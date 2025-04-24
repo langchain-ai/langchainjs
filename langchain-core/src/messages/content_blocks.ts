@@ -1,3 +1,5 @@
+import { MessageContentImageUrl } from "./base.js";
+
 export interface BaseDataContentBlock {
   mime_type?: string;
   metadata?: Record<string, unknown>;
@@ -70,6 +72,8 @@ export function isDataContentBlock(
   return (
     typeof content_block === "object" &&
     content_block !== null &&
+    "type" in content_block &&
+    typeof content_block.type === "string" &&
     "source_type" in content_block &&
     (content_block.source_type === "url" ||
       content_block.source_type === "base64" ||
@@ -82,7 +86,10 @@ export function isURLContentBlock(
   content_block: object
 ): content_block is URLContentBlock {
   return (
-    isDataContentBlock(content_block) && content_block.source_type === "url"
+    isDataContentBlock(content_block) &&
+    content_block.source_type === "url" &&
+    "url" in content_block &&
+    typeof content_block.url === "string"
   );
 }
 
@@ -90,7 +97,10 @@ export function isBase64ContentBlock(
   content_block: object
 ): content_block is Base64ContentBlock {
   return (
-    isDataContentBlock(content_block) && content_block.source_type === "base64"
+    isDataContentBlock(content_block) &&
+    content_block.source_type === "base64" &&
+    "data" in content_block &&
+    typeof content_block.data === "string"
   );
 }
 
@@ -98,7 +108,10 @@ export function isPlainTextContentBlock(
   content_block: object
 ): content_block is PlainTextContentBlock {
   return (
-    isDataContentBlock(content_block) && content_block.source_type === "text"
+    isDataContentBlock(content_block) &&
+    content_block.source_type === "text" &&
+    "text" in content_block &&
+    typeof content_block.text === "string"
   );
 }
 
@@ -106,13 +119,16 @@ export function isIDContentBlock(
   content_block: object
 ): content_block is IDContentBlock {
   return (
-    isDataContentBlock(content_block) && content_block.source_type === "id"
+    isDataContentBlock(content_block) &&
+    content_block.source_type === "id" &&
+    "id" in content_block &&
+    typeof content_block.id === "string"
   );
 }
 
 export function convertToOpenAIImageBlock(
   content_block: URLContentBlock | Base64ContentBlock
-): Record<string, unknown> {
+): MessageContentImageUrl {
   if (isDataContentBlock(content_block)) {
     if (content_block.source_type === "url") {
       return {
@@ -337,7 +353,7 @@ export function convertToProviderContentBlock<
   if (block.type === "text") {
     if (!converter.fromStandardTextBlock) {
       throw new Error(
-        `Conversion from standard text blocks to provider text blocks not supported. Converter must implement \`fromStandardTextBlock\` method.`
+        `Converter for ${converter.providerName} does not implement \`fromStandardTextBlock\` method.`
       );
     }
     return converter.fromStandardTextBlock(block as StandardTextBlock);
@@ -345,7 +361,7 @@ export function convertToProviderContentBlock<
   if (block.type === "image") {
     if (!converter.fromStandardImageBlock) {
       throw new Error(
-        `Conversion from standard image blocks to provider image blocks not supported. Converter must implement \`fromStandardImageBlock\` method.`
+        `Converter for ${converter.providerName} does not implement \`fromStandardImageBlock\` method.`
       );
     }
     return converter.fromStandardImageBlock(block as StandardImageBlock);
@@ -353,7 +369,7 @@ export function convertToProviderContentBlock<
   if (block.type === "audio") {
     if (!converter.fromStandardAudioBlock) {
       throw new Error(
-        `Conversion from standard audio blocks to provider audio blocks not supported. Converter must implement \`fromStandardAudioBlock\` method.`
+        `Converter for ${converter.providerName} does not implement \`fromStandardAudioBlock\` method.`
       );
     }
     return converter.fromStandardAudioBlock(block as StandardAudioBlock);
@@ -361,7 +377,7 @@ export function convertToProviderContentBlock<
   if (block.type === "file") {
     if (!converter.fromStandardFileBlock) {
       throw new Error(
-        `Conversion from standard file blocks to provider file blocks not supported. Converter must implement \`fromStandardFileBlock\` method.`
+        `Converter for ${converter.providerName} does not implement \`fromStandardFileBlock\` method.`
       );
     }
     return converter.fromStandardFileBlock(block as StandardFileBlock);
