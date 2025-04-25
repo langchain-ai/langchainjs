@@ -17,7 +17,12 @@ import {
   type RunnableConfig,
 } from "../runnables/config.js";
 import type { RunnableFunc } from "../runnables/base.js";
-import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
+import {
+  DirectToolOutput,
+  isDirectToolOutput,
+  ToolCall,
+  ToolMessage,
+} from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
@@ -35,6 +40,7 @@ import type {
   DynamicStructuredToolInput,
   ZodObjectAny,
   StringInputToolSchema,
+  ToolCallInput,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -173,13 +179,13 @@ export abstract class StructuredTool<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  async call(
-    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  async call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg: TArg,
     configArg?: Callbacks | ToolRunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolMessage | ToolOutputT> {
-    let parsed = arg;
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
+    let parsed: StructuredToolCallInput<SchemaT, SchemaInputT> = arg;
     if (isZodSchema(this.schema)) {
       try {
         parsed = await (this.schema as z.ZodSchema).parseAsync(arg);
@@ -288,14 +294,13 @@ export abstract class Tool<ToolOutputT = ToolReturnType> extends StructuredTool<
    * @param callbacks Optional callbacks for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call(
-    arg: string | undefined | z.input<this["schema"]> | ToolCall,
+  call<TArg extends ToolCallInput>(
+    arg?: TArg,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<ToolMessage | ToolOutputT> {
-    return super.call(
-      typeof arg === "string" || !arg ? { input: arg } : arg,
-      callbacks
-    );
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
+    const input: ToolCallInput =
+      typeof arg === "string" || !arg ? { input: arg } : arg;
+    return super.call<TArg>(input, callbacks);
   }
 }
 
@@ -326,10 +331,10 @@ export class DynamicTool<
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
-  async call(
-    arg: string | undefined | z.input<this["schema"]> | ToolCall,
-    configArg?: ToolRunnableConfig | Callbacks
-  ): Promise<ToolMessage | ToolOutputT> {
+  call<TArg extends ToolCallInput>(
+    arg?: TArg,
+    configArg?: Callbacks | ToolRunnableConfig
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -388,12 +393,12 @@ export class DynamicStructuredTool<
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    */
-  async call(
-    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  async call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg: TArg,
     configArg?: RunnableConfig | Callbacks,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolMessage | ToolOutputT> {
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -631,6 +636,18 @@ export function tool<
           >;
 }
 
+function _formatToolOutput<TOutput extends ToolReturnType>(params: {
+  content: TOutput;
+  name: string;
+  artifact?: unknown;
+  toolCallId: string;
+}): TOutput extends DirectToolOutput ? TOutput : ToolMessage;
+function _formatToolOutput<TOutput extends ToolReturnType>(params: {
+  content: TOutput;
+  name: string;
+  artifact?: unknown;
+  toolCallId?: string | undefined;
+}): TOutput;
 function _formatToolOutput<TOutput extends ToolReturnType>(params: {
   content: TOutput;
   name: string;

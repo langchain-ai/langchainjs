@@ -13,7 +13,7 @@ import {
   RunnableToolLike,
   type RunnableInterface,
 } from "../runnables/base.js";
-import type { ToolCall } from "../messages/tool.js";
+import type { ToolCall, ToolMessage } from "../messages/tool.js";
 import type { MessageContent } from "../messages/base.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import { JSONSchema } from "../utils/json_schema.js";
@@ -146,6 +146,22 @@ export type StringInputToolSchema = z.ZodEffects<
 >;
 
 /**
+ * Defines the type for input to a tool's call method.
+ *
+ * This type is a convenience alias for StructuredToolCallInput with the input type
+ * derived from the schema. It represents the possible inputs that can be passed to a tool,
+ * which can be either:
+ * - A string (if the tool accepts string input)
+ * - A structured input matching the tool's schema
+ * - A ToolCall object (typically from an LLM)
+ *
+ * @param SchemaT - The schema type for the tool input, defaults to StringInputToolSchema
+ */
+export type ToolCallInput<
+  SchemaT extends ToolInputSchemaBase = StringInputToolSchema
+> = StructuredToolCallInput<SchemaT, ToolInputSchemaInputType<SchemaT>>;
+
+/**
  * Interface that defines the shape of a LangChain structured tool.
  *
  * A structured tool is a tool that uses a schema to define the structure of the arguments that the
@@ -163,7 +179,7 @@ export interface StructuredToolInterface<
   ToolOutputT = ToolReturnType
 > extends RunnableInterface<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
-    ToolOutputT
+    ToolOutputT | ToolMessage
   > {
   lc_namespace: string[];
 
@@ -171,6 +187,11 @@ export interface StructuredToolInterface<
    * A Zod schema representing the parameters of the tool.
    */
   schema: SchemaT;
+
+  invoke<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg: TArg,
+    configArg?: RunnableConfig
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -183,12 +204,12 @@ export interface StructuredToolInterface<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call(
-    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg: TArg,
     configArg?: Callbacks | RunnableConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolOutputT>;
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
 
   /**
    * The name of the tool.
@@ -232,11 +253,10 @@ export interface ToolInterface<
    * @param callbacks Optional callbacks for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call(
-    // TODO: shouldn't this be narrowed based on SchemaT?
-    arg: string | undefined | SchemaInputT | ToolCall,
+  call<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+    arg?: TArg,
     callbacks?: Callbacks | RunnableConfig
-  ): Promise<ToolOutputT>;
+  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
 }
 
 /**
