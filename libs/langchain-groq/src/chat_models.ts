@@ -287,6 +287,18 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
+function extractGenericMessageCustomRole(message: ChatMessage): GroqRoleEnum {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
+  ) {
+      console.warn(`Unknown message role: ${message.role}`);
+  }
+  return message.role as GroqRoleEnum;
+}
+
 export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
   const type = message._getType();
   switch (type) {
@@ -301,6 +313,11 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
     case "tool":
       // Not yet supported as a type
       return "tool" as GroqRoleEnum;
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
