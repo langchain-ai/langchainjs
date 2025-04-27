@@ -1,12 +1,12 @@
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
-import weaviate from "weaviate-ts-client";
+import weaviate from "weaviate-client";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { WeaviateStore } from "../weaviate.js";
 
 test("WeaviateStore", async () => {
-  // Something wrong with the weaviate-ts-client types, so we need to disable
+  // Something wrong with the weaviate-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
     scheme:
