@@ -120,7 +120,7 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   apiWrapper?: TavilySearchAPIWrapper;
 
   /**
-   * The number of content chunks to retrieve from each source. Each chunk's length is maximum 500 characters. Available only when search_depth is advanced.
+   * The number of content chunks to retrieve from each source. Each chunk's length is maximum 500 characters. Available only when searchDepth is advanced. See https://docs.tavily.com/docs/rest-api/api-reference
    *
    * @default 3
    */
