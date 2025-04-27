@@ -1,9 +1,13 @@
 import * as uuid from "uuid";
 import {
   WeaviateClient,
-  WeaviateObject,
-  Filters,
+  // WeaviateObject,
+  // Filters,
   FilterValue,
+  // Operator,
+  // WhereFilter,
+  DataObject,
+  Collection,
 } from "weaviate-client";
 import {
   MaxMarginalRelevanceSearchOptions,
@@ -71,19 +75,22 @@ export interface WeaviateLibArgs {
   tenant?: string;
 }
 
-interface ResultRow {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+// interface ResultRow {
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   [key: string]: any;
+// }
 
 /**
  * Interface that defines a filter for querying data from Weaviate. It
  * includes a distance and a `WhereFilter`.
  */
 export interface WeaviateFilter {
-  distance?: number;
   where: FilterValue;
 }
+
+// export interface WeaviateCollection {
+//   where: FilterValue;
+// }
 
 /**
  * Class that extends the `VectorStore` base class. It provides methods to
@@ -91,7 +98,7 @@ export interface WeaviateFilter {
  * deleting data, and performing similarity searches.
  */
 export class WeaviateStore extends VectorStore {
-  declare FilterType: WeaviateFilter;
+  declare FilterType: FilterValue;
 
   private client: WeaviateClient;
 
@@ -114,7 +121,7 @@ export class WeaviateStore extends VectorStore {
     this.indexName = args.indexName;
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
-    this.tenant = args.tenant;
+    // this.tenant = args.tenant;
 
     if (args.metadataKeys) {
       this.queryAttrs = [
@@ -136,6 +143,38 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
+  async getOrCreateCollection(): Promise<Collection> {
+
+    const collection = this.client.collections.get(this.indexName)
+
+    if (!collection) {
+      // const insertString = `
+      //   INSERT INTO ${this.computedCollectionTableName}(
+      //     uuid,
+      //     name,
+      //     cmetadata
+      //   )
+      //   VALUES (
+      //     uuid_generate_v4(),
+      //     $1,
+      //     $2
+      //   )
+      //   RETURNING uuid;
+      // `;
+      // const insertResult = await this.pool.query(insertString, [
+      //   this.collectionName,
+      //   this.collectionMetadata,
+      // ]);
+      // collectionId = insertResult.rows[0]?.uuid;
+    }
+    // const instance = this(embeddings, args);
+    // await instance.addDocuments(docs);
+    // return instance;
+
+    return collection;
+  }
+
+
   /**
    * Method to add vectors and corresponding documents to the Weaviate
    * index.
@@ -150,20 +189,20 @@ export class WeaviateStore extends VectorStore {
     options?: { ids?: string[] }
   ) {
     const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
-    const batch: WeaviateObject<Record<string, any>>[] = documents.map((document, index) => {
+    const batch: DataObject<undefined>[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
         );
-
+      
+      // console.log(documentIds)
       const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
       return {
-        ...(this.tenant ? { tenant: this.tenant } : {}),
-        class: this.indexName,
-        uuid: documentIds[index],
-        vector: vectors[index],
-        vectors : {ANY_ADDITIONAL_PROPERTY: vectors[index]},
-        metadata : {},
+        // ...(this.tenant ? { tenant: this.tenant } : {}),
+        // class: this.indexName,
+        id: documentIds[index],
+        vectors : vectors[index],
+        // metadata : {},
         references : {},
         properties: {
           [this.textKey]: document.pageContent,
@@ -176,13 +215,14 @@ export class WeaviateStore extends VectorStore {
       const collection = this.client.collections.get(this.indexName)
       const response = await collection.data.insertMany(batch);
 
-      console.log(`Successfully imported batch of ${Object.keys(response.uuids).length} items`);
+      console.log(`Successfully imported batch of ${Object.values(response.uuids).length} items`);
       if (response.hasErrors) {
         console.log("this the error", response.errors);
         throw new Error("Error in batch import!");
       }
-      
-      return Object.keys(response.uuids);
+      // console.log(response)
+      // console.log(response.allResponses)
+      return Object.values(response.uuids);
 
     } catch (error) {
       console.error('Error importing batch:', error);
@@ -214,7 +254,7 @@ export class WeaviateStore extends VectorStore {
    */
   async delete(params: {
     ids?: string[];
-    filter?: WeaviateFilter;
+    filter?: FilterValue;
   }): Promise<void> {
     const { ids, filter } = params;
 
@@ -227,9 +267,9 @@ export class WeaviateStore extends VectorStore {
         }
       }
     } else if (filter) {
-      collection.data.deleteMany(filter.where);
+      collection.data.deleteMany(filter);
       if (this.tenant) {
-        collection.withTenant(this.tenant).data.deleteMany(filter.where);
+        collection.withTenant(this.tenant).data.deleteMany(filter);
       }
 
     } else {
@@ -251,7 +291,7 @@ export class WeaviateStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: WeaviateFilter
+    filter?: FilterValue
   ): Promise<[Document, number][]> {
     const resultsWithEmbedding =
       await this.similaritySearchVectorWithScoreAndEmbedding(query, k, filter);
@@ -273,35 +313,46 @@ export class WeaviateStore extends VectorStore {
   async similaritySearchVectorWithScoreAndEmbedding(
     query: number[],
     k: number,
-    filter?: WeaviateFilter
-  ): Promise<[Document, number, number[]][]> {
+    filter?: FilterValue
+  ): Promise<[Document, number, number, number[]][]> {
     try {
+      console.log(filter);
+      // console.log(query)
       const collection = this.client.collections.get(this.indexName)
       var result = await collection.query.nearVector(query, {
-        filters: filter?.where,
+        filters: filter,
         limit: k,
+        includeVector: true,
         returnMetadata: ['distance', 'score']
       })
+      // console.log(result);
 
       if (this.tenant) {
         result = await collection.withTenant(this.tenant).query.nearVector(query, {
-          filters: filter?.where,
+          filters: filter,
           limit: k,
           returnMetadata: ['distance', 'score']
         })
       }
 
-      const documents: [Document, number, number[]][] = [];
+      const documents: [Document, number, number, number[]][] = [];
 
       for (let data of result.objects) {
+        console.log(data.properties)
+        const { properties = {}, metadata = {} } = data ?? {};
+        const { [this.textKey]: text, ...rest } = properties;
+
         documents.push([
           new Document({
-            pageContent: JSON.stringify(data.properties, null, 2),
-            metadata: data.metadata,
+            pageContent: String(data.properties?.[this.textKey] ?? ''),
+            metadata: {
+              ...rest,
+            },
             id: data.uuid,
           }),
-          data.metadata?.distance ?? 0,
-          Object.values(data.vectors)[0],
+          metadata?.distance ?? 0,
+          metadata?.score ?? 0,
+          Object.values(data.vectors)[0]
         ]);
       }
       return documents;
@@ -332,15 +383,18 @@ export class WeaviateStore extends VectorStore {
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
     const queryEmbedding: number[] = await this.embeddings.embedQuery(query);
-    const allResults: [Document, number, number[]][] =
+    const allResults: [Document, number, number, number[]][] =
       await this.similaritySearchVectorWithScoreAndEmbedding(
         queryEmbedding,
         fetchK,
         filter
       );
     const embeddingList = allResults.map(
-      ([_doc, _score, embedding]) => embedding
+      ([_doc, _distance, _score, embedding]) => embedding
     );
+    // console.log(allResults)
+    // console.log('*******************')
+    // console.log(embeddingList)
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
       embeddingList,

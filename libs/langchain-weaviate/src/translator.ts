@@ -14,15 +14,15 @@ import {
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
-import { WeaviateFilter, WeaviateStore } from "./vectorstores.js";
+import { WeaviateStore } from "./vectorstores.js";
+import {
+  FilterValue,
+} from "weaviate-client";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
 type WeaviateOperatorValues = {
-  valueText: string;
-  valueInt: number;
-  valueNumber: number;
-  valueBoolean: boolean;
+  value: string | number | boolean;
 };
 
 type WeaviateOperatorKeys = keyof WeaviateOperatorValues;
@@ -40,17 +40,16 @@ export type WeaviateVisitorResult =
 
 export type WeaviateOperationResult = {
   operator: string;
-  operands: WeaviateVisitorResult[];
+  filters: WeaviateVisitorResult[];
+  value: null;
 };
 export type WeaviateComparisonResult = {
-  path: [string];
+  target: { property: string };
   operator: string;
 } & ExclusiveOperatorValue;
 
 export type WeaviateStructuredQueryResult = {
-  filter?: {
-    where?: WeaviateComparisonResult | WeaviateOperationResult;
-  };
+  filter?: WeaviateComparisonResult | WeaviateOperationResult;
 };
 
 /**
@@ -143,12 +142,12 @@ export class WeaviateTranslator<
    * @returns A WeaviateOperationResult.
    */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
-    const args = operation.args?.map((arg) =>
-      arg.accept(this as Visitor)
-    ) as WeaviateVisitorResult[];
+    const args = operation.args?.map((arg) => arg.accept(this as Visitor)) as (WeaviateComparisonResult | WeaviateOperationResult)[];
+  
     return {
-      operator: this.formatFunction(operation.operator),
-      operands: args,
+      operator: this.formatFunction(operation.operator),  // Usually 'And' or 'Or'
+      filters: args,
+      value: null,
     };
   }
 
@@ -160,29 +159,23 @@ export class WeaviateTranslator<
    * @returns A WeaviateComparisonResult.
    */
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
-    if (isString(comparison.value)) {
-      return {
-        path: [comparison.attribute],
-        operator: this.formatFunction(comparison.comparator),
-        valueText: comparison.value as string,
-      };
-    }
-    if (isInt(comparison.value)) {
-      return {
-        path: [comparison.attribute],
-        operator: this.formatFunction(comparison.comparator),
-        valueInt: parseInt(comparison.value as string, 10),
-      };
-    }
-    if (isFloat(comparison.value)) {
-      return {
-        path: [comparison.attribute],
-        operator: this.formatFunction(comparison.comparator),
-        valueNumber: parseFloat(comparison.value as string),
-      };
-    }
+    console.log(comparison)
 
-    throw new Error("Value type is not supported");
+    const result = {
+      operator: this.formatFunction(comparison.comparator),
+      target:  {property: comparison.attribute},
+      value: null as any,
+    };
+    if (isString(comparison.value)) {
+      result.value = comparison.value as string;
+    } else if (isInt(comparison.value)) {
+      result.value = parseInt(comparison.value as string, 10);
+    } else if (isFloat(comparison.value)) {
+      result.value = parseFloat(comparison.value as string);
+    } else {
+      throw new Error("Value type is not supported");
+    }
+    return result as this["VisitComparisonOutput"];
   }
 
   /**
@@ -194,12 +187,14 @@ export class WeaviateTranslator<
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
+    console.log(query)
     let nextArg = {};
     if (query.filter) {
       nextArg = {
-        filter: { where: query.filter.accept(this as Visitor) },
+        filter: { filters: [query.filter.accept(this as Visitor)] },
       };
     }
+    console.log(nextArg)
     return nextArg;
   }
 
@@ -212,26 +207,36 @@ export class WeaviateTranslator<
    * @param defaultFilter The default filter to merge.
    * @param generatedFilter The generated filter to merge.
    * @param mergeType The type of merge to perform. Can be 'and', 'or', or 'replace'. Defaults to 'and'.
-   * @returns A merged WeaviateFilter, or undefined if both filters are empty.
+   * @returns A merged FilterValue, or undefined if both filters are empty.
    */
   mergeFilters(
-    defaultFilter: WeaviateFilter | undefined,
-    generatedFilter: WeaviateFilter | undefined,
+    defaultFilter: FilterValue | undefined,
+    generatedFilter: FilterValue | undefined,
     mergeType = "and"
-  ): WeaviateFilter | undefined {
+  ): FilterValue | undefined {
+    console.log(defaultFilter)
+    console.log(generatedFilter)
     if (
-      isFilterEmpty(defaultFilter?.where) &&
-      isFilterEmpty(generatedFilter?.where)
+      isFilterEmpty(defaultFilter) &&
+      isFilterEmpty(generatedFilter)
     ) {
       return undefined;
     }
-    if (isFilterEmpty(defaultFilter?.where) || mergeType === "replace") {
-      if (isFilterEmpty(generatedFilter?.where)) {
+    if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
+      if (isFilterEmpty(generatedFilter)) {
         return undefined;
       }
-      return generatedFilter;
+      const temp = {
+        operator: 'GreaterThan',
+        target: {
+          property: 'rating',
+        },
+        value: 8.5
+      } as FilterValue;
+
+      return temp;
     }
-    if (isFilterEmpty(generatedFilter?.where)) {
+    if (isFilterEmpty(generatedFilter)) {
       if (mergeType === "and") {
         return undefined;
       }
@@ -239,24 +244,22 @@ export class WeaviateTranslator<
     }
     const merged: WeaviateOperationResult = {
       operator: "And",
-      operands: [
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        defaultFilter!.where as WeaviateVisitorResult,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        generatedFilter!.where as WeaviateVisitorResult,
+      filters: [
+        defaultFilter as WeaviateVisitorResult,
+        generatedFilter as WeaviateVisitorResult,
       ],
+      value: null
     };
-    if (mergeType === "and") {
-      return {
-        where: merged,
-      } as WeaviateFilter;
-    } else if (mergeType === "or") {
+
+    if (mergeType === "or") {
       merged.operator = "Or";
-      return {
-        where: merged,
-      } as WeaviateFilter;
-    } else {
-      throw new Error("Unknown merge type");
     }
+    const temp = {
+        operator: merged.operator,
+        operands: merged.filters,
+        value: null,  
+    } as FilterValue;
+    console.log(temp);
+    return temp;
   }
 }
