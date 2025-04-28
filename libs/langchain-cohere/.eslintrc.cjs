@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "no-instanceof"],
+  plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-jest"],
   ignorePatterns: [
     ".eslintrc.cjs",
     "scripts",
@@ -33,6 +33,7 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-misused-promises": "error",
+    "arrow-body-style": 0,
     camelcase: 0,
     "class-methods-use-this": 0,
     "import/extensions": [2, "ignorePackages"],
@@ -61,6 +62,15 @@ module.exports = {
     "func-names": 0,
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
+    'jest/no-focused-tests': 'error',
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

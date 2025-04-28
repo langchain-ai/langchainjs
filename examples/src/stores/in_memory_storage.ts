@@ -1,4 +1,4 @@
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 
 // Instantiate the store using the `fromPath` method.

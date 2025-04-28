@@ -14,6 +14,18 @@ function tryJsonStringify(obj: unknown, fallback: string) {
   }
 }
 
+function formatKVMapItem(value: unknown) {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (value === null || value === undefined) {
+    return value;
+  }
+
+  return tryJsonStringify(value, value.toString());
+}
+
 function elapsed(run: Run): string {
   if (!run.end_time) return "";
   const elapsed = run.end_time - run.start_time;
@@ -210,7 +222,9 @@ export class ConsoleCallbackHandler extends BaseTracer {
       `${wrap(
         color.green,
         "[tool/start]"
-      )} [${crumbs}] Entering Tool run with input: "${run.inputs.input?.trim()}"`
+      )} [${crumbs}] Entering Tool run with input: "${formatKVMapItem(
+        run.inputs.input
+      )}"`
     );
   }
 
@@ -221,10 +235,13 @@ export class ConsoleCallbackHandler extends BaseTracer {
    */
   onToolEnd(run: Run) {
     const crumbs = this.getBreadcrumbs(run);
+
     console.log(
       `${wrap(color.cyan, "[tool/end]")} [${crumbs}] [${elapsed(
         run
-      )}] Exiting Tool run with output: "${run.outputs?.output?.trim()}"`
+      )}] Exiting Tool run with output: "${formatKVMapItem(
+        run.outputs?.output
+      )}"`
     );
   }
 

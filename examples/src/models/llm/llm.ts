@@ -3,14 +3,14 @@ import { OpenAI } from "@langchain/openai";
 export const run = async () => {
   const modelA = new OpenAI();
   // `call` is a simple string-in, string-out method for interacting with the model.
-  const resA = await modelA.call(
+  const resA = await modelA.invoke(
     "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resA });
   // { resA: '\n\nSocktastic Colors' }
 
   // `generate` allows you to generate multiple completions for multiple prompts (in a single request for some models).
-  const resB = await modelA.generate([
+  const resB = await modelA.invoke([
     "What would be a good company name a company that makes colorful socks?",
     "What would be a good company name a company that makes colorful sweaters?",
   ]);
@@ -49,7 +49,7 @@ export const run = async () => {
 
   // We can specify additional parameters the specific model provider supports, like `temperature`:
   const modelB = new OpenAI({ temperature: 0.9 });
-  const resC = await modelA.call(
+  const resC = await modelA.invoke(
     "What would be a good company name a company that makes colorful socks?"
   );
   console.log({ resC });

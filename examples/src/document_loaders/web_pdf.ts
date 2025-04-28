@@ -1,4 +1,4 @@
-import { WebPDFLoader } from "langchain/document_loaders/web/pdf";
+import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 
 const blob = new Blob(); // e.g. from a file input
 

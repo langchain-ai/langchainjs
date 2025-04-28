@@ -1,4 +1,4 @@
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
 import { EmbeddingsFilter } from "langchain/retrievers/document_compressors/embeddings_filter";
@@ -29,7 +29,7 @@ const retriever = new ContextualCompressionRetriever({
   baseRetriever,
 });
 
-const retrievedDocs = await retriever.getRelevantDocuments(
+const retrievedDocs = await retriever.invoke(
   "What did the speaker say about Justice Breyer in the 2022 State of the Union?"
 );
 console.log({ retrievedDocs });

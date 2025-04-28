@@ -6,7 +6,7 @@ const modelA = new Replicate({
 });
 
 // `call` is a simple string-in, string-out method for interacting with the model.
-const resA = await modelA.call(
+const resA = await modelA.invoke(
   "What would be a good company name a company that makes colorful socks?"
 );
 console.log({ resA });
@@ -17,7 +17,7 @@ console.log({ resA });
 */
 
 // `generate` allows you to generate multiple completions for multiple prompts (in a single request for some models).
-const resB = await modelA.generate([
+const resB = await modelA.invoke([
   "What would be a good company name a company that makes colorful socks?",
   "What would be a good company name a company that makes colorful sweaters?",
 ]);
@@ -47,7 +47,7 @@ const text2image = new Replicate({
     "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf",
 });
 
-const image = await text2image.call("A cat");
+const image = await text2image.invoke("A cat");
 console.log({ image });
 /*
 {

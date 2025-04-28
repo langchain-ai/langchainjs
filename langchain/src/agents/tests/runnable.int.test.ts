@@ -10,12 +10,12 @@ import {
   BaseMessage,
   FunctionMessage,
 } from "@langchain/core/messages";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
-import { Calculator } from "../../tools/calculator.js";
+import { SerpAPI } from "../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
 
 test("Runnable variant", async () => {
@@ -58,14 +58,16 @@ test("Runnable variant", async () => {
     tools,
   });
 
-  console.log("Loaded agent executor");
+  // console.log("Loaded agent executor");
 
   const query = "What is the weather in New York?";
-  console.log(`Calling agent executor with query: ${query}`);
+  // console.log(`Calling agent executor with query: ${query}`);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await executor.invoke({
     input: query,
   });
-  console.log(result);
+  // console.log(result);
 });
 
 test("Runnable variant executor astream log", async () => {
@@ -112,16 +114,16 @@ test("Runnable variant executor astream log", async () => {
     tools,
   });
 
-  console.log("Loaded agent executor");
+  // console.log("Loaded agent executor");
 
   const query = "What is the weather in New York?";
-  console.log(`Calling agent executor with query: ${query}`);
+  // console.log(`Calling agent executor with query: ${query}`);
   const stream = await executor.streamLog({
     input: query,
   });
   let hasSeenLLMLogPatch = false;
   for await (const chunk of stream) {
-    console.log(JSON.stringify(chunk));
+    // console.log(JSON.stringify(chunk));
     if (chunk.ops[0].path.includes("ChatOpenAI")) {
       hasSeenLLMLogPatch = true;
     }

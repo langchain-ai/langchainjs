@@ -5,8 +5,7 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
-import { AstraDB } from "@datastax/astra-db-ts";
-import { Collection } from "@datastax/astra-db-ts/dist/collections";
+import { DataAPIClient, Collection } from "@datastax/astra-db-ts";
 
 export interface AstraDBChatMessageHistoryInput {
   token: string;
@@ -79,8 +78,9 @@ export class AstraDBChatMessageHistory extends BaseListChatMessageHistory {
     namespace,
     sessionId,
   }: AstraDBChatMessageHistoryInput): Promise<AstraDBChatMessageHistory> {
-    const client = new AstraDB(token, endpoint, namespace);
-    const collection = await client.collection(collectionName);
+    const client = new DataAPIClient(token, { caller: ["langchainjs"] });
+    const db = client.db(endpoint, { namespace });
+    const collection = await db.collection(collectionName);
     return new AstraDBChatMessageHistory({ collection, sessionId });
   }
 

@@ -32,7 +32,7 @@ export abstract class BaseDocumentTransformer<
    * @param _options Optional configuration object to customize the behavior of callbacks.
    * @returns A Promise that resolves to the transformed documents.
    */
-  invoke(input: RunInput, _options: BaseCallbackConfig): Promise<RunOutput> {
+  invoke(input: RunInput, _options?: BaseCallbackConfig): Promise<RunOutput> {
     return this.transformDocuments(input);
   }
 }

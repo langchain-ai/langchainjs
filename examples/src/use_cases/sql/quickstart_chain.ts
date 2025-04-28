@@ -11,7 +11,7 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const chain = await createSqlQueryChain({
   llm,
   db,

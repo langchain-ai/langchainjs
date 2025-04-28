@@ -3,11 +3,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Document } from "@langchain/core/documents";
-import {
-  Node,
-  Relationship,
-  GraphDocument,
-} from "../../graphs/graph_document.js";
+import { Node, Relationship, GraphDocument } from "../../graphs/document.js";
 
 export const SYSTEM_PROMPT = `
 # Knowledge Graph Instructions for GPT-4\n
@@ -47,6 +43,18 @@ interface OptionalEnumFieldProps {
   fieldKwargs?: object;
 }
 
+interface SchemaProperty {
+  key: string;
+  value: string;
+}
+
+function toTitleCase(str: string): string {
+  return str
+    .split(" ")
+    .map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase())
+    .join("");
+}
+
 function createOptionalEnumType({
   enumValues = undefined,
   description = "",
@@ -79,66 +87,143 @@ function createOptionalEnumType({
   return schema;
 }
 
-function createSchema(allowedNodes: string[], allowedRelationships: string[]) {
+function createNodeSchema(allowedNodes: string[], nodeProperties: string[]) {
+  const nodeSchema = z.object({
+    id: z.string(),
+    type: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The type or label of the node.",
+    }),
+  });
+
+  return nodeProperties.length > 0
+    ? nodeSchema.extend({
+        properties: z
+          .array(
+            z.object({
+              key: createOptionalEnumType({
+                enumValues: nodeProperties,
+                description: "Property key.",
+              }),
+              value: z.string().describe("Extracted value."),
+            })
+          )
+          .describe(`List of node properties`),
+      })
+    : nodeSchema;
+}
+
+function createRelationshipSchema(
+  allowedNodes: string[],
+  allowedRelationships: string[],
+  relationshipProperties: string[]
+) {
+  const relationshipSchema = z.object({
+    sourceNodeId: z.string(),
+    sourceNodeType: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The source node of the relationship.",
+    }),
+    relationshipType: createOptionalEnumType({
+      enumValues: allowedRelationships,
+      description: "The type of the relationship.",
+      isRel: true,
+    }),
+    targetNodeId: z.string(),
+    targetNodeType: createOptionalEnumType({
+      enumValues: allowedNodes,
+      description: "The target node of the relationship.",
+    }),
+  });
+
+  return relationshipProperties.length > 0
+    ? relationshipSchema.extend({
+        properties: z
+          .array(
+            z.object({
+              key: createOptionalEnumType({
+                enumValues: relationshipProperties,
+                description: "Property key.",
+              }),
+              value: z.string().describe("Extracted value."),
+            })
+          )
+          .describe(`List of relationship properties`),
+      })
+    : relationshipSchema;
+}
+
+function createSchema(
+  allowedNodes: string[],
+  allowedRelationships: string[],
+  nodeProperties: string[],
+  relationshipProperties: string[]
+) {
+  const nodeSchema = createNodeSchema(allowedNodes, nodeProperties);
+  const relationshipSchema = createRelationshipSchema(
+    allowedNodes,
+    allowedRelationships,
+    relationshipProperties
+  );
+
   const dynamicGraphSchema = z.object({
-    nodes: z
-      .array(
-        z.object({
-          id: z.string(),
-          type: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The type or label of the node.",
-          }),
-        })
-      )
-      .describe("List of nodes"),
+    nodes: z.array(nodeSchema).describe("List of nodes"),
     relationships: z
-      .array(
-        z.object({
-          sourceNodeId: z.string(),
-          sourceNodeType: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The source node of the relationship.",
-          }),
-          relationshipType: createOptionalEnumType({
-            enumValues: allowedRelationships,
-            description: "The type of the relationship.",
-            isRel: true,
-          }),
-          targetNodeId: z.string(),
-          targetNodeType: createOptionalEnumType({
-            enumValues: allowedNodes,
-            description: "The target node of the relationship.",
-          }),
-        })
-      )
+      .array(relationshipSchema)
       .describe("List of relationships."),
   });
 
   return dynamicGraphSchema;
 }
 
+function convertPropertiesToRecord(
+  properties: SchemaProperty[]
+): Record<string, string> {
+  return properties.reduce((accumulator: Record<string, string>, prop) => {
+    accumulator[prop.key] = prop.value;
+    return accumulator;
+  }, {});
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapToBaseNode(node: any): Node {
   return new Node({
     id: node.id,
-    type: node.type.replace(" ", "_").toUpperCase(),
+    type: node.type ? toTitleCase(node.type) : "",
+    properties: node.properties
+      ? convertPropertiesToRecord(node.properties)
+      : {},
   });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapToBaseRelationship(relationship: any): Relationship {
-  return new Relationship({
-    source: new Node({
-      id: relationship.sourceNodeId,
-      type: relationship.sourceNodeType.replace(" ", "_").toUpperCase(),
-    }),
-    target: new Node({
-      id: relationship.targetNodeId,
-      type: relationship.targetNodeType.replace(" ", "_").toUpperCase(),
-    }),
-    type: relationship.relationshipType.replace(" ", "_").toUpperCase(),
-  });
+function mapToBaseRelationship({
+  fallbackRelationshipType,
+}: {
+  fallbackRelationshipType: string | null;
+}) {
+  return function (relationship: any): Relationship {
+    return new Relationship({
+      source: new Node({
+        id: relationship.sourceNodeId,
+        type: relationship.sourceNodeType
+          ? toTitleCase(relationship.sourceNodeType)
+          : "",
+      }),
+      target: new Node({
+        id: relationship.targetNodeId,
+        type: relationship.targetNodeType
+          ? toTitleCase(relationship.targetNodeType)
+          : "",
+      }),
+      type: (relationship.relationshipType || fallbackRelationshipType)
+        .replace(" ", "_")
+        .toUpperCase(),
+      properties: relationship.properties
+        ? convertPropertiesToRecord(relationship.properties)
+        : {},
+    });
+  };
 }
 
 export interface LLMGraphTransformerProps {
@@ -147,6 +232,15 @@ export interface LLMGraphTransformerProps {
   allowedRelationships?: string[];
   prompt?: ChatPromptTemplate;
   strictMode?: boolean;
+  nodeProperties?: string[];
+  relationshipProperties?: string[];
+
+  /**
+   * @description
+   * The LLM may rarely create relationships without a type, causing extraction to fail.
+   * Use this to provide a fallback relationship type in such case.
+   */
+  fallbackRelationshipType?: string | null;
 }
 
 export class LLMGraphTransformer {
@@ -159,12 +253,21 @@ export class LLMGraphTransformer {
 
   strictMode: boolean;
 
+  nodeProperties: string[];
+
+  relationshipProperties: string[];
+
+  fallbackRelationshipType: string | null = null;
+
   constructor({
     llm,
     allowedNodes = [],
     allowedRelationships = [],
     prompt = DEFAULT_PROMPT,
     strictMode = true,
+    nodeProperties = [],
+    relationshipProperties = [],
+    fallbackRelationshipType = null,
   }: LLMGraphTransformerProps) {
     if (typeof llm.withStructuredOutput !== "function") {
       throw new Error(
@@ -175,9 +278,17 @@ export class LLMGraphTransformer {
     this.allowedNodes = allowedNodes;
     this.allowedRelationships = allowedRelationships;
     this.strictMode = strictMode;
+    this.nodeProperties = nodeProperties;
+    this.relationshipProperties = relationshipProperties;
+    this.fallbackRelationshipType = fallbackRelationshipType;
 
     // Define chain
-    const schema = createSchema(allowedNodes, allowedRelationships);
+    const schema = createSchema(
+      allowedNodes,
+      allowedRelationships,
+      nodeProperties,
+      relationshipProperties
+    );
     const structuredLLM = llm.withStructuredOutput(zodToJsonSchema(schema));
     this.chain = prompt.pipe(structuredLLM);
   }
@@ -194,13 +305,17 @@ export class LLMGraphTransformer {
     const rawSchema = await this.chain.invoke({ input: text });
 
     let nodes: Node[] = [];
-    if (rawSchema.nodes) {
+    if (rawSchema?.nodes) {
       nodes = rawSchema.nodes.map(mapToBaseNode);
     }
 
     let relationships: Relationship[] = [];
-    if (rawSchema.relationships) {
-      relationships = rawSchema.relationships.map(mapToBaseRelationship);
+    if (rawSchema?.relationships) {
+      relationships = rawSchema.relationships.map(
+        mapToBaseRelationship({
+          fallbackRelationshipType: this.fallbackRelationshipType,
+        })
+      );
     }
 
     if (
@@ -208,16 +323,29 @@ export class LLMGraphTransformer {
       (this.allowedNodes.length > 0 || this.allowedRelationships.length > 0)
     ) {
       if (this.allowedNodes.length > 0) {
-        nodes = nodes.filter((node) => this.allowedNodes.includes(node.type));
+        const allowedNodesLowerCase = this.allowedNodes.map((node) =>
+          node.toLowerCase()
+        );
+
+        // For nodes, compare lowercased types
+        nodes = nodes.filter((node) =>
+          allowedNodesLowerCase.includes(node.type.toLowerCase())
+        );
+
+        // For relationships, compare lowercased types for both source and target nodes
         relationships = relationships.filter(
           (rel) =>
-            this.allowedNodes.includes(rel.source.type) &&
-            this.allowedNodes.includes(rel.target.type)
+            allowedNodesLowerCase.includes(rel.source.type.toLowerCase()) &&
+            allowedNodesLowerCase.includes(rel.target.type.toLowerCase())
         );
       }
+
       if (this.allowedRelationships.length > 0) {
+        // For relationships, compare lowercased types
         relationships = relationships.filter((rel) =>
-          this.allowedRelationships.includes(rel.type)
+          this.allowedRelationships
+            .map((rel) => rel.toLowerCase())
+            .includes(rel.type.toLowerCase())
         );
       }
     }

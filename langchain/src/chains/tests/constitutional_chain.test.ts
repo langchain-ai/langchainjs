@@ -52,7 +52,7 @@ test("Test ConstitutionalChain", async () => {
     ],
   });
 
-  const { output } = await constitutionalChain.call({
+  const { output } = await constitutionalChain.invoke({
     question: "What is the meaning of life?",
   });
   expect(output).toContain(critiqueWord);

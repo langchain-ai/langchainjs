@@ -4,6 +4,7 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
   ALIBABA_API_KEY?: string;
+  AUTHENTICATOR?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
@@ -18,11 +19,14 @@ export interface SecretMap {
   CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
+  DRIA_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
+  FRIENDLI_TEAM?: string;
+  FRIENDLI_TOKEN?: string;
   GOOGLE_API_KEY?: string;
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;
-  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
+  GOOGLE_ROUTES_API_KEY?: string;
   GRADIENT_ACCESS_TOKEN?: string;
   GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;
@@ -34,10 +38,13 @@ export interface SecretMap {
   MILVUS_USERNAME?: string;
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
+  MOONSHOT_API_KEY?: string;
+  NOVITA_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
   PLANETSCALE_USERNAME?: string;
+  PREM_API_KEY?: string;
   QDRANT_API_KEY?: string;
   QDRANT_URL?: string;
   REDIS_PASSWORD?: string;
@@ -46,6 +53,9 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  SERPAPI_API_KEY?: string;
+  TENCENT_SECRET_ID?: string;
+  TENCENT_SECRET_KEY?: string;
   TOGETHER_AI_API_KEY?: string;
   TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
@@ -53,6 +63,12 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_AI_APIKEY?: string;
+  WATSONX_AI_AUTH_TYPE?: string;
+  WATSONX_AI_BEARER_TOKEN?: string;
+  WATSONX_AI_PASSWORD?: string;
+  WATSONX_AI_URL?: string;
+  WATSONX_AI_USERNAME?: string;
   WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;
@@ -60,4 +76,5 @@ export interface SecretMap {
   YC_IAM_TOKEN?: string;
   ZEP_API_KEY?: string;
   ZEP_API_URL?: string;
+  ZHIPUAI_API_KEY?: string;
 }

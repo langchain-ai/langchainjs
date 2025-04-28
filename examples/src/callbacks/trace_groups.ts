@@ -20,9 +20,12 @@ export const run = async () => {
   const blockResult = await traceAsGroup(
     { name: "my_group_name" },
     async (manager: CallbackManager, questions: string[]) => {
-      await chain.call({ question: questions[0] }, manager);
-      await chain.call({ question: questions[1] }, manager);
-      const finalResult = await chain.call({ question: questions[2] }, manager);
+      await chain.invoke({ question: questions[0] }, manager);
+      await chain.invoke({ question: questions[1] }, manager);
+      const finalResult = await chain.invoke(
+        { question: questions[2] },
+        manager
+      );
       return finalResult;
     },
     [
@@ -35,9 +38,9 @@ export const run = async () => {
   const traceGroup = new TraceGroup("my_group_name");
   const groupManager = await traceGroup.start();
   try {
-    await chain.call({ question: "What is your name?" }, groupManager);
-    await chain.call({ question: "What is your quest?" }, groupManager);
-    await chain.call(
+    await chain.invoke({ question: "What is your name?" }, groupManager);
+    await chain.invoke({ question: "What is your quest?" }, groupManager);
+    await chain.invoke(
       { question: "What is the airspeed velocity of an unladen swallow?" },
       groupManager
     );

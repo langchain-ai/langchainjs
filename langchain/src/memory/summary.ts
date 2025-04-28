@@ -4,10 +4,6 @@ import {
   SystemMessage,
   getBufferString,
 } from "@langchain/core/messages";
-import {
-  BaseChatMemory,
-  BaseChatMemoryInput,
-} from "@langchain/community/memory/chat_memory";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   InputValues,
@@ -16,6 +12,7 @@ import {
 } from "@langchain/core/memory";
 import { LLMChain } from "../chains/llm_chain.js";
 import { SUMMARY_PROMPT } from "./prompt.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters of the ConversationSummaryMemory

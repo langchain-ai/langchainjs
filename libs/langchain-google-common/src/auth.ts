@@ -1,9 +1,9 @@
 import { ReadableJsonStream } from "./utils/stream.js";
 import { GooglePlatformType } from "./types.js";
 
-export type GoogleAbstractedClientOpsMethod = "GET" | "POST";
+export type GoogleAbstractedClientOpsMethod = "GET" | "POST" | "DELETE";
 
-export type GoogleAbstractedClientOpsResponseType = "json" | "stream";
+export type GoogleAbstractedClientOpsResponseType = "json" | "stream" | "blob";
 
 export type GoogleAbstractedClientOps = {
   url?: string;
@@ -28,6 +28,17 @@ export abstract class GoogleAbstractedFetchClient
 
   abstract request(opts: GoogleAbstractedClientOps): unknown;
 
+  async _buildData(res: Response, opts: GoogleAbstractedClientOps) {
+    switch (opts.responseType) {
+      case "json":
+        return res.json();
+      case "stream":
+        return new ReadableJsonStream(res.body);
+      default:
+        return res.blob();
+    }
+  }
+
   async _request(
     url: string | undefined,
     opts: GoogleAbstractedClientOps,
@@ -47,25 +58,35 @@ export abstract class GoogleAbstractedFetchClient
       },
     };
     if (opts.data !== undefined) {
-      fetchOptions.body = JSON.stringify(opts.data);
+      if (typeof opts.data === "string") {
+        fetchOptions.body = opts.data;
+      } else {
+        fetchOptions.body = JSON.stringify(opts.data);
+      }
     }
 
     const res = await fetch(url, fetchOptions);
 
     if (!res.ok) {
+      const resText = await res.text();
       const error = new Error(
-        `Could not get access token for Google with status code: ${res.status}`
+        `Google request failed with status code ${res.status}: ${resText}`
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       (error as any).response = res;
+      (error as any).details = {
+        url,
+        opts,
+        fetchOptions,
+        result: res,
+      };
+      /* eslint-enable @typescript-eslint/no-explicit-any */
       throw error;
     }
 
+    const data = await this._buildData(res, opts);
     return {
-      data:
-        opts.responseType === "json"
-          ? await res.json()
-          : new ReadableJsonStream(res.body),
+      data,
       config: {},
       status: res.status,
       statusText: res.statusText,

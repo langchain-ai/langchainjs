@@ -1,6 +1,6 @@
 # 🦜🍎️ @langchain/core
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dw/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) [![](https://dcbadge.vercel.app/api/server/6adMQxSpJS?compact=true&style=flat)](https://discord.gg/6adMQxSpJS)
+[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) 
 
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
@@ -83,13 +83,13 @@ Streaming (and streaming of intermediate steps) is needed to show the user that 
 Async interfaces are nice when moving into production.
 Rather than having to write multiple implementations for all of those, LCEL allows you to write a runnable once and invoke it in many different ways.
 
-For more check out the [LCEL docs](https://js.langchain.com/docs/expression_language/).
+For more check out the [LCEL docs](https://js.langchain.com/docs/concepts/lcel).
 
-![LangChain Stack](../docs/core_docs/static/img/langchain_stack_feb_2024.webp)
+![LangChain Stack](../docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 ## 📕 Releases & Versioning
 
-`@langchain/core` is currently on version `0.1.x`.
+`@langchain/core` is currently on version `0.3.x`.
 
 As `@langchain/core` contains the base abstractions and runtime for the whole LangChain ecosystem, we will communicate any breaking changes with advance notice and version bumps. The exception for this is anything in `@langchain/core/beta`. The reason for `@langchain/core/beta` is that given the rate of change of the field, being able to move quickly is still a priority, and this module is our attempt to do so.
 
@@ -109,7 +109,7 @@ Patch version increases will occur for:
 Other LangChain packages should add this package as a dependency and extend the classes within.
 For an example, see the [@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic) in this repo.
 
-Because all used packages must share the same version of core, we suggest using a tilde dependency to allow for different (backwards-compatible) patch versions:
+Because all used packages must share the same version of core, packages should never directly depend on `@langchain/core`. Instead they should have core as a peer dependency and a dev dependency. We suggest using a tilde dependency to allow for different (backwards-compatible) patch versions:
 
 ```json
 {
@@ -120,8 +120,13 @@ Because all used packages must share the same version of core, we suggest using 
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.10.0",
-    "@langchain/core": "~0.1.5"
+    "@anthropic-ai/sdk": "^0.10.0"
+  },
+  "peerDependencies": {
+    "@langchain/core": "~0.3.0"
+  },
+  "devDependencies": {
+    "@langchain/core": "~0.3.0"
   }
 }
 ```

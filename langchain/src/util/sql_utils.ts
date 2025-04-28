@@ -139,7 +139,10 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
-  if (appDataSource.options.type === "sqlite") {
+  if (
+    appDataSource.options.type === "sqlite" ||
+    appDataSource.options.type === "sqljs"
+  ) {
     sql =
       "SELECT \n" +
       "   m.name AS table_name,\n" +

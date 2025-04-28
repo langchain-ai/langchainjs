@@ -1,9 +1,11 @@
+import { deepCompareStrict } from "@cfworker/json-schema";
 import { BaseOutputParser } from "./base.js";
 import {
   type BaseMessage,
   isBaseMessage,
   isBaseMessageChunk,
-} from "../messages/index.js";
+} from "../messages/base.js";
+import { convertToChunk } from "../messages/utils.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
 import {
   type Generation,
@@ -11,7 +13,6 @@ import {
   GenerationChunk,
   ChatGenerationChunk,
 } from "../outputs.js";
-import { deepCompareStrict } from "../utils/@cfworker/json-schema/index.js";
 
 /**
  * Class to parse the output of an LLM call that also allows streaming inputs.
@@ -105,7 +106,7 @@ export abstract class BaseCumulativeTransformOutputParser<
           throw new Error("Cannot handle non-string message output.");
         }
         chunkGen = new ChatGenerationChunk({
-          message: chunk.toChunk(),
+          message: convertToChunk(chunk),
           text: chunk.content,
         });
       } else {
@@ -132,5 +133,9 @@ export abstract class BaseCumulativeTransformOutputParser<
         prevParsed = parsed;
       }
     }
+  }
+
+  getFormatInstructions(): string {
+    return "";
   }
 }

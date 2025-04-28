@@ -6,7 +6,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { SqlToolkit } from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
-import { Tool } from "langchain/tools";
+import { Tool } from "@langchain/core/tools";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { DataSource } from "typeorm";
@@ -82,7 +82,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const sqlToolKit = new SqlToolkit(db, llm);
 const newPrompt = await prompt.partial({
   dialect: sqlToolKit.dialect,

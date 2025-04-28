@@ -11,7 +11,7 @@ const docs = [
   new Document({ pageContent: "Ankush went to princeton" }),
   new Document({ pageContent: "Ankush obtained his degree in 2019" }),
 ];
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: docs,
   question: "Where and when did Harrison obtain his degree?",
 });

@@ -2,11 +2,7 @@ import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import {
-  AzureOpenAIInput,
-  OpenAICoreRequestOptions,
-  LegacyOpenAIInput,
-} from "./types.js";
+import { OpenAICoreRequestOptions } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
@@ -15,8 +11,14 @@ import { wrapOpenAIClientError } from "./utils/openai.js";
  * defines additional parameters specific to the OpenAIEmbeddings class.
  */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   * @deprecated Use "model" instead.
+   */
   modelName: string;
+  /** Model name to use */
+  model: string;
 
   /**
    * The number of dimensions the resulting output embeddings should have.
@@ -44,9 +46,10 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
 }
 
 /**
- * Class for generating embeddings using the OpenAI API. Extends the
- * Embeddings class and implements OpenAIEmbeddingsParams and
- * AzureOpenAIInput.
+ * Class for generating embeddings using the OpenAI API.
+ *
+ * To use with Azure, import the `AzureOpenAIEmbeddings` class.
+ *
  * @example
  * ```typescript
  * // Embed a query using OpenAIEmbeddings to generate embeddings for a given text
@@ -60,9 +63,12 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  */
 export class OpenAIEmbeddings
   extends Embeddings
-  implements OpenAIEmbeddingsParams, AzureOpenAIInput
+  implements Partial<OpenAIEmbeddingsParams>
 {
-  modelName = "text-embedding-ada-002";
+  model = "text-embedding-ada-002";
+
+  /** @deprecated Use "model" instead */
+  modelName: string;
 
   batchSize = 512;
 
@@ -77,102 +83,51 @@ export class OpenAIEmbeddings
 
   timeout?: number;
 
-  azureOpenAIApiVersion?: string;
-
-  azureOpenAIApiKey?: string;
-
-  azureOpenAIApiInstanceName?: string;
-
-  azureOpenAIApiDeploymentName?: string;
-
-  azureOpenAIBasePath?: string;
-
   organization?: string;
 
-  private client: OpenAIClient;
+  protected client: OpenAIClient;
 
-  private clientConfig: ClientOptions;
+  protected clientConfig: ClientOptions;
 
   constructor(
-    fields?: Partial<OpenAIEmbeddingsParams> &
-      Partial<AzureOpenAIInput> & {
-        verbose?: boolean;
-        openAIApiKey?: string;
-        configuration?: ClientOptions;
-      },
-    configuration?: ClientOptions & LegacyOpenAIInput
+    fields?: Partial<OpenAIEmbeddingsParams> & {
+      verbose?: boolean;
+      /**
+       * The OpenAI API key to use.
+       * Alias for `apiKey`.
+       */
+      openAIApiKey?: string;
+      /** The OpenAI API key to use. */
+      apiKey?: string;
+      configuration?: ClientOptions;
+    }
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
     super(fieldsWithDefaults);
 
-    let apiKey =
+    const apiKey =
+      fieldsWithDefaults?.apiKey ??
       fieldsWithDefaults?.openAIApiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
-
-    const azureApiKey =
-      fieldsWithDefaults?.azureOpenAIApiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-    if (!azureApiKey && !apiKey) {
-      throw new Error("OpenAI or Azure OpenAI API key not found");
-    }
-
-    const azureApiInstanceName =
-      fieldsWithDefaults?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
-
-    const azureApiDeploymentName =
-      (fieldsWithDefaults?.azureOpenAIApiEmbeddingsDeploymentName ||
-        fieldsWithDefaults?.azureOpenAIApiDeploymentName) ??
-      (getEnvironmentVariable("AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME") ||
-        getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME"));
-
-    const azureApiVersion =
-      fieldsWithDefaults?.azureOpenAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
-
-    this.azureOpenAIBasePath =
-      fieldsWithDefaults?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
     this.organization =
       fieldsWithDefaults?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
-    this.batchSize =
-      fieldsWithDefaults?.batchSize ?? (azureApiKey ? 1 : this.batchSize);
+    this.model =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.modelName = this.model;
+    this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
     this.timeout = fieldsWithDefaults?.timeout;
     this.dimensions = fieldsWithDefaults?.dimensions;
 
-    this.azureOpenAIApiVersion = azureApiVersion;
-    this.azureOpenAIApiKey = azureApiKey;
-    this.azureOpenAIApiInstanceName = azureApiInstanceName;
-    this.azureOpenAIApiDeploymentName = azureApiDeploymentName;
-
-    if (this.azureOpenAIApiKey) {
-      if (!this.azureOpenAIApiInstanceName && !this.azureOpenAIBasePath) {
-        throw new Error("Azure OpenAI API instance name not found");
-      }
-      if (!this.azureOpenAIApiDeploymentName) {
-        throw new Error("Azure OpenAI API deployment name not found");
-      }
-      if (!this.azureOpenAIApiVersion) {
-        throw new Error("Azure OpenAI API version not found");
-      }
-      apiKey = apiKey ?? "";
-    }
-
     this.clientConfig = {
       apiKey,
       organization: this.organization,
-      baseURL: configuration?.basePath,
       dangerouslyAllowBrowser: true,
-      defaultHeaders: configuration?.baseOptions?.headers,
-      defaultQuery: configuration?.baseOptions?.params,
-      ...configuration,
       ...fields?.configuration,
     };
   }
@@ -192,7 +147,7 @@ export class OpenAIEmbeddings
 
     const batchRequests = batches.map((batch) => {
       const params: OpenAIClient.EmbeddingCreateParams = {
-        model: this.modelName,
+        model: this.model,
         input: batch,
       };
       if (this.dimensions) {
@@ -221,7 +176,7 @@ export class OpenAIEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const params: OpenAIClient.EmbeddingCreateParams = {
-      model: this.modelName,
+      model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
     };
     if (this.dimensions) {
@@ -238,15 +193,11 @@ export class OpenAIEmbeddings
    * @param request Request to send to the OpenAI API.
    * @returns Promise that resolves to the response from the API.
    */
-  private async embeddingWithRetry(
+  protected async embeddingWithRetry(
     request: OpenAIClient.EmbeddingCreateParams
   ) {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
-        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
-        azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAIBasePath: this.azureOpenAIBasePath,
         baseURL: this.clientConfig.baseURL,
       };
 
@@ -265,17 +216,8 @@ export class OpenAIEmbeddings
 
       this.client = new OpenAIClient(params);
     }
-    const requestOptions: OpenAICoreRequestOptions = {};
-    if (this.azureOpenAIApiKey) {
-      requestOptions.headers = {
-        "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
-      };
-      requestOptions.query = {
-        "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
-      };
-    }
+    const requestOptions: OpenAICoreRequestOptions<OpenAIClient.EmbeddingCreateParams> =
+      {};
     return this.caller.call(async () => {
       try {
         const res = await this.client.embeddings.create(

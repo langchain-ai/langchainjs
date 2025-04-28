@@ -1,4 +1,4 @@
-import { Bedrock } from "langchain/llms/bedrock";
+import { Bedrock } from "@langchain/community/llms/bedrock";
 
 async function test() {
   const model = new Bedrock({

@@ -3,14 +3,14 @@ import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
   temperature: 0.9,
-  openAIApiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
+  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
 
 // You can also pass tools or functions to the model, learn more here
 // https://platform.openai.com/docs/guides/gpt/function-calling
 
 const modelForFunctionCalling = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
   temperature: 0,
 });
 
@@ -56,7 +56,7 @@ AIMessage {
 // Coerce response type with JSON mode.
 // Requires "gpt-4-1106-preview" or later
 const jsonModeModel = new ChatOpenAI({
-  modelName: "gpt-4-1106-preview",
+  model: "gpt-4-1106-preview",
   maxTokens: 128,
 }).bind({
   response_format: {

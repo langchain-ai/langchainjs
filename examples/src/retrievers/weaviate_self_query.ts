@@ -1,11 +1,10 @@
 import weaviate from "weaviate-ts-client";
 
-import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { WeaviateStore } from "@langchain/community/vectorstores/weaviate";
-import { WeaviateTranslator } from "langchain/retrievers/self_query/weaviate";
+import { WeaviateStore, WeaviateTranslator } from "@langchain/weaviate";
 import { Document } from "@langchain/core/documents";
+import { AttributeInfo } from "langchain/chains/query_constructor";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -103,7 +102,7 @@ const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, {
   textKey: "text",
   metadataKeys: ["year", "director", "rating", "genre"],
 });
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
@@ -112,7 +111,7 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
    * We need to use a translator that translates the queries into a
    * filter format that the vector store can understand. LangChain provides one here.
    */
-  structuredQueryTranslator: new WeaviateTranslator(),
+  structuredQueryTranslator: new WeaviateTranslator<WeaviateStore>(),
 });
 
 /**
@@ -125,10 +124,10 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * meaning that Weaviate will throw an error if the self query chain generate a query with a metadata key that does
  * not exist in your Weaviate database.
  */
-const query1 = await selfQueryRetriever.getRelevantDocuments(
+const query1 = await selfQueryRetriever.invoke(
   "Which movies are rated higher than 8.5?"
 );
-const query2 = await selfQueryRetriever.getRelevantDocuments(
+const query2 = await selfQueryRetriever.invoke(
   "Which movies are directed by Greta Gerwig?"
 );
 console.log(query1, query2);

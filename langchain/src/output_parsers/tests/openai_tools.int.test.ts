@@ -2,10 +2,11 @@
 
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
 import { JsonOutputToolsParser } from "../openai_tools.js";
 
 const schema = z.object({
@@ -27,7 +28,7 @@ test("Extraction", async () => {
         function: {
           name: "joke",
           description: "A joke",
-          parameters: zodToJsonSchema(schema),
+          parameters: isZodSchema(schema) ? zodToJsonSchema(schema) : schema,
         },
       },
     ],
@@ -40,6 +41,6 @@ test("Extraction", async () => {
     foo: "bears",
   });
 
-  console.log(res);
+  // console.log(res);
   expect(res.length).toBe(2);
 });

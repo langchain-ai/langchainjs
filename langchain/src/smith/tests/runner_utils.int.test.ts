@@ -69,10 +69,10 @@ const getScore = ({ outputs }: { outputs?: KVMap }) =>
 
 const outputNotEmpty = async (
   { run }: { run: Run; example?: Example },
-  options?: { config?: RunnableConfig }
+  options?: RunnableConfig
 ) => {
   const lambda = new RunnableLambda({ func: getScore });
-  const score = await lambda.invoke(run, options?.config);
+  const score = await lambda.invoke(run, options);
   return {
     key: "output_not_empty",
     score,

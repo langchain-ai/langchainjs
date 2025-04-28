@@ -6,7 +6,7 @@ import {
 import { ChatOpenAI } from "@langchain/openai";
 import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { SqlToolkit } from "langchain/agents/toolkits/sql";
-import { AIMessage } from "langchain/schema";
+import { AIMessage } from "@langchain/core/messages";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
 
@@ -17,7 +17,7 @@ const datasource = new DataSource({
 const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
-const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 });
 const sqlToolKit = new SqlToolkit(db, llm);
 const tools = sqlToolKit.getTools();
 const SQL_PREFIX = `You are an agent designed to interact with a SQL database.

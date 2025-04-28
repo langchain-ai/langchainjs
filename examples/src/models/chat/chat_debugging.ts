@@ -1,4 +1,4 @@
-import { type LLMResult } from "langchain/schema";
+import { type LLMResult } from "@langchain/core/outputs";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 import { Serialized } from "@langchain/core/load/serializable";

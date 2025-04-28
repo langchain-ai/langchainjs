@@ -3,7 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { FakeRetriever } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 import { createRetrievalChain } from "../retrieval.js";
-import { FakeListLLM } from "../../llms/fake.js";
+import { FakeListLLM } from "../../util/testing/llms/fake.js";
 
 test("createRetrievalChain", async () => {
   const answer = "I know the answer!";

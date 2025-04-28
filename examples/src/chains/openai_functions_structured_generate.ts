@@ -31,7 +31,7 @@ const prompt = new ChatPromptTemplate({
   inputVariables: ["inputText"],
 });
 
-const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 1 });
+const llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 1 });
 
 const chain = createStructuredOutputChainFromZod(zodSchema, {
   prompt,
@@ -39,7 +39,7 @@ const chain = createStructuredOutputChainFromZod(zodSchema, {
   outputKey: "person",
 });
 
-const response = await chain.call({
+const response = await chain.invoke({
   inputText:
     "Please generate a diverse group of people, but don't generate anyone who likes video games.",
 });

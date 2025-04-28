@@ -15,7 +15,7 @@ body:
         Relevant links to check before filing a bug report to see if your issue has already been reported, fixed or
         if there's another way to solve your problem:
         
-        [LangChain.js documentation with the integrated search](https://js.langchain.com/docs/get_started/introduction),
+        [LangChain.js documentation with the integrated search](https://js.langchain.com/docs/introduction),
         [API Reference](https://api.js.langchain.com/),
         [GitHub search](https://github.com/langchain-ai/langchainjs),
         [LangChain.js Github Discussions](https://github.com/langchain-ai/langchainjs/discussions),

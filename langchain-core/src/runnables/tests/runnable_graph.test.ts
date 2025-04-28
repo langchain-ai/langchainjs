@@ -1,5 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { test, expect } from "@jest/globals";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import { FakeLLM } from "../../utils/testing/index.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
@@ -87,4 +88,20 @@ test("Test graph sequence", async () => {
       { source: 2, target: 3 },
     ],
   });
+  expect(graph.drawMermaid())
+    .toEqual(`%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+\tPromptTemplateInput([PromptTemplateInput]):::first
+\tPromptTemplate(PromptTemplate)
+\tFakeLLM(FakeLLM)
+\tCommaSeparatedListOutputParser(CommaSeparatedListOutputParser)
+\tCommaSeparatedListOutputParserOutput([CommaSeparatedListOutputParserOutput]):::last
+\tPromptTemplateInput --> PromptTemplate;
+\tPromptTemplate --> FakeLLM;
+\tCommaSeparatedListOutputParser --> CommaSeparatedListOutputParserOutput;
+\tFakeLLM --> CommaSeparatedListOutputParser;
+\tclassDef default fill:#f2f0ff,line-height:1.2;
+\tclassDef first fill-opacity:0;
+\tclassDef last fill:#bfb6fc;
+`);
 });

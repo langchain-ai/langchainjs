@@ -66,7 +66,9 @@ test("Test MultiPromptChain", async () => {
     promptTemplates,
   });
 
-  const { text: result } = await multiPromptChain.call({ input: "Test input" });
+  const { text: result } = await multiPromptChain.invoke({
+    input: "Test input",
+  });
 
   expect(result).toEqual(`<from ${pickedPrompt}>`);
 });

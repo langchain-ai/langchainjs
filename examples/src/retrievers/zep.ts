@@ -98,7 +98,7 @@ export const run = async () => {
   // Simple similarity search
   const query = "Can I drive red cars in France?";
   const retriever = new ZepRetriever({ ...zepConfig, topK: 3 });
-  const docs = await retriever.getRelevantDocuments(query);
+  const docs = await retriever.invoke(query);
   console.log("Simple similarity search");
   console.log(JSON.stringify(docs, null, 2));
 
@@ -109,7 +109,7 @@ export const run = async () => {
     searchType: "mmr",
     mmrLambda: 0.5,
   });
-  const mmrDocs = await mmrRetriever.getRelevantDocuments(query);
+  const mmrDocs = await mmrRetriever.invoke(query);
   console.log("MMR reranking search");
   console.log(JSON.stringify(mmrDocs, null, 2));
 
@@ -121,7 +121,7 @@ export const run = async () => {
     searchType: "mmr",
     mmrLambda: 0.5,
   });
-  const mmrSummaryDocs = await mmrSummaryRetriever.getRelevantDocuments(query);
+  const mmrSummaryDocs = await mmrSummaryRetriever.invoke(query);
   console.log("Summary search with MMR reranking");
   console.log(JSON.stringify(mmrSummaryDocs, null, 2));
 
@@ -133,7 +133,7 @@ export const run = async () => {
       where: { jsonpath: '$.system.entities[*] ? (@.Label == "GPE")' },
     },
   });
-  const filteredDocs = await filteredRetriever.getRelevantDocuments(query);
+  const filteredDocs = await filteredRetriever.invoke(query);
   console.log("Filtered search");
   console.log(JSON.stringify(filteredDocs, null, 2));
 };

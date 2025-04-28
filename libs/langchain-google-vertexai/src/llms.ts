@@ -1,14 +1,17 @@
 import { type GoogleLLMInput, GoogleLLM } from "@langchain/google-gauth";
 
 /**
- * Input to LLM model class.
+ * Input to a Google Vertex AI LLM class.
  */
 export interface VertexAIInput extends GoogleLLMInput {}
 
 /**
- * Integration with a LLM model.
+ * Integration with a Google Vertex AI LLM using
+ * the "@langchain/google-gauth" package for auth.
  */
 export class VertexAI extends GoogleLLM {
+  lc_namespace = ["langchain", "llms", "vertexai"];
+
   static lc_name() {
     return "VertexAI";
   }

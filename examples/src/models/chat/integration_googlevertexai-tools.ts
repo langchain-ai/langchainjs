@@ -1,6 +1,6 @@
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { type GeminiTool } from "@langchain/google-vertexai/types";
-import { zodToGeminiParameters } from "@langchain/google-vertexai/utils";
+import { schemaToGeminiParameters } from "@langchain/google-vertexai/utils";
 import { z } from "zod";
 // Or, if using the web entrypoint:
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
@@ -18,14 +18,14 @@ const geminiCalculatorTool: GeminiTool = {
     {
       name: "calculator",
       description: "A simple calculator tool",
-      parameters: zodToGeminiParameters(calculatorSchema),
+      parameters: schemaToGeminiParameters(calculatorSchema),
     },
   ],
 };
 
 const model = new ChatVertexAI({
   temperature: 0.7,
-  modelName: "gemini-1.0-pro",
+  model: "gemini-1.5-flash-001",
 }).bind({
   tools: [geminiCalculatorTool],
 });
@@ -36,13 +36,13 @@ console.log(JSON.stringify(response.additional_kwargs, null, 2));
 {
   "tool_calls": [
     {
-      "id": "calculator",
+      "id": "a20075d3b0e34f7ca60cc135916e620d",
       "type": "function",
       "function": {
         "name": "calculator",
-        "arguments": "{\"number2\":81623836,\"number1\":1628253239,\"operation\":\"multiply\"}"
+        "arguments": "{\"number1\":1628253239,\"operation\":\"multiply\",\"number2\":81623836}"
       }
     }
-  ],
+  ]
 }
  */

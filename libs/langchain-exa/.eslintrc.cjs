@@ -63,4 +63,12 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

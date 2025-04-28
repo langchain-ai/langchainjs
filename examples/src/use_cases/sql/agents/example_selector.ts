@@ -61,7 +61,7 @@ const fullPrompt = ChatPromptTemplate.fromMessages([
 
 // And now we can create our agent with our custom prompt:
 
-const llm = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const datasource = new DataSource({
   type: "sqlite",
   database: "../../../../Chinook.db",

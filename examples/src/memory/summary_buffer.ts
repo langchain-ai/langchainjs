@@ -10,7 +10,7 @@ import {
 
 // summary buffer memory
 const memory = new ConversationSummaryBufferMemory({
-  llm: new OpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
+  llm: new OpenAI({ model: "gpt-3.5-turbo-instruct", temperature: 0 }),
   maxTokenLimit: 10,
 });
 
@@ -31,7 +31,7 @@ console.log({ history });
 
 // We can also get the history as a list of messages (this is useful if you are using this with a chat prompt).
 const chatPromptMemory = new ConversationSummaryBufferMemory({
-  llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
   maxTokenLimit: 10,
   returnMessages: true,
 });

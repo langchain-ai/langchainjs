@@ -4,6 +4,7 @@ import type { BasePromptValueInterface } from "../prompt_values.js";
 import type { BaseMessage, MessageContentComplex } from "../messages/index.js";
 import type { Callbacks } from "../callbacks/manager.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
+import { addLangChainErrorFields } from "../errors/index.js";
 
 /**
  * Options for formatting instructions.
@@ -193,5 +194,7 @@ export class OutputParserException extends Error {
         );
       }
     }
+
+    addLangChainErrorFields(this, "OUTPUT_PARSING_FAILURE");
   }
 }

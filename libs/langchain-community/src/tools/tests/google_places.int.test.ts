@@ -10,7 +10,7 @@ describe("GooglePlacesAPI", () => {
   test("GooglePlacesAPI returns expected result for valid query", async () => {
     const tool = new GooglePlacesAPI();
 
-    const result = await tool.call("EatonCenter");
+    const result = await tool.invoke("EatonCenter");
 
     expect(result).toContain("220 Yonge St");
     expect(result).toContain("CF Toronto Eaton Centre");
@@ -19,7 +19,7 @@ describe("GooglePlacesAPI", () => {
   test("GooglePlacesAPI returns '' for query on an non-existent place", async () => {
     const tool = new GooglePlacesAPI();
 
-    const result = await tool.call("ihfwehnwfi");
+    const result = await tool.invoke("ihfwehnwfi");
 
     expect(result).toContain("");
   });

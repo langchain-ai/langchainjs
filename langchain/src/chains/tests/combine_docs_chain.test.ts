@@ -44,11 +44,11 @@ test("Test MapReduceDocumentsChain", async () => {
     new Document({ pageContent: "ankush went to princeton" }),
   ];
 
-  const res = await chain.call({
+  const res = await chain.invoke({
     input_documents: docs,
     question: "Where did harrison go to college",
   });
-  console.log({ res });
+  // console.log({ res });
 
   expect(res).toEqual({
     text: "a final answer",
@@ -69,11 +69,11 @@ test("Test MapReduceDocumentsChain with content above maxTokens and intermediate
     new Document({ pageContent: bString }),
   ];
 
-  const res = await chain.call({
+  const res = await chain.invoke({
     input_documents: docs,
     question: "Is the letter c present in the document",
   });
-  console.log({ res });
+  // console.log({ res });
 
   expect(res).toEqual({
     text: "a final answer",
@@ -93,6 +93,8 @@ test("Test RefineDocumentsChain", async () => {
 
   expect(chain.inputKeys).toEqual(["input_documents"]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.run(docs);
-  console.log({ res });
+  // console.log({ res });
 });

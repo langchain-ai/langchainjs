@@ -1,6 +1,6 @@
 import { OpenAI } from "@langchain/openai";
 import { loadSummarizationChain } from "langchain/chains";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 
 // In this example, we use a `MapReduceDocumentsChain` specifically prompted to summarize a set of documents.
@@ -11,7 +11,7 @@ const docs = await textSplitter.createDocuments([text]);
 
 // This convenience function creates a document chain prompted to summarize a set of documents.
 const chain = loadSummarizationChain(model, { type: "map_reduce" });
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: docs,
 });
 console.log({ res });

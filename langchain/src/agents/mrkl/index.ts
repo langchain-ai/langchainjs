@@ -56,7 +56,7 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  * });
  * ```
  *
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain_agents.createReactAgent.html | createReactAgent method instead}.
+ * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain.agents.createReactAgent.html | createReactAgent method instead}.
  */
 export class ZeroShotAgent extends Agent {
   static lc_name() {
@@ -128,7 +128,7 @@ export class ZeroShotAgent extends Agent {
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join("\n");
 
-    const toolNames = tools.map((tool) => tool.name);
+    const toolNames = tools.map((tool) => `"${tool.name}"`).join(", ");
 
     const formatInstructions = renderTemplate(FORMAT_INSTRUCTIONS, "f-string", {
       tool_names: toolNames,

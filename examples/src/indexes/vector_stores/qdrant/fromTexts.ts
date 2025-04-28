@@ -1,4 +1,4 @@
-import { QdrantVectorStore } from "@langchain/community/vectorstores/qdrant";
+import { QdrantVectorStore } from "@langchain/qdrant";
 import { OpenAIEmbeddings } from "@langchain/openai";
 // text sample from Godel, Escher, Bach
 const vectorStore = await QdrantVectorStore.fromTexts(

@@ -11,6 +11,29 @@ export type RouterInput = {
 /**
  * A runnable that routes to a set of runnables based on Input['key'].
  * Returns the output of the selected runnable.
+ * @example
+ * ```typescript
+ * import { RouterRunnable, RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const router = new RouterRunnable({
+ *   runnables: {
+ *     toUpperCase: RunnableLambda.from((text: string) => text.toUpperCase()),
+ *     reverseText: RunnableLambda.from((text: string) =>
+ *       text.split("").reverse().join("")
+ *     ),
+ *   },
+ * });
+ *
+ * // Invoke the 'reverseText' runnable
+ * const result1 = router.invoke({ key: "reverseText", input: "Hello World" });
+ *
+ * // "dlroW olleH"
+ *
+ * // Invoke the 'toUpperCase' runnable
+ * const result2 = router.invoke({ key: "toUpperCase", input: "Hello World" });
+ *
+ * // "HELLO WORLD"
+ * ```
  */
 export class RouterRunnable<
   RunInput extends RouterInput,

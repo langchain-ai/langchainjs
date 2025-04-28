@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for Nomic via the @nomic-ai/
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/nomic
+npm install @langchain/nomic @langchain/core
 ```
 
 ## Embeddings

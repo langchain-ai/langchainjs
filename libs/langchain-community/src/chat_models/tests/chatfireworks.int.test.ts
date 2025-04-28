@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -13,21 +15,27 @@ describe.skip("ChatFireworks", () => {
   test("call", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
-    const res = await chat.call([message]);
-    console.log({ res });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
+    const res = await chat.invoke([message]);
+    // console.log({ res });
   });
 
   test("generate", async () => {
     const chat = new ChatFireworks();
     const message = new HumanMessage("Hello!");
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const res = await chat.generate([[message]]);
-    console.log(JSON.stringify(res, null, 2));
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("custom messages", async () => {
     const chat = new ChatFireworks();
-    const res = await chat.call([new ChatMessage("Hello!", "user")]);
-    console.log(JSON.stringify(res, null, 2));
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
+    const res = await chat.invoke([new ChatMessage("Hello!", "user")]);
+    // console.log(JSON.stringify(res, null, 2));
   });
 
   test("prompt templates", async () => {
@@ -43,6 +51,8 @@ describe.skip("ChatFireworks", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         job: "pirate",
@@ -50,7 +60,7 @@ describe.skip("ChatFireworks", () => {
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
   });
 
   test("longer chain of messages", async () => {
@@ -62,12 +72,45 @@ describe.skip("ChatFireworks", () => {
       HumanMessagePromptTemplate.fromTemplate("{text}"),
     ]);
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const responseA = await chat.generatePrompt([
       await chatPrompt.formatPromptValue({
         text: "What did I just say my name was?",
       }),
     ]);
 
-    console.log(responseA.generations);
+    // console.log(responseA.generations);
+  });
+
+  test("Tool calling", async () => {
+    const zodSchema = z
+      .object({
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
+      })
+      .describe(
+        "Get the weather of a specific location and return the temperature in Celsius."
+      );
+    const chat = new ChatFireworks({
+      modelName: "accounts/fireworks/models/firefunction-v1",
+      temperature: 0,
+    }).bind({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: zodToJsonSchema(zodSchema),
+          },
+        },
+      ],
+    });
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
+    const result = await chat.invoke("What is the current weather in SF?");
+    // console.log(result);
   });
 });

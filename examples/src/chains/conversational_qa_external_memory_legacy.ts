@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 
 /* Initialize the LLM to use to answer the question */
@@ -21,11 +21,11 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
 /* Ask it a question */
 const question = "What did the president say about Justice Breyer?";
 /* Can be a string or an array of chat messages */
-const res = await chain.call({ question, chat_history: "" });
+const res = await chain.invoke({ question, chat_history: "" });
 console.log(res);
 /* Ask it a follow up question */
 const chatHistory = `${question}\n${res.text}`;
-const followUpRes = await chain.call({
+const followUpRes = await chain.invoke({
   question: "Was that nice?",
   chat_history: chatHistory,
 });

@@ -20,7 +20,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
-    "typescript": "latest"
+    "typescript": "5.5.4"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

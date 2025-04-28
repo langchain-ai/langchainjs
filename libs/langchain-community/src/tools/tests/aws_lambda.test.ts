@@ -31,7 +31,7 @@ test("AWSLambda invokes the correct lambda function and returns the response.bod
     functionName: "testFunction1",
   });
 
-  const result = await lambda.call("Hello world! This is an email.");
+  const result = await lambda.invoke("Hello world! This is an email.");
 
   expect(result).toBe("email sent.");
 });

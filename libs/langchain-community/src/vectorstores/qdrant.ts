@@ -6,7 +6,12 @@ import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
+const CONTENT_KEY = "content";
+const METADATA_KEY = "metadata";
+
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Interface for the arguments that can be passed to the
  * `QdrantVectorStore` constructor. It includes options for specifying a
  * `QdrantClient` instance, the URL and API key for a Qdrant database, and
@@ -20,14 +25,25 @@ export interface QdrantLibArgs {
   collectionConfig?: QdrantSchemas["CreateCollection"];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customPayload?: Record<string, any>[];
+  contentPayloadKey?: string;
+  metadataPayloadKey?: string;
 }
 
+/** @deprecated Install and import from @langchain/qdrant instead. */
 export type QdrantAddDocumentOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customPayload: Record<string, any>[];
 };
 
+/** @deprecated Install and import from @langchain/qdrant instead. */
+export type QdrantFilter = QdrantSchemas["Filter"];
+
+/** @deprecated Install and import from @langchain/qdrant instead. */
+export type QdrantCondition = QdrantSchemas["FieldCondition"];
+
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Type for the response returned by a search operation in the Qdrant
  * database. It includes the score and payload (metadata and content) for
  * each point (document) in the search results.
@@ -40,12 +56,16 @@ type QdrantSearchResponse = QdrantSchemas["ScoredPoint"] & {
 };
 
 /**
+ * @deprecated Install and import from @langchain/qdrant instead.
+ *
  * Class that extends the `VectorStore` base class to interact with a
  * Qdrant database. It includes methods for adding documents and vectors
  * to the Qdrant database, searching for similar vectors, and ensuring the
  * existence of a collection in the database.
  */
 export class QdrantVectorStore extends VectorStore {
+  declare FilterType: QdrantFilter;
+
   get lc_secrets(): { [key: string]: string } {
     return {
       apiKey: "QDRANT_API_KEY",
@@ -58,6 +78,10 @@ export class QdrantVectorStore extends VectorStore {
   collectionName: string;
 
   collectionConfig?: QdrantSchemas["CreateCollection"];
+
+  contentPayloadKey: string;
+
+  metadataPayloadKey: string;
 
   _vectorstoreType(): string {
     return "qdrant";
@@ -83,6 +107,10 @@ export class QdrantVectorStore extends VectorStore {
     this.collectionName = args.collectionName ?? "documents";
 
     this.collectionConfig = args.collectionConfig;
+
+    this.contentPayloadKey = args.contentPayloadKey ?? CONTENT_KEY;
+
+    this.metadataPayloadKey = args.metadataPayloadKey ?? METADATA_KEY;
   }
 
   /**
@@ -129,8 +157,8 @@ export class QdrantVectorStore extends VectorStore {
       id: uuid(),
       vector: embedding,
       payload: {
-        content: documents[idx].pageContent,
-        metadata: documents[idx].metadata,
+        [this.contentPayloadKey]: documents[idx].pageContent,
+        [this.metadataPayloadKey]: documents[idx].metadata,
         customPayload: documentOptions?.customPayload[idx],
       },
     }));
@@ -163,7 +191,7 @@ export class QdrantVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k?: number,
-    filter?: QdrantSchemas["Filter"]
+    filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
     if (!query) {
       return [];
@@ -181,8 +209,9 @@ export class QdrantVectorStore extends VectorStore {
       results as QdrantSearchResponse[]
     ).map((res) => [
       new Document({
-        metadata: res.payload.metadata,
-        pageContent: res.payload.content,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: res.payload[this.metadataPayloadKey] as Record<string, any>,
+        pageContent: res.payload[this.contentPayloadKey] as string,
       }),
       res.score,
     ]);

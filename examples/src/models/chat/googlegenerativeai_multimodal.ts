@@ -4,7 +4,7 @@ import { HumanMessage } from "@langchain/core/messages";
 
 // Multi-modal
 const vision = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro-vision",
+  model: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");

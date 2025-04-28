@@ -12,7 +12,7 @@ const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIChatModel = new ChatOpenAI({
-  modelName: "potato!",
+  model: "potato!",
   maxRetries: 0,
 });
 
@@ -31,9 +31,7 @@ const badChain = chatPrompt.pipe(fakeOpenAIChatModel).pipe(outputParser);
 
 const goodChain = prompt.pipe(openAILLM).pipe(outputParser);
 
-const chain = badChain.withFallbacks({
-  fallbacks: [goodChain],
-});
+const chain = badChain.withFallbacks([goodChain]);
 
 const result = await chain.invoke({
   animal: "dragon",

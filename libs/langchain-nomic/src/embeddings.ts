@@ -21,9 +21,15 @@ export interface NomicEmbeddingsParams extends EmbeddingsParams {
   apiKey?: string;
   /**
    * The name of the model to use.
+   * Alias for `model`
    * @default {"nomic-embed-text-v1"}
    */
   modelName?: string;
+  /**
+   * The name of the model to use.
+   * @default {"nomic-embed-text-v1"}
+   */
+  model?: string;
   /**
    * The task your embeddings should be specialized for:
    * search_query, search_document, clustering, classification.
@@ -65,6 +71,8 @@ export class NomicEmbeddings
 {
   modelName = "nomic-embed-text-v1";
 
+  model = "nomic-embed-text-v1";
+
   taskType: EmbeddingTaskType = "search_document";
 
   batchSize = 400;
@@ -88,7 +96,8 @@ export class NomicEmbeddings
       throw new Error("NOMIC_API_KEY is required.");
     }
     this.client = new AtlasUser({ apiKey });
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.taskType = fields?.taskType ?? this.taskType;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
@@ -142,7 +151,7 @@ export class NomicEmbeddings
   ): Promise<NomicEmbeddingsResult> {
     return this.caller.call(async () => {
       const result = await this.client.apiCall(`/v1/embedding/text`, "POST", {
-        model: this.modelName,
+        model: this.model,
         texts: Array.isArray(input) ? input : [input],
         task_type: this.taskType,
         dimensionality: this.dimensionality,

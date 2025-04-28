@@ -58,7 +58,7 @@ describe("LocalFileStore", () => {
     for await (const key of store.yieldKeys(prefix)) {
       yieldedKeys.push(key);
     }
-    console.log("Yielded keys:", yieldedKeys);
+    // console.log("Yielded keys:", yieldedKeys);
     expect(yieldedKeys.sort()).toEqual(keysWithPrefix.sort());
     // afterEach won't automatically delete these since we're applying a prefix.
     await store.mdelete(keysWithPrefix);
@@ -77,7 +77,7 @@ describe("LocalFileStore", () => {
     const retrievedValues = await store.mget([keys[0], keys[1]]);
     const everyValueDefined = retrievedValues.every((v) => v !== undefined);
     expect(everyValueDefined).toBe(true);
-    console.log("retrievedValues", retrievedValues);
+    // console.log("retrievedValues", retrievedValues);
     expect(
       retrievedValues.map((v) => {
         if (!v) {
@@ -86,6 +86,25 @@ describe("LocalFileStore", () => {
         return decoder.decode(v);
       })
     ).toEqual([value1, value2]);
+    await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
+  });
+
+  test("Should disallow attempts to traverse paths outside of a subfolder", async () => {
+    const encoder = new TextEncoder();
+    const store = await LocalFileStore.fromPath(secondaryRootPath);
+    const value1 = new Date().toISOString();
+    await expect(
+      store.mset([["../foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(
+      store.mset([["/foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(
+      store.mset([["\\foo", encoder.encode(value1)]])
+    ).rejects.toThrowError();
+    await expect(store.mget(["../foo"])).rejects.toThrowError();
+    await expect(store.mget(["/foo"])).rejects.toThrowError();
+    await expect(store.mget(["\\foo"])).rejects.toThrowError();
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
 });

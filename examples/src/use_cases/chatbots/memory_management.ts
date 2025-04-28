@@ -5,7 +5,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
 });
 
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
@@ -36,7 +36,7 @@ console.log(
   })
 );
 
-import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();
 

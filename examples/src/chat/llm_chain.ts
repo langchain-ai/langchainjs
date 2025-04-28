@@ -18,7 +18,7 @@ export const run = async () => {
     llm: chat,
   });
 
-  const response = await chain.call({
+  const response = await chain.invoke({
     input_language: "English",
     output_language: "French",
     text: "I love programming.",

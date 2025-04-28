@@ -43,7 +43,7 @@ const dataset = [
 
 const model = new ChatOpenAI({
   temperature: 0,
-  modelName: "gpt-3.5-turbo-16k-0613",
+  model: "gpt-3.5-turbo-16k-0613",
 });
 const serpAPI = new SerpAPI(process.env.SERPAPI_API_KEY, {
   location: "Austin,Texas,United States",
@@ -80,7 +80,7 @@ const concurrencyLevel = 4; // How many concurrent agents to run. May need to de
 const batch = [];
 for (const example of dataset) {
   batch.push(
-    Promise.all(agents.map((agent) => agent.call({ input: example })))
+    Promise.all(agents.map((agent) => agent.invoke({ input: example })))
   );
   if (batch.length >= concurrencyLevel) {
     const batchResults = await Promise.all(batch);

@@ -15,6 +15,8 @@ export {
   RunnableAssign,
   RunnablePick,
   _coerceToRunnable,
+  RunnableToolLike,
+  type RunnableToolLikeArgs,
 } from "./base.js";
 export {
   type RunnableBatchOptions,
@@ -26,6 +28,8 @@ export {
   getCallbackManagerForConfig,
   patchConfig,
   ensureConfig,
+  mergeConfigs,
+  pickRunnableConfigKeys,
 } from "./config.js";
 export { RunnablePassthrough } from "./passthrough.js";
 export { type RouterInput, RouterRunnable } from "./router.js";

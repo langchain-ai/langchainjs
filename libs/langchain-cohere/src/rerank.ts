@@ -1,13 +1,9 @@
 import { DocumentInterface } from "@langchain/core/documents";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 import { CohereClient } from "cohere-ai";
+import { CohereClientOptions, getCohereClient } from "./client.js";
 
-export interface CohereRerankArgs {
-  /**
-   * The API key to use.
-   * @default {process.env.COHERE_API_KEY}
-   */
-  apiKey?: string;
+export interface BaseCohereRerankArgs {
   /**
    * The name of the model to use.
    * @default {"rerank-english-v2.0"}
@@ -24,11 +20,12 @@ export interface CohereRerankArgs {
   maxChunksPerDoc?: number;
 }
 
+type CohereRerankArgs = BaseCohereRerankArgs & CohereClientOptions;
 /**
  * Document compressor that uses `Cohere Rerank API`.
  */
-export class CohereRerank {
-  model = "rerank-english-v2.0";
+export class CohereRerank extends BaseDocumentCompressor {
+  model: string | undefined;
 
   topN = 3;
 
@@ -37,15 +34,16 @@ export class CohereRerank {
   maxChunksPerDoc: number | undefined;
 
   constructor(fields?: CohereRerankArgs) {
-    const token = fields?.apiKey ?? getEnvironmentVariable("COHERE_API_KEY");
-    if (!token) {
-      throw new Error("No API key provided for CohereRerank.");
-    }
+    super();
 
-    this.client = new CohereClient({
-      token,
-    });
+    this.client = getCohereClient(fields);
+
     this.model = fields?.model ?? this.model;
+    if (!this.model) {
+      throw new Error(
+        "Model not specified for CohereRerank instance. Please provide a model name from the options here: https://docs.cohere.com/reference/rerank"
+      );
+    }
     this.topN = fields?.topN ?? this.topN;
     this.maxChunksPerDoc = fields?.maxChunksPerDoc;
   }
@@ -62,6 +60,9 @@ export class CohereRerank {
     documents: Array<DocumentInterface>,
     query: string
   ): Promise<Array<DocumentInterface>> {
+    if (documents == null || documents.length === 0) {
+      return [];
+    }
     const _docs = documents.map((doc) => doc.pageContent);
     const { results } = await this.client.rerank({
       model: this.model,

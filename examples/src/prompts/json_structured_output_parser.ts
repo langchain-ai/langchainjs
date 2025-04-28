@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { HumanMessage } from "@langchain/core/messages";
+import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
 // Instantiate the parser
 const parser = new JsonOutputFunctionsParser();
@@ -31,7 +31,7 @@ const extractionFunctionSchema = {
 };
 
 // Instantiate the ChatOpenAI class
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ model: "gpt-4" });
 
 // Create a new runnable, bind the function to the model, and pipe the output through the parser
 const runnable = model

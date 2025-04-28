@@ -1,5 +1,5 @@
 import fs from "fs";
-import { GoogleVertexAIMultimodalEmbeddings } from "langchain/experimental/multimodal_embeddings/googlevertexai";
+import { GoogleVertexAIMultimodalEmbeddings } from "@langchain/community/experimental/multimodal_embeddings/googlevertexai";
 
 const model = new GoogleVertexAIMultimodalEmbeddings();
 

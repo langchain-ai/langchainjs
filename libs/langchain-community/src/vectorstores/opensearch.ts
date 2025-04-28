@@ -29,6 +29,9 @@ interface VectorSearchOptions {
  */
 export interface OpenSearchClientArgs {
   readonly client: Client;
+  readonly vectorFieldName?: string;
+  readonly textFieldName?: string;
+  readonly metadataFieldName?: string;
   readonly service?: "es" | "aoss";
   readonly indexName?: string;
 
@@ -91,6 +94,12 @@ export class OpenSearchVectorStore extends VectorStore {
 
   private readonly m: number;
 
+  private readonly vectorFieldName: string;
+
+  private readonly textFieldName: string;
+
+  private readonly metadataFieldName: string;
+
   _vectorstoreType(): string {
     return "opensearch";
   }
@@ -105,6 +114,9 @@ export class OpenSearchVectorStore extends VectorStore {
     this.efSearch = args.vectorSearchOptions?.efSearch ?? 512;
     this.numberOfShards = args.vectorSearchOptions?.numberOfShards ?? 5;
     this.numberOfReplicas = args.vectorSearchOptions?.numberOfReplicas ?? 1;
+    this.vectorFieldName = args.vectorFieldName ?? "embedding";
+    this.textFieldName = args.textFieldName ?? "text";
+    this.metadataFieldName = args.metadataFieldName ?? "metadata";
 
     this.client = args.client;
     this.indexName = args.indexName ?? "documents";
@@ -161,9 +173,9 @@ export class OpenSearchVectorStore extends VectorStore {
           },
         },
         {
-          embedding,
-          metadata: documents[idx].metadata,
-          text: documents[idx].pageContent,
+          [this.vectorFieldName]: embedding,
+          [this.textFieldName]: documents[idx].pageContent,
+          [this.metadataFieldName]: documents[idx].metadata,
         },
       ];
 
@@ -204,7 +216,7 @@ export class OpenSearchVectorStore extends VectorStore {
             must: [
               {
                 knn: {
-                  embedding: { vector: query, k },
+                  [this.vectorFieldName]: { vector: query, k },
                 },
               },
             ],
@@ -219,8 +231,8 @@ export class OpenSearchVectorStore extends VectorStore {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return body.hits.hits.map((hit: any) => [
       new Document({
-        pageContent: hit._source.text,
-        metadata: hit._source.metadata,
+        pageContent: hit._source[this.textFieldName],
+        metadata: hit._source[this.metadataFieldName],
       }),
       hit._score,
     ]);
@@ -306,22 +318,22 @@ export class OpenSearchVectorStore extends VectorStore {
         dynamic_templates: [
           {
             // map all metadata properties to be keyword
-            "metadata.*": {
+            [`${this.metadataFieldName}.*`]: {
               match_mapping_type: "string",
               mapping: { type: "keyword" },
             },
           },
           {
-            "metadata.loc": {
+            [`${this.metadataFieldName}.loc`]: {
               match_mapping_type: "object",
               mapping: { type: "object" },
             },
           },
         ],
         properties: {
-          text: { type: "text" },
-          metadata: { type: "object" },
-          embedding: {
+          [this.textFieldName]: { type: "text" },
+          [this.metadataFieldName]: { type: "object" },
+          [this.vectorFieldName]: {
             type: "knn_vector",
             dimension,
             method: {
@@ -373,7 +385,7 @@ export class OpenSearchVectorStore extends VectorStore {
     const must = [];
     const must_not = [];
     for (const [key, value] of Object.entries(filter)) {
-      const metadataKey = `metadata.${key}`;
+      const metadataKey = `${this.metadataFieldName}.${key}`;
       if (value) {
         if (typeof value === "object" && !Array.isArray(value)) {
           if ("exists" in value) {

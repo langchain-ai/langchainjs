@@ -13,6 +13,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 export interface TypeORMVectorStoreArgs {
   postgresConnectionOptions: DataSourceOptions;
   tableName?: string;
+  schemaName?: string;
   filter?: Metadata;
   verbose?: boolean;
 }
@@ -23,8 +24,6 @@ export interface TypeORMVectorStoreArgs {
  */
 export class TypeORMVectorStoreDocument extends Document {
   embedding: string;
-
-  id?: string;
 }
 
 const defaultDocumentTableName = "documents";
@@ -39,6 +38,8 @@ export class TypeORMVectorStore extends VectorStore {
   declare FilterType: Metadata;
 
   tableName: string;
+
+  schemaName?: string;
 
   documentEntity: EntitySchema;
 
@@ -58,6 +59,7 @@ export class TypeORMVectorStore extends VectorStore {
   ) {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;
+    this.schemaName = fields.schemaName;
     this.filter = fields.filter;
 
     const TypeORMDocumentEntity = new EntitySchema<TypeORMVectorStoreDocument>({
@@ -217,13 +219,19 @@ export class TypeORMVectorStore extends VectorStore {
   async ensureTableInDatabase(): Promise<void> {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
     await this.appDataSource.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
+      CREATE TABLE IF NOT EXISTS ${this.getTablePath()} (
         "id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
         embedding vector
       );
     `);
+  }
+
+  private getTablePath() {
+    if (!this.schemaName) return this.tableName;
+
+    return `"${this.schemaName}"."${this.tableName}"`;
   }
 
   /**

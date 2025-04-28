@@ -1,4 +1,4 @@
-import { AmazonKendraRetriever } from "@langchain/community/retrievers/amazon_kendra";
+import { AmazonKendraRetriever } from "@langchain/aws";
 
 const retriever = new AmazonKendraRetriever({
   topK: 10,
@@ -12,6 +12,6 @@ const retriever = new AmazonKendraRetriever({
   },
 });
 
-const docs = await retriever.getRelevantDocuments("How are clouds formed?");
+const docs = await retriever.invoke("How are clouds formed?");
 
 console.log(docs);

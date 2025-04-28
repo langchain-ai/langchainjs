@@ -17,3 +17,5 @@ check_broken_links.d.cts
 node_modules
 dist
 .yarn
+!bin/build.js
+dist_build

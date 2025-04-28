@@ -9,7 +9,7 @@ export const run = async () => {
   const prompt = PromptTemplate.fromTemplate("1 + {number} =");
   const chain = new LLMChain({ prompt, llm, callbacks: [handler] });
 
-  const output = await chain.call({ number: 2 });
+  const output = await chain.invoke({ number: 2 });
   /*
   Entering new llm_chain chain...
   Finished chain.

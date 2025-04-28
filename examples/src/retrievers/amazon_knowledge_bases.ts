@@ -1,4 +1,4 @@
-import { AmazonKnowledgeBaseRetriever } from "@langchain/community/retrievers/amazon_knowledge_base";
+import { AmazonKnowledgeBaseRetriever } from "@langchain/aws";
 
 const retriever = new AmazonKnowledgeBaseRetriever({
   topK: 10,
@@ -12,6 +12,6 @@ const retriever = new AmazonKnowledgeBaseRetriever({
   },
 });
 
-const docs = await retriever.getRelevantDocuments("How are clouds formed?");
+const docs = await retriever.invoke("How are clouds formed?");
 
 console.log(docs);

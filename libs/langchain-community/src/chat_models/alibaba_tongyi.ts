@@ -1,3 +1,4 @@
+import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
   type BaseChatModelParams,
@@ -6,10 +7,12 @@ import {
   AIMessage,
   type BaseMessage,
   ChatMessage,
+  AIMessageChunk,
 } from "@langchain/core/messages";
 import { type ChatResult } from "@langchain/core/outputs";
-import { type CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 /**
  * Type representing the role of a message in the Tongyi chat model.
@@ -90,10 +93,17 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatAlibabaTongyi class.
  */
 interface AlibabaTongyiChatInput {
-  /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+  /**
+   * Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+   * Alias for `model`
    * @default "qwen-turbo"
    */
   modelName: string;
+
+  /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
+   * @default "qwen-turbo"
+   */
+  model: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -187,7 +197,7 @@ function messageToTongyiRole(message: BaseMessage): TongyiMessageRole {
  * });
  *
  * const qwen = new ChatAlibabaTongyi({
- *   modelName: "qwen-turbo",
+ *   model: "qwen-turbo",
  *   temperature: 1,
  *   alibabaApiKey: "YOUR-API-KEY",
  * });
@@ -229,6 +239,8 @@ export class ChatAlibabaTongyi
 
   modelName: ChatCompletionRequest["model"];
 
+  model: ChatCompletionRequest["model"];
+
   apiUrl: string;
 
   maxTokens?: number | undefined;
@@ -268,7 +280,8 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
-    this.modelName = fields.modelName ?? "qwen-turbo";
+    this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
+    this.model = this.modelName;
   }
 
   /**
@@ -301,7 +314,7 @@ export class ChatAlibabaTongyi
   identifyingParams(): ChatCompletionRequest["parameters"] &
     Pick<ChatCompletionRequest, "model"> {
     return {
-      model: this.modelName,
+      model: this.model,
       ...this.invocationParams(),
     };
   }
@@ -326,7 +339,7 @@ export class ChatAlibabaTongyi
           let resolved = false;
           this.completionWithRetry(
             {
-              model: this.modelName,
+              model: this.model,
               parameters,
               input: {
                 messages: messagesMapped,
@@ -373,7 +386,7 @@ export class ChatAlibabaTongyi
         })
       : await this.completionWithRetry(
           {
-            model: this.modelName,
+            model: this.model,
             parameters,
             input: {
               messages: messagesMapped,
@@ -481,6 +494,111 @@ export class ChatAlibabaTongyi
     };
 
     return this.caller.call(makeCompletionRequest);
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const parameters = {
+      ...this.invocationParams(),
+      stream: true,
+      incremental_output: true,
+    };
+
+    const messagesMapped: TongyiMessage[] = messages.map((message) => ({
+      role: messageToTongyiRole(message),
+      content: message.content as string,
+    }));
+
+    const stream = await this.caller.call(async () =>
+      this.createTongyiStream(
+        {
+          model: this.model,
+          parameters,
+          input: {
+            messages: messagesMapped,
+          },
+        },
+        options?.signal
+      )
+    );
+
+    for await (const chunk of stream) {
+      const { text, finish_reason } = chunk.output;
+      yield new ChatGenerationChunk({
+        text,
+        message: new AIMessageChunk({ content: text }),
+        generationInfo:
+          finish_reason === "stop"
+            ? {
+                finish_reason,
+                request_id: chunk.request_id,
+                usage: chunk.usage,
+              }
+            : undefined,
+      });
+      await runManager?.handleLLMNewToken(text);
+    }
+  }
+
+  private async *createTongyiStream(
+    request: ChatCompletionRequest,
+    signal?: AbortSignal
+  ) {
+    const response = await fetch(this.apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.alibabaApiKey}`,
+        Accept: "text/event-stream",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal,
+    });
+
+    if (!response.ok) {
+      let error;
+      const responseText = await response.text();
+      try {
+        const json = JSON.parse(responseText);
+        error = new Error(
+          `Tongyi call failed with status code ${response.status}: ${json.error}`
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        error = new Error(
+          `Tongyi call failed with status code ${response.status}: ${responseText}`
+        );
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).response = response;
+      throw error;
+    }
+    if (!response.body) {
+      throw new Error(
+        "Could not begin Tongyi stream. Please check the given URL and try again."
+      );
+    }
+    const stream = IterableReadableStream.fromReadableStream(response.body);
+    const decoder = new TextDecoder();
+    let extra = "";
+    for await (const chunk of stream) {
+      const decoded = extra + decoder.decode(chunk);
+      const lines = decoded.split("\n");
+      extra = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) {
+          continue;
+        }
+        try {
+          yield JSON.parse(line.slice("data:".length).trim());
+        } catch (e) {
+          console.warn(`Received a non-JSON parseable chunk: ${line}`);
+        }
+      }
+    }
   }
 
   _llmType(): string {

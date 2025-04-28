@@ -100,7 +100,7 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
     }
   );
 
-  const { text: result } = await multiRetrievalQAChain.call({
+  const { text: result } = await multiRetrievalQAChain.invoke({
     input: "test input",
   });
 
@@ -129,7 +129,7 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
     }
   );
 
-  const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
+  const { text: result, sourceDocuments } = await multiRetrievalQAChain.invoke({
     input: "test input",
   });
 

@@ -11,7 +11,7 @@ describe.skip("Postgres Chat History", () => {
   beforeAll(async () => {
     pool = new pg.Pool({
       host: "127.0.0.1",
-      port: 5433,
+      port: 5432,
       user: "myuser",
       password: "ChangeMe",
       database: "api",
@@ -124,5 +124,24 @@ describe.skip("Postgres Chat History", () => {
     } finally {
       await newChatHistory.clear();
     }
+  });
+
+  test("Can store & retrieve message IDs", async () => {
+    const blankResult = await chatHistory.getMessages();
+    expect(blankResult).toStrictEqual([]);
+
+    const aiMessageId = "ai-message-id";
+    const aiMessage = new AIMessage({
+      content: "Ozzy Osbourne",
+      id: aiMessageId,
+    });
+    await chatHistory.addMessage(aiMessage);
+
+    const expectedMessages = [aiMessage];
+
+    const resultWithHistory = await chatHistory.getMessages();
+    expect(resultWithHistory).toHaveLength(1);
+    expect(resultWithHistory).toEqual(expectedMessages);
+    expect(resultWithHistory[0].id).toEqual(aiMessageId);
   });
 });

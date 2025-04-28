@@ -6,7 +6,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 export const run = async () => {
   const memory = new ConversationSummaryMemory({
     memoryKey: "chat_history",
-    llm: new OpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+    llm: new OpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
   });
 
   const model = new OpenAI({ temperature: 0.9 });
@@ -19,7 +19,7 @@ export const run = async () => {
   AI:`);
   const chain = new LLMChain({ llm: model, prompt, memory });
 
-  const res1 = await chain.call({ input: "Hi! I'm Jim." });
+  const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
   console.log({ res1, memory: await memory.loadMemoryVariables({}) });
   /*
   {
@@ -32,7 +32,7 @@ export const run = async () => {
   }
   */
 
-  const res2 = await chain.call({ input: "What's my name?" });
+  const res2 = await chain.invoke({ input: "What's my name?" });
   console.log({ res2, memory: await memory.loadMemoryVariables({}) });
   /*
   {

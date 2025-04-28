@@ -14,7 +14,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "mitochondria is made of lipids",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new CohereEmbeddings()
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const model = new ChatAnthropic({});
 const retriever = MultiQueryRetriever.fromLLM({
@@ -24,7 +24,7 @@ const retriever = MultiQueryRetriever.fromLLM({
 });
 
 const query = "What are mitochondria made of?";
-const retrievedDocs = await retriever.getRelevantDocuments(query);
+const retrievedDocs = await retriever.invoke(query);
 
 /*
   Generated queries: What are the components of mitochondria?,What substances comprise the mitochondria organelle?  ,What is the molecular composition of mitochondria?

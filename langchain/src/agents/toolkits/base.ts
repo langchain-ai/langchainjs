@@ -1,1 +1,1 @@
-export * from "@langchain/community/agents/toolkits/base";
+export { BaseToolkit as Toolkit } from "@langchain/core/tools";

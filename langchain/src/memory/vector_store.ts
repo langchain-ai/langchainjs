@@ -9,6 +9,12 @@ import {
 } from "@langchain/core/memory";
 import { formatDocumentsAsString } from "../util/document.js";
 
+type Metadata = Record<string, unknown>;
+type MetadataFunction = (
+  inputValues?: InputValues,
+  outputValues?: OutputValues
+) => Metadata;
+
 /**
  * Interface for the parameters required to initialize a
  * VectorStoreRetrieverMemory instance.
@@ -19,6 +25,10 @@ export interface VectorStoreRetrieverMemoryParams {
   outputKey?: string;
   memoryKey?: string;
   returnDocs?: boolean;
+  /**
+   * Metadata to be added to the document when saving context.
+   */
+  metadata?: Metadata | MetadataFunction;
 }
 
 /**
@@ -64,12 +74,15 @@ export class VectorStoreRetrieverMemory
 
   returnDocs: boolean;
 
+  metadata?: Metadata | MetadataFunction;
+
   constructor(fields: VectorStoreRetrieverMemoryParams) {
     super();
     this.vectorStoreRetriever = fields.vectorStoreRetriever;
     this.inputKey = fields.inputKey;
     this.memoryKey = fields.memoryKey ?? "memory";
     this.returnDocs = fields.returnDocs ?? false;
+    this.metadata = fields.metadata;
   }
 
   get memoryKeys(): string[] {
@@ -105,13 +118,17 @@ export class VectorStoreRetrieverMemory
     inputValues: InputValues,
     outputValues: OutputValues
   ): Promise<void> {
+    const metadata =
+      typeof this.metadata === "function"
+        ? this.metadata(inputValues, outputValues)
+        : this.metadata;
     const text = Object.entries(inputValues)
       .filter(([k]) => k !== this.memoryKey)
       .concat(Object.entries(outputValues))
       .map(([k, v]) => `${k}: ${v}`)
       .join("\n");
     await this.vectorStoreRetriever.addDocuments([
-      new Document({ pageContent: text }),
+      new Document({ pageContent: text, metadata }),
     ]);
   }
 }

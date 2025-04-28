@@ -49,12 +49,9 @@ jobs:
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable
-      - name: Build
-        run: yarn run build --filter=@langchain/core
+        # Running `test:unit:ci` from root will build first, however debugging
+        # in CI is easier if we separate the build step from the test step.
+      - name: Build LangChain Core
+        run: yarn build --filter=@langchain/core
       - name: Test
-        run: yarn run test:unit:ci --filter=@langchain/core --concurrency=1
-      #   run: yarn run test:unit:ci -- --coverage
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v3
-      #   env:
-      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: yarn run test:unit:ci --filter=@langchain/core

@@ -37,7 +37,7 @@ export default {
         ["human", "{input}"],
       ]);
       const model = new ChatAnthropic({
-        anthropicApiKey: env.ANTHROPIC_API_KEY,
+        apiKey: env.ANTHROPIC_API_KEY,
       });
 
       const chain = RunnableSequence.from([

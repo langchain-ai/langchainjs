@@ -1,4 +1,13 @@
-import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
+/* eslint-disable import/no-extraneous-dependencies */
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  LlamaJsonSchemaGrammar,
+  LlamaGrammar,
+  getLlama,
+  GbnfJsonSchema,
+} from "node-llama-cpp";
 import {
   LLM,
   type BaseLLMCallOptions,
@@ -12,6 +21,8 @@ import {
   createLlamaModel,
   createLlamaContext,
   createLlamaSession,
+  createLlamaJsonSchemaGrammar,
+  createCustomGrammar,
 } from "../utils/llama_cpp.js";
 
 /**
@@ -31,7 +42,7 @@ export interface LlamaCppCallOptions extends BaseLLMCallOptions {
  *  To use this model you need to have the `node-llama-cpp` module installed.
  *  This can be installed using `npm install -S node-llama-cpp` and the minimum
  *  version supported in version 2.0.0.
- *  This also requires that have a locally built version of Llama2 installed.
+ *  This also requires that have a locally built version of Llama3 installed.
  */
 export class LlamaCpp extends LLM<LlamaCppCallOptions> {
   lc_serializable = true;
@@ -54,24 +65,46 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
 
   _session: LlamaChatSession;
 
+  _jsonSchema: LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined;
+
+  _gbnf: LlamaGrammar | undefined;
+
   static lc_name() {
     return "LlamaCpp";
   }
 
-  constructor(inputs: LlamaCppInputs) {
+  public constructor(inputs: LlamaCppInputs) {
     super(inputs);
     this.maxTokens = inputs?.maxTokens;
     this.temperature = inputs?.temperature;
     this.topK = inputs?.topK;
     this.topP = inputs?.topP;
     this.trimWhitespaceSuffix = inputs?.trimWhitespaceSuffix;
-    this._model = createLlamaModel(inputs);
-    this._context = createLlamaContext(this._model, inputs);
-    this._session = createLlamaSession(this._context);
+  }
+
+  /**
+   * Initializes the llama_cpp model for usage.
+   * @param inputs - the inputs passed onto the model.
+   * @returns A Promise that resolves to the LlamaCpp type class.
+   */
+  public static async initialize(inputs: LlamaCppInputs): Promise<LlamaCpp> {
+    const instance = new LlamaCpp(inputs);
+    const llama = await getLlama();
+
+    instance._model = await createLlamaModel(inputs, llama);
+    instance._context = await createLlamaContext(instance._model, inputs);
+    instance._jsonSchema = await createLlamaJsonSchemaGrammar(
+      inputs?.jsonSchema,
+      llama
+    );
+    instance._gbnf = await createCustomGrammar(inputs?.gbnf, llama);
+    instance._session = createLlamaSession(instance._context);
+
+    return instance;
   }
 
   _llmType() {
-    return "llama2_cpp";
+    return "llama_cpp";
   }
 
   /** @ignore */
@@ -80,7 +113,17 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
     options?: this["ParsedCallOptions"]
   ): Promise<string> {
     try {
+      let promptGrammer;
+
+      if (this._jsonSchema !== undefined) {
+        promptGrammer = this._jsonSchema;
+      } else if (this._gbnf !== undefined) {
+        promptGrammer = this._gbnf;
+      } else {
+        promptGrammer = undefined;
+      }
       const promptOptions = {
+        grammar: promptGrammer,
         onToken: options?.onToken,
         maxTokens: this?.maxTokens,
         temperature: this?.temperature,
@@ -88,7 +131,13 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
         topP: this?.topP,
         trimWhitespaceSuffix: this?.trimWhitespaceSuffix,
       };
+
       const completion = await this._session.prompt(prompt, promptOptions);
+
+      if (this._jsonSchema !== undefined && completion !== undefined) {
+        return this._jsonSchema.parse(completion) as unknown as string;
+      }
+
       return completion;
     } catch (e) {
       throw new Error("Error getting prompt completion.");
@@ -107,16 +156,24 @@ export class LlamaCpp extends LLM<LlamaCppCallOptions> {
       topP: this?.topP,
     };
 
+    if (this._context.sequencesLeft === 0) {
+      this._context = await createLlamaContext(this._model, LlamaCpp.inputs);
+    }
+    const sequence = this._context.getSequence();
+    const tokens = this._model.tokenize(prompt);
+
     const stream = await this.caller.call(async () =>
-      this._context.evaluate(this._context.encode(prompt), promptOptions)
+      sequence.evaluate(tokens, promptOptions)
     );
 
     for await (const chunk of stream) {
       yield new GenerationChunk({
-        text: this._context.decode([chunk]),
+        text: this._model.detokenize([chunk]),
         generationInfo: {},
       });
-      await runManager?.handleLLMNewToken(this._context.decode([chunk]) ?? "");
+      await runManager?.handleLLMNewToken(
+        this._model.detokenize([chunk]) ?? ""
+      );
     }
   }
 }

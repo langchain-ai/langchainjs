@@ -10,17 +10,24 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../package/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) .
 
+# make sure the .eslintrc makes it over
+if [ -f ../package/.eslintrc.json ]; then
+  cp ../package/.eslintrc.json .
+fi
+
 mkdir -p ./libs/langchain-core/
 mkdir -p ./libs/langchain-openai/
 mkdir -p ./libs/langchain-anthropic/
 mkdir -p ./libs/langchain-community/
+mkdir -p ./libs/langchain-cohere/
 mkdir -p ./libs/langchain/
 
-cp -r ../langchain-core ./libs/
-cp -r ../langchain-openai ./libs/
-cp -r ../langchain-anthropic ./libs/
-cp -r ../langchain-community ./libs/
-cp -r ../langchain ./libs/
+cp -r ../langchain-core/!(node_modules) ./libs/langchain-core
+cp -r ../langchain-openai/!(node_modules) ./libs/langchain-openai
+cp -r ../langchain-anthropic/!(node_modules) ./libs/langchain-anthropic
+cp -r ../langchain-community/!(node_modules) ./libs/langchain-community
+cp -r ../langchain-cohere/!(node_modules) ./libs/langchain-cohere
+cp -r ../langchain/!(node_modules) ./libs/langchain
 
 # copy cache
 mkdir -p ./.yarn

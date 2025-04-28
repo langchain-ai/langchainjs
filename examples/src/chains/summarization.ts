@@ -9,7 +9,7 @@ export const run = async () => {
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
   ];
-  const res = await chain.call({
+  const res = await chain.invoke({
     input_documents: docs,
   });
   console.log(res);

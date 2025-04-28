@@ -1,10 +1,10 @@
-import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const promptTemplate =
-  PromptTemplate.fromTemplate(`Given the user question below, classify it as either being about \`LangChain\`, \`Anthropic\`, or \`Other\`.
+  ChatPromptTemplate.fromTemplate(`Given the user question below, classify it as either being about \`LangChain\`, \`Anthropic\`, or \`Other\`.
                                      
 Do not respond with more than one word.
 
@@ -15,7 +15,7 @@ Do not respond with more than one word.
 Classification:`);
 
 const model = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
 });
 
 const classificationChain = RunnableSequence.from([
@@ -33,7 +33,7 @@ console.log(classificationChainResult);
   Anthropic
 */
 
-const langChainChain = PromptTemplate.fromTemplate(
+const langChainChain = ChatPromptTemplate.fromTemplate(
   `You are an expert in langchain.
 Always answer questions starting with "As Harrison Chase told me".
 Respond to the following question:
@@ -42,7 +42,7 @@ Question: {question}
 Answer:`
 ).pipe(model);
 
-const anthropicChain = PromptTemplate.fromTemplate(
+const anthropicChain = ChatPromptTemplate.fromTemplate(
   `You are an expert in anthropic. \
 Always answer questions starting with "As Dario Amodei told me". \
 Respond to the following question:
@@ -51,7 +51,7 @@ Question: {question}
 Answer:`
 ).pipe(model);
 
-const generalChain = PromptTemplate.fromTemplate(
+const generalChain = ChatPromptTemplate.fromTemplate(
   `Respond to the following question:
 
 Question: {question}

@@ -26,6 +26,11 @@ import { BaseStore } from "@langchain/core/stores";
  *   await store.mdelete([key]);
  * }
  * ```
+ *
+ * @security **Security Notice** This file store
+ * can alter any text file in the provided directory and any subfolders.
+ * Make sure that the path you specify when initializing the store is free
+ * of other files.
  */
 export class LocalFileStore extends BaseStore<string, Uint8Array> {
   lc_namespace = ["langchain", "storage"];
@@ -43,6 +48,12 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @returns Promise that resolves to the parsed file content.
    */
   private async getParsedFile(key: string): Promise<Uint8Array | undefined> {
+    // Validate the key to prevent path traversal
+    if (!/^[a-zA-Z0-9_\-:.]+$/.test(key)) {
+      throw new Error(
+        "Invalid key. Only alphanumeric characters, underscores, hyphens, colons, and periods are allowed."
+      );
+    }
     try {
       const fileContent = await fs.readFile(this.getFullPath(key));
       if (!fileContent) {
@@ -87,11 +98,26 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
   private getFullPath(key: string): string {
     try {
       const keyAsTxtFile = `${key}.txt`;
-      const fullPath = path.join(this.rootPath, keyAsTxtFile);
+
+      // Validate the key to prevent path traversal
+      if (!/^[a-zA-Z0-9_.\-/]+$/.test(key)) {
+        throw new Error(`Invalid characters in key: ${key}`);
+      }
+
+      const fullPath = path.resolve(this.rootPath, keyAsTxtFile);
+      const commonPath = path.resolve(this.rootPath);
+
+      if (!fullPath.startsWith(commonPath)) {
+        throw new Error(
+          `Invalid key: ${key}. Key should be relative to the root path. ` +
+            `Root path: ${this.rootPath}, Full path: ${fullPath}`
+        );
+      }
+
       return fullPath;
     } catch (e) {
       throw new Error(
-        `Error getting full path for key: ${key}.\nError: ${JSON.stringify(e)}`
+        `Error getting full path for key: ${key}.\nError: ${String(e)}`
       );
     }
   }

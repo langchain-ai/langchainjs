@@ -30,6 +30,9 @@ interface OllamaEmbeddingsParams extends EmbeddingsParams {
   requestOptions?: CamelCasedRequestOptions;
 }
 
+/**
+ * @deprecated OllamaEmbeddings have been moved to the `@langchain/ollama` package. Install it with `npm install @langchain/ollama`.
+ */
 export class OllamaEmbeddings extends Embeddings {
   model = "llama2";
 
@@ -110,6 +113,9 @@ export class OllamaEmbeddings extends Embeddings {
       const snakeCasedOption = mapping[key as keyof CamelCasedRequestOptions];
       if (snakeCasedOption) {
         snakeCasedOptions[snakeCasedOption] = value;
+      } else {
+        // Just pass unknown options through
+        snakeCasedOptions[key] = value;
       }
     }
     return snakeCasedOptions;

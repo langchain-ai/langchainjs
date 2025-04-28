@@ -21,10 +21,10 @@ test("Test Bedrock LLM: AI21", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
 
-  console.log(res);
+  // console.log(res);
 });
 
 test.skip("Test Bedrock LLM: Meta Llama2", async () => {
@@ -44,10 +44,10 @@ test.skip("Test Bedrock LLM: Meta Llama2", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
 
-  console.log(res);
+  // console.log(res);
 });
 
 test.skip("Test Bedrock LLM streaming: Meta Llama2", async () => {
@@ -70,7 +70,7 @@ test.skip("Test Bedrock LLM streaming: Meta Llama2", async () => {
   const stream = await bedrock.stream(prompt);
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -93,9 +93,9 @@ test("Test Bedrock LLM: Claude-v2", async () => {
     },
   });
 
-  const res = await bedrock.call(prompt);
+  const res = await bedrock.invoke(prompt);
   expect(typeof res).toBe("string");
-  console.log(res);
+  // console.log(res);
 });
 
 test("Test Bedrock LLM streaming: AI21", async () => {
@@ -118,7 +118,7 @@ test("Test Bedrock LLM streaming: AI21", async () => {
   const stream = await bedrock.stream(prompt);
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toEqual(1);
@@ -150,7 +150,7 @@ test("Test Bedrock LLM handleLLMNewToken: Claude-v2", async () => {
     ],
   });
 
-  const stream = await bedrock.call(prompt);
+  const stream = await bedrock.invoke(prompt);
   expect(tokens.length).toBeGreaterThan(1);
   expect(stream).toEqual(tokens.join(""));
 });
@@ -175,8 +175,30 @@ test("Test Bedrock LLM streaming: Claude-v2", async () => {
   const stream = await bedrock.stream(prompt);
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test Bedrock LLM: Inference Models", async () => {
+  const region = process.env.BEDROCK_AWS_REGION!;
+  const model = "eu.anthropic.claude-3-5-sonnet-20240620-v1:0";
+  const prompt = "Human: What is your name?\n\nAssistant:";
+
+  const bedrock = new Bedrock({
+    maxTokens: 20,
+    region,
+    model,
+    maxRetries: 0,
+    credentials: {
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      sessionToken: process.env.BEDROCK_AWS_SESSION_TOKEN,
+    },
+  });
+
+  const res = await bedrock.invoke(prompt);
+  expect(typeof res).toBe("string");
+  // console.log(res);
 });

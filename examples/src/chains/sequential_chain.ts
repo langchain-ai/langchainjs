@@ -43,7 +43,7 @@ const overallChain = new SequentialChain({
   outputVariables: ["synopsis", "review"],
   verbose: true,
 });
-const chainExecutionResult = await overallChain.call({
+const chainExecutionResult = await overallChain.invoke({
   title: "Tragedy at sunset on the beach",
   era: "Victorian England",
 });

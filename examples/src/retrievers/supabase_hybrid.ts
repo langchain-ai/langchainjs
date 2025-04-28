@@ -20,7 +20,7 @@ export const run = async () => {
     keywordQueryName: "kw_match_documents",
   });
 
-  const results = await retriever.getRelevantDocuments("hello bye");
+  const results = await retriever.invoke("hello bye");
 
   console.log(results);
 };

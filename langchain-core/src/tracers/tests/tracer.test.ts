@@ -48,7 +48,7 @@ test("Test LLMRun", async () => {
     child_runs: [],
     extra: {},
     tags: [],
-    dotted_order: `20210503T000000000000Z${runId}`,
+    dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
   expect(run).toEqual(compareRun);
@@ -70,7 +70,7 @@ test("Test Chat Model Run", async () => {
     {
       "child_execution_order": 1,
       "child_runs": [],
-      "dotted_order": "20210503T000000000000Z${runId}",
+      "dotted_order": "20210503T000000000001Z${runId}",
       "end_time": 1620000000000,
       "events": [
         {
@@ -162,7 +162,7 @@ test("Test Chain Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
-    dotted_order: `20210503T000000000000Z${runId}`,
+    dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
   await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
@@ -199,7 +199,7 @@ test("Test Tool Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
-    dotted_order: `20210503T000000000000Z${runId}`,
+    dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
   await tracer.handleToolStart(serialized, "test", runId);
@@ -240,7 +240,7 @@ test("Test Retriever Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
-    dotted_order: `20210503T000000000000Z${runId}`,
+    dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
 
@@ -314,7 +314,7 @@ test("Test nested runs", async () => {
             child_runs: [],
             extra: {},
             tags: [],
-            dotted_order: `20210503T000000000000Z${chainRunId}.20210503T000000000000Z${toolRunId}.20210503T000000000000Z${llmRunId}`,
+            dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000002Z${toolRunId}.20210503T000000000003Z${llmRunId}`,
             trace_id: chainRunId,
           },
         ],
@@ -338,7 +338,7 @@ test("Test nested runs", async () => {
         run_type: "tool",
         extra: {},
         tags: [],
-        dotted_order: `20210503T000000000000Z${chainRunId}.20210503T000000000000Z${toolRunId}`,
+        dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000002Z${toolRunId}`,
         trace_id: chainRunId,
       },
       {
@@ -368,7 +368,7 @@ test("Test nested runs", async () => {
         child_runs: [],
         extra: {},
         tags: [],
-        dotted_order: `20210503T000000000000Z${chainRunId}.20210503T000000000000Z${llmRunId2}`,
+        dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000004Z${llmRunId2}`,
         trace_id: chainRunId,
       },
     ],
@@ -399,7 +399,7 @@ test("Test nested runs", async () => {
     extra: {},
     tags: [],
     parent_run_id: undefined,
-    dotted_order: `20210503T000000000000Z${chainRunId}`,
+    dotted_order: `20210503T000000000001Z${chainRunId}`,
     trace_id: chainRunId,
   };
   expect(tracer.runs.length).toBe(1);

@@ -17,6 +17,6 @@ export const run = async () => {
     content_field,
   });
 
-  const result = await retriever.getRelevantDocuments("what is vespa?");
+  const result = await retriever.invoke("what is vespa?");
   console.log(result);
 };

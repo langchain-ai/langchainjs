@@ -13,7 +13,7 @@ export const config = {
   internals: [/node\:/],
   entrypoints: {
     index: "index",
-    build: "build",
+    build: "build/index",
     migrations: "migrations/index",
     check_broken_links: "check_broken_links",
   },
@@ -21,4 +21,5 @@ export const config = {
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
+  additionalGitignorePaths: ["!bin/build.js", "dist_build"]
 }

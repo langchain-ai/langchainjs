@@ -13,6 +13,6 @@ export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
   const system_message = new SystemMessage("You are to chat with a user.");
   const message = new HumanMessage("Hello!");
-  const resB = await chat.call([system_message, message]);
+  const resB = await chat.invoke([system_message, message]);
   console.log({ resB });
 };

@@ -4,12 +4,17 @@ import {
 } from "../utils/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./base.js";
 import {
+  BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  CallbackHandlerPrefersStreaming,
   HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
-import { AIMessageChunk } from "../messages/index.js";
+import { AIMessageChunk } from "../messages/ai.js";
+import type { StreamEvent, StreamEventData } from "./event_stream.js";
+
+export type { StreamEvent, StreamEventData };
 
 /**
  * Interface that represents the structure of a log entry in the
@@ -113,92 +118,6 @@ export class RunLog extends RunLogPatch {
   }
 }
 
-/**
- * Data associated with a StreamEvent.
- */
-export type StreamEventData = {
-  /**
-   * The input passed to the runnable that generated the event.
-   * Inputs will sometimes be available at the *START* of the runnable, and
-   * sometimes at the *END* of the runnable.
-   * If a runnable is able to stream its inputs, then its input by definition
-   * won't be known until the *END* of the runnable when it has finished streaming
-   * its inputs.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input?: any;
-
-  /**
-   * The output of the runnable that generated the event.
-   * Outputs will only be available at the *END* of the runnable.
-   * For most runnables, this field can be inferred from the `chunk` field,
-   * though there might be some exceptions for special cased runnables (e.g., like
-   * chat models), which may return more information.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  output?: any;
-
-  /**
-   * A streaming chunk from the output that generated the event.
-   * chunks support addition in general, and adding them up should result
-   * in the output of the runnable that generated the event.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chunk?: any;
-};
-
-/**
- * A streaming event.
- *
- * Schema of a streaming event which is produced from the streamEvents method.
- */
-export type StreamEvent = {
-  /**
-   * Event names are of the format: on_[runnable_type]_(start|stream|end).
-   *
-   * Runnable types are one of:
-   * - llm - used by non chat models
-   * - chat_model - used by chat models
-   * - prompt --  e.g., ChatPromptTemplate
-   * - tool -- from tools defined via @tool decorator or inheriting from Tool/BaseTool
-   * - chain - most Runnables are of this type
-   *
-   * Further, the events are categorized as one of:
-   * - start - when the runnable starts
-   * - stream - when the runnable is streaming
-   * - end - when the runnable ends
-   *
-   * start, stream and end are associated with slightly different `data` payload.
-   *
-   * Please see the documentation for `EventData` for more details.
-   */
-  event: string;
-  /** The name of the runnable that generated the event. */
-  name: string;
-  /**
-   * An randomly generated ID to keep track of the execution of the given runnable.
-   *
-   * Each child runnable that gets invoked as part of the execution of a parent runnable
-   * is assigned its own unique ID.
-   */
-  run_id: string;
-  /**
-   * Tags associated with the runnable that generated this event.
-   * Tags are always inherited from parent runnables.
-   */
-  tags?: string[];
-  /** Metadata associated with the runnable that generated this event. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata: Record<string, any>;
-  /**
-   * Event data.
-   *
-   * The contents of the event data depend on the event type.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: StreamEventData;
-};
-
 export type SchemaFormat = "original" | "streaming_events";
 
 export interface LogStreamCallbackHandlerInput
@@ -212,6 +131,10 @@ export interface LogStreamCallbackHandlerInput
   excludeTags?: string[];
   _schemaFormat?: SchemaFormat;
 }
+
+export const isLogStreamHandler = (
+  handler: BaseCallbackHandler
+): handler is LogStreamCallbackHandler => handler.name === "log_stream_tracer";
 
 /**
  * Extract standardized inputs from a run.
@@ -288,7 +211,10 @@ function isChatGenerationChunk(
  * handler that logs the execution of runs and emits `RunLog` instances to a
  * `RunLogStream`.
  */
-export class LogStreamCallbackHandler extends BaseTracer {
+export class LogStreamCallbackHandler
+  extends BaseTracer
+  implements CallbackHandlerPrefersStreaming
+{
   protected autoClose = true;
 
   protected includeNames?: string[];
@@ -318,6 +244,8 @@ export class LogStreamCallbackHandler extends BaseTracer {
   public receiveStream: IterableReadableStream<RunLogPatch>;
 
   name = "log_stream_tracer";
+
+  lc_prefer_streaming = true;
 
   constructor(fields?: LogStreamCallbackHandlerInput) {
     super({ _awaitHandler: true, ...fields });
@@ -535,7 +463,10 @@ export class LogStreamCallbackHandler extends BaseTracer {
       if (isChatGenerationChunk(kwargs?.chunk)) {
         streamedOutputValue = kwargs?.chunk;
       } else {
-        streamedOutputValue = new AIMessageChunk(token);
+        streamedOutputValue = new AIMessageChunk({
+          id: `run-${run.id}`,
+          content: token,
+        });
       }
     } else {
       streamedOutputValue = token;

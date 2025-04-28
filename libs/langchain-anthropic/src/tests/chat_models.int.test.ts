@@ -1,7 +1,14 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "@jest/globals";
-import { HumanMessage } from "@langchain/core/messages";
+import * as fs from "fs/promises";
+import {
+  AIMessageChunk,
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
   PromptTemplate,
@@ -11,20 +18,52 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { StructuredTool } from "@langchain/core/tools";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { concat } from "@langchain/core/utils/stream";
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { ChatAnthropic } from "../chat_models.js";
-import { AnthropicToolResponse } from "../types.js";
+import { AnthropicMessageResponse } from "../types.js";
 
-test.skip("Test ChatAnthropic", async () => {
+test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
   const res = await chat.invoke([message]);
-  console.log({ res });
+  expect(res.response_metadata.usage).toBeDefined();
+});
+
+test("Test ChatAnthropic with a bad API key throws appropriate error", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+    apiKey: "bad",
+  });
+  let error;
+  try {
+    const message = new HumanMessage("Hello!");
+    await chat.invoke([message]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("MODEL_AUTHENTICATION");
+});
+
+test("Test ChatAnthropic with unknown model throws appropriate error", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "badbad",
+    maxRetries: 0,
+  });
+  let error;
+  try {
+    const message = new HumanMessage("Hello!");
+    await chat.invoke([message]);
+  } catch (e) {
+    error = e;
+  }
+  expect(error).toBeDefined();
+  expect((error as any).lc_error_code).toEqual("MODEL_NOT_FOUND");
 });
 
 test("Test ChatAnthropic Generate", async () => {
@@ -37,11 +76,13 @@ test("Test ChatAnthropic Generate", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
@@ -59,11 +100,13 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const message of generation) {
-      console.log(message.text);
+      // console.log(message.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
@@ -92,11 +135,13 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     maxRetries: 0,
     modelName: "claude-3-sonnet-20240229",
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.generate([
     [new HumanMessage(`Hello!`)],
     [new HumanMessage(`Hi!`)],
   ]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic in streaming mode", async () => {
@@ -116,7 +161,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   });
   const message = new HumanMessage("Hello!");
   const res = await model.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 
   expect(nrNewTokens > 0).toBe(true);
   expect(res.content).toBe(streamedCompletion);
@@ -151,7 +196,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
     return res;
   }).rejects.toThrow();
 
-  console.log({ nrNewTokens, streamedCompletion });
+  // console.log({ nrNewTokens, streamedCompletion });
 }, 5000);
 
 test.skip("Test ChatAnthropic prompt value", async () => {
@@ -163,11 +208,13 @@ test.skip("Test ChatAnthropic prompt value", async () => {
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for (const g of generation) {
-      console.log(g.text);
+      // console.log(g.text);
     }
   }
-  console.log({ res });
+  // console.log({ res });
 });
 
 test.skip("ChatAnthropic, docs, prompt templates", async () => {
@@ -186,6 +233,8 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       input_language: "English",
@@ -194,7 +243,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, longer chain of messages", async () => {
@@ -210,13 +259,15 @@ test.skip("ChatAnthropic, longer chain of messages", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
       text: "What did I just say my name was?",
     }),
   ]);
 
-  console.log(responseA.generations);
+  // console.log(responseA.generations);
 });
 
 test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async () => {
@@ -228,8 +279,10 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
     anthropicApiUrl,
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.call([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic stream method", async () => {
@@ -241,7 +294,6 @@ test("Test ChatAnthropic stream method", async () => {
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -260,8 +312,10 @@ test("Test ChatAnthropic stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const chunk of stream) {
-      console.log(chunk);
+      // console.log(chunk);
     }
   }).rejects.toThrow();
 });
@@ -276,8 +330,10 @@ test("Test ChatAnthropic stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
-    console.log(chunk);
+    // console.log(chunk);
     i += 1;
     if (i > 10) {
       break;
@@ -289,7 +345,7 @@ test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
-    anthropicApiKey: "NOT_REAL",
+    apiKey: "NOT_REAL",
     clientOptions: {
       defaultHeaders: {
         "X-Api-Key": process.env.ANTHROPIC_API_KEY,
@@ -297,8 +353,10 @@ test("Test ChatAnthropic headers passed through", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatAnthropic multimodal", async () => {
@@ -306,6 +364,8 @@ test("Test ChatAnthropic multimodal", async () => {
     modelName: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([
     new HumanMessage({
       content: [
@@ -319,227 +379,715 @@ test("Test ChatAnthropic multimodal", async () => {
       ],
     }),
   ]);
-  console.log(res);
+  // console.log(res);
 });
 
-describe("Tool calling", () => {
-  const zodSchema = z
-    .object({
-      location: z.string().describe("The name of city to get the weather for."),
-    })
-    .describe(
-      "Get the weather of a specific location and return the temperature in Celsius."
-    );
-
-  class WeatherTool extends StructuredTool {
-    schema = z.object({
-      location: z.string().describe("The name of city to get the weather for."),
-    });
-
-    description =
-      "Get the weather of a specific location and return the temperature in Celsius.";
-
-    name = "get_weather";
-
-    async _call(input: z.infer<typeof this.schema>) {
-      console.log(`WeatherTool called with input: ${input}`);
-      return `The weather in ${input.location} is 25°C`;
+test("Stream tokens", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-haiku-20240307",
+    temperature: 0,
+    maxTokens: 10,
+  });
+  let res: AIMessageChunk | null = null;
+  for await (const chunk of await model.stream(
+    "Why is the sky blue? Be concise."
+  )) {
+    if (!res) {
+      res = chunk;
+    } else {
+      res = res.concat(chunk);
     }
   }
+  // console.log(res);
+  expect(res?.usage_metadata).toBeDefined();
+  if (!res?.usage_metadata) {
+    return;
+  }
+  expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.output_tokens).toBeGreaterThan(1);
+  expect(res.usage_metadata.total_tokens).toBe(
+    res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
+  );
+});
 
+test("id is supplied when invoking", async () => {
+  const model = new ChatAnthropic();
+  const result = await model.invoke("Hello");
+  expect(result.id).toBeDefined();
+  expect(result.id).not.toEqual("");
+});
+
+test("id is supplied when streaming", async () => {
+  const model = new ChatAnthropic();
+  let finalChunk: AIMessageChunk | undefined;
+  for await (const chunk of await model.stream("Hello")) {
+    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  }
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect(finalChunk.id).toBeDefined();
+  expect(finalChunk.id).not.toEqual("");
+});
+
+const CACHED_TEXT = `## Components
+
+LangChain provides standard, extendable interfaces and external integrations for various components useful for building with LLMs.
+Some components LangChain implements, some components we rely on third-party integrations for, and others are a mix.
+
+### Chat models
+
+<span data-heading-keywords="chat model,chat models"></span>
+
+Language models that use a sequence of messages as inputs and return chat messages as outputs (as opposed to using plain text).
+These are generally newer models (older models are generally \`LLMs\`, see below).
+Chat models support the assignment of distinct roles to conversation messages, helping to distinguish messages from the AI, users, and instructions such as system messages.
+
+Although the underlying models are messages in, message out, the LangChain wrappers also allow these models to take a string as input.
+This gives them the same interface as LLMs (and simpler to use).
+When a string is passed in as input, it will be converted to a \`HumanMessage\` under the hood before being passed to the underlying model.
+
+LangChain does not host any Chat Models, rather we rely on third party integrations.
+
+We have some standardized parameters when constructing ChatModels:
+
+- \`model\`: the name of the model
+
+Chat Models also accept other parameters that are specific to that integration.
+
+:::important
+Some chat models have been fine-tuned for **tool calling** and provide a dedicated API for it.
+Generally, such models are better at tool calling than non-fine-tuned models, and are recommended for use cases that require tool calling.
+Please see the [tool calling section](/docs/concepts/#functiontool-calling) for more information.
+:::
+
+For specifics on how to use chat models, see the [relevant how-to guides here](/docs/how_to/#chat-models).
+
+#### Multimodality
+
+Some chat models are multimodal, accepting images, audio and even video as inputs.
+These are still less common, meaning model providers haven't standardized on the "best" way to define the API.
+Multimodal outputs are even less common. As such, we've kept our multimodal abstractions fairly light weight
+and plan to further solidify the multimodal APIs and interaction patterns as the field matures.
+
+In LangChain, most chat models that support multimodal inputs also accept those values in OpenAI's content blocks format.
+So far this is restricted to image inputs. For models like Gemini which support video and other bytes input, the APIs also support the native, model-specific representations.
+
+For specifics on how to use multimodal models, see the [relevant how-to guides here](/docs/how_to/#multimodal).
+
+### LLMs
+
+<span data-heading-keywords="llm,llms"></span>
+
+:::caution
+Pure text-in/text-out LLMs tend to be older or lower-level. Many popular models are best used as [chat completion models](/docs/concepts/#chat-models),
+even for non-chat use cases.
+
+You are probably looking for [the section above instead](/docs/concepts/#chat-models).
+:::
+
+Language models that takes a string as input and returns a string.
+These are traditionally older models (newer models generally are [Chat Models](/docs/concepts/#chat-models), see above).
+
+Although the underlying models are string in, string out, the LangChain wrappers also allow these models to take messages as input.
+This gives them the same interface as [Chat Models](/docs/concepts/#chat-models).
+When messages are passed in as input, they will be formatted into a string under the hood before being passed to the underlying model.
+
+LangChain does not host any LLMs, rather we rely on third party integrations.
+
+For specifics on how to use LLMs, see the [relevant how-to guides here](/docs/how_to/#llms).
+
+### Message types
+
+Some language models take an array of messages as input and return a message.
+There are a few different types of messages.
+All messages have a \`role\`, \`content\`, and \`response_metadata\` property.
+
+The \`role\` describes WHO is saying the message.
+LangChain has different message classes for different roles.
+
+The \`content\` property describes the content of the message.
+This can be a few different things:
+
+- A string (most models deal this type of content)
+- A List of objects (this is used for multi-modal input, where the object contains information about that input type and that input location)
+
+#### HumanMessage
+
+This represents a message from the user.
+
+#### AIMessage
+
+This represents a message from the model. In addition to the \`content\` property, these messages also have:
+
+**\`response_metadata\`**
+
+The \`response_metadata\` property contains additional metadata about the response. The data here is often specific to each model provider.
+This is where information like log-probs and token usage may be stored.
+
+**\`tool_calls\`**
+
+These represent a decision from an language model to call a tool. They are included as part of an \`AIMessage\` output.
+They can be accessed from there with the \`.tool_calls\` property.
+
+This property returns a list of \`ToolCall\`s. A \`ToolCall\` is an object with the following arguments:
+
+- \`name\`: The name of the tool that should be called.
+- \`args\`: The arguments to that tool.
+- \`id\`: The id of that tool call.
+
+#### SystemMessage
+
+This represents a system message, which tells the model how to behave. Not every model provider supports this.
+
+#### ToolMessage
+
+This represents the result of a tool call. In addition to \`role\` and \`content\`, this message has:
+
+- a \`tool_call_id\` field which conveys the id of the call to the tool that was called to produce this result.
+- an \`artifact\` field which can be used to pass along arbitrary artifacts of the tool execution which are useful to track but which should not be sent to the model.
+
+#### (Legacy) FunctionMessage
+
+This is a legacy message type, corresponding to OpenAI's legacy function-calling API. \`ToolMessage\` should be used instead to correspond to the updated tool-calling API.
+
+This represents the result of a function call. In addition to \`role\` and \`content\`, this message has a \`name\` parameter which conveys the name of the function that was called to produce this result.
+
+### Prompt templates
+
+<span data-heading-keywords="prompt,prompttemplate,chatprompttemplate"></span>
+
+Prompt templates help to translate user input and parameters into instructions for a language model.
+This can be used to guide a model's response, helping it understand the context and generate relevant and coherent language-based output.
+
+Prompt Templates take as input an object, where each key represents a variable in the prompt template to fill in.
+
+Prompt Templates output a PromptValue. This PromptValue can be passed to an LLM or a ChatModel, and can also be cast to a string or an array of messages.
+The reason this PromptValue exists is to make it easy to switch between strings and messages.
+
+There are a few different types of prompt templates:
+
+#### String PromptTemplates
+
+These prompt templates are used to format a single string, and generally are used for simpler inputs.
+For example, a common way to construct and use a PromptTemplate is as follows:
+
+\`\`\`typescript
+import { PromptTemplate } from "@langchain/core/prompts";
+
+const promptTemplate = PromptTemplate.fromTemplate(
+  "Tell me a joke about {topic}"
+);
+
+await promptTemplate.invoke({ topic: "cats" });
+\`\`\`
+
+#### ChatPromptTemplates
+
+These prompt templates are used to format an array of messages. These "templates" consist of an array of templates themselves.
+For example, a common way to construct and use a ChatPromptTemplate is as follows:
+
+\`\`\`typescript
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  ["user", "Tell me a joke about {topic}"],
+]);
+
+await promptTemplate.invoke({ topic: "cats" });
+\`\`\`
+
+In the above example, this ChatPromptTemplate will construct two messages when called.
+The first is a system message, that has no variables to format.
+The second is a HumanMessage, and will be formatted by the \`topic\` variable the user passes in.
+
+#### MessagesPlaceholder
+
+<span data-heading-keywords="messagesplaceholder"></span>
+
+This prompt template is responsible for adding an array of messages in a particular place.
+In the above ChatPromptTemplate, we saw how we could format two messages, each one a string.
+But what if we wanted the user to pass in an array of messages that we would slot into a particular spot?
+This is how you use MessagesPlaceholder.
+
+\`\`\`typescript
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
+
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  new MessagesPlaceholder("msgs"),
+]);
+
+promptTemplate.invoke({ msgs: [new HumanMessage({ content: "hi!" })] });
+\`\`\`
+
+This will produce an array of two messages, the first one being a system message, and the second one being the HumanMessage we passed in.
+If we had passed in 5 messages, then it would have produced 6 messages in total (the system message plus the 5 passed in).
+This is useful for letting an array of messages be slotted into a particular spot.
+
+An alternative way to accomplish the same thing without using the \`MessagesPlaceholder\` class explicitly is:
+
+\`\`\`typescript
+const promptTemplate = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant"],
+  ["placeholder", "{msgs}"], // <-- This is the changed part
+]);
+\`\`\`
+
+For specifics on how to use prompt templates, see the [relevant how-to guides here](/docs/how_to/#prompt-templates).
+
+### Example Selectors
+
+One common prompting technique for achieving better performance is to include examples as part of the prompt.
+This gives the language model concrete examples of how it should behave.
+Sometimes these examples are hardcoded into the prompt, but for more advanced situations it may be nice to dynamically select them.
+Example Selectors are classes responsible for selecting and then formatting examples into prompts.
+
+For specifics on how to use example selectors, see the [relevant how-to guides here](/docs/how_to/#example-selectors).
+
+### Output parsers
+
+<span data-heading-keywords="output parser"></span>
+
+:::note
+
+The information here refers to parsers that take a text output from a model try to parse it into a more structured representation.
+More and more models are supporting function (or tool) calling, which handles this automatically.
+It is recommended to use function/tool calling rather than output parsing.
+See documentation for that [here](/docs/concepts/#function-tool-calling).
+
+:::
+
+Responsible for taking the output of a model and transforming it to a more suitable format for downstream tasks.
+Useful when you are using LLMs to generate structured data, or to normalize output from chat models and LLMs.
+
+There are two main methods an output parser must implement:
+
+- "Get format instructions": A method which returns a string containing instructions for how the output of a language model should be formatted.
+- "Parse": A method which takes in a string (assumed to be the response from a language model) and parses it into some structure.
+
+And then one optional one:
+
+- "Parse with prompt": A method which takes in a string (assumed to be the response from a language model) and a prompt (assumed to be the prompt that generated such a response) and parses it into some structure. The prompt is largely provided in the event the OutputParser wants to retry or fix the output in some way, and needs information from the prompt to do so.
+
+Output parsers accept a string or \`BaseMessage\` as input and can return an arbitrary type.
+
+LangChain has many different types of output parsers. This is a list of output parsers LangChain supports. The table below has various pieces of information:
+
+**Name**: The name of the output parser
+
+**Supports Streaming**: Whether the output parser supports streaming.
+
+**Input Type**: Expected input type. Most output parsers work on both strings and messages, but some (like OpenAI Functions) need a message with specific arguments.
+
+**Output Type**: The output type of the object returned by the parser.
+
+**Description**: Our commentary on this output parser and when to use it.
+
+The current date is ${new Date().toISOString()}`;
+
+test("system prompt caching", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-sonnet-20240229",
-    temperature: 0,
-  });
-
-  const anthropicTool = {
-    name: "get_weather",
-    description:
-      "Get the weather of a specific location and return the temperature in Celsius.",
-    input_schema: {
-      type: "object",
-      properties: {
-        location: {
-          type: "string",
-          description: "The name of city to get the weather for.",
-        },
+    model: "claude-3-haiku-20240307",
+    clientOptions: {
+      defaultHeaders: {
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
-      required: ["location"],
     },
-  };
+  });
+  const messages = [
+    new SystemMessage({
+      content: [
+        {
+          type: "text",
+          text: `You are a pirate. Always respond in pirate dialect.\nUse the following as context when answering questions: ${CACHED_TEXT}`,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    }),
+    new HumanMessage({
+      content: "What types of messages are supported in LangChain?",
+    }),
+  ];
+  const res = await model.invoke(messages);
+  expect(
+    res.usage_metadata?.input_token_details?.cache_creation
+  ).toBeGreaterThan(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
+  const res2 = await model.invoke(messages);
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+  const stream = await model.stream(messages);
+  let agg;
+  for await (const chunk of stream) {
+    agg = agg === undefined ? chunk : concat(agg, chunk);
+  }
+  expect(agg).toBeDefined();
+  expect(agg!.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+});
 
-  test("Can bind & invoke StructuredTools", async () => {
-    const tools = [new WeatherTool()];
-
-    const modelWithTools = model.bind({
-      tools,
-    });
-
-    const result = await modelWithTools.invoke(
-      "What is the weather in London today?"
-    );
-    console.log(
-      {
-        tool_calls: JSON.stringify(result.content, null, 2),
+// TODO: Add proper test with long tool content
+test.skip("tool caching", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-haiku-20240307",
+    clientOptions: {
+      defaultHeaders: {
+        "anthropic-beta": "prompt-caching-2024-07-31",
       },
-      "Can bind & invoke StructuredTools"
-    );
-    expect(Array.isArray(result.content)).toBeTruthy();
-    if (!Array.isArray(result.content)) {
-      throw new Error("Content is not an array");
-    }
-    let toolCall: AnthropicToolResponse | undefined;
-    result.content.forEach((item) => {
-      if (item.type === "tool_use") {
-        toolCall = item as AnthropicToolResponse;
-      }
-    });
-    if (!toolCall) {
-      throw new Error("No tool call found");
-    }
-    expect(toolCall).toBeTruthy();
-    const { name, input } = toolCall;
-    expect(name).toBe("get_weather");
-    expect(input).toBeTruthy();
-    expect(input.location).toBeTruthy();
+    },
+  }).bindTools([
+    {
+      name: "get_weather",
+      description: "Get the weather for a specific location",
+      input_schema: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "Location to get the weather for",
+          },
+          unit: {
+            type: "string",
+            description: "Temperature unit to return",
+          },
+        },
+        required: ["location"],
+      },
+      cache_control: { type: "ephemeral" },
+    },
+  ]);
+  const messages = [
+    new HumanMessage({
+      content: "What is the weather in Regensburg?",
+    }),
+  ];
+  const res = await model.invoke(messages);
+  console.log(res);
+  expect(
+    res.usage_metadata?.input_token_details?.cache_creation
+  ).toBeGreaterThan(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
+  const res2 = await model.invoke(messages);
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+});
+
+test.skip("Test ChatAnthropic with custom client", async () => {
+  const client = new AnthropicVertex();
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-sonnet-20240229",
+    maxRetries: 0,
+    createClient: () => client,
+  });
+  const message = new HumanMessage("Hello!");
+  const res = await chat.invoke([message]);
+  // console.log({ res });
+  expect(res.usage_metadata?.input_token_details).toBeDefined();
+});
+
+test("human message caching", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-haiku-20240307",
+    clientOptions: {
+      defaultHeaders: {
+        "anthropic-beta": "prompt-caching-2024-07-31",
+      },
+    },
   });
 
-  test("Can bind & invoke AnthropicTools", async () => {
-    const modelWithTools = model.bind({
-      tools: [anthropicTool],
-    });
+  const messages = [
+    new SystemMessage({
+      content: [
+        {
+          type: "text",
+          text: `You are a pirate. Always respond in pirate dialect.\nUse the following as context when answering questions: ${CACHED_TEXT}`,
+        },
+      ],
+    }),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What types of messages are supported in LangChain?",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    }),
+  ];
 
-    const result = await modelWithTools.invoke(
-      "What is the weather in London today?"
-    );
-    console.log(
-      {
-        tool_calls: JSON.stringify(result.content, null, 2),
-      },
-      "Can bind & invoke StructuredTools"
-    );
-    expect(Array.isArray(result.content)).toBeTruthy();
-    if (!Array.isArray(result.content)) {
-      throw new Error("Content is not an array");
-    }
-    let toolCall: AnthropicToolResponse | undefined;
-    result.content.forEach((item) => {
-      if (item.type === "tool_use") {
-        toolCall = item as AnthropicToolResponse;
-      }
-    });
-    if (!toolCall) {
-      throw new Error("No tool call found");
-    }
-    expect(toolCall).toBeTruthy();
-    const { name, input } = toolCall;
-    expect(name).toBe("get_weather");
-    expect(input).toBeTruthy();
-    expect(input.location).toBeTruthy();
+  const res = await model.invoke(messages);
+  expect(
+    res.usage_metadata?.input_token_details?.cache_creation
+  ).toBeGreaterThan(0);
+  expect(res.usage_metadata?.input_token_details?.cache_read).toBe(0);
+  const res2 = await model.invoke(messages);
+  expect(res2.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(res2.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+});
+
+test("Can accept PDF documents", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
   });
 
-  test("Can bind & stream AnthropicTools", async () => {
-    const modelWithTools = model.bind({
-      tools: [anthropicTool],
-    });
+  const pdfPath =
+    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
-    const result = await modelWithTools.stream(
-      "What is the weather in London today?"
-    );
-    let finalMessage;
-    for await (const item of result) {
-      console.log("item", JSON.stringify(item, null, 2));
-      finalMessage = item;
-    }
+  const response = await model.invoke([
+    ["system", "Use the provided documents to answer the question"],
+    [
+      "user",
+      [
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBase64,
+          },
+        },
+        {
+          type: "text",
+          text: "Summarize the contents of this PDF",
+        },
+      ],
+    ],
+  ]);
 
-    if (!finalMessage) {
-      throw new Error("No final message returned");
-    }
+  expect(response.content.length).toBeGreaterThan(10);
+});
 
-    console.log(
-      {
-        tool_calls: JSON.stringify(finalMessage.content, null, 2),
-      },
-      "Can bind & invoke StructuredTools"
-    );
-    expect(Array.isArray(finalMessage.content)).toBeTruthy();
-    if (!Array.isArray(finalMessage.content)) {
-      throw new Error("Content is not an array");
-    }
-    let toolCall: AnthropicToolResponse | undefined;
-    finalMessage.content.forEach((item) => {
-      if (item.type === "tool_use") {
-        toolCall = item as AnthropicToolResponse;
-      }
-    });
-    if (!toolCall) {
-      throw new Error("No tool call found");
-    }
-    expect(toolCall).toBeTruthy();
-    const { name, input } = toolCall;
-    expect(name).toBe("get_weather");
-    expect(input).toBeTruthy();
-    expect(input.location).toBeTruthy();
+test("Citations", async () => {
+  const citationsModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
   });
 
-  test("withStructuredOutput with zod schema", async () => {
-    const modelWithTools = model.withStructuredOutput<{ location: string }>(
-      zodSchema,
-      {
-        name: "get_weather",
-      }
-    );
+  const messages = [
+    {
+      role: "user",
+      content: [
+        {
+          type: "document",
+          source: {
+            type: "text",
+            media_type: "text/plain",
+            data: "The grass the user is asking about is bluegrass. The sky is orange because it's night.",
+          },
+          title: "My Document",
+          context: "This is a trustworthy document.",
+          citations: {
+            enabled: true,
+          },
+        },
+        {
+          type: "text",
+          text: "What color is the grass and sky?",
+        },
+      ],
+    },
+  ];
 
-    const result = await modelWithTools.invoke(
-      "What is the weather in London today?"
-    );
-    console.log(
-      {
-        result,
-      },
-      "withStructuredOutput with zod schema"
-    );
-    expect(typeof result.location).toBe("string");
+  const response = await citationsModel.invoke(messages);
+
+  expect(response.content.length).toBeGreaterThan(2);
+  expect(Array.isArray(response.content)).toBe(true);
+  const blocksWithCitations = (response.content as any[]).filter(
+    (block) => block.citations !== undefined
+  );
+  expect(blocksWithCitations.length).toEqual(2);
+  expect(typeof blocksWithCitations[0].citations[0]).toEqual("object");
+
+  const stream = await citationsModel.stream(messages);
+  let aggregated;
+  let chunkHasCitation = false;
+  for await (const chunk of stream) {
+    aggregated = aggregated === undefined ? chunk : concat(aggregated, chunk);
+    if (
+      !chunkHasCitation &&
+      Array.isArray(chunk.content) &&
+      chunk.content.some((c: any) => c.citations !== undefined)
+    ) {
+      chunkHasCitation = true;
+    }
+  }
+  expect(chunkHasCitation).toBe(true);
+  expect(Array.isArray(aggregated?.content)).toBe(true);
+  expect(aggregated?.content.length).toBeGreaterThan(2);
+  expect(
+    (aggregated?.content as any[]).some((c) => c.citations !== undefined)
+  ).toBe(true);
+});
+
+test("Test thinking blocks multiturn invoke", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
   });
 
-  test("withStructuredOutput with AnthropicTool", async () => {
-    const modelWithTools = model.withStructuredOutput<{ location: string }>(
-      anthropicTool,
-      {
-        name: anthropicTool.name,
-      }
-    );
+  async function doInvoke(messages: BaseMessage[]) {
+    const response = await model.invoke(messages);
 
-    const result = await modelWithTools.invoke(
-      "What is the weather in London today?"
-    );
-    console.log(
-      {
-        result,
-      },
-      "withStructuredOutput with AnthropicTool"
-    );
-    expect(typeof result.location).toBe("string");
+    expect(Array.isArray(response.content)).toBe(true);
+    const content = response.content as AnthropicMessageResponse[];
+    expect(content.some((block) => "thinking" in (block as any))).toBe(true);
+
+    for (const block of response.content) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "thinking") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "thinking", "signature"].sort()
+        );
+        expect((block as any).thinking).toBeTruthy();
+        expect(typeof (block as any).thinking).toBe("string");
+        expect((block as any).signature).toBeTruthy();
+        expect(typeof (block as any).signature).toBe("string");
+      }
+    }
+    return response;
+  }
+
+  const invokeMessages = [new HumanMessage("Hello")];
+
+  invokeMessages.push(await doInvoke(invokeMessages));
+  invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await model.invoke(invokeMessages);
+});
+
+test("Test thinking blocks multiturn streaming", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
   });
 
-  test("withStructuredOutput JSON Schema only", async () => {
-    const jsonSchema = zodToJsonSchema(zodSchema);
-    const modelWithTools = model.withStructuredOutput<{ location: string }>(
-      jsonSchema,
-      {
-        name: "get_weather",
-      }
-    );
+  async function doStreaming(messages: BaseMessage[]) {
+    let full: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(messages)) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(Array.isArray(full?.content)).toBe(true);
+    const content3 = full?.content as AnthropicMessageResponse[];
+    expect(content3.some((block) => "thinking" in (block as any))).toBe(true);
 
-    const result = await modelWithTools.invoke(
-      "What is the weather in London today?"
-    );
-    console.log(
-      {
-        result,
-      },
-      "withStructuredOutput JSON Schema only"
-    );
-    expect(typeof result.location).toBe("string");
+    for (const block of full?.content || []) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "thinking") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "thinking", "signature", "index"].sort()
+        );
+        expect((block as any).thinking).toBeTruthy();
+        expect(typeof (block as any).thinking).toBe("string");
+        expect((block as any).signature).toBeTruthy();
+        expect(typeof (block as any).signature).toBe("string");
+      }
+    }
+    return full as AIMessageChunk;
+  }
+
+  const streamingMessages = [new HumanMessage("Hello")];
+
+  streamingMessages.push(await doStreaming(streamingMessages));
+  streamingMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doStreaming(streamingMessages);
+});
+
+test("Test redacted thinking blocks multiturn invoke", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
   });
+
+  async function doInvoke(messages: BaseMessage[]) {
+    const response = await model.invoke(messages);
+    let hasReasoning = false;
+
+    for (const block of response.content) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "redacted_thinking") {
+        hasReasoning = true;
+        expect(Object.keys(block).sort()).toEqual(["type", "data"].sort());
+        expect((block as any).data).toBeTruthy();
+        expect(typeof (block as any).data).toBe("string");
+      }
+    }
+    expect(hasReasoning).toBe(true);
+    return response;
+  }
+
+  const invokeMessages = [
+    new HumanMessage(
+      "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+    ),
+  ];
+
+  invokeMessages.push(await doInvoke(invokeMessages));
+  invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doInvoke(invokeMessages);
+});
+
+test("Test redacted thinking blocks multiturn streaming", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+    maxTokens: 5000,
+    thinking: { type: "enabled", budget_tokens: 2000 },
+  });
+
+  async function doStreaming(messages: BaseMessage[]) {
+    let full: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(messages)) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(Array.isArray(full?.content)).toBe(true);
+    let streamHasReasoning = false;
+
+    for (const block of full?.content || []) {
+      expect(typeof block).toBe("object");
+      if ((block as any).type === "redacted_thinking") {
+        streamHasReasoning = true;
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "data", "index"].sort()
+        );
+        expect((block as any).data).toBeTruthy();
+        expect(typeof (block as any).data).toBe("string");
+      }
+    }
+    expect(streamHasReasoning).toBe(true);
+    return full as AIMessageChunk;
+  }
+
+  const streamingMessages = [
+    new HumanMessage(
+      "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB"
+    ),
+  ];
+
+  streamingMessages.push(await doStreaming(streamingMessages));
+  streamingMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doStreaming(streamingMessages);
 });

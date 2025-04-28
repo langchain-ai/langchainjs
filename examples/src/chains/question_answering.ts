@@ -9,7 +9,7 @@ const docs = [
   new Document({ pageContent: "Harrison went to Harvard." }),
   new Document({ pageContent: "Ankush went to Princeton." }),
 ];
-const resA = await chainA.call({
+const resA = await chainA.invoke({
   input_documents: docs,
   question: "Where did Harrison go to college?",
 });
@@ -20,7 +20,7 @@ console.log({ resA });
 // Optionally limit the number of concurrent requests to the language model.
 const llmB = new OpenAI({ maxConcurrency: 10 });
 const chainB = loadQAMapReduceChain(llmB);
-const resB = await chainB.call({
+const resB = await chainB.invoke({
   input_documents: docs,
   question: "Where did Harrison go to college?",
 });

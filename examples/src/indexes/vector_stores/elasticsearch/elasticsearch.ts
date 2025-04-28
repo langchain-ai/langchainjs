@@ -77,7 +77,7 @@ export async function run() {
     k: 1,
     returnSourceDocuments: true,
   });
-  const response = await chain.call({ query: "What is Elasticsearch?" });
+  const response = await chain.invoke({ query: "What is Elasticsearch?" });
 
   console.log(JSON.stringify(response, null, 2));
   /*
@@ -96,7 +96,7 @@ export async function run() {
 
   await vectorStore.delete({ ids });
 
-  const response2 = await chain.call({ query: "What is Elasticsearch?" });
+  const response2 = await chain.invoke({ query: "What is Elasticsearch?" });
 
   console.log(JSON.stringify(response2, null, 2));
 

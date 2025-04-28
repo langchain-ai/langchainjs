@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 
 // Initialize the LLM to use to answer the question.
@@ -17,7 +17,7 @@ const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const chain = RetrievalQAChain.fromLLM(model, vectorStore.asRetriever(), {
   returnSourceDocuments: true, // Can also be passed into the constructor
 });
-const res = await chain.call({
+const res = await chain.invoke({
   query: "What did the president say about Justice Breyer?",
 });
 console.log(JSON.stringify(res, null, 2));

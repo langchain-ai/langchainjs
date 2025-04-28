@@ -1,4 +1,15 @@
-import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp";
+/* eslint-disable import/no-extraneous-dependencies */
+import {
+  LlamaModel,
+  LlamaContext,
+  LlamaChatSession,
+  LlamaJsonSchemaGrammar,
+  LlamaGrammar,
+  type LlamaModelOptions,
+  LlamaContextOptions,
+  GbnfJsonSchema,
+  Llama,
+} from "node-llama-cpp";
 
 /**
  * Note that the modelPath is the only required parameter. For testing you
@@ -41,10 +52,17 @@ export interface LlamaBaseCppInputs {
   useMmap?: boolean;
   /** Only load the vocabulary, no weights. */
   vocabOnly?: boolean;
+  /** JSON schema to be used to format output. Also known as `grammar`. */
+  jsonSchema?: object;
+  /** GBNF string to be used to format output. Also known as `grammar`. */
+  gbnf?: string;
 }
 
-export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
-  const options = {
+export async function createLlamaModel(
+  inputs: LlamaBaseCppInputs,
+  llama: Llama
+): Promise<LlamaModel> {
+  const options: LlamaModelOptions = {
     gpuLayers: inputs?.gpuLayers,
     modelPath: inputs.modelPath,
     useMlock: inputs?.useMlock,
@@ -52,28 +70,47 @@ export function createLlamaModel(inputs: LlamaBaseCppInputs): LlamaModel {
     vocabOnly: inputs?.vocabOnly,
   };
 
-  return new LlamaModel(options);
+  return llama.loadModel(options);
 }
 
-export function createLlamaContext(
+export async function createLlamaContext(
   model: LlamaModel,
   inputs: LlamaBaseCppInputs
-): LlamaContext {
-  const options = {
+): Promise<LlamaContext> {
+  const options: LlamaContextOptions = {
     batchSize: inputs?.batchSize,
     contextSize: inputs?.contextSize,
-    embedding: inputs?.embedding,
-    f16Kv: inputs?.f16Kv,
-    logitsAll: inputs?.logitsAll,
-    model,
-    prependBos: inputs?.prependBos,
-    seed: inputs?.seed,
     threads: inputs?.threads,
   };
 
-  return new LlamaContext(options);
+  return model.createContext(options);
 }
 
 export function createLlamaSession(context: LlamaContext): LlamaChatSession {
-  return new LlamaChatSession({ context });
+  return new LlamaChatSession({ contextSequence: context.getSequence() });
+}
+
+export async function createLlamaJsonSchemaGrammar(
+  schemaString: object | undefined,
+  llama: Llama
+): Promise<LlamaJsonSchemaGrammar<GbnfJsonSchema> | undefined> {
+  if (schemaString === undefined) {
+    return undefined;
+  }
+
+  const schemaJSON = schemaString as GbnfJsonSchema;
+  return await llama.createGrammarForJsonSchema(schemaJSON);
+}
+
+export async function createCustomGrammar(
+  filePath: string | undefined,
+  llama: Llama
+): Promise<LlamaGrammar | undefined> {
+  if (filePath === undefined) {
+    return undefined;
+  }
+
+  return llama.createGrammar({
+    grammar: filePath,
+  });
 }

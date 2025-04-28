@@ -19,8 +19,12 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community
+npm install @langchain/community @langchain/core
 ```
+
+import UnifiedModelParamsTooltip from "@mdx_components/unified_model_params_tooltip.mdx";
+
+<UnifiedModelParamsTooltip></UnifiedModelParamsTooltip>
 
 ## Basic usage
 
@@ -69,3 +73,8 @@ This feature supports calling tools like a search engine to get additional data 
 import MinimaxPlugins from "@examples/models/chat/minimax_plugins.ts";
 
 <CodeBlock language="typescript">{MinimaxPlugins}</CodeBlock>
+
+## Related
+
+- Chat model [conceptual guide](/docs/concepts/chat_models)
+- Chat model [how-to guides](/docs/how_to/#chat-models)

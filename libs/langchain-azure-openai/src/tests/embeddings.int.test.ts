@@ -18,6 +18,16 @@ test("Test OpenAIEmbeddings.embedDocuments", async () => {
   expect(typeof res[1][0]).toBe("number");
 });
 
+test("Test OpenAIEmbeddings.embedDocuments batching", async () => {
+  const embeddings = new AzureOpenAIEmbeddings({
+    batchSize: 16,
+  });
+  const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
+  expect(res).toHaveLength(2);
+  expect(typeof res[0][0]).toBe("number");
+  expect(typeof res[1][0]).toBe("number");
+});
+
 test("Test OpenAIEmbeddings concurrency", async () => {
   const embeddings = new AzureOpenAIEmbeddings({
     batchSize: 1,

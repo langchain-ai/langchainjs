@@ -83,7 +83,8 @@ export class OpenAIAssistantRunnable<
       tools: formattedTools,
       model,
       file_ids: fileIds,
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     return new this({
       client: oaiClient,
@@ -114,7 +115,7 @@ export class OpenAIAssistantRunnable<
           {
             role: "user",
             content: input.content,
-            file_ids: input.fileIds,
+            attachments: input.attachments,
             metadata: input.messagesMetadata,
           },
         ],
@@ -128,9 +129,10 @@ export class OpenAIAssistantRunnable<
       await this.client.beta.threads.messages.create(input.threadId, {
         content: input.content,
         role: "user",
-        file_ids: input.file_ids,
+        attachments: input.attachments,
         metadata: input.messagesMetadata,
-      });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
       run = await this._createRun(input);
     } else {
       // Submitting tool outputs to an existing run, outside the AgentExecutor
@@ -189,7 +191,8 @@ export class OpenAIAssistantRunnable<
       instructions,
       model,
       file_ids: fileIds,
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
   }
 
   private async _parseStepsInput(input: RunInput): Promise<RunInput> {
@@ -291,7 +294,7 @@ export class OpenAIAssistantRunnable<
     const run = await this._waitForRun(runId, threadId);
     if (run.status === "completed") {
       const messages = await this.client.beta.threads.messages.list(threadId, {
-        order: "asc",
+        order: "desc",
       });
       const newMessages = messages.data.filter((msg) => msg.run_id === runId);
       if (!this.asAgent) {

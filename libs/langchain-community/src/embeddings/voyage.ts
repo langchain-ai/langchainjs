@@ -14,6 +14,31 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
    * limited by the Voyage AI API to a maximum of 8.
    */
   batchSize?: number;
+
+  /**
+   * Input type for the embeddings request.
+   */
+  inputType?: string;
+
+  /**
+   * Whether to truncate the input texts to the maximum length allowed by the model.
+   */
+  truncation?: boolean;
+
+  /**
+   * The desired dimension of the output embeddings.
+   */
+  outputDimension?: number;
+
+  /**
+   * The data type of the output embeddings. Can be "float" or "int8".
+   */
+  outputDtype?: string;
+
+  /**
+   * The format of the output embeddings. Can be "float", "base64", or "ubinary".
+   */
+  encodingFormat?: string;
 }
 
 /**
@@ -32,6 +57,31 @@ export interface CreateVoyageEmbeddingRequest {
    * @memberof CreateVoyageEmbeddingRequest
    */
   input: string | string[];
+
+  /**
+   * Input type for the embeddings request.
+   */
+  input_type?: string;
+
+  /**
+   * Whether to truncate the input texts.
+   */
+  truncation?: boolean;
+
+  /**
+   * The desired dimension of the output embeddings.
+   */
+  output_dimension?: number;
+
+  /**
+   * The data type of the output embeddings.
+   */
+  output_dtype?: string;
+
+  /**
+   * The format of the output embeddings.
+   */
+  encoding_format?: string;
 }
 
 /**
@@ -53,6 +103,16 @@ export class VoyageEmbeddings
 
   headers?: Record<string, string>;
 
+  inputType?: string;
+
+  truncation?: boolean;
+
+  outputDimension?: number;
+
+  outputDtype?: string;
+
+  encodingFormat?: string;
+
   /**
    * Constructor for the VoyageEmbeddings class.
    * @param fields - An optional object with properties to configure the instance.
@@ -61,6 +121,7 @@ export class VoyageEmbeddings
     fields?: Partial<VoyageEmbeddingsParams> & {
       verbose?: boolean;
       apiKey?: string;
+      inputType?: string;
     }
   ) {
     const fieldsWithDefaults = { ...fields };
@@ -78,6 +139,11 @@ export class VoyageEmbeddings
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;
+    this.inputType = fieldsWithDefaults?.inputType;
+    this.truncation = fieldsWithDefaults?.truncation;
+    this.outputDimension = fieldsWithDefaults?.outputDimension;
+    this.outputDtype = fieldsWithDefaults?.outputDtype;
+    this.encodingFormat = fieldsWithDefaults?.encodingFormat;
   }
 
   /**
@@ -92,6 +158,11 @@ export class VoyageEmbeddings
       this.embeddingWithRetry({
         model: this.modelName,
         input: batch,
+        input_type: this.inputType,
+        truncation: this.truncation,
+        output_dimension: this.outputDimension,
+        output_dtype: this.outputDtype,
+        encoding_format: this.encodingFormat,
       })
     );
 
@@ -119,6 +190,11 @@ export class VoyageEmbeddings
     const { data } = await this.embeddingWithRetry({
       model: this.modelName,
       input: text,
+      input_type: this.inputType,
+      truncation: this.truncation,
+      output_dimension: this.outputDimension,
+      output_dtype: this.outputDtype,
+      encoding_format: this.encodingFormat,
     });
 
     return data[0].embedding;
@@ -129,7 +205,6 @@ export class VoyageEmbeddings
    * @param request - An object with properties to configure the request.
    * @returns A Promise that resolves to the response from the Voyage AI API.
    */
-
   private async embeddingWithRetry(request: CreateVoyageEmbeddingRequest) {
     const makeCompletionRequest = async () => {
       const url = `${this.apiUrl}`;

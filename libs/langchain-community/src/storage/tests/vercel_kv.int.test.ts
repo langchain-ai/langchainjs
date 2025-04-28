@@ -39,8 +39,10 @@ describe("VercelKVStore", () => {
       encoder.encode(value1),
       encoder.encode(value2),
     ]);
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     for await (const key of store.yieldKeys()) {
-      console.log(key);
+      // console.log(key);
     }
     await store.mdelete(["key1", "key2"]);
     const retrievedValues2 = await store.mget(["key1", "key2"]);
@@ -69,7 +71,7 @@ describe("VercelKVStore", () => {
     for await (const key of store.yieldKeys(prefix)) {
       yieldedKeys.push(key);
     }
-    console.log(yieldedKeys);
+    // console.log(yieldedKeys);
     expect(yieldedKeys).toEqual(expect.arrayContaining(prefixedKeys));
     await store.mdelete(prefixedKeys);
     const retrievedValues2 = await store.mget(prefixedKeys);

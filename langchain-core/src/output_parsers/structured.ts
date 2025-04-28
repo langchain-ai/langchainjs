@@ -81,7 +81,7 @@ export class StructuredOutputParser<
 
 "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
-For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}}}
+For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
 would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
 Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
@@ -104,7 +104,15 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return await this.schema.parseAsync(JSON.parse(json));
+
+      const escapedJson = json
+        .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (_match, capturedGroup) => {
+          const escapedInsideQuotes = capturedGroup.replace(/\n/g, "\\n");
+          return `"${escapedInsideQuotes}"`;
+        })
+        .replace(/\n/g, "");
+
+      return await this.schema.parseAsync(JSON.parse(escapedJson));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,

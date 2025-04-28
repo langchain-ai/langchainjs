@@ -1,0 +1,97 @@
+---
+sidebar_position: 1
+sidebar_label: v0.2
+---
+
+# LangChain v0.2
+
+LangChain v0.2 was released in May 2024. This release includes a number of breaking changes and deprecations. This document contains a guide on upgrading to 0.2.x, as well as a list of deprecations and breaking changes.
+
+:::note Reference
+
+- [Migrating to Astream Events v2](/docs/versions/v0_2/migrating_astream_events)
+
+:::
+
+## Migration
+
+This documentation will help you upgrade your code to LangChain `0.2.x.`. To prepare for migration, we first recommend you take the following steps:
+
+1. install the 0.2.x versions of `@langchain/core`, langchain and upgrade to recent versions of other packages that you may be using (e.g. `@langchain/langgraph`, `@langchain/community`, `@langchain/openai`, etc.)
+2. Verify that your code runs properly with the new packages (e.g., unit tests pass)
+3. Install a recent version of `langchain-cli` , and use the tool to replace old imports used by your code with the new imports. (See instructions below.)
+4. Manually resolve any remaining deprecation warnings
+5. Re-run unit tests
+
+### Upgrade to new imports
+
+We created a tool to help migrate your code. This tool is still in **beta** and may not cover all cases, but
+we hope that it will help you migrate your code more quickly.
+
+The migration script has the following limitations:
+
+1. It's limited to helping users move from old imports to new imports. It doesn't help address other deprecations.
+2. It can't handle imports that involve `as` .
+3. New imports are always placed in global scope, even if the old import that was replaced was located inside some local scope (e..g, function body).
+4. It will likely miss some deprecated imports.
+
+Here is an example of the import changes that the migration script can help apply automatically:
+
+| From Package           | To Package                 | Deprecated Import                                                          | New Import                                                                       |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `langchain`            | `@langchain/community`     | `import { UpstashVectorStore } from "langchain/vectorstores/upstash"`      | `import { UpstashVectorStore } from "@langchain/community/vectorstores/upstash"` |
+| `@langchain/community` | `@langchain/openai`        | `import { ChatOpenAI } from "@langchain/community/chat_models/openai"`     | `import { ChatOpenAI } from "@langchain/openai"`                                 |
+| `langchain`            | `@langchain/core`          | `import { Document } from "langchain/schema/document"`                     | `import { Document } from "@langchain/core/documents"`                           |
+| `langchain`            | `@langchain/textsplitters` | `import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"` | `import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"`      |
+
+#### Deprecation timeline
+
+We have two main types of deprecations:
+
+1. Code that was moved from `langchain` into another package (e.g, `@langchain/community`)
+
+If you try to import it from `langchain`, it will fail since the entrypoint has been removed.
+
+2. Code that has better alternatives available and will eventually be removed, so there's only a single way to do things. (e.g., `predictMessages` method in ChatModels has been deprecated in favor of `invoke`).
+
+Many of these were marked for removal in 0.2. We have bumped the removal to 0.3.
+
+#### Installation
+
+:::note
+The 0.2.X migration script is only available in version `0.0.14-rc.1` or later.
+:::
+
+```bash npm2yarn
+npm i @langchain/scripts@0.0.14-rc.1
+```
+
+#### Usage
+
+Given that the migration script is not perfect, you should make sure you have a backup of your code first (e.g., using version control like `git`).
+
+For example, say your code still uses `import ChatOpenAI from "@langchain/community/chat_models/openai";`:
+
+Invoking the migration script will replace this import with `import ChatOpenAI from "@langchain/openai";`.
+
+```typescript
+import { updateEntrypointsFrom0_x_xTo0_2_x } from "@langchain/scripts/migrations";
+
+const pathToMyProject = "..."; // This path is used in the following glob pattern: `${projectPath}/**/*.{ts,tsx,js,jsx}`.
+
+updateEntrypointsFrom0_x_xTo0_2_x({
+  projectPath: pathToMyProject,
+  shouldLog: true,
+});
+```
+
+#### Other options
+
+```typescript
+updateEntrypointsFrom0_x_xTo0_2_x({
+  projectPath: pathToMyProject,
+  tsConfigPath: "tsconfig.json", // Path to the tsConfig file. This will be used to load all the project files into the script.
+  testRun: true, // If true, the script will not save any changes, but will log the changes that would be made.
+  files: ["..."], // A list of .ts file paths to check. If this is provided, the script will only check these files.
+});
+```

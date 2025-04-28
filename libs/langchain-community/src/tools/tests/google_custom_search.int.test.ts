@@ -4,7 +4,9 @@ import { GoogleCustomSearch } from "../google_custom_search.js";
 test.skip("GoogleCustomSearchTool", async () => {
   const tool = new GoogleCustomSearch();
 
-  const result = await tool.call("What is Langchain?");
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
+  const result = await tool.invoke("What is Langchain?");
 
-  console.log({ result });
+  // console.log({ result });
 });

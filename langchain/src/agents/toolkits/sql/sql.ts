@@ -1,6 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import type { ToolInterface } from "@langchain/core/tools";
-import { Toolkit } from "@langchain/community/agents/toolkits/base";
+import { type ToolInterface, BaseToolkit } from "@langchain/core/tools";
 import { renderTemplate } from "@langchain/core/prompts";
 import {
   InfoSqlTool,
@@ -35,7 +34,7 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
  * console.log(`Got output ${result.output}`);
  * ```
  */
-export class SqlToolkit extends Toolkit {
+export class SqlToolkit extends BaseToolkit {
   tools: ToolInterface[];
 
   db: SqlDatabase;

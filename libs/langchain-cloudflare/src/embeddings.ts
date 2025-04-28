@@ -1,5 +1,4 @@
-import { Ai } from "@cloudflare/ai";
-import { Fetcher } from "@cloudflare/workers-types";
+import { Ai } from "@cloudflare/workers-types";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
@@ -14,10 +13,17 @@ type AiTextEmbeddingsOutput = {
 
 export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
-  binding: Fetcher;
+  binding: Ai;
 
-  /** Model name to use */
+  /**
+   * Model name to use
+   * Alias for `model`
+   */
   modelName?: string;
+  /**
+   * Model name to use
+   */
+  model?: string;
 
   /**
    * The maximum number of documents to embed in a single request.
@@ -34,6 +40,8 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
   modelName = "@cf/baai/bge-base-en-v1.5";
 
+  model = "@cf/baai/bge-base-en-v1.5";
+
   batchSize = 50;
 
   stripNewLines = true;
@@ -48,8 +56,9 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
         "Must supply a Workers AI binding, eg { binding: env.AI }"
       );
     }
-    this.ai = new Ai(fields.binding);
-    this.modelName = fields.modelName ?? this.modelName;
+    this.ai = fields.binding;
+    this.modelName = fields?.model ?? fields.modelName ?? this.model;
+    this.model = this.modelName;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 
@@ -84,7 +93,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
     return this.caller.call(async () => {
       const response: AiTextEmbeddingsOutput = await this.ai.run(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.modelName as any,
+        this.model as any,
         {
           text: texts,
         } as AiTextEmbeddingsInput

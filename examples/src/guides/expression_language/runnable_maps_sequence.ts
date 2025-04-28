@@ -1,5 +1,4 @@
 import { CohereEmbeddings } from "@langchain/cohere";
-import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
@@ -8,11 +7,12 @@ import {
 } from "@langchain/core/runnables";
 import { Document } from "@langchain/core/documents";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const model = new ChatAnthropic();
-const vectorstore = await HNSWLib.fromDocuments(
+const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: "mitochondria is the powerhouse of the cell", metadata: {} }],
-  new CohereEmbeddings()
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const retriever = vectorstore.asRetriever();
 const template = `Answer the question based only on the following context:

@@ -1,6 +1,6 @@
 import { loadSummarizationChain } from "langchain/chains";
-import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { TokenTextSplitter } from "langchain/text_splitter";
+import { SearchApiLoader } from "@langchain/community/document_loaders/web/searchapi";
+import { TokenTextSplitter } from "@langchain/textsplitters";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropic } from "@langchain/anthropic";
 
@@ -19,7 +19,7 @@ const splitter = new TokenTextSplitter({
 const docsSummary = await splitter.splitDocuments(docs);
 
 const llmSummary = new ChatAnthropic({
-  modelName: "claude-3-sonnet-20240229",
+  model: "claude-3-sonnet-20240229",
   temperature: 0.3,
 });
 

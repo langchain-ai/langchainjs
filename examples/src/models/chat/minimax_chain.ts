@@ -20,7 +20,7 @@ const chainB = new LLMChain({
   llm: chat,
 });
 
-const resB = await chainB.call({
+const resB = await chainB.invoke({
   input_language: "English",
   output_language: "Chinese",
   text: "I love programming.",

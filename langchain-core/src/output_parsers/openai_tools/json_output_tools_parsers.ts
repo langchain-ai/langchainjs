@@ -1,6 +1,13 @@
 import { z } from "zod";
-import { ChatGeneration } from "../../outputs.js";
-import { BaseLLMOutputParser, OutputParserException } from "../base.js";
+import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
+import { OutputParserException } from "../base.js";
+import { parsePartialJson } from "../json.js";
+import { InvalidToolCall, ToolCall } from "../../messages/tool.js";
+import {
+  BaseCumulativeTransformOutputParser,
+  BaseCumulativeTransformOutputParserInput,
+} from "../transform.js";
+import { isAIMessage } from "../../messages/ai.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -9,25 +16,108 @@ export type ParsedToolCall = {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
-
-  /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
-  name: string;
-
-  /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
-  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type JsonOutputToolsParserParams = {
   /** Whether to return the tool call id. */
   returnId?: boolean;
-};
+} & BaseCumulativeTransformOutputParserInput;
+
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options: { returnId?: boolean; partial: true }
+): ToolCall | undefined;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: false }
+): ToolCall;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: boolean }
+): ToolCall | undefined;
+export function parseToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  options?: { returnId?: boolean; partial?: boolean }
+): ToolCall | undefined {
+  if (rawToolCall.function === undefined) {
+    return undefined;
+  }
+  let functionArgs;
+  if (options?.partial) {
+    try {
+      functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
+    } catch (e) {
+      return undefined;
+    }
+  } else {
+    try {
+      functionArgs = JSON.parse(rawToolCall.function.arguments);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new OutputParserException(
+        [
+          `Function "${rawToolCall.function.name}" arguments:`,
+          ``,
+          rawToolCall.function.arguments,
+          ``,
+          `are not valid JSON.`,
+          `Error: ${e.message}`,
+        ].join("\n")
+      );
+    }
+  }
+
+  const parsedToolCall: ToolCall = {
+    name: rawToolCall.function.name,
+    args: functionArgs,
+    type: "tool_call",
+  };
+
+  if (options?.returnId) {
+    parsedToolCall.id = rawToolCall.id;
+  }
+
+  return parsedToolCall;
+}
+
+export function convertLangChainToolCallToOpenAI(toolCall: ToolCall) {
+  if (toolCall.id === undefined) {
+    throw new Error(`All OpenAI tool calls must have an "id" field.`);
+  }
+  return {
+    id: toolCall.id,
+    type: "function",
+    function: {
+      name: toolCall.name,
+      arguments: JSON.stringify(toolCall.args),
+    },
+  };
+}
+
+export function makeInvalidToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>,
+  errorMsg?: string
+): InvalidToolCall {
+  return {
+    name: rawToolCall.function?.name,
+    args: rawToolCall.function?.arguments,
+    id: rawToolCall.id,
+    error: errorMsg,
+    type: "invalid_tool_call",
+  };
+}
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object.
  */
-export class JsonOutputToolsParser extends BaseLLMOutputParser<
-  ParsedToolCall[]
-> {
+export class JsonOutputToolsParser<
+  T
+> extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {
     return "JsonOutputToolsParser";
   }
@@ -43,48 +133,63 @@ export class JsonOutputToolsParser extends BaseLLMOutputParser<
     this.returnId = fields?.returnId ?? this.returnId;
   }
 
+  protected _diff() {
+    throw new Error("Not supported.");
+  }
+
+  async parse(): Promise<T> {
+    throw new Error("Not implemented.");
+  }
+
+  async parseResult(generations: ChatGeneration[]): Promise<T> {
+    const result = await this.parsePartialResult(generations, false);
+    return result;
+  }
+
   /**
    * Parses the output and returns a JSON object. If `argsOnly` is true,
    * only the arguments of the function call are returned.
    * @param generations The output of the LLM to parse.
    * @returns A JSON object representation of the function call or its arguments.
    */
-  async parseResult(generations: ChatGeneration[]): Promise<ParsedToolCall[]> {
-    const toolCalls = generations[0].message.additional_kwargs.tool_calls;
-    if (!toolCalls) {
-      throw new Error(
-        `No tools_call in message ${JSON.stringify(generations)}`
-      );
-    }
-    const clonedToolCalls = JSON.parse(JSON.stringify(toolCalls));
-    const parsedToolCalls = [];
-    for (const toolCall of clonedToolCalls) {
-      if (toolCall.function !== undefined) {
-        // @ts-expect-error name and arguemnts are defined by Object.defineProperty
-        const parsedToolCall: ParsedToolCall = {
-          type: toolCall.function.name,
-          args: JSON.parse(toolCall.function.arguments),
-        };
-
-        if (this.returnId) {
-          parsedToolCall.id = toolCall.id;
+  async parsePartialResult(
+    generations: ChatGenerationChunk[] | ChatGeneration[],
+    partial = true
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<any> {
+    const message = generations[0].message;
+    let toolCalls;
+    if (isAIMessage(message) && message.tool_calls?.length) {
+      toolCalls = message.tool_calls.map((toolCall) => {
+        const { id, ...rest } = toolCall;
+        if (!this.returnId) {
+          return rest;
         }
-
-        // backward-compatibility with previous
-        // versions of Langchain JS, which uses `name` and `arguments`
-        Object.defineProperty(parsedToolCall, "name", {
-          get() {
-            return this.type;
-          },
-        });
-
-        Object.defineProperty(parsedToolCall, "arguments", {
-          get() {
-            return this.args;
-          },
-        });
-
-        parsedToolCalls.push(parsedToolCall);
+        return {
+          id,
+          ...rest,
+        };
+      });
+    } else if (message.additional_kwargs.tool_calls !== undefined) {
+      const rawToolCalls = JSON.parse(
+        JSON.stringify(message.additional_kwargs.tool_calls)
+      );
+      toolCalls = rawToolCalls.map((rawToolCall: Record<string, unknown>) => {
+        return parseToolCall(rawToolCall, { returnId: this.returnId, partial });
+      });
+    }
+    if (!toolCalls) {
+      return [];
+    }
+    const parsedToolCalls = [];
+    for (const toolCall of toolCalls) {
+      if (toolCall !== undefined) {
+        const backwardsCompatibleToolCall: ParsedToolCall = {
+          type: toolCall.name,
+          args: toolCall.args,
+          id: toolCall.id,
+        };
+        parsedToolCalls.push(backwardsCompatibleToolCall);
       }
     }
     return parsedToolCalls;
@@ -97,10 +202,8 @@ export type JsonOutputKeyToolsParserParams<
 > = {
   keyName: string;
   returnSingle?: boolean;
-  /** Whether to return the tool call id. */
-  returnId?: boolean;
   zodSchema?: z.ZodType<T>;
-};
+} & JsonOutputToolsParserParams;
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object if you are
@@ -109,7 +212,7 @@ export type JsonOutputKeyToolsParserParams<
 export class JsonOutputKeyToolsParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
-> extends BaseLLMOutputParser<T> {
+> extends JsonOutputToolsParser<T> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
   }
@@ -126,15 +229,12 @@ export class JsonOutputKeyToolsParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  initialParser: JsonOutputToolsParser;
-
   zodSchema?: z.ZodType<T>;
 
   constructor(params: JsonOutputKeyToolsParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
-    this.initialParser = new JsonOutputToolsParser(params);
     this.zodSchema = params.zodSchema;
   }
 
@@ -158,16 +258,44 @@ export class JsonOutputKeyToolsParser<
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async parseResult(generations: ChatGeneration[]): Promise<any> {
-    const results = await this.initialParser.parseResult(generations);
+  async parsePartialResult(generations: ChatGeneration[]): Promise<any> {
+    const results = await super.parsePartialResult(generations);
     const matchingResults = results.filter(
-      (result) => result.type === this.keyName
+      (result: ParsedToolCall) => result.type === this.keyName
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
       matchingResults;
+    if (!matchingResults.length) {
+      return undefined;
+    }
     if (!this.returnId) {
-      returnedValues = matchingResults.map((result) => result.args);
+      returnedValues = matchingResults.map(
+        (result: ParsedToolCall) => result.args
+      );
+    }
+    if (this.returnSingle) {
+      return returnedValues[0];
+    }
+    return returnedValues;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async parseResult(generations: ChatGeneration[]): Promise<any> {
+    const results = await super.parsePartialResult(generations, false);
+    const matchingResults = results.filter(
+      (result: ParsedToolCall) => result.type === this.keyName
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let returnedValues: ParsedToolCall[] | Record<string, any>[] =
+      matchingResults;
+    if (!matchingResults.length) {
+      return undefined;
+    }
+    if (!this.returnId) {
+      returnedValues = matchingResults.map(
+        (result: ParsedToolCall) => result.args
+      );
     }
     if (this.returnSingle) {
       return this._validateResult(returnedValues[0]);

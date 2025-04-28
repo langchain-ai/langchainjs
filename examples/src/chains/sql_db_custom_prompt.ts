@@ -43,7 +43,7 @@ const chain = new SqlDatabaseChain({
   prompt,
 });
 
-const res = await chain.call({
+const res = await chain.invoke({
   query: "How many employees are there in the foobar table?",
 });
 console.log(res);

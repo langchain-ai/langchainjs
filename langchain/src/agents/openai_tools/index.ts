@@ -7,11 +7,12 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnablePassthrough } from "@langchain/core/runnables";
 import { OpenAIClient } from "@langchain/openai";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
+import { ToolDefinition } from "@langchain/core/language_models/base";
 import { formatToOpenAIToolMessages } from "../format_scratchpad/openai_tools.js";
 import {
   OpenAIToolsAgentOutputParser,
   type ToolsAgentStep,
-} from "../openai/output_parser.js";
+} from "./output_parser.js";
 import { AgentRunnableSequence } from "../agent.js";
 
 export { OpenAIToolsAgentOutputParser, type ToolsAgentStep };
@@ -35,7 +36,7 @@ export type CreateOpenAIToolsAgentParams = {
     }
   >;
   /** Tools this agent has access to. */
-  tools: StructuredToolInterface[];
+  tools: StructuredToolInterface[] | ToolDefinition[];
   /** The prompt to use, must have an input key of `agent_scratchpad`. */
   prompt: ChatPromptTemplate;
   /**
@@ -115,7 +116,9 @@ export async function createOpenAIToolsAgent({
       ].join("\n")
     );
   }
-  const modelWithTools = llm.bind({ tools: tools.map(convertToOpenAITool) });
+  const modelWithTools = llm.bind({
+    tools: tools.map((tool) => convertToOpenAITool(tool)),
+  });
   const agent = AgentRunnableSequence.fromRunnables(
     [
       RunnablePassthrough.assign({

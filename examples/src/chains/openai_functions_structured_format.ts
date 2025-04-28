@@ -2,12 +2,12 @@ import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { ChatOpenAI } from "@langchain/openai";
-import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 } from "@langchain/core/prompts";
+import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
 const zodSchema = z.object({
   foods: z
@@ -31,7 +31,7 @@ const prompt = new ChatPromptTemplate({
   inputVariables: ["inputText"],
 });
 
-const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 });
 
 // Binding "function_call" below makes the model always call the specified function.
 // If you want to allow the model to call functions selectively, omit it.

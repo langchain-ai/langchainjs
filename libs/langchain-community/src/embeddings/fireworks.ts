@@ -7,7 +7,11 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  * parameters specific to the FireworksEmbeddings class.
  */
 export interface FireworksEmbeddingsParams extends EmbeddingsParams {
+  /**
+   * @deprecated Use `model` instead.
+   */
   modelName: string;
+  model: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -41,7 +45,12 @@ export class FireworksEmbeddings
   extends Embeddings
   implements FireworksEmbeddingsParams
 {
+  /**
+   * @deprecated Use `model` instead.
+   */
   modelName = "nomic-ai/nomic-embed-text-v1.5";
+
+  model = "nomic-ai/nomic-embed-text-v1.5";
 
   batchSize = 8;
 
@@ -74,7 +83,8 @@ export class FireworksEmbeddings
       throw new Error("Fireworks AI API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
+    this.modelName = this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;
@@ -90,7 +100,7 @@ export class FireworksEmbeddings
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         input: batch,
       })
     );
@@ -117,7 +127,7 @@ export class FireworksEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
-      model: this.modelName,
+      model: this.model,
       input: text,
     });
 

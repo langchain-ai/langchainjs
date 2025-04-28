@@ -10,7 +10,7 @@ import { getBufferString } from "@langchain/core/messages";
 import {
   BaseChatMemory,
   BaseChatMemoryInput,
-} from "@langchain/community/memory/chat_memory";
+} from "../../../memory/chat_memory.js";
 import { _formatIntermediateSteps } from "../../openai_functions/index.js";
 
 /**

@@ -324,9 +324,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
       embeddings,
       {
         indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        },
       }
     );
 
@@ -346,9 +343,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
       embeddings,
       {
         indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        },
       }
     );
 
@@ -375,9 +369,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
       embeddings,
       {
         indexName: INDEX_NAME,
-        search: {
-          type: AzureAISearchQueryType.Similarity,
-        },
       }
     );
 
@@ -399,9 +390,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
   test("test search document with query key", async () => {
     const store = new AzureAISearchVectorStore(embeddings, {
       indexName: INDEX_NAME,
-      search: {
-        type: AzureAISearchQueryType.Similarity,
-      },
     });
 
     const result = await store.similaritySearch("test", 1);
@@ -416,9 +404,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     const id = new Date().getTime().toString();
     const store = new AzureAISearchVectorStore(embeddings, {
       indexName: INDEX_NAME,
-      search: {
-        type: AzureAISearchQueryType.Similarity,
-      },
     });
 
     await store.addDocuments(
@@ -456,9 +441,6 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
 
     const store = new AzureAISearchVectorStore(embeddings, {
       indexName: INDEX_NAME,
-      search: {
-        type: AzureAISearchQueryType.Similarity,
-      },
     });
 
     await store.addDocuments([
@@ -487,5 +469,25 @@ describe.skip("AzureAISearchVectorStore integration tests", () => {
     });
 
     expect(docs).toHaveLength(0);
+  });
+
+  test("test connect with custom credentials", async () => {
+    const store = await AzureAISearchVectorStore.fromTexts(
+      ["test index document upload text"],
+      [],
+      embeddings,
+      {
+        indexName: INDEX_NAME,
+        credentials: new AzureKeyCredential(process.env.AZURE_AISEARCH_KEY!),
+      }
+    );
+
+    // Need to wait a bit for the document to be indexed
+    await setTimeout(1000);
+
+    const docs = await store.similaritySearch("test", 1);
+
+    expect(docs).toHaveLength(1);
+    expect(docs[0].metadata.embeddings).not.toBeDefined();
   });
 });

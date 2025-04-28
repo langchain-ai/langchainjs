@@ -1,13 +1,14 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { InMemoryStore } from "langchain/storage/in_memory";
+import { InMemoryStore } from "@langchain/core/stores";
 import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
-const docstore = new InMemoryStore();
+const byteStore = new InMemoryStore<Uint8Array>();
+
 const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
   vectorstore,
   {
@@ -17,7 +18,7 @@ const childDocumentRetriever = ScoreThresholdRetriever.fromVectorStore(
 );
 const retriever = new ParentDocumentRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   childDocumentRetriever,
   // Optional, not required if you're already passing in split documents
   parentSplitter: new RecursiveCharacterTextSplitter({
@@ -35,7 +36,7 @@ const parentDocuments = await textLoader.load();
 // We must add the parent documents via the retriever's addDocuments method
 await retriever.addDocuments(parentDocuments);
 
-const retrievedDocs = await retriever.getRelevantDocuments("justice breyer");
+const retrievedDocs = await retriever.invoke("justice breyer");
 
 // Retrieved chunk is the larger parent chunk
 console.log(retrievedDocs);

@@ -1,5 +1,5 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { CharacterTextSplitter } from "langchain/text_splitter";
+import { CharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
@@ -34,7 +34,7 @@ const vectorstore = await HNSWLib.fromDocuments(
 );
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 

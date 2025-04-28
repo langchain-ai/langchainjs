@@ -2,7 +2,7 @@ import { OpenAI } from "@langchain/openai";
 
 // To make the caching really obvious, lets use a slower model.
 const model = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
   cache: true,
 });
 

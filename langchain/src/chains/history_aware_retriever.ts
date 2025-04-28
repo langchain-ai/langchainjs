@@ -43,8 +43,7 @@ export type CreateHistoryAwareRetrieverParams = {
  *
  * import { ChatOpenAI } from "@langchain/openai";
  * import { pull } from "langchain/hub";
- * import { createRetrievalChain } from "langchain/chains/retrieval";
- * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ * import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
  *
  * const rephrasePrompt = await pull("langchain-ai/chat-langchain-rephrase");
  * const llm = new ChatOpenAI({});

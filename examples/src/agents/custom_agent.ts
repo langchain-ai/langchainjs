@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { AgentExecutor, type AgentStep } from "langchain/agents";
+import { AgentExecutor } from "langchain/agents";
 import { formatToOpenAIFunctionMessages } from "langchain/agents/format_scratchpad";
 import {
   ChatPromptTemplate,
@@ -10,11 +10,12 @@ import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling"
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { DynamicTool } from "@langchain/core/tools";
+import { AgentStep } from "@langchain/core/agents";
 
 /**
  * Define your chat model to use.
  */
-const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 });
 
 const customTool = new DynamicTool({
   name: "get_word_length",

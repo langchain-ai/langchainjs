@@ -1,6 +1,6 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { SearchApiLoader } from "langchain/document_loaders/web/searchapi";
-import { TokenTextSplitter } from "langchain/text_splitter";
+import { SearchApiLoader } from "@langchain/community/document_loaders/web/searchapi";
+import { TokenTextSplitter } from "@langchain/textsplitters";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
@@ -21,7 +21,7 @@ const textSplitterQA = new TokenTextSplitter({
 const docsQA = await textSplitterQA.splitDocuments(docs);
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0.2,
 });
 

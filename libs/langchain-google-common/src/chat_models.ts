@@ -1,9 +1,10 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { type BaseMessage } from "@langchain/core/messages";
+import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
 import {
   BaseChatModel,
+  LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -20,27 +21,27 @@ import {
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
+import { concat } from "@langchain/core/utils/stream";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
   GoogleAISafetySetting,
   GoogleConnectionParams,
   GooglePlatformType,
-  GeminiContent,
   GeminiTool,
   GoogleAIBaseLanguageModelCallOptions,
+  GoogleAIAPI,
+  GoogleAIAPIParams,
+  GoogleSearchToolSetting,
 } from "./types.js";
 import {
+  convertToGeminiTools,
   copyAIModelParams,
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
 import { AbstractGoogleLLMConnection } from "./connection.js";
-import {
-  baseMessageToContent,
-  safeResponseToChatGeneration,
-  safeResponseToChatResult,
-  DefaultGeminiSafetyHandler,
-} from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
@@ -50,20 +51,102 @@ import type {
   GoogleAISafetyParams,
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
+  GoogleAIToolType,
+  GeminiAPIConfig,
+  GoogleAIModelModality,
 } from "./types.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
-class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
+export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
   AuthOptions
 > {
-  formatContents(
-    input: BaseMessage[],
-    _parameters: GoogleAIModelParams
-  ): GeminiContent[] {
-    return input
-      .map((msg) => baseMessageToContent(msg))
-      .reduce((acc, cur) => [...acc, ...cur]);
+  convertSystemMessageToHumanContent: boolean | undefined;
+
+  constructor(
+    fields: GoogleAIBaseLLMInput<AuthOptions> | undefined,
+    caller: AsyncCaller,
+    client: GoogleAbstractedClient,
+    streaming: boolean
+  ) {
+    super(fields, caller, client, streaming);
+    this.convertSystemMessageToHumanContent =
+      fields?.convertSystemMessageToHumanContent;
+  }
+
+  get useSystemInstruction(): boolean {
+    return typeof this.convertSystemMessageToHumanContent === "boolean"
+      ? !this.convertSystemMessageToHumanContent
+      : this.computeUseSystemInstruction;
+  }
+
+  get computeUseSystemInstruction(): boolean {
+    // This works on models from April 2024 and later
+    //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
+    //   AI Studio: gemini-1.5-pro-latest
+    if (this.modelFamily === "palm") {
+      return false;
+    } else if (this.modelName === "gemini-1.0-pro-001") {
+      return false;
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+      return false;
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+      return false;
+    } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
+      // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
+      return false;
+    } else if (this.modelFamily === "gemma") {
+      // At least as of 12 Mar 2025 gemma 3 on AIS, trying to use system instructions yields an error:
+      // "Developer instruction is not enabled for models/gemma-3-27b-it"
+      return false;
+    }
+    return true;
+  }
+
+  computeGoogleSearchToolAdjustmentFromModel(): Exclude<
+    GoogleSearchToolSetting,
+    boolean
+  > {
+    if (this.modelName.startsWith("gemini-1.0")) {
+      return "googleSearchRetrieval";
+    } else if (this.modelName.startsWith("gemini-1.5")) {
+      return "googleSearchRetrieval";
+    } else {
+      return "googleSearch";
+    }
+  }
+
+  computeGoogleSearchToolAdjustment(
+    apiConfig: GeminiAPIConfig
+  ): Exclude<GoogleSearchToolSetting, true> {
+    const adj = apiConfig.googleSearchToolAdjustment;
+    if (adj === undefined || adj === true) {
+      return this.computeGoogleSearchToolAdjustmentFromModel();
+    } else {
+      return adj;
+    }
+  }
+
+  buildGeminiAPI(): GoogleAIAPI {
+    const apiConfig: GeminiAPIConfig =
+      (this.apiConfig as GeminiAPIConfig) ?? {};
+    const googleSearchToolAdjustment =
+      this.computeGoogleSearchToolAdjustment(apiConfig);
+    const geminiConfig: GeminiAPIConfig = {
+      useSystemInstruction: this.useSystemInstruction,
+      googleSearchToolAdjustment,
+      ...apiConfig,
+    };
+    return getGeminiAPI(geminiConfig);
+  }
+
+  get api(): GoogleAIAPI {
+    switch (this.apiName) {
+      case "google":
+        return this.buildGeminiAPI();
+      default:
+        return super.api;
+    }
   }
 }
 
@@ -74,13 +157,15 @@ export interface ChatGoogleBaseInput<AuthOptions>
   extends BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    GoogleAIAPIParams,
+    Pick<GoogleAIBaseLanguageModelCallOptions, "streamUsage"> {}
 
 /**
- * Integration with a chat model.
+ * Integration with a Google chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
-  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions>
+  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
   implements ChatGoogleBaseInput<AuthOptions>
 {
   // Used for tracing, replace with the same name as your class
@@ -88,26 +173,51 @@ export abstract class ChatGoogleBase<AuthOptions>
     return "ChatGoogle";
   }
 
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
+  }
+
   lc_serializable = true;
 
-  /** @deprecated Prefer `modelName` */
-  model = "gemini-pro";
+  // Set based on modelName
+  model: string;
 
   modelName = "gemini-pro";
 
-  temperature = 0.7;
+  temperature: number;
 
-  maxOutputTokens = 1024;
+  maxOutputTokens: number;
 
-  topP = 0.8;
+  maxReasoningTokens: number;
 
-  topK = 40;
+  topP: number;
+
+  topK: number;
+
+  presencePenalty: number;
+
+  frequencyPenalty: number;
 
   stopSequences: string[] = [];
 
+  logprobs: boolean;
+
+  topLogprobs: number = 0;
+
   safetySettings: GoogleAISafetySetting[] = [];
 
+  responseModalities?: GoogleAIModelModality[];
+
+  // May intentionally be undefined, meaning to compute this.
+  convertSystemMessageToHumanContent: boolean | undefined;
+
   safetyHandler: GoogleAISafetyHandler;
+
+  streamUsage = true;
+
+  streaming = false;
 
   protected connection: ChatConnection<AuthOptions>;
 
@@ -119,9 +229,21 @@ export abstract class ChatGoogleBase<AuthOptions>
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
       fields?.safetyHandler ?? new DefaultGeminiSafetyHandler();
-
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     const client = this.buildClient(fields);
     this.buildConnection(fields ?? {}, client);
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = this.invocationParams(options);
+    return {
+      ls_provider: "google_vertexai",
+      ls_model_name: this.model,
+      ls_model_type: "chat",
+      ls_temperature: params.temperature ?? undefined,
+      ls_max_tokens: params.maxOutputTokens ?? undefined,
+      ls_stop: options.stop,
+    };
   }
 
   abstract buildAbstractedClient(
@@ -170,58 +292,125 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.connection.platform;
   }
 
+  override bindTools(
+    tools: GoogleAIToolType[],
+    kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
+  ): Runnable<
+    BaseLanguageModelInput,
+    AIMessageChunk,
+    GoogleAIBaseLanguageModelCallOptions
+  > {
+    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+  }
+
   // Replace
   _llmType() {
     return "chat_integration";
   }
 
+  /**
+   * Get the parameters used to invoke the model
+   */
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    return copyAIModelParams(this, options);
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager: CallbackManagerForLLMRun | undefined
+    runManager: CallbackManagerForLLMRun | undefined
   ): Promise<ChatResult> {
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
+    if (this.streaming) {
+      const stream = this._streamResponseChunks(messages, options, runManager);
+      let finalChunk: ChatGenerationChunk | null = null;
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+      }
+      if (!finalChunk) {
+        throw new Error("No chunks were returned from the stream.");
+      }
+      return {
+        generations: [finalChunk],
+      };
+    }
+
     const response = await this.connection.request(
       messages,
       parameters,
-      options
+      options,
+      runManager
     );
-    const ret = safeResponseToChatResult(response, this.safetyHandler);
+    const ret = this.connection.api.responseToChatResult(response);
+    const chunk = ret?.generations?.[0];
+    if (chunk) {
+      await runManager?.handleLLMNewToken(chunk.text || "");
+    }
     return ret;
   }
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     // Make the call as a streaming request
-    const parameters = copyAIModelParams(this, options);
+    const parameters = this.invocationParams(options);
     const response = await this.streamedConnection.request(
       _messages,
       parameters,
-      options
+      options,
+      runManager
     );
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-
+    let usageMetadata: UsageMetadata | undefined;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
     while (!stream.streamDone) {
       const output = await stream.nextChunk();
+      await runManager?.handleCustomEvent(
+        `google-chunk-${this.constructor.name}`,
+        {
+          output,
+        }
+      );
+      if (
+        output &&
+        output.usageMetadata &&
+        this.streamUsage !== false &&
+        options.streamUsage !== false
+      ) {
+        usageMetadata = {
+          input_tokens: output.usageMetadata.promptTokenCount,
+          output_tokens: output.usageMetadata.candidatesTokenCount,
+          total_tokens: output.usageMetadata.totalTokenCount,
+        };
+      }
       const chunk =
         output !== null
-          ? safeResponseToChatGeneration({ data: output }, this.safetyHandler)
+          ? this.connection.api.responseToChatGeneration({ data: output })
           : new ChatGenerationChunk({
               text: "",
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
+                usage_metadata: usageMetadata,
               }),
             });
-      yield chunk;
+      if (chunk) {
+        yield chunk;
+        await runManager?.handleLLMNewToken(
+          chunk.text ?? "",
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { chunk }
+        );
+      }
     }
   }
 
@@ -280,7 +469,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
     if (isZodSchema(schema)) {
-      const jsonSchema = zodToGeminiParameters(schema);
+      const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
           functionDeclarations: [
@@ -326,6 +515,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
     const llm = this.bind({
       tools,
+      tool_choice: functionName,
     });
 
     if (!includeRaw) {

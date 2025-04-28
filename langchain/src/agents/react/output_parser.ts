@@ -1,5 +1,6 @@
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { renderTemplate } from "@langchain/core/prompts";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentActionOutputParser } from "../types.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
 
@@ -69,14 +70,14 @@ export class ReActSingleInputOutputParser extends AgentActionOutputParser {
     const actionMatch = text.match(regex);
     if (actionMatch) {
       if (includesAnswer) {
-        throw new Error(
+        throw new OutputParserException(
           `${FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE}: ${text}`
         );
       }
 
       const action = actionMatch[1];
       const actionInput = actionMatch[2];
-      const toolInput = actionInput.trim().replace(/"/g, "");
+      const toolInput = actionInput.trim().replace(/^"|"$/g, "");
 
       return {
         tool: action,
@@ -95,7 +96,7 @@ export class ReActSingleInputOutputParser extends AgentActionOutputParser {
       };
     }
 
-    throw new Error(`Could not parse LLM output: ${text}`);
+    throw new OutputParserException(`Could not parse LLM output: ${text}`);
   }
 
   /**

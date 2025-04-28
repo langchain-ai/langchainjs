@@ -9,7 +9,7 @@ import { AgentExecutor, createReactAgent } from "langchain/agents";
 const tools = [new TavilySearchResults({ maxResults: 1 })];
 
 const llm = new OpenAI({
-  modelName: "gpt-3.5-turbo-instruct",
+  model: "gpt-3.5-turbo-instruct",
   temperature: 0,
 });
 

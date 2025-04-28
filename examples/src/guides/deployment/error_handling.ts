@@ -10,8 +10,8 @@ const prompt = ChatPromptTemplate.fromTemplate(TEMPLATE);
 
 const model = new ChatOpenAI({
   temperature: 0.8,
-  modelName: "gpt-3.5-turbo-1106",
-  openAIApiKey: "INVALID_KEY",
+  model: "gpt-3.5-turbo-1106",
+  apiKey: "INVALID_KEY",
 });
 
 const outputParser = new HttpResponseOutputParser();

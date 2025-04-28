@@ -5,7 +5,7 @@ import { Calculator } from "@langchain/community/tools/calculator";
 
 const tools = [new Calculator()];
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
   callbacks: [new LunaryHandler()],
 });

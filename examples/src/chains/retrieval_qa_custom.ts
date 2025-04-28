@@ -1,6 +1,6 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 import { loadQAMapReduceChain } from "langchain/chains";
 
@@ -16,7 +16,7 @@ const query = "What did the president say about Justice Breyer?";
 const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
 const retriever = vectorStore.asRetriever();
 
-const relevantDocs = await retriever.getRelevantDocuments(query);
+const relevantDocs = await retriever.invoke(query);
 
 const mapReduceChain = loadQAMapReduceChain(model);
 

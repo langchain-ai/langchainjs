@@ -4,7 +4,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  modelName: "mistral-small",
+  model: "mistral-small",
 });
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful assistant"],

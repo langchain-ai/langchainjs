@@ -1,1 +1,1 @@
-export * from "@langchain/community/utils/event_source_parse";
+export * from "@langchain/core/utils/event_source_parse";

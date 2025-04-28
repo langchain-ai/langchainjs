@@ -5,6 +5,6 @@ const tool = new WikipediaQueryRun({
   maxDocContentLength: 4000,
 });
 
-const res = await tool.call("Langchain");
+const res = await tool.invoke("Langchain");
 
 console.log(res);

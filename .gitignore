@@ -46,3 +46,7 @@ docs/api_refs/typedoc.json
 
 .tool-versions
 credentials.json
+**/typedoc.json
+.vercel
+
+bun.lock

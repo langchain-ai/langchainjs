@@ -17,7 +17,11 @@ export interface PackageJSONPerson extends PackageJSONAddress {
 }
 
 export interface ExportsMapValue {
-  types: string;
+  types: {
+    import: string;
+    require: string;
+    default: string;
+  };
   import: string;
   require: string;
 }
@@ -147,4 +151,10 @@ export interface LangChainConfig {
    * @returns {string}
    */
   abs: (relativePath: string) => string;
+  /**
+   * Additional paths to add to the gitignore file.
+   * @default undefined
+   * @type {string[]}
+   */
+  additionalGitignorePaths?: string[];
 }

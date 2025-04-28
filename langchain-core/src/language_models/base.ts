@@ -1,7 +1,7 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
 import { z } from "zod";
-import { type BaseCache, InMemoryCache } from "../caches.js";
+import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
   type BasePromptValueInterface,
   StringPromptValue,
@@ -11,14 +11,15 @@ import {
   type BaseMessage,
   type BaseMessageLike,
   type MessageContent,
-  coerceMessageLikeToMessage,
-} from "../messages/index.js";
+} from "../messages/base.js";
+import { coerceMessageLikeToMessage } from "../messages/utils.js";
 import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
 import { AsyncCaller, AsyncCallerParams } from "../utils/async_caller.js";
 import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
+import { JSONSchema } from "../utils/json_schema.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -37,6 +38,10 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
 
   if (modelName.startsWith("gpt-4-")) {
     return "gpt-4";
+  }
+
+  if (modelName.startsWith("gpt-4o")) {
+    return "gpt-4o";
   }
 
   return modelName as TiktokenModel;
@@ -77,6 +82,27 @@ export const getModelContextSize = (modelName: string): number => {
       return 4097;
   }
 };
+
+/**
+ * Whether or not the input matches the OpenAI tool definition.
+ * @param {unknown} tool The input to check.
+ * @returns {boolean} Whether the input is an OpenAI tool definition.
+ */
+export function isOpenAITool(tool: unknown): tool is ToolDefinition {
+  if (typeof tool !== "object" || !tool) return false;
+  if (
+    "type" in tool &&
+    tool.type === "function" &&
+    "function" in tool &&
+    typeof tool.function === "object" &&
+    tool.function &&
+    "name" in tool.function &&
+    "parameters" in tool.function
+  ) {
+    return true;
+  }
+  return false;
+}
 
 interface CalculateMaxTokenProps {
   prompt: string;
@@ -182,18 +208,6 @@ export interface BaseLanguageModelCallOptions extends RunnableConfig {
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
-
-  /**
-   * Timeout for this call in milliseconds.
-   */
-  timeout?: number;
-
-  /**
-   * Abort signal for this call.
-   * If provided, the call will be aborted when the signal is aborted.
-   * @see https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
-   */
-  signal?: AbortSignal;
 }
 
 export interface FunctionDefinition {
@@ -213,7 +227,7 @@ export interface FunctionDefinition {
    * To describe a function that accepts no parameters, provide the value
    * `{"type": "object", "properties": {}}`.
    */
-  parameters: Record<string, unknown>;
+  parameters: Record<string, unknown> | JSONSchema;
 
   /**
    * A description of what the function does, used by the model to choose when and
@@ -247,8 +261,10 @@ export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
     name?: string;
-    method?: "functionCalling" | "jsonMode";
+    method?: "functionCalling" | "jsonMode" | "jsonSchema" | string;
     includeRaw?: IncludeRaw;
+    /** Whether to use strict mode. Currently only supported by OpenAI models. */
+    strict?: boolean;
   };
 
 /** @deprecated Use StructuredOutputMethodOptions instead */
@@ -350,13 +366,14 @@ export abstract class BaseLanguageModel<
     callbackManager,
     ...params
   }: BaseLanguageModelParams) {
+    const { cache, ...rest } = params;
     super({
       callbacks: callbacks ?? callbackManager,
-      ...params,
+      ...rest,
     });
-    if (typeof params.cache === "object") {
-      this.cache = params.cache;
-    } else if (params.cache) {
+    if (typeof cache === "object") {
+      this.cache = cache;
+    } else if (cache) {
       this.cache = InMemoryCache.global();
     } else {
       this.cache = undefined;
@@ -456,8 +473,9 @@ export abstract class BaseLanguageModel<
    * @param callOptions Call options for the model
    * @returns A unique cache key.
    */
-  protected _getSerializedCacheKeyParametersForCall(
-    callOptions: CallOptions
+  _getSerializedCacheKeyParametersForCall(
+    // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
@@ -499,7 +517,6 @@ export abstract class BaseLanguageModel<
   withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     schema:
       | z.ZodType<RunOutput>

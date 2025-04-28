@@ -4,7 +4,7 @@ import { Calculator } from "@langchain/community/tools/calculator";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 const tools = [new Calculator(), new SerpAPI()];
-const chat = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const chat = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const prefix =
   "You are a helpful AI assistant. However, all final response to the user must be in pirate dialect.";
 

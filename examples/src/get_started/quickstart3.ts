@@ -1,5 +1,5 @@
 /* eslint-disable import/first */
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({});
@@ -15,7 +15,7 @@ const docs = await loader.load();
 console.log(docs.length);
 console.log(docs[0].pageContent.length);
 
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const splitter = new RecursiveCharacterTextSplitter();
 
@@ -90,7 +90,7 @@ const agentPrompt = await pull<ChatPromptTemplate>(
 );
 
 const agentModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   temperature: 0,
 });
 
