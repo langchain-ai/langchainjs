@@ -44,7 +44,7 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
         const _toolInput = _toolInputMatch ? _toolInputMatch[1]:'';
         return { tool: _tool, toolInput: _toolInput, log: text };
     } else if (text.includes("<final_answer>")) {
-        const answerMatch = text.match(/<final_answer>([^<]*)<\/final_answer>/)
+        const answerMatch = text.match(/<final_answer>([^<]*?)(?:<\/final_answer>|$)/);
         const answer = answerMatch ? answerMatch[1]: '';
         return { returnValues: { output: answer }, log: text };
     } else {
