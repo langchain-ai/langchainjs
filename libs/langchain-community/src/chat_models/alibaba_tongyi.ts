@@ -603,7 +603,7 @@ export class ChatAlibabaTongyi
           continue;
         }
         try {
-          yield JSON.parse(line.slice("data:".length));
+          yield JSON.parse(line.slice("data:".length).trim());
         } catch (e) {
           console.warn(`Received a non-JSON parseable chunk: ${line}`);
         }
