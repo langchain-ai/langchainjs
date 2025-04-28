@@ -31,7 +31,7 @@ const DEFAULTS = {
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
   groqParams: `{\n  model: "llama-3.3-70b-versatile",\n  temperature: 0\n}`,
   vertexParams: `{\n  model: "gemini-1.5-flash",\n  temperature: 0\n}`,
-  azureParams: `{\n  azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],\n  azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],\n  openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"]\n}`,
+  azureParams: `{\n  azure_endpoint=process.env.AZURE_OPENAI_ENDPOINT,\n  azure_deployment=process.env.AZURE_OPENAI_DEPLOYMENT_NAME,\n  openai_api_version=process.env.AZURE_OPENAI_API_VERSION\n}`,
 };
 
 const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
