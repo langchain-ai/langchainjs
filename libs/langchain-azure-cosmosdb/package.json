@@ -34,7 +34,7 @@
   "dependencies": {
     "@azure/cosmos": "^4.2.0",
     "@azure/identity": "^4.5.0",
-    "mongodb": "^6.10.0"
+    "mongodb": "^5.8.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -61,7 +61,7 @@
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
     "release-it": "^18.1.2",
-    "rollup": "^4.5.2",
+    "rollup": "^3.29.5",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0"
   },

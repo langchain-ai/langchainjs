@@ -37,7 +37,7 @@
     "@mdx-js/react": "^1.6.22",
     "@supabase/supabase-js": "^2.45.0",
     "clsx": "^1.2.1",
-    "cookie": "^0.6.0",
+    "cookie": "^1.0.2",
     "isomorphic-dompurify": "^2.9.0",
     "json-loader": "^0.5.7",
     "marked": "^12.0.2",
