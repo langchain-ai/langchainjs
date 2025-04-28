@@ -76,7 +76,7 @@ export default function ChatModelTabs(props) {
     "groq",
     "openai",
     "anthropic",
-    "azure",
+    "azureOpenAI",
     "fireworks",
     "mistral",
     "vertex",
