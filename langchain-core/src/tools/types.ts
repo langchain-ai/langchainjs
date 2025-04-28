@@ -21,13 +21,25 @@ import { JSONSchema } from "../utils/json_schema.js";
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ToolReturnType = any;
+export type ToolOutputType = any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ZodObjectAny = z.ZodObject<any, any, any, any>;
+
+/**
+ * Conditional type that determines the return type of a tool based on the input and configuration.
+ * - If the input is a ToolCall, it returns a ToolMessage
+ * - If the config is a runnable config and contains a toolCall property, it returns a ToolMessage
+ * - Otherwise, it returns the original output type
+ */
+export type ToolReturnType<TInput, TConfig, TOutput> = TInput extends ToolCall
+  ? ToolMessage
+  : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+  ? ToolMessage
+  : TOutput;
 
 /**
  * Base type that establishes the types of input schemas that can be used for LangChain tool
@@ -170,7 +182,7 @@ export type ToolCallInput<
 export interface StructuredToolInterface<
   SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 > extends RunnableInterface<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
     ToolOutputT | ToolMessage
@@ -206,13 +218,7 @@ export interface StructuredToolInterface<
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  >;
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
 
   /**
    * The name of the tool.
@@ -242,7 +248,7 @@ export interface StructuredToolInterface<
 export interface ToolInterface<
   SchemaT extends StringInputToolSchema = StringInputToolSchema,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 > extends StructuredToolInterface<SchemaT, SchemaInputT, ToolOutputT> {
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -260,13 +266,7 @@ export interface ToolInterface<
     // TODO: shouldn't this be narrowed based on SchemaT?
     arg: TArg,
     callbacks?: TConfig
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  >;
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
 }
 
 /**
@@ -288,7 +288,7 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<ToolOutputT = ToolReturnType>
+export interface DynamicToolInput<ToolOutputT = ToolOutputType>
   extends BaseDynamicToolInput {
   func: (
     input: string,
@@ -306,7 +306,7 @@ export interface DynamicToolInput<ToolOutputT = ToolReturnType>
 export interface DynamicStructuredToolInput<
   SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.

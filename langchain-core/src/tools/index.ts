@@ -17,12 +17,7 @@ import {
   type RunnableConfig,
 } from "../runnables/config.js";
 import type { RunnableFunc } from "../runnables/base.js";
-import {
-  DirectToolOutput,
-  isDirectToolOutput,
-  ToolCall,
-  ToolMessage,
-} from "../messages/tool.js";
+import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { _isToolCall, ToolInputParsingException } from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
@@ -41,6 +36,7 @@ import type {
   ZodObjectAny,
   StringInputToolSchema,
   ToolInterface,
+  ToolOutputType,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -75,7 +71,7 @@ export abstract class StructuredTool<
     SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
     SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
     SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-    ToolOutputT = ToolReturnType
+    ToolOutputT = ToolOutputType
   >
   extends BaseLangChain<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -134,9 +130,12 @@ export abstract class StructuredTool<
    * @param config Optional configuration for the tool.
    * @returns A Promise that resolves with a string.
    */
-  async invoke<TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+  async invoke<
+    TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends RunnableConfig | undefined
+  >(
     input: TInput,
-    config?: RunnableConfig
+    config?: TConfig
   ): Promise<TInput extends ToolCall ? ToolMessage : ToolOutputT> {
     let toolInput: Exclude<
       StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -161,7 +160,7 @@ export abstract class StructuredTool<
     }
 
     return this.call(toolInput, enrichedConfig) as Promise<
-      TInput extends ToolCall ? ToolMessage : ToolOutputT
+      ToolReturnType<TInput, TConfig, ToolOutputT>
     >;
   }
 
@@ -184,13 +183,7 @@ export abstract class StructuredTool<
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  > {
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
     // Determine the actual input that needs parsing/validation.
     // If arg is a ToolCall, use its args; otherwise, use arg directly.
     const inputForValidation = _isToolCall(arg) ? arg.args : arg;
@@ -291,7 +284,7 @@ export abstract class StructuredTool<
       // We've checked toolCall exists, assert the type to access .id
       toolCallId = (config as ToolRunnableConfig).toolCall?.id;
     }
-    const formattedOutput = _formatToolOutput({
+    const formattedOutput = _formatToolOutput<ToolOutputT>({
       content,
       artifact,
       toolCallId,
@@ -299,18 +292,14 @@ export abstract class StructuredTool<
     });
     await runManager?.handleToolEnd(formattedOutput);
     // Assert based on the new conditional type
-    return formattedOutput as TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT;
+    return formattedOutput as ToolReturnType<TArg, TConfig, ToolOutputT>;
   }
 }
 
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool<ToolOutputT = ToolReturnType>
+export abstract class Tool<ToolOutputT = ToolOutputType>
   extends StructuredTool<
     StringInputToolSchema,
     ToolInputSchemaOutputType<StringInputToolSchema>,
@@ -348,13 +337,7 @@ export abstract class Tool<ToolOutputT = ToolReturnType>
   >(
     arg: TArg,
     callbacks?: TConfig
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  > {
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
     // Prepare the input for the base class call method.
     // If arg is string or undefined, wrap it; otherwise, pass ToolCall or { input: ... } directly.
     const structuredArg =
@@ -362,11 +345,7 @@ export abstract class Tool<ToolOutputT = ToolReturnType>
 
     // Ensure TConfig is passed to super.call
     return super.call(structuredArg, callbacks) as Promise<
-      TArg extends ToolCall
-        ? ToolMessage
-        : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-        ? ToolMessage
-        : ToolOutputT
+      ToolReturnType<TArg, TConfig, ToolOutputT>
     >;
   }
 }
@@ -375,7 +354,7 @@ export abstract class Tool<ToolOutputT = ToolReturnType>
  * A tool that can be created dynamically from a function, name, and description.
  */
 export class DynamicTool<
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 > extends Tool<ToolOutputT> {
   static lc_name() {
     return "DynamicTool";
@@ -404,13 +383,7 @@ export class DynamicTool<
   >(
     arg: TArg,
     configArg?: TConfig
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  > {
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -443,7 +416,7 @@ export class DynamicStructuredTool<
   SchemaT extends ToolInputSchemaBase = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 > extends StructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT> {
   static lc_name() {
     return "DynamicStructuredTool";
@@ -480,13 +453,7 @@ export class DynamicStructuredTool<
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<
-    TArg extends ToolCall
-      ? ToolMessage
-      : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-      ? ToolMessage
-      : ToolOutputT
-  > {
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -584,7 +551,7 @@ interface ToolWrapperParams<
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
-export function tool<SchemaT extends z.ZodString, ToolOutputT = ToolReturnType>(
+export function tool<SchemaT extends z.ZodString, ToolOutputT = ToolOutputType>(
   func: RunnableFunc<
     SchemaT extends z.ZodString ? z.output<SchemaT> : string,
     ToolOutputT,
@@ -597,7 +564,7 @@ export function tool<
   SchemaT extends ZodObjectAny,
   SchemaOutputT = z.output<SchemaT>,
   SchemaInputT = z.input<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT>
@@ -607,7 +574,7 @@ export function tool<
   SchemaT extends JSONSchema,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
@@ -622,7 +589,7 @@ export function tool<
   SchemaT extends ZodObjectAny | z.ZodString | JSONSchema = ZodObjectAny,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
-  ToolOutputT = ToolReturnType
+  ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
   fields: ToolWrapperParams<SchemaT>
@@ -728,19 +695,7 @@ export function tool<
           >;
 }
 
-function _formatToolOutput<TOutput extends ToolReturnType>(params: {
-  content: TOutput;
-  name: string;
-  artifact?: unknown;
-  toolCallId: string;
-}): TOutput extends DirectToolOutput ? TOutput : ToolMessage;
-function _formatToolOutput<TOutput extends ToolReturnType>(params: {
-  content: TOutput;
-  name: string;
-  artifact?: unknown;
-  toolCallId?: string | undefined;
-}): TOutput;
-function _formatToolOutput<TOutput extends ToolReturnType>(params: {
+function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   content: TOutput;
   name: string;
   artifact?: unknown;
