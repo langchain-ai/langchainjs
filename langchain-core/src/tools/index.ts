@@ -128,7 +128,7 @@ export abstract class StructuredTool<
    * Invokes the tool with the provided input and configuration.
    * @param input The input for the tool.
    * @param config Optional configuration for the tool.
-   * @returns A Promise that resolves with a string.
+   * @returns A Promise that resolves with the tool's output.
    */
   async invoke<
     TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -136,7 +136,7 @@ export abstract class StructuredTool<
   >(
     input: TInput,
     config?: TConfig
-  ): Promise<TInput extends ToolCall ? ToolMessage : ToolOutputT> {
+  ): Promise<ToolReturnType<TInput, TConfig, ToolOutputT>> {
     let toolInput: Exclude<
       StructuredToolCallInput<SchemaT, SchemaInputT>,
       ToolCall

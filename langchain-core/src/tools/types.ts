@@ -194,10 +194,19 @@ export interface StructuredToolInterface<
    */
   schema: SchemaT;
 
-  invoke<TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>>(
+  /**
+   * Invokes the tool with the provided argument and configuration.
+   * @param arg The input argument for the tool.
+   * @param configArg Optional configuration for the tool call.
+   * @returns A Promise that resolves with the tool's output.
+   */
+  invoke<
+    TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends RunnableConfig | undefined
+  >(
     arg: TArg,
-    configArg?: RunnableConfig
-  ): Promise<TArg extends ToolCall ? ToolMessage : ToolOutputT>;
+    configArg?: TConfig
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
