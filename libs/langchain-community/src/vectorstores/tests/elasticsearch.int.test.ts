@@ -78,7 +78,7 @@ describe("ElasticVectorSearch", () => {
 
     expect(results3).toHaveLength(3);
 
-    console.log(`Upserted:`, results3);
+    // console.log(`Upserted:`, results3);
 
     await store.delete({ ids: ids.slice(2) });
 
@@ -101,11 +101,34 @@ describe("ElasticVectorSearch", () => {
       { pageContent: "responsible", metadata: { a: createdAt } },
       { pageContent: "friendly", metadata: { a: createdAt } },
       { pageContent: "confident", metadata: { a: createdAt } },
-      { pageContent: "generous", metadata: { a: createdAt } },
-      { pageContent: "compassionate", metadata: { a: createdAt } },
+      { pageContent: "generous", metadata: { a: null } },
+      { pageContent: "compassionate", metadata: {} },
     ]);
     const results = await store.similaritySearch("*", 11);
     expect(results).toHaveLength(11);
+    const results2 = await store.similaritySearch("*", 11, [
+      {
+        field: "a",
+        value: createdAt,
+        operator: "exclude",
+      },
+    ]);
+    expect(results2).toHaveLength(3);
+    const results3 = await store.similaritySearch("*", 11, [
+      {
+        field: "a",
+        value: [createdAt],
+        operator: "exclude",
+      },
+    ]);
+    expect(results3).toHaveLength(3);
+    const results4 = await store.similaritySearch("*", 11, [
+      {
+        field: "a",
+        operator: "not_exists",
+      },
+    ]);
+    expect(results4).toHaveLength(2);
   });
 
   test.skip("ElasticVectorSearch integration with text splitting metadata", async () => {

@@ -82,7 +82,10 @@ export class FunctionCallStructuredOutputParser<
     }
     super(fields);
     if (fields.jsonSchema !== undefined) {
-      this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
+      this.jsonSchemaValidator = new Validator(
+        fields.jsonSchema as Record<string, unknown>,
+        "7"
+      );
     }
     if (fields.zodSchema !== undefined) {
       this.zodSchema = fields.zodSchema;
@@ -142,7 +145,7 @@ export class FunctionCallStructuredOutputParser<
 }
 
 /**
- * @deprecated Use {@link https://v02.api.js.langchain.com/functions/langchain_chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead
+ * @deprecated Use {@link https://api.js.langchain.com/functions/langchain.chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead
  * Create a chain that returns output matching a JSON Schema.
  * @param input Object that includes all LLMChainInput fields except "outputParser"
  * as well as an additional required "outputSchema" JSON Schema object.
@@ -187,7 +190,7 @@ export function createStructuredOutputChain<
   });
 }
 
-/** @deprecated Use {@link https://v02.api.js.langchain.com/functions/langchain_chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
+/** @deprecated Use {@link https://api.js.langchain.com/functions/langchain.chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
 export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">

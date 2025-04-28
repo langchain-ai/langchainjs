@@ -3,9 +3,9 @@
 name: Format
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+    paths_ignore:
+      - '.github/**'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 

@@ -21,13 +21,7 @@ import {
   copyAIModelParams,
   copyAndValidateModelParamsInto,
 } from "./utils/common.js";
-import {
-  chunkToString,
-  messageContentToParts,
-  safeResponseToBaseMessage,
-  safeResponseToString,
-  DefaultGeminiSafetyHandler,
-} from "./utils/gemini.js";
+import { DefaultGeminiSafetyHandler } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import { ensureParams } from "./utils/failed_handler.js";
 import { ChatGoogleBase } from "./chat_models.js";
@@ -39,11 +33,11 @@ class GoogleLLMConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   MessageContent,
   AuthOptions
 > {
-  formatContents(
+  async formatContents(
     input: MessageContent,
     _parameters: GoogleAIModelParams
-  ): GeminiContent[] {
-    const parts = messageContentToParts(input);
+  ): Promise<GeminiContent[]> {
+    const parts = await this.api.messageContentToParts!(input);
     const contents: GeminiContent[] = [
       {
         role: "user", // Required by Vertex AI
@@ -80,6 +74,12 @@ export abstract class GoogleBaseLLM<AuthOptions>
   // Used for tracing, replace with the same name as your class
   static lc_name() {
     return "GoogleLLM";
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      authOptions: "GOOGLE_AUTH_OPTIONS",
+    };
   }
 
   originalFields?: GoogleBaseLLMInput<AuthOptions>;
@@ -189,7 +189,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
   ): Promise<string> {
     const parameters = copyAIModelParams(this, options);
     const result = await this.connection.request(prompt, parameters, options);
-    const ret = safeResponseToString(result, this.safetyHandler);
+    const ret = this.connection.api.responseToString(result);
     return ret;
   }
 
@@ -234,7 +234,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     const proxyChat = this.createProxyChat();
     try {
       for await (const chunk of proxyChat._streamIterator(input, options)) {
-        const stringValue = chunkToString(chunk);
+        const stringValue = this.connection.api.chunkToString(chunk);
         const generationChunk = new GenerationChunk({
           text: stringValue,
         });
@@ -267,7 +267,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
       {},
       options as BaseLanguageModelCallOptions
     );
-    const ret = safeResponseToBaseMessage(result, this.safetyHandler);
+    const ret = this.connection.api.responseToBaseMessage(result);
     return ret;
   }
 

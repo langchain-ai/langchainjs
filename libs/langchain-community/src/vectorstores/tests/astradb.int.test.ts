@@ -36,7 +36,7 @@ describe.skip("AstraDBVectorStore", () => {
     try {
       await db.dropCollection(astraConfig.collection);
     } catch (e) {
-      console.debug("Collection doesn't exist yet, skipping drop");
+      // console.debug("Collection doesn't exist yet, skipping drop");
     }
   });
 

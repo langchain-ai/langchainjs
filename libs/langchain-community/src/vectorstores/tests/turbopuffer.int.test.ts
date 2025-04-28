@@ -34,7 +34,7 @@ test("similaritySearchVectorWithScore", async () => {
     { pageContent: "bye", metadata: { a: createdAt } },
     { pageContent: "what's this", metadata: { a: createdAt } },
   ]);
-  console.log("added docs");
+  // console.log("added docs");
   const results = await store.similaritySearch(createdAt.toString(), 1);
 
   expect(results).toHaveLength(1);

@@ -1,4 +1,4 @@
-import { ChatOllama } from "@langchain/community/chat_models/ollama";
+import { ChatOllama } from "@langchain/ollama";
 import { HumanMessage } from "@langchain/core/messages";
 import * as fs from "node:fs/promises";
 

@@ -40,7 +40,7 @@ describe("Vertex AI matching", () => {
 
   test.skip("public endpoint", async () => {
     const apiendpoint = await engine.determinePublicAPIEndpoint();
-    console.log(apiendpoint);
+    // console.log(apiendpoint);
     expect(apiendpoint).toHaveProperty("apiEndpoint");
     expect(apiendpoint).toHaveProperty("deployedIndexId");
   });
@@ -48,12 +48,12 @@ describe("Vertex AI matching", () => {
   test.skip("store", async () => {
     const doc = new Document({ pageContent: "this" });
     await engine.addDocuments([doc]);
-    console.log(store._docs);
+    // console.log(store._docs);
   });
 
   test.skip("query", async () => {
     const results = await engine.similaritySearch("that");
-    console.log("query", results);
+    // console.log("query", results);
     expect(results?.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -65,27 +65,27 @@ describe("Vertex AI matching", () => {
       },
     ];
     const results = await engine.similaritySearch("that", 4, filters);
-    console.log("query", results);
+    // console.log("query", results);
     expect(results?.length).toEqual(0);
   });
 
   test.skip("delete", async () => {
     const newDoc = new Document({ pageContent: "this" });
     await engine.addDocuments([newDoc]);
-    console.log("added", newDoc);
+    // console.log("added", newDoc);
 
     const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
     expect(oldResults?.length).toBeGreaterThanOrEqual(1);
-    console.log(oldResults);
+    // console.log(oldResults);
 
     const oldIds = oldResults.map((doc) => doc.id!);
     await engine.delete({ ids: oldIds });
-    console.log("deleted", oldIds);
+    // console.log("deleted", oldIds);
 
     const newResults: IdDocument[] = await engine.similaritySearch("this", 10);
     expect(newResults).not.toEqual(oldResults);
 
-    console.log(newResults);
+    // console.log(newResults);
   });
 
   describe("restrictions", () => {

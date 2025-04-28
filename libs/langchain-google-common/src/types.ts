@@ -1,7 +1,22 @@
 import type { BaseLLMParams } from "@langchain/core/language_models/llms";
-import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import type {
+  BaseChatModelCallOptions,
+  BindToolsInput,
+} from "@langchain/core/language_models/chat_models";
+import {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageContent,
+} from "@langchain/core/messages";
+import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import type { JsonStream } from "./utils/stream.js";
+import { MediaManager } from "./experimental/utils/media_core.js";
+import {
+  AnthropicResponseData,
+  AnthropicAPIConfig,
+} from "./types-anthropic.js";
+
+export * from "./types-anthropic.js";
 
 /**
  * Parameters needed to setup the client connection.
@@ -42,12 +57,78 @@ export interface GoogleConnectionParams<AuthOptions>
   platformType?: GooglePlatformType;
 }
 
+export const GoogleAISafetyCategory = {
+  Harassment: "HARM_CATEGORY_HARASSMENT",
+  HARASSMENT: "HARM_CATEGORY_HARASSMENT",
+  HARM_CATEGORY_HARASSMENT: "HARM_CATEGORY_HARASSMENT",
+
+  HateSpeech: "HARM_CATEGORY_HATE_SPEECH",
+  HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
+  HARM_CATEGORY_HATE_SPEECH: "HARM_CATEGORY_HATE_SPEECH",
+
+  SexuallyExplicit: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+  HARM_CATEGORY_SEXUALLY_EXPLICIT: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+
+  Dangerous: "HARM_CATEGORY_DANGEROUS",
+  DANGEROUS: "HARM_CATEGORY_DANGEROUS",
+  HARM_CATEGORY_DANGEROUS: "HARM_CATEGORY_DANGEROUS",
+
+  CivicIntegrity: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+  HARM_CATEGORY_CIVIC_INTEGRITY: "HARM_CATEGORY_CIVIC_INTEGRITY",
+} as const;
+
+export type GoogleAISafetyCategory =
+  (typeof GoogleAISafetyCategory)[keyof typeof GoogleAISafetyCategory];
+
+export const GoogleAISafetyThreshold = {
+  None: "BLOCK_NONE",
+  NONE: "BLOCK_NONE",
+  BLOCK_NONE: "BLOCK_NONE",
+
+  Few: "BLOCK_ONLY_HIGH",
+  FEW: "BLOCK_ONLY_HIGH",
+  BLOCK_ONLY_HIGH: "BLOCK_ONLY_HIGH",
+
+  Some: "BLOCK_MEDIUM_AND_ABOVE",
+  SOME: "BLOCK_MEDIUM_AND_ABOVE",
+  BLOCK_MEDIUM_AND_ABOVE: "BLOCK_MEDIUM_AND_ABOVE",
+
+  Most: "BLOCK_LOW_AND_ABOVE",
+  MOST: "BLOCK_LOW_AND_ABOVE",
+  BLOCK_LOW_AND_ABOVE: "BLOCK_LOW_AND_ABOVE",
+
+  Off: "OFF",
+  OFF: "OFF",
+  BLOCK_OFF: "OFF",
+} as const;
+
+export type GoogleAISafetyThreshold =
+  (typeof GoogleAISafetyThreshold)[keyof typeof GoogleAISafetyThreshold];
+
+export const GoogleAISafetyMethod = {
+  Severity: "SEVERITY",
+  Probability: "PROBABILITY",
+} as const;
+
+export type GoogleAISafetyMethod =
+  (typeof GoogleAISafetyMethod)[keyof typeof GoogleAISafetyMethod];
+
 export interface GoogleAISafetySetting {
-  category: string;
-  threshold: string;
+  category: GoogleAISafetyCategory | string;
+  threshold: GoogleAISafetyThreshold | string;
+  method?: GoogleAISafetyMethod | string; // Just for Vertex AI?
 }
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
+
+export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
+
+export interface GoogleThinkingConfig {
+  thinkingBudget?: number;
+  includeThoughts?: boolean;
+}
 
 export interface GoogleAIModelParams {
   /** Model to use */
@@ -63,8 +144,25 @@ export interface GoogleAIModelParams {
 
   /**
    * Maximum number of tokens to generate in the completion.
+   * This may include reasoning tokens (for backwards compatibility).
    */
   maxOutputTokens?: number;
+
+  /**
+   * The maximum number of the output tokens that will be used
+   * for the "thinking" or "reasoning" stages.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for "maxReasoningTokens"
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An OpenAI compatible parameter that will map to "maxReasoningTokens"
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -88,6 +186,36 @@ export interface GoogleAIModelParams {
    */
   topK?: number;
 
+  /**
+   * Presence penalty applied to the next token's logprobs
+   * if the token has already been seen in the response.
+   * This penalty is binary on/off and not dependant on the
+   * number of times the token is used (after the first).
+   * Use frequencyPenalty for a penalty that increases with each use.
+   * A positive penalty will discourage the use of tokens that have
+   * already been used in the response, increasing the vocabulary.
+   * A negative penalty will encourage the use of tokens that have
+   * already been used in the response, decreasing the vocabulary.
+   */
+  presencePenalty?: number;
+
+  /**
+   * Frequency penalty applied to the next token's logprobs,
+   * multiplied by the number of times each token has been seen
+   * in the respponse so far.
+   * A positive penalty will discourage the use of tokens that
+   * have already been used, proportional to the number of times
+   * the token has been used:
+   * The more a token is used, the more dificult it is for the model
+   * to use that token again increasing the vocabulary of responses.
+   * Caution: A _negative_ penalty will encourage the model to reuse
+   * tokens proportional to the number of times the token has been used.
+   * Small negative values will reduce the vocabulary of a response.
+   * Larger negative values will cause the model to start repeating
+   * a common token until it hits the maxOutputTokens limit.
+   */
+  frequencyPenalty?: number;
+
   stopSequences?: string[];
 
   safetySettings?: GoogleAISafetySetting[];
@@ -104,25 +232,91 @@ export interface GoogleAIModelParams {
    * @default "text/plain"
    */
   responseMimeType?: GoogleAIResponseMimeType;
+
+  /**
+   * Whether or not to stream.
+   * @default false
+   */
+  streaming?: boolean;
+
+  /**
+   * Whether to return log probabilities of the output tokens or not.
+   * If true, returns the log probabilities of each output token
+   * returned in the content of message.
+   */
+  logprobs?: boolean;
+
+  /**
+   * An integer between 0 and 5 specifying the number of
+   * most likely tokens to return at each token position,
+   * each with an associated log probability.
+   * logprobs must be set to true if this parameter is used.
+   */
+  topLogprobs?: number;
+
+  /**
+   * The modalities of the response.
+   */
+  responseModalities?: GoogleAIModelModality[];
 }
+
+export type GoogleAIToolType = BindToolsInput | GeminiTool;
 
 /**
  * The params which can be passed to the API at request time.
  */
 export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
-  tools?: StructuredToolInterface[] | GeminiTool[];
+  tools?: GoogleAIToolType[];
+  /**
+   * Force the model to use tools in a specific way.
+   *
+   * | Mode     |	Description                                                                                                                                             |
+   * |----------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+   * | "auto"	  | The default model behavior. The model decides whether to predict a function call or a natural language response.                                        |
+   * | "any"	  | The model must predict only function calls. To limit the model to a subset of functions, define the allowed function names in `allowed_function_names`. |
+   * | "none"	  | The model must not predict function calls. This behavior is equivalent to a model request without any associated function declarations.                 |
+   * | string   | The string value must be one of the function names. This will force the model to predict the specified function call.                                   |
+   *
+   * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tool_choice?: string | "auto" | "any" | "none" | Record<string, any>;
+  /**
+   * Allowed functions to call when the mode is "any".
+   * If empty, any one of the provided functions are called.
+   */
+  allowed_function_names?: string[];
+
+  /**
+   * Used to specify a previously created context cache to use with generation.
+   * For Vertex, this should be of the form:
+   * "projects/PROJECT_NUMBER/locations/LOCATION/cachedContents/CACHE_ID",
+   *
+   * See these guides for more information on how to use context caching:
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-create
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
+   */
+  cachedContent?: string;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
   extends BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams,
+    GoogleAIAPIParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
-  extends BaseLanguageModelCallOptions,
+  extends BaseChatModelCallOptions,
     GoogleAIModelRequestParams,
-    GoogleAISafetyParams {}
+    GoogleAISafetyParams {
+  /**
+   * Whether or not to include usage data, like token counts
+   * in the streamed response chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
+}
 
 /**
  * Input to LLM class.
@@ -133,6 +327,10 @@ export interface GoogleBaseLLMInput<AuthOptions>
 export interface GoogleResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
+}
+
+export interface GoogleRawResponse extends GoogleResponse {
+  data: Blob;
 }
 
 export interface GeminiPartText {
@@ -146,7 +344,6 @@ export interface GeminiPartInlineData {
   };
 }
 
-// Vertex AI only
 export interface GeminiPartFileData {
   fileData: {
     mimeType: string;
@@ -187,6 +384,86 @@ export type GeminiSafetyRating = {
   probability: string;
 } & Record<string, unknown>;
 
+export interface GeminiCitationMetadata {
+  citations: GeminiCitation[];
+}
+
+export interface GeminiCitation {
+  startIndex: number;
+  endIndex: number;
+  uri: string;
+  title: string;
+  license: string;
+  publicationDate: GoogleTypeDate;
+}
+
+export interface GoogleTypeDate {
+  year: number; // 1-9999 or 0 to specify a date without a year
+  month: number; // 1-12 or 0 to specify a year without a month and day
+  day: number; // Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant
+}
+
+export interface GeminiGroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: GeminiSearchEntryPoint;
+  groundingChunks: GeminiGroundingChunk[];
+  groundingSupports?: GeminiGroundingSupport[];
+  retrievalMetadata?: GeminiRetrievalMetadata;
+}
+
+export interface GeminiSearchEntryPoint {
+  renderedContent?: string;
+  sdkBlob?: string; // Base64 encoded JSON representing array of tuple.
+}
+
+export interface GeminiGroundingChunk {
+  web: GeminiGroundingChunkWeb;
+  retrievedContext: GeminiGroundingChunkRetrievedContext;
+}
+
+export interface GeminiGroundingChunkWeb {
+  uri: string;
+  title: string;
+}
+
+export interface GeminiGroundingChunkRetrievedContext {
+  uri: string;
+  title: string;
+  text: string;
+}
+
+export interface GeminiGroundingSupport {
+  segment: GeminiSegment;
+  groundingChunkIndices: number[];
+  confidenceScores: number[];
+}
+
+export interface GeminiSegment {
+  partIndex: number;
+  startIndex: number;
+  endIndex: number;
+  text: string;
+}
+
+export interface GeminiRetrievalMetadata {
+  googleSearchDynamicRetrievalScore: number;
+}
+
+export interface GeminiLogprobsResult {
+  topCandidates: GeminiLogprobsTopCandidate[];
+  chosenCandidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsTopCandidate {
+  candidates: GeminiLogprobsResultCandidate[];
+}
+
+export interface GeminiLogprobsResultCandidate {
+  token: string;
+  tokenId: number;
+  logProbability: number;
+}
+
 // The "system" content appears to only be valid in the systemInstruction
 export type GeminiRole = "system" | "user" | "model" | "function";
 
@@ -195,8 +472,51 @@ export interface GeminiContent {
   role: GeminiRole; // Vertex AI requires the role
 }
 
+/*
+ * If additional attributes are added here, they should also be
+ * added to the attributes below
+ */
 export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
+  googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
+  googleSearch?: GoogleSearch; // Gemini-2.0
+  retrieval?: VertexAIRetrieval;
+}
+
+/*
+ * The known strings in this type should match those in GeminiSearchToolAttribuets
+ */
+export type GoogleSearchToolSetting =
+  | boolean
+  | "googleSearchRetrieval"
+  | "googleSearch"
+  | string;
+
+export const GeminiSearchToolAttributes = [
+  "googleSearchRetrieval",
+  "googleSearch",
+];
+
+export const GeminiToolAttributes = [
+  "functionDeclaration",
+  "retrieval",
+  ...GeminiSearchToolAttributes,
+];
+
+export interface GoogleSearchRetrieval {
+  dynamicRetrievalConfig?: {
+    mode?: string;
+    dynamicThreshold?: number;
+  };
+}
+
+export interface GoogleSearch {}
+
+export interface VertexAIRetrieval {
+  vertexAiSearch: {
+    datastore: string;
+  };
+  disableAttribution?: boolean;
 }
 
 export interface GeminiFunctionDeclaration {
@@ -231,18 +551,31 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
+  responseLogprobs?: boolean;
+  logprobs?: number;
+  responseModalities?: GoogleAIModelModality[];
+  thinkingConfig?: GoogleThinkingConfig;
 }
 
 export interface GeminiRequest {
   contents?: GeminiContent[];
   systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
+  toolConfig?: {
+    functionCallingConfig: {
+      mode: "auto" | "any" | "none";
+      allowedFunctionNames?: string[];
+    };
+  };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
+  cachedContent?: string;
 }
 
-interface GeminiResponseCandidate {
+export interface GeminiResponseCandidate {
   content: {
     parts: GeminiPart[];
     role: string;
@@ -251,6 +584,11 @@ interface GeminiResponseCandidate {
   index: number;
   tokenCount?: number;
   safetyRatings: GeminiSafetyRating[];
+  citationMetadata?: GeminiCitationMetadata;
+  groundingMetadata?: GeminiGroundingMetadata;
+  avgLogprobs?: number;
+  logprobsResult: GeminiLogprobsResult;
+  finishMessage?: string;
 }
 
 interface GeminiResponsePromptFeedback {
@@ -264,7 +602,9 @@ export interface GenerateContentResponseData {
   usageMetadata: Record<string, unknown>;
 }
 
-export type GoogleLLMModelFamily = null | "palm" | "gemini";
+export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
+
+export type VertexModelFamily = GoogleLLMModelFamily | "claude";
 
 export type GoogleLLMResponseData =
   | JsonStream
@@ -272,7 +612,7 @@ export type GoogleLLMResponseData =
   | GenerateContentResponseData[];
 
 export interface GoogleLLMResponse extends GoogleResponse {
-  data: GoogleLLMResponseData;
+  data: GoogleLLMResponseData | AnthropicResponseData;
 }
 
 export interface GoogleAISafetyHandler {
@@ -298,4 +638,56 @@ export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
   items?: GeminiJsonSchemaDirty;
   properties?: Record<string, GeminiJsonSchemaDirty>;
   additionalProperties?: boolean;
+}
+
+export type GoogleAIAPI = {
+  messageContentToParts?: (content: MessageContent) => Promise<GeminiPart[]>;
+
+  baseMessageToContent?: (
+    message: BaseMessage,
+    prevMessage: BaseMessage | undefined,
+    useSystemInstruction: boolean
+  ) => Promise<GeminiContent[]>;
+
+  responseToString: (response: GoogleLLMResponse) => string;
+
+  responseToChatGeneration: (
+    response: GoogleLLMResponse
+  ) => ChatGenerationChunk | null;
+
+  chunkToString: (chunk: BaseMessageChunk) => string;
+
+  responseToBaseMessage: (response: GoogleLLMResponse) => BaseMessage;
+
+  responseToChatResult: (response: GoogleLLMResponse) => ChatResult;
+
+  formatData: (
+    input: unknown,
+    parameters: GoogleAIModelRequestParams
+  ) => Promise<unknown>;
+};
+
+export interface GeminiAPIConfig {
+  safetyHandler?: GoogleAISafetyHandler;
+  mediaManager?: MediaManager;
+  useSystemInstruction?: boolean;
+
+  /**
+   * How to handle the Google Search tool, since the name (and format)
+   * of the tool changes between Gemini 1.5 and Gemini 2.0.
+   * true - Change based on the model version. (Default)
+   * false - Do not change the tool name provided
+   * string value - Use this as the attribute name for the search
+   *   tool, adapting any tool attributes if possible.
+   * When the model is created, a "true" or default setting
+   * will be changed to a string based on the model.
+   */
+  googleSearchToolAdjustment?: GoogleSearchToolSetting;
+}
+
+export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;
+
+export interface GoogleAIAPIParams {
+  apiName?: string;
+  apiConfig?: GoogleAIAPIConfig;
 }

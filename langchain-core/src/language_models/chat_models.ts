@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   AIMessage,
   type BaseMessage,
@@ -5,6 +7,13 @@ import {
   type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
+  AIMessageChunk,
+  isAIMessageChunk,
+  isBaseMessage,
+  isAIMessage,
+  convertToOpenAIImageBlock,
+  isURLContentBlock,
+  isBase64ContentBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -17,6 +26,8 @@ import {
 } from "../outputs.js";
 import {
   BaseLanguageModel,
+  type StructuredOutputMethodOptions,
+  type ToolDefinition,
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
@@ -27,12 +38,24 @@ import {
   type Callbacks,
 } from "../callbacks/manager.js";
 import type { RunnableConfig } from "../runnables/config.js";
-import type { BaseCache } from "../caches.js";
-import { StructuredToolInterface } from "../tools.js";
-import { Runnable } from "../runnables/base.js";
-import { isStreamEventsHandler } from "../tracers/event_stream.js";
-import { isLogStreamHandler } from "../tracers/log_stream.js";
+import type { BaseCache } from "../caches/base.js";
+import {
+  StructuredToolInterface,
+  StructuredToolParams,
+} from "../tools/index.js";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableSequence,
+  RunnableToolLike,
+} from "../runnables/base.js";
 import { concat } from "../utils/stream.js";
+import { RunnablePassthrough } from "../runnables/passthrough.js";
+import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolChoice = string | Record<string, any> | "auto" | "any";
 
 /**
  * Represents a serialized chat model.
@@ -56,12 +79,39 @@ export type SerializedLLM = {
 /**
  * Represents the parameters for a base chat model.
  */
-export type BaseChatModelParams = BaseLanguageModelParams;
+export type BaseChatModelParams = BaseLanguageModelParams & {
+  /**
+   * Whether to disable streaming.
+   *
+   * If streaming is bypassed, then `stream()` will defer to
+   * `invoke()`.
+   *
+   * - If true, will always bypass streaming case.
+   * - If false (default), will always use streaming case if available.
+   */
+  disableStreaming?: boolean;
+};
 
 /**
  * Represents the call options for a base chat model.
  */
-export type BaseChatModelCallOptions = BaseLanguageModelCallOptions;
+export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
+  /**
+   * Specifies how the chat model should use tools.
+   * @default undefined
+   *
+   * Possible values:
+   * - "auto": The model may choose to use any of the provided tools, or none.
+   * - "any": The model must use one of the provided tools.
+   * - "none": The model must not use any tools.
+   * - A string (not "auto", "any", or "none"): The name of a specific tool the model must use.
+   * - An object: A custom schema specifying tool choice parameters. Specific to the provider.
+   *
+   * Note: Not all providers support tool_choice. An error will be thrown
+   * if used with an unsupported model.
+   */
+  tool_choice?: ToolChoice;
+};
 
 /**
  * Creates a transform stream for encoding chat message chunks.
@@ -83,6 +133,34 @@ export function createChatMessageChunkEncoderStream() {
   });
 }
 
+function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
+  const messagesToTrace: BaseMessage[] = [];
+  for (const message of messages) {
+    let messageToTrace = message;
+    if (Array.isArray(message.content)) {
+      for (let idx = 0; idx < message.content.length; idx++) {
+        const block = message.content[idx];
+        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
+          if (messageToTrace === message) {
+            // Also shallow-copy content
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messageToTrace = new (message.constructor as any)({
+              ...messageToTrace,
+              content: [
+                ...message.content.slice(0, idx),
+                convertToOpenAIImageBlock(block),
+                ...message.content.slice(idx + 1),
+              ],
+            });
+          }
+        }
+      }
+    }
+    messagesToTrace.push(messageToTrace);
+  }
+  return messagesToTrace;
+}
+
 export type LangSmithParams = {
   ls_provider?: string;
   ls_model_name?: string;
@@ -92,16 +170,13 @@ export type LangSmithParams = {
   ls_stop?: Array<string>;
 };
 
-interface ChatModelGenerateCachedParameters<
-  T extends BaseChatModel<CallOptions>,
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions
-> {
-  messages: BaseMessageLike[][];
-  cache: BaseCache<Generation[]>;
-  llmStringKey: string;
-  parsedOptions: T["ParsedCallOptions"];
-  handledOptions: RunnableConfig;
-}
+export type BindToolsInput =
+  | StructuredToolInterface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | Record<string, any>
+  | ToolDefinition
+  | RunnableToolLike
+  | StructuredToolParams;
 
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
@@ -110,15 +185,18 @@ interface ChatModelGenerateCachedParameters<
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   // TODO: Fix the parameter order on the next minor version.
-  OutputMessageType extends BaseMessageChunk = BaseMessageChunk
+  OutputMessageType extends BaseMessageChunk = AIMessageChunk
 > extends BaseLanguageModel<OutputMessageType, CallOptions> {
+  // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
     CallOptions,
-    keyof RunnableConfig & "timeout"
+    Exclude<keyof RunnableConfig, "signal" | "timeout" | "maxConcurrency">
   >;
 
   // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "chat_models", this._llmType()];
+
+  disableStreaming = false;
 
   constructor(fields: BaseChatModelParams) {
     super(fields);
@@ -128,14 +206,13 @@ export abstract class BaseChatModel<
     ...llmOutputs: LLMResult["llmOutput"][]
   ): LLMResult["llmOutput"];
 
-  protected _separateRunnableConfigFromCallOptions(
+  protected _separateRunnableConfigFromCallOptionsCompat(
     options?: Partial<CallOptions>
   ): [RunnableConfig, this["ParsedCallOptions"]] {
+    // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
-    if (callOptions?.timeout && !callOptions.signal) {
-      callOptions.signal = AbortSignal.timeout(callOptions.timeout);
-    }
+    (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -143,12 +220,12 @@ export abstract class BaseChatModel<
    * Bind tool-like objects to this chat model.
    *
    * @param tools A list of tool definitions to bind to this chat model.
-   * Can be a structured tool or an object matching the provider's
-   * specific tool schema.
+   * Can be a structured tool, an OpenAI formatted tool, or an object
+   * matching the provider's specific tool schema.
    * @param kwargs Any additional parameters to bind.
    */
   bindTools?(
-    tools: (StructuredToolInterface | Record<string, unknown>)[],
+    tools: BindToolsInput[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
 
@@ -189,14 +266,15 @@ export abstract class BaseChatModel<
     // Subclass check required to avoid double callbacks with default implementation
     if (
       this._streamResponseChunks ===
-      BaseChatModel.prototype._streamResponseChunks
+        BaseChatModel.prototype._streamResponseChunks ||
+      this.disableStreaming
     ) {
       yield this.invoke(input, options);
     } else {
       const prompt = BaseChatModel._convertInputToPromptValue(input);
       const messages = prompt.toChatMessages();
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptions(options);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
@@ -218,7 +296,7 @@ export abstract class BaseChatModel<
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        [messages],
+        [_formatForTracing(messages)],
         runnableConfig.runId,
         undefined,
         extra,
@@ -227,12 +305,18 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
           callOptions,
           runManagers?.[0]
         )) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           chunk.message.response_metadata = {
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
@@ -242,6 +326,18 @@ export abstract class BaseChatModel<
             generationChunk = chunk;
           } else {
             generationChunk = generationChunk.concat(chunk);
+          }
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              },
+            };
           }
         }
       } catch (err) {
@@ -257,16 +353,22 @@ export abstract class BaseChatModel<
           runManager?.handleLLMEnd({
             // TODO: Remove cast after figuring out inheritance
             generations: [[generationChunk as ChatGeneration]],
+            llmOutput,
           })
         )
       );
     }
   }
 
-  protected getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const providerName = this.getName().startsWith("Chat")
+      ? this.getName().replace("Chat", "")
+      : this.getName();
+
     return {
       ls_model_type: "chat",
       ls_stop: options.stop,
+      ls_provider: providerName,
     };
   }
 
@@ -274,51 +376,61 @@ export abstract class BaseChatModel<
   async _generateUncached(
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: RunnableConfig
+    handledOptions: RunnableConfig,
+    startedRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    const inheritableMetadata = {
-      ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
-    };
-    // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
-      handledOptions.callbacks,
-      this.callbacks,
-      handledOptions.tags,
-      this.tags,
-      inheritableMetadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-      batch_size: 1,
-    };
-    const runManagers = await callbackManager_?.handleChatModelStart(
-      this.toJSON(),
-      baseMessages,
-      handledOptions.runId,
-      undefined,
-      extra,
-      undefined,
-      undefined,
-      handledOptions.runName
-    );
+    let runManagers: CallbackManagerForLLMRun[] | undefined;
+    if (
+      startedRunManagers !== undefined &&
+      startedRunManagers.length === baseMessages.length
+    ) {
+      runManagers = startedRunManagers;
+    } else {
+      const inheritableMetadata = {
+        ...handledOptions.metadata,
+        ...this.getLsParams(parsedOptions),
+      };
+      // create callback manager and start run
+      const callbackManager_ = await CallbackManager.configure(
+        handledOptions.callbacks,
+        this.callbacks,
+        handledOptions.tags,
+        this.tags,
+        inheritableMetadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+        batch_size: 1,
+      };
+      runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        baseMessages.map(_formatForTracing),
+        handledOptions.runId,
+        undefined,
+        extra,
+        undefined,
+        undefined,
+        handledOptions.runName
+      );
+    }
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
-    const hasStreamingHandler = !!runManagers?.[0].handlers.find((handler) => {
-      return isStreamEventsHandler(handler) || isLogStreamHandler(handler);
-    });
+    const hasStreamingHandler = !!runManagers?.[0].handlers.find(
+      callbackHandlerPrefersStreaming
+    );
     if (
       hasStreamingHandler &&
+      !this.disableStreaming &&
       baseMessages.length === 1 &&
       this._streamResponseChunks !==
         BaseChatModel.prototype._streamResponseChunks
@@ -330,11 +442,29 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
+          if (chunk.message.id == null) {
+            const runId = runManagers?.at(0)?.runId;
+            if (runId != null) chunk.message._updateId(`run-${runId}`);
+          }
           if (aggregated === undefined) {
             aggregated = chunk;
           } else {
             aggregated = concat(aggregated, chunk);
+          }
+          if (
+            isAIMessageChunk(chunk.message) &&
+            chunk.message.usage_metadata !== undefined
+          ) {
+            llmOutput = {
+              tokenUsage: {
+                promptTokens: chunk.message.usage_metadata.input_tokens,
+                completionTokens: chunk.message.usage_metadata.output_tokens,
+                totalTokens: chunk.message.usage_metadata.total_tokens,
+              },
+            };
           }
         }
         if (aggregated === undefined) {
@@ -343,7 +473,7 @@ export abstract class BaseChatModel<
         generations.push([aggregated]);
         await runManagers?.[0].handleLLMEnd({
           generations,
-          llmOutput: {},
+          llmOutput,
         });
       } catch (e) {
         await runManagers?.[0].handleLLMError(e);
@@ -366,6 +496,10 @@ export abstract class BaseChatModel<
           if (pResult.status === "fulfilled") {
             const result = pResult.value;
             for (const generation of result.generations) {
+              if (generation.message.id == null) {
+                const runId = runManagers?.at(0)?.runId;
+                if (runId != null) generation.message._updateId(`run-${runId}`);
+              }
               generation.message.response_metadata = {
                 ...generation.generationInfo,
                 ...generation.message.response_metadata,
@@ -413,8 +547,18 @@ export abstract class BaseChatModel<
     llmStringKey,
     parsedOptions,
     handledOptions,
-  }: ChatModelGenerateCachedParameters<typeof this>): Promise<
-    LLMResult & { missingPromptIndices: number[] }
+  }: {
+    messages: BaseMessageLike[][];
+    cache: BaseCache<Generation[]>;
+    llmStringKey: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    parsedOptions: any;
+    handledOptions: RunnableConfig;
+  }): Promise<
+    LLMResult & {
+      missingPromptIndices: number[];
+      startedRunManagers?: CallbackManagerForLLMRun[];
+    }
   > {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
@@ -438,11 +582,10 @@ export abstract class BaseChatModel<
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: 1,
-      cached: true,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      baseMessages,
+      baseMessages.map(_formatForTracing),
       handledOptions.runId,
       undefined,
       extra,
@@ -484,16 +627,51 @@ export abstract class BaseChatModel<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
-          generations[i] = result;
+          generations[i] = result.map((result) => {
+            if (
+              "message" in result &&
+              isBaseMessage(result.message) &&
+              isAIMessage(result.message)
+            ) {
+              // eslint-disable-next-line no-param-reassign
+              result.message.usage_metadata = {
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+              };
+            }
+            // eslint-disable-next-line no-param-reassign
+            result.generationInfo = {
+              ...result.generationInfo,
+              tokenUsage: {},
+            };
+            return result;
+          });
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
-          return runManager?.handleLLMEnd({
-            generations: [result],
-          });
+          return runManager?.handleLLMEnd(
+            {
+              generations: [result],
+            },
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
         } else {
           // status === "rejected"
-          await runManager?.handleLLMError(promiseResult.reason);
+          await runManager?.handleLLMError(
+            promiseResult.reason,
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
           return Promise.reject(promiseResult.reason);
         }
       })
@@ -502,6 +680,7 @@ export abstract class BaseChatModel<
     const output = {
       generations,
       missingPromptIndices,
+      startedRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -542,7 +721,7 @@ export abstract class BaseChatModel<
     );
 
     const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptions(parsedOptions);
+      this._separateRunnableConfigFromCallOptionsCompat(parsedOptions);
     runnableConfig.callbacks = runnableConfig.callbacks ?? callbacks;
 
     if (!this.cache) {
@@ -550,23 +729,28 @@ export abstract class BaseChatModel<
     }
 
     const { cache } = this;
-    const llmStringKey =
-      this._getSerializedCacheKeyParametersForCall(callOptions);
+    const llmStringKey = this._getSerializedCacheKeyParametersForCall(
+      callOptions as CallOptions
+    );
 
-    const { generations, missingPromptIndices } = await this._generateCached({
-      messages: baseMessages,
-      cache,
-      llmStringKey,
-      parsedOptions: callOptions,
-      handledOptions: runnableConfig,
-    });
+    const { generations, missingPromptIndices, startedRunManagers } =
+      await this._generateCached({
+        messages: baseMessages,
+        cache,
+        llmStringKey,
+        parsedOptions: callOptions,
+        handledOptions: runnableConfig,
+      });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
-        runnableConfig
+        runnableConfig,
+        startedRunManagers !== undefined
+          ? missingPromptIndices.map((i) => startedRunManagers?.[i])
+          : undefined
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
@@ -713,6 +897,142 @@ export abstract class BaseChatModel<
       throw new Error("Cannot use predict when output is not a string.");
     }
     return result.content;
+  }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | z.ZodType<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | Runnable<BaseLanguageModelInput, RunOutput>
+    | Runnable<
+        BaseLanguageModelInput,
+        {
+          raw: BaseMessage;
+          parsed: RunOutput;
+        }
+      > {
+    if (typeof this.bindTools !== "function") {
+      throw new Error(
+        `Chat model must implement ".bindTools()" to use withStructuredOutput.`
+      );
+    }
+    if (config?.strict) {
+      throw new Error(
+        `"strict" mode is not supported for this model by default.`
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const name = config?.name;
+    const description = schema.description ?? "A function available to call.";
+    const method = config?.method;
+    const includeRaw = config?.includeRaw;
+    if (method === "jsonMode") {
+      throw new Error(
+        `Base withStructuredOutput implementation only supports "functionCalling" as a method.`
+      );
+    }
+
+    let functionName = name ?? "extract";
+    let tools: ToolDefinition[];
+    if (isZodSchema(schema)) {
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: zodToJsonSchema(schema),
+          },
+        },
+      ];
+    } else {
+      if ("name" in schema) {
+        functionName = schema.name;
+      }
+      tools = [
+        {
+          type: "function",
+          function: {
+            name: functionName,
+            description,
+            parameters: schema,
+          },
+        },
+      ];
+    }
+
+    const llm = this.bindTools(tools);
+    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+      (input: AIMessageChunk): RunOutput => {
+        if (!input.tool_calls || input.tool_calls.length === 0) {
+          throw new Error("No tool calls found in the response.");
+        }
+        const toolCall = input.tool_calls.find(
+          (tc) => tc.name === functionName
+        );
+        if (!toolCall) {
+          throw new Error(`No tool call found with name ${functionName}.`);
+        }
+        return toolCall.args as RunOutput;
+      }
+    );
+
+    if (!includeRaw) {
+      return llm.pipe(outputParser).withConfig({
+        runName: "StructuredOutput",
+      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+    }
+
+    const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
+    });
+    const parserNone = RunnablePassthrough.assign({
+      parsed: () => null,
+    });
+    const parsedWithFallback = parserAssign.withFallbacks({
+      fallbacks: [parserNone],
+    });
+    return RunnableSequence.from<
+      BaseLanguageModelInput,
+      { raw: BaseMessage; parsed: RunOutput }
+    >([
+      {
+        raw: llm,
+      },
+      parsedWithFallback,
+    ]).withConfig({
+      runName: "StructuredOutputRunnable",
+    });
   }
 }
 

@@ -5,7 +5,6 @@
 import OpenAI from "openai";
 import wiki from "wikipedia";
 import { Client, Dataset, RunTree, RunTreeConfig } from "langsmith";
-import { runOnDataset } from "../runner_utils.js";
 import { DynamicRunEvaluatorParams, RunEvalConfig } from "../config.js";
 
 const oaiClient = new OpenAI();
@@ -43,7 +42,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return chatCompletion.choices[0].message.content ?? "";
     } catch (error: any) {
-      console.error("Error generating wiki search query:", error);
+      // console.error("Error generating wiki search query:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -93,7 +92,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return finalResults;
     } catch (error: any) {
-      console.error("Error in retrieval:", error);
+      // console.error("Error in retrieval:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -131,7 +130,7 @@ test(`Chat model dataset`, async () => {
       await childRun.postRun();
       return chatCompletion.choices[0].message.content ?? "";
     } catch (error: any) {
-      console.error("Error generating answer:", error);
+      // console.error("Error generating answer:", error);
       childRun.end({ error: error.toString() });
       await childRun.postRun();
       throw error;
@@ -158,7 +157,7 @@ test(`Chat model dataset`, async () => {
       await parentRun.postRun();
       return answer;
     } catch (error: any) {
-      console.error("Error running RAG Pipeline:", error);
+      // console.error("Error running RAG Pipeline:", error);
       parentRun.end({ error: error.toString() });
       await parentRun.postRun();
       throw error;
@@ -211,6 +210,8 @@ test(`Chat model dataset`, async () => {
     };
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // The 'evaluators' are loaded from LangChain's evaluation
     // library.
@@ -237,6 +238,8 @@ test(`Chat model dataset`, async () => {
     customEvaluators: [unsure],
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,
   }: {
@@ -245,11 +248,11 @@ test(`Chat model dataset`, async () => {
     return ragPipeline(question);
   };
 
-  console.log(
-    await runOnDataset(wrappedRagPipeline, datasetName, {
-      evaluationConfig: evaluation,
-    })
-  );
+  // console.log(
+  //   await runOnDataset(wrappedRagPipeline, datasetName, {
+  //     evaluationConfig: evaluation,
+  //   })
+  // );
 });
 
 test("Thrown errors should not interrupt dataset run", async () => {
@@ -292,16 +295,20 @@ test("Thrown errors should not interrupt dataset run", async () => {
 
   // An illustrative custom evaluator example
   const dummy = async (_: DynamicRunEvaluatorParams) => {
-    console.log("RUNNING EVAL");
+    // console.log("RUNNING EVAL");
     throw new Error("Expected error");
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // Custom evaluators can be user-defined RunEvaluator's
     // or a compatible function
     customEvaluators: [dummy],
   };
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,
   }: {
@@ -310,10 +317,10 @@ test("Thrown errors should not interrupt dataset run", async () => {
     return ragPipeline(question);
   };
 
-  console.log(
-    await runOnDataset(wrappedRagPipeline, datasetName, {
-      evaluationConfig: evaluation,
-      maxConcurrency: 1,
-    })
-  );
+  // console.log(
+  //   await runOnDataset(wrappedRagPipeline, datasetName, {
+  //     evaluationConfig: evaluation,
+  //     maxConcurrency: 1,
+  //   })
+  // );
 });

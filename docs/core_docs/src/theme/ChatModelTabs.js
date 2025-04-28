@@ -12,7 +12,7 @@ function InstallationInfo({ children }) {
       <Admonition type="tip">
         <p>
           See{" "}
-          <a href="/docs/get_started/installation#installing-integration-packages">
+          <a href="/docs/how_to/installation/#installing-integration-packages">
             this section for general instructions on installing integration
             packages
           </a>
@@ -25,13 +25,13 @@ function InstallationInfo({ children }) {
 }
 
 const DEFAULTS = {
-  openaiParams: `{\n  model: "gpt-3.5-turbo",\n  temperature: 0\n}`,
-  anthropicParams: `{\n  model: "claude-3-sonnet-20240229",\n  temperature: 0\n}`,
-  fireworksParams: `{\n  model: "accounts/fireworks/models/firefunction-v1",\n  temperature: 0\n}`,
+  openaiParams: `{\n  model: "gpt-4o-mini",\n  temperature: 0\n}`,
+  anthropicParams: `{\n  model: "claude-3-5-sonnet-20240620",\n  temperature: 0\n}`,
+  fireworksParams: `{\n  model: "accounts/fireworks/models/llama-v3p1-70b-instruct",\n  temperature: 0\n}`,
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
-  groqParams: `{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}`,
-  vertexParams: `{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}`,
-  azureParams: `{\n  azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],\n  azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],\n  openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"]\n}`,
+  groqParams: `{\n  model: "llama-3.3-70b-versatile",\n  temperature: 0\n}`,
+  vertexParams: `{\n  model: "gemini-1.5-flash",\n  temperature: 0\n}`,
+    azureParams: `{\n  azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],\n  azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],\n  openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"]\n}`,
 };
 
 const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
@@ -73,12 +73,12 @@ export default function ChatModelTabs(props) {
   const vertexParams = props.vertexParams ?? DEFAULTS.vertexParams;
   const azureParams = props.azureParams ?? DEFAULTS.azureParams;
   const providers = props.providers ?? [
+    "groq",
     "openai",
     "anthropic",
     "azure",
     "fireworks",
     "mistral",
-    "groq",
     "vertex",
   ];
 

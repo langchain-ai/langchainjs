@@ -9,7 +9,7 @@ test("Test Embedding Distance", async () => {
     reference: "I shan't go",
   });
 
-  console.log({ res });
+  // console.log({ res });
   expect(res.score).toBeGreaterThan(0.09);
 
   const res1 = await chain.evaluateStrings({
@@ -18,7 +18,7 @@ test("Test Embedding Distance", async () => {
   });
 
   expect(res1.score).toBeLessThan(0.04);
-  console.log({ res1 });
+  // console.log({ res1 });
 });
 
 test("Test Pairwise Embedding Distance", async () => {
@@ -30,5 +30,5 @@ test("Test Pairwise Embedding Distance", async () => {
   });
 
   expect(res.score).toBeGreaterThan(0.09);
-  console.log({ res });
+  // console.log({ res });
 });

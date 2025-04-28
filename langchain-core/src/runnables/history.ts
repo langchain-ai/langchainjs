@@ -115,9 +115,9 @@ export class RunnableWithMessageHistory<
   getMessageHistory: GetSessionHistoryCallable;
 
   constructor(fields: RunnableWithMessageHistoryInputs<RunInput, RunOutput>) {
-    let historyChain: Runnable = new RunnableLambda({
-      func: (input, options) => this._enterHistory(input, options ?? {}),
-    }).withConfig({ runName: "loadHistory" });
+    let historyChain: Runnable = RunnableLambda.from((input, options) =>
+      this._enterHistory(input, options ?? {})
+    ).withConfig({ runName: "loadHistory" });
 
     const messagesKey = fields.historyMessagesKey ?? fields.inputMessagesKey;
     if (messagesKey) {
@@ -240,9 +240,9 @@ export class RunnableWithMessageHistory<
   async _enterHistory(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
-    kwargs?: { config?: RunnableConfig }
+    kwargs?: RunnableConfig
   ): Promise<BaseMessage[]> {
-    const history = kwargs?.config?.configurable?.messageHistory;
+    const history = kwargs?.configurable?.messageHistory;
     const messages = await history.getMessages();
     if (this.historyMessagesKey === undefined) {
       return messages.concat(this._getInputMessages(input));

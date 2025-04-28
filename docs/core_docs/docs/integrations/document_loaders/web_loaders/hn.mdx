@@ -9,13 +9,13 @@ This example goes over how to load data from the hacker news website, using Chee
 ## Setup
 
 ```bash npm2yarn
-npm install cheerio
+npm install @langchain/community @langchain/core cheerio
 ```
 
 ## Usage
 
 ```typescript
-import { HNLoader } from "langchain/document_loaders/web/hn";
+import { HNLoader } from "@langchain/community/document_loaders/web/hn";
 
 const loader = new HNLoader("https://news.ycombinator.com/item?id=34817881");
 

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { expect, test } from "@jest/globals";
 import {
   AIMessagePromptTemplate,
@@ -15,6 +17,7 @@ import {
   ChatMessage,
   FunctionMessage,
 } from "../../messages/index.js";
+import { Document } from "../../documents/document.js";
 
 function createChatPromptTemplate() {
   const systemPrompt = new PromptTemplate({
@@ -72,13 +75,18 @@ test("Test format", async () => {
 
 test("Test format with invalid input values", async () => {
   const chatPrompt = createChatPromptTemplate();
-  await expect(
+  let error: any | undefined;
+  try {
     // @ts-expect-error TS compiler should flag missing input variables
-    chatPrompt.formatPromptValue({
+    await chatPrompt.formatPromptValue({
       context: "This is a context",
       foo: "Foo",
-    })
-  ).rejects.toThrow("Missing value for input variable `bar`");
+    });
+  } catch (e) {
+    error = e;
+  }
+  expect(error?.message).toContain("Missing value for input variable `bar`");
+  expect(error?.lc_error_code).toEqual("INVALID_PROMPT_INPUT");
 });
 
 test("Test format with invalid input variables", async () => {
@@ -129,6 +137,23 @@ test("Test fromTemplate", async () => {
   ]);
 });
 
+test("Test fromTemplate", async () => {
+  const chatPrompt = ChatPromptTemplate.fromTemplate("Hello {foo}, I'm {bar}");
+  expect(chatPrompt.inputVariables).toEqual(["foo", "bar"]);
+  expect(
+    (
+      await chatPrompt.invoke({
+        foo: ["barbar"],
+        bar: [new Document({ pageContent: "bar" })],
+      })
+    ).toChatMessages()
+  ).toEqual([
+    new HumanMessage(
+      `Hello ["barbar"], I'm [{"pageContent":"bar","metadata":{}}]`
+    ),
+  ]);
+});
+
 test("Test fromMessages", async () => {
   const systemPrompt = new PromptTemplate({
     template: "Here's some context: {context}",
@@ -151,6 +176,34 @@ test("Test fromMessages", async () => {
   });
   expect(messages.toChatMessages()).toEqual([
     new SystemMessage("Here's some context: This is a context"),
+    new HumanMessage("Hello Foo, I'm Bar"),
+  ]);
+});
+
+test("Test fromMessages with non-string inputs", async () => {
+  const systemPrompt = new PromptTemplate({
+    template: "Here's some context: {context}",
+    inputVariables: ["context"],
+  });
+  const userPrompt = new PromptTemplate({
+    template: "Hello {foo}, I'm {bar}",
+    inputVariables: ["foo", "bar"],
+  });
+  // TODO: Fix autocomplete for the fromMessages method
+  const chatPrompt = ChatPromptTemplate.fromMessages([
+    new SystemMessagePromptTemplate(systemPrompt),
+    new HumanMessagePromptTemplate(userPrompt),
+  ]);
+  expect(chatPrompt.inputVariables).toEqual(["context", "foo", "bar"]);
+  const messages = await chatPrompt.formatPromptValue({
+    context: [new Document({ pageContent: "bar" })],
+    foo: "Foo",
+    bar: "Bar",
+  });
+  expect(messages.toChatMessages()).toEqual([
+    new SystemMessage(
+      `Here's some context: [{"pageContent":"bar","metadata":{}}]`
+    ),
     new HumanMessage("Hello Foo, I'm Bar"),
   ]);
 });
@@ -302,7 +355,25 @@ test("Test MessagesPlaceholder not optional", async () => {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(prompt.formatMessages({} as any)).rejects.toThrow(
-    'Error: Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+    'Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
+  );
+});
+
+test("Test MessagesPlaceholder not optional with invalid input should throw", async () => {
+  const prompt = new MessagesPlaceholder({
+    variableName: "foo",
+  });
+  const badInput = [new Document({ pageContent: "barbar", metadata: {} })];
+  await expect(
+    prompt.formatMessages({
+      foo: [new Document({ pageContent: "barbar", metadata: {} })],
+    })
+  ).rejects.toThrow(
+    `Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages or coerceable values as input.\n\nReceived value: ${JSON.stringify(
+      badInput,
+      null,
+      2
+    )}\n\nAdditional message: Unable to coerce message from array: only human, AI, system, developer, or tool message coercion is currently supported.`
   );
 });
 
@@ -321,6 +392,60 @@ test("Test MessagesPlaceholder shorthand in a chat prompt template", async () =>
     new HumanMessage("Hi there!"),
     new AIMessage("how r u"),
   ]);
+});
+
+test("Test MessagesPlaceholder shorthand in a chat prompt template with object format", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  const messages = await prompt.formatMessages({
+    foo: [
+      {
+        type: "system",
+        content: "some initial content",
+      },
+      {
+        type: "human",
+        content: [
+          {
+            text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+            type: "text",
+          },
+          {
+            text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+            type: "text",
+          },
+        ],
+      },
+      {
+        type: "assistant",
+        content: "some captivating response",
+      },
+    ],
+  });
+  expect(messages).toEqual([
+    new SystemMessage("some initial content"),
+    new HumanMessage({
+      content: [
+        {
+          text: "page: 1\ndescription: One Purchase Flow\ntimestamp: '2024-06-04T14:46:46.062Z'\ntype: navigate\nscreenshot_present: true\n",
+          type: "text",
+        },
+        {
+          text: "page: 3\ndescription: intent_str=buy,mode_str=redirect,screenName_str=order-completed,\ntimestamp: '2024-06-04T14:46:58.846Z'\ntype: Screen View\nscreenshot_present: false\n",
+          type: "text",
+        },
+      ],
+    }),
+    new AIMessage("some captivating response"),
+  ]);
+});
+
+test("Test MessagesPlaceholder with invalid shorthand should throw", async () => {
+  const prompt = ChatPromptTemplate.fromMessages([["placeholder", "{foo}"]]);
+  await expect(() =>
+    prompt.formatMessages({
+      foo: [{ badFormatting: true }],
+    })
+  ).rejects.toThrow();
 });
 
 test("Test using partial", async () => {
@@ -506,6 +631,122 @@ test("Multi part chat prompt template with image", async () => {
   ]);
 });
 
+test("Multi part chat prompt template with dicts", async () => {
+  const name = "Bob";
+  const text1 = "chair";
+  const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "{text1}",
+          cache_control: { type: "ephemeral" },
+        },
+        { type: "audio", audio: { path: "{myImage}" } },
+        // { type: "image_url", image_url: { path: "{myImage}" } },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    text1,
+    myImage,
+  });
+  expect(messages).toEqual([
+    new SystemMessage("You are an AI assistant named Bob"),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: `chair`,
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "audio",
+          audio: {
+            path: myImage,
+          },
+        },
+      ],
+    }),
+  ]);
+
+  expect(JSON.parse(JSON.stringify(template))).toEqual({
+    id: ["langchain_core", "prompts", "chat", "ChatPromptTemplate"],
+    kwargs: {
+      input_variables: ["name", "text1", "myImage"],
+      messages: [
+        {
+          id: [
+            "langchain_core",
+            "prompts",
+            "chat",
+            "SystemMessagePromptTemplate",
+          ],
+          kwargs: {
+            prompt: {
+              id: ["langchain_core", "prompts", "prompt", "PromptTemplate"],
+              kwargs: {
+                input_variables: ["name"],
+                template: "You are an AI assistant named {name}",
+                template_format: "f-string",
+              },
+              lc: 1,
+              type: "constructor",
+            },
+          },
+          lc: 1,
+          type: "constructor",
+        },
+        {
+          id: [
+            "langchain_core",
+            "prompts",
+            "chat",
+            "HumanMessagePromptTemplate",
+          ],
+          kwargs: {
+            additional_options: {},
+            prompt: [
+              {
+                id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
+                kwargs: {
+                  input_variables: ["text1"],
+                  template: {
+                    cache_control: { type: "ephemeral" },
+                    text: "{text1}",
+                    type: "text",
+                  },
+                  template_format: "f-string",
+                },
+                lc: 1,
+                type: "constructor",
+              },
+              {
+                id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
+                kwargs: {
+                  input_variables: ["myImage"],
+                  template: { audio: { path: "{myImage}" }, type: "audio" },
+                  template_format: "f-string",
+                },
+                lc: 1,
+                type: "constructor",
+              },
+            ],
+          },
+          lc: 1,
+          type: "constructor",
+        },
+      ],
+    },
+    lc: 1,
+    type: "constructor",
+  });
+});
+
 test("Multi-modal, multi part chat prompt works with instances of BaseMessage", async () => {
   const name = "Bob";
   const objectName = "chair";
@@ -567,4 +808,76 @@ test("Multi-modal, multi part chat prompt works with instances of BaseMessage", 
     myUrl,
   });
   expect(messages).toMatchSnapshot();
+});
+
+test("Format complex messages and keep additional fields", async () => {
+  const examplePrompt = ChatPromptTemplate.fromMessages([
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "{input}",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    ],
+    [
+      "ai",
+      [
+        {
+          type: "text",
+          text: "{output}",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    ],
+  ]);
+  const formatted = await examplePrompt.formatMessages({
+    input: "hello",
+    output: "ciao",
+  });
+
+  expect(formatted).toHaveLength(2);
+
+  expect(formatted[0]._getType()).toBe("human");
+  expect(formatted[0].content[0]).toHaveProperty("cache_control");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((formatted[0].content[0] as any).cache_control).toEqual({
+    type: "ephemeral",
+  });
+
+  expect(formatted[1]._getType()).toBe("ai");
+  expect(formatted[1].content[0]).toHaveProperty("cache_control");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((formatted[1].content[0] as any).cache_control).toEqual({
+    type: "ephemeral",
+  });
+});
+
+test("Format image content messages and keep additional fields", async () => {
+  const examplePrompt = ChatPromptTemplate.fromMessages([
+    [
+      "human",
+      [
+        {
+          type: "image_url",
+          image_url: "{image_url}",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    ],
+  ]);
+  const formatted = await examplePrompt.formatMessages({
+    image_url: "image_url",
+  });
+
+  expect(formatted).toHaveLength(1);
+
+  expect(formatted[0]._getType()).toBe("human");
+  expect(formatted[0].content[0]).toHaveProperty("cache_control");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((formatted[0].content[0] as any).cache_control).toEqual({
+    type: "ephemeral",
+  });
 });

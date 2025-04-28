@@ -6,7 +6,7 @@ test("Test GooglePalmEmbeddings.embedQuery", async () => {
     maxRetries: 1,
   });
   const res = await embeddings.embedQuery("Hello world");
-  console.log(res);
+  // console.log(res);
   expect(typeof res[0]).toBe("number");
 });
 
@@ -22,7 +22,7 @@ test("Test GooglePalmEmbeddings.embedDocuments", async () => {
     "six documents",
     "to test pagination",
   ]);
-  console.log(res);
+  // console.log(res);
   expect(res).toHaveLength(6);
   res.forEach((r) => {
     expect(typeof r[0]).toBe("number");

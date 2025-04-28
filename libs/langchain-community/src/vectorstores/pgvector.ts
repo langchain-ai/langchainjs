@@ -1,8 +1,12 @@
 import pg, { type Pool, type PoolClient, type PoolConfig } from "pg";
-import { VectorStore } from "@langchain/core/vectorstores";
+import {
+  MaxMarginalRelevanceSearchOptions,
+  VectorStore,
+} from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 type Metadata = Record<string, unknown>;
 
@@ -41,10 +45,152 @@ export interface PGVectorStoreArgs {
 }
 
 /**
- * Class that provides an interface to a Postgres vector database. It
- * extends the `VectorStore` base class and implements methods for adding
- * documents and vectors, performing similarity searches, and ensuring the
- * existence of a table in the database.
+ * PGVector vector store integration.
+ *
+ * Setup:
+ * Install `@langchain/community` and `pg`.
+ *
+ * If you wish to generate ids, you should also install the `uuid` package.
+ *
+ * ```bash
+ * npm install @langchain/community pg uuid
+ * ```
+ *
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_community.vectorstores_pgvector.PGVectorStore.html#constructor)
+ *
+ * <details open>
+ * <summary><strong>Instantiate</strong></summary>
+ *
+ * ```typescript
+ * import {
+ *   PGVectorStore,
+ *   DistanceStrategy,
+ * } from "@langchain/community/vectorstores/pgvector";
+ *
+ * // Or other embeddings
+ * import { OpenAIEmbeddings } from "@langchain/openai";
+ * import { PoolConfig } from "pg";
+ *
+ * const embeddings = new OpenAIEmbeddings({
+ *   model: "text-embedding-3-small",
+ * });
+ *
+ * // Sample config
+ * const config = {
+ *   postgresConnectionOptions: {
+ *     type: "postgres",
+ *     host: "127.0.0.1",
+ *     port: 5433,
+ *     user: "myuser",
+ *     password: "ChangeMe",
+ *     database: "api",
+ *   } as PoolConfig,
+ *   tableName: "testlangchainjs",
+ *   columns: {
+ *     idColumnName: "id",
+ *     vectorColumnName: "vector",
+ *     contentColumnName: "content",
+ *     metadataColumnName: "metadata",
+ *   },
+ *   // supported distance strategies: cosine (default), innerProduct, or euclidean
+ *   distanceStrategy: "cosine" as DistanceStrategy,
+ * };
+ *
+ * const vectorStore = await PGVectorStore.initialize(embeddings, config);
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Add documents</strong></summary>
+ *
+ * ```typescript
+ * import type { Document } from '@langchain/core/documents';
+ *
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
+ * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ *
+ * const documents: Document[] = [document1, document2, document3];
+ * const ids = ["1", "2", "3"];
+ * await vectorStore.addDocuments(documents, { ids });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Delete documents</strong></summary>
+ *
+ * ```typescript
+ * await vectorStore.delete({ ids: ["3"] });
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>Similarity search</strong></summary>
+ *
+ * ```typescript
+ * const results = await vectorStore.similaritySearch("thud", 1);
+ * for (const doc of results) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * thud [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with filter</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
+ *
+ * for (const doc of resultsWithFilter) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ *
+ * <details>
+ * <summary><strong>Similarity search with score</strong></summary>
+ *
+ * ```typescript
+ * const resultsWithScore = await vectorStore.similaritySearchWithScore("qux", 1);
+ * for (const [doc, score] of resultsWithScore) {
+ *   console.log(`* [SIM=${score.toFixed(6)}] ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * [SIM=0.000000] qux [{"bar":"baz","baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
+ *
+ * <details>
+ * <summary><strong>As a retriever</strong></summary>
+ *
+ * ```typescript
+ * const retriever = vectorStore.asRetriever({
+ *   searchType: "mmr", // Leave blank for standard similarity search
+ *   k: 1,
+ * });
+ * const resultAsRetriever = await retriever.invoke("thud");
+ * console.log(resultAsRetriever);
+ *
+ * // Output: [Document({ metadata: { "baz":"bar" }, pageContent: "thud" })]
+ * ```
+ * </details>
+ *
+ * <br />
  */
 export class PGVectorStore extends VectorStore {
   declare FilterType: Metadata;
@@ -119,9 +265,15 @@ export class PGVectorStore extends VectorStore {
     this.chunkSize = config.chunkSize ?? 500;
     this.distanceStrategy = config.distanceStrategy ?? this.distanceStrategy;
 
-    this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      !!config.verbose;
+    const langchainVerbose = getEnvironmentVariable("LANGCHAIN_VERBOSE");
+
+    if (langchainVerbose === "true") {
+      this._verbose = true;
+    } else if (langchainVerbose === "false") {
+      this._verbose = false;
+    } else {
+      this._verbose = config.verbose;
+    }
   }
 
   get computedTableName() {
@@ -163,17 +315,19 @@ export class PGVectorStore extends VectorStore {
    * `connect` to return a new instance of `PGVectorStore`.
    *
    * @param embeddings - Embeddings instance.
-   * @param fields - `PGVectorStoreArgs` instance.
+   * @param fields - `PGVectorStoreArgs` instance
+   * @param fields.dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns A new instance of `PGVectorStore`.
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: PGVectorStoreArgs
+    config: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
-    const postgresqlVectorStore = new PGVectorStore(embeddings, config);
+    const { dimensions, ...rest } = config;
+    const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
 
     await postgresqlVectorStore._initializeClient();
-    await postgresqlVectorStore.ensureTableInDatabase();
+    await postgresqlVectorStore.ensureTableInDatabase(dimensions);
     if (postgresqlVectorStore.collectionTableName) {
       await postgresqlVectorStore.ensureCollectionTableInDatabase();
     }
@@ -268,7 +422,6 @@ export class PGVectorStore extends VectorStore {
    * Constructs the SQL query for inserting rows into the specified table.
    *
    * @param rows - The rows of data to be inserted, consisting of values and records.
-   * @param chunkIndex - The starting index for generating query placeholders based on chunk positioning.
    * @returns The complete SQL INSERT INTO query string.
    */
   private async buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
@@ -452,19 +605,18 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
-   * Method to perform a similarity search in the vector store. It returns
-   * the `k` most similar documents to the query vector, along with their
-   * similarity scores.
-   *
+   * Method to perform a similarity search in the vector store. It returns the `k` most similar documents to the query text.
    * @param query - Query vector.
    * @param k - Number of most similar documents to return.
    * @param filter - Optional filter to apply to the search.
+   * @param includeEmbedding Whether to include the embedding vectors in the results.
    * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
    */
-  async similaritySearchVectorWithScore(
+  private async searchPostgres(
     query: number[],
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    includeEmbedding?: boolean
   ): Promise<[Document, number][]> {
     const embeddingString = `[${query.join(",")}]`;
     const _filter: this["FilterType"] = filter ?? {};
@@ -542,7 +694,11 @@ export class PGVectorStore extends VectorStore {
         const document = new Document({
           pageContent: doc[this.contentColumnName],
           metadata: doc[this.metadataColumnName],
+          id: doc[this.idColumnName],
         });
+        if (includeEmbedding) {
+          document.metadata[this.vectorColumnName] = doc[this.vectorColumnName];
+        }
         results.push([document, doc._distance]);
       }
     }
@@ -550,12 +706,29 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
+   * Method to perform a similarity search in the vector store. It returns
+   * the `k` most similar documents to the query vector, along with their
+   * similarity scores.
+   * @param query - Query vector.
+   * @param k - Number of most similar documents to return.
+   * @param filter - Optional filter to apply to the search.
+   * @returns Promise that resolves with an array of tuples, each containing a `Document` and its similarity score.
+   */
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<[Document, number][]> {
+    return this.searchPostgres(query, k, filter, false);
+  }
+
+  /**
    * Method to ensure the existence of the table in the database. It creates
    * the table if it does not already exist.
-   *
+   * @param dimensions Number of dimensions in your vector data type. For example, use 1536 for OpenAI's `text-embedding-3-small`. If not set, indexes like HNSW might not be used during query time.
    * @returns Promise that resolves when the table has been ensured.
    */
-  async ensureTableInDatabase(): Promise<void> {
+  async ensureTableInDatabase(dimensions?: number): Promise<void> {
     const vectorQuery =
       this.extensionSchemaName == null
         ? "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -568,12 +741,15 @@ export class PGVectorStore extends VectorStore {
       this.extensionSchemaName == null
         ? "vector"
         : `"${this.extensionSchemaName}"."vector"`;
+    const vectorColumnType = dimensions
+      ? `${extensionName}(${dimensions})`
+      : extensionName;
     const tableQuery = `
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
-        "${this.vectorColumnName}" ${extensionName}
+        "${this.vectorColumnName}" ${vectorColumnType}
       );
     `;
     await this.pool.query(vectorQuery);
@@ -633,7 +809,7 @@ export class PGVectorStore extends VectorStore {
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const docs = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -660,7 +836,7 @@ export class PGVectorStore extends VectorStore {
   static async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: PGVectorStoreArgs
+    dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
@@ -676,5 +852,105 @@ export class PGVectorStore extends VectorStore {
   async end(): Promise<void> {
     this.client?.release();
     return this.pool.end();
+  }
+
+  /**
+   * Method to create the HNSW index on the vector column.
+   *
+   * @param dimensions - Defines the number of dimensions in your vector data type, up to 2000. For example, use 1536 for OpenAI's text-embedding-ada-002 and Amazon's amazon.titan-embed-text-v1 models.
+   * @param m - The max number of connections per layer (16 by default). Index build time improves with smaller values, while higher values can speed up search queries.
+   * @param efConstruction -  The size of the dynamic candidate list for constructing the graph (64 by default). A higher value can potentially improve the index quality at the cost of index build time.
+   * @param distanceFunction -  The distance function name you want to use, is automatically selected based on the distanceStrategy.
+   * @param namespace -  The namespace is used to create the index with a specific name. This is useful when you want to create multiple indexes on the same database schema (within the same schema in PostgreSQL, the index name must be unique across all tables).
+   * @returns Promise that resolves with the query response of creating the index.
+   */
+  async createHnswIndex(config: {
+    dimensions: number;
+    m?: number;
+    efConstruction?: number;
+    distanceFunction?: string;
+    namespace?: string;
+  }): Promise<void> {
+    let idxDistanceFunction = config?.distanceFunction || "vector_cosine_ops";
+    const prefix = config?.namespace ? `${config.namespace}_` : "";
+
+    switch (this.distanceStrategy) {
+      case "cosine":
+        idxDistanceFunction = "vector_cosine_ops";
+        break;
+      case "innerProduct":
+        idxDistanceFunction = "vector_ip_ops";
+        break;
+      case "euclidean":
+        idxDistanceFunction = "vector_l2_ops";
+        break;
+      default:
+        throw new Error(`Unknown distance strategy: ${this.distanceStrategy}`);
+    }
+
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS ${prefix}${
+      this.vectorColumnName
+    }_embedding_hnsw_idx
+        ON ${this.computedTableName} USING hnsw ((${
+      this.vectorColumnName
+    }::vector(${config.dimensions})) ${idxDistanceFunction})
+        WITH (
+            m=${config?.m || 16},
+            ef_construction=${config?.efConstruction || 64}
+        );`;
+
+    try {
+      await this.pool.query(createIndexQuery);
+    } catch (e) {
+      console.error(
+        `Failed to create HNSW index on table ${this.computedTableName}, error: ${e}`
+      );
+    }
+  }
+
+  /**
+   * Return documents selected using the maximal marginal relevance.
+   * Maximal marginal relevance optimizes for similarity to the query AND
+   * diversity among selected documents.
+   * @param query Text to look up documents similar to.
+   * @param options.k=4 Number of documents to return.
+   * @param options.fetchK=20 Number of documents to fetch before passing to
+   *     the MMR algorithm.
+   * @param options.lambda=0.5 Number between 0 and 1 that determines the
+   *     degree of diversity among the results, where 0 corresponds to maximum
+   *     diversity and 1 to minimum diversity.
+   * @returns List of documents selected by maximal marginal relevance.
+   */
+  async maxMarginalRelevanceSearch(
+    query: string,
+    options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
+  ): Promise<Document[]> {
+    const { k = 4, fetchK = 20, lambda = 0.5, filter } = options;
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const docs = await this.searchPostgres(
+      queryEmbedding,
+      fetchK,
+      filter,
+      true
+    );
+
+    const embeddingList = docs.map((doc) =>
+      JSON.parse(doc[0].metadata[this.vectorColumnName])
+    );
+
+    const mmrIndexes = maximalMarginalRelevance(
+      queryEmbedding,
+      embeddingList,
+      lambda,
+      k
+    );
+
+    const mmrDocs = mmrIndexes.map((index) => {
+      const doc = docs[index][0];
+      delete doc.metadata[this.vectorColumnName];
+      return docs[index][0];
+    });
+    return mmrDocs;
   }
 }

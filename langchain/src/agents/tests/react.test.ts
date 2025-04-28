@@ -9,7 +9,7 @@ test("ReActSingleInputOutputParser identifies final answer", async () => {
   });
 
   const parsedOutput = await outputParser.parse(finalAnswerText);
-  console.log(parsedOutput);
+  // console.log(parsedOutput);
   expect(parsedOutput).toHaveProperty("returnValues");
   expect(
     "returnValues" in parsedOutput && parsedOutput.returnValues.output
@@ -28,7 +28,7 @@ test("ReActSingleInputOutputParser identifies agent actions", async () => {
   });
 
   const parsedOutput = await outputParser.parse(finalAnswerText);
-  console.log(parsedOutput);
+  // console.log(parsedOutput);
   expect(parsedOutput).toHaveProperty("toolInput");
   expect(parsedOutput).toHaveProperty("tool");
 });

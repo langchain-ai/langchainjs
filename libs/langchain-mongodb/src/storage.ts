@@ -35,7 +35,7 @@ export interface MongoDBStoreInput {
  * const store = new MongoDBStore({
  *   collection,
  * });
- * 
+ *
  * const docs = [
  *   [uuidv4(), "Dogs are tough."],
  *   [uuidv4(), "Cats are tough."],
@@ -97,14 +97,23 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       .toArray();
 
     const encoder = new TextEncoder();
-    return retrievedValues.map((value) => {
-      if (!("value" in value)) {
+    const valueMap = new Map(
+      retrievedValues.map((item) => [item[this.primaryKey], item])
+    );
+
+    return prefixedKeys.map((prefixedKey) => {
+      const value = valueMap.get(prefixedKey);
+
+      if (!value) {
         return undefined;
       }
-      if (value === undefined || value === null) {
+
+      if (!("value" in value)) {
         return undefined;
-      } else if (typeof value === "object") {
+      } else if (typeof value.value === "object") {
         return encoder.encode(JSON.stringify(value.value));
+      } else if (typeof value.value === "string") {
+        return encoder.encode(value.value);
       } else {
         throw new Error("Unexpected value type");
       }

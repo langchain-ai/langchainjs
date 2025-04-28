@@ -342,11 +342,18 @@ export class ElasticVectorSearch extends VectorStore {
             field: metadataField,
           },
         });
-      } else if (condition.operator === "exclude") {
+      } else if (condition.operator === "not_exists") {
         must_not.push({
-          terms: {
-            [metadataField]: condition.value,
+          exists: {
+            field: metadataField,
           },
+        });
+      } else if (condition.operator === "exclude") {
+        const toExclude = { [metadataField]: condition.value };
+        must_not.push({
+          ...(Array.isArray(condition.value)
+            ? { terms: toExclude }
+            : { term: toExclude }),
         });
       } else if (condition.operator === "or") {
         should.push({

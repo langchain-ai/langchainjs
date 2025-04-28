@@ -31,7 +31,7 @@ test.skip("Test chat.stream work fine", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  console.log(chunks);
+  // console.log(chunks);
   expect(chunks.length).toBeGreaterThan(0);
 });
 
@@ -76,7 +76,7 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages, passedConfig);
-    console.log({ res });
+    // console.log({ res });
 
     if (passedConfig.streaming) {
       expect(nrNewTokens > 0).toBe(true);

@@ -2,8 +2,9 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
+import { AsyncLocalStorage } from "node:async_hooks";
 import {
   RunnableLambda,
   RunnableMap,
@@ -24,10 +25,13 @@ import {
   HumanMessage,
   SystemMessage,
 } from "../../messages/index.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool, tool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { GenerationChunk } from "../../outputs.js";
+// Import from web to avoid top-level side-effects from AsyncLocalStorage
+import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
+import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -72,6 +76,131 @@ test("Runnable streamEvents method", async () => {
       event: "on_chain_end",
       metadata: {},
       name: "reverse",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents method on a chat model", async () => {
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  const events = [];
+  const eventStream = await model.streamEvents("hello", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toMatchObject([
+    {
+      data: { input: "hello" },
+      event: "on_chat_model_start",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
+      event: "on_chat_model_end",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
+test("Runnable streamEvents call nested in another runnable + passed callbacks should still work", async () => {
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  const events: any[] = [];
+  const container = RunnableLambda.from(async (_) => {
+    const eventStream = model.streamEvents("hello", { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+    return events;
+  });
+
+  await container.invoke({}, { callbacks: [{ handleLLMStart: () => {} }] });
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
+  expect(events).toMatchObject([
+    {
+      data: { input: "hello" },
+      event: "on_chat_model_start",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "a" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "b" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "c" }) },
+      event: "on_chat_model_stream",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: new AIMessageChunk({ id: anyString, content: "abc" }) },
+      event: "on_chat_model_end",
+      name: "FakeListChatModel",
+      metadata: expect.any(Object),
       run_id: expect.any(String),
       tags: [],
     },
@@ -599,18 +728,6 @@ test("Runnable streamEvents method with llm", async () => {
     },
     {
       event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "h",
-      },
-    },
-    {
-      event: "on_llm_stream",
       data: {
         chunk: {
           text: "e",
@@ -621,18 +738,6 @@ test("Runnable streamEvents method with llm", async () => {
       tags: ["my_model"],
       metadata: {
         a: "b",
-      },
-    },
-    {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "e",
       },
     },
     {
@@ -651,18 +756,6 @@ test("Runnable streamEvents method with llm", async () => {
     },
     {
       event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "y",
-      },
-    },
-    {
-      event: "on_llm_stream",
       data: {
         chunk: {
           text: "!",
@@ -673,18 +766,6 @@ test("Runnable streamEvents method with llm", async () => {
       tags: ["my_model"],
       metadata: {
         a: "b",
-      },
-    },
-    {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      name: "my_model",
-      tags: ["my_model"],
-      metadata: {
-        a: "b",
-      },
-      data: {
-        chunk: "!",
       },
     },
     {
@@ -740,6 +821,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -787,6 +871,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -805,10 +890,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -818,7 +904,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -828,10 +914,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -841,7 +928,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -851,10 +938,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -864,7 +952,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chat_model_stream",
@@ -874,10 +962,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -887,7 +976,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chat_model_end",
@@ -898,6 +987,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -906,7 +996,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ content: "ROAR", id: anyString }),
       },
     },
     {
@@ -917,9 +1007,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
       metadata: {
         foo: "bar",
       },
-      data: {
-        output: new AIMessageChunk("ROAR"),
-      },
+      data: { output: new AIMessageChunk({ content: "ROAR", id: anyString }) },
     },
   ]);
 });
@@ -957,6 +1045,10 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  // used here to avoid casting every ID
+  const anyString = expect.any(String) as unknown as string;
+
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -1009,12 +1101,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1027,65 +1120,70 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1093,7 +1191,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
     {
@@ -1104,7 +1202,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       name: "RunnableLambda",
-      data: { chunk: new AIMessageChunk("ROAR") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
     {
       event: "on_chain_stream",
@@ -1114,7 +1212,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("ROAR") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
     {
       event: "on_chain_end",
@@ -1126,7 +1224,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       },
       data: {
         input: await template.invoke({ question: "hello" }),
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
     {
@@ -1138,7 +1236,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
         foo: "bar",
       },
       data: {
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
   ]);
@@ -1175,6 +1273,8 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
   for await (const event of eventStream) {
     events.push(event);
   }
+
+  const anyString = expect.any(String) as unknown as string;
   expect(events).toEqual([
     {
       run_id: expect.any(String),
@@ -1227,12 +1327,13 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1245,26 +1346,33 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
     {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      tags: expect.arrayContaining(["my_chain", "my_model"]),
       metadata: {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessageChunk({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chat_model_end",
       name: "my_model",
       run_id: expect.any(String),
-      tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
+      tags: expect.arrayContaining(["my_model", "my_chain"]),
       metadata: {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
+        ls_provider: model.getName(),
       },
       data: {
         input: {
@@ -1272,7 +1380,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
             [new SystemMessage("You are Godzilla"), new HumanMessage("hello")],
           ],
         },
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
     {
@@ -1283,7 +1394,12 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       name: "RunnableLambda",
-      data: { chunk: new AIMessage("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chain_stream",
@@ -1293,7 +1409,12 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessage("You are Godzilla\nhello") },
+      data: {
+        chunk: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
+      },
     },
     {
       event: "on_chain_end",
@@ -1305,7 +1426,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       },
       data: {
         input: await template.invoke({ question: "hello" }),
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
     {
@@ -1317,7 +1441,10 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
         foo: "bar",
       },
       data: {
-        output: new AIMessage("You are Godzilla\nhello"),
+        output: new AIMessage({
+          id: anyString,
+          content: "You are Godzilla\nhello",
+        }),
       },
     },
   ]);
@@ -1417,7 +1544,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1433,7 +1560,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1448,7 +1575,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1463,7 +1590,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1478,7 +1605,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1504,7 +1631,7 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1654,7 +1781,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
         },
       },
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
       metadata: {
         foo: "bar",
@@ -1670,7 +1797,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1696,7 +1823,7 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       },
       run_id: expect.any(String),
       name: "my_model",
-      tags: ["seq:step:2", "my_model", "my_chain"],
+      tags: ["my_model", "my_chain"],
       metadata: {
         foo: "bar",
         a: "b",
@@ -1823,6 +1950,195 @@ test("Runnable streamEvents method with simple tools", async () => {
   ]);
 });
 
+test("Runnable methods with a custom event", async () => {
+  const lambda = RunnableLambda.from(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    }
+  );
+  // Invoke shouldn't fail
+  const res = await lambda.invoke({ x: 1, y: "2" });
+  expect(res).toEqual(JSON.stringify({ x: 1, y: "2" }));
+  const events = [];
+  const eventStream = await lambda.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_chain_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "RunnableLambda",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_chain_stream",
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+      data: { chunk: '{"x":1,"y":"2"}' },
+    },
+    {
+      event: "on_chain_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "RunnableLambda",
+      tags: [],
+      metadata: {},
+    },
+  ]);
+});
+
+test("Custom event inside a custom tool", async () => {
+  const customTool = tool(
+    async (params: { x: number; y: string }, config) => {
+      await dispatchCustomEvent("testEvent", { someval: "test" }, config);
+      await dispatchCustomEvent("testEvent", { someval: "test2" }, config);
+      return JSON.stringify({ x: params.x, y: params.y });
+    },
+    {
+      schema: z.object({ x: z.number(), y: z.string() }),
+      name: "testtool",
+    }
+  );
+  const events = [];
+  const eventStream = await customTool.streamEvents(
+    { x: 1, y: "2" },
+    { version: "v2" }
+  );
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  expect(events).toEqual([
+    {
+      event: "on_tool_start",
+      data: { input: { x: 1, y: "2" } },
+      name: "testtool",
+      tags: [],
+      run_id: expect.any(String),
+      metadata: {},
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test" },
+    },
+    {
+      event: "on_custom_event",
+      run_id: expect.any(String),
+      name: "testEvent",
+      tags: [],
+      metadata: {},
+      data: { someval: "test2" },
+    },
+    {
+      event: "on_tool_end",
+      data: { output: '{"x":1,"y":"2"}' },
+      run_id: expect.any(String),
+      name: "testtool",
+      tags: [],
+      metadata: {},
+    },
+  ]);
+});
+
+test("Runnable streamEvents method with tools that return objects", async () => {
+  const adderFunc = (_params: { x: number; y: number }) => {
+    return JSON.stringify({ sum: 3 });
+  };
+  const parameterlessTool = tool(adderFunc, {
+    name: "parameterless",
+  });
+  const events = [];
+  const eventStream = parameterlessTool.streamEvents({}, { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        output: JSON.stringify({ sum: 3 }),
+      },
+      event: "on_tool_end",
+      metadata: {},
+      name: "parameterless",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  const adderTool = tool(adderFunc, {
+    name: "with_parameters",
+    description: "A tool that does nothing",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+    }),
+  });
+  const events2 = [];
+  const eventStream2 = adderTool.streamEvents(
+    { x: 1, y: 2 },
+    { version: "v2" }
+  );
+  for await (const event of eventStream2) {
+    events2.push(event);
+  }
+  expect(events2).toEqual([
+    {
+      data: { input: { x: 1, y: 2 } },
+      event: "on_tool_start",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: { output: JSON.stringify({ sum: 3 }) },
+      event: "on_tool_end",
+      metadata: {},
+      name: "with_parameters",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+});
+
 test("Runnable streamEvents method with a retriever", async () => {
   const retriever = new FakeRetriever({
     output: [
@@ -1925,4 +2241,45 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
   }
 
   expect(decoder.decode(events[3])).toEqual("event: end\n\n");
+});
+
+test("Runnable streamEvents method should respect passed signal", async () => {
+  const r = RunnableLambda.from(reverse);
+
+  const chain = r
+    .withConfig({ runName: "1" })
+    .pipe(r.withConfig({ runName: "2" }))
+    .pipe(r.withConfig({ runName: "3" }));
+
+  const controller = new AbortController();
+  const eventStream = await chain.streamEvents("hello", {
+    version: "v2",
+    signal: controller.signal,
+  });
+  await expect(async () => {
+    for await (const _ of eventStream) {
+      // Abort after the first chunk
+      controller.abort();
+    }
+  }).rejects.toThrowError();
+});
+
+test("streamEvents method handles errors", async () => {
+  let caughtError: unknown;
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+  });
+
+  try {
+    // eslint-disable-next-line no-unreachable-loop
+    for await (const _ of model.streamEvents("Hello! Tell me about yourself.", {
+      version: "v2",
+    })) {
+      throw new Error("should catch this error");
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect((caughtError as any)?.message).toEqual("should catch this error");
 });

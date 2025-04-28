@@ -1,5 +1,7 @@
+/* eslint-disable no-promise-executor-return */
 import { test, expect } from "@jest/globals";
 import * as uuid from "uuid";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
 import type { Serialized } from "../../load/serializable.js";
@@ -8,6 +10,9 @@ import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
+import { RunnableLambda } from "../../runnables/base.js";
+import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
+import { awaitAllCallbacks } from "../promises.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -201,6 +206,9 @@ test("CallbackManager", async () => {
     new Document({ pageContent: "test", metadata: { test: "test" } }),
   ]);
   await retrieverCb.handleRetrieverError(new Error("test"));
+
+  // In case background mode is on while running this test
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   for (const handler of [handler1, handler2]) {
     expect(handler.starts).toBe(5);
@@ -513,4 +521,56 @@ test("error handling in llm start", async () => {
   await expect(async () => {
     await manager.handleLLMStart(serialized, ["test"]);
   }).rejects.toThrowError();
+});
+
+test("chain should still run if a normal callback handler throws an error", async () => {
+  const chain = RunnableLambda.from(async () => "hello world");
+  const res = await chain.invoke(
+    {},
+    {
+      callbacks: [
+        {
+          handleChainStart: () => {
+            throw new Error("Bad");
+          },
+        },
+      ],
+    }
+  );
+  expect(res).toEqual("hello world");
+});
+
+test("runnables in callbacks should be root runs", async () => {
+  AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+    new AsyncLocalStorage()
+  );
+  const nestedChain = RunnableLambda.from(async () => {
+    const subRun = RunnableLambda.from(async () => "hello world");
+    return await subRun.invoke({ foo: "bar" });
+  });
+  let error;
+  let finalInputs;
+  const res = await nestedChain.invoke(
+    {},
+    {
+      callbacks: [
+        {
+          handleChainStart: (_chain, inputs) => {
+            finalInputs = inputs;
+            try {
+              expect(
+                AsyncLocalStorageProviderSingleton.getRunnableConfig()
+              ).toEqual(undefined);
+            } catch (e) {
+              error = e;
+            }
+          },
+        },
+      ],
+    }
+  );
+  await awaitAllCallbacks();
+  expect(res).toEqual("hello world");
+  expect(error).toBe(undefined);
+  expect(finalInputs).toEqual({ foo: "bar" });
 });

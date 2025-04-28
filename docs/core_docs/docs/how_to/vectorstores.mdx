@@ -13,8 +13,8 @@ Head to [Integrations](/docs/integrations/vectorstores) for documentation on bui
 This guide assumes familiarity with the following concepts:
 
 - [Vector stores](/docs/concepts/#vectorstores)
-- [Embeddings](/docs/concepts/#embedding-models)
-- [Document loaders](/docs/concepts#document-loaders)
+- [Embeddings](/docs/concepts/embedding_models)
+- [Document loaders](/docs/concepts/document_loaders)
 
 :::
 
@@ -23,7 +23,7 @@ vectors, and then at query time to embed the unstructured query and retrieve the
 'most similar' to the embedded query. A vector store takes care of storing embedded data and performing vector search
 for you.
 
-This walkthrough uses a basic, unoptimized implementation called [`MemoryVectorStore`](https://v02.api.js.langchain.com/classes/langchain_vectorstores_memory.MemoryVectorStore.html) that stores embeddings in-memory and does an exact, linear search for the most similar embeddings.
+This walkthrough uses a basic, unoptimized implementation called [`MemoryVectorStore`](https://api.js.langchain.com/classes/langchain.vectorstores_memory.MemoryVectorStore.html) that stores embeddings in-memory and does an exact, linear search for the most similar embeddings.
 LangChain contains many built-in integrations - see [this section](/docs/how_to/vectorstores/#which-one-to-pick) for more, or the [full list of integrations](/docs/integrations/vectorstores/).
 
 ## Creating a new index
@@ -34,7 +34,7 @@ import ExampleLoader from "@examples/indexes/vector_stores/memory_fromdocs.ts";
 
 <CodeBlock language="typescript">{ExampleLoader}</CodeBlock>
 
-Most of the time, you'll need to split the loaded text as a preparation step. See [this section](/docs/concepts/#text-splitters) to learn more about text splitters.
+Most of the time, you'll need to split the loaded text as a preparation step. See [this section](/docs/concepts/text_splitters) to learn more about text splitters.
 
 ## Creating a new index from texts
 
@@ -48,7 +48,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai
+npm install @langchain/openai @langchain/core
 ```
 
 <CodeBlock language="typescript">{ExampleTexts}</CodeBlock>

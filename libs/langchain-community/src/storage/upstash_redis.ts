@@ -163,7 +163,7 @@ export class UpstashRedisStore extends BaseStore<string, Uint8Array> {
     for (const key of batch) {
       yield this._getDeprefixedKey(key);
     }
-    while (cursor !== 0) {
+    while (cursor !== "0") {
       [cursor, batch] = await this.client.scan(cursor, {
         match: pattern,
         count: this.yieldKeysScanBatchSize,

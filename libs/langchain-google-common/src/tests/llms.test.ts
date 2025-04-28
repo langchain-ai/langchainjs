@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test, jest } from "@jest/globals";
 import {
   BaseMessage,
   HumanMessageChunk,
@@ -10,6 +10,7 @@ import {
   authOptions,
   MockClient,
   MockClientAuthInfo,
+  MockClientError,
   mockFile,
   mockId,
 } from "./mock.js";
@@ -191,7 +192,33 @@ describe("Mock Google LLM", () => {
       "1. Sock it to Me!\n2. Heel Yeah Socks\n3. Sole Mates\n4. Happy Soles\n5. Toe-tally Awesome Socks\n6. Sock Appeal\n7. Footsie Wootsies\n8. Thread Heads\n9. Sock Squad\n10. Sock-a-licious\n11. Darn Good Socks\n12. Sockcessories\n13. Sole Searching\n14. Sockstar\n15. Socktopia\n16. Sockology\n17. Elevated Toes\n18. The Urban Sole\n19. The Hippie Sole\n20. Sole Fuel"
     );
     // expect(record.opts.url).toEqual(`https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`)
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
+  });
+
+  test("1: generateContent - retryable request", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "llm-1-mock.json",
+    };
+    const model = new GoogleLLM({
+      authOptions,
+    });
+
+    const retryableError = new MockClientError(429);
+    const requestSpy = jest
+      .spyOn(MockClient.prototype, "request")
+      .mockRejectedValueOnce(retryableError);
+
+    const response = await model.invoke("Hello world");
+
+    expect(response).toEqual(
+      "1. Sock it to Me!\n2. Heel Yeah Socks\n3. Sole Mates\n4. Happy Soles\n5. Toe-tally Awesome Socks\n6. Sock Appeal\n7. Footsie Wootsies\n8. Thread Heads\n9. Sock Squad\n10. Sock-a-licious\n11. Darn Good Socks\n12. Sockcessories\n13. Sole Searching\n14. Sockstar\n15. Socktopia\n16. Sockology\n17. Elevated Toes\n18. The Urban Sole\n19. The Hippie Sole\n20. Sole Fuel"
+    );
+    expect(requestSpy).toHaveBeenCalledTimes(2);
   });
 
   test("1: invoke", async () => {
@@ -211,14 +238,14 @@ describe("Mock Google LLM", () => {
       "1. Sock it to Me!\n2. Heel Yeah Socks\n3. Sole Mates\n4. Happy Soles\n5. Toe-tally Awesome Socks\n6. Sock Appeal\n7. Footsie Wootsies\n8. Thread Heads\n9. Sock Squad\n10. Sock-a-licious\n11. Darn Good Socks\n12. Sockcessories\n13. Sole Searching\n14. Sockstar\n15. Socktopia\n16. Sockology\n17. Elevated Toes\n18. The Urban Sole\n19. The Hippie Sole\n20. Sole Fuel"
     );
     // expect(record.opts.url).toEqual(`https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`)
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
     expect(record.opts.data.contents).toHaveLength(1);
     expect(record.opts.data.contents[0]).toHaveProperty("parts");
 
     const parts = record?.opts?.data?.contents[0]?.parts;
-    console.log(parts);
+    // console.log(parts);
     expect(parts).toHaveLength(1);
     expect(parts[0]).toHaveProperty("text");
     expect(parts[0].text).toEqual("Hello world");
@@ -243,7 +270,7 @@ describe("Mock Google LLM", () => {
     expect(record.opts.url).toEqual(
       `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:streamGenerateContent`
     );
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("3: streamGenerateContent - streaming", async () => {
@@ -266,7 +293,7 @@ describe("Mock Google LLM", () => {
     }
 
     expect(responseArray).toHaveLength(6);
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("4: streamGenerateContent - non-streaming - safety exception", async () => {
@@ -342,7 +369,7 @@ describe("Mock Google LLM", () => {
     }
 
     expect(responseArray).toHaveLength(4);
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
 
     expect(caught).toEqual(true);
   });
@@ -372,7 +399,7 @@ describe("Mock Google LLM", () => {
 
     expect(responseArray).toHaveLength(6);
     expect(responseArray[4]).toEqual("I'm sorry Dave, but I can't do that.");
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("6: predictMessages image blue-square", async () => {
@@ -406,14 +433,14 @@ describe("Mock Google LLM", () => {
     ];
     const res = await model.predictMessages(messages);
 
-    console.log("record", record);
+    // console.log("record", record);
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
     expect(record.opts.data.contents).toHaveLength(1);
     expect(record.opts.data.contents[0]).toHaveProperty("parts");
 
     const parts = record?.opts?.data?.contents[0]?.parts;
-    console.log(parts);
+    // console.log(parts);
     expect(parts).toHaveLength(2);
     expect(parts[0]).toHaveProperty("text");
     expect(parts[1]).toHaveProperty("inlineData");
@@ -459,14 +486,14 @@ describe("Mock Google LLM", () => {
     const input = new ChatPromptValue(messages);
     const res = await model.invoke(input);
 
-    console.log("record", record);
+    // console.log("record", record);
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
     expect(record.opts.data.contents).toHaveLength(1);
     expect(record.opts.data.contents[0]).toHaveProperty("parts");
 
     const parts = record?.opts?.data?.contents[0]?.parts;
-    console.log(parts);
+    // console.log(parts);
     expect(parts).toHaveLength(2);
     expect(parts[0]).toHaveProperty("text");
     expect(parts[1]).toHaveProperty("inlineData");
@@ -519,7 +546,7 @@ describe("Mock Google LLM", () => {
     }
 
     expect(responseArray).toHaveLength(3);
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("8: streamGenerateContent - streaming - json responseMimeType", async () => {
@@ -545,7 +572,7 @@ describe("Mock Google LLM", () => {
     expect(responseArray).toHaveLength(10);
     expect(typeof JSON.parse(responseArray.join(""))).toEqual("object");
 
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 
   test("9: streamGenerateContent - non-streaming - check json responseMimeType", async () => {
@@ -568,6 +595,6 @@ describe("Mock Google LLM", () => {
       "application/json"
     );
 
-    console.log("record", JSON.stringify(record, null, 2));
+    // console.log("record", JSON.stringify(record, null, 2));
   });
 });

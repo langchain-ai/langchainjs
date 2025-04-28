@@ -6,7 +6,8 @@ import {
 } from "./base.js";
 
 export type PostgresRecordManagerOptions = {
-  postgresConnectionOptions: PoolConfig;
+  postgresConnectionOptions?: PoolConfig;
+  pool?: Pool;
   tableName?: string;
   schema?: string;
 };
@@ -23,13 +24,18 @@ export class PostgresRecordManager implements RecordManagerInterface {
   finalTableName: string;
 
   constructor(namespace: string, config: PostgresRecordManagerOptions) {
-    const { postgresConnectionOptions, tableName } = config;
+    const { postgresConnectionOptions, tableName, pool } = config;
     this.namespace = namespace;
-    this.pool = new pg.Pool(postgresConnectionOptions);
+    if (!postgresConnectionOptions && !pool) {
+      throw new Error(
+        "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
+      );
+    }
+    this.pool = pool ?? new pg.Pool(postgresConnectionOptions);
     this.tableName = tableName || "upsertion_records";
     this.finalTableName = config.schema
-      ? `"${config.schema}"."${tableName}"`
-      : `"${tableName}"`;
+      ? `"${config.schema}"."${this.tableName}"`
+      : `"${this.tableName}"`;
   }
 
   async createSchema(): Promise<void> {

@@ -1,24 +1,151 @@
+import { addLangChainErrorFields } from "../errors/index.js";
+import { SerializedConstructor } from "../load/serializable.js";
+import { _isToolCall } from "../tools/utils.js";
+import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
   BaseMessage,
   isBaseMessage,
   StoredMessage,
   StoredMessageV1,
+  BaseMessageFields,
+  _isMessageFieldWithRole,
 } from "./base.js";
-import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { AIMessage, AIMessageChunk } from "./ai.js";
-import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ChatMessage,
-  ChatMessageChunk,
   ChatMessageFieldsWithRole,
+  ChatMessageChunk,
 } from "./chat.js";
 import {
   FunctionMessage,
-  FunctionMessageChunk,
   FunctionMessageFieldsWithName,
+  FunctionMessageChunk,
 } from "./function.js";
-import { ToolMessage, ToolMessageFieldsWithToolCallId } from "./tool.js";
+import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { SystemMessage, SystemMessageChunk } from "./system.js";
+import {
+  ToolCall,
+  ToolMessage,
+  ToolMessageFieldsWithToolCallId,
+} from "./tool.js";
+
+function _coerceToolCall(
+  toolCall: ToolCall | Record<string, unknown>
+): ToolCall {
+  if (_isToolCall(toolCall)) {
+    return toolCall;
+  } else if (
+    typeof toolCall.id === "string" &&
+    toolCall.type === "function" &&
+    typeof toolCall.function === "object" &&
+    toolCall.function !== null &&
+    "arguments" in toolCall.function &&
+    typeof toolCall.function.arguments === "string" &&
+    "name" in toolCall.function &&
+    typeof toolCall.function.name === "string"
+  ) {
+    // Handle OpenAI tool call format
+    return {
+      id: toolCall.id,
+      args: JSON.parse(toolCall.function.arguments),
+      name: toolCall.function.name,
+      type: "tool_call",
+    };
+  } else {
+    // TODO: Throw an error?
+    return toolCall as ToolCall;
+  }
+}
+
+function isSerializedConstructor(x: unknown): x is SerializedConstructor {
+  return (
+    typeof x === "object" &&
+    x != null &&
+    (x as SerializedConstructor).lc === 1 &&
+    Array.isArray((x as SerializedConstructor).id) &&
+    (x as SerializedConstructor).kwargs != null &&
+    typeof (x as SerializedConstructor).kwargs === "object"
+  );
+}
+
+function _constructMessageFromParams(
+  params:
+    | (BaseMessageFields & { type: string } & Record<string, unknown>)
+    | SerializedConstructor
+) {
+  let type: string;
+  let rest: BaseMessageFields & Record<string, unknown>;
+  // Support serialized messages
+  if (isSerializedConstructor(params)) {
+    const className = params.id.at(-1);
+    if (className === "HumanMessage" || className === "HumanMessageChunk") {
+      type = "user";
+    } else if (className === "AIMessage" || className === "AIMessageChunk") {
+      type = "assistant";
+    } else if (
+      className === "SystemMessage" ||
+      className === "SystemMessageChunk"
+    ) {
+      type = "system";
+    } else if (
+      className === "FunctionMessage" ||
+      className === "FunctionMessageChunk"
+    ) {
+      type = "function";
+    } else if (
+      className === "ToolMessage" ||
+      className === "ToolMessageChunk"
+    ) {
+      type = "tool";
+    } else {
+      type = "unknown";
+    }
+    rest = params.kwargs as BaseMessageFields;
+  } else {
+    const { type: extractedType, ...otherParams } = params;
+    type = extractedType;
+    rest = otherParams;
+  }
+  if (type === "human" || type === "user") {
+    return new HumanMessage(rest);
+  } else if (type === "ai" || type === "assistant") {
+    const { tool_calls: rawToolCalls, ...other } = rest;
+    if (!Array.isArray(rawToolCalls)) {
+      return new AIMessage(rest);
+    }
+    const tool_calls = rawToolCalls.map(_coerceToolCall);
+    return new AIMessage({ ...other, tool_calls });
+  } else if (type === "system") {
+    return new SystemMessage(rest);
+  } else if (type === "developer") {
+    return new SystemMessage({
+      ...rest,
+      additional_kwargs: {
+        ...rest.additional_kwargs,
+        __openai_role__: "developer",
+      },
+    });
+  } else if (type === "tool" && "tool_call_id" in rest) {
+    return new ToolMessage({
+      ...rest,
+      content: rest.content,
+      tool_call_id: rest.tool_call_id as string,
+      name: rest.name,
+    });
+  } else {
+    const error = addLangChainErrorFields(
+      new Error(
+        `Unable to coerce message from array: only human, AI, system, developer, or tool message coercion is currently supported.\n\nReceived: ${JSON.stringify(
+          params,
+          null,
+          2
+        )}`
+      ),
+      "MESSAGE_COERCION_FAILURE"
+    );
+    throw error;
+  }
+}
 
 export function coerceMessageLikeToMessage(
   messageLike: BaseMessageLike
@@ -28,17 +155,14 @@ export function coerceMessageLikeToMessage(
   } else if (isBaseMessage(messageLike)) {
     return messageLike;
   }
-  const [type, content] = messageLike;
-  if (type === "human" || type === "user") {
-    return new HumanMessage({ content });
-  } else if (type === "ai" || type === "assistant") {
-    return new AIMessage({ content });
-  } else if (type === "system") {
-    return new SystemMessage({ content });
+  if (Array.isArray(messageLike)) {
+    const [type, content] = messageLike;
+    return _constructMessageFromParams({ type, content });
+  } else if (_isMessageFieldWithRole(messageLike)) {
+    const { role: type, ...rest } = messageLike;
+    return _constructMessageFromParams({ ...rest, type });
   } else {
-    throw new Error(
-      `Unable to coerce message from array: only human, AI, or system message coercion is currently supported.`
-    );
+    return _constructMessageFromParams(messageLike);
   }
 }
 
@@ -70,7 +194,11 @@ export function getBufferString(
       throw new Error(`Got unsupported message type: ${m._getType()}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
-    string_messages.push(`${role}: ${nameStr}${m.content}`);
+    const readableContent =
+      typeof m.content === "string"
+        ? m.content
+        : JSON.stringify(m.content, null, 2);
+    string_messages.push(`${role}: ${nameStr}${readableContent}`);
   }
   return string_messages.join("\n");
 }
@@ -125,7 +253,7 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new ToolMessage(
         storedMessage.data as ToolMessageFieldsWithToolCallId
       );
-    case "chat": {
+    case "generic": {
       if (storedMessage.data.role === undefined) {
         throw new Error("Role must be defined for chat messages");
       }
@@ -168,8 +296,22 @@ export function convertToChunk(message: BaseMessage) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new HumanMessageChunk({ ...message });
   } else if (type === "ai") {
+    let aiChunkFields: AIMessageChunkFields = {
+      ...message,
+    };
+    if ("tool_calls" in aiChunkFields) {
+      aiChunkFields = {
+        ...aiChunkFields,
+        tool_call_chunks: aiChunkFields.tool_calls?.map((tc) => ({
+          ...tc,
+          type: "tool_call_chunk",
+          index: undefined,
+          args: JSON.stringify(tc.args),
+        })),
+      };
+    }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new AIMessageChunk({ ...message });
+    return new AIMessageChunk({ ...aiChunkFields });
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });

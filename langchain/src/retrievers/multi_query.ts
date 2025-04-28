@@ -67,6 +67,7 @@ Original question: {question}`,
 
 export interface MultiQueryRetrieverInput extends BaseRetrieverInput {
   retriever: BaseRetrieverInterface;
+  /** @deprecated Pass a custom prompt into `.fromLLM` instead. */
   llmChain: LLMChain<LineList>;
   queryCount?: number;
   parserKey?: string;
@@ -196,7 +197,8 @@ export class MultiQueryRetriever extends BaseRetriever {
     if (this.documentCompressor && uniqueDocuments.length) {
       outputDocs = await this.documentCompressor.compressDocuments(
         uniqueDocuments,
-        question
+        question,
+        runManager?.getChild()
       );
       if (this.documentCompressorFilteringFn) {
         outputDocs = this.documentCompressorFilteringFn(outputDocs);

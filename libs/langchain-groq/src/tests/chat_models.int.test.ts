@@ -1,29 +1,33 @@
-import { z } from "zod";
 import { test } from "@jest/globals";
-
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { DynamicStructuredTool } from "@langchain/core/tools";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatGroq } from "../chat_models.js";
 
 test("invoke", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await chat.invoke([message]);
-  console.log({ res });
   expect(res.content.length).toBeGreaterThan(10);
 });
 
 test("invoke with stop sequence", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
-  console.log({ res });
+  // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
 });
@@ -31,6 +35,7 @@ test("invoke with stop sequence", async () => {
 test("invoke should respect passed headers", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   await expect(async () => {
@@ -43,6 +48,7 @@ test("invoke should respect passed headers", async () => {
 test("stream should respect passed headers", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
   await expect(async () => {
@@ -53,15 +59,19 @@ test("stream should respect passed headers", async () => {
 });
 
 test("generate", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
   const message = new HumanMessage("Hello!");
   const res = await chat.generate([[message]]);
-  console.log(JSON.stringify(res, null, 2));
+  // console.log(JSON.stringify(res, null, 2));
   expect(res.generations[0][0].text.length).toBeGreaterThan(10);
 });
 
 test("streaming", async () => {
-  const chat = new ChatGroq();
+  const chat = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
   const message = new HumanMessage("What color is the sky?");
   const stream = await chat.stream([message]);
   let iters = 0;
@@ -70,14 +80,14 @@ test("streaming", async () => {
     iters += 1;
     finalRes += chunk.content;
   }
-  console.log({ finalRes, iters });
+  // console.log({ finalRes, iters });
   expect(iters).toBeGreaterThan(1);
 });
 
 test("invoke with bound tools", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -105,7 +115,7 @@ test("invoke with bound tools", async () => {
       tool_choice: "auto",
     })
     .invoke([message]);
-  console.log(JSON.stringify(res));
+  // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
   expect(
     JSON.parse(
@@ -114,53 +124,10 @@ test("invoke with bound tools", async () => {
   ).toEqual(res.tool_calls?.[0].args);
 });
 
-test.skip("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
-  const llm = new ChatGroq({
-    temperature: 0,
-    modelName: "mixtral-8x7b-32768",
-  });
-  const prompt = ChatPromptTemplate.fromMessages([
-    [
-      "system",
-      "You are an agent capable of retrieving current weather information.",
-    ],
-    ["human", "{input}"],
-    ["placeholder", "{agent_scratchpad}"],
-  ]);
-
-  const currentWeatherTool = new DynamicStructuredTool({
-    name: "get_current_weather",
-    description: "Get the current weather in a given location",
-    schema: z.object({
-      location: z
-        .string()
-        .describe("The city and state, e.g. San Francisco, CA"),
-    }),
-    func: async () => Promise.resolve("28 °C"),
-  });
-
-  const agent = await createOpenAIToolsAgent({
-    llm,
-    tools: [currentWeatherTool],
-    prompt,
-  });
-
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools: [currentWeatherTool],
-  });
-
-  const input = "What's the weather like in Paris?";
-  const { output } = await agentExecutor.invoke({ input });
-
-  console.log(output);
-  expect(output).toBeDefined();
-  expect(output).toContain("The current temperature in Paris is 28 °C");
-});
-
 test("stream with bound tools, yielding a single chunk", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
+    model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
@@ -188,14 +155,16 @@ test("stream with bound tools, yielding a single chunk", async () => {
       tool_choice: "auto",
     })
     .stream([message]);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   for await (const chunk of stream) {
-    console.log(JSON.stringify(chunk));
+    // console.log(JSON.stringify(chunk));
   }
 });
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatGroq({
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
     temperature: 0,
   }).bind({
     tools: [
@@ -241,6 +210,68 @@ test("Few shotting with tool calls", async () => {
     new AIMessage("It is currently 24 degrees in SF with hail in SF."),
     new HumanMessage("What did you say the weather was?"),
   ]);
-  console.log(res);
+  // console.log(res);
   expect(res.content).toContain("24");
+});
+
+test("Groq can stream tool calls", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.1-70b-versatile",
+    temperature: 0,
+  });
+
+  const weatherTool = tool((_) => "The temperature is 24 degrees with hail.", {
+    name: "get_current_weather",
+    schema: z.object({
+      location: z
+        .string()
+        .describe("The location to get the current weather for."),
+    }),
+    description: "Get the current weather in a given location.",
+  });
+
+  const modelWithTools = model.bindTools([weatherTool]);
+
+  const stream = await modelWithTools.stream(
+    "What is the weather in San Francisco?"
+  );
+
+  let finalMessage: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalMessage = !finalMessage ? chunk : concat(finalMessage, chunk);
+  }
+
+  expect(finalMessage).toBeDefined();
+  if (!finalMessage) return;
+
+  expect(finalMessage.tool_calls?.[0]).toBeDefined();
+  if (!finalMessage.tool_calls?.[0]) return;
+
+  expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
+  expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
+  expect(finalMessage.tool_calls?.[0].id).toBeDefined();
+});
+
+test("response metadata includes groq metadata", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const res = await model.invoke([message]);
+  // console.dir(res, { depth: Infinity });
+  expect(res.response_metadata.x_groq?.id).toBeDefined();
+});
+
+test("response metadata includes groq metadata when streaming", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const stream = await model.stream([message]);
+  let finalRes: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalRes = !finalRes ? chunk : concat(finalRes, chunk);
+  }
+  // console.dir(finalRes, { depth: Infinity });
+  expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
 });

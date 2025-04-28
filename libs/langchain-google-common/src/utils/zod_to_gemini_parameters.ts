@@ -1,56 +1,69 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import {
   GeminiFunctionSchema,
   GeminiJsonSchema,
   GeminiJsonSchemaDirty,
 } from "../types.js";
 
-function removeAdditionalProperties(
-  schema: GeminiJsonSchemaDirty
-): GeminiJsonSchema {
-  const updatedSchema: GeminiJsonSchemaDirty = { ...schema };
-  if (Object.hasOwn(updatedSchema, "additionalProperties")) {
-    delete updatedSchema.additionalProperties;
-  }
-  if (updatedSchema.properties) {
-    const keys = Object.keys(updatedSchema.properties);
-    removeProperties(updatedSchema.properties, keys, 0);
-  }
-  if (Object.hasOwn(updatedSchema, "items") && updatedSchema.items) {
-    updatedSchema.items = removeAdditionalProperties(updatedSchema.items);
-  }
-
-  return updatedSchema;
-}
-
-function removeProperties(
-  properties: Record<string, GeminiJsonSchemaDirty>,
-  keys: string[],
-  index: number
-): void {
-  if (index >= keys.length) {
-    return;
-  }
-
-  const key = keys[index];
-  // eslint-disable-next-line no-param-reassign
-  properties[key] = removeAdditionalProperties(properties[key]);
-  removeProperties(properties, keys, index + 1);
-}
-
-export function zodToGeminiParameters(
+export function removeAdditionalProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  zodObj: z.ZodType<any>
+  obj: Record<string, any>
+): GeminiJsonSchema {
+  if (typeof obj === "object" && obj !== null) {
+    const newObj = { ...obj };
+
+    if ("additionalProperties" in newObj) {
+      delete newObj.additionalProperties;
+    }
+
+    for (const key in newObj) {
+      if (key in newObj) {
+        if (Array.isArray(newObj[key])) {
+          newObj[key] = newObj[key].map(removeAdditionalProperties);
+        } else if (typeof newObj[key] === "object" && newObj[key] !== null) {
+          newObj[key] = removeAdditionalProperties(newObj[key]);
+        }
+      }
+    }
+
+    return newObj as GeminiJsonSchema;
+  }
+
+  return obj as GeminiJsonSchema;
+}
+
+export function schemaToGeminiParameters<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
+  schema:
+    | z.ZodType<RunOutput>
+    | z.ZodEffects<z.ZodType<RunOutput>>
+    | JsonSchema7Type
+): GeminiFunctionSchema {
+  // Gemini doesn't accept either the $schema or additionalProperties
+  // attributes, so we need to explicitly remove them.
+  const jsonSchema = removeAdditionalProperties(
+    isZodSchema(schema) ? zodToJsonSchema(schema) : schema
+  );
+  const { $schema, ...rest } = jsonSchema;
+
+  return rest;
+}
+
+export function jsonSchemaToGeminiParameters(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: Record<string, any>
 ): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const jsonSchema = zodToJsonSchema(zodObj) as any;
   const jsonSchema = removeAdditionalProperties(
-    zodToJsonSchema(zodObj) as GeminiJsonSchemaDirty
+    schema as GeminiJsonSchemaDirty
   );
   const { $schema, ...rest } = jsonSchema;
 

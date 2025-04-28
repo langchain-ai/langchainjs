@@ -11,10 +11,12 @@ import { Ollama } from "../ollama.js";
 
 test.skip("test call", async () => {
   const ollama = new Ollama({});
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await ollama.invoke(
     "What is a good name for a company that makes colorful socks?"
   );
-  console.log({ result });
+  // console.log({ result });
 });
 
 test.skip("test call with callback", async () => {
@@ -49,7 +51,7 @@ test.skip("test streaming call", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  console.log(chunks.join(""));
+  // console.log(chunks.join(""));
   expect(chunks.length).toBeGreaterThan(1);
 });
 
@@ -89,7 +91,7 @@ test.skip("should stream through with a bytes output parser", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  console.log(chunks.join(""));
+  // console.log(chunks.join(""));
   expect(chunks.length).toBeGreaterThan(1);
 });
 
@@ -112,7 +114,7 @@ test.skip("JSON mode", async () => {
   const res = await chain.invoke({
     input: `Translate "I love programming" into German.`,
   });
-  console.log(res);
+  // console.log(res);
   expect(JSON.parse(res).response).toBeDefined();
 });
 
@@ -126,6 +128,8 @@ test.skip("Test Ollama with an image", async () => {
   }).bind({
     images: [imageData.toString("base64")],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await model.invoke("What's in this image?");
-  console.log({ res });
+  // console.log({ res });
 });

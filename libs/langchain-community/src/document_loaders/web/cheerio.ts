@@ -5,34 +5,27 @@ import type {
   SelectorType,
 } from "cheerio";
 import { Document } from "@langchain/core/documents";
-import {
-  AsyncCaller,
-  AsyncCallerParams,
-} from "@langchain/core/utils/async_caller";
+import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
-import type { DocumentLoader } from "@langchain/core/document_loaders/base";
+import type { WebBaseLoaderParams, WebBaseLoader } from "./html.js";
+
+/**
+ * @deprecated Either import the CheerioWebBaseLoaderParams from @langchain/community/document_loaders/web/cheerio
+ * or use the WebBaseLoaderParams from @langchain/community/document_loaders/web/html.
+ */
+export { WebBaseLoaderParams };
 
 /**
  * Represents the parameters for configuring the CheerioWebBaseLoader. It
- * extends the AsyncCallerParams interface and adds additional parameters
- * specific to web-based loaders.
+ * extends the WebBaseLoaderParams interface and adds additional parameters
+ * specific to loading with Cheerio.
  */
-export interface WebBaseLoaderParams extends AsyncCallerParams {
-  /**
-   * The timeout in milliseconds for the fetch request. Defaults to 10s.
-   */
-  timeout?: number;
-
+export interface CheerioWebBaseLoaderParams extends WebBaseLoaderParams {
   /**
    * The selector to use to extract the text from the document. Defaults to
    * "body".
    */
   selector?: SelectorType;
-
-  /**
-   * The text decoder to use to decode the response. Defaults to UTF-8.
-   */
-  textDecoder?: TextDecoder;
 }
 
 /**
@@ -41,14 +34,14 @@ export interface WebBaseLoaderParams extends AsyncCallerParams {
  * web-based documents using Cheerio.
  * @example
  * ```typescript
- * const loader = new CheerioWebBaseLoader("https:exampleurl.com");
+ * const loader = new CheerioWebBaseLoader("https://exampleurl.com");
  * const docs = await loader.load();
  * console.log({ docs });
  * ```
  */
 export class CheerioWebBaseLoader
   extends BaseDocumentLoader
-  implements DocumentLoader
+  implements WebBaseLoader
 {
   timeout: number;
 
@@ -58,13 +51,16 @@ export class CheerioWebBaseLoader
 
   textDecoder?: TextDecoder;
 
-  constructor(public webPath: string, fields?: WebBaseLoaderParams) {
+  headers?: HeadersInit;
+
+  constructor(public webPath: string, fields?: CheerioWebBaseLoaderParams) {
     super();
-    const { timeout, selector, textDecoder, ...rest } = fields ?? {};
+    const { timeout, selector, textDecoder, headers, ...rest } = fields ?? {};
     this.timeout = timeout ?? 10000;
     this.caller = new AsyncCaller(rest);
     this.selector = selector ?? "body";
     this.textDecoder = textDecoder;
+    this.headers = headers;
   }
 
   /**
@@ -78,7 +74,9 @@ export class CheerioWebBaseLoader
     caller: AsyncCaller,
     timeout: number | undefined,
     textDecoder?: TextDecoder,
-    options?: CheerioOptions
+    options?: CheerioOptions & {
+      headers?: HeadersInit;
+    }
   ): Promise<CheerioAPI[]> {
     return Promise.all(
       urls.map((url) =>
@@ -92,16 +90,20 @@ export class CheerioWebBaseLoader
     caller: AsyncCaller,
     timeout: number | undefined,
     textDecoder?: TextDecoder,
-    options?: CheerioOptions
+    options?: CheerioOptions & {
+      headers?: HeadersInit;
+    }
   ): Promise<CheerioAPI> {
+    const { headers, ...cheerioOptions } = options ?? {};
     const { load } = await CheerioWebBaseLoader.imports();
     const response = await caller.call(fetch, url, {
       signal: timeout ? AbortSignal.timeout(timeout) : undefined,
+      headers,
     });
     const html =
       textDecoder?.decode(await response.arrayBuffer()) ??
       (await response.text());
-    return load(html, options);
+    return load(html, cheerioOptions);
   }
 
   /**
@@ -110,11 +112,13 @@ export class CheerioWebBaseLoader
    * @returns A Promise that resolves to a CheerioAPI instance.
    */
   async scrape(): Promise<CheerioAPI> {
+    const options = { headers: this.headers };
     return CheerioWebBaseLoader._scrape(
       this.webPath,
       this.caller,
       this.timeout,
-      this.textDecoder
+      this.textDecoder,
+      options
     );
   }
 
@@ -126,8 +130,9 @@ export class CheerioWebBaseLoader
    */
   async load(): Promise<Document[]> {
     const $ = await this.scrape();
+    const title = $("title").text();
     const text = $(this.selector).text();
-    const metadata = { source: this.webPath };
+    const metadata = { source: this.webPath, title };
     return [new Document({ pageContent: text, metadata })];
   }
 

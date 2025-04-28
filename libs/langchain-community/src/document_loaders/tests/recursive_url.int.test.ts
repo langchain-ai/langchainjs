@@ -1,12 +1,20 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { test } from "@jest/globals";
+import { test, jest } from "@jest/globals";
 import { compile } from "html-to-text";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";
 
 describe("RecursiveUrlLoader", () => {
+  beforeEach(() => {
+    jest.spyOn(console, "error");
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   test("loading valid url", async () => {
-    const url = "https://js.langchain.com/v0.2/docs/introduction";
+    const url = "https://js.langchain.com/docs/introduction";
 
     const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
 
@@ -22,7 +30,7 @@ describe("RecursiveUrlLoader", () => {
   });
 
   test("loading single page", async () => {
-    const url = "https://js.langchain.com/v0.2/docs/introduction";
+    const url = "https://js.langchain.com/docs/introduction";
 
     const compiledConvert = compile({ wordwrap: 130 }); // returns (input: string) => string;
 
@@ -83,5 +91,17 @@ describe("RecursiveUrlLoader", () => {
     expect(docs.some((doc) => doc.metadata.source.startsWith(excludeDir))).toBe(
       false
     );
+  });
+
+  test("load docs from langsmith without reporting errors", async () => {
+    const url = "https://docs.smith.langchain.com/";
+    const loader = new RecursiveUrlLoader(url, {
+      maxDepth: 5,
+      timeout: 5000,
+    });
+
+    const docs = await loader.load();
+    expect(docs.length).toBeGreaterThan(1);
+    expect(console.error).not.toHaveBeenCalled();
   });
 });

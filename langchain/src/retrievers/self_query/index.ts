@@ -101,7 +101,10 @@ export class SelfQueryRetriever<T extends VectorStore>
   ): Promise<Document<Record<string, unknown>>[]> {
     const generatedStructuredQuery = await this.queryConstructor.invoke(
       { query },
-      runManager?.getChild("query_constructor")
+      {
+        callbacks: runManager?.getChild("query_constructor"),
+        runName: "query_constructor",
+      }
     );
 
     const nextArg = this.structuredQueryTranslator.visitStructuredQuery(
@@ -122,12 +125,12 @@ export class SelfQueryRetriever<T extends VectorStore>
       myQuery = generatedQuery;
     }
 
-    return this.vectorStore.similaritySearch(
-      myQuery,
-      this.searchParams?.k,
-      filter,
-      runManager?.getChild("vectorstore")
-    );
+    return this.vectorStore
+      .asRetriever({
+        k: this.searchParams?.k,
+        filter,
+      })
+      .invoke(myQuery, { callbacks: runManager?.getChild("retriever") });
   }
 
   /**

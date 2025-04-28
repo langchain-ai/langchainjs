@@ -5,7 +5,7 @@ This package contains various implementations of LangChain.js text splitters, mo
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/textsplitters
+npm install @langchain/textsplitters @langchain/core
 ```
 
 ## Development

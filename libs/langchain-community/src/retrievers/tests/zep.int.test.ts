@@ -34,7 +34,7 @@ test.skip("ZepRetriever - memory exists", async () => {
 
   expect(docs.length).toBeGreaterThanOrEqual(2);
 
-  console.log(docs);
+  // console.log(docs);
 });
 
 test.skip("ZepRetriever - does not exist", async () => {
@@ -47,5 +47,5 @@ test.skip("ZepRetriever - does not exist", async () => {
 
   expect(docs.length).toBe(0);
 
-  console.log(docs);
+  // console.log(docs);
 });
