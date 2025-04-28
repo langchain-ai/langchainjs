@@ -17,6 +17,10 @@ export class DictPromptTemplate<
 
   inputVariables: Array<Extract<keyof RunInput, string>>;
 
+  static lc_name() {
+    return "DictPromptTemplate";
+  }
+
   constructor(fields: {
     template: Record<string, unknown>;
     templateFormat?: TemplateFormat;
