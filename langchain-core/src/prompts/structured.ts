@@ -61,6 +61,7 @@ export class StructuredPrompt<
 {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
+
   method?: "jsonMode" | "jsonSchema" | "functionMode";
 
   lc_namespace = ["langchain_core", "prompts", "structured"];
