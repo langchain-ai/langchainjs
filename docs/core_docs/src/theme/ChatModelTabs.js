@@ -103,7 +103,7 @@ export default function ChatModelTabs(props) {
       value: "azure",
       label: "Azure",
       default: false,
-      text: `import { AzureChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new AzureChatOpenAI(${azureParams});`,
+      text: `import { AzureChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new AzureChatOpenAI(${azureOpenAIParams});`,
       envs: `AZURE_OPENAI_API_KEY=your-api-key`,
       dependencies: "@langchain/openai",
     },
