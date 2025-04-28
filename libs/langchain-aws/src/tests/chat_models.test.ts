@@ -313,7 +313,7 @@ describe("convertToConverseMessages", () => {
             role: "user",
             content: [
               {
-                text: "Hello, how are you?\n" + "Also, what's your name?",
+                text: "Hello, how are you?\nAlso, what's your name?",
               },
             ],
           },
