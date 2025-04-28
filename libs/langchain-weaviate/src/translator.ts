@@ -159,8 +159,6 @@ export class WeaviateTranslator<
    * @returns A WeaviateComparisonResult.
    */
   visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
-    console.log(comparison)
-
     const result = {
       operator: this.formatFunction(comparison.comparator),
       target:  {property: comparison.attribute},
@@ -187,14 +185,12 @@ export class WeaviateTranslator<
   visitStructuredQuery(
     query: StructuredQuery
   ): this["VisitStructuredQueryOutput"] {
-    console.log(query)
     let nextArg = {};
     if (query.filter) {
       nextArg = {
-        filter: { filters: [query.filter.accept(this as Visitor)] },
+        filter:  query.filter.accept(this as Visitor) ,
       };
     }
-    console.log(nextArg)
     return nextArg;
   }
 
@@ -214,8 +210,6 @@ export class WeaviateTranslator<
     generatedFilter: FilterValue | undefined,
     mergeType = "and"
   ): FilterValue | undefined {
-    console.log(defaultFilter)
-    console.log(generatedFilter)
     if (
       isFilterEmpty(defaultFilter) &&
       isFilterEmpty(generatedFilter)
@@ -226,15 +220,7 @@ export class WeaviateTranslator<
       if (isFilterEmpty(generatedFilter)) {
         return undefined;
       }
-      const temp = {
-        operator: 'GreaterThan',
-        target: {
-          property: 'rating',
-        },
-        value: 8.5
-      } as FilterValue;
-
-      return temp;
+      return generatedFilter;
     }
     if (isFilterEmpty(generatedFilter)) {
       if (mergeType === "and") {
@@ -259,7 +245,6 @@ export class WeaviateTranslator<
         operands: merged.filters,
         value: null,  
     } as FilterValue;
-    console.log(temp);
     return temp;
   }
 }
