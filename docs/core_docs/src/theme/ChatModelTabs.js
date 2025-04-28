@@ -100,8 +100,8 @@ export default function ChatModelTabs(props) {
       dependencies: "@langchain/anthropic",
     },
     azure: {
-      value: "azure",
-      label: "Azure",
+      value: "azureOpenAI",
+      label: "Azure OpenAI",
       default: false,
       text: `import { AzureChatOpenAI } from "@langchain/openai";\n\nconst ${llmVarName} = new AzureChatOpenAI(${azureOpenAIParams});`,
       envs: `AZURE_OPENAI_API_KEY=your-api-key`,
