@@ -40,7 +40,7 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
     if (text.includes("</tool>")) {
         const _toolMatch = text.match(/<tool>([^<]*)<\/tool>/);
         const _tool = _toolMatch ? _toolMatch[1]: '';
-        const _toolInputMatch = text.match(/<tool_input>([^<]*)<\/tool_input>/);
+        const _toolInputMatch = text.match(/<tool_input>([^<]*?)(?:<\/tool_input>|$)/);
         const _toolInput = _toolInputMatch ? _toolInputMatch[1]:'';
         return { tool: _tool, toolInput: _toolInput, log: text };
     } else if (text.includes("<final_answer>")) {
