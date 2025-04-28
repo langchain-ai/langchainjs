@@ -1,5 +1,5 @@
 import { Document } from "../document.js";
-import { describe, expect, test} from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 
 describe("Document", () => {
   test("Constructing a document with an empty sting", async () => {
