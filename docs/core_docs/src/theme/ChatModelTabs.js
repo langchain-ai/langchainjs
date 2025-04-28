@@ -47,7 +47,7 @@ const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
  *
  * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
- * @property {boolean} [hideAzure] - Whether or not to hide Microsoft Azure OpenAI chat model.
+ * @property {boolean} [hideAzureOpenAI] - Whether or not to hide Microsoft Azure OpenAI chat model.
  * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.
  * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
  * @property {boolean} [hideGroq] - Whether or not to hide Mistral chat model.
