@@ -318,6 +318,10 @@
     "util/math.js",
     "util/math.d.ts",
     "util/math.d.cts",
+    "util/openapi.cjs",
+    "util/openapi.js",
+    "util/openapi.d.ts",
+    "util/openapi.d.cts",
     "util/time.cjs",
     "util/time.js",
     "util/time.d.ts",
@@ -1263,6 +1267,15 @@
       },
       "import": "./util/math.js",
       "require": "./util/math.cjs"
+    },
+    "./util/openapi": {
+      "types": {
+        "import": "./util/openapi.d.ts",
+        "require": "./util/openapi.d.cts",
+        "default": "./util/openapi.d.ts"
+      },
+      "import": "./util/openapi.js",
+      "require": "./util/openapi.cjs"
     },
     "./util/time": {
       "types": {
