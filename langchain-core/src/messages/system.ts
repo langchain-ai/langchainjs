@@ -4,18 +4,35 @@ import {
   mergeContent,
   _mergeDicts,
   type MessageType,
+  type BaseMessageFields,
+  type MessageContentComplex,
 } from "./base.js";
+import type { DataContentBlock } from "./content_blocks.js";
+
+export type SystemMessageFields = BaseMessageFields & {
+  content: string | (MessageContentComplex | DataContentBlock)[];
+};
 
 /**
  * Represents a system message in a conversation.
  */
 export class SystemMessage extends BaseMessage {
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
+
   static lc_name() {
     return "SystemMessage";
   }
 
   _getType(): MessageType {
     return "system";
+  }
+
+  constructor(
+    fields: string | SystemMessageFields,
+    /** @deprecated */
+    kwargs?: Record<string, unknown>
+  ) {
+    super(fields, kwargs);
   }
 }
 
@@ -24,12 +41,22 @@ export class SystemMessage extends BaseMessage {
  * other system message chunks.
  */
 export class SystemMessageChunk extends BaseMessageChunk {
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
+
   static lc_name() {
     return "SystemMessageChunk";
   }
 
   _getType(): MessageType {
     return "system";
+  }
+
+  constructor(
+    fields: string | SystemMessageFields,
+    /** @deprecated */
+    kwargs?: Record<string, unknown>
+  ) {
+    super(fields, kwargs);
   }
 
   concat(chunk: SystemMessageChunk) {

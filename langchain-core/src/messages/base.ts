@@ -1,5 +1,9 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
+import {
+  type PlainTextContentBlock,
+  isDataContentBlock,
+} from "./content_blocks.js";
 
 export interface StoredMessageData {
   content: string;
@@ -112,6 +116,18 @@ export function mergeContent(
     }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
+    } else if (
+      Array.isArray(secondContent) &&
+      secondContent.some((c) => isDataContentBlock(c))
+    ) {
+      return [
+        {
+          type: "text",
+          source_type: "text",
+          text: firstContent,
+        } as PlainTextContentBlock,
+        ...secondContent,
+      ];
     } else {
       return [{ type: "text", text: firstContent }, ...secondContent];
     }
@@ -126,9 +142,21 @@ export function mergeContent(
   } else {
     if (secondContent === "") {
       return firstContent;
+    } else if (
+      Array.isArray(firstContent) &&
+      firstContent.some((c) => isDataContentBlock(c))
+    ) {
+      return [
+        ...firstContent,
+        {
+          type: "file",
+          source_type: "text",
+          text: secondContent,
+        } as PlainTextContentBlock,
+      ];
+    } else {
+      return [...firstContent, { type: "text", text: secondContent }];
     }
-    // Otherwise, add the second content as a new element of the list
-    return [...firstContent, { type: "text", text: secondContent }];
   }
 }
 

@@ -47,6 +47,7 @@ export interface StructuredPromptInput<
 > extends ChatPromptTemplateInput<RunInput, PartialVariableName> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
+  method?: "jsonMode" | "jsonSchema" | "functionMode";
 }
 
 export class StructuredPrompt<
@@ -61,6 +62,8 @@ export class StructuredPrompt<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
 
+  method?: "jsonMode" | "jsonSchema" | "functionMode";
+
   lc_namespace = ["langchain_core", "prompts", "structured"];
 
   get lc_aliases(): Record<string, string> {
@@ -73,6 +76,7 @@ export class StructuredPrompt<
   constructor(input: StructuredPromptInput<RunInput, PartialVariableName>) {
     super(input);
     this.schema = input.schema;
+    this.method = input.method;
   }
 
   pipe<NewRunOutput>(
@@ -87,10 +91,15 @@ export class StructuredPrompt<
       isWithStructuredOutput(coerceable.bound)
     ) {
       return super.pipe(
-        coerceable.bound
-          .withStructuredOutput(this.schema)
-          .bind(coerceable.kwargs ?? {})
-          .withConfig(coerceable.config)
+        this.method
+          ? coerceable.bound
+              .withStructuredOutput(this.schema, { method: this.method })
+              .bind(coerceable.kwargs ?? {})
+              .withConfig(coerceable.config)
+          : coerceable.bound
+              .withStructuredOutput(this.schema)
+              .bind(coerceable.kwargs ?? {})
+              .withConfig(coerceable.config)
       );
     }
 
@@ -105,12 +114,13 @@ export class StructuredPrompt<
       | ChatPromptTemplate<InputValues, string>
       | BaseMessagePromptTemplateLike
     )[],
-    schema: StructuredPromptInput["schema"]
+    schema: StructuredPromptInput["schema"],
+    method?: "jsonMode" | "jsonSchema" | "functionMode"
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): ChatPromptTemplate<RunInput, any> {
     return StructuredPrompt.fromMessages<
       RunInput,
       StructuredPromptInput<RunInput>
-    >(promptMessages, { schema });
+    >(promptMessages, { schema, method });
   }
 }
