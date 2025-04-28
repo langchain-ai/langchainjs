@@ -340,16 +340,25 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
     modelName: "gemini-2.5-pro-exp-03-25",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  // Gemini 2.5 not available on Vertex yet
-  // {
-  //   modelName: "gemini-2.5-pro-exp-03-25",
-  //   platformType: "gai",
-  //   apiVersion: "v1beta",
-  // },
+  {
+    modelName: "gemini-2.5-pro-exp-03-25",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
@@ -364,6 +373,7 @@ const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 10000,
   "gemini-2.0-flash-thinking-exp-1219": 10000,
   "gemini-2.5-pro-exp-03-25": 10000,
+  "gemini-2.5-flash-preview-04-17": 10000,
 };
 
 describe.each(testGeminiModelNames)(
@@ -919,6 +929,37 @@ describe.each(testGeminiModelNames)(
         throw new Error("finalMsg is undefined");
       }
       expect(finalMsg.content as string).toContain("Dodgers");
+    });
+
+    test("reasoning", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning default", async () => {
+      const model = newChatGoogle({});
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning off", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 0,
+      });
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
     });
   }
 );
