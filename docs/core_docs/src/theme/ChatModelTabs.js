@@ -71,7 +71,7 @@ export default function ChatModelTabs(props) {
   const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
   const groqParams = props.groqParams ?? DEFAULTS.groqParams;
   const vertexParams = props.vertexParams ?? DEFAULTS.vertexParams;
-  const azureParams = props.azureParams ?? DEFAULTS.azureParams;
+  const azureOpenAIParams = props.azureParams ?? DEFAULTS.azureParams;
   const providers = props.providers ?? [
     "groq",
     "openai",
