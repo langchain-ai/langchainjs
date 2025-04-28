@@ -294,7 +294,7 @@ function extractGenericMessageCustomRole(message: ChatMessage): GroqRoleEnum {
     message.role !== "user" &&
     message.role !== "function"
   ) {
-      console.warn(`Unknown message role: ${message.role}`);
+    console.warn(`Unknown message role: ${message.role}`);
   }
   return message.role as GroqRoleEnum;
 }
