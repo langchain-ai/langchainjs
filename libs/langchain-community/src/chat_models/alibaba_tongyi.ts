@@ -533,7 +533,7 @@ export class ChatAlibabaTongyi
           "request_id": "43d18007-5aa5-9d18-b3b3-a55aba9ce8cb"
         }
       */
-      if (!chunk.output) {
+      if (!chunk.output && chunk.code) {
         throw new Error(JSON.stringify(chunk));
       }
       const { text, finish_reason } = chunk.output;
