@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test } from "@jest/globals";
+import { test, expect, afterEach } from "@jest/globals";
 import { z } from "zod";
 import {
   RunnableLambda,
@@ -22,13 +22,15 @@ import {
   SystemMessage,
 } from "../../messages/index.js";
 import { ChatGenerationChunk, GenerationChunk } from "../../outputs.js";
-import { DynamicStructuredTool, DynamicTool } from "../../tools.js";
+import { DynamicStructuredTool, DynamicTool } from "../../tools/index.js";
 import { Document } from "../../documents/document.js";
 
 function reverse(s: string) {
   // Reverse a string.
   return s.split("").reverse().join("");
 }
+
+const anyString = expect.any(String) as unknown as string;
 
 const originalCallbackValue = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
@@ -712,6 +714,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -730,10 +733,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chain_stream",
@@ -743,7 +747,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_llm_stream",
@@ -753,10 +757,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
     {
       event: "on_chain_stream",
@@ -766,7 +771,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("O") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
     {
       event: "on_llm_stream",
@@ -776,10 +781,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
     {
       event: "on_chain_stream",
@@ -789,7 +795,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("A") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
     {
       event: "on_llm_stream",
@@ -799,10 +805,11 @@ test("Runnable streamEvents method with chat model chain", async () => {
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chain_stream",
@@ -812,7 +819,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
-      data: { chunk: new AIMessageChunk("R") },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_llm_end",
@@ -823,6 +830,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
+        ls_provider: model.getName(),
         ls_stop: undefined,
       },
       data: {
@@ -836,7 +844,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
             [
               new ChatGenerationChunk({
                 generationInfo: {},
-                message: new AIMessageChunk("ROAR"),
+                message: new AIMessageChunk({ id: anyString, content: "ROAR" }),
                 text: "ROAR",
               }),
             ],
@@ -853,7 +861,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       data: {
-        output: new AIMessageChunk("ROAR"),
+        output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
     },
   ]);

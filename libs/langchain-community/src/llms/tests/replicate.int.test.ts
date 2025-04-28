@@ -13,7 +13,7 @@ test.skip("Test Replicate", async () => {
 
   const res = await model.invoke("Hello, my name is ");
 
-  console.log({ res });
+  // console.log({ res });
 
   expect(typeof res).toBe("string");
 });
@@ -33,7 +33,7 @@ test.skip("Test Replicate streaming", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  console.log(chunks);
+  // console.log(chunks);
   expect(chunks.length).toBeGreaterThan(1);
 });
 

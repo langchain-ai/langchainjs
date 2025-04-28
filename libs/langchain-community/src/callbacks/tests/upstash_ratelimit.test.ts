@@ -29,7 +29,7 @@ const createResponse = (
 
 const createRatelimitMock = () => {
   const ratelimit = new Ratelimit({
-    redis: new Redis({ url: "mock", token: "mock" }),
+    redis: new Redis({ url: "https://mock.com", token: "mock" }),
     limiter: Ratelimit.fixedWindow(10, "10 s"),
   });
 

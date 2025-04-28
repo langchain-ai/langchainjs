@@ -70,7 +70,7 @@ test("Retrieval chain with a history aware retriever and a followup", async () =
     chat_history: "",
   });
 
-  console.log(results);
+  // console.log(results);
   expect(results.answer.toLowerCase()).toContain("mitochondria");
 
   const results2 = await chain.invoke({
@@ -81,6 +81,6 @@ test("Retrieval chain with a history aware retriever and a followup", async () =
       "Assistant: Mitochondria is the powerhouse of the cell",
     ].join("\n"),
   });
-  console.log(results2);
+  // console.log(results2);
   expect(results2.answer.toLowerCase()).toContain("lipids");
 });

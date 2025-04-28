@@ -7,7 +7,10 @@ import {
   HumanMessage,
   MessageType,
 } from "@langchain/core/messages";
-import { condenseZepMemoryIntoHumanMessage } from "../../memory/zep_cloud.js";
+import {
+  condenseZepMemoryIntoHumanMessage,
+  zepMemoryToMessages,
+} from "../../memory/zep_cloud.js";
 
 export const getZepMessageRoleType = (role: MessageType): RoleType => {
   switch (role) {
@@ -33,9 +36,12 @@ export const getZepMessageRoleType = (role: MessageType): RoleType => {
 interface ZepMemoryInput {
   sessionId: string;
   client: ZepClient;
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
   humanPrefix?: string;
   aiPrefix?: string;
+  // Whether to return separate messages for chat history with a SystemMessage containing (facts and summary) or return a single HumanMessage with the entire memory context.
+  // Defaults to false (return a single HumanMessage) in order to allow more flexibility with different models.
+  separateMessages?: boolean;
 }
 
 /**
@@ -55,11 +61,13 @@ export class ZepCloudChatMessageHistory
 
   client: ZepClient;
 
-  memoryType: Zep.MemoryGetRequestMemoryType;
+  memoryType: Zep.MemoryType;
 
   humanPrefix = "human";
 
   aiPrefix = "ai";
+
+  separateMessages = false;
 
   constructor(fields: ZepMemoryInput) {
     super();
@@ -71,6 +79,9 @@ export class ZepCloudChatMessageHistory
     }
     if (fields.aiPrefix) {
       this.aiPrefix = fields.aiPrefix;
+    }
+    if (fields.separateMessages) {
+      this.separateMessages = fields.separateMessages;
     }
   }
 
@@ -98,7 +109,9 @@ export class ZepCloudChatMessageHistory
       return [];
     }
 
-    return [condenseZepMemoryIntoHumanMessage(memory)];
+    return this.separateMessages
+      ? zepMemoryToMessages(memory)
+      : [condenseZepMemoryIntoHumanMessage(memory)];
   }
 
   async addAIChatMessage(

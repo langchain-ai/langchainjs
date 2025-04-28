@@ -10,7 +10,7 @@ test("Test ChatOpenAI with a file", async () => {
   const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new ChatOpenAI({
-    modelName: "gpt-4-vision-preview",
+    modelName: "gpt-4o",
     maxTokens: 1024,
   });
   const message = new HumanMessage({
@@ -27,28 +27,33 @@ test("Test ChatOpenAI with a file", async () => {
       },
     ],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ChatOpenAI with a URL", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-4-vision-preview",
+    modelName: "gpt-4o",
     maxTokens: 1024,
   });
   const message = new HumanMessage({
     content: [
       {
         type: "text",
-        text: "What does this image say?",
+        text: "What's in this image?",
       },
       {
         type: "image_url",
-        image_url:
-          "https://www.freecodecamp.org/news/content/images/2023/05/Screenshot-2023-05-29-at-5.40.38-PM.png",
+        image_url: {
+          url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg",
+        },
       },
     ],
   });
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chat.invoke([message]);
-  console.log({ res });
+  // console.log({ res });
 });

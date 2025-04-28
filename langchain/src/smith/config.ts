@@ -31,8 +31,11 @@ export type EvaluatorInputFormatter = ({
 }) => EvaluatorInputs;
 
 export type DynamicRunEvaluatorParams<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Input extends Record<string, any> = Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Prediction extends Record<string, any> = Record<string, unknown>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Reference extends Record<string, any> = Record<string, unknown>
 > = {
   input: Input;
@@ -50,11 +53,11 @@ export type DynamicRunEvaluatorParams<
 export type RunEvaluatorLike =
   | ((
       props: DynamicRunEvaluatorParams,
-      options?: { config?: RunnableConfig }
+      options: RunnableConfig
     ) => Promise<EvaluationResult>)
   | ((
       props: DynamicRunEvaluatorParams,
-      options?: { config?: RunnableConfig }
+      options: RunnableConfig
     ) => EvaluationResult);
 
 export function isOffTheShelfEvaluator<

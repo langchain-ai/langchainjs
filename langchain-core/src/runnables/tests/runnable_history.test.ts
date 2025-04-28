@@ -1,3 +1,4 @@
+import { test, expect } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
@@ -20,6 +21,8 @@ import {
 } from "../../utils/testing/index.js";
 import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
+
+const anyString = expect.any(String) as unknown as string;
 
 // For `BaseChatMessageHistory`
 async function getGetSessionHistory(): Promise<
@@ -106,9 +109,15 @@ test("Runnable with message history with a chat model", async () => {
   const sessionHistory = await getMessageHistory("2");
   expect(await sessionHistory.getMessages()).toEqual([
     new HumanMessage("hello"),
-    new AIMessage("Hello world!"),
+    new AIMessage({
+      id: anyString,
+      content: "Hello world!",
+    }),
     new HumanMessage("good bye"),
-    new AIMessageChunk("Hello world!"),
+    new AIMessageChunk({
+      id: anyString,
+      content: "Hello world!",
+    }),
   ]);
 });
 
@@ -128,6 +137,7 @@ test("Runnable with message history with a messages in, messages out chain", asy
     config: {},
     getMessageHistory,
   });
+
   const config: RunnableConfig = { configurable: { sessionId: "2" } };
   const output = await withHistory.invoke([new HumanMessage("hello")], config);
   expect(output.content).toBe("So long and thanks for the fish!!");
@@ -146,9 +156,15 @@ test("Runnable with message history with a messages in, messages out chain", asy
   const sessionHistory = await getMessageHistory("2");
   expect(await sessionHistory.getMessages()).toEqual([
     new HumanMessage("hello"),
-    new AIMessage("So long and thanks for the fish!!"),
+    new AIMessage({
+      id: anyString,
+      content: "So long and thanks for the fish!!",
+    }),
     new HumanMessage("good bye"),
-    new AIMessageChunk("So long and thanks for the fish!!"),
+    new AIMessageChunk({
+      id: anyString,
+      content: "So long and thanks for the fish!!",
+    }),
   ]);
 });
 

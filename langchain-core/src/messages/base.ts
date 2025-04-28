@@ -1,5 +1,9 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
+import {
+  type PlainTextContentBlock,
+  isDataContentBlock,
+} from "./content_blocks.js";
 
 export interface StoredMessageData {
   content: string;
@@ -11,6 +15,7 @@ export interface StoredMessageData {
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  id?: string;
 }
 
 export interface StoredMessage {
@@ -33,9 +38,11 @@ export type MessageType =
   | "human"
   | "ai"
   | "generic"
+  | "developer"
   | "system"
   | "function"
-  | "tool";
+  | "tool"
+  | "remove";
 
 export type ImageDetail = "auto" | "low" | "high";
 
@@ -74,38 +81,28 @@ export interface FunctionCall {
   name: string;
 }
 
-/**
- * @deprecated
- * Import as "OpenAIToolCall" instead
- */
-export interface ToolCall {
-  /**
-   * The ID of the tool call.
-   */
-  id: string;
-
-  /**
-   * The function that the model called.
-   */
-  function: FunctionCall;
-
-  /**
-   * The type of the tool. Currently, only `function` is supported.
-   */
-  type: "function";
-}
-
 export type BaseMessageFields = {
   content: MessageContent;
   name?: string;
   additional_kwargs?: {
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
     function_call?: FunctionCall;
-    tool_calls?: ToolCall[];
+    /**
+     * @deprecated Use "tool_calls" field on AIMessages instead
+     */
+    tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
   /** Response metadata. For example: response headers, logprobs, token counts. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
 };
 
 export function mergeContent(
@@ -114,19 +111,99 @@ export function mergeContent(
 ): MessageContent {
   // If first content is a string
   if (typeof firstContent === "string") {
+    if (firstContent === "") {
+      return secondContent;
+    }
     if (typeof secondContent === "string") {
       return firstContent + secondContent;
+    } else if (
+      Array.isArray(secondContent) &&
+      secondContent.some((c) => isDataContentBlock(c))
+    ) {
+      return [
+        {
+          type: "text",
+          source_type: "text",
+          text: firstContent,
+        } as PlainTextContentBlock,
+        ...secondContent,
+      ];
     } else {
       return [{ type: "text", text: firstContent }, ...secondContent];
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return [...firstContent, ...secondContent];
-    // If the first content is a list and second is a string
+    return (
+      _mergeLists(firstContent, secondContent) ?? [
+        ...firstContent,
+        ...secondContent,
+      ]
+    );
   } else {
-    // Otherwise, add the second content as a new element of the list
-    return [...firstContent, { type: "text", text: secondContent }];
+    if (secondContent === "") {
+      return firstContent;
+    } else if (
+      Array.isArray(firstContent) &&
+      firstContent.some((c) => isDataContentBlock(c))
+    ) {
+      return [
+        ...firstContent,
+        {
+          type: "file",
+          source_type: "text",
+          text: secondContent,
+        } as PlainTextContentBlock,
+      ];
+    } else {
+      return [...firstContent, { type: "text", text: secondContent }];
+    }
   }
+}
+
+/**
+ * 'Merge' two statuses. If either value passed is 'error', it will return 'error'. Else
+ * it will return 'success'.
+ *
+ * @param {"success" | "error" | undefined} left The existing value to 'merge' with the new value.
+ * @param {"success" | "error" | undefined} right The new value to 'merge' with the existing value
+ * @returns {"success" | "error"} The 'merged' value.
+ */
+export function _mergeStatus(
+  left?: "success" | "error",
+  right?: "success" | "error"
+): "success" | "error" | undefined {
+  if (left === "error" || right === "error") {
+    return "error";
+  }
+  return "success";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function helper(obj: any, currentDepth: number): any {
+    if (typeof obj !== "object" || obj === null || obj === undefined) {
+      return obj;
+    }
+    if (currentDepth >= depthLimit) {
+      if (Array.isArray(obj)) {
+        return "[Array]";
+      }
+      return "[Object]";
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => helper(item, currentDepth + 1));
+    }
+
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = helper(obj[key], currentDepth + 1);
+    }
+    return result;
+  }
+
+  return JSON.stringify(helper(obj, 0), null, 2);
 }
 
 /**
@@ -151,11 +228,21 @@ export abstract class BaseMessage
   }
 
   /**
-   * @deprecated
-   * Use {@link BaseMessage.content} instead.
+   * Get text content of the message.
    */
   get text(): string {
-    return typeof this.content === "string" ? this.content : "";
+    if (typeof this.content === "string") {
+      return this.content;
+    }
+
+    if (!Array.isArray(this.content)) return "";
+    return this.content
+      .map((c) => {
+        if (typeof c === "string") return c;
+        if (c.type === "text") return c.text;
+        return "";
+      })
+      .join("");
   }
 
   /** The content of the message. */
@@ -170,8 +257,29 @@ export abstract class BaseMessage
   /** Response metadata. For example: response headers, logprobs, token counts. */
   response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
 
-  /** The type of the message. */
+  /**
+   * An optional unique identifier for the message. This should ideally be
+   * provided by the provider/model which created the message.
+   */
+  id?: string;
+
+  /**
+   * @deprecated Use .getType() instead or import the proper typeguard.
+   * For example:
+   *
+   * ```ts
+   * import { isAIMessage } from "@langchain/core/messages";
+   *
+   * const message = new AIMessage("Hello!");
+   * isAIMessage(message); // true
+   * ```
+   */
   abstract _getType(): MessageType;
+
+  /** The type of the message. */
+  getType(): MessageType {
+    return this._getType();
+  }
 
   constructor(
     fields: string | BaseMessageFields,
@@ -200,6 +308,7 @@ export abstract class BaseMessage
     this.content = fields.content;
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;
+    this.id = fields.id;
   }
 
   toDict(): StoredMessage {
@@ -209,11 +318,71 @@ export abstract class BaseMessage
         .kwargs as StoredMessageData,
     };
   }
+
+  static lc_name() {
+    return "BaseMessage";
+  }
+
+  // Can't be protected for silly reasons
+  get _printableFields(): Record<string, unknown> {
+    return {
+      id: this.id,
+      content: this.content,
+      name: this.name,
+      additional_kwargs: this.additional_kwargs,
+      response_metadata: this.response_metadata,
+    };
+  }
+
+  // this private method is used to update the ID for the runtime
+  // value as well as in lc_kwargs for serialisation
+  _updateId(value: string | undefined) {
+    this.id = value;
+
+    // lc_attributes wouldn't work here, because jest compares the
+    // whole object
+    this.lc_kwargs.id = value;
+  }
+
+  get [Symbol.toStringTag]() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.constructor as any).lc_name();
+  }
+
+  // Override the default behavior of console.log
+  [Symbol.for("nodejs.util.inspect.custom")](depth: number | null) {
+    if (depth === null) {
+      return this;
+    }
+    const printable = stringifyWithDepthLimit(
+      this._printableFields,
+      Math.max(4, depth)
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return `${(this.constructor as any).lc_name()} ${printable}`;
+  }
 }
 
-// TODO: Deprecate when SDK typing is updated
-export type OpenAIToolCall = ToolCall & {
-  index: number;
+/**
+ * @deprecated Use "tool_calls" field on AIMessages instead
+ */
+export type OpenAIToolCall = {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+
+  /**
+   * The function that the model called.
+   */
+  function: FunctionCall;
+
+  /**
+   * The type of the tool. Currently, only `function` is supported.
+   */
+  type: "function";
+
+  index?: number;
 };
 
 export function isOpenAIToolCallArray(
@@ -246,8 +415,12 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      merged[key] = (merged[key] as string) + value;
-    } else if (!Array.isArray(merged[key]) && typeof merged[key] === "object") {
+      if (key === "type") {
+        // Do not merge 'type' fields
+        continue;
+      }
+      merged[key] += value;
+    } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
       merged[key] = _mergeLists(merged[key], value);
@@ -284,11 +457,47 @@ export function _mergeLists(left?: any[], right?: any[]) {
         } else {
           merged.push(item);
         }
+      } else if (
+        typeof item === "object" &&
+        "text" in item &&
+        item.text === ""
+      ) {
+        // No-op - skip empty text blocks
+        continue;
       } else {
         merged.push(item);
       }
     }
     return merged;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function _mergeObj<T = any>(
+  left: T | undefined,
+  right: T | undefined
+): T {
+  if (!left && !right) {
+    throw new Error("Cannot merge two undefined objects.");
+  }
+  if (!left || !right) {
+    return left || (right as T);
+  } else if (typeof left !== typeof right) {
+    throw new Error(
+      `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
+    );
+  } else if (typeof left === "string" && typeof right === "string") {
+    return (left + right) as T;
+  } else if (Array.isArray(left) && Array.isArray(right)) {
+    return _mergeLists(left, right) as T;
+  } else if (typeof left === "object" && typeof right === "object") {
+    return _mergeDicts(left, right) as T;
+  } else if (left === right) {
+    return left;
+  } else {
+    throw new Error(
+      `Can not merge objects of different types.\nLeft ${left}\nRight ${right}`
+    );
   }
 }
 
@@ -303,15 +512,36 @@ export abstract class BaseMessageChunk extends BaseMessage {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
 }
 
+export type MessageFieldWithRole = {
+  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
+  content: MessageContent;
+  name?: string;
+} & Record<string, unknown>;
+
+export function _isMessageFieldWithRole(
+  x: BaseMessageLike
+): x is MessageFieldWithRole {
+  return typeof (x as MessageFieldWithRole).role === "string";
+}
+
 export type BaseMessageLike =
   | BaseMessage
+  | MessageFieldWithRole
   | [
       StringWithAutocomplete<
         MessageType | "user" | "assistant" | "placeholder"
       >,
       MessageContent
     ]
-  | string;
+  | string
+  /**
+   * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
+   */
+  | ({
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>)
+  | SerializedConstructor;
 
 export function isBaseMessage(
   messageLike?: unknown

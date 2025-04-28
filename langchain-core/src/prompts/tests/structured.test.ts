@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ZodType, ZodTypeDef } from "zod";
+import { test, expect } from "@jest/globals";
 import {
   StructuredOutputMethodParams,
   StructuredOutputMethodOptions,

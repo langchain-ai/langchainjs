@@ -1,7 +1,14 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { RequestOptions as _OpenAICoreRequestOptions } from "openai/core";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
+import type { z } from "zod";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -16,6 +23,13 @@ export declare interface OpenAIBaseInput {
    * tokens as possible given the prompt and the model's maximum context size.
    */
   maxTokens?: number;
+
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   * Alias for `maxTokens` for reasoning models.
+   */
+  maxCompletionTokens?: number;
 
   /** Total probability mass of tokens to consider at each step */
   topP: number;
@@ -39,10 +53,18 @@ export declare interface OpenAIBaseInput {
   streaming: boolean;
 
   /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
+
+  /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use "model" instead.
    */
   modelName: string;
+
   /** Model name to use */
   model: string;
 
@@ -79,23 +101,8 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-// TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
-export type OpenAICoreRequestOptions<
-  Req extends object = Record<string, unknown>
-> = {
-  path?: string;
-  query?: Req | undefined;
-  body?: Req | undefined;
-  headers?: Record<string, string | null | undefined> | undefined;
-
-  maxRetries?: number;
-  stream?: boolean | undefined;
-  timeout?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  httpAgent?: any;
-  signal?: AbortSignal | undefined | null;
-  idempotencyKey?: string;
-};
+export type OpenAICoreRequestOptions<Req = Record<string, unknown>> =
+  _OpenAICoreRequestOptions<Req>;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -115,19 +122,6 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
   batchSize: number;
 }
 
-/**
- * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
- */
-export interface LegacyOpenAIInput {
-  /** @deprecated Use baseURL instead */
-  basePath?: string;
-  /** @deprecated Use defaultHeaders and defaultQuery instead */
-  baseOptions?: {
-    headers?: Record<string, string>;
-    params?: Record<string, string>;
-  };
-}
-
 export interface OpenAIChatInput extends OpenAIBaseInput {
   /**
    * Whether to return log probabilities of the output tokens or not.
@@ -142,7 +136,46 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   topLogprobs?: number;
 
   /** ChatGPT messages to pass as a prefix to the prompt */
-  prefixMessages?: OpenAIClient.Chat.CreateChatCompletionRequestMessage[];
+  prefixMessages?: OpenAIClient.Chat.ChatCompletionMessageParam[];
+
+  /**
+   * Whether to include the raw OpenAI response in the output message's "additional_kwargs" field.
+   * Currently in experimental beta.
+   */
+  __includeRawResponse?: boolean;
+
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to OpenAI.
+   */
+  supportsStrictToolCalling?: boolean;
+
+  /**
+   * Output types that you would like the model to generate for this request. Most
+   * models are capable of generating text, which is the default:
+   *
+   * `["text"]`
+   *
+   * The `gpt-4o-audio-preview` model can also be used to
+   * [generate audio](https://platform.openai.com/docs/guides/audio). To request that
+   * this model generate both text and audio responses, you can use:
+   *
+   * `["text", "audio"]`
+   */
+  modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
+
+  /**
+   * Parameters for audio output. Required when audio output is requested with
+   * `modalities: ["audio"]`.
+   * [Learn more](https://platform.openai.com/docs/guides/audio).
+   */
+  audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
+
+  /**
+   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
+   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   */
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 }
 
 export declare interface AzureOpenAIInput {
@@ -192,11 +225,18 @@ export declare interface AzureOpenAIInput {
   azureOpenAIApiCompletionsDeploymentName?: string;
 
   /**
-   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * Custom base url for Azure OpenAI API. This is useful in case you have a deployment in another region.
    * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/openai/deployments"
    * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
    */
   azureOpenAIBasePath?: string;
+
+  /**
+   * Custom endpoint for Azure OpenAI API. This is useful in case you have a deployment in another region.
+   * e.g. setting this value to "https://westeurope.api.cognitive.microsoft.com/"
+   * will be result in the endpoint URL: https://westeurope.api.cognitive.microsoft.com/openai/deployments/{DeploymentName}/
+   */
+  azureOpenAIEndpoint?: string;
 
   /**
    * A function that returns an access token for Microsoft Entra (formerly known as Azure Active Directory),
@@ -204,3 +244,22 @@ export declare interface AzureOpenAIInput {
    */
   azureADTokenProvider?: () => Promise<string>;
 }
+
+type ChatOpenAIResponseFormatJSONSchema = Omit<
+  ResponseFormatJSONSchema,
+  "json_schema"
+> & {
+  json_schema: Omit<ResponseFormatJSONSchema["json_schema"], "schema"> & {
+    /**
+     * The schema for the response format, described as a JSON Schema object
+     * or a Zod object.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+  };
+};
+
+export type ChatOpenAIResponseFormat =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ChatOpenAIResponseFormatJSONSchema;

@@ -21,6 +21,20 @@ interface TestConfig {
   shouldThrow?: boolean;
 }
 
+test.skip("Test chat.stream work fine", async () => {
+  const chat = new ChatBaiduWenxin({
+    modelName: "ERNIE-Bot",
+  });
+  const stream = await chat.stream(
+    `Translate "I love programming" into Chinese.`
+  );
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(0);
+});
+
 const runTest = async ({
   modelName,
   config,
@@ -62,7 +76,7 @@ const runTest = async ({
     }
 
     const res = await chat.invoke(messages);
-    console.log({ res });
+    // console.log({ res });
 
     if (config.streaming) {
       expect(nrNewTokens > 0).toBe(true);
@@ -108,9 +122,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "ERNIE-Bot-turbo", config: {} },
+  { modelName: "ERNIE-Lite-8K", config: {} },
   {
-    modelName: "ERNIE-Bot-turbo",
+    modelName: "ERNIE-Lite-8K",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -118,7 +132,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "ERNIE-Bot-turbo",
+    modelName: "ERNIE-Lite-8K",
     config: {
       description: "with system message",
     },

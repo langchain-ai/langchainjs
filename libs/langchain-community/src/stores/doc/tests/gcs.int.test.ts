@@ -50,7 +50,7 @@ describe.skip("GoogleCloudStorageDocstore", () => {
       bucket,
     });
     const document = await store.search(name);
-    console.log(document);
+    // console.log(document);
     expect(document.pageContent).toEqual("This is a test");
   });
 
@@ -60,7 +60,7 @@ describe.skip("GoogleCloudStorageDocstore", () => {
       bucket,
     });
     const document = await store.search(name);
-    console.log(document);
+    // console.log(document);
     expect(document.pageContent).toEqual("This is a metadata test");
     expect(document.metadata.meta1).toEqual("one");
   });
@@ -73,7 +73,7 @@ describe.skip("GoogleCloudStorageDocstore", () => {
       prefix,
     });
     const document = await store.search(name);
-    console.log(document);
+    // console.log(document);
     expect(document.pageContent).toEqual("This is a prefix test");
   });
 });

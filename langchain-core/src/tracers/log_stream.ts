@@ -4,12 +4,14 @@ import {
 } from "../utils/fast-json-patch/index.js";
 import { BaseTracer, type Run } from "./base.js";
 import {
+  BaseCallbackHandler,
   BaseCallbackHandlerInput,
+  CallbackHandlerPrefersStreaming,
   HandleLLMNewTokenCallbackFields,
 } from "../callbacks/base.js";
 import { IterableReadableStream } from "../utils/stream.js";
 import { ChatGenerationChunk, GenerationChunk } from "../outputs.js";
-import { AIMessageChunk } from "../messages/index.js";
+import { AIMessageChunk } from "../messages/ai.js";
 import type { StreamEvent, StreamEventData } from "./event_stream.js";
 
 export type { StreamEvent, StreamEventData };
@@ -130,6 +132,10 @@ export interface LogStreamCallbackHandlerInput
   _schemaFormat?: SchemaFormat;
 }
 
+export const isLogStreamHandler = (
+  handler: BaseCallbackHandler
+): handler is LogStreamCallbackHandler => handler.name === "log_stream_tracer";
+
 /**
  * Extract standardized inputs from a run.
  *
@@ -205,7 +211,10 @@ function isChatGenerationChunk(
  * handler that logs the execution of runs and emits `RunLog` instances to a
  * `RunLogStream`.
  */
-export class LogStreamCallbackHandler extends BaseTracer {
+export class LogStreamCallbackHandler
+  extends BaseTracer
+  implements CallbackHandlerPrefersStreaming
+{
   protected autoClose = true;
 
   protected includeNames?: string[];
@@ -235,6 +244,8 @@ export class LogStreamCallbackHandler extends BaseTracer {
   public receiveStream: IterableReadableStream<RunLogPatch>;
 
   name = "log_stream_tracer";
+
+  lc_prefer_streaming = true;
 
   constructor(fields?: LogStreamCallbackHandlerInput) {
     super({ _awaitHandler: true, ...fields });
@@ -452,7 +463,10 @@ export class LogStreamCallbackHandler extends BaseTracer {
       if (isChatGenerationChunk(kwargs?.chunk)) {
         streamedOutputValue = kwargs?.chunk;
       } else {
-        streamedOutputValue = new AIMessageChunk(token);
+        streamedOutputValue = new AIMessageChunk({
+          id: `run-${run.id}`,
+          content: token,
+        });
       }
     } else {
       streamedOutputValue = token;

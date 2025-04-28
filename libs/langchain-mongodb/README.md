@@ -5,7 +5,7 @@ This package contains the LangChain.js integrations for MongoDB through their SD
 ## Installation
 
 ```bash npm2yarn
-npm install @langchain/mongodb
+npm install @langchain/mongodb @langchain/core
 ```
 
 This package, along with the main LangChain package, depends on [`@langchain/core`](https://npmjs.com/package/@langchain/core/).
@@ -17,18 +17,18 @@ You can do so by adding appropriate field to your project's `package.json` like 
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/mongodb": "^0.0.0",
-    "langchain": "0.0.207"
+    "@langchain/core": "^0.3.0",
+    "@langchain/mongodb": "^0.0.0"
   },
   "resolutions": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "^0.3.0"
   },
   "overrides": {
-    "@langchain/core": "0.1.5"
+    "@langchain/core": "^0.3.0"
   },
   "pnpm": {
     "overrides": {
-      "@langchain/core": "0.1.5"
+      "@langchain/core": "^0.3.0"
     }
   }
 }

@@ -36,11 +36,13 @@ test("CombiningOutputParser", async () => {
     question: "What is the capital of France?",
   });
 
-  console.log(input);
+  // console.log(input);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const response = await model.invoke(input);
 
-  console.log(response);
+  // console.log(response);
 
-  console.log(await parser.parse(response.content as string));
+  // console.log(await parser.parse(response.content as string));
 });

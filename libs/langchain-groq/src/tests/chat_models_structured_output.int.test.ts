@@ -7,7 +7,7 @@ import { ChatGroq } from "../chat_models.js";
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -28,7 +28,7 @@ test("withStructuredOutput zod schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -37,7 +37,7 @@ test("withStructuredOutput zod schema function calling", async () => {
 test("withStructuredOutput zod schema JSON mode", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -67,7 +67,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -76,7 +76,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema function calling", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -97,7 +97,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -106,7 +106,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
 test("withStructuredOutput OpenAI function definition function calling", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -127,7 +127,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -136,7 +136,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
 test("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -166,7 +166,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -175,7 +175,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const jsonSchema = {
@@ -207,7 +207,7 @@ Respond with a JSON object containing three keys:
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
@@ -216,7 +216,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput includeRaw true", async () => {
   const model = new ChatGroq({
     temperature: 0,
-    modelName: "mixtral-8x7b-32768",
+    model: "llama-3.3-70b-versatile",
   });
 
   const calculatorSchema = z.object({
@@ -238,7 +238,7 @@ test("withStructuredOutput includeRaw true", async () => {
   ]);
   const chain = prompt.pipe(modelWithStructuredOutput);
   const result = await chain.invoke({});
-  console.log(result);
+  // console.log(result);
 
   expect("parsed" in result).toBe(true);
   // Need to make TS happy :)

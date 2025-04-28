@@ -24,9 +24,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
-    "d3-dsv": "2",
     "esbuild": "^0.17.18",
-    "hnswlib-node": "^3.0.0",
     "langchain": "workspace:*",
     "typescript": "^5.0.0"
   },

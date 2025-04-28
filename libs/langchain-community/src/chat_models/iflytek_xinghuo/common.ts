@@ -124,8 +124,8 @@ function messageToXinghuoRole(message: BaseMessage): XinghuoMessageRole {
 }
 
 declare interface IflytekXinghuoChatInput {
-  /** Model version to use. Available options are: v1.1, v2.1, v3.1
-   * @default "v2.1"
+  /** Model version to use. Available options are: v1.1, v2.1, v3.1, v3.5, v4.0
+   * @default "v3.1"
    */
   version: string;
 
@@ -200,7 +200,7 @@ export abstract class BaseChatIflytekXinghuo
 
   lc_serializable = true;
 
-  version = "v2.1";
+  version = "v3.1";
 
   iflytekAppid: string;
 
@@ -256,7 +256,12 @@ export abstract class BaseChatIflytekXinghuo
     this.top_k = fields?.top_k ?? this.top_k;
 
     this.version = fields?.version ?? this.version;
-    if (["v1.1", "v2.1", "v3.1"].includes(this.version)) {
+    if (
+      ["v1.1", "v2.1", "v3.1", "v3.5", "v4.0", "pro-128k"].includes(
+        this.version
+      )
+    ) {
+      this.apiUrl = `wss://spark-api.xf-yun.com/${this.version}/chat`;
       switch (this.version) {
         case "v1.1":
           this.domain = "general";
@@ -267,10 +272,19 @@ export abstract class BaseChatIflytekXinghuo
         case "v3.1":
           this.domain = "generalv3";
           break;
+        case "v3.5":
+          this.domain = "generalv3.5";
+          break;
+        case "v4.0":
+          this.domain = "4.0Ultra";
+          break;
+        case "pro-128k":
+          this.domain = "pro-128k";
+          this.apiUrl = `wss://spark-api.xf-yun.com/chat/${this.version}`;
+          break;
         default:
-          this.domain = "generalv2";
+          this.domain = "generalv3";
       }
-      this.apiUrl = `wss://spark-api.xf-yun.com/${this.version}/chat`;
     } else {
       throw new Error(`Invalid model version: ${this.version}`);
     }

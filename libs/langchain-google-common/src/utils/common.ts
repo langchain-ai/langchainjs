@@ -1,18 +1,141 @@
-import { StructuredToolInterface } from "@langchain/core/tools";
-import type {
+import { isOpenAITool } from "@langchain/core/language_models/base";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { isModelGemini, isModelGemma, validateGeminiParams } from "./gemini.js";
+import {
+  GeminiFunctionDeclaration,
+  GeminiFunctionSchema,
   GeminiTool,
+  GeminiToolAttributes,
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
-  GoogleLLMModelFamily,
+  GoogleAIToolType,
+  VertexModelFamily,
 } from "../types.js";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
+import {
+  jsonSchemaToGeminiParameters,
+  schemaToGeminiParameters,
+} from "./zod_to_gemini_parameters.js";
+import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
 export function copyAIModelParams(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined
 ): GoogleAIModelRequestParams {
   return copyAIModelParamsInto(params, options, {});
+}
+
+function processToolChoice(
+  toolChoice: GoogleAIBaseLanguageModelCallOptions["tool_choice"],
+  allowedFunctionNames: GoogleAIBaseLanguageModelCallOptions["allowed_function_names"]
+):
+  | {
+      tool_choice: "any" | "auto" | "none";
+      allowed_function_names?: string[];
+    }
+  | undefined {
+  if (!toolChoice) {
+    if (allowedFunctionNames) {
+      // Allowed func names is passed, return 'any' so it forces the model to use a tool.
+      return {
+        tool_choice: "any",
+        allowed_function_names: allowedFunctionNames,
+      };
+    }
+    return undefined;
+  }
+
+  if (toolChoice === "any" || toolChoice === "auto" || toolChoice === "none") {
+    return {
+      tool_choice: toolChoice,
+      allowed_function_names: allowedFunctionNames,
+    };
+  }
+  if (typeof toolChoice === "string") {
+    // String representing the function name.
+    // Return any to force the model to predict the specified function call.
+    return {
+      tool_choice: "any",
+      allowed_function_names: [...(allowedFunctionNames ?? []), toolChoice],
+    };
+  }
+  throw new Error("Object inputs for tool_choice not supported.");
+}
+
+function isGeminiTool(tool: GoogleAIToolType): tool is GeminiTool {
+  for (const toolAttribute of GeminiToolAttributes) {
+    if (toolAttribute in tool) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isGeminiNonFunctionTool(tool: GoogleAIToolType): tool is GeminiTool {
+  return isGeminiTool(tool) && !("functionDeclaration" in tool);
+}
+
+export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
+  const geminiTools: GeminiTool[] = [];
+  let functionDeclarationsIndex = -1;
+  tools.forEach((tool) => {
+    if (isGeminiNonFunctionTool(tool)) {
+      geminiTools.push(tool);
+    } else {
+      if (functionDeclarationsIndex === -1) {
+        geminiTools.push({
+          functionDeclarations: [],
+        });
+        functionDeclarationsIndex = geminiTools.length - 1;
+      }
+      if (
+        "functionDeclarations" in tool &&
+        Array.isArray(tool.functionDeclarations)
+      ) {
+        const funcs: GeminiFunctionDeclaration[] = tool.functionDeclarations;
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push(
+          ...funcs
+        );
+      } else if (isLangChainTool(tool)) {
+        const jsonSchema = schemaToGeminiParameters(tool.schema);
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.name,
+          description: tool.description ?? `A function available to call.`,
+          parameters: jsonSchema as GeminiFunctionSchema,
+        });
+      } else if (isOpenAITool(tool)) {
+        geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
+          name: tool.function.name,
+          description:
+            tool.function.description ?? `A function available to call.`,
+          parameters: jsonSchemaToGeminiParameters(tool.function.parameters),
+        });
+      } else {
+        throw new Error(`Received invalid tool: ${JSON.stringify(tool)}`);
+      }
+    }
+  });
+  return geminiTools;
+}
+
+function reasoningEffortToReasoningTokens(
+  _modelName?: string,
+  effort?: string
+): number | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+  const maxEffort = 24 * 1024; // Max for Gemini 2.5 Flash
+  switch (effort) {
+    case "low":
+      return maxEffort / 3;
+    case "medium":
+      return (2 * maxEffort) / 3;
+    case "high":
+      return maxEffort;
+    default:
+      return undefined;
+  }
 }
 
 export function copyAIModelParamsInto(
@@ -31,12 +154,33 @@ export function copyAIModelParamsInto(
     options?.maxOutputTokens ??
     params?.maxOutputTokens ??
     target.maxOutputTokens;
+  ret.maxReasoningTokens =
+    options?.maxReasoningTokens ??
+    params?.maxReasoningTokens ??
+    target?.maxReasoningTokens ??
+    options?.thinkingBudget ??
+    params?.thinkingBudget ??
+    target?.thinkingBudget ??
+    reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.presencePenalty =
+    options?.presencePenalty ??
+    params?.presencePenalty ??
+    target.presencePenalty;
+  ret.frequencyPenalty =
+    options?.frequencyPenalty ??
+    params?.frequencyPenalty ??
+    target.frequencyPenalty;
   ret.stopSequences =
     options?.stopSequences ?? params?.stopSequences ?? target.stopSequences;
   ret.safetySettings =
     options?.safetySettings ?? params?.safetySettings ?? target.safetySettings;
+  ret.logprobs = options?.logprobs ?? params?.logprobs ?? target.logprobs;
+  ret.topLogprobs =
+    options?.topLogprobs ?? params?.topLogprobs ?? target.topLogprobs;
   ret.convertSystemMessageToHumanContent =
     options?.convertSystemMessageToHumanContent ??
     params?.convertSystemMessageToHumanContent ??
@@ -45,79 +189,62 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
-
-  ret.tools = options?.tools;
-  // Ensure tools are formatted properly for Gemini
-  const geminiTools = options?.tools
-    ?.map((tool) => {
-      if (
-        "function" in tool &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        "parameters" in (tool.function as Record<string, any>)
-      ) {
-        // Tool is in OpenAI format. Convert to Gemini then return.
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const castTool = tool.function as Record<string, any>;
-        const cleanedParameters = castTool.parameters;
-        if ("$schema" in cleanedParameters) {
-          delete cleanedParameters.$schema;
-        }
-        if ("additionalProperties" in cleanedParameters) {
-          delete cleanedParameters.additionalProperties;
-        }
-        const toolInGeminiFormat: GeminiTool = {
-          functionDeclarations: [
-            {
-              name: castTool.name,
-              description: castTool.description,
-              parameters: cleanedParameters,
-            },
-          ],
-        };
-        return toolInGeminiFormat;
-      } else if ("functionDeclarations" in tool) {
-        return tool;
-      } else {
-        return null;
-      }
-    })
-    .filter((tool): tool is GeminiTool => tool !== null);
-
-  const structuredOutputTools = options?.tools
-    ?.map((tool) => {
-      if ("lc_namespace" in tool) {
-        return tool;
-      } else {
-        return null;
-      }
-    })
-    .filter((tool): tool is StructuredToolInterface => tool !== null);
-
-  if (
-    structuredOutputTools &&
-    structuredOutputTools.length > 0 &&
-    geminiTools &&
-    geminiTools.length > 0
-  ) {
-    throw new Error(
-      `Cannot mix structured tools with Gemini tools.\nReceived ${structuredOutputTools.length} structured tools and ${geminiTools.length} Gemini tools.`
-    );
+  ret.responseModalities =
+    options?.responseModalities ??
+    params?.responseModalities ??
+    target?.responseModalities;
+  ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
+  const toolChoice = processToolChoice(
+    options?.tool_choice,
+    options?.allowed_function_names
+  );
+  if (toolChoice) {
+    ret.tool_choice = toolChoice.tool_choice;
+    ret.allowed_function_names = toolChoice.allowed_function_names;
   }
-  ret.tools = geminiTools ?? structuredOutputTools;
+
+  const tools = options?.tools;
+  if (tools) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ret.tools = convertToGeminiTools(tools as Record<string, any>[]);
+  }
+
+  if (options?.cachedContent) {
+    ret.cachedContent = options.cachedContent;
+  }
 
   return ret;
 }
 
 export function modelToFamily(
   modelName: string | undefined
-): GoogleLLMModelFamily {
+): VertexModelFamily {
   if (!modelName) {
     return null;
   } else if (isModelGemini(modelName)) {
     return "gemini";
+  } else if (isModelGemma(modelName)) {
+    return "gemma";
+  } else if (isModelClaude(modelName)) {
+    return "claude";
   } else {
     return null;
+  }
+}
+
+export function modelToPublisher(modelName: string | undefined): string {
+  const family = modelToFamily(modelName);
+  switch (family) {
+    case "gemini":
+    case "gemma":
+    case "palm":
+      return "google";
+
+    case "claude":
+      return "anthropic";
+
+    default:
+      return "unknown";
   }
 }
 
@@ -128,7 +255,12 @@ export function validateModelParams(
   const model = testParams.model ?? testParams.modelName;
   switch (modelToFamily(model)) {
     case "gemini":
+    case "gemma": // TODO: Are we sure?
       return validateGeminiParams(testParams);
+
+    case "claude":
+      return validateClaudeParams(testParams);
+
     default:
       throw new Error(
         `Unable to verify model params: ${JSON.stringify(params)}`

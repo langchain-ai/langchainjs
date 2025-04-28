@@ -1,10 +1,12 @@
-// Make this a type to override ReadableStream's async iterator type in case
-// the popular web-streams-polyfill is imported - the supplied types
+import { pickRunnableConfigKeys } from "../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
+import type { IterableReadableStreamInterface } from "../types/_internal.js";
+import { raceWithSignal } from "./signal.js";
 
-// in this case don't quite match.
-export type IterableReadableStreamInterface<T> = ReadableStream<T> &
-  AsyncIterable<T>;
+// Re-exported for backwards compatibility
+// Do NOT import this type from this file inside the project. Instead, always import from `types/_internal.js`
+// when using internally
+export type { IterableReadableStreamInterface };
 
 /*
  * Support async iterator syntax for ReadableStreams in all environments.
@@ -68,6 +70,12 @@ export class IterableReadableStream<T>
 
   [Symbol.asyncIterator]() {
     return this;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
+  async [Symbol.asyncDispose]() {
+    await this.return();
   }
 
   static fromReadableStream<T>(stream: ReadableStream<T>) {
@@ -186,6 +194,8 @@ export class AsyncGeneratorWithSetup<
 
   public config?: unknown;
 
+  public signal?: AbortSignal;
+
   private firstResult: Promise<IteratorResult<T>>;
 
   private firstResultUsed = false;
@@ -194,40 +204,59 @@ export class AsyncGeneratorWithSetup<
     generator: AsyncGenerator<T>;
     startSetup?: () => Promise<S>;
     config?: unknown;
+    signal?: AbortSignal;
   }) {
     this.generator = params.generator;
     this.config = params.config;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.signal = params.signal ?? (this.config as any)?.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      const storage = AsyncLocalStorageProviderSingleton.getInstance();
-      void storage.run(params.config, async () => {
-        this.firstResult = params.generator.next();
-        if (params.startSetup) {
-          this.firstResult.then(params.startSetup).then(resolve, reject);
-        } else {
-          this.firstResult.then((_result) => resolve(undefined as S), reject);
-        }
-      });
+      void AsyncLocalStorageProviderSingleton.runWithConfig(
+        pickRunnableConfigKeys(
+          params.config as Record<string, unknown> | undefined
+        ),
+        async () => {
+          this.firstResult = params.generator.next();
+          if (params.startSetup) {
+            this.firstResult.then(params.startSetup).then(resolve, reject);
+          } else {
+            this.firstResult.then((_result) => resolve(undefined as S), reject);
+          }
+        },
+        true
+      );
     });
   }
 
   async next(...args: [] | [TNext]): Promise<IteratorResult<T>> {
+    this.signal?.throwIfAborted();
+
     if (!this.firstResultUsed) {
       this.firstResultUsed = true;
       return this.firstResult;
     }
 
-    const storage = AsyncLocalStorageProviderSingleton.getInstance();
-    return storage.run(this.config, async () => {
-      return this.generator.next(...args);
-    });
+    return AsyncLocalStorageProviderSingleton.runWithConfig(
+      pickRunnableConfigKeys(
+        this.config as Record<string, unknown> | undefined
+      ),
+      this.signal
+        ? async () => {
+            return raceWithSignal(this.generator.next(...args), this.signal);
+          }
+        : async () => {
+            return this.generator.next(...args);
+          },
+      true
+    );
   }
 
   async return(
-    value: TReturn | PromiseLike<TReturn>
+    value?: TReturn | PromiseLike<TReturn>
   ): Promise<IteratorResult<T>> {
     return this.generator.return(value);
   }
@@ -238,6 +267,12 @@ export class AsyncGeneratorWithSetup<
 
   [Symbol.asyncIterator]() {
     return this;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Not present in Node 18 types, required in latest Node 22
+  async [Symbol.asyncDispose]() {
+    await this.return();
   }
 }
 
@@ -258,9 +293,14 @@ export async function pipeGeneratorWithSetup<
   ) => AsyncGenerator<U, UReturn, UNext>,
   generator: AsyncGenerator<T, TReturn, TNext>,
   startSetup: () => Promise<S>,
+  signal: AbortSignal | undefined,
   ...args: A
 ) {
-  const gen = new AsyncGeneratorWithSetup({ generator, startSetup });
+  const gen = new AsyncGeneratorWithSetup({
+    generator,
+    startSetup,
+    signal,
+  });
   const setup = await gen.setup;
   return { output: to(gen, setup, ...args), setup };
 }

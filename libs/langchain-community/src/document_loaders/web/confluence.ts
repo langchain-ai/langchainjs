@@ -14,6 +14,7 @@ export interface ConfluencePagesLoaderParams {
   personalAccessToken?: string;
   limit?: number;
   expand?: string;
+  maxRetries?: number;
 }
 
 /**
@@ -71,6 +72,8 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
 
   public readonly limit: number;
 
+  public readonly maxRetries: number;
+
   /**
    * expand parameter for confluence rest api
    * description can be found at https://developer.atlassian.com/server/confluence/expansions-in-the-rest-api/
@@ -87,6 +90,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     limit = 25,
     expand = "body.storage,version",
     personalAccessToken,
+    maxRetries = 5,
   }: ConfluencePagesLoaderParams) {
     super();
     this.baseUrl = baseUrl;
@@ -96,6 +100,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
     this.limit = limit;
     this.expand = expand;
     this.personalAccessToken = personalAccessToken;
+    this.maxRetries = maxRetries;
   }
 
   /**
@@ -147,30 +152,38 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
   protected async fetchConfluenceData(
     url: string
   ): Promise<ConfluenceAPIResponse> {
-    try {
-      const initialHeaders: HeadersInit = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
+    let retryCounter = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      retryCounter += 1;
+      try {
+        const initialHeaders: HeadersInit = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
 
-      const authHeader = this.authorizationHeader;
-      if (authHeader) {
-        initialHeaders.Authorization = authHeader;
+        const authHeader = this.authorizationHeader;
+        if (authHeader) {
+          initialHeaders.Authorization = authHeader;
+        }
+
+        const response = await fetch(url, {
+          headers: initialHeaders,
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch ${url} from Confluence: ${response.status}. Retrying...`
+          );
+        }
+
+        return await response.json();
+      } catch (error) {
+        if (retryCounter >= this.maxRetries)
+          throw new Error(
+            `Failed to fetch ${url} from Confluence (retry: ${retryCounter}): ${error}`
+          );
       }
-
-      const response = await fetch(url, {
-        headers: initialHeaders,
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch ${url} from Confluence: ${response.status}`
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw new Error(`Failed to fetch ${url} from Confluence: ${error}`);
     }
   }
 
@@ -205,19 +218,44 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
    * @returns A Document instance.
    */
   private createDocumentFromPage(page: ConfluencePage): Document {
+    const htmlContent = page.body.storage.value;
+
+    // Handle both self-closing and regular macros for attachments and view-file
+    const htmlWithoutOtherMacros = htmlContent.replace(
+      /<ac:structured-macro\s+ac:name="(attachments|view-file)"[^>]*(?:\/?>|>.*?<\/ac:structured-macro>)/gs,
+      "[ATTACHMENT]"
+    );
+
+    // Extract and preserve code blocks with unique placeholders
+    const codeBlocks: { language: string; code: string }[] = [];
+    const htmlWithPlaceholders = htmlWithoutOtherMacros.replace(
+      /<ac:structured-macro.*?<ac:parameter ac:name="language">(.*?)<\/ac:parameter>.*?<ac:plain-text-body><!\[CDATA\[([\s\S]*?)\]\]><\/ac:plain-text-body><\/ac:structured-macro>/g,
+      (_, language, code) => {
+        const placeholder = `CODE_BLOCK_${codeBlocks.length}`;
+        codeBlocks.push({ language, code: code.trim() });
+        return `\n${placeholder}\n`;
+      }
+    );
+
     // Convert the HTML content to plain text
-    const plainTextContent = htmlToText(page.body.storage.value, {
+    let plainTextContent = htmlToText(htmlWithPlaceholders, {
       wordwrap: false,
-      preserveNewlines: false,
+      preserveNewlines: true,
+    });
+
+    // Reinsert code blocks with proper markdown formatting
+    codeBlocks.forEach(({ language, code }, index) => {
+      const placeholder = `CODE_BLOCK_${index}`;
+      plainTextContent = plainTextContent.replace(
+        placeholder,
+        `\`\`\`${language}\n${code}\n\`\`\``
+      );
     });
 
     // Remove empty lines
     const textWithoutEmptyLines = plainTextContent.replace(/^\s*[\r\n]/gm, "");
 
-    // Generate the URL
-    const pageUrl = `${this.baseUrl}/spaces/${this.spaceKey}/pages/${page.id}`;
-
-    // Return a langchain document
+    // Rest of the method remains the same...
     return new Document({
       pageContent: textWithoutEmptyLines,
       metadata: {
@@ -225,7 +263,7 @@ export class ConfluencePagesLoader extends BaseDocumentLoader {
         status: page.status,
         title: page.title,
         type: page.type,
-        url: pageUrl,
+        url: `${this.baseUrl}/spaces/${this.spaceKey}/pages/${page.id}`,
         version: page.version?.number,
         updated_by: page.version?.by?.displayName,
         updated_at: page.version?.when,

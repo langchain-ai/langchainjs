@@ -25,7 +25,6 @@ export * as embeddings__fake from "../embeddings/fake.js";
 export * as vectorstores__memory from "../vectorstores/memory.js";
 export * as text_splitter from "../text_splitter.js";
 export * as memory from "../memory/index.js";
-export * as memory__index from "../memory/index.js";
 export * as memory__chat_memory from "../memory/chat_memory.js";
 export * as document_loaders__base from "../document_loaders/base.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
@@ -33,6 +32,7 @@ export * as callbacks from "../callbacks/index.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as retrievers__contextual_compression from "../retrievers/contextual_compression.js";
 export * as retrievers__document_compressors from "../retrievers/document_compressors/index.js";
+export * as retrievers__ensemble from "../retrievers/ensemble.js";
 export * as retrievers__multi_query from "../retrievers/multi_query.js";
 export * as retrievers__multi_vector from "../retrievers/multi_vector.js";
 export * as retrievers__parent_document from "../retrievers/parent_document.js";
@@ -68,8 +68,11 @@ export * as schema__query_constructor from "../schema/query_constructor.js";
 export * as schema__prompt_template from "../schema/prompt_template.js";
 import {
   ChatOpenAI,
+  AzureChatOpenAI,
   OpenAI,
-  OpenAIEmbeddings
+  AzureOpenAI,
+  OpenAIEmbeddings,
+  AzureOpenAIEmbeddings
 } from "@langchain/openai";
 import {
   PromptTemplate,
@@ -127,14 +130,26 @@ const chat_models__openai = {
   ChatOpenAI
 };
 export { chat_models__openai };
+const chat_models__azure_openai = {
+  AzureChatOpenAI
+};
+export { chat_models__azure_openai };
 const llms__openai = {
   OpenAI
 };
 export { llms__openai };
+const llms__azure_openai = {
+  AzureOpenAI
+};
+export { llms__azure_openai };
 const embeddings__openai = {
   OpenAIEmbeddings
 };
 export { embeddings__openai };
+const embeddings__azure_openai = {
+  AzureOpenAIEmbeddings
+};
+export { embeddings__azure_openai };
 const prompts__prompt = {
   PromptTemplate
 };

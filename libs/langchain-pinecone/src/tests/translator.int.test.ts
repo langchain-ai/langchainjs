@@ -109,14 +109,8 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
-      throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();
@@ -144,22 +138,30 @@ describe("Pinecone self query", () => {
       },
     });
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query1 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are less than 90 minutes?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query2 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are rated higher than 8.5?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query3 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are directed by Greta Gerwig?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query4 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are either comedy or drama and are less than 90 minutes?"
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
       "Awawawawa hello hello hello huh where am i?"
     );
-    console.log(query1, query2, query3, query4, query5); // query 5 should return documents
+    // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
   });
 
@@ -260,14 +262,8 @@ describe("Pinecone self query", () => {
       },
     ];
 
-    if (
-      !process.env.PINECONE_API_KEY ||
-      !process.env.PINECONE_ENVIRONMENT ||
-      !testIndexName
-    ) {
-      throw new Error(
-        "PINECONE_ENVIRONMENT and PINECONE_API_KEY and PINECONE_INDEX must be set"
-      );
+    if (!process.env.PINECONE_API_KEY || !testIndexName) {
+      throw new Error("PINECONE_API_KEY and PINECONE_INDEX must be set");
     }
 
     const embeddings = new OpenAIEmbeddings();
@@ -296,22 +292,30 @@ describe("Pinecone self query", () => {
       },
     });
 
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query1 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are less than 90 minutes?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query2 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are rated higher than 8.5?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query3 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are directed by Greta Gerwig?"
     );
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     const query4 = await selfQueryRetriever.getRelevantDocuments(
       "Which movies are either comedy or drama and are less than 90 minutes?"
     );
     const query5 = await selfQueryRetriever.getRelevantDocuments(
       "Awawawawa hello hello hello huh where am i?"
     );
-    console.log(query1, query2, query3, query4, query5); // query 5 should return documents
+    // console.log(query1, query2, query3, query4, query5); // query 5 should return documents
     expect(query5.length).toBeGreaterThan(0);
   });
 });

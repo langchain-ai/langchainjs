@@ -19,15 +19,21 @@ interface FirecrawlLoaderParameters {
   apiKey?: string;
 
   /**
-   * Mode of operation. Can be either "crawl" or "scrape". If not provided, the default value is "crawl".
+   * API URL for Firecrawl.
    */
-  mode?: "crawl" | "scrape";
+  apiUrl?: string;
+  /**
+   * Mode of operation. Can be "crawl", "scrape", or "map". If not provided, the default value is "crawl".
+   */
+  mode?: "crawl" | "scrape" | "map";
   params?: Record<string, unknown>;
 }
 
 interface FirecrawlDocument {
-  markdown: string;
-  metadata: Record<string, unknown>;
+  markdown?: string;
+  html?: string;
+  rawHtml?: string;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -46,9 +52,11 @@ interface FirecrawlDocument {
 export class FireCrawlLoader extends BaseDocumentLoader {
   private apiKey: string;
 
+  private apiUrl?: string;
+
   private url: string;
 
-  private mode: "crawl" | "scrape";
+  private mode: "crawl" | "scrape" | "map";
 
   private params?: Record<string, unknown>;
 
@@ -56,6 +64,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     super();
     const {
       apiKey = getEnvironmentVariable("FIRECRAWL_API_KEY"),
+      apiUrl,
       url,
       mode = "crawl",
       params,
@@ -67,31 +76,59 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     }
 
     this.apiKey = apiKey;
+    this.apiUrl = apiUrl;
     this.url = url;
     this.mode = mode;
     this.params = params;
   }
 
   /**
-   * Loads the data from the Firecrawl.
+   * Loads data from Firecrawl.
    * @returns An array of Documents representing the retrieved data.
    * @throws An error if the data could not be loaded.
    */
   public async load(): Promise<DocumentInterface[]> {
-    const app = new FirecrawlApp({ apiKey: this.apiKey });
+    const params: ConstructorParameters<typeof FirecrawlApp>[0] = {
+      apiKey: this.apiKey,
+    };
+    if (this.apiUrl !== undefined) {
+      params.apiUrl = this.apiUrl;
+    }
+    const app = new FirecrawlApp(params);
     let firecrawlDocs: FirecrawlDocument[];
 
     if (this.mode === "scrape") {
-      const response = await app.scrapeUrl(this.url, this.params);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await app.scrapeUrl(this.url, this.params as any);
       if (!response.success) {
         throw new Error(
           `Firecrawl: Failed to scrape URL. Error: ${response.error}`
         );
       }
-      firecrawlDocs = [response.data as FirecrawlDocument];
+      firecrawlDocs = [response] as FirecrawlDocument[];
     } else if (this.mode === "crawl") {
-      const response = await app.crawlUrl(this.url, this.params, true);
-      firecrawlDocs = response as FirecrawlDocument[];
+      const response = await app.crawlUrl(this.url, this.params);
+      if (!response.success) {
+        throw new Error(
+          `Firecrawl: Failed to crawl URL. Error: ${response.error}`
+        );
+      }
+      firecrawlDocs = response.data as FirecrawlDocument[];
+    } else if (this.mode === "map") {
+      const response = await app.mapUrl(this.url, this.params);
+      if (!response.success) {
+        throw new Error(
+          `Firecrawl: Failed to map URL. Error: ${response.error}`
+        );
+      }
+      firecrawlDocs = response.links as FirecrawlDocument[];
+
+      return firecrawlDocs.map(
+        (doc) =>
+          new Document({
+            pageContent: JSON.stringify(doc),
+          })
+      );
     } else {
       throw new Error(
         `Unrecognized mode '${this.mode}'. Expected one of 'crawl', 'scrape'.`
@@ -101,7 +138,7 @@ export class FireCrawlLoader extends BaseDocumentLoader {
     return firecrawlDocs.map(
       (doc) =>
         new Document({
-          pageContent: doc.markdown || "",
+          pageContent: doc.markdown || doc.html || doc.rawHtml || "",
           metadata: doc.metadata || {},
         })
     );

@@ -12,5 +12,5 @@ test.skip("DriaRetriever", async () => {
   const docs = await retriever.getRelevantDocuments("What is a union type?");
   expect(docs.length).toBe(topK);
 
-  console.log(docs[0].pageContent);
+  // console.log(docs[0].pageContent);
 });

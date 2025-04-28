@@ -1,6 +1,13 @@
 import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
+import { addLangChainErrorFields } from "../errors/index.js";
+
+function configureMustache() {
+  // Use unescaped HTML
+  // https://github.com/janl/mustache.js?tab=readme-ov-file#variables
+  mustache.escape = (text) => text;
+}
 
 /**
  * Type that specifies the format of a template.
@@ -85,7 +92,9 @@ const mustacheTemplateToNodes = (
     if (temp[0] === "name") {
       const name = temp[1].includes(".") ? temp[1].split(".")[0] : temp[1];
       return { type: "variable", name };
-    } else if (temp[0] === "#") {
+    } else if (["#", "&", "^", ">"].includes(temp[0])) {
+      // # represents a section, "&" represents an unescaped variable.
+      // These should both be considered variables.
       return { type: "variable", name: temp[1] };
     } else {
       return { type: "literal", text: temp[1] };
@@ -93,24 +102,32 @@ const mustacheTemplateToNodes = (
   });
 
 export const parseMustache = (template: string) => {
+  configureMustache();
   const parsed = mustache.parse(template);
   return mustacheTemplateToNodes(parsed);
 };
 
-export const interpolateFString = (template: string, values: InputValues) =>
-  parseFString(template).reduce((res, node) => {
+export const interpolateFString = (template: string, values: InputValues) => {
+  return parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
       if (node.name in values) {
-        return res + values[node.name];
+        const stringValue =
+          typeof values[node.name] === "string"
+            ? values[node.name]
+            : JSON.stringify(values[node.name]);
+        return res + stringValue;
       }
       throw new Error(`(f-string) Missing value for input ${node.name}`);
     }
 
     return res + node.text;
   }, "");
+};
 
-export const interpolateMustache = (template: string, values: InputValues) =>
-  mustache.render(template, values);
+export const interpolateMustache = (template: string, values: InputValues) => {
+  configureMustache();
+  return mustache.render(template, values);
+};
 
 /**
  * Type that represents a function that takes a template string and a set
@@ -139,7 +156,14 @@ export const renderTemplate = (
   template: string,
   templateFormat: TemplateFormat,
   inputValues: InputValues
-) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+) => {
+  try {
+    return DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+  } catch (e) {
+    const error = addLangChainErrorFields(e, "INVALID_PROMPT_INPUT");
+    throw error;
+  }
+};
 
 export const parseTemplate = (
   template: string,

@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { AttributeInfo } from "../../../chains/query_constructor/index.js";
 import { SelfQueryRetriever } from "../index.js";
 import { FunctionalTranslator } from "../functional.js";
@@ -73,8 +73,8 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -89,19 +89,19 @@ test("Memory Vector Store Self Query Retriever Test", async () => {
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(0);
 
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(2);
 
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(1);
 });
 
@@ -203,8 +203,8 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter Or Merge
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -224,25 +224,25 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter Or Merge
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(6);
 
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(7);
 
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(6);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Awawawa au au au wawawawa hello?"
   );
-  console.log(query4);
+  // console.log(query4);
   expect(query4.length).toEqual(6); // this one should return documents since default filter takes over
 });
 
@@ -344,8 +344,8 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
   ];
 
   const embeddings = new OpenAIEmbeddings();
-  const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
   });
   const documentContents = "Brief summary of a movie";
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
@@ -365,24 +365,24 @@ test("Memory Vector Store Self Query Retriever Test With Default Filter And Merg
   const query1 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are less than 90 minutes?"
   );
-  console.log(query1);
+  // console.log(query1);
   expect(query1.length).toEqual(0);
 
   const query2 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are rated higher than 8.5?"
   );
-  console.log(query2);
+  // console.log(query2);
   expect(query2.length).toEqual(2);
 
   const query3 = await selfQueryRetriever.getRelevantDocuments(
     "Which movies are directed by Greta Gerwig?"
   );
-  console.log(query3);
+  // console.log(query3);
   expect(query3.length).toEqual(1);
 
   const query4 = await selfQueryRetriever.getRelevantDocuments(
     "Awawawa au au au wawawawa hello?"
   );
-  console.log(query4);
-  expect(query4.length).toEqual(0); // this one should return documents since default filter takes over
+  // console.log(query4);
+  expect(query4.length).toEqual(7); // this one should return documents since default filter takes over
 });

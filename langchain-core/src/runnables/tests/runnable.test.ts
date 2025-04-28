@@ -4,7 +4,7 @@
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
-import { jest } from "@jest/globals";
+import { jest, test, expect, describe } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
@@ -427,29 +427,47 @@ test("Create a runnable sequence with a static method with invalid output and ca
     }
   };
   const runnable = RunnableSequence.from([promptTemplate, llm, parser]);
-  await expect(async () => {
-    const result = await runnable.invoke({ input: "Hello sequence!" });
-    console.log(result);
-  }).rejects.toThrow(OutputParserException);
+  let error: any | undefined;
+  try {
+    await runnable.invoke({ input: "Hello sequence!" });
+  } catch (e: any) {
+    error = e;
+  }
+  expect(error).toBeInstanceOf(OutputParserException);
+  expect(error?.lc_error_code).toEqual("OUTPUT_PARSING_FAILURE");
+});
+
+test("Create a runnable sequence with a static method with no tags", async () => {
+  const seq = RunnableSequence.from([() => "foo", () => "bar"], {
+    omitSequenceTags: true,
+  });
+  const events = [];
+  for await (const event of seq.streamEvents({}, { version: "v2" })) {
+    events.push(event);
+  }
+  expect(events.length).toBeGreaterThan(1);
+  for (const event of events) {
+    expect(event.tags?.find((tag) => tag.startsWith("seq:"))).toBeUndefined();
+  }
 });
 
 test("RunnableSequence can pass config to every step in batched request", async () => {
   let numSeen = 0;
 
-  const addOne = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addOne = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 1;
   };
-  const addTwo = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addTwo = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 2;
   };
-  const addThree = (x: number, options?: { config?: RunnableConfig }) => {
-    if (options?.config?.configurable?.isPresent === true) {
+  const addThree = (x: number, options?: RunnableConfig) => {
+    if (options?.configurable?.isPresent === true) {
       numSeen += 1;
     }
     return x + 3;

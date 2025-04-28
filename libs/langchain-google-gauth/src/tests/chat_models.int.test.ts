@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { test } from "@jest/globals";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -8,20 +8,25 @@ import {
   BaseMessageChunk,
   BaseMessageLike,
   HumanMessage,
+  HumanMessageChunk,
   MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { GeminiTool } from "@langchain/google-common";
+import {
+  BackedBlobStore,
+  MediaBlob,
+  MediaManager,
+  ReadThroughBlobStore,
+  SimpleWebBlobStore,
+} from "@langchain/google-common/experimental/utils/media_core";
+import { GoogleCloudStorageUri } from "@langchain/google-common/experimental/media";
+import { InMemoryStore } from "@langchain/core/stores";
+import { GeminiTool } from "../types.js";
 import { ChatGoogle } from "../chat_models.js";
-import { GoogleLLM } from "../llms.js";
+import { BlobStoreGoogleCloudStorage } from "../media.js";
 
 describe("GAuth Chat", () => {
-  test("platform", async () => {
-    const model = new GoogleLLM();
-    expect(model.platform).toEqual("gcp");
-  });
-
   test("invoke", async () => {
     const model = new ChatGoogle();
     try {
@@ -31,12 +36,22 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
       const content = aiMessage.content[0] as MessageContentComplex;
-      expect(typeof content).toBe("string");
-      expect(content).toBe("2");
+      expect(content).toHaveProperty("type");
+      expect(content.type).toEqual("text");
+
+      const textContent = content as MessageContentText;
+      expect(textContent.text).toBeDefined();
+      expect(textContent.text).toEqual("2");
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -60,7 +75,23 @@ describe("GAuth Chat", () => {
 
       const aiMessage = res as AIMessageChunk;
       expect(aiMessage.content).toBeDefined();
-      expect(["H", "T"]).toContainEqual(aiMessage.content);
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(["H", "T"]).toContainEqual(text);
+
+      /*
+      expect(aiMessage.content.length).toBeGreaterThan(0);
+      expect(aiMessage.content[0]).toBeDefined();
+
+      const content = aiMessage.content[0] as MessageContentComplex;
+      expect(content).toHaveProperty("type");
+      expect(content.type).toEqual("text");
+
+      const textContent = content as MessageContentText;
+      expect(textContent.text).toBeDefined();
+      expect(["H", "T"]).toContainEqual(textContent.text);
+      */
     } catch (e) {
       console.error(e);
       throw e;
@@ -212,5 +243,75 @@ describe("GAuth Chat", () => {
     const model = new ChatGoogle().withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
+  });
+
+  test("media - fileData", async () => {
+    class MemStore extends InMemoryStore<MediaBlob> {
+      get length() {
+        return Object.keys(this.store).length;
+      }
+    }
+    const aliasMemory = new MemStore();
+    const aliasStore = new BackedBlobStore({
+      backingStore: aliasMemory,
+      defaultFetchOptions: {
+        actionIfBlobMissing: undefined,
+      },
+    });
+    const backingStore = new BlobStoreGoogleCloudStorage({
+      uriPrefix: new GoogleCloudStorageUri("gs://test-langchainjs/mediatest/"),
+      defaultStoreOptions: {
+        actionIfInvalid: "prefixPath",
+      },
+    });
+    const blobStore = new ReadThroughBlobStore({
+      baseStore: aliasStore,
+      backingStore,
+    });
+    const resolver = new SimpleWebBlobStore();
+    const mediaManager = new MediaManager({
+      store: blobStore,
+      resolvers: [resolver],
+    });
+    const model = new ChatGoogle({
+      modelName: "gemini-1.5-flash",
+      apiConfig: {
+        mediaManager,
+      },
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "https://js.langchain.com/v0.2/img/brand/wordmark.png",
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    try {
+      const res = await model.invoke(messages);
+
+      console.log(res);
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/LangChain/);
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   });
 });

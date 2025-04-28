@@ -14,8 +14,31 @@ import {
   BaseBedrockInput,
   BedrockLLMInputOutputAdapter,
   type CredentialType,
-} from "../../utils/bedrock.js";
+} from "../../utils/bedrock/index.js";
 import type { SerializedFields } from "../../load/map_keys.js";
+
+const AWS_REGIONS = [
+  "us",
+  "sa",
+  "me",
+  "il",
+  "eu",
+  "cn",
+  "ca",
+  "ap",
+  "af",
+  "us-gov",
+];
+
+const ALLOWED_MODEL_PROVIDERS = [
+  "ai21",
+  "anthropic",
+  "amazon",
+  "cohere",
+  "meta",
+  "mistral",
+  "deepseek",
+];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
 
@@ -30,6 +53,8 @@ const PRELUDE_TOTAL_LENGTH_BYTES = 4;
  */
 export class Bedrock extends LLM implements BaseBedrockInput {
   model = "amazon.titan-tg1-large";
+
+  modelProvider: string;
 
   region: string;
 
@@ -84,17 +109,11 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     super(fields ?? {});
 
     this.model = fields?.model ?? this.model;
-    const allowedModels = [
-      "ai21",
-      "anthropic",
-      "amazon",
-      "cohere",
-      "meta",
-      "mistral",
-    ];
-    if (!allowedModels.includes(this.model.split(".")[0])) {
+    this.modelProvider = getModelProvider(this.model);
+
+    if (!ALLOWED_MODEL_PROVIDERS.includes(this.modelProvider)) {
       throw new Error(
-        `Unknown model: '${this.model}', only these are supported: ${allowedModels}`
+        `Unknown model provider: '${this.modelProvider}', only these are supported: ${ALLOWED_MODEL_PROVIDERS}`
       );
     }
     const region =
@@ -141,7 +160,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     const service = "bedrock-runtime";
     const endpointHost =
       this.endpointHost ?? `${service}.${this.region}.amazonaws.com`;
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     if (this.streaming) {
       const stream = this._streamResponseChunks(prompt, options, runManager);
       let finalResult: GenerationChunk | undefined;
@@ -246,7 +265,7 @@ export class Bedrock extends LLM implements BaseBedrockInput {
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
-    const provider = this.model.split(".")[0];
+    const provider = this.modelProvider;
     const bedrockMethod =
       provider === "anthropic" ||
       provider === "cohere" ||
@@ -369,5 +388,19 @@ export class Bedrock extends LLM implements BaseBedrockInput {
         }
       },
     };
+  }
+}
+
+function isInferenceModel(modelId: string): boolean {
+  const parts = modelId.split(".");
+  return AWS_REGIONS.some((region) => parts[0] === region);
+}
+
+function getModelProvider(modelId: string): string {
+  const parts = modelId.split(".");
+  if (isInferenceModel(modelId)) {
+    return parts[1];
+  } else {
+    return parts[0];
   }
 }

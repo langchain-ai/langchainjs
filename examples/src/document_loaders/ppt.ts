@@ -1,4 +1,4 @@
-import { PPTXLoader } from "langchain/document_loaders/fs/pptx";
+import { PPTXLoader } from "@langchain/community/document_loaders/fs/pptx";
 
 export const run = async () => {
   const loader = new PPTXLoader(

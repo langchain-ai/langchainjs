@@ -39,5 +39,5 @@ test("Test LLMChainExtractor", async () => {
 
   expect(res.text.length).toBeGreaterThan(0);
 
-  console.log({ res });
+  // console.log({ res });
 });

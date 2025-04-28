@@ -1,21 +1,26 @@
 import { CohereClient } from "cohere-ai";
 
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { CohereClientOptions, getCohereClient } from "./client.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the CohereEmbeddings class.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
-  model: string;
+  model?: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
    * limited by the Cohere API to a maximum of 96.
    */
   batchSize?: number;
+
+  /**
+   * Specifies the type of embeddings you want to generate.
+   */
+  embeddingTypes?: Array<string>;
 
   /**
    * Specifies the type of input you're giving to the model.
@@ -37,11 +42,11 @@ export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
-  model = "small";
+  model: string | undefined;
 
   batchSize = 48;
 
-  inputType: string | undefined;
+  embeddingTypes = ["float"];
 
   private client: CohereClient;
 
@@ -52,26 +57,24 @@ export class CohereEmbeddings
   constructor(
     fields?: Partial<CohereEmbeddingsParams> & {
       verbose?: boolean;
-      apiKey?: string;
-    }
+    } & CohereClientOptions
   ) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...fields };
 
     super(fieldsWithDefaults);
 
-    const apiKey =
-      fieldsWithDefaults?.apiKey || getEnvironmentVariable("COHERE_API_KEY");
+    this.client = getCohereClient(fieldsWithDefaults);
+    this.model = fieldsWithDefaults?.model ?? this.model;
 
-    if (!apiKey) {
-      throw new Error("Cohere API key not found");
+    if (!this.model) {
+      throw new Error(
+        "Model not specified for CohereEmbeddings instance. Please provide a model name from the options here: https://docs.cohere.com/reference/embed"
+      );
     }
 
-    this.client = new CohereClient({
-      token: apiKey,
-    });
-    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
-    this.inputType = fieldsWithDefaults?.inputType;
+    this.embeddingTypes =
+      fieldsWithDefaults?.embeddingTypes ?? this.embeddingTypes;
   }
 
   /**
@@ -87,7 +90,9 @@ export class CohereEmbeddings
         model: this.model,
         texts: batch,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        inputType: this.inputType as any,
+        inputType: "search_document" as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        embeddingTypes: this.embeddingTypes as any,
       })
     );
 
@@ -120,8 +125,29 @@ export class CohereEmbeddings
       model: this.model,
       texts: [text],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      inputType: this.inputType as any,
+      inputType: "search_query" as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      embeddingTypes: this.embeddingTypes as any,
     });
+    if ("float" in embeddings && embeddings.float) {
+      return embeddings.float[0];
+    } else if (Array.isArray(embeddings)) {
+      return embeddings[0];
+    } else {
+      throw new Error(
+        `Invalid response from Cohere API. Received: ${JSON.stringify(
+          embeddings,
+          null,
+          2
+        )}`
+      );
+    }
+  }
+
+  async embed(
+    request: Parameters<typeof this.client.embed>[0]
+  ): Promise<number[]> {
+    const { embeddings } = await this.embeddingWithRetry(request);
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];
     } else if (Array.isArray(embeddings)) {

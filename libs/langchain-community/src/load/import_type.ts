@@ -4,6 +4,7 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
   ALIBABA_API_KEY?: string;
+  AUTHENTICATOR?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
   AWS_SECRET_ACCESS_KEY?: string;
@@ -26,7 +27,6 @@ export interface SecretMap {
   GOOGLE_PALM_API_KEY?: string;
   GOOGLE_PLACES_API_KEY?: string;
   GOOGLE_ROUTES_API_KEY?: string;
-  GOOGLE_VERTEX_AI_WEB_CREDENTIALS?: string;
   GRADIENT_ACCESS_TOKEN?: string;
   GRADIENT_WORKSPACE_ID?: string;
   HUGGINGFACEHUB_API_KEY?: string;
@@ -39,6 +39,7 @@ export interface SecretMap {
   MINIMAX_API_KEY?: string;
   MINIMAX_GROUP_ID?: string;
   MOONSHOT_API_KEY?: string;
+  NOVITA_API_KEY?: string;
   PLANETSCALE_DATABASE_URL?: string;
   PLANETSCALE_HOST?: string;
   PLANETSCALE_PASSWORD?: string;
@@ -52,6 +53,9 @@ export interface SecretMap {
   REMOTE_RETRIEVER_AUTH_BEARER?: string;
   REPLICATE_API_TOKEN?: string;
   SEARXNG_API_BASE?: string;
+  SERPAPI_API_KEY?: string;
+  TENCENT_SECRET_ID?: string;
+  TENCENT_SECRET_KEY?: string;
   TOGETHER_AI_API_KEY?: string;
   TURBOPUFFER_API_KEY?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
@@ -59,6 +63,12 @@ export interface SecretMap {
   VECTARA_API_KEY?: string;
   VECTARA_CORPUS_ID?: string;
   VECTARA_CUSTOMER_ID?: string;
+  WATSONX_AI_APIKEY?: string;
+  WATSONX_AI_AUTH_TYPE?: string;
+  WATSONX_AI_BEARER_TOKEN?: string;
+  WATSONX_AI_PASSWORD?: string;
+  WATSONX_AI_URL?: string;
+  WATSONX_AI_USERNAME?: string;
   WATSONX_PROJECT_ID?: string;
   WRITER_API_KEY?: string;
   WRITER_ORG_ID?: string;

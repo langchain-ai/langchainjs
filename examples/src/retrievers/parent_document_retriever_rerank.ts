@@ -44,11 +44,11 @@ const jimDocs = await splitter.createDocuments([`Jim favorite color is blue.`]);
 const pamDocs = await splitter.createDocuments([`Pam favorite color is red.`]);
 
 const vectorstore = await HNSWLib.fromDocuments([], new OpenAIEmbeddings());
-const docstore = new InMemoryStore();
+const byteStore = new InMemoryStore<Uint8Array>();
 
 const retriever = new ParentDocumentRetriever({
   vectorstore,
-  docstore,
+  byteStore,
   // Very small chunks for demo purposes.
   // Use a bigger chunk size for serious use-cases.
   childSplitter: new RecursiveCharacterTextSplitter({
@@ -69,9 +69,7 @@ await retriever.addDocuments(docs);
 
 // This will search for documents in vector store and return for LLM already reranked and sorted document
 // with appropriate minimum relevance score
-const retrievedDocs = await retriever.getRelevantDocuments(
-  "What is Pam's favorite color?"
-);
+const retrievedDocs = await retriever.invoke("What is Pam's favorite color?");
 
 // Pam's favorite color is returned first!
 console.log(JSON.stringify(retrievedDocs, null, 2));

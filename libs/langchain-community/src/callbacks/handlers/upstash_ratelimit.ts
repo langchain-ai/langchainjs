@@ -100,6 +100,8 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
       options.llmOutputTotalTokenField ?? "totalTokens";
     this.llmOutputPromptTokenField =
       options.llmOutputPromptTokenField ?? "promptTokens";
+
+    this.awaitHandlers = true;
   }
 
   /**
@@ -148,7 +150,12 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
     _name?: string
   ): Promise<void> {
     if (this.tokenRatelimit) {
-      const remaining = await this.tokenRatelimit.getRemaining(this.identifier);
+      const result = await this.tokenRatelimit.getRemaining(this.identifier);
+
+      // result of getRemaining was changed from a number to an object in v2.0.0.
+      // we check to make sure that it works with versions before & after:
+      const remaining = typeof result === "number" ? result : result.remaining;
+
       if (remaining <= 0) {
         throw new UpstashRatelimitError("Token limit reached!", "token");
       }

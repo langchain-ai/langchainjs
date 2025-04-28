@@ -69,6 +69,17 @@ export class FunctionMessageChunk extends BaseMessageChunk {
         chunk.response_metadata
       ),
       name: this.name ?? "",
+      id: this.id ?? chunk.id,
     });
   }
+}
+
+export function isFunctionMessage(x: BaseMessage): x is FunctionMessage {
+  return x._getType() === "function";
+}
+
+export function isFunctionMessageChunk(
+  x: BaseMessageChunk
+): x is FunctionMessageChunk {
+  return x._getType() === "function";
 }

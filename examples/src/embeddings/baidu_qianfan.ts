@@ -1,4 +1,4 @@
-import { BaiduQianfanEmbeddings } from "@langchain/community/embeddings/baidu_qianfan";
+import { BaiduQianfanEmbeddings } from "@langchain/baidu-qianfan";
 
 const embeddings = new BaiduQianfanEmbeddings();
 const res = await embeddings.embedQuery(

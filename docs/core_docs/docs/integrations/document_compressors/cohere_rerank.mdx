@@ -13,7 +13,7 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/cohere
+npm install @langchain/cohere @langchain/core
 ```
 
 import CodeBlock from "@theme/CodeBlock";
@@ -33,3 +33,11 @@ import ExampleCompressor from "@examples/document_compressors/cohere_rerank_comp
 From the results, we can see it returned the top 3 documents, and assigned a `relevanceScore` to each.
 
 As expected, the document with the highest `relevanceScore` is the one that references Washington, D.C., with a score of `98.7%`!
+
+### Usage with `CohereClient`
+
+If you are using Cohere on Azure, AWS Bedrock or a standalone instance you can use the `CohereClient` to create a `CohereRerank` instance with your endpoint.
+
+import ExampleClient from "@examples/document_compressors/cohere_rerank_custom_client.ts";
+
+<CodeBlock language="typescript">{ExampleClient}</CodeBlock>
