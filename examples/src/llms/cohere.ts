@@ -1,4 +1,4 @@
-import { Cohere } from "langchain/llms/cohere";
+import { Cohere } from "@langchain/cohere";
 
 export const run = async () => {
   const model = new Cohere({
@@ -6,7 +6,7 @@ export const run = async () => {
     maxTokens: 20,
     maxRetries: 5,
   });
-  const res = await model.call(
+  const res = await model.invoke(
     "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
   );
   console.log({ res });

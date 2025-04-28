@@ -1,12 +1,12 @@
-import { ChatMinimax } from "langchain/chat_models/minimax";
+import { ChatMinimax } from "@langchain/community/chat_models/minimax";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "langchain/prompts";
-import { HumanMessage } from "langchain/schema";
+} from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatMinimax({
-  modelName: "abab5.5-chat",
+  model: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",
@@ -52,7 +52,7 @@ AIMessage {
 // use json_value
 
 const modelMinimax = new ChatMinimax({
-  modelName: "abab5.5-chat",
+  model: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

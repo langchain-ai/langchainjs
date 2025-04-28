@@ -1,11 +1,11 @@
-import { MomentoVectorIndex } from "langchain/vectorstores/momento_vector_index";
+import { MomentoVectorIndex } from "@langchain/community/vectorstores/momento_vector_index";
 // For browser/edge, adjust this to import from "@gomomento/sdk-web";
 import {
   PreviewVectorIndexClient,
   VectorIndexConfigurations,
   CredentialProvider,
 } from "@gomomento/sdk";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { sleep } from "langchain/util/time";
 
 const vectorStore = await MomentoVectorIndex.fromTexts(

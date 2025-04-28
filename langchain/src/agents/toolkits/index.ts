@@ -11,7 +11,6 @@ export {
   createVectorStoreAgent,
   createVectorStoreRouterAgent,
 } from "./vectorstore/vectorstore.js";
-export { ZapierToolKit } from "./zapier/zapier.js";
 export { createRetrieverTool } from "./conversational_retrieval/tool.js";
 export {
   createConversationalRetrievalAgent,

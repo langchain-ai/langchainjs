@@ -1,7 +1,7 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 
-import { OpenAI } from "langchain/llms/openai";
-import { CloudflareKVCache } from "langchain/cache/cloudflare_kv";
+import { OpenAI } from "@langchain/openai";
+import { CloudflareKVCache } from "@langchain/cloudflare";
 
 export interface Env {
   KV_NAMESPACE: KVNamespace;
@@ -14,8 +14,8 @@ export default {
       const cache = new CloudflareKVCache(env.KV_NAMESPACE);
       const model = new OpenAI({
         cache,
-        modelName: "gpt-3.5-turbo-instruct",
-        openAIApiKey: env.OPENAI_API_KEY,
+        model: "gpt-3.5-turbo-instruct",
+        apiKey: env.OPENAI_API_KEY,
       });
       const response = await model.invoke("How are you today?");
       return new Response(JSON.stringify(response), {

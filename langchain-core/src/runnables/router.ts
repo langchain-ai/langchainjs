@@ -1,6 +1,6 @@
 import { Runnable, type RunnableBatchOptions } from "./base.js";
 import { IterableReadableStream } from "../utils/stream.js";
-import type { RunnableConfig } from "./config.js";
+import { ensureConfig, type RunnableConfig } from "./config.js";
 
 export type RouterInput = {
   key: string;
@@ -11,6 +11,29 @@ export type RouterInput = {
 /**
  * A runnable that routes to a set of runnables based on Input['key'].
  * Returns the output of the selected runnable.
+ * @example
+ * ```typescript
+ * import { RouterRunnable, RunnableLambda } from "@langchain/core/runnables";
+ *
+ * const router = new RouterRunnable({
+ *   runnables: {
+ *     toUpperCase: RunnableLambda.from((text: string) => text.toUpperCase()),
+ *     reverseText: RunnableLambda.from((text: string) =>
+ *       text.split("").reverse().join("")
+ *     ),
+ *   },
+ * });
+ *
+ * // Invoke the 'reverseText' runnable
+ * const result1 = router.invoke({ key: "reverseText", input: "Hello World" });
+ *
+ * // "dlroW olleH"
+ *
+ * // Invoke the 'toUpperCase' runnable
+ * const result2 = router.invoke({ key: "toUpperCase", input: "Hello World" });
+ *
+ * // "HELLO WORLD"
+ * ```
  */
 export class RouterRunnable<
   RunInput extends RouterInput,
@@ -43,7 +66,7 @@ export class RouterRunnable<
     if (runnable === undefined) {
       throw new Error(`No runnable associated with key "${key}".`);
     }
-    return runnable.invoke(actualInput, options);
+    return runnable.invoke(actualInput, ensureConfig(options));
   }
 
   async batch(
@@ -77,10 +100,10 @@ export class RouterRunnable<
     }
     const runnables = keys.map((key) => this.runnables[key]);
     const optionsList = this._getOptionsList(options ?? {}, inputs.length);
+    const maxConcurrency =
+      optionsList[0]?.maxConcurrency ?? batchOptions?.maxConcurrency;
     const batchSize =
-      batchOptions?.maxConcurrency && batchOptions.maxConcurrency > 0
-        ? batchOptions?.maxConcurrency
-        : inputs.length;
+      maxConcurrency && maxConcurrency > 0 ? maxConcurrency : inputs.length;
     const batchResults = [];
     for (let i = 0; i < actualInputs.length; i += batchSize) {
       const batchPromises = actualInputs

@@ -5,8 +5,8 @@ import type {
   InputValues,
   PartialValues,
   StringWithAutocomplete,
-} from "../utils/types.js";
-import { type BasePromptValue } from "../prompt_values.js";
+} from "../utils/types/index.js";
+import { type BasePromptValueInterface } from "../prompt_values.js";
 import { BaseOutputParser } from "../output_parsers/index.js";
 import type { SerializedFields } from "../load/map_keys.js";
 import { Runnable } from "../runnables/base.js";
@@ -49,7 +49,7 @@ export interface BasePromptTemplateInput<
 export abstract class BasePromptTemplate<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
-    RunOutput extends BasePromptValue = BasePromptValue,
+    RunOutput extends BasePromptValueInterface = BasePromptValueInterface,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     PartialVariableName extends string = any
   >
@@ -73,6 +73,14 @@ export abstract class BasePromptTemplate<
   outputParser?: BaseOutputParser;
 
   partialVariables: PartialValues<PartialVariableName>;
+
+  /**
+   * Metadata to be used for tracing.
+   */
+  metadata?: Record<string, unknown>;
+
+  /** Tags to be used for tracing. */
+  tags?: string[];
 
   constructor(input: BasePromptTemplateInput) {
     super(input);
@@ -127,10 +135,15 @@ export abstract class BasePromptTemplate<
     input: RunInput,
     options?: BaseCallbackConfig
   ): Promise<RunOutput> {
+    const metadata = {
+      ...this.metadata,
+      ...options?.metadata,
+    };
+    const tags = [...(this.tags ?? []), ...(options?.tags ?? [])];
     return this._callWithConfig(
       (input: RunInput) => this.formatPromptValue(input),
       input,
-      { ...options, runType: "prompt" }
+      { ...options, tags, metadata, runType: "prompt" }
     );
   }
 
@@ -180,7 +193,9 @@ export abstract class BasePromptTemplate<
    */
   static async deserialize(
     data: SerializedBasePromptTemplate
-  ): Promise<BasePromptTemplate<InputValues, BasePromptValue, string>> {
+  ): Promise<
+    BasePromptTemplate<InputValues, BasePromptValueInterface, string>
+  > {
     switch (data._type) {
       case "prompt": {
         const { PromptTemplate } = await import("./prompt.js");

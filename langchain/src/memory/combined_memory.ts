@@ -3,7 +3,7 @@ import {
   MemoryVariables,
   BaseMemory,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**

@@ -1,31 +1,30 @@
-import { BaseChain, ChainInputs } from "./base.js";
-import { BasePromptTemplate } from "../prompts/base.js";
 import {
   BaseLanguageModel,
+  BaseLanguageModelInterface,
   BaseLanguageModelInput,
-} from "../base_language/index.js";
-import {
-  ChainValues,
-  Generation,
-  BasePromptValue,
-  BaseMessage,
-} from "../schema/index.js";
+} from "@langchain/core/language_models/base";
+import type { ChainValues } from "@langchain/core/utils/types";
+import type { Generation } from "@langchain/core/outputs";
+import type { BaseMessage } from "@langchain/core/messages";
+import type { BasePromptValueInterface } from "@langchain/core/prompt_values";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
   BaseLLMOutputParser,
   BaseOutputParser,
-} from "../schema/output_parser.js";
-import { SerializedLLMChain } from "./serde.js";
-import { CallbackManager } from "../callbacks/index.js";
+} from "@langchain/core/output_parsers";
 import {
+  CallbackManager,
   BaseCallbackConfig,
   CallbackManagerForChainRun,
   Callbacks,
-} from "../callbacks/manager.js";
+} from "@langchain/core/callbacks/manager";
+import { Runnable, type RunnableInterface } from "@langchain/core/runnables";
+import { BaseChain, ChainInputs } from "./base.js";
+import { SerializedLLMChain } from "./serde.js";
 import { NoOpOutputParser } from "../output_parsers/noop.js";
-import { Runnable } from "../schema/runnable/base.js";
 
 type LLMType =
-  | BaseLanguageModel
+  | BaseLanguageModelInterface
   | Runnable<BaseLanguageModelInput, string>
   | Runnable<BaseLanguageModelInput, BaseMessage>;
 
@@ -51,10 +50,10 @@ export interface LLMChainInput<
 }
 
 function isBaseLanguageModel(llmLike: unknown): llmLike is BaseLanguageModel {
-  return typeof (llmLike as BaseLanguageModel)._llmType === "function";
+  return typeof (llmLike as BaseLanguageModelInterface)._llmType === "function";
 }
 
-function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
+function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
   if (isBaseLanguageModel(llmLike)) {
     return llmLike;
   } else if ("bound" in llmLike && Runnable.isRunnable(llmLike.bound)) {
@@ -73,16 +72,21 @@ function _getLanguageModel(llmLike: Runnable): BaseLanguageModel {
 }
 
 /**
+ * @deprecated This class will be removed in 1.0.0. Use the LangChain Expression Language (LCEL) instead.
+ * See the example below for how to use LCEL with the LLMChain class:
+ *
  * Chain to run queries against LLMs.
  *
  * @example
  * ```ts
- * import { LLMChain } from "langchain/chains";
- * import { OpenAI } from "langchain/llms/openai";
- * import { PromptTemplate } from "langchain/prompts";
+ * import { ChatPromptTemplate } from "@langchain/core/prompts";
+ * import { ChatOpenAI } from "@langchain/openai";
  *
- * const prompt = PromptTemplate.fromTemplate("Tell me a {adjective} joke");
- * const llm = new LLMChain({ llm: new OpenAI(), prompt });
+ * const prompt = ChatPromptTemplate.fromTemplate("Tell me a {adjective} joke");
+ * const llm = new ChatOpenAI();
+ * const chain = prompt.pipe(llm);
+ *
+ * const response = await chain.invoke({ adjective: "funny" });
  * ```
  */
 export class LLMChain<
@@ -152,7 +156,7 @@ export class LLMChain<
   /** @ignore */
   async _getFinalOutput(
     generations: Generation[],
-    promptValue: BasePromptValue,
+    promptValue: BasePromptValueInterface,
     runManager?: CallbackManagerForChainRun
   ): Promise<unknown> {
     let finalCompletion: unknown;

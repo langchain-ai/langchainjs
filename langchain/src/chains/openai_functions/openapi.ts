@@ -1,24 +1,26 @@
-import type { OpenAI as OpenAIClient } from "openai";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
-import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import type { OpenAIClient } from "@langchain/openai";
+import {
+  JsonSchema7ObjectType,
+  JsonSchema7ArrayType,
+  JsonSchema7Type,
+} from "zod-to-json-schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
-import { OpenAPISpec } from "../../util/openapi.js";
-import { ChainValues } from "../../schema/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { BaseChain } from "../base.js";
-import { LLMChain, LLMChainInput } from "../llm_chain.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import { ChainValues } from "@langchain/core/utils/types";
+import { ChatOpenAI } from "@langchain/openai";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+  BasePromptTemplate,
+} from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { OpenAPISpec } from "../../util/openapi.js";
+import { BaseChain } from "../base.js";
+import { LLMChain, LLMChainInput } from "../llm_chain.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
-import { BaseChatModel } from "../../chat_models/base.js";
-import { BaseFunctionCallOptions } from "../../base_language/index.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.
@@ -173,7 +175,11 @@ export function convertOpenAPISchemaToJSONSchema(
           openAPIProperty,
           spec
         );
-        if (openAPIProperty.required && jsonSchema.required !== undefined) {
+        if (
+          (openAPIProperty.required ||
+            schema.required?.includes(propertyName)) &&
+          jsonSchema.required !== undefined
+        ) {
           jsonSchema.required.push(propertyName);
         }
         return jsonSchema;
@@ -204,7 +210,7 @@ export function convertOpenAPISchemaToJSONSchema(
  * @param spec The OpenAPI specification to convert.
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
-function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
+export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
   openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {

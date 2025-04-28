@@ -1,7 +1,10 @@
-import { Typesense, TypesenseConfig } from "langchain/vectorstores/typesense";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import {
+  Typesense,
+  TypesenseConfig,
+} from "@langchain/community/vectorstores/typesense";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { Client } from "typesense";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const vectorTypesenseClient = new Client({
   nodes: [

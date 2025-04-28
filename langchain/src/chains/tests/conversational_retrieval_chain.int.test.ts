@@ -1,15 +1,13 @@
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";
-import { HNSWLib } from "../../vectorstores/hnswlib.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { PromptTemplate } from "../../prompts/index.js";
+import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Test ConversationalRetrievalQAChain from LLM", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -18,13 +16,15 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
     model,
     vectorStore.asRetriever()
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({ question: "foo", chat_history: "bar" });
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -54,8 +54,8 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with flag option to return source and memory set", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001" });
-  const vectorStore = await HNSWLib.fromTexts(
+  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -90,8 +90,11 @@ test("Test ConversationalRetrievalQAChain from LLM with flag option to return so
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with override default prompts", async () => {
-  const model = new OpenAI({ modelName: "text-ada-001", temperature: 0 });
-  const vectorStore = await HNSWLib.fromTexts(
+  const model = new OpenAI({
+    modelName: "gpt-3.5-turbo-instruct",
+    temperature: 0,
+  });
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -115,7 +118,7 @@ test("Test ConversationalRetrievalQAChain from LLM with override default prompts
     chat_history: "bar",
   });
   expect(res.text).toContain("I am learning from Aliens");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () => {
@@ -123,7 +126,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -149,7 +152,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model", async () 
     chat_history: "bar",
   });
   expect(res.text).toContain("I am learning from Aliens");
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", async () => {
@@ -157,7 +160,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
@@ -172,19 +175,21 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
       },
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
     chat_history: "bar",
   });
 
-  console.log({ res });
+  // console.log({ res });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM without memory", async () => {
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -206,14 +211,16 @@ test("Test ConversationalRetrievalQAChain from LLM without memory", async () => 
     chat_history: "",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: question + res.text,
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model without memory", async () => {
@@ -221,7 +228,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -243,21 +250,23 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
     chat_history: "",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: question + res.text,
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -278,17 +287,21 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
       }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory", async () => {
@@ -296,7 +309,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
     modelName: "gpt-3.5-turbo",
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -318,24 +331,28 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
       }),
     }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });
 
 test("Test ConversationalRetrievalQAChain from LLM with deprecated history syntax", async () => {
   const model = new OpenAI({
     temperature: 0,
   });
-  const vectorStore = await HNSWLib.fromTexts(
+  const vectorStore = await MemoryVectorStore.fromTexts(
     [
       "Mitochondria are the powerhouse of the cell",
       "Foo is red",
@@ -357,12 +374,14 @@ test("Test ConversationalRetrievalQAChain from LLM with deprecated history synta
     chat_history: [],
   });
 
-  console.log({ res });
+  // console.log({ res });
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
     chat_history: [[question, res.text]],
   });
 
-  console.log({ res2 });
+  // console.log({ res2 });
 });

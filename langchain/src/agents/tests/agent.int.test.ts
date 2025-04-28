@@ -1,53 +1,18 @@
 /* eslint-disable no-process-env */
 import { expect, test } from "@jest/globals";
-import { OpenAI } from "../../llms/openai.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { loadAgent } from "../load.js";
+import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { Tool } from "@langchain/core/tools";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { AIMessage } from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { ChatMessageHistory } from "../../stores/message/in_memory.js";
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { Calculator } from "../../tools/calculator.js";
+import { SerpAPI } from "../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { initializeAgentExecutorWithOptions } from "../initialize.js";
 import { WebBrowser } from "../../tools/webbrowser.js";
-import { Tool } from "../../tools/base.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { OutputParserException } from "../../schema/output_parser.js";
-import { AIMessage, AgentStep } from "../../schema/index.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
-import { ChatMessageHistory } from "../../memory/index.js";
-
-test("Run agent from hub", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
-  const tools: Tool[] = [
-    new SerpAPI(undefined, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
-    new Calculator(),
-  ];
-  const agent = await loadAgent(
-    "lc://agents/zero-shot-react-description/agent.json",
-    { llm: model, tools }
-  );
-  const executor = AgentExecutor.fromAgentAndTools({
-    agent,
-    tools,
-    returnIntermediateSteps: true,
-  });
-  const res = await executor.call({
-    input:
-      "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
-  });
-  console.log(
-    {
-      res,
-    },
-    "Run agent from hub response"
-  );
-  expect(res.output).not.toEqual("");
-  expect(res.output).not.toEqual("Agent stopped due to max iterations.");
-});
 
 test("Pass runnable to agent executor", async () => {
   const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
@@ -81,12 +46,12 @@ test("Pass runnable to agent executor", async () => {
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
-  console.log(
-    {
-      res,
-    },
-    "Pass runnable to agent executor"
-  );
+  // console.log(
+  //   {
+  //     res,
+  //   },
+  //   "Pass runnable to agent executor"
+  // );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
 });
@@ -150,12 +115,12 @@ test("Custom output parser", async () => {
     input:
       "Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?",
   });
-  console.log(
-    {
-      res,
-    },
-    "Custom output parser"
-  );
+  // console.log(
+  //   {
+  //     res,
+  //   },
+  //   "Custom output parser"
+  // );
   expect(res.output).toEqual("We did it!");
 });
 
@@ -195,44 +160,14 @@ test("Add a fallback method", async () => {
   const res = await executor.invoke({
     input: "Is the sky blue? Response with a concise answer",
   });
-  console.log(
-    {
-      res,
-    },
-    "Pass runnable to agent executor"
-  );
+  // console.log(
+  //   {
+  //     res,
+  //   },
+  //   "Pass runnable to agent executor"
+  // );
   expect(res.output).not.toEqual("");
   expect(res.output).not.toEqual("Agent stopped due to max iterations.");
-});
-
-test("Run agent locally", async () => {
-  const model = new OpenAI({ temperature: 0, modelName: "text-babbage-001" });
-  const tools = [
-    new SerpAPI(undefined, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
-    new Calculator(),
-  ];
-
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
-    agentType: "zero-shot-react-description",
-  });
-  console.log("Loaded agent.");
-
-  const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
-  console.log(`Executing with input "${input}"...`);
-
-  const result = await executor.call({ input });
-  console.log(
-    {
-      result,
-    },
-    "Run agent locally"
-  );
-  expect(result.output).not.toEqual("");
-  expect(result.output).not.toEqual("Agent stopped due to max iterations.");
 });
 
 test("Run agent with an abort signal", async () => {
@@ -242,10 +177,10 @@ test("Run agent with an abort signal", async () => {
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
   });
-  console.log("Loaded agent.");
+  // console.log("Loaded agent.");
 
   const input = `What is 3 to the fourth power?`;
-  console.log(`Executing with input "${input}"...`);
+  // console.log(`Executing with input "${input}"...`);
 
   const controller = new AbortController();
   await expect(() => {
@@ -273,7 +208,7 @@ test("Run agent with incorrect api key should throw error", async () => {
   const executor = await initializeAgentExecutorWithOptions(tools, model, {
     agentType: "zero-shot-react-description",
   });
-  console.log("Loaded agent.");
+  // console.log("Loaded agent.");
 
   const input = `Who is Olivia Wilde's boyfriend? What is his current age raised to the 0.23 power?`;
 
@@ -281,7 +216,7 @@ test("Run agent with incorrect api key should throw error", async () => {
   // Test that the model throws an error
   await expect(async () => {
     try {
-      await model.call(input);
+      await model.invoke(input);
     } catch (e) {
       error = e;
       throw e;
@@ -311,18 +246,18 @@ test("Run tool web-browser", async () => {
     agentType: "zero-shot-react-description",
     returnIntermediateSteps: true,
   });
-  console.log("Loaded agent.");
+  // console.log("Loaded agent.");
 
   const input = `What is the word of the day on merriam webster`;
-  console.log(`Executing with input "${input}"...`);
+  // console.log(`Executing with input "${input}"...`);
 
   const result = await executor.call({ input });
-  console.log(
-    {
-      result,
-    },
-    "Run tool web-browser"
-  );
+  // console.log(
+  //   {
+  //     result,
+  //   },
+  //   "Run tool web-browser"
+  // );
   expect(result.intermediateSteps.length).toBeGreaterThanOrEqual(1);
   expect(result.intermediateSteps[0].action.tool).toEqual("search");
   expect(result.intermediateSteps[1].action.tool).toEqual("web-browser");
@@ -345,10 +280,10 @@ test("Agent can stream", async () => {
     agentType: "zero-shot-react-description",
     returnIntermediateSteps: false,
   });
-  console.log("Loaded agent.");
+  // console.log("Loaded agent.");
 
   const input = `What is the word of the day on merriam webster`;
-  console.log(`Executing with input "${input}"...`);
+  // console.log(`Executing with input "${input}"...`);
 
   const result = await executor.stream({ input });
   let streamIters = 0;
@@ -356,7 +291,7 @@ test("Agent can stream", async () => {
   const finalResponse: any = [];
   for await (const item of result) {
     streamIters += 1;
-    console.log("Stream item:", item);
+    // console.log("Stream item:", item);
     // each stream does NOT contain the previous steps,
     // because returnIntermediateSteps is false so we
     // push each new stream item to the array.
@@ -405,10 +340,10 @@ test("Agent can stream with chat messages", async () => {
     returnIntermediateSteps: true,
     memory,
   });
-  console.log("Loaded agent.");
+  // console.log("Loaded agent.");
 
   const input = `What is the word of the day on merriam webster, and what is the sum of all letter indices (relative to the english alphabet) in the word?`;
-  console.log(`Executing with input "${input}"...`);
+  // console.log(`Executing with input "${input}"...`);
 
   const result = await executor.stream({ input, chat_history: [] });
   let streamIters = 0;
@@ -416,14 +351,14 @@ test("Agent can stream with chat messages", async () => {
   let finalResponse: any;
   for await (const item of result) {
     streamIters += 1;
-    console.log("Stream item:", item);
+    // console.log("Stream item:", item);
     // each stream contains the previous steps
     // because returnIntermediateSteps is true),
     // so we can overwrite on each stream.
     finalResponse = item;
   }
 
-  console.log("__finalResponse__", finalResponse);
+  // console.log("__finalResponse__", finalResponse);
 
   expect("intermediateSteps" in finalResponse).toBeTruthy();
   expect("output" in finalResponse).toBeTruthy();

@@ -1,6 +1,16 @@
-import { Runnable, RunnableLike, _coerceToRunnable } from "./base.js";
-import { RunnableConfig } from "./config.js";
+import {
+  Runnable,
+  RunnableLike,
+  _coerceToDict,
+  _coerceToRunnable,
+} from "./base.js";
+import {
+  RunnableConfig,
+  getCallbackManagerForConfig,
+  patchConfig,
+} from "./config.js";
 import { CallbackManagerForChainRun } from "../callbacks/manager.js";
+import { concat } from "../utils/stream.js";
 
 /**
  * Type for a branch in the RunnableBranch. It consists of a condition
@@ -92,7 +102,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
    *
    * @example
    * ```ts
-   * import { RunnableBranch } from "langchain/schema/runnable";
+   * import { RunnableBranch } from "@langchain/core/runnables";
    *
    * const branch = RunnableBranch.from([
    *   [(x: number) => x > 0, (x: number) => x + 1],
@@ -143,12 +153,16 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
       const [condition, branchRunnable] = this.branches[i];
       const conditionValue = await condition.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild(`condition:${i + 1}`))
+        patchConfig(config, {
+          callbacks: runManager?.getChild(`condition:${i + 1}`),
+        })
       );
       if (conditionValue) {
         result = await branchRunnable.invoke(
           input,
-          this._patchConfig(config, runManager?.getChild(`branch:${i + 1}`))
+          patchConfig(config, {
+            callbacks: runManager?.getChild(`branch:${i + 1}`),
+          })
         );
         break;
       }
@@ -156,7 +170,9 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     if (!result) {
       result = await this.default.invoke(
         input,
-        this._patchConfig(config, runManager?.getChild("default"))
+        patchConfig(config, {
+          callbacks: runManager?.getChild("branch:default"),
+        })
       );
     }
     return result;
@@ -167,5 +183,83 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
     config: RunnableConfig = {}
   ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke, input, config);
+  }
+
+  async *_streamIterator(input: RunInput, config?: Partial<RunnableConfig>) {
+    const callbackManager_ = await getCallbackManagerForConfig(config);
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      _coerceToDict(input, "input"),
+      config?.runId,
+      undefined,
+      undefined,
+      undefined,
+      config?.runName
+    );
+    let finalOutput;
+    let finalOutputSupported = true;
+    let stream;
+    try {
+      for (let i = 0; i < this.branches.length; i += 1) {
+        const [condition, branchRunnable] = this.branches[i];
+        const conditionValue = await condition.invoke(
+          input,
+          patchConfig(config, {
+            callbacks: runManager?.getChild(`condition:${i + 1}`),
+          })
+        );
+        if (conditionValue) {
+          stream = await branchRunnable.stream(
+            input,
+            patchConfig(config, {
+              callbacks: runManager?.getChild(`branch:${i + 1}`),
+            })
+          );
+          for await (const chunk of stream) {
+            yield chunk;
+            if (finalOutputSupported) {
+              if (finalOutput === undefined) {
+                finalOutput = chunk;
+              } else {
+                try {
+                  finalOutput = concat(finalOutput, chunk);
+                } catch (e) {
+                  finalOutput = undefined;
+                  finalOutputSupported = false;
+                }
+              }
+            }
+          }
+          break;
+        }
+      }
+      if (stream === undefined) {
+        stream = await this.default.stream(
+          input,
+          patchConfig(config, {
+            callbacks: runManager?.getChild("branch:default"),
+          })
+        );
+        for await (const chunk of stream) {
+          yield chunk;
+          if (finalOutputSupported) {
+            if (finalOutput === undefined) {
+              finalOutput = chunk;
+            } else {
+              try {
+                finalOutput = concat(finalOutput, chunk as RunOutput);
+              } catch (e) {
+                finalOutput = undefined;
+                finalOutputSupported = false;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    await runManager?.handleChainEnd(finalOutput ?? {});
   }
 }

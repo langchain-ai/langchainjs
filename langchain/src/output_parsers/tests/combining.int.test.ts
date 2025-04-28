@@ -1,12 +1,12 @@
 import { test } from "@jest/globals";
 
-import { PromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   StructuredOutputParser,
   RegexParser,
   CombiningOutputParser,
 } from "../index.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
 
 test("CombiningOutputParser", async () => {
   const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
@@ -36,11 +36,13 @@ test("CombiningOutputParser", async () => {
     question: "What is the capital of France?",
   });
 
-  console.log(input);
+  // console.log(input);
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const response = await model.invoke(input);
 
-  console.log(response);
+  // console.log(response);
 
-  console.log(await parser.parse(response.content as string));
+  // console.log(await parser.parse(response.content as string));
 });

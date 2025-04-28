@@ -7,7 +7,7 @@ describe("Test FakeListChatLLM", () => {
   test("Should exist", async () => {
     const chat = new FakeListChatModel({ responses: ["test response"] });
     const message = new HumanMessage("test message");
-    const response = await chat.call([message]);
+    const response = await chat.invoke([message]);
 
     expect(typeof response.content).toBe("string");
   });
@@ -17,8 +17,8 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const message = new HumanMessage("test message");
-    const response1 = await chat.call([message]);
-    const response2 = await chat.call([message]);
+    const response1 = await chat.invoke([message]);
+    const response2 = await chat.invoke([message]);
 
     expect(response1.content).toBe("test response 1");
     expect(response2.content).toBe("test response 2");
@@ -29,9 +29,9 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const message = new HumanMessage("test message");
-    const first_response = await chat.call([message]);
-    const second_response = await chat.call([message]);
-    const third_response = await chat.call([message]);
+    const first_response = await chat.invoke([message]);
+    const second_response = await chat.invoke([message]);
+    const third_response = await chat.invoke([message]);
 
     expect(first_response.content).toBe("test response 1");
     expect(second_response.content).toBe("test response 2");
@@ -43,7 +43,7 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const message = new HumanMessage("test message");
-    const response = await chat.call([message], { stop: ["stop"] });
+    const response = await chat.invoke([message], { stop: ["stop"] });
 
     expect(response.content).toBe("stop");
   });
@@ -53,8 +53,8 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
     });
     const message = new HumanMessage("test message");
-    const first_response = await chat.call([message], { stop: ["stop"] });
-    const second_response = await chat.call([message]);
+    const first_response = await chat.invoke([message], { stop: ["stop"] });
+    const second_response = await chat.invoke([message]);
 
     expect(first_response.content).toBe("stop");
     expect(second_response.content).toBe("test response 1");
@@ -67,7 +67,7 @@ describe("Test FakeListChatLLM", () => {
     });
     const sleepSpy = jest.spyOn(chat, "_sleep");
     const message = new HumanMessage("test message");
-    await chat.call([message]);
+    await chat.invoke([message]);
 
     expect(sleepSpy).toHaveBeenCalledTimes(1);
   }, 30000);

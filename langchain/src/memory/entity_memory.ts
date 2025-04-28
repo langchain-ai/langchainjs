@@ -1,27 +1,27 @@
-import { BaseLanguageModel } from "../base_language/index.js";
-import { BaseEntityStore } from "../schema/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { PromptTemplate } from "@langchain/core/prompts";
 
-import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
-import {
-  ENTITY_EXTRACTION_PROMPT,
-  ENTITY_SUMMARIZATION_PROMPT,
-} from "./prompt.js";
 import {
   InputValues,
   MemoryVariables,
   OutputValues,
-  getBufferString,
   getPromptInputKey,
-} from "./base.js";
-import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
+} from "@langchain/core/memory";
+import { getBufferString } from "@langchain/core/messages";
 import { InMemoryEntityStore } from "./stores/entity/in_memory.js";
+import { LLMChain } from "../chains/llm_chain.js";
+import {
+  ENTITY_EXTRACTION_PROMPT,
+  ENTITY_SUMMARIZATION_PROMPT,
+} from "./prompt.js";
+import { BaseEntityStore } from "./stores/entity/base.js";
+import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
 /**
  * Interface for the input parameters required by the EntityMemory class.
  */
 export interface EntityMemoryInput extends BaseChatMemoryInput {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   humanPrefix?: string;
   aiPrefix?: string;
   entityExtractionPrompt?: PromptTemplate;
@@ -81,7 +81,7 @@ export class EntityMemory extends BaseChatMemory implements EntityMemoryInput {
 
   chatHistoryKey = "history";
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   entitiesKey = "entities";
 

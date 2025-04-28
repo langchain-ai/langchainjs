@@ -1,8 +1,7 @@
 import { test, expect } from "@jest/globals";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { SystemMessage } from "@langchain/core/messages";
 import { ConversationSummaryBufferMemory } from "../summary_buffer.js";
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { SystemMessage } from "../../schema/index.js";
 
 test("Test summary buffer memory", async () => {
   const memory = new ConversationSummaryBufferMemory({
@@ -18,8 +17,10 @@ test("Test summary buffer memory", async () => {
     { response: "Hello! I'm doing fine. and you?" }
   );
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -40,8 +41,10 @@ test("Test summary buffer memory with chat model", async () => {
     { input: "How's it going?" },
     { response: "Hello! I'm doing fine. and you?" }
   );
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({
@@ -66,8 +69,10 @@ test("Test summary buffer memory return messages", async () => {
     { response: "Hello! I'm doing fine. and you?" }
   );
 
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await memory.loadMemoryVariables({});
-  console.log("result", result);
+  // console.log("result", result);
 
   await memory.clear();
   expect(await memory.loadMemoryVariables({})).toEqual({

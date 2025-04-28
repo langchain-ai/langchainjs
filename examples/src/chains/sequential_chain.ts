@@ -1,6 +1,6 @@
 import { SequentialChain, LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // This is an LLMChain to write a synopsis given a title of a play and the era it is set in.
 const llm = new OpenAI({ temperature: 0 });
@@ -43,7 +43,7 @@ const overallChain = new SequentialChain({
   outputVariables: ["synopsis", "review"],
   verbose: true,
 });
-const chainExecutionResult = await overallChain.call({
+const chainExecutionResult = await overallChain.invoke({
   title: "Tragedy at sunset on the beach",
   era: "Victorian England",
 });

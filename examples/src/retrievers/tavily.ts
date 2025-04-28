@@ -1,10 +1,10 @@
-import { TavilySearchAPIRetriever } from "langchain/retrievers/tavily_search_api";
+import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 
 const retriever = new TavilySearchAPIRetriever({
   k: 3,
 });
 
-const retrievedDocs = await retriever.getRelevantDocuments(
+const retrievedDocs = await retriever.invoke(
   "What did the speaker say about Justice Breyer in the 2022 State of the Union?"
 );
 console.log({ retrievedDocs });

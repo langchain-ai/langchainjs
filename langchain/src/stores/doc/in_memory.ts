@@ -1,6 +1,6 @@
-import { Document } from "../../document.js";
-import { Docstore } from "../../schema/index.js";
-import { BaseStoreInterface } from "../../schema/storage.js";
+import { Document } from "@langchain/core/documents";
+import { BaseStoreInterface } from "@langchain/core/stores";
+import { Docstore } from "./base.js";
 
 /**
  * Class for storing and retrieving documents in memory asynchronously.

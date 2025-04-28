@@ -1,8 +1,11 @@
-import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
+import { type ClientOptions, OpenAIClient } from "@langchain/openai";
+import { ChainValues } from "@langchain/core/utils/types";
+import {
+  AsyncCaller,
+  AsyncCallerParams,
+} from "@langchain/core/utils/async_caller";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseChain, ChainInputs } from "./base.js";
-import { ChainValues } from "../schema/index.js";
-import { AsyncCaller, AsyncCallerParams } from "../util/async_caller.js";
-import { getEnvironmentVariable } from "../util/env.js";
 
 /**
  * Interface for the input parameters of the OpenAIModerationChain class.
@@ -10,6 +13,8 @@ import { getEnvironmentVariable } from "../util/env.js";
 export interface OpenAIModerationChainInput
   extends ChainInputs,
     AsyncCallerParams {
+  apiKey?: string;
+  /** @deprecated Use "apiKey" instead. */
   openAIApiKey?: string;
   openAIOrganization?: string;
   throwError?: boolean;
@@ -22,7 +27,7 @@ export interface OpenAIModerationChainInput
  * OpenAIModerationChainInput interface.
  * @example
  * ```typescript
- * const moderation = new ChatOpenAIModerationChain({ throwError: true });
+ * const moderation = new OpenAIModerationChain({ throwError: true });
  *
  * const badString = "Bad naughty words from user";
  *
@@ -83,7 +88,9 @@ export class OpenAIModerationChain
     super(fields);
     this.throwError = fields?.throwError ?? false;
     this.openAIApiKey =
-      fields?.openAIApiKey ?? getEnvironmentVariable("OPENAI_API_KEY");
+      fields?.apiKey ??
+      fields?.openAIApiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
 
     if (!this.openAIApiKey) {
       throw new Error("OpenAI API key not found");

@@ -1,10 +1,10 @@
-import { Tool } from "./base.js";
-import { OpenAI } from "../llms/openai.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { OpenAI } from "@langchain/openai";
+import { Tool } from "@langchain/core/tools";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../chains/llm_chain.js";
-import { PromptTemplate } from "../prompts/prompt.js";
 import type { SqlDatabase } from "../sql_db.js";
 import { SqlTable } from "../util/sql_utils.js";
-import { BaseLanguageModel } from "../base_language/index.js";
 
 /**
  * Interface for SQL tools. It has a `db` property which is a SQL
@@ -137,7 +137,7 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
  */
 type QueryCheckerToolArgs = {
   llmChain?: LLMChain;
-  llm?: BaseLanguageModel;
+  llm?: BaseLanguageModelInterface;
   _chainType?: never;
 };
 
@@ -156,7 +156,7 @@ export class QueryCheckerTool extends Tool {
 
   template = `
     {query}
-Double check the sqlite query above for common mistakes, including:
+Double check the SQL query above for common mistakes, including:
 - Using NOT IN with NULL values
 - Using UNION when UNION ALL should have been used
 - Using BETWEEN for exclusive ranges

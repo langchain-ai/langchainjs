@@ -1,9 +1,8 @@
 import { expect, test } from "@jest/globals";
-import { HydeRetriever } from "../hyde.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import { OpenAI } from "../../llms/openai.js";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { Document } from "../../document.js";
+import { HydeRetriever } from "../hyde.js";
 
 test("Hyde retriever", async () => {
   const embeddings = new OpenAIEmbeddings();
@@ -29,7 +28,7 @@ test("Hyde retriever", async () => {
   );
 
   expect(results.length).toBe(1);
-  console.log(results);
+  // console.log(results);
 });
 
 test("Hyde retriever with default prompt template", async () => {
@@ -57,5 +56,5 @@ test("Hyde retriever with default prompt template", async () => {
   );
 
   expect(results.length).toBe(1);
-  console.log(results);
+  // console.log(results);
 });

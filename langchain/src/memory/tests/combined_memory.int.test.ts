@@ -1,9 +1,13 @@
 import { test, expect } from "@jest/globals";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
+import { OpenAI } from "@langchain/openai";
 import { BufferMemory } from "../buffer_memory.js";
 import { CombinedMemory } from "../combined_memory.js";
 import { ConversationSummaryMemory } from "../summary.js";
-import { OpenAI } from "../../llms/openai.js";
-import { AIMessage, HumanMessage, SystemMessage } from "../../schema/index.js";
 
 test("Test combined memory", async () => {
   // buffer memory
@@ -32,7 +36,7 @@ test("Test combined memory", async () => {
   await memory.saveContext({ input: "bar" }, { output: "foo" });
   const expectedString = "Human: bar\nAI: foo";
   const result2 = await memory.loadMemoryVariables({});
-  console.log("result2", result2);
+  // console.log("result2", result2);
 
   expect(result2.chat_history_lines).toStrictEqual(expectedString);
 
@@ -67,7 +71,7 @@ test("Test combined memory return messages", async () => {
   });
 
   const result1 = await memory.loadMemoryVariables({});
-  console.log("result1", result1);
+  // console.log("result1", result1);
   expect(result1).toStrictEqual({
     chat_history_lines: [],
     history: [new SystemMessage("")],
@@ -76,7 +80,7 @@ test("Test combined memory return messages", async () => {
   await memory.saveContext({ input: "bar" }, { output: "foo" });
   const expectedResult = [new HumanMessage("bar"), new AIMessage("foo")];
   const result2 = await memory.loadMemoryVariables({});
-  console.log("result2", result2);
+  // console.log("result2", result2);
 
   expect(result2.chat_history_lines).toStrictEqual(expectedResult);
 

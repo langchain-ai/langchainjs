@@ -1,5 +1,9 @@
 import type { Embeddings } from "../embeddings.js";
-import type { VectorStore, VectorStoreRetriever } from "../vectorstores.js";
+import type {
+  VectorStoreInterface,
+  VectorStoreRetrieverInterface,
+  VectorStore,
+} from "../vectorstores.js";
 import type { Example } from "../prompts/base.js";
 import { Document } from "../documents/document.js";
 import { BaseExampleSelector } from "./base.js";
@@ -15,7 +19,7 @@ function sortedValues<T>(values: Record<string, T>): T[] {
  * class.
  */
 export type SemanticSimilarityExampleSelectorInput<
-  V extends VectorStore = VectorStore
+  V extends VectorStoreInterface = VectorStoreInterface
 > =
   | {
       vectorStore: V;
@@ -26,7 +30,7 @@ export type SemanticSimilarityExampleSelectorInput<
       vectorStoreRetriever?: never;
     }
   | {
-      vectorStoreRetriever: VectorStoreRetriever<V>;
+      vectorStoreRetriever: VectorStoreRetrieverInterface<V>;
       exampleKeys?: string[];
       inputKeys?: string[];
       vectorStore?: never;
@@ -64,9 +68,9 @@ export type SemanticSimilarityExampleSelectorInput<
  * ```
  */
 export class SemanticSimilarityExampleSelector<
-  V extends VectorStore = VectorStore
+  V extends VectorStoreInterface = VectorStoreInterface
 > extends BaseExampleSelector {
-  vectorStoreRetriever: VectorStoreRetriever<V>;
+  vectorStoreRetriever: VectorStoreRetrieverInterface<V>;
 
   exampleKeys?: string[];
 

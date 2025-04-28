@@ -6,3 +6,6 @@ export * from "./prompt.js";
 export * from "./serde.js";
 export * from "./string.js";
 export * from "./template.js";
+export * from "./image.js";
+export * from "./structured.js";
+export * from "./dict.js";

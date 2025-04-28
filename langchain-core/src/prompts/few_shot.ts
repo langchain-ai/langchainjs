@@ -12,7 +12,7 @@ import {
 } from "./template.js";
 import { PromptTemplate } from "./prompt.js";
 import type { SerializedFewShotTemplate } from "./serde.js";
-import type { InputValues, PartialValues } from "../utils/types.js";
+import type { InputValues, PartialValues } from "../utils/types/index.js";
 import type { BaseMessage } from "../messages/index.js";
 import {
   BaseChatPromptTemplate,

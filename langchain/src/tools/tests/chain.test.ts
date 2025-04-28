@@ -1,12 +1,12 @@
 import { test, expect, jest } from "@jest/globals";
 
+import { LLM } from "@langchain/core/language_models/llms";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { ChainTool } from "../chain.js";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
-import { LLM } from "../../llms/base.js";
 import { VectorDBQAChain } from "../../chains/vector_db_qa.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
-import { FakeEmbeddings } from "../../embeddings/fake.js";
 
 class FakeLLM extends LLM {
   _llmType() {
@@ -44,17 +44,19 @@ test("chain tool with llm chain and local callback", async () => {
     prompt: PromptTemplate.fromTemplate("hello world"),
   });
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
-  const result = await tool.call("hi", [
-    {
-      awaitHandlers: true,
-      handleToolStart,
-      handleToolEnd,
-      handleLLMStart,
-      handleLLMEnd,
-      handleChainStart,
-      handleChainEnd,
-    },
-  ]);
+  const result = await tool.invoke("hi", {
+    callbacks: [
+      {
+        awaitHandlers: true,
+        handleToolStart,
+        handleToolEnd,
+        handleLLMStart,
+        handleLLMEnd,
+        handleChainStart,
+        handleChainEnd,
+      },
+    ],
+  });
   expect(result).toMatchInlineSnapshot(`"hello world"`);
   expect(handleToolStart).toBeCalledTimes(1);
   expect(handleToolEnd).toBeCalledTimes(1);
@@ -100,17 +102,19 @@ test("chain tool with vectordbqa chain", async () => {
     await MemoryVectorStore.fromExistingIndex(new FakeEmbeddings())
   );
   const tool = new ChainTool({ chain, name: "fake", description: "fake" });
-  const result = await tool.call("hi", [
-    {
-      awaitHandlers: true,
-      handleToolStart,
-      handleToolEnd,
-      handleLLMStart,
-      handleLLMEnd,
-      handleChainStart,
-      handleChainEnd,
-    },
-  ]);
+  const result = await tool.invoke("hi", {
+    callbacks: [
+      {
+        awaitHandlers: true,
+        handleToolStart,
+        handleToolEnd,
+        handleLLMStart,
+        handleLLMEnd,
+        handleChainStart,
+        handleChainEnd,
+      },
+    ],
+  });
   expect(result).toMatchInlineSnapshot(`
     "Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 

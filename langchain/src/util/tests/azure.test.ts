@@ -1,4 +1,4 @@
-import { getEndpoint, OpenAIEndpointConfig } from "../azure.js";
+import { getEndpoint, OpenAIEndpointConfig } from "@langchain/openai";
 
 describe("getEndpoint", () => {
   it("should return the correct endpoint with azureOpenAIBasePath and azureOpenAIApiDeploymentName", () => {

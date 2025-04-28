@@ -1,4 +1,4 @@
-import { OutputParserException } from "../../schema/output_parser.js";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { OutputParserArgs } from "../agent.js";
 import { AgentActionOutputParser } from "../types.js";
 

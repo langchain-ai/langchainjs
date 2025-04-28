@@ -1,6 +1,6 @@
 import { TimeWeightedVectorStoreRetriever } from "langchain/retrievers/time_weighted";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
 
@@ -22,9 +22,7 @@ const documents = [
 // so that the correct access history metadata is populated
 await retriever.addDocuments(documents);
 
-const results1 = await retriever.getRelevantDocuments(
-  "What is my favourite food?"
-);
+const results1 = await retriever.invoke("What is my favourite food?");
 
 console.log(results1);
 
@@ -34,9 +32,7 @@ console.log(results1);
 ]
  */
 
-const results2 = await retriever.getRelevantDocuments(
-  "What is my favourite food?"
-);
+const results2 = await retriever.invoke("What is my favourite food?");
 
 console.log(results2);
 

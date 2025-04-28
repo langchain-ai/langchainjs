@@ -1,7 +1,6 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAI } from "langchain/llms/openai";
-import { StringOutputParser } from "langchain/schema/output_parser";
-import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
+import { ChatOpenAI, OpenAI } from "@langchain/openai";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 
 const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
   [
@@ -13,7 +12,7 @@ const chatPrompt = ChatPromptTemplate.fromMessages<{ animal: string }>([
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIChatModel = new ChatOpenAI({
-  modelName: "potato!",
+  model: "potato!",
   maxRetries: 0,
 });
 
@@ -32,9 +31,7 @@ const badChain = chatPrompt.pipe(fakeOpenAIChatModel).pipe(outputParser);
 
 const goodChain = prompt.pipe(openAILLM).pipe(outputParser);
 
-const chain = badChain.withFallbacks({
-  fallbacks: [goodChain],
-});
+const chain = badChain.withFallbacks([goodChain]);
 
 const result = await chain.invoke({
   animal: "dragon",

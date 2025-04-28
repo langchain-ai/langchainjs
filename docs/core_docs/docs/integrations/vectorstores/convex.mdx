@@ -21,7 +21,7 @@ npm create convex@latest
 Add query and mutation helpers to `convex/langchain/db.ts`:
 
 ```ts title="convex/langchain/db.ts"
-export * from "langchain/util/convex";
+export * from "@langchain/community/utils/convex";
 ```
 
 ### Configure your schema
@@ -46,6 +46,14 @@ export default defineSchema({
 
 ## Usage
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
 ### Ingestion
 
 import CodeBlock from "@theme/CodeBlock";
@@ -62,3 +70,8 @@ import Search from "@examples/indexes/vector_stores/convex/search.ts";
 <CodeBlock language="typescript" title="convex/myActions.ts">
   {Search}
 </CodeBlock>
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

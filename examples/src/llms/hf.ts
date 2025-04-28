@@ -1,4 +1,4 @@
-import { HuggingFaceInference } from "langchain/llms/hf";
+import { HuggingFaceInference } from "@langchain/community/llms/hf";
 
 export const run = async () => {
   const model = new HuggingFaceInference({
@@ -6,7 +6,7 @@ export const run = async () => {
     temperature: 0.7,
     maxTokens: 50,
   });
-  const res = await model.call(
+  const res = await model.invoke(
     "Question: What would be a good company name a company that makes colorful socks?\nAnswer:"
   );
   console.log({ res });

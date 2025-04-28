@@ -1,7 +1,7 @@
-import { HumanMessage } from "langchain/schema";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { ChatMinimax } from "langchain/chat_models/minimax";
+import { ChatMinimax } from "@langchain/community/chat_models/minimax";
+import { HumanMessage } from "@langchain/core/messages";
 
 const extractionFunctionZodSchema = z.object({
   location: z.string().describe(" The location to get the weather"),
@@ -12,7 +12,7 @@ const extractionFunctionZodSchema = z.object({
 // We translate the above Zod schema into JSON schema using the "zodToJsonSchema" package.
 
 const model = new ChatMinimax({
-  modelName: "abab5.5-chat",
+  model: "abab5.5-chat",
   botSetting: [
     {
       bot_name: "MM Assistant",

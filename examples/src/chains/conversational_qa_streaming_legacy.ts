@@ -1,8 +1,7 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { BufferMemory } from "langchain/memory";
 
 import * as fs from "fs";
@@ -42,7 +41,7 @@ export const run = async () => {
   );
   /* Ask it a question */
   const question = "What did the president say about Justice Breyer?";
-  const res = await chain.call({ question });
+  const res = await chain.invoke({ question });
   console.log({ streamedResponse });
   /*
     {

@@ -1,5 +1,4 @@
-import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { FewShotPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 
 const constitutionalPrompt = `Human: {input_prompt}
 Model: {output_from_model}

@@ -67,4 +67,12 @@ module.exports = {
     "new-cap": ["error", { properties: false, capIsNew: false }],
     'jest/no-focused-tests': 'error',
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

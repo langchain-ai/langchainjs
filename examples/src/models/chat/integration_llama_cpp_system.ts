@@ -1,11 +1,11 @@
-import { ChatLlamaCpp } from "langchain/chat_models/llama_cpp";
-import { SystemMessage, HumanMessage } from "langchain/schema";
+import { ChatLlamaCpp } from "@langchain/community/chat_models/llama_cpp";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 
-const llamaPath = "/Replace/with/path/to/your/model/gguf-llama2-q4_0.bin";
+const llamaPath = "/Replace/with/path/to/your/model/gguf-llama3-Q4_0.bin";
 
-const model = new ChatLlamaCpp({ modelPath: llamaPath });
+const model = await ChatLlamaCpp.initialize({ modelPath: llamaPath });
 
-const response = await model.call([
+const response = await model.invoke([
   new SystemMessage(
     "You are a pirate, responses must be very verbose and in pirate dialect, add 'Arr, m'hearty!' to each sentence."
   ),

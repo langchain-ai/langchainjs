@@ -1,24 +1,30 @@
-import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManager, Callbacks } from "../callbacks/manager.js";
+import type {
+  StructuredToolInterface,
+  ToolInterface,
+} from "@langchain/core/tools";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { CallbackManager, Callbacks } from "@langchain/core/callbacks/manager";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { BaseMessage } from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { Serializable } from "@langchain/core/load/serializable";
+import {
+  Runnable,
+  patchConfig,
+  type RunnableConfig,
+  RunnableSequence,
+  RunnableLike,
+} from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BasePromptTemplate } from "../prompts/base.js";
-import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-  BaseMessage,
-  ChainValues,
-} from "../schema/index.js";
-import { Serializable } from "../load/serializable.js";
-import { StructuredTool, Tool } from "../tools/base.js";
-import {
+import type {
   AgentActionOutputParser,
   AgentInput,
-  RunnableAgentInput,
+  RunnableMultiActionAgentInput,
+  RunnableSingleActionAgentInput,
   SerializedAgent,
   StoppingMethod,
 } from "./types.js";
-import { Runnable } from "../schema/runnable/base.js";
 
 /**
  * Record type for arguments passed to output parsers.
@@ -44,7 +50,7 @@ class ParseError extends Error {
  * functionality for agents, such as handling inputs and outputs.
  */
 export abstract class BaseAgent extends Serializable {
-  declare ToolType: StructuredTool;
+  declare ToolType: StructuredToolInterface;
 
   abstract get inputKeys(): string[];
 
@@ -120,7 +126,8 @@ export abstract class BaseSingleActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
   ): Promise<AgentAction | AgentFinish>;
 }
 
@@ -146,7 +153,8 @@ export abstract class BaseMultiActionAgent extends BaseAgent {
   abstract plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
   ): Promise<AgentAction[] | AgentFinish>;
 }
 
@@ -154,44 +162,203 @@ function isAgentAction(input: unknown): input is AgentAction {
   return !Array.isArray(input) && (input as AgentAction)?.tool !== undefined;
 }
 
+export function isRunnableAgent(x: BaseAgent) {
+  return (
+    (x as RunnableMultiActionAgent | RunnableSingleActionAgent).runnable !==
+    undefined
+  );
+}
+
+// TODO: Remove in the future. Only for backwards compatibility.
+// Allows for the creation of runnables with properties that will
+// be passed to the agent executor constructor.
+export class AgentRunnableSequence<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any
+> extends RunnableSequence<RunInput, RunOutput> {
+  streamRunnable?: boolean;
+
+  singleAction: boolean;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static fromRunnables<RunInput = any, RunOutput = any>(
+    [first, ...runnables]: [
+      RunnableLike<RunInput>,
+      ...RunnableLike[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>
+    ],
+    config: { singleAction: boolean; streamRunnable?: boolean; name?: string }
+  ): AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>> {
+    const sequence = RunnableSequence.from(
+      [first, ...runnables],
+      config.name
+    ) as AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>>;
+    sequence.singleAction = config.singleAction;
+    sequence.streamRunnable = config.streamRunnable;
+    return sequence;
+  }
+
+  static isAgentRunnableSequence(x: Runnable): x is AgentRunnableSequence {
+    return typeof (x as AgentRunnableSequence).singleAction === "boolean";
+  }
+}
+
 /**
- * Class representing a single action agent which accepts runnables.
+ * Class representing a single-action agent powered by runnables.
  * Extends the BaseSingleActionAgent class and provides methods for
  * planning agent actions with runnables.
  */
-export class RunnableAgent extends BaseMultiActionAgent {
-  protected lc_runnable = true;
-
+export class RunnableSingleActionAgent extends BaseSingleActionAgent {
   lc_namespace = ["langchain", "agents", "runnable"];
 
   runnable: Runnable<
     ChainValues & { steps: AgentStep[] },
-    AgentAction[] | AgentAction | AgentFinish
+    AgentAction | AgentFinish
   >;
-
-  stop?: string[];
 
   get inputKeys(): string[] {
     return [];
   }
 
-  constructor(fields: RunnableAgentInput) {
-    super();
+  /**
+   * Whether to stream from the runnable or not.
+   * If true, the underlying LLM is invoked in a streaming fashion to make it
+   * possible to get access to the individual LLM tokens when using
+   * `streamLog` with the Agent Executor. If false then LLM is invoked in a
+   * non-streaming fashion and individual LLM tokens will not be available
+   * in `streamLog`.
+   *
+   * Note that the runnable should still only stream a single action or
+   * finish chunk.
+   */
+  streamRunnable = true;
+
+  defaultRunName = "RunnableAgent";
+
+  constructor(fields: RunnableSingleActionAgentInput) {
+    super(fields);
     this.runnable = fields.runnable;
-    this.stop = fields.stop;
+    this.defaultRunName =
+      fields.defaultRunName ?? this.runnable.name ?? this.defaultRunName;
+    this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
   }
 
   async plan(
     steps: AgentStep[],
     inputs: ChainValues,
-    callbackManager?: CallbackManager
-  ): Promise<AgentAction[] | AgentFinish> {
-    const invokeInput = { ...inputs, steps };
-
-    const output = await this.runnable.invoke(invokeInput, {
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
+  ): Promise<AgentAction | AgentFinish> {
+    const combinedInput = { ...inputs, steps };
+    const combinedConfig = patchConfig(config, {
       callbacks: callbackManager,
-      runName: "RunnableAgent",
+      runName: this.defaultRunName,
     });
+    if (this.streamRunnable) {
+      const stream = await this.runnable.stream(combinedInput, combinedConfig);
+      let finalOutput: AgentAction | AgentFinish | undefined;
+      for await (const chunk of stream) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          throw new Error(
+            [
+              `Multiple agent actions/finishes received in streamed agent output.`,
+              `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+            ].join("\n")
+          );
+        }
+      }
+      if (finalOutput === undefined) {
+        throw new Error(
+          [
+            "No streaming output received from underlying runnable.",
+            `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+          ].join("\n")
+        );
+      }
+      return finalOutput;
+    } else {
+      return this.runnable.invoke(combinedInput, combinedConfig);
+    }
+  }
+}
+
+/**
+ * Class representing a multi-action agent powered by runnables.
+ * Extends the BaseMultiActionAgent class and provides methods for
+ * planning agent actions with runnables.
+ */
+export class RunnableMultiActionAgent extends BaseMultiActionAgent {
+  lc_namespace = ["langchain", "agents", "runnable"];
+
+  // TODO: Rename input to "intermediate_steps"
+  runnable: Runnable<
+    ChainValues & { steps: AgentStep[] },
+    AgentAction[] | AgentAction | AgentFinish
+  >;
+
+  defaultRunName = "RunnableAgent";
+
+  stop?: string[];
+
+  streamRunnable = true;
+
+  get inputKeys(): string[] {
+    return [];
+  }
+
+  constructor(fields: RunnableMultiActionAgentInput) {
+    super(fields);
+    this.runnable = fields.runnable;
+    this.stop = fields.stop;
+    this.defaultRunName =
+      fields.defaultRunName ?? this.runnable.name ?? this.defaultRunName;
+    this.streamRunnable = fields.streamRunnable ?? this.streamRunnable;
+  }
+
+  async plan(
+    steps: AgentStep[],
+    inputs: ChainValues,
+    callbackManager?: CallbackManager,
+    config?: RunnableConfig
+  ): Promise<AgentAction[] | AgentFinish> {
+    const combinedInput = { ...inputs, steps };
+    const combinedConfig = patchConfig(config, {
+      callbacks: callbackManager,
+      runName: this.defaultRunName,
+    });
+    let output;
+    if (this.streamRunnable) {
+      const stream = await this.runnable.stream(combinedInput, combinedConfig);
+      let finalOutput: AgentAction | AgentFinish | AgentAction[] | undefined;
+      for await (const chunk of stream) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          throw new Error(
+            [
+              `Multiple agent actions/finishes received in streamed agent output.`,
+              `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+            ].join("\n")
+          );
+        }
+      }
+      if (finalOutput === undefined) {
+        throw new Error(
+          [
+            "No streaming output received from underlying runnable.",
+            `Set "streamRunnable: false" when initializing the agent to invoke this agent in non-streaming mode.`,
+          ].join("\n")
+        );
+      }
+      output = finalOutput;
+    } else {
+      output = await this.runnable.invoke(combinedInput, combinedConfig);
+    }
 
     if (isAgentAction(output)) {
       return [output];
@@ -200,6 +367,9 @@ export class RunnableAgent extends BaseMultiActionAgent {
     return output;
   }
 }
+
+/** @deprecated Renamed to RunnableMultiActionAgent. */
+export class RunnableAgent extends RunnableMultiActionAgent {}
 
 /**
  * Interface for input data for creating a LLMSingleActionAgent.
@@ -308,6 +478,8 @@ export interface AgentArgs {
  * @remarks This is driven by an LLMChain. The prompt in the LLMChain *must*
  * include a variable called "agent_scratchpad" where the agent can put its
  * intermediary work.
+ *
+ * @deprecated Use {@link https://js.langchain.com/docs/modules/agents/agent_types/ | new agent creation methods}.
  */
 export abstract class Agent extends BaseSingleActionAgent {
   llmChain: LLMChain;
@@ -365,7 +537,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    * @returns A PromptTemplate assembled from the given tools and fields.
    * */
   static createPrompt(
-    _tools: StructuredTool[],
+    _tools: StructuredToolInterface[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
   ): BasePromptTemplate {
@@ -374,8 +546,8 @@ export abstract class Agent extends BaseSingleActionAgent {
 
   /** Construct an agent from an LLM and a list of tools */
   static fromLLMAndTools(
-    _llm: BaseLanguageModel,
-    _tools: StructuredTool[],
+    _llm: BaseLanguageModelInterface,
+    _tools: StructuredToolInterface[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
   ): Agent {
@@ -385,7 +557,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Validate that appropriate tools are passed in
    */
-  static validateTools(_tools: StructuredTool[]): void {}
+  static validateTools(_tools: StructuredToolInterface[]): void {}
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];
@@ -502,7 +674,10 @@ export abstract class Agent extends BaseSingleActionAgent {
    * Load an agent from a json-like object describing it.
    */
   static async deserialize(
-    data: SerializedAgent & { llm?: BaseLanguageModel; tools?: Tool[] }
+    data: SerializedAgent & {
+      llm?: BaseLanguageModelInterface;
+      tools?: ToolInterface[];
+    }
   ): Promise<Agent> {
     switch (data._type) {
       case "zero-shot-react-description": {

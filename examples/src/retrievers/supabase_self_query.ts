@@ -1,12 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 import { AttributeInfo } from "langchain/schema/query_constructor";
-import { Document } from "langchain/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
-import { SupabaseTranslator } from "langchain/retrievers/self_query/supabase";
-import { OpenAI } from "langchain/llms/openai";
-import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { SupabaseTranslator } from "@langchain/community/structured_query/supabase";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
+import { Document } from "@langchain/core/documents";
 
 /**
  * First, we create a bunch of documents. You can load your own documents here instead.
@@ -101,7 +100,7 @@ const client = createClient(
 const vectorStore = await SupabaseVectorStore.fromDocuments(docs, embeddings, {
   client,
 });
-const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
+const selfQueryRetriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,
   documentContents,
@@ -119,16 +118,16 @@ const selfQueryRetriever = await SelfQueryRetriever.fromLLM({
  * We can also ask questions like "Which movies are either comedy or drama and are less than 90 minutes?".
  * The retriever will automatically convert these questions into queries that can be used to retrieve documents.
  */
-const query1 = await selfQueryRetriever.getRelevantDocuments(
+const query1 = await selfQueryRetriever.invoke(
   "Which movies are less than 90 minutes?"
 );
-const query2 = await selfQueryRetriever.getRelevantDocuments(
+const query2 = await selfQueryRetriever.invoke(
   "Which movies are rated higher than 8.5?"
 );
-const query3 = await selfQueryRetriever.getRelevantDocuments(
+const query3 = await selfQueryRetriever.invoke(
   "Which movies are directed by Greta Gerwig?"
 );
-const query4 = await selfQueryRetriever.getRelevantDocuments(
+const query4 = await selfQueryRetriever.invoke(
   "Which movies are either comedy or drama and are less than 90 minutes?"
 );
 console.log(query1, query2, query3, query4);

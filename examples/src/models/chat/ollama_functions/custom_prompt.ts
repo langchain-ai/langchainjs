@@ -1,5 +1,5 @@
-import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
-import { HumanMessage } from "langchain/schema";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Custom system prompt to format tools. You must encourage the model
 // to wrap output in a JSON object with "tool" and "tool_input" properties.

@@ -1,7 +1,7 @@
+import type { AgentFinish } from "@langchain/core/agents";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentActionOutputParser } from "../types.js";
-import { AgentFinish } from "../../schema/index.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
-import { OutputParserException } from "../../schema/output_parser.js";
 
 export const FINAL_ANSWER_ACTION = "Final Answer:";
 /**

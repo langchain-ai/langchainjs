@@ -1,8 +1,11 @@
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
-import type { InputValues } from "../utils/types.js";
-import { StringPromptValue } from "../prompt_values.js";
+import type { InputValues } from "../utils/types/index.js";
+import {
+  type StringPromptValueInterface,
+  StringPromptValue,
+} from "../prompt_values.js";
 import { BasePromptTemplate, type TypedPromptInputValues } from "./base.js";
 
 /**
@@ -15,7 +18,11 @@ export abstract class BaseStringPromptTemplate<
   RunInput extends InputValues = any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any
-> extends BasePromptTemplate<RunInput, StringPromptValue, PartialVariableName> {
+> extends BasePromptTemplate<
+  RunInput,
+  StringPromptValueInterface,
+  PartialVariableName
+> {
   /**
    * Formats the prompt given the input values and returns a formatted
    * prompt value.
@@ -24,7 +31,7 @@ export abstract class BaseStringPromptTemplate<
    */
   async formatPromptValue(
     values: TypedPromptInputValues<RunInput>
-  ): Promise<StringPromptValue> {
+  ): Promise<StringPromptValueInterface> {
     const formattedPrompt = await this.format(values);
     return new StringPromptValue(formattedPrompt);
   }

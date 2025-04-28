@@ -1,5 +1,5 @@
-import { OllamaFunctions } from "langchain/experimental/chat_models/ollama_functions";
-import { HumanMessage } from "langchain/schema";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new OllamaFunctions({
   temperature: 0.1,

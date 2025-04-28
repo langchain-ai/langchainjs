@@ -1,5 +1,5 @@
 import { loadEvaluator } from "langchain/evaluation";
-import { FakeEmbeddings } from "langchain/embeddings/fake";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 const chain = await loadEvaluator("embedding_distance");
 

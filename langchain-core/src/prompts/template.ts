@@ -1,24 +1,38 @@
-import type { InputValues } from "../utils/types.js";
+import mustache from "mustache";
+import { MessageContent } from "../messages/index.js";
+import type { InputValues } from "../utils/types/index.js";
+import { addLangChainErrorFields } from "../errors/index.js";
+
+function configureMustache() {
+  // Use unescaped HTML
+  // https://github.com/janl/mustache.js?tab=readme-ov-file#variables
+  mustache.escape = (text) => text;
+}
 
 /**
- * Type that specifies the format of a template. Only
- * "f-string" is supported currently.
+ * Type that specifies the format of a template.
  */
-export type TemplateFormat = "f-string";
+export type TemplateFormat = "f-string" | "mustache";
 
 /**
  * Type that represents a node in a parsed format string. It can be either
  * a literal text or a variable name.
  */
-type ParsedFStringNode =
+export type ParsedTemplateNode =
   | { type: "literal"; text: string }
   | { type: "variable"; name: string };
 
-export const parseFString = (template: string): ParsedFStringNode[] => {
+/**
+ * Alias for `ParsedTemplateNode` since it is the same for
+ * both f-string and mustache templates.
+ */
+export type ParsedFStringNode = ParsedTemplateNode;
+
+export const parseFString = (template: string): ParsedTemplateNode[] => {
   // Core logic replicated from internals of pythons built in Formatter class.
   // https://github.com/python/cpython/blob/135ec7cefbaffd516b77362ad2b2ad1025af462e/Objects/stringlib/unicode_format.h#L700-L706
   const chars = template.split("");
-  const nodes: ParsedFStringNode[] = [];
+  const nodes: ParsedTemplateNode[] = [];
 
   const nextBracket = (bracket: "}" | "{" | "{}", start: number) => {
     for (let i = start; i < chars.length; i += 1) {
@@ -64,17 +78,56 @@ export const parseFString = (template: string): ParsedFStringNode[] => {
   return nodes;
 };
 
-export const interpolateFString = (template: string, values: InputValues) =>
-  parseFString(template).reduce((res, node) => {
+/**
+ * Convert the result of mustache.parse into an array of ParsedTemplateNode,
+ * to make it compatible with other LangChain string parsing template formats.
+ *
+ * @param {mustache.TemplateSpans} template The result of parsing a mustache template with the mustache.js library.
+ * @returns {ParsedTemplateNode[]}
+ */
+const mustacheTemplateToNodes = (
+  template: mustache.TemplateSpans
+): ParsedTemplateNode[] =>
+  template.map((temp) => {
+    if (temp[0] === "name") {
+      const name = temp[1].includes(".") ? temp[1].split(".")[0] : temp[1];
+      return { type: "variable", name };
+    } else if (["#", "&", "^", ">"].includes(temp[0])) {
+      // # represents a section, "&" represents an unescaped variable.
+      // These should both be considered variables.
+      return { type: "variable", name: temp[1] };
+    } else {
+      return { type: "literal", text: temp[1] };
+    }
+  });
+
+export const parseMustache = (template: string) => {
+  configureMustache();
+  const parsed = mustache.parse(template);
+  return mustacheTemplateToNodes(parsed);
+};
+
+export const interpolateFString = (template: string, values: InputValues) => {
+  return parseFString(template).reduce((res, node) => {
     if (node.type === "variable") {
       if (node.name in values) {
-        return res + values[node.name];
+        const stringValue =
+          typeof values[node.name] === "string"
+            ? values[node.name]
+            : JSON.stringify(values[node.name]);
+        return res + stringValue;
       }
-      throw new Error(`Missing value for input ${node.name}`);
+      throw new Error(`(f-string) Missing value for input ${node.name}`);
     }
 
     return res + node.text;
   }, "");
+};
+
+export const interpolateMustache = (template: string, values: InputValues) => {
+  configureMustache();
+  return mustache.render(template, values);
+};
 
 /**
  * Type that represents a function that takes a template string and a set
@@ -85,23 +138,32 @@ type Interpolator = (template: string, values: InputValues) => string;
 
 /**
  * Type that represents a function that takes a template string and
- * returns an array of `ParsedFStringNode`.
+ * returns an array of `ParsedTemplateNode`.
  */
-type Parser = (template: string) => ParsedFStringNode[];
+type Parser = (template: string) => ParsedTemplateNode[];
 
 export const DEFAULT_FORMATTER_MAPPING: Record<TemplateFormat, Interpolator> = {
   "f-string": interpolateFString,
+  mustache: interpolateMustache,
 };
 
 export const DEFAULT_PARSER_MAPPING: Record<TemplateFormat, Parser> = {
   "f-string": parseFString,
+  mustache: parseMustache,
 };
 
 export const renderTemplate = (
   template: string,
   templateFormat: TemplateFormat,
   inputValues: InputValues
-) => DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+) => {
+  try {
+    return DEFAULT_FORMATTER_MAPPING[templateFormat](template, inputValues);
+  } catch (e) {
+    const error = addLangChainErrorFields(e, "INVALID_PROMPT_INPUT");
+    throw error;
+  }
+};
 
 export const parseTemplate = (
   template: string,
@@ -109,7 +171,7 @@ export const parseTemplate = (
 ) => DEFAULT_PARSER_MAPPING[templateFormat](template);
 
 export const checkValidTemplate = (
-  template: string,
+  template: MessageContent,
   templateFormat: TemplateFormat,
   inputVariables: string[]
 ) => {
@@ -123,7 +185,30 @@ export const checkValidTemplate = (
       acc[v] = "foo";
       return acc;
     }, {} as Record<string, string>);
-    renderTemplate(template, templateFormat, dummyInputs);
+    if (Array.isArray(template)) {
+      template.forEach((message) => {
+        if (message.type === "text") {
+          renderTemplate(message.text, templateFormat, dummyInputs);
+        } else if (message.type === "image_url") {
+          if (typeof message.image_url === "string") {
+            renderTemplate(message.image_url, templateFormat, dummyInputs);
+          } else {
+            const imageUrl = message.image_url.url;
+            renderTemplate(imageUrl, templateFormat, dummyInputs);
+          }
+        } else {
+          throw new Error(
+            `Invalid message template received. ${JSON.stringify(
+              message,
+              null,
+              2
+            )}`
+          );
+        }
+      });
+    } else {
+      renderTemplate(template, templateFormat, dummyInputs);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);

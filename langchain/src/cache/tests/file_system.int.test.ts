@@ -4,8 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as os from "node:os";
 
-import { OpenAI } from "../../llms/openai.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { LocalFileCache } from "../file_system.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +35,7 @@ describe("Test LocalFileCache", () => {
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).not.toBeUndefined();
-    console.log(response1, response2);
+    // console.log(response1, response2);
     expect(response1).toEqual(response2);
   });
 });

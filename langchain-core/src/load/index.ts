@@ -6,7 +6,7 @@ import {
   get_lc_unique_name,
 } from "./serializable.js";
 import { optionalImportEntrypoints as defaultOptionalImportEntrypoints } from "./import_constants.js";
-import * as defaultImportMap from "./import_map.js";
+import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
@@ -29,19 +29,19 @@ function combineAliasesAndInvert(constructor: typeof Serializable) {
 
 async function reviver(
   this: {
-    optionalImportsMap: OptionalImportMap;
-    optionalImportEntrypoints: string[];
-    secretsMap: SecretMap;
-    importMap: Record<string, unknown>;
+    optionalImportsMap?: OptionalImportMap;
+    optionalImportEntrypoints?: string[];
+    secretsMap?: SecretMap;
+    importMap?: Record<string, unknown>;
     path?: string[];
   },
   value: unknown
 ): Promise<unknown> {
   const {
-    optionalImportsMap,
-    optionalImportEntrypoints,
-    importMap,
-    secretsMap,
+    optionalImportsMap = {},
+    optionalImportEntrypoints = [],
+    importMap = {},
+    secretsMap = {},
     path = ["$"],
   } = this;
   const pathStr = path.join(".");
@@ -98,21 +98,32 @@ async function reviver(
     const str = JSON.stringify(serialized);
     const [name, ...namespaceReverse] = serialized.id.slice().reverse();
     const namespace = namespaceReverse.reverse();
-    const finalImportMap = { ...defaultImportMap, ...importMap };
+    const importMaps = { langchain_core: coreImportMap, langchain: importMap };
 
     let module:
-      | (typeof finalImportMap)[keyof typeof finalImportMap]
+      | (typeof importMaps)["langchain_core"][keyof (typeof importMaps)["langchain_core"]]
+      | (typeof importMaps)["langchain"][keyof (typeof importMaps)["langchain"]]
       | OptionalImportMap[keyof OptionalImportMap]
       | null = null;
+
+    const optionalImportNamespaceAliases = [namespace.join("/")];
+    if (namespace[0] === "langchain_community") {
+      optionalImportNamespaceAliases.push(
+        ["langchain", ...namespace.slice(1)].join("/")
+      );
+    }
+    const matchingNamespaceAlias = optionalImportNamespaceAliases.find(
+      (alias) => alias in optionalImportsMap
+    );
     if (
       defaultOptionalImportEntrypoints
         .concat(optionalImportEntrypoints)
         .includes(namespace.join("/")) ||
-      namespace.join("/") in optionalImportsMap
+      matchingNamespaceAlias
     ) {
-      if (namespace.join("/") in optionalImportsMap) {
+      if (matchingNamespaceAlias !== undefined) {
         module = await optionalImportsMap[
-          namespace.join("/") as keyof typeof optionalImportsMap
+          matchingNamespaceAlias as keyof typeof optionalImportsMap
         ];
       } else {
         throw new Error(
@@ -122,13 +133,12 @@ async function reviver(
         );
       }
     } else {
-      // Currently, we only support langchain imports.
-      if (
-        namespace[0] === "langchain" ||
-        namespace[0] === "langchain_core" ||
-        namespace[0] === "langchain_anthropic" ||
-        namespace[0] === "langchain_openai"
-      ) {
+      let finalImportMap:
+        | (typeof importMaps)["langchain"]
+        | (typeof importMaps)["langchain_core"];
+      // Currently, we only support langchain and langchain_core imports.
+      if (namespace[0] === "langchain" || namespace[0] === "langchain_core") {
+        finalImportMap = importMaps[namespace[0]];
         namespace.shift();
       } else {
         throw new Error(`Invalid namespace: ${pathStr} -> ${str}`);
@@ -224,21 +234,13 @@ async function reviver(
 
 export async function load<T>(
   text: string,
-  {
-    secretsMap,
-    importMap,
-    optionalImportsMap,
-    optionalImportEntrypoints,
-  }: {
-    secretsMap: SecretMap;
-    optionalImportsMap: OptionalImportMap;
-    optionalImportEntrypoints: string[];
-    importMap: Record<string, unknown>;
+  mappings?: {
+    secretsMap?: SecretMap;
+    optionalImportsMap?: OptionalImportMap;
+    optionalImportEntrypoints?: string[];
+    importMap?: Record<string, unknown>;
   }
 ): Promise<T> {
   const json = JSON.parse(text);
-  return reviver.call(
-    { secretsMap, optionalImportsMap, optionalImportEntrypoints, importMap },
-    json
-  ) as Promise<T>;
+  return reviver.call({ ...mappings }, json) as Promise<T>;
 }

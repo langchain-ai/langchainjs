@@ -15,6 +15,14 @@ To work with Neo4j Vector Index, you need to install the `neo4j-driver` package:
 npm install neo4j-driver
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
 ### Setup a `Neo4j` self hosted instance with `docker-compose`
 
 `Neo4j` provides a prebuilt Docker image that can be used to quickly setup a self-hosted Neo4j database instance.
@@ -51,6 +59,12 @@ import ExistingGraphExample from "@examples/indexes/vector_stores/neo4j_vector/n
 
 <CodeBlock language="typescript">{ExistingGraphExample}</CodeBlock>
 
+### Metadata filtering
+
+import MetadataExample from "@examples/indexes/vector_stores/neo4j_vector/neo4j_vector_metadata.ts";
+
+<CodeBlock language="typescript">{MetadataExample}</CodeBlock>
+
 # Disclaimer ⚠️
 
 _Security note_: Make sure that the database connection uses credentials
@@ -64,3 +78,8 @@ limit the permissions granted to the credentials used with this tool.
 For example, creating read only users for the database is a good way to
 ensure that the calling code cannot mutate or delete data.
 See the [security page](/docs/security) for more information.
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

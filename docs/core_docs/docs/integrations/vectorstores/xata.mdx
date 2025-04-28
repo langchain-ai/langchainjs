@@ -33,6 +33,14 @@ and then choose the database you created above. This will also generate a `xata.
 
 ## Usage
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core
+```
+
 import CodeBlock from "@theme/CodeBlock";
 
 ### Example: Q&A chatbot using OpenAI and Xata as vector store
@@ -50,3 +58,8 @@ This example shows how to implement semantic search using LangChain.js and Xata.
 import SimSearch from "@examples/indexes/vector_stores/xata_metadata.ts";
 
 <CodeBlock language="typescript">{SimSearch}</CodeBlock>
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

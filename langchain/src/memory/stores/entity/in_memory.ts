@@ -1,4 +1,4 @@
-import { BaseEntityStore } from "../../../schema/index.js";
+import { BaseEntityStore } from "./base.js";
 
 /**
  * An entity store that keeps data in memory. It extends from the

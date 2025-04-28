@@ -1,4 +1,4 @@
-import { Replicate } from "langchain/llms/replicate";
+import { Replicate } from "@langchain/community/llms/replicate";
 
 const model = new Replicate({
   model:
@@ -9,7 +9,7 @@ const prompt = `
 User: How much wood would a woodchuck chuck if a wood chuck could chuck wood?
 Assistant:`;
 
-const res = await model.call(prompt);
+const res = await model.invoke(prompt);
 console.log({ res });
 /*
   {

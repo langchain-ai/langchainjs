@@ -1,9 +1,9 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { VectorStoreInterface } from "@langchain/core/vectorstores";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { ChainValues } from "@langchain/core/utils/types";
 import { BaseChain, ChainInputs } from "./base.js";
-import { VectorStore } from "../vectorstores/base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
-import { ChainValues } from "../schema/index.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,9 +14,13 @@ export type LoadValues = Record<string, any>;
  * input fields required for a VectorDBQAChain. It includes properties
  * such as `vectorstore`, `combineDocumentsChain`,
  * `returnSourceDocuments`, `k`, and `inputKey`.
+ *
+ * @deprecated
+ * Switch to {@link https://js.langchain.com/docs/modules/chains/ | createRetrievalChain}
+ * Will be removed in 0.2.0
  */
 export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
   combineDocumentsChain: BaseChain;
   returnSourceDocuments?: boolean;
   k?: number;
@@ -28,6 +32,10 @@ export interface VectorDBQAChainInput extends Omit<ChainInputs, "memory"> {
  * class and implements the `VectorDBQAChainInput` interface. It performs
  * a similarity search using a vector store and combines the search
  * results using a specified combine documents chain.
+ *
+ * @deprecated
+ * Switch to {@link https://js.langchain.com/docs/modules/chains/ | createRetrievalChain}
+ * Will be removed in 0.2.0
  */
 export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
   static lc_name() {
@@ -48,7 +56,7 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
     );
   }
 
-  vectorstore: VectorStore;
+  vectorstore: VectorStoreInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -140,8 +148,8 @@ export class VectorDBQAChain extends BaseChain implements VectorDBQAChainInput {
    * @returns A new instance of VectorDBQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    vectorstore: VectorStore,
+    llm: BaseLanguageModelInterface,
+    vectorstore: VectorStoreInterface,
     options?: Partial<
       Omit<VectorDBQAChainInput, "combineDocumentsChain" | "vectorstore">
     >

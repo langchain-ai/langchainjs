@@ -1,12 +1,12 @@
 import { AgentExecutor, ChatAgentOutputParser } from "langchain/agents";
 import { formatLogToString } from "langchain/agents/format_scratchpad/log";
-import { OpenAI } from "langchain/llms/openai";
-import { ChatPromptTemplate, PromptTemplate } from "langchain/prompts";
-import { AgentStep } from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI } from "langchain/tools";
-import { Calculator } from "langchain/tools/calculator";
+import { OpenAI } from "@langchain/openai";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { renderTextDescription } from "langchain/tools/render";
+import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define the model to be used */
 const model = new OpenAI({ temperature: 0 });

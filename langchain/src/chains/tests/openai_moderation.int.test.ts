@@ -45,7 +45,7 @@ test("OpenAI Moderation Test in non-english language", async () => {
     "La kato ( Felis catus ) estas hejma specio de malgranda karnovora mamulo."
   );
 
-  console.log(results[0].category_scores);
+  // console.log(results[0].category_scores);
 
   expect(results[0].category_scores["self-harm"]).toBeGreaterThan(0.01); // We can have a more granular control over moderation this way. It's not conclusive, but it's better than nothing if the language is not english.
 });

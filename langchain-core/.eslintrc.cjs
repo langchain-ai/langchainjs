@@ -16,6 +16,7 @@ module.exports = {
     "src/utils/@cfworker",
     "src/utils/fast-json-patch",
     "src/utils/js-sha1",
+    "src/utils/sax-js",
     ".eslintrc.cjs",
     "scripts",
     "node_modules",
@@ -36,6 +37,7 @@ module.exports = {
     "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
     "@typescript-eslint/no-floating-promises": "error",
     "@typescript-eslint/no-misused-promises": "error",
+    "@typescript-eslint/no-this-alias": 0,
     camelcase: 0,
     "class-methods-use-this": 0,
     "import/extensions": [2, "ignorePackages"],
@@ -51,6 +53,7 @@ module.exports = {
     "no-await-in-loop": 0,
     "no-bitwise": 0,
     "no-console": 0,
+    "no-empty-function": 0,
     "no-restricted-syntax": 0,
     "no-shadow": 0,
     "no-continue": 0,
@@ -59,6 +62,7 @@ module.exports = {
     "no-use-before-define": 0,
     "no-useless-constructor": 0,
     "no-return-await": 0,
+    "no-plusplus": 0,
     "consistent-return": 0,
     "no-else-return": 0,
     "func-names": 0,
@@ -66,5 +70,15 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
     'jest/no-focused-tests': 'error',
+    "arrow-body-style": 0,
+    "prefer-destructuring": 0,
   },
+  overrides: [
+    {
+      files: ['**/*.test.ts'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };

@@ -17,13 +17,36 @@ If you are not sure what to work on, we have a few suggestions:
 
 ### New abstractions
 
-We aim to keep the same APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
+We aim to keep the same core APIs between the Python and JS versions of LangChain, where possible. As such we ask that if you have an idea for a new abstraction, please open an issue first to discuss it. This will help us make sure that the API is consistent across both versions. If you're not sure what to work on, we recommend looking at the links above first.
 
 ### Want to add a specific integration?
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/llms/openai.ts)), vector stores (e.g. [FAISS](https://github.com/ewfian/langchainjs/blob/main/langchain/src/vectorstores/faiss.ts)), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/stores/message/redis.ts)), and more.
+LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-redis/src/caches.ts)), and more.
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
+
+You can also check out the [guides on extending LangChain.js](https://js.langchain.com/docs/how_to/#custom) in our docs.
+
+#### Integration packages
+
+Integrations should generally reside in the `libs/langchain-community` workspace and be imported as `@langchain/community/module/name`. More in-depth integrations or suites of integrations may also reside in separate packages that depend on and extend `@langchain/core`. See [`@langchain/google-genai`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-google-genai) for an example.
+
+To make creating packages like this easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
+
+```bash
+$ npx create-langchain-integration
+```
+
+After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this,simply update the `env` section of the `prepare-matrix` job with your package name inside the `PACKAGES` variable:
+
+```yaml
+prepare-matrix:
+  needs: get-changed-files
+  runs-on: ubuntu-latest
+  env:
+    PACKAGES: "anthropic,azure-openai,cloudflare,<your-package>"
+    ...
+```
 
 ### Want to add a feature that's already in Python?
 
@@ -48,7 +71,7 @@ If you are adding an issue, please try to keep it focused on a single modular bu
 If the two issues are related, or blocking, please link them rather than keep them as one single one.
 
 We will try to keep these issues as up to date as possible, though
-with the rapid rate of develop in this field some may get out of date.
+with the rapid rate of development in this field some may get out of date.
 If you notice this happening, please just let us know.
 
 ### 🙋 Getting Help
@@ -65,7 +88,7 @@ good code into the codebase.
 
 ### 🏭 Release process
 
-As of now, LangChain has an ad hoc release process: releases are cut with high frequency via by
+As of now, LangChain has an ad hoc release process: releases are cut with high frequency by
 a developer and published to [npm](https://www.npmjs.com/package/langchain).
 
 LangChain follows the [semver](https://semver.org/) versioning standard. However, as pre-1.0 software,
@@ -73,6 +96,28 @@ even patch releases may contain [non-backwards-compatible changes](https://semve
 
 If your contribution has made its way into a release, we will want to give you credit on Twitter (only if you want though)!
 If you have a Twitter account you would like us to mention, please let us know in the PR or in another manner.
+
+#### Integration releases
+
+The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root. If working from a fork of the repository, make sure to sync the forked `main` branch with the upstream `main` branch first.
+
+You can invoke the script by calling `yarn release`. If new dependencies have been added to the integration package, install them first (i.e. run `yarn`, then `yarn release`).
+
+There are three parameters which can be passed to this script, one required and two optional.
+
+- **Required**: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
+- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- **Optional**: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
+
+This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
+
+Halfway through this script, you'll be prompted to enter an NPM OTP (typically from an authenticator app). This value is not stored anywhere and is only used to authenticate the NPM release.
+
+> **Note** Unless releasing `langchain`, `no` should be answered to all prompts following `Publish @langchain/<package> to npm?`. Then, the change should be manually committed with the following commit message: `<package>[patch]: Release <new version>`. E.g.: `groq[patch]: Release 0.0.1`.
+
+Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
+
+Full example: `yarn release @langchain/core`.
 
 ### 🛠️ Tooling
 
@@ -100,13 +145,21 @@ Next, try running the following common tasks:
 ## ✅ Common Tasks
 
 Our goal is to make it as easy as possible for you to contribute to this project.
-All of the below commands should be run from within the `langchain/` directory unless otherwise noted.
+All of the below commands should be run from within a workspace directory (e.g. `langchain`, `libs/langchain-community`) unless otherwise noted.
 
 ```bash
 cd langchain
 ```
 
+Or, if you are working on a community integration:
+
+```bash
+cd libs/langchain-community
+```
+
 ### Setup
+
+**Prerequisite**: Node version 18+ is required. Please check node version `node -v` and update it if required.
 
 To get started, you will need to install the dependencies for the project. To do so, run:
 
@@ -117,7 +170,7 @@ yarn
 Then, you will need to switch directories into `langchain-core` and build core by running:
 
 ```bash
-cd ../langchain-core
+cd ../../langchain-core
 yarn
 yarn build
 ```
@@ -164,7 +217,7 @@ yarn test
 
 #### Running a single test
 
-To run a single test, run:
+To run a single test, run the following from within a workspace:
 
 ```bash
 yarn test:single /path/to/yourtest.test.ts
@@ -177,7 +230,7 @@ This is useful for developing individual features.
 If you add support for a new external API, please add a new integration test.
 Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` file
+Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` or `libs/langchain-community/.env` file
 like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
 
 We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
@@ -198,22 +251,35 @@ yarn build
 
 LangChain exposes multiple subpaths the user can import from, e.g.
 
-```ts
+```typescript
 import { OpenAI } from "langchain/llms/openai";
 ```
 
 We call these subpaths "entrypoints". In general, you should create a new entrypoint if you are adding a new integration with a 3rd party library. If you're adding self-contained functionality without any external dependencies, you can add it to an existing entrypoint.
 
 In order to declare a new entrypoint that users can import from, you
-should edit the `langchain/scripts/create-entrypoints.js` script. To add an
+should edit the `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js` file. To add an
 entrypoint `tools` that imports from `tools/index.ts` you'd add
-the following to the `entrypoints` variable:
+the following to the `entrypoints` key inside the `config` variable:
 
-```ts
-const entrypoints = {
+```typescript
+// ...
+entrypoints: {
   // ...
   tools: "tools/index",
-};
+},
+// ...
+```
+
+If you're adding a new integration which requires installing a third party dependency, you must add the entrypoint to the `requiresOptionalDependency` array, also located inside `langchain/langchain.config.js` or `libs/langchain-community/langchain.config.js`.
+
+```typescript
+// ...
+requiresOptionalDependency: [
+  // ...
+  "tools/index",
+],
+// ...
 ```
 
 This will make sure the entrypoint is included in the published package,
@@ -223,6 +289,32 @@ and in generated documentation.
 
 ### Contribute Documentation
 
+#### Install dependencies
+
+##### Note: you only need to follow these steps if you are building the docs site locally.
+
+1. [Quarto](https://quarto.org/) - package that converts Jupyter notebooks (`.ipynb` files) into `.mdx` files for serving in Docusaurus.
+2. `yarn build --filter=core_docs` - It's as simple as that! (or you can simply run `yarn build` from `docs/core_docs/`)
+
+All notebooks are converted to `.md` files and automatically gitignored. If you would like to create a non notebook doc, it must be a `.mdx` file.
+
+### Writing Notebooks
+
+When adding new dependencies inside the notebook you must update the import map inside `deno.json` in the root of the LangChain repo.
+
+This is required because the notebooks use the Deno runtime, and Deno formats imports differently than Node.js.
+
+Example:
+
+```typescript
+// Import in Node:
+import { z } from "zod";
+// Import in Deno:
+import { z } from "npm:/zod";
+```
+
+See examples inside `deno.json` for more details.
+
 Docs are largely autogenerated by [TypeDoc](https://typedoc.org/) from the code.
 
 For that reason, we ask that you add good documentation to all classes and methods.
@@ -230,6 +322,10 @@ For that reason, we ask that you add good documentation to all classes and metho
 Similar to linting, we recognize documentation can be annoying. If you do not want to do it, please contact a project maintainer, and they can help you with it. We do not want this to be a blocker for good code getting contributed.
 
 Documentation and the skeleton lives under the `docs/` folder. Example code is imported from under the `examples/` folder.
+
+**If you are contributing an integration, please copy and use the appropriate template from here:**
+
+https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates
 
 ### Running examples
 
@@ -242,7 +338,7 @@ Examples can be added in the `examples/src` directory, e.g.
 example can then be invoked with `yarn example path/to/example` at the top
 level of the repo.
 
-To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`
+To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`.
 
 ### Build Documentation Locally
 

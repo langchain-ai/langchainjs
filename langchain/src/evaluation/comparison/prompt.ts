@@ -6,7 +6,7 @@
  * Zheng, et. al. https://arxiv.org/abs/2306.05685
  */
 
-import { PromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `Act as a fair judge and rate the two responses to the question below.\
  Choose the response that best followed the instructions and answered the question.\

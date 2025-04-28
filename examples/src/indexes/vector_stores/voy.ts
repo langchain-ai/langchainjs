@@ -1,7 +1,7 @@
-import { VoyVectorStore } from "langchain/vectorstores/voy";
+import { VoyVectorStore } from "@langchain/community/vectorstores/voy";
 import { Voy as VoyClient } from "voy-search";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { Document } from "langchain/document";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 
 // Create Voy client using the library.
 const voyClient = new VoyClient();

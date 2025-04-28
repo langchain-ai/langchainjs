@@ -1,5 +1,5 @@
-import { PromptTemplate } from "langchain/prompts";
 import { loadEvaluator } from "langchain/evaluation";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `Respond Y or N based on how well the following response follows the specified rubric. Grade only based on the rubric and expected response:
 

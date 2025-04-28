@@ -1,5 +1,4 @@
-import type { OpenAI as OpenAIClient } from "openai";
-import type { AgentFinish, AgentAction } from "../../schema/index.js";
+import type { AgentFinish, AgentAction } from "@langchain/core/agents";
 
 export type OpenAIAssistantFinish = AgentFinish & {
   runId: string;
@@ -15,8 +14,5 @@ export type OpenAIAssistantAction = AgentAction & {
   threadId: string;
 };
 
-export type OpenAIToolType = Array<
-  | OpenAIClient.Beta.AssistantCreateParams.AssistantToolsCode
-  | OpenAIClient.Beta.AssistantCreateParams.AssistantToolsRetrieval
-  | OpenAIClient.Beta.AssistantCreateParams.AssistantToolsFunction
->;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OpenAIToolType = Array<any>;

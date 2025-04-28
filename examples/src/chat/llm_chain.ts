@@ -1,6 +1,6 @@
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate } from "langchain/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const chat = new ChatOpenAI({ temperature: 0 });
@@ -18,7 +18,7 @@ export const run = async () => {
     llm: chat,
   });
 
-  const response = await chain.call({
+  const response = await chain.invoke({
     input_language: "English",
     output_language: "French",
     text: "I love programming.",

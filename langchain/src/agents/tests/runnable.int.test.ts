@@ -1,21 +1,22 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import { AgentExecutor } from "../executor.js";
-import { ChatOpenAI } from "../../chat_models/openai.js";
-import { ChatPromptTemplate, MessagesPlaceholder } from "../../prompts/chat.js";
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
 import {
   AIMessage,
-  AgentStep,
   BaseMessage,
   FunctionMessage,
-} from "../../schema/index.js";
-import { RunnableSequence } from "../../schema/runnable/base.js";
-import { SerpAPI } from "../../tools/serpapi.js";
-import { formatToOpenAIFunction } from "../../tools/convert_to_openai.js";
-import { Calculator } from "../../tools/calculator.js";
+} from "@langchain/core/messages";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentExecutor } from "../executor.js";
+import { SerpAPI } from "../../util/testing/tools/serpapi.js";
+import { Calculator } from "../../util/testing/tools/calculator.js";
 import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
-import { LLMChain } from "../../chains/llm_chain.js";
-import { OpenAIAgent } from "../openai/index.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];
@@ -28,7 +29,7 @@ test("Runnable variant", async () => {
   ]);
 
   const modelWithTools = model.bind({
-    functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
   });
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
@@ -57,23 +58,25 @@ test("Runnable variant", async () => {
     tools,
   });
 
-  console.log("Loaded agent executor");
+  // console.log("Loaded agent executor");
 
   const query = "What is the weather in New York?";
-  console.log(`Calling agent executor with query: ${query}`);
+  // console.log(`Calling agent executor with query: ${query}`);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
   const result = await executor.invoke({
     input: query,
   });
-  console.log(result);
+  // console.log(result);
 });
 
-test("Runnable variant works with executor", async () => {
-  // Prepare tools
+test("Runnable variant executor astream log", async () => {
   const tools = [new Calculator(), new SerpAPI()];
-  const runnableModel = new ChatOpenAI({
+  const model = new ChatOpenAI({
     modelName: "gpt-4",
     temperature: 0,
-  }).bind({});
+    streaming: true,
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
@@ -81,24 +84,49 @@ test("Runnable variant works with executor", async () => {
     new MessagesPlaceholder("agent_scratchpad"),
   ]);
 
-  // Prepare agent chain
-  const llmChain = new LLMChain({
+  const modelWithTools = model.bind({
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
+  });
+
+  const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
+    steps.flatMap(({ action, observation }) => {
+      if ("messageLog" in action && action.messageLog !== undefined) {
+        const log = action.messageLog as BaseMessage[];
+        return log.concat(new FunctionMessage(observation, action.tool));
+      } else {
+        return [new AIMessage(action.log)];
+      }
+    });
+
+  const runnableAgent = RunnableSequence.from([
+    {
+      input: (i: { input: string; steps: AgentStep[] }) => i.input,
+      agent_scratchpad: (i: { input: string; steps: AgentStep[] }) =>
+        formatAgentSteps(i.steps),
+    },
     prompt,
-    llm: runnableModel,
-  });
-  const agent = new OpenAIAgent({
-    llmChain,
+    modelWithTools,
+    new OpenAIFunctionsAgentOutputParser(),
+  ]);
+
+  const executor = AgentExecutor.fromAgentAndTools({
+    agent: runnableAgent,
     tools,
   });
 
-  // Prepare and run executor
-  const executor = new AgentExecutor({
-    agent,
-    tools,
-  });
-  const result = await executor.invoke({
-    input: "What is the weather in New York?",
-  });
+  // console.log("Loaded agent executor");
 
-  console.log(result);
+  const query = "What is the weather in New York?";
+  // console.log(`Calling agent executor with query: ${query}`);
+  const stream = await executor.streamLog({
+    input: query,
+  });
+  let hasSeenLLMLogPatch = false;
+  for await (const chunk of stream) {
+    // console.log(JSON.stringify(chunk));
+    if (chunk.ops[0].path.includes("ChatOpenAI")) {
+      hasSeenLLMLogPatch = true;
+    }
+  }
+  expect(hasSeenLLMLogPatch).toBe(true);
 });

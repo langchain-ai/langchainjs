@@ -1,7 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import process from "process";
+import { HumanMessage } from "@langchain/core/messages";
 
 process.env.LANGCHAIN_TRACING_V2 = "true";
 
@@ -14,14 +13,14 @@ const prompts = [
   "Say hello to Mary.",
 ];
 
-const res = await model.generate(prompts);
+const res = await model.invoke(prompts);
 console.log({ res });
 
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
 });
 
-const messages = prompts.map((prompt) => [new HumanMessage(prompt)]);
+const messages = prompts.map((prompt) => new HumanMessage(prompt));
 
-const res2 = await chat.generate(messages);
+const res2 = await chat.invoke(messages);
 console.log({ res2 });

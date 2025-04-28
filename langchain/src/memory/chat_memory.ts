@@ -1,11 +1,11 @@
-import { BaseChatMessageHistory } from "../schema/index.js";
+import { BaseChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMemory,
   InputValues,
   OutputValues,
   getInputValue,
   getOutputValue,
-} from "./base.js";
+} from "@langchain/core/memory";
 import { ChatMessageHistory } from "../stores/message/in_memory.js";
 
 /**

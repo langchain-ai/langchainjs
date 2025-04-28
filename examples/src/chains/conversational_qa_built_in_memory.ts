@@ -1,15 +1,14 @@
-import { Document } from "langchain/document";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { LLMChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { BaseMessage } from "langchain/schema";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { BaseMessage } from "@langchain/core/messages";
 
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 
@@ -66,7 +65,7 @@ Standalone question:`
 
 // Initialize fast and slow LLMs, along with chains for each
 const fasterModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
 });
 const fasterChain = new LLMChain({
   llm: fasterModel,
@@ -74,7 +73,7 @@ const fasterChain = new LLMChain({
 });
 
 const slowerModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 const slowerChain = new LLMChain({
   llm: slowerModel,
@@ -138,7 +137,7 @@ const chain = RunnableSequence.from([
     },
     // Fetch relevant context based on the question
     context: async (input: { question: string }) =>
-      retriever.getRelevantDocuments(input.question),
+      retriever.invoke(input.question),
   },
   performQuestionAnswering,
 ]);

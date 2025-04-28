@@ -1,11 +1,8 @@
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  StructuredOutputParser,
-  RegexParser,
-  CombiningOutputParser,
-} from "langchain/output_parsers";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { OpenAI } from "@langchain/openai";
+import { RegexParser, CombiningOutputParser } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
   answer: "answer to the user's question",

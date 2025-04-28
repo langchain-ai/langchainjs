@@ -2,27 +2,13 @@ import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
-import { BaseTracer, Run } from "../base.js";
+import { Run } from "../base.js";
 import { HumanMessage } from "../../messages/index.js";
+import { FakeTracer } from "../../utils/testing/index.js";
 
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
-
-class FakeTracer extends BaseTracer {
-  name = "fake_tracer";
-
-  runs: Run[] = [];
-
-  constructor() {
-    super();
-  }
-
-  protected persistRun(run: Run): Promise<void> {
-    this.runs.push(run);
-    return Promise.resolve();
-  }
-}
 
 const serialized: Serialized = {
   lc: 1,
@@ -62,6 +48,8 @@ test("Test LLMRun", async () => {
     child_runs: [],
     extra: {},
     tags: [],
+    dotted_order: `20210503T000000000001Z${runId}`,
+    trace_id: runId,
   };
   expect(run).toEqual(compareRun);
 });
@@ -82,6 +70,7 @@ test("Test Chat Model Run", async () => {
     {
       "child_execution_order": 1,
       "child_runs": [],
+      "dotted_order": "20210503T000000000001Z${runId}",
       "end_time": 1620000000000,
       "events": [
         {
@@ -108,6 +97,7 @@ test("Test Chat Model Run", async () => {
               "kwargs": {
                 "additional_kwargs": {},
                 "content": "Avast",
+                "response_metadata": {},
               },
               "lc": 1,
               "type": "constructor",
@@ -131,6 +121,7 @@ test("Test Chat Model Run", async () => {
       },
       "start_time": 1620000000000,
       "tags": [],
+      "trace_id": "${runId}",
     }
   `
   );
@@ -171,6 +162,8 @@ test("Test Chain Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
+    dotted_order: `20210503T000000000001Z${runId}`,
+    trace_id: runId,
   };
   await tracer.handleChainStart(serialized, { foo: "bar" }, runId);
   await tracer.handleChainEnd({ foo: "bar" }, runId);
@@ -206,6 +199,8 @@ test("Test Tool Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
+    dotted_order: `20210503T000000000001Z${runId}`,
+    trace_id: runId,
   };
   await tracer.handleToolStart(serialized, "test", runId);
   await tracer.handleToolEnd("output", runId);
@@ -245,6 +240,8 @@ test("Test Retriever Run", async () => {
     child_runs: [],
     extra: {},
     tags: [],
+    dotted_order: `20210503T000000000001Z${runId}`,
+    trace_id: runId,
   };
 
   await tracer.handleRetrieverStart(serialized, "bar", runId);
@@ -317,6 +314,8 @@ test("Test nested runs", async () => {
             child_runs: [],
             extra: {},
             tags: [],
+            dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000002Z${toolRunId}.20210503T000000000003Z${llmRunId}`,
+            trace_id: chainRunId,
           },
         ],
         end_time: 1620000000000,
@@ -339,6 +338,8 @@ test("Test nested runs", async () => {
         run_type: "tool",
         extra: {},
         tags: [],
+        dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000002Z${toolRunId}`,
+        trace_id: chainRunId,
       },
       {
         id: llmRunId2,
@@ -367,6 +368,8 @@ test("Test nested runs", async () => {
         child_runs: [],
         extra: {},
         tags: [],
+        dotted_order: `20210503T000000000001Z${chainRunId}.20210503T000000000004Z${llmRunId2}`,
+        trace_id: chainRunId,
       },
     ],
     id: chainRunId,
@@ -395,6 +398,9 @@ test("Test nested runs", async () => {
     run_type: "chain",
     extra: {},
     tags: [],
+    parent_run_id: undefined,
+    dotted_order: `20210503T000000000001Z${chainRunId}`,
+    trace_id: chainRunId,
   };
   expect(tracer.runs.length).toBe(1);
   expect(tracer.runs[0]).toEqual(compareRun);

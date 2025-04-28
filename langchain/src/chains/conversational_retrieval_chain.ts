@@ -1,17 +1,13 @@
-import { PromptTemplate } from "../prompts/prompt.js";
-import { BaseLanguageModel } from "../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { BaseMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ChainValues } from "@langchain/core/utils/types";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { SerializedChatVectorDBQAChain } from "./serde.js";
-import {
-  ChainValues,
-  BaseMessage,
-  HumanMessage,
-  AIMessage,
-} from "../schema/index.js";
-import { BaseRetriever } from "../schema/retriever.js";
 import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { QAChainParams, loadQAChain } from "./question_answering/load.js";
-import { CallbackManagerForChainRun } from "../callbacks/manager.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -28,7 +24,7 @@ Standalone question:`;
  * ConversationalRetrievalQAChain class.
  */
 export interface ConversationalRetrievalQAChainInput extends ChainInputs {
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
   combineDocumentsChain: BaseChain;
   questionGeneratorChain: LLMChain;
   returnSourceDocuments?: boolean;
@@ -37,37 +33,79 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
 }
 
 /**
+ * @deprecated This class will be removed in 1.0.0. See below for an example implementation using
+ * `createRetrievalChain`.
+ *
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.
  * @example
  * ```typescript
- * const model = new ChatAnthropic({});
+ * import { ChatAnthropic } from "@langchain/anthropic";
+ * import {
+ *   ChatPromptTemplate,
+ *   MessagesPlaceholder,
+ * } from "@langchain/core/prompts";
+ * import { BaseMessage } from "@langchain/core/messages";
+ * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ * import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
+ * import { createRetrievalChain } from "langchain/chains/retrieval";
  *
- * const text = fs.readFileSync("state_of_the_union.txt", "utf8");
+ * const retriever = ...your retriever;
+ * const llm = new ChatAnthropic();
  *
- * const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
- * const docs = await textSplitter.createDocuments([text]);
- *
- * const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
- *
- * const chain = ConversationalRetrievalQAChain.fromLLM(
- *   model,
- *   vectorStore.asRetriever(),
- * );
- *
- * const question = "What did the president say about Justice Breyer?";
- *
- * const res = await chain.call({ question, chat_history: "" });
- * console.log(res);
- *
- * const chatHistory = `${question}\n${res.text}`;
- * const followUpRes = await chain.call({
- *   question: "Was that nice?",
- *   chat_history: chatHistory,
+ * // Contextualize question
+ * const contextualizeQSystemPrompt = `
+ * Given a chat history and the latest user question
+ * which might reference context in the chat history,
+ * formulate a standalone question which can be understood
+ * without the chat history. Do NOT answer the question, just
+ * reformulate it if needed and otherwise return it as is.`;
+ * const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
+ *   ["system", contextualizeQSystemPrompt],
+ *   new MessagesPlaceholder("chat_history"),
+ *   ["human", "{input}"],
+ * ]);
+ * const historyAwareRetriever = await createHistoryAwareRetriever({
+ *   llm,
+ *   retriever,
+ *   rephrasePrompt: contextualizeQPrompt,
  * });
- * console.log(followUpRes);
  *
+ * // Answer question
+ * const qaSystemPrompt = `
+ * You are an assistant for question-answering tasks. Use
+ * the following pieces of retrieved context to answer the
+ * question. If you don't know the answer, just say that you
+ * don't know. Use three sentences maximum and keep the answer
+ * concise.
+ * \n\n
+ * {context}`;
+ * const qaPrompt = ChatPromptTemplate.fromMessages([
+ *   ["system", qaSystemPrompt],
+ *   new MessagesPlaceholder("chat_history"),
+ *   ["human", "{input}"],
+ * ]);
+ *
+ * // Below we use createStuffDocuments_chain to feed all retrieved context
+ * // into the LLM. Note that we can also use StuffDocumentsChain and other
+ * // instances of BaseCombineDocumentsChain.
+ * const questionAnswerChain = await createStuffDocumentsChain({
+ *   llm,
+ *   prompt: qaPrompt,
+ * });
+ *
+ * const ragChain = await createRetrievalChain({
+ *   retriever: historyAwareRetriever,
+ *   combineDocsChain: questionAnswerChain,
+ * });
+ *
+ * // Usage:
+ * const chat_history: BaseMessage[] = [];
+ * const response = await ragChain.invoke({
+ *   chat_history,
+ *   input: "...",
+ * });
  * ```
  */
 export class ConversationalRetrievalQAChain
@@ -92,7 +130,7 @@ export class ConversationalRetrievalQAChain
     );
   }
 
-  retriever: BaseRetriever;
+  retriever: BaseRetrieverInterface;
 
   combineDocumentsChain: BaseChain;
 
@@ -238,16 +276,16 @@ export class ConversationalRetrievalQAChain
   /**
    * Static method to create a new ConversationalRetrievalQAChain from a
    * BaseLanguageModel and a BaseRetriever.
-   * @param llm {@link BaseLanguageModel} instance used to generate a new question.
-   * @param retriever {@link BaseRetriever} instance used to retrieve relevant documents.
+   * @param llm {@link BaseLanguageModelInterface} instance used to generate a new question.
+   * @param retriever {@link BaseRetrieverInterface} instance used to retrieve relevant documents.
    * @param options.returnSourceDocuments Whether to return source documents in the final output
    * @param options.questionGeneratorChainOptions Options to initialize the standalone question generation chain used as the first internal step
    * @param options.qaChainOptions {@link QAChainParams} used to initialize the QA chain used as the second internal step
    * @returns A new instance of ConversationalRetrievalQAChain.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
-    retriever: BaseRetriever,
+    llm: BaseLanguageModelInterface,
+    retriever: BaseRetrieverInterface,
     options: {
       outputKey?: string; // not used
       returnSourceDocuments?: boolean;
@@ -256,7 +294,7 @@ export class ConversationalRetrievalQAChain
       /** @deprecated Pass in qaChainOptions.prompt instead */
       qaTemplate?: string;
       questionGeneratorChainOptions?: {
-        llm?: BaseLanguageModel;
+        llm?: BaseLanguageModelInterface;
         template?: string;
       };
       qaChainOptions?: QAChainParams;

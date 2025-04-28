@@ -1,5 +1,5 @@
-import { AgentAction, AgentFinish } from "../../schema/index.js";
-import { OutputParserException } from "../../schema/output_parser.js";
+import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { AgentActionOutputParser } from "../types.js";
 
 /**

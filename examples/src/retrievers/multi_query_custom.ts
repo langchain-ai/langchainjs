@@ -1,11 +1,11 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { CohereEmbeddings } from "@langchain/cohere";
 import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
-import { BaseOutputParser } from "langchain/schema/output_parser";
-import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
 import { pull } from "langchain/hub";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 type LineList = {
   lines: string[];
@@ -53,7 +53,7 @@ const vectorstore = await MemoryVectorStore.fromTexts(
     "Mitochondrien bestehen aus Lipiden",
   ],
   [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
-  new CohereEmbeddings()
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const model = new ChatAnthropic({});
 const llmChain = new LLMChain({
@@ -68,7 +68,7 @@ const retriever = new MultiQueryRetriever({
 });
 
 const query = "What are mitochondria made of?";
-const retrievedDocs = await retriever.getRelevantDocuments(query);
+const retrievedDocs = await retriever.invoke(query);
 
 /*
   Generated queries: Was besteht ein Mitochondrium?,Aus welchen Komponenten setzt sich ein Mitochondrium zusammen?  ,Welche Moleküle finden sich in einem Mitochondrium?

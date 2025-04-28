@@ -1,8 +1,8 @@
-import { PromptTemplate } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new ChatOpenAI({
-  modelName: "badmodel",
+  model: "badmodel",
 });
 const promptTemplate = PromptTemplate.fromTemplate(
   "Tell me a joke about {topic}"
@@ -12,8 +12,8 @@ const chain = promptTemplate.pipe(model);
 
 const result = await chain.batch(
   [{ topic: "bears" }, { topic: "cats" }],
-  {},
-  { returnExceptions: true, maxConcurrency: 1 }
+  { maxConcurrency: 1 },
+  { returnExceptions: true }
 );
 
 console.log(result);

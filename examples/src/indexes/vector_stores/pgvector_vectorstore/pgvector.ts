@@ -1,9 +1,12 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { PGVectorStore } from "langchain/vectorstores/pgvector";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import {
+  DistanceStrategy,
+  PGVectorStore,
+} from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 
 // First, follow set-up instructions at
-// https://js.langchain.com/docs/modules/indexes/vector_stores/integrations/pgvector
+// https://js.langchain.com/docs/integrations/vectorstores/pgvector/#setting-up-an-instance
 
 const config = {
   postgresConnectionOptions: {
@@ -21,6 +24,8 @@ const config = {
     contentColumnName: "content",
     metadataColumnName: "metadata",
   },
+  // supported distance strategies: cosine (default), innerProduct, or euclidean
+  distanceStrategy: "cosine" as DistanceStrategy,
 };
 
 const pgvectorStore = await PGVectorStore.initialize(
@@ -29,8 +34,8 @@ const pgvectorStore = await PGVectorStore.initialize(
 );
 
 await pgvectorStore.addDocuments([
-  { pageContent: "what's this", metadata: { a: 2 } },
-  { pageContent: "Cat drinks milk", metadata: { a: 1 } },
+  { pageContent: "what's this", metadata: { a: 2, b: ["tag1", "tag2"] } },
+  { pageContent: "Cat drinks milk", metadata: { a: 1, b: ["tag2"] } },
 ]);
 
 const results = await pgvectorStore.similaritySearch("water", 1);
@@ -39,6 +44,57 @@ console.log(results);
 
 /*
   [ Document { pageContent: 'Cat drinks milk', metadata: { a: 1 } } ]
+*/
+
+// Filtering is supported
+const results2 = await pgvectorStore.similaritySearch("water", 1, {
+  a: 2,
+});
+
+console.log(results2);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
+// Filtering on multiple values using "in" is supported too
+const results3 = await pgvectorStore.similaritySearch("water", 1, {
+  a: {
+    in: [2],
+  },
+});
+
+console.log(results3);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
+await pgvectorStore.delete({
+  filter: {
+    a: 1,
+  },
+});
+
+const results4 = await pgvectorStore.similaritySearch("water", 1);
+
+console.log(results4);
+
+/*
+  [ Document { pageContent: 'what's this', metadata: { a: 2 } } ]
+*/
+
+// Filtering using arrayContains (?|) is supported
+const results5 = await pgvectorStore.similaritySearch("water", 1, {
+  b: {
+    arrayContains: ["tag1"],
+  },
+});
+
+console.log(results5);
+
+/*
+  [ Document { pageContent: "what's this", metadata: { a: 2, b: ['tag1', 'tag2'] } } } ]
 */
 
 await pgvectorStore.end();

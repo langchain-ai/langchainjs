@@ -1,14 +1,14 @@
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "../../prompts/prompt.js";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../prompts/chat.js";
+  PromptTemplate,
+} from "@langchain/core/prompts";
 import {
   ConditionalPromptSelector,
   isChatModel,
-} from "../../prompts/selectors/conditional.js";
+} from "@langchain/core/example_selectors";
 
 export const DEFAULT_QA_PROMPT = /*#__PURE__*/ new PromptTemplate({
   template:

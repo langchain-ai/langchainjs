@@ -1,18 +1,20 @@
-import { distance, similarity } from "ml-distance";
+import type { EmbeddingsInterface } from "@langchain/core/embeddings";
+import { ChainValues } from "@langchain/core/utils/types";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import {
+  CallbackManagerForChainRun,
+  Callbacks,
+  BaseCallbackConfig,
+} from "@langchain/core/callbacks/manager";
 import {
   PairwiseStringEvaluator,
   PairwiseStringEvaluatorArgs,
   StringEvaluator,
   StringEvaluatorArgs,
 } from "../base.js";
-import { ChainValues } from "../../schema/index.js";
-import { OpenAIEmbeddings } from "../../embeddings/openai.js";
-import {
-  CallbackManagerForChainRun,
-  Callbacks,
-} from "../../callbacks/index.js";
-import { BaseCallbackConfig } from "../../callbacks/manager.js";
-import { Embeddings } from "../../embeddings/base.js";
+import { cosine } from "../../util/ml-distance/similarities.js";
+import { chebyshev, manhattan } from "../../util/ml-distance/distances.js";
+import { euclidean } from "../../util/ml-distance-euclidean/euclidean.js";
 
 /**
  *
@@ -37,7 +39,7 @@ export interface EmbeddingDistanceEvalChainInput {
   /**
    * The embedding objects to vectorize the outputs.
    */
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   /**
    * The distance metric to use
@@ -58,10 +60,10 @@ export function getDistanceCalculationFunction(
 ): VectorFunction {
   const distanceFunctions: { [key in EmbeddingDistanceType]: VectorFunction } =
     {
-      cosine: (X: number[], Y: number[]) => 1.0 - similarity.cosine(X, Y),
-      euclidean: distance.euclidean,
-      manhattan: distance.manhattan,
-      chebyshev: distance.chebyshev,
+      cosine: (X: number[], Y: number[]) => 1.0 - cosine(X, Y),
+      euclidean,
+      manhattan,
+      chebyshev,
     };
 
   return distanceFunctions[distanceType];
@@ -95,7 +97,7 @@ export class EmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 
@@ -158,7 +160,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   outputKey = "score";
 
-  embedding?: Embeddings;
+  embedding?: EmbeddingsInterface;
 
   distanceMetric: EmbeddingDistanceType = "cosine";
 

@@ -1,14 +1,18 @@
-import { BaseMemory } from "../memory/base.js";
-import { ChainValues, RUN_KEY } from "../schema/index.js";
+import { BaseMemory } from "@langchain/core/memory";
+import { ChainValues } from "@langchain/core/utils/types";
+import { RUN_KEY } from "@langchain/core/outputs";
 import {
   CallbackManagerForChainRun,
   CallbackManager,
   Callbacks,
   parseCallbackConfigArg,
-} from "../callbacks/manager.js";
+} from "@langchain/core/callbacks/manager";
+import { ensureConfig, type RunnableConfig } from "@langchain/core/runnables";
+import {
+  BaseLangChain,
+  BaseLangChainParams,
+} from "@langchain/core/language_models/base";
 import { SerializedBaseChain } from "./serde.js";
-import { BaseLangChain, BaseLangChainParams } from "../base_language/index.js";
-import { RunnableConfig } from "../schema/runnable/config.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
@@ -79,8 +83,56 @@ export abstract class BaseChain<
    * @param config Optional configuration for the Runnable.
    * @returns Promise that resolves with the output of the chain run.
    */
-  async invoke(input: RunInput, config?: RunnableConfig): Promise<RunOutput> {
-    return this.call(input, config);
+  async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
+    const config = ensureConfig(options);
+    const fullValues = await this._formatValues(input);
+    const callbackManager_ = await CallbackManager.configure(
+      config?.callbacks,
+      this.callbacks,
+      config?.tags,
+      this.tags,
+      config?.metadata,
+      this.metadata,
+      { verbose: this.verbose }
+    );
+    const runManager = await callbackManager_?.handleChainStart(
+      this.toJSON(),
+      fullValues,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      config?.runName
+    );
+    let outputValues: RunOutput;
+    try {
+      outputValues = await (fullValues.signal
+        ? (Promise.race([
+            this._call(fullValues as RunInput, runManager, config),
+            new Promise((_, reject) => {
+              fullValues.signal?.addEventListener("abort", () => {
+                reject(new Error("AbortError"));
+              });
+            }),
+          ]) as Promise<RunOutput>)
+        : this._call(fullValues as RunInput, runManager, config));
+    } catch (e) {
+      await runManager?.handleChainError(e);
+      throw e;
+    }
+    if (!(this.memory == null)) {
+      await this.memory.saveContext(
+        this._selectMemoryInputs(input),
+        outputValues
+      );
+    }
+    await runManager?.handleChainEnd(outputValues);
+    // add the runManager's currentRunId to the outputValues
+    Object.defineProperty(outputValues, RUN_KEY, {
+      value: runManager ? { runId: runManager?.runId } : undefined,
+      configurable: true,
+    });
+    return outputValues;
   }
 
   private _validateOutputs(outputs: Record<string, unknown>): void {
@@ -114,7 +166,8 @@ export abstract class BaseChain<
    */
   abstract _call(
     values: RunInput,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<RunOutput>;
 
   /**
@@ -133,6 +186,7 @@ export abstract class BaseChain<
 
   abstract get outputKeys(): string[];
 
+  /** @deprecated Use .invoke() instead. Will be removed in 0.2.0. */
   async run(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
@@ -180,6 +234,8 @@ export abstract class BaseChain<
   }
 
   /**
+   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
+   *
    * Run the core logic of this chain and add to output if desired.
    *
    * Wraps _call and handles memory.
@@ -190,58 +246,13 @@ export abstract class BaseChain<
     /** @deprecated */
     tags?: string[]
   ): Promise<RunOutput> {
-    const fullValues = await this._formatValues(values);
-    const parsedConfig = parseCallbackConfigArg(config);
-    const callbackManager_ = await CallbackManager.configure(
-      parsedConfig.callbacks,
-      this.callbacks,
-      parsedConfig.tags || tags,
-      this.tags,
-      parsedConfig.metadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      fullValues,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      parsedConfig.runName
-    );
-    let outputValues: RunOutput;
-    try {
-      outputValues = await (values.signal
-        ? (Promise.race([
-            this._call(fullValues as RunInput, runManager),
-            new Promise((_, reject) => {
-              values.signal?.addEventListener("abort", () => {
-                reject(new Error("AbortError"));
-              });
-            }),
-          ]) as Promise<RunOutput>)
-        : this._call(fullValues as RunInput, runManager));
-    } catch (e) {
-      await runManager?.handleChainError(e);
-      throw e;
-    }
-    if (!(this.memory == null)) {
-      await this.memory.saveContext(
-        this._selectMemoryInputs(values),
-        outputValues
-      );
-    }
-    await runManager?.handleChainEnd(outputValues);
-    // add the runManager's currentRunId to the outputValues
-    Object.defineProperty(outputValues, RUN_KEY, {
-      value: runManager ? { runId: runManager?.runId } : undefined,
-      configurable: true,
-    });
-    return outputValues;
+    const parsedConfig = { tags, ...parseCallbackConfigArg(config) };
+    return this.invoke(values as RunInput, parsedConfig);
   }
 
   /**
+   * @deprecated Use .batch() instead. Will be removed in 0.2.0.
+   *
    * Call the chain on all inputs in the list
    */
   async apply(

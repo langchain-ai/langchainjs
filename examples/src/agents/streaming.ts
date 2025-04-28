@@ -1,10 +1,10 @@
 import { LLMChain } from "langchain/chains";
 import { AgentExecutor, ZeroShotAgent } from "langchain/agents";
-import { BaseCallbackHandler } from "langchain/callbacks";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Calculator } from "langchain/tools/calculator";
-import { AgentAction } from "langchain/schema";
-import { Serialized } from "langchain/load/serializable";
+import { ChatOpenAI } from "@langchain/openai";
+import { Calculator } from "@langchain/community/tools/calculator";
+import { Serialized } from "@langchain/core/load/serializable";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import { AgentAction } from "@langchain/core/agents";
 
 export const run = async () => {
   // You can implement your own callback handler by extending BaseCallbackHandler

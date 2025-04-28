@@ -1,6 +1,6 @@
 import { OpenAIModerationChain, LLMChain } from "langchain/chains";
-import { PromptTemplate } from "langchain/prompts";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 // A string containing potentially offensive content from the user
 const badString = "Bad naughty words from user";
@@ -12,7 +12,7 @@ try {
   });
 
   // Send the user's input to the moderation chain and wait for the result
-  const { output: badResult, results } = await moderation.call({
+  const { output: badResult, results } = await moderation.invoke({
     input: badString,
   });
 
@@ -26,7 +26,7 @@ try {
   const template = "Hello, how are you today {person}?";
   const prompt = new PromptTemplate({ template, inputVariables: ["person"] });
   const chainA = new LLMChain({ llm: model, prompt });
-  const resA = await chainA.call({ person: badResult });
+  const resA = await chainA.invoke({ person: badResult });
   console.log({ resA });
 } catch (error) {
   // If an error is caught, it means the input contains content that violates OpenAI TOS

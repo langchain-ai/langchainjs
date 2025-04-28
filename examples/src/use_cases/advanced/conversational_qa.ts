@@ -1,14 +1,13 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { BufferMemory } from "langchain/memory";
 import * as fs from "fs";
-import { RunnableBranch, RunnableSequence } from "langchain/schema/runnable";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
 import { LLMChain } from "langchain/chains";
 import { formatDocumentsAsString } from "langchain/util/document";
+import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 export const run = async () => {
   /* Initialize the LLM to use to answer the question */
@@ -79,7 +78,7 @@ Standalone question:`);
       outputParser: new StringOutputParser(),
     });
 
-    const { text } = await chain.call({
+    const { text } = await chain.invoke({
       ...input,
       chatHistory: serializeChatHistory(input.chatHistory ?? ""),
     });
@@ -117,7 +116,7 @@ Standalone question:`);
         chatHistory?: string | Array<string>;
       }) => {
         // Fetch relevant docs and serialize to a string.
-        const relevantDocs = await retriever.getRelevantDocuments(
+        const relevantDocs = await retriever.invoke(
           previousStepResult.question
         );
         const serialized = formatDocumentsAsString(relevantDocs);

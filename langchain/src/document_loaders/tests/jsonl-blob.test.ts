@@ -2,8 +2,8 @@ import * as url from "node:url";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";
 import { test, expect } from "@jest/globals";
+import { Document } from "@langchain/core/documents";
 import { JSONLinesLoader } from "../fs/json.js";
-import { Document } from "../../document.js";
 
 test("Test JSONL loader from blob", async () => {
   const filePath = path.resolve(
@@ -40,6 +40,7 @@ test("Test JSONL loader from blob", async () => {
   expect(docs.length).toBe(2);
   expect(docs[0]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 1,
@@ -50,6 +51,7 @@ test("Test JSONL loader from blob", async () => {
   `);
   expect(docs[1]).toMatchInlineSnapshot(`
     Document {
+      "id": undefined,
       "metadata": {
         "blobType": "application/jsonl+json",
         "line": 2,

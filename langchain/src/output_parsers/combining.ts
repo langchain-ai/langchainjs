@@ -1,5 +1,5 @@
-import { Callbacks } from "../callbacks/manager.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
+import { Callbacks } from "@langchain/core/callbacks/manager";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 
 /**
  * Type for the combined output of the CombiningOutputParser class.

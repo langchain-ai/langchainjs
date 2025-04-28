@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createMetadataTaggerFromZod } from "langchain/document_transformers/openai_functions";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Document } from "langchain/document";
-import { PromptTemplate } from "langchain/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const taggingChainTemplate = `Extract the desired information from the following passage.
 Anonymous critics are actually Roger Ebert.
@@ -21,7 +21,7 @@ const zodSchema = z.object({
 });
 
 const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
-  llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo" }),
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo" }),
   prompt: PromptTemplate.fromTemplate(taggingChainTemplate),
 });
 

@@ -1,7 +1,6 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { BufferMemory } from "langchain/memory";
 
 const CUSTOM_QUESTION_GENERATOR_CHAIN_PROMPT = `Given the following conversation and a follow up question, return the conversation history excerpt that includes any relevant context to the question if it exists and rephrase the follow up question to be a standalone question.
@@ -19,7 +18,7 @@ Standalone question: <Rephrased question here>
 Your answer:`;
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
 });
 
@@ -49,7 +48,7 @@ const chain = ConversationalRetrievalQAChain.fromLLM(
   }
 );
 
-const res = await chain.call({
+const res = await chain.invoke({
   question:
     "I have a friend called Bob. He's 28 years old. He'd like to know what the powerhouse of the cell is?",
 });
@@ -61,7 +60,7 @@ console.log(res);
   }
 */
 
-const res2 = await chain.call({
+const res2 = await chain.invoke({
   question: "How old is Bob?",
 });
 

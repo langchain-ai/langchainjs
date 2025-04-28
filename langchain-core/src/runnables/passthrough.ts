@@ -1,37 +1,18 @@
-import { Runnable, RunnableLike, RunnableMap } from "./base.js";
-import type { RunnableConfig } from "./config.js";
+import { concat } from "../utils/stream.js";
+import {
+  Runnable,
+  RunnableAssign,
+  RunnableMap,
+  RunnableMapLike,
+} from "./base.js";
+import { ensureConfig, type RunnableConfig } from "./config.js";
 
-/**
- * A runnable that assigns key-value pairs to inputs of type `Record<string, unknown>`.
- */
-export class RunnableAssign<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunInput extends Record<string, any> = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = any,
-  CallOptions extends RunnableConfig = RunnableConfig
-> extends Runnable<RunInput, RunOutput> {
-  lc_namespace = ["langchain_core", "runnables"];
-
-  mapper: RunnableMap<RunInput>;
-
-  constructor(mapper: RunnableMap<RunInput>) {
-    super();
-    this.mapper = mapper;
-  }
-
-  async invoke(
-    input: RunInput,
-    options?: Partial<CallOptions>
-  ): Promise<RunOutput> {
-    const mapperResult = await this.mapper.invoke(input, options);
-
-    return {
-      ...input,
-      ...mapperResult,
-    } as RunOutput;
-  }
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RunnablePassthroughFunc<RunInput = any> =
+  | ((input: RunInput) => void)
+  | ((input: RunInput, config?: RunnableConfig) => void)
+  | ((input: RunInput) => Promise<void>)
+  | ((input: RunInput, config?: RunnableConfig) => Promise<void>);
 
 /**
  * A runnable to passthrough inputs unchanged or with additional keys.
@@ -59,7 +40,8 @@ export class RunnableAssign<
  * );
  * ```
  */
-export class RunnablePassthrough<RunInput> extends Runnable<
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class RunnablePassthrough<RunInput = any> extends Runnable<
   RunInput,
   RunInput
 > {
@@ -71,15 +53,63 @@ export class RunnablePassthrough<RunInput> extends Runnable<
 
   lc_serializable = true;
 
+  func?: RunnablePassthroughFunc<RunInput>;
+
+  constructor(fields?: { func?: RunnablePassthroughFunc<RunInput> }) {
+    super(fields);
+    if (fields) {
+      this.func = fields.func;
+    }
+  }
+
   async invoke(
     input: RunInput,
     options?: Partial<RunnableConfig>
   ): Promise<RunInput> {
+    const config = ensureConfig(options);
+    if (this.func) {
+      await this.func(input, config);
+    }
+
     return this._callWithConfig(
       (input: RunInput) => Promise.resolve(input),
       input,
-      options
+      config
     );
+  }
+
+  async *transform(
+    generator: AsyncGenerator<RunInput>,
+    options: Partial<RunnableConfig>
+  ): AsyncGenerator<RunInput> {
+    const config = ensureConfig(options);
+    let finalOutput: RunInput | undefined;
+    let finalOutputSupported = true;
+
+    for await (const chunk of this._transformStreamWithConfig(
+      generator,
+      (input: AsyncGenerator<RunInput>) => input,
+      config
+    )) {
+      yield chunk;
+      if (finalOutputSupported) {
+        if (finalOutput === undefined) {
+          finalOutput = chunk;
+        } else {
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            finalOutput = concat(finalOutput, chunk as any);
+          } catch {
+            finalOutput = undefined;
+            finalOutputSupported = false;
+          }
+        }
+      }
+    }
+
+    if (this.func && finalOutput !== undefined) {
+      await this.func(finalOutput, config);
+    }
   }
 
   /**
@@ -110,12 +140,12 @@ export class RunnablePassthrough<RunInput> extends Runnable<
    * });
    * ```
    */
-  static assign(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mapping: Record<string, RunnableLike<Record<string, unknown>, any>>
-  ): RunnableAssign<Record<string, unknown>, Record<string, unknown>> {
-    return new RunnableAssign(
-      new RunnableMap<Record<string, unknown>>({ steps: mapping })
-    );
+  static assign<
+    RunInput extends Record<string, unknown> = Record<string, unknown>,
+    RunOutput extends Record<string, unknown> = Record<string, unknown>
+  >(
+    mapping: RunnableMapLike<RunInput, RunOutput>
+  ): RunnableAssign<RunInput, RunInput & RunOutput> {
+    return new RunnableAssign(new RunnableMap({ steps: mapping }));
   }
 }

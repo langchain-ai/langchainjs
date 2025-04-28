@@ -1,5 +1,6 @@
 ---
 hide_table_of_contents: true
+sidebar_class_name: hidden
 ---
 
 import CodeBlock from "@theme/CodeBlock";
@@ -7,11 +8,23 @@ import Example from "@examples/agents/aiplugin-tool.ts";
 
 # ChatGPT Plugins
 
+:::warning
+OpenAI has [deprecated plugins](https://openai.com/index/chatgpt-plugins/).
+:::
+
 This example shows how to use ChatGPT Plugins within LangChain abstractions.
 
 Note 1: This currently only works for plugins with no auth.
 
 Note 2: There are almost certainly other ways to do this, this is just a first pass. If you have better ideas, please open a PR!
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/core
+```
 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
@@ -52,3 +65,8 @@ Finished chain.
   }
 }
 ````
+
+## Related
+
+- Tool [conceptual guide](/docs/concepts/tools)
+- Tool [how-to guides](/docs/how_to/#tools)

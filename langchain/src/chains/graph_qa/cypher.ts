@@ -1,16 +1,22 @@
-import { LLMChain } from "../../chains/llm_chain.js";
-import { ChainValues } from "../../schema/index.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { LLMChain } from "../llm_chain.js";
 import { BaseChain, ChainInputs } from "../base.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
-import { Neo4jGraph } from "../../graphs/neo4j_graph.js";
 import { CYPHER_GENERATION_PROMPT, CYPHER_QA_PROMPT } from "./prompts.js";
+import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation.js";
+
+/* #__PURE__ */ logVersion020MigrationWarning({
+  oldEntrypointName: "chains/graph_qa/cypher",
+  newPackageName: "@langchain/community",
+});
 
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
-  graph: Neo4jGraph;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: any;
   cypherGenerationChain: LLMChain;
   qaChain: LLMChain;
   inputKey?: string;
@@ -21,10 +27,11 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 }
 
 export interface FromLLMInput {
-  graph: Neo4jGraph;
-  llm?: BaseLanguageModel;
-  cypherLLM?: BaseLanguageModel;
-  qaLLM?: BaseLanguageModel;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: any;
+  llm?: BaseLanguageModelInterface;
+  cypherLLM?: BaseLanguageModelInterface;
+  qaLLM?: BaseLanguageModelInterface;
   qaPrompt?: BasePromptTemplate;
   cypherPrompt?: BasePromptTemplate;
   returnIntermediateSteps?: boolean;
@@ -32,17 +39,32 @@ export interface FromLLMInput {
 }
 
 /**
+ * Chain for question-answering against a graph by generating Cypher statements.
+ *
  * @example
  * ```typescript
  * const chain = new GraphCypherQAChain({
  *   llm: new ChatOpenAI({ temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
- * const res = await chain.run("Who played in Pulp Fiction?");
+ * const res = await chain.invoke("Who played in Pulp Fiction?");
  * ```
+ *
+ * @security
+ * This chain will execute Cypher statements against the provided database.
+ * Make sure that the database connection uses credentials
+ * that are narrowly-scoped to only include necessary permissions.
+ * Failure to do so may result in data corruption or loss, since the calling code
+ * may attempt commands that would result in deletion, mutation of data
+ * if appropriately prompted or reading sensitive data if such data is present in the database.
+ * The best way to guard against such negative outcomes is to (as appropriate) limit the
+ * permissions granted to the credentials used with this tool.
+ *
+ * See https://js.langchain.com/docs/security for more information.
  */
 export class GraphCypherQAChain extends BaseChain {
-  private graph: Neo4jGraph;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private graph: any;
 
   private cypherGenerationChain: LLMChain;
 
@@ -133,12 +155,12 @@ export class GraphCypherQAChain extends BaseChain {
     }
 
     const qaChain = new LLMChain({
-      llm: (qaLLM || llm) as BaseLanguageModel,
+      llm: (qaLLM || llm) as BaseLanguageModelInterface,
       prompt: qaPrompt,
     });
 
     const cypherGenerationChain = new LLMChain({
-      llm: (cypherLLM || llm) as BaseLanguageModel,
+      llm: (cypherLLM || llm) as BaseLanguageModelInterface,
       prompt: cypherPrompt,
     });
 

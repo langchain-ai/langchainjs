@@ -4,9 +4,9 @@ import {
   CredentialProvider,
 } from "@gomomento/sdk"; // `from "gomomento/sdk-web";` for browser/edge
 import { BufferMemory } from "langchain/memory";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
-import { MomentoChatMessageHistory } from "langchain/stores/message/momento";
+import { MomentoChatMessageHistory } from "@langchain/community/stores/message/momento";
 
 // See https://github.com/momentohq/client-sdk-javascript for connection options
 const client = new CacheClient({
@@ -34,13 +34,13 @@ console.log(
 );
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
 });
 
 const chain = new ConversationChain({ llm: model, memory });
 
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 /*
 {
@@ -50,7 +50,7 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "What did I just say my name was?" });
+const res2 = await chain.invoke({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*

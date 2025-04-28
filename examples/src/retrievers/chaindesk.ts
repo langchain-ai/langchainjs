@@ -1,4 +1,4 @@
-import { ChaindeskRetriever } from "langchain/retrievers/chaindesk";
+import { ChaindeskRetriever } from "@langchain/community/retrievers/chaindesk";
 
 const retriever = new ChaindeskRetriever({
   datastoreId: "DATASTORE_ID",
@@ -6,6 +6,6 @@ const retriever = new ChaindeskRetriever({
   topK: 8, // optional: default value is 3
 });
 
-const docs = await retriever.getRelevantDocuments("hello");
+const docs = await retriever.invoke("hello");
 
 console.log(docs);

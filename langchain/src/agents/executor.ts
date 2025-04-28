@@ -1,36 +1,44 @@
-import { BaseChain, ChainInputs } from "../chains/base.js";
 import {
-  BaseMultiActionAgent,
-  BaseSingleActionAgent,
-  RunnableAgent,
-} from "./agent.js";
-import { StoppingMethod } from "./types.js";
-import { SerializedLLMChain } from "../chains/serde.js";
+  type StructuredToolInterface,
+  type ToolInterface,
+  ToolInputParsingException,
+  Tool,
+} from "@langchain/core/tools";
 import {
-  AgentAction,
-  ChainValues,
-  AgentFinish,
-  AgentStep,
-} from "../schema/index.js";
+  Runnable,
+  type RunnableConfig,
+  patchConfig,
+} from "@langchain/core/runnables";
+import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
+import { ChainValues } from "@langchain/core/utils/types";
 import {
   CallbackManager,
   CallbackManagerForChainRun,
   Callbacks,
-} from "../callbacks/manager.js";
-import { OutputParserException } from "../schema/output_parser.js";
+} from "@langchain/core/callbacks/manager";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { Serializable } from "@langchain/core/load/serializable";
+import { SerializedLLMChain } from "../chains/serde.js";
+import { StoppingMethod } from "./types.js";
 import {
-  StructuredTool,
-  ToolInputParsingException,
-  Tool,
-} from "../tools/base.js";
-import { Runnable } from "../schema/runnable/base.js";
-import { Serializable } from "../load/serializable.js";
+  AgentRunnableSequence,
+  BaseMultiActionAgent,
+  BaseSingleActionAgent,
+  RunnableMultiActionAgent,
+  RunnableSingleActionAgent,
+  isRunnableAgent,
+} from "./agent.js";
+import { BaseChain, ChainInputs } from "../chains/base.js";
 
 interface AgentExecutorIteratorInput {
   agentExecutor: AgentExecutor;
   inputs: Record<string, string>;
+  config?: RunnableConfig;
+  /** @deprecated Use "config" */
   callbacks?: Callbacks;
+  /** @deprecated Use "config" */
   tags?: string[];
+  /** @deprecated Use "config" */
   metadata?: Record<string, unknown>;
   runName?: string;
   runManager?: CallbackManagerForChainRun;
@@ -46,12 +54,18 @@ export class AgentExecutorIterator
 
   inputs: Record<string, string>;
 
-  callbacks: Callbacks;
+  config?: RunnableConfig;
 
+  /** @deprecated Use "config" */
+  callbacks?: Callbacks;
+
+  /** @deprecated Use "config" */
   tags: string[] | undefined;
 
+  /** @deprecated Use "config" */
   metadata: Record<string, unknown> | undefined;
 
+  /** @deprecated Use "config" */
   runName: string | undefined;
 
   private _finalOutputs: Record<string, unknown> | undefined;
@@ -76,7 +90,7 @@ export class AgentExecutorIterator
 
   iterations = 0;
 
-  get nameToToolMap(): Record<string, Tool> {
+  get nameToToolMap(): Record<string, ToolInterface> {
     const toolMap = this.agentExecutor.tools.map((tool) => ({
       [tool.name]: tool,
     }));
@@ -87,10 +101,12 @@ export class AgentExecutorIterator
     super(fields);
     this.agentExecutor = fields.agentExecutor;
     this.inputs = fields.inputs;
+    this.callbacks = fields.callbacks;
     this.tags = fields.tags;
     this.metadata = fields.metadata;
     this.runName = fields.runName;
     this.runManager = fields.runManager;
+    this.config = fields.config;
   }
 
   /**
@@ -145,11 +161,11 @@ export class AgentExecutorIterator
   async onFirstStep(): Promise<void> {
     if (this.iterations === 0) {
       const callbackManager = await CallbackManager.configure(
-        this.callbacks,
+        this.callbacks ?? this.config?.callbacks,
         this.agentExecutor.callbacks,
-        this.tags,
+        this.tags ?? this.config?.tags,
         this.agentExecutor.tags,
-        this.metadata,
+        this.metadata ?? this.config?.metadata,
         this.agentExecutor.metadata,
         {
           verbose: this.agentExecutor.verbose,
@@ -158,12 +174,15 @@ export class AgentExecutorIterator
       this.runManager = await callbackManager?.handleChainStart(
         this.agentExecutor.toJSON(),
         this.inputs,
+        this.config?.runId,
         undefined,
-        undefined,
-        this.tags,
-        this.metadata,
-        this.runName
+        this.tags ?? this.config?.tags,
+        this.metadata ?? this.config?.metadata,
+        this.runName ?? this.config?.runName
       );
+      if (this.config !== undefined) {
+        delete this.config.runId;
+      }
     }
   }
 
@@ -178,7 +197,8 @@ export class AgentExecutorIterator
       this.nameToToolMap,
       this.inputs,
       this.intermediateSteps,
-      runManager
+      runManager,
+      this.config
     );
   }
 
@@ -217,9 +237,7 @@ export class AgentExecutorIterator
           this.intermediateSteps,
           runManager
         );
-        if (this.runManager) {
-          await this.runManager.handleChainEnd(output);
-        }
+        await this.runManager?.handleChainEnd(output);
         await this.setFinalOutputs(output);
       }
     }
@@ -239,6 +257,7 @@ export class AgentExecutorIterator
       this.runManager
     );
     await this.setFinalOutputs(returnedOutput);
+    await this.runManager?.handleChainEnd(returnedOutput);
     return returnedOutput;
   }
 
@@ -267,9 +286,9 @@ export class AgentExecutorIterator
   }
 }
 
-type ExtractToolType<T> = T extends { ToolType: infer Tool }
-  ? Tool
-  : StructuredTool;
+type ExtractToolType<T> = T extends { ToolType: infer ToolInterface }
+  ? ToolInterface
+  : StructuredToolInterface;
 
 /**
  * Interface defining the structure of input data for creating an
@@ -292,6 +311,7 @@ export interface AgentExecutorInput extends ChainInputs {
     | boolean
     | string
     | ((e: OutputParserException | ToolInputParsingException) => string);
+  handleToolRuntimeErrors?: (e: Error) => string;
 }
 
 // TODO: Type properly with { intermediateSteps?: AgentStep[] };
@@ -348,6 +368,9 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   earlyStoppingMethod: StoppingMethod = "force";
 
+  // TODO: Update BaseChain implementation on breaking change to include this
+  returnOnlyOutputs = true;
+
   /**
    * How to handle errors raised by the agent's output parser.
     Defaults to `False`, which raises the error.
@@ -364,6 +387,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     | ((e: OutputParserException | ToolInputParsingException) => string) =
     false;
 
+  handleToolRuntimeErrors?: (e: Error) => string;
+
   get inputKeys() {
     return this.agent.inputKeys;
   }
@@ -374,9 +399,29 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   constructor(input: AgentExecutorInput) {
     let agent: BaseSingleActionAgent | BaseMultiActionAgent;
+    let returnOnlyOutputs = true;
     if (Runnable.isRunnable(input.agent)) {
-      agent = new RunnableAgent({ runnable: input.agent });
+      if (AgentRunnableSequence.isAgentRunnableSequence(input.agent)) {
+        if (input.agent.singleAction) {
+          agent = new RunnableSingleActionAgent({
+            runnable: input.agent,
+            streamRunnable: input.agent.streamRunnable,
+          });
+        } else {
+          agent = new RunnableMultiActionAgent({
+            runnable: input.agent,
+            streamRunnable: input.agent.streamRunnable,
+          });
+        }
+      } else {
+        agent = new RunnableMultiActionAgent({ runnable: input.agent });
+      }
+      // TODO: Update BaseChain implementation on breaking change
+      returnOnlyOutputs = false;
     } else {
+      if (isRunnableAgent(input.agent)) {
+        returnOnlyOutputs = false;
+      }
       agent = input.agent;
     }
 
@@ -385,6 +430,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
     this.tools = input.tools;
     this.handleParsingErrors =
       input.handleParsingErrors ?? this.handleParsingErrors;
+    this.handleToolRuntimeErrors = input.handleToolRuntimeErrors;
+    this.returnOnlyOutputs = returnOnlyOutputs;
     if (this.agent._agentActionType() === "multi") {
       for (const tool of this.tools) {
         if (tool.returnDirect) {
@@ -423,7 +470,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   /** @ignore */
   async _call(
     inputs: ChainValues,
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<AgentExecutorOutput> {
     const toolsByName = Object.fromEntries(
       this.tools.map((t) => [t.name.toLowerCase(), t])
@@ -437,17 +485,30 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       const { returnValues } = finishStep;
       const additional = await this.agent.prepareForOutput(returnValues, steps);
 
-      if (this.returnIntermediateSteps) {
-        return { ...returnValues, intermediateSteps: steps, ...additional };
-      }
       await runManager?.handleAgentEnd(finishStep);
-      return { ...returnValues, ...additional };
+
+      let response;
+
+      if (this.returnIntermediateSteps) {
+        response = { ...returnValues, intermediateSteps: steps, ...additional };
+      } else {
+        response = { ...returnValues, ...additional };
+      }
+      if (!this.returnOnlyOutputs) {
+        response = { ...inputs, ...response };
+      }
+      return response;
     };
 
     while (this.shouldContinue(iterations)) {
       let output;
       try {
-        output = await this.agent.plan(steps, inputs, runManager?.getChild());
+        output = await this.agent.plan(
+          steps,
+          inputs,
+          runManager?.getChild(),
+          config
+        );
       } catch (e) {
         // eslint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {
@@ -498,9 +559,18 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
           let observation;
           try {
             observation = tool
-              ? await tool.call(action.toolInput, runManager?.getChild())
+              ? await tool.invoke(
+                  action.toolInput,
+                  patchConfig(config, { callbacks: runManager?.getChild() })
+                )
               : `${action.tool} is not a valid tool, try another one.`;
-          } catch (e) {
+            if (typeof observation !== "string") {
+              throw new Error(
+                "Received unsupported non-string response from tool call."
+              );
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (e: any) {
             // eslint-disable-next-line no-instanceof/no-instanceof
             if (e instanceof ToolInputParsingException) {
               if (this.handleParsingErrors === true) {
@@ -518,6 +588,8 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
                 runManager?.getChild()
               );
               return { action, observation: observation ?? "" };
+            } else if (this.handleToolRuntimeErrors !== undefined) {
+              observation = this.handleToolRuntimeErrors(e);
             }
           }
 
@@ -550,17 +622,19 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   }
 
   async _takeNextStep(
-    nameToolMap: Record<string, Tool>,
+    nameToolMap: Record<string, ToolInterface>,
     inputs: ChainValues,
     intermediateSteps: AgentStep[],
-    runManager?: CallbackManagerForChainRun
+    runManager?: CallbackManagerForChainRun,
+    config?: RunnableConfig
   ): Promise<AgentFinish | AgentStep[]> {
     let output;
     try {
       output = await this.agent.plan(
         intermediateSteps,
         inputs,
-        runManager?.getChild()
+        runManager?.getChild(),
+        config
       );
     } catch (e) {
       // eslint-disable-next-line no-instanceof/no-instanceof
@@ -615,6 +689,11 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
             agentAction.toolInput,
             runManager?.getChild()
           );
+          if (typeof observation !== "string") {
+            throw new Error(
+              "Received unsupported non-string response from tool call."
+            );
+          }
         } catch (e) {
           // eslint-disable-next-line no-instanceof/no-instanceof
           if (e instanceof ToolInputParsingException) {
@@ -698,14 +777,17 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
 
   async *_streamIterator(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inputs: Record<string, any>
+    inputs: Record<string, any>,
+    options?: Partial<RunnableConfig>
   ): AsyncGenerator<ChainValues> {
     const agentExecutorIterator = new AgentExecutorIterator({
       inputs,
       agentExecutor: this,
-      metadata: this.metadata,
-      tags: this.tags,
-      callbacks: this.callbacks,
+      config: options,
+      // TODO: Deprecate these other parameters
+      metadata: options?.metadata,
+      tags: options?.tags,
+      callbacks: options?.callbacks,
     });
     const iterator = agentExecutorIterator.streamIterator();
     for await (const step of iterator) {

@@ -1,6 +1,6 @@
-import { BaseLanguageModel } from "../../../base_language/index.js";
-import { Tool } from "../../../tools/base.js";
-import { DynamicTool } from "../../../tools/dynamic.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { ToolInterface } from "@langchain/core/tools";
+import { DynamicTool, BaseToolkit } from "@langchain/core/tools";
 import { JsonSpec } from "../../../tools/json.js";
 import { AgentExecutor } from "../../executor.js";
 import {
@@ -10,7 +10,6 @@ import {
 } from "./prompt.js";
 import { LLMChain } from "../../../chains/llm_chain.js";
 import { ZeroShotCreatePromptArgs, ZeroShotAgent } from "../../mrkl/index.js";
-import { Toolkit } from "../base.js";
 import {
   Headers,
   RequestsGetTool,
@@ -22,8 +21,8 @@ import { createJsonAgent, JsonToolkit } from "../json/json.js";
  * Represents a toolkit for making HTTP requests. It initializes the
  * request tools based on the provided headers.
  */
-export class RequestsToolkit extends Toolkit {
-  tools: Tool[];
+export class RequestsToolkit extends BaseToolkit {
+  tools: ToolInterface[];
 
   constructor(headers?: Headers) {
     super();
@@ -56,7 +55,11 @@ export class RequestsToolkit extends Toolkit {
  * ```
  */
 export class OpenApiToolkit extends RequestsToolkit {
-  constructor(jsonSpec: JsonSpec, llm: BaseLanguageModel, headers?: Headers) {
+  constructor(
+    jsonSpec: JsonSpec,
+    llm: BaseLanguageModelInterface,
+    headers?: Headers
+  ) {
     super(headers);
     const jsonAgent = createJsonAgent(llm, new JsonToolkit(jsonSpec));
     this.tools = [
@@ -74,6 +77,8 @@ export class OpenApiToolkit extends RequestsToolkit {
 }
 
 /**
+ * @deprecated Create a specific agent with a custom tool instead.
+ *
  * Creates an OpenAPI agent using a language model, an OpenAPI toolkit,
  * and optional prompt arguments. It creates a prompt for the agent using
  * the OpenAPI tools and the provided prefix and suffix. It then creates a
@@ -93,7 +98,7 @@ export class OpenApiToolkit extends RequestsToolkit {
  * @link See https://js.langchain.com/docs/security for more information.
  */
 export function createOpenApiAgent(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   openApiToolkit: OpenApiToolkit,
   args?: ZeroShotCreatePromptArgs
 ) {

@@ -1,17 +1,21 @@
 import { AgentExecutor } from "langchain/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import {
-  AIMessage,
-  AgentStep,
-  BaseMessage,
-  FunctionMessage,
-} from "langchain/schema";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { SerpAPI, formatToOpenAIFunction } from "langchain/tools";
-import { Calculator } from "langchain/tools/calculator";
+import { ChatOpenAI } from "@langchain/openai";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+import {
+  AIMessage,
+  BaseMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentStep } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 /** Define your list of tools. */
 const tools = [new Calculator(), new SerpAPI()];
@@ -20,15 +24,15 @@ const tools = [new Calculator(), new SerpAPI()];
  * In this example we'll use gpt-4 as it is much better
  * at following directions in an agent than other models.
  */
-const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 
 /**
  * Bind the tools to the LLM.
- * Here we're using the `formatToOpenAIFunction` util function
+ * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
 const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
 });
 
 const memory = new BufferMemory({

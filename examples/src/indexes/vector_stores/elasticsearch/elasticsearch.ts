@@ -1,12 +1,12 @@
 import { Client, ClientOptions } from "@elastic/elasticsearch";
-import { Document } from "langchain/document";
-import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { VectorDBQAChain } from "langchain/chains";
+
 import {
   ElasticClientArgs,
   ElasticVectorSearch,
-} from "langchain/vectorstores/elasticsearch";
-import { VectorDBQAChain } from "langchain/chains";
+} from "@langchain/community/vectorstores/elasticsearch";
+import { Document } from "@langchain/core/documents";
 
 // to run this first run Elastic's docker-container with `docker-compose up -d --build`
 export async function run() {
@@ -77,7 +77,7 @@ export async function run() {
     k: 1,
     returnSourceDocuments: true,
   });
-  const response = await chain.call({ query: "What is Elasticsearch?" });
+  const response = await chain.invoke({ query: "What is Elasticsearch?" });
 
   console.log(JSON.stringify(response, null, 2));
   /*
@@ -96,7 +96,7 @@ export async function run() {
 
   await vectorStore.delete({ ids });
 
-  const response2 = await chain.call({ query: "What is Elasticsearch?" });
+  const response2 = await chain.invoke({ query: "What is Elasticsearch?" });
 
   console.log(JSON.stringify(response2, null, 2));
 

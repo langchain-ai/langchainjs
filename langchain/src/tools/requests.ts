@@ -1,4 +1,4 @@
-import { Tool } from "./base.js";
+import { Tool } from "@langchain/core/tools";
 
 export interface Headers {
   [key: string]: string;

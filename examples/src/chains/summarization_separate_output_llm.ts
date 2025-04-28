@@ -1,14 +1,14 @@
 import { loadSummarizationChain } from "langchain/chains";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 // In this example, we use a separate LLM as the final summary LLM to meet our customized LLM requirements for different stages of the chain and to only stream the final results.
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const model = new ChatAnthropic({ temperature: 0 });
 const combineModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
   temperature: 0,
   streaming: true,
   callbacks: [
@@ -35,7 +35,7 @@ const chain = loadSummarizationChain(model, {
   type: "map_reduce",
   combineLLM: combineModel,
 });
-const res = await chain.call({
+const res = await chain.invoke({
   input_documents: docs,
 });
 console.log({ res });

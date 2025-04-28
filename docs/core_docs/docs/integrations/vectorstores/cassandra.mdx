@@ -14,37 +14,63 @@ The [latest version](<https://cwiki.apache.org/confluence/display/CASSANDRA/CEP-
 
 ## Setup
 
-1. Create an [Astra DB account](https://astra.datastax.com/register).
-2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
-3. Download your secure connect bundle and application token on your database's "Connect" tab.
-4. Set up the following env vars:
+First, install the Cassandra Node.js driver:
 
-```bash
-export OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
-export CASSANDRA_SCB=YOUR_CASSANDRA_SCB_HERE
-export CASSANDRA_TOKEN=YOUR_CASSANDRA_TOKEN_HERE
-```
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
-5. Install the Cassandra Node.js driver.
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install cassandra-driver
+npm install cassandra-driver @langchain/community @langchain/openai @langchain/core
 ```
+
+Depending on your database providers, the specifics of how to connect to the database will vary. We will create a document `configConnection` which will be used as part of the vector store configuration.
+
+### Apache Cassandra®
+
+Vector search is supported in [Apache Cassandra® 5.0](https://cassandra.apache.org/_/Apache-Cassandra-5.0-Moving-Toward-an-AI-Driven-Future.html) and above. You can use a standard connection document, for example:
+
+```typescript
+const configConnection = {
+  contactPoints: ['h1', 'h2'],
+  localDataCenter: 'datacenter1',
+  credentials: {
+    username: <...> as string,
+    password: <...> as string,
+  },
+};
+```
+
+### Astra DB
+
+Astra DB is a cloud-native Cassandra-as-a-Service platform.
+
+1. Create an [Astra DB account](https://astra.datastax.com/register).
+2. Create a [vector enabled database](https://astra.datastax.com/createDatabase).
+3. Create a [token](https://docs.datastax.com/en/astra/docs/manage-application-tokens.html) for your database.
+
+```typescript
+const configConnection = {
+  serviceProviderArgs: {
+    astra: {
+      token: <...> as string,
+      endpoint: <...> as string,
+    },
+  },
+};
+```
+
+Instead of `endpoint:`, you many provide property `datacenterID:` and optionally `regionName:`.
 
 ## Indexing docs
 
 ```typescript
 import { CassandraStore } from "langchain/vectorstores/cassandra";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
+// The configConnection document is defined above
 const config = {
-  cloud: {
-    secureConnectBundle: process.env.CASSANDRA_SCB as string,
-  },
-  credentials: {
-    username: "token",
-    password: process.env.CASSANDRA_TOKEN as string,
-  },
+  ...configConnection,
   keyspace: "test",
   dimensions: 1536,
   table: "test",
@@ -96,7 +122,26 @@ vector store is first created, and specifed in the constructor parameter `vector
   ...
 ```
 
-## Non-Equality Filters
+## Indices
+
+With Version 5, Cassandra introduced Storage Attached Indexes, or SAIs. These allow `WHERE` filtering without specifying
+the partition key, and allow for additional operator types such as non-equalities. You can define these with the `indices`
+parameter, which accepts zero or more dictionaries each containing `name` and `value` entries.
+
+Indices are optional, though required if using filtered queries on non-partition columns.
+
+- The `name` entry is part of the object name; on a table named `test_table` an index with `name: "some_column"`
+  would be `idx_test_table_some_column`.
+- The `value` entry is the column on which the index is created, surrounded by `(` and `)`. With the above column
+  `some_column` it would be specified as `value: "(some_column)"`.
+- An optional `options` entry is a map passed to the `WITH OPTIONS =` clause of the `CREATE CUSTOM INDEX` statement.
+  The specific entries on this map are index type specific.
+
+```typescript
+  indices: [{ name: "some_column", value: "(some_column)" }],
+```
+
+## Advanced Filtering
 
 By default, filters are applied with an equality `=`. For those fields that have an `indices` entry, you may
 provide an `operator` with a string of a value supported by the index; in this case, you specify one or
@@ -113,6 +158,24 @@ or
   { userid: userid_variable },
   { name: "create_datetime", operator: ">", value: some_date_variable },
 ];
+```
+
+`value` can be a single value or an array. If it is not an array, or there is only one element in `value`,
+the resulting query will be along the lines of `${name} ${operator} ?` with `value` bound to the `?`.
+
+If there is more than one element in the `value` array, the number of unquoted `?` in `name` are counted
+and subtracted from the length of `value`, and this number of `?` is put on the right side of the operator;
+if there are more than one `?` then they will be encapsulated in `(` and `)`, e.g. `(?, ?, ?)`.
+
+This faciliates bind values on the left of the operator, which is useful for some functions; for example
+a geo-distance filter:
+
+```typescript
+{
+  name: "GEO_DISTANCE(coord, ?)",
+  operator: "<",
+  value: [new Float32Array([53.3730617,-6.3000515]), 10000],
+},
 ```
 
 ## Data Partitioning and Composite Keys
@@ -146,16 +209,19 @@ In the configuration document, further optional parameters are provided; their d
 
 ```typescript
   ...,
-  indices: [],
   maxConcurrency: 25,
   batchSize: 1,
   withClause: "",
   ...
 ```
 
-| Parameter        | Usage                                                                                                                                                                                                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `indices`        | Optional, but required if using filtered queries on non-partition columns. Each metadata column (e.g. `<metadata_filter_column>`) to be indexed should appear as an entry in a list, in the format `[{name: "<metadata_filter_column>", value: "(<metadata_filter_column>)"}]`. |
-| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                                                                         |
-| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged.                                                    |
-| `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                                                                     |
+| Parameter        | Usage                                                                                                                                                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxConcurrency` | How many concurrent requests will be sent to Cassandra at a given time.                                                                                                                                                      |
+| `batchSize`      | How many documents will be sent on a single request to Cassandra. When using a value > 1, you should ensure your batch size will not exceed the Cassandra parameter `batch_size_fail_threshold_in_kb`. Batches are unlogged. |
+| `withClause`     | Cassandra tables may be created with an optional `WITH` clause; this is generally not needed but provided for completeness.                                                                                                  |
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

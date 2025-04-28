@@ -1,8 +1,8 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { Calculator } from "langchain/tools/calculator";
-import { MessagesPlaceholder } from "langchain/prompts";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { BufferMemory } from "langchain/memory";
+import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 export const run = async () => {
   const model = new ChatOpenAI({ temperature: 0 });

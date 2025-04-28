@@ -1,4 +1,4 @@
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { loadEvaluator } from "langchain/evaluation";
 
 const embedding = new OpenAIEmbeddings();

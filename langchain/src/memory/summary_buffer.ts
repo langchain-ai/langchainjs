@@ -1,9 +1,9 @@
+import { getBufferString } from "@langchain/core/messages";
 import {
-  getBufferString,
   InputValues,
   MemoryVariables,
   OutputValues,
-} from "./base.js";
+} from "@langchain/core/memory";
 import {
   BaseConversationSummaryMemory,
   BaseConversationSummaryMemoryInput,

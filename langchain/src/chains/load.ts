@@ -29,6 +29,8 @@ const loadChainFromFile: FileLoader<BaseChain> = async (
  * import { loadChain } from "langchain/chains/load";
  * const chain = await loadChain("/path/to/chain.json");
  * ```
+ *
+ * @deprecated Use newer {@link https://api.js.langchain.com/functions/langchain.load.load.html | load method}.
  */
 export const loadChain = async (
   uri: string,

@@ -1,4 +1,4 @@
-import { AgentStep } from "../../schema/index.js";
+import { AgentStep } from "@langchain/core/agents";
 
 export function formatXml(intermediateSteps: AgentStep[]) {
   let log = "";

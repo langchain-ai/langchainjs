@@ -1,7 +1,7 @@
 import {
   SageMakerEndpoint,
   SageMakerLLMContentHandler,
-} from "langchain/llms/sagemaker_endpoint";
+} from "@langchain/community/llms/sagemaker_endpoint";
 
 interface ResponseJsonInterface {
   generation: {
@@ -60,7 +60,7 @@ const model = new SageMakerEndpoint({
   },
 });
 
-const res = await model.call(
+const res = await model.invoke(
   "Hello, my name is John Doe, tell me a joke about llamas "
 );
 

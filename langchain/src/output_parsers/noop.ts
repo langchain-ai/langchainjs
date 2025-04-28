@@ -1,4 +1,4 @@
-import { BaseOutputParser } from "../schema/output_parser.js";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
 
 /**
  * The NoOpOutputParser class is a type of output parser that does not

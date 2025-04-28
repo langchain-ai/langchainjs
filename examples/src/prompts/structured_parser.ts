@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 // With a `StructuredOutputParser` we can define a schema for the output.
 const parser = StructuredOutputParser.fromNamesAndDescriptions({
@@ -22,7 +22,7 @@ const model = new OpenAI({ temperature: 0 });
 const input = await prompt.format({
   question: "What is the capital of France?",
 });
-const response = await model.call(input);
+const response = await model.invoke(input);
 
 console.log(input);
 /*

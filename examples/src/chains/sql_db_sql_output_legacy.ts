@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "langchain/sql_db";
 import { SqlDatabaseChain } from "langchain/chains/sql_db";
 
@@ -23,7 +23,7 @@ const chain = new SqlDatabaseChain({
   sqlOutputKey: "sql",
 });
 
-const res = await chain.call({ query: "How many tracks are there?" });
+const res = await chain.invoke({ query: "How many tracks are there?" });
 /* Expected result:
  * {
  *   result: ' There are 3503 tracks.',

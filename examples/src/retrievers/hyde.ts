@@ -1,8 +1,7 @@
-import { OpenAI } from "langchain/llms/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { HydeRetriever } from "langchain/retrievers/hyde";
-import { Document } from "langchain/document";
+import { Document } from "@langchain/core/documents";
 
 const embeddings = new OpenAIEmbeddings();
 const vectorStore = new MemoryVectorStore(embeddings);
@@ -22,9 +21,7 @@ await vectorStore.addDocuments(
   ].map((pageContent) => new Document({ pageContent }))
 );
 
-const results = await retriever.getRelevantDocuments(
-  "What is my favourite food?"
-);
+const results = await retriever.invoke("What is my favourite food?");
 
 console.log(results);
 /*

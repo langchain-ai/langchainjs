@@ -1,6 +1,6 @@
-import { ChatPromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 // We can also construct an LLMChain from a ChatPromptTemplate and a chat model.
 const chat = new ChatOpenAI({ temperature: 0 });
@@ -16,7 +16,7 @@ const chainB = new LLMChain({
   llm: chat,
 });
 
-const resB = await chainB.call({
+const resB = await chainB.invoke({
   input_language: "English",
   output_language: "French",
   text: "I love programming.",

@@ -9,13 +9,13 @@ This example goes over how to load data from the internet movie script database 
 ## Setup
 
 ```bash npm2yarn
-npm install cheerio
+npm install @langchain/community @langchain/core cheerio
 ```
 
 ## Usage
 
 ```typescript
-import { IMSDBLoader } from "langchain/document_loaders/web/imsdb";
+import { IMSDBLoader } from "@langchain/community/document_loaders/web/imsdb";
 
 const loader = new IMSDBLoader("https://imsdb.com/scripts/BlacKkKlansman.html");
 

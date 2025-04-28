@@ -1,5 +1,6 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -11,7 +12,6 @@ import {
   COMBINE_PROMPT_SELECTOR,
   COMBINE_QA_PROMPT_SELECTOR,
 } from "./map_reduce_prompts.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import {
   QUESTION_PROMPT_SELECTOR,
   REFINE_PROMPT_SELECTOR,
@@ -33,7 +33,7 @@ export type QAChainParams =
     } & RefineQAChainParams);
 
 export const loadQAChain = (
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: QAChainParams = { type: "stuff" }
 ) => {
   const { type } = params;
@@ -65,7 +65,7 @@ export interface StuffQAChainParams {
  * @returns A StuffQAChain instance.
  */
 export function loadQAStuffChain(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: StuffQAChainParams = {}
 ) {
   const { prompt = QA_PROMPT_SELECTOR.getPrompt(llm), verbose } = params;
@@ -81,7 +81,7 @@ export interface MapReduceQAChainParams {
   returnIntermediateSteps?: MapReduceDocumentsChainInput["returnIntermediateSteps"];
   combineMapPrompt?: BasePromptTemplate;
   combinePrompt?: BasePromptTemplate;
-  combineLLM?: BaseLanguageModel;
+  combineLLM?: BaseLanguageModelInterface;
   verbose?: boolean;
 }
 
@@ -93,7 +93,7 @@ export interface MapReduceQAChainParams {
  * @returns A MapReduceQAChain instance.
  */
 export function loadQAMapReduceChain(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: MapReduceQAChainParams = {}
 ) {
   const {
@@ -129,7 +129,7 @@ export function loadQAMapReduceChain(
 export interface RefineQAChainParams {
   questionPrompt?: BasePromptTemplate;
   refinePrompt?: BasePromptTemplate;
-  refineLLM?: BaseLanguageModel;
+  refineLLM?: BaseLanguageModelInterface;
   verbose?: boolean;
 }
 
@@ -141,7 +141,7 @@ export interface RefineQAChainParams {
  * @returns A RefineQAChain instance.
  */
 export function loadQARefineChain(
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: RefineQAChainParams = {}
 ) {
   const {

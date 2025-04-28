@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
 
 const extractionFunctionSchema = {
   name: "extractor",
@@ -26,7 +26,7 @@ const extractionFunctionSchema = {
 };
 
 const model = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 }).bind({
   functions: [extractionFunctionSchema],
   function_call: { name: "extractor" },

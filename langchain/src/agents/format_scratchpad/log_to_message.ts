@@ -1,10 +1,10 @@
-import { renderTemplate } from "../../prompts/template.js";
+import type { AgentStep } from "@langchain/core/agents";
 import {
+  type BaseMessage,
   AIMessage,
-  AgentStep,
-  BaseMessage,
   HumanMessage,
-} from "../../schema/index.js";
+} from "@langchain/core/messages";
+import { renderTemplate } from "@langchain/core/prompts";
 
 export function formatLogToMessage(
   intermediateSteps: AgentStep[],

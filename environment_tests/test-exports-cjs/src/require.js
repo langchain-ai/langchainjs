@@ -1,29 +1,19 @@
 const assert = require("assert");
-const { OpenAI } = require("langchain/llms/openai");
+const { OpenAI } = require("@langchain/openai");
 const { LLMChain } = require("langchain/chains");
-const { ChatPromptTemplate } = require("langchain/prompts");
-const { loadPrompt } = require("langchain/prompts/load");
-const { HNSWLib } = require("langchain/vectorstores/hnswlib");
-const { OpenAIEmbeddings } = require("langchain/embeddings/openai");
-const { Document } = require("langchain/document");
-const { CSVLoader } = require("langchain/document_loaders/fs/csv");
+const { ChatPromptTemplate } = require("@langchain/core/prompts");
+const { MemoryVectorStore } = require("langchain/vectorstores/memory");
+const { HuggingFaceTransformersEmbeddings } = require("@langchain/community/embeddings/huggingface_transformers");
+const { Document } = require("@langchain/core/documents");
 
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof LLMChain === "function");
-  assert(typeof loadPrompt === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof HNSWLib === "function");
+  assert(typeof MemoryVectorStore === "function");
 
-  // Test dynamic imports of peer dependencies
-  const { HierarchicalNSW } = await HNSWLib.imports();
-
-  const vs = new HNSWLib(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }), {
-    space: "ip",
-    numDimensions: 3,
-    index: new HierarchicalNSW("ip", 3),
-  });
+  const vs = new MemoryVectorStore(new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" }));
 
   await vs.addVectors(
     [
@@ -41,13 +31,6 @@ async function test() {
   );
 
   assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
-
-  // Test CSVLoader
-  const loader = new CSVLoader(new Blob(["a,b,c\n1,2,3\n4,5,6"]));
-
-  const docs = await loader.load();
-
-  assert(docs.length === 2);
 }
 
 test()

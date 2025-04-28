@@ -1,6 +1,6 @@
-import { PromptTemplate } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { RunnableSequence } from "langchain/schema/runnable";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 const model = new ChatOpenAI({});
 const promptTemplate = PromptTemplate.fromTemplate(

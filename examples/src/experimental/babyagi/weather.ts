@@ -1,7 +1,6 @@
 import { BabyAGI } from "langchain/experimental/babyagi";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
 
@@ -11,7 +10,7 @@ const babyAGI = BabyAGI.fromLLM({
   maxIterations: 3,
 });
 
-await babyAGI.call({ objective: "Write a weather report for SF today" });
+await babyAGI.invoke({ objective: "Write a weather report for SF today" });
 /*
 
 *****TASK LIST*****

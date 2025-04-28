@@ -1,6 +1,6 @@
-import { CallbackManagerForChainRun } from "langchain/callbacks";
-import { BaseMemory } from "langchain/memory";
-import { ChainValues } from "langchain/schema";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import { BaseMemory } from "@langchain/core/memory";
+import { ChainValues } from "@langchain/core/utils/types";
 
 abstract class BaseChain {
   memory?: BaseMemory;

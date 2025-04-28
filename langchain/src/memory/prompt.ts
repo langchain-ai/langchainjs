@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const _DEFAULT_SUMMARIZER_TEMPLATE = `Progressively summarize the lines of conversation provided, adding onto the previous summary returning a new summary.
 

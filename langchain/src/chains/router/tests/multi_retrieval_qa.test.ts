@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
+import { BaseRetriever } from "@langchain/core/retrievers";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { LLMResult } from "@langchain/core/outputs";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
-import { BaseLLM } from "../../../llms/base.js";
-import { LLMResult } from "../../../schema/index.js";
-import { BaseRetriever } from "../../../schema/retriever.js";
-import { Document } from "../../../document.js";
-import { PromptTemplate } from "../../../prompts/prompt.js";
 
 class FakeRetrievers extends BaseRetriever {
   lc_namespace: string[] = [];
@@ -100,7 +100,7 @@ test("Test MultiRetrievalQAChain No Defaults With Retriever Prompts", async () =
     }
   );
 
-  const { text: result } = await multiRetrievalQAChain.call({
+  const { text: result } = await multiRetrievalQAChain.invoke({
     input: "test input",
   });
 
@@ -129,7 +129,7 @@ test("Test MultiRetrievalQAChain No Defaults No Retriever Prompts", async () => 
     }
   );
 
-  const { text: result, sourceDocuments } = await multiRetrievalQAChain.call({
+  const { text: result, sourceDocuments } = await multiRetrievalQAChain.invoke({
     input: "test input",
   });
 

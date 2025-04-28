@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { createExtractionChainFromZod } from "langchain/chains";
 
 const zodSchema = z.object({
@@ -10,7 +10,7 @@ const zodSchema = z.object({
   "dog-breed": z.string().optional(),
 });
 const chatModel = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-0613",
+  model: "gpt-3.5-turbo-0613",
   temperature: 0,
 });
 const chain = createExtractionChainFromZod(zodSchema, chatModel);

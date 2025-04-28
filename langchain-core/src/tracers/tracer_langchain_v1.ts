@@ -1,5 +1,6 @@
-import type { ChainValues } from "../utils/types.js";
-import { type BaseMessage, getBufferString } from "../messages/index.js";
+import type { ChainValues } from "../utils/types/index.js";
+import { type BaseMessage } from "../messages/base.js";
+import { getBufferString } from "../messages/utils.js";
 import type { LLMResult } from "../outputs.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 
@@ -51,6 +52,7 @@ export interface TracerSessionV1 extends BaseTracerSession {
   id: number;
 }
 
+/** @deprecated Use LangChainTracer instead. */
 export class LangChainTracerV1 extends BaseTracer {
   name = "langchain_tracer";
 

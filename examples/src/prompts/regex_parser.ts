@@ -1,6 +1,6 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { RegexParser } from "langchain/output_parsers";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
   const parser = new RegexParser(
@@ -30,7 +30,7 @@ export const run = async () => {
   Joke: What time is the appointment? Tooth hurt-y.
   */
 
-  const response = await model.call(input);
+  const response = await model.invoke(input);
   console.log(response);
   /*
   Humor: 8, Sophistication: D

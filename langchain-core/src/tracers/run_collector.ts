@@ -20,7 +20,7 @@ export class RunCollectorCallbackHandler extends BaseTracer {
    * @param exampleId The ID of the example.
    */
   constructor({ exampleId }: { exampleId?: string } = {}) {
-    super();
+    super({ _awaitHandler: true });
     this.exampleId = exampleId;
     this.tracedRuns = [];
   }

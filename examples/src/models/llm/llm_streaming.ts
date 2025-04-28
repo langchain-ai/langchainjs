@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 // To enable streaming, we pass in `streaming: true` to the LLM constructor.
 // Additionally, we pass in a handler for the `handleLLMNewToken` event.
@@ -7,7 +7,7 @@ const model = new OpenAI({
   streaming: true,
 });
 
-const response = await model.call("Tell me a joke.", {
+const response = await model.invoke("Tell me a joke.", {
   callbacks: [
     {
       handleLLMNewToken(token: string) {

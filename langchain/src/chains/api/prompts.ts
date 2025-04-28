@@ -1,5 +1,5 @@
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 export const API_URL_RAW_PROMPT_TEMPLATE = `You are given the below API Documentation:
 {api_docs}

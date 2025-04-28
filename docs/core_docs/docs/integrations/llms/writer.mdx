@@ -12,9 +12,22 @@ Next, you'll need to install the official package as a peer dependency:
 yarn add @writerai/writer-sdk
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core
+```
+
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
 import WriterExample from "@examples/models/llm/writer.ts";
 
 <CodeBlock language="typescript">{WriterExample}</CodeBlock>
+
+## Related
+
+- LLM [conceptual guide](/docs/concepts/text_llms)
+- LLM [how-to guides](/docs/how_to/#llms)

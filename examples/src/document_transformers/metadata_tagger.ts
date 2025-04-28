@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createMetadataTaggerFromZod } from "langchain/document_transformers/openai_functions";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Document } from "langchain/document";
+import { ChatOpenAI } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 
 const zodSchema = z.object({
   movie_title: z.string(),
@@ -13,7 +13,7 @@ const zodSchema = z.object({
 });
 
 const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
-  llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo" }),
+  llm: new ChatOpenAI({ model: "gpt-3.5-turbo" }),
 });
 
 const documents = [

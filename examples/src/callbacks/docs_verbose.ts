@@ -1,6 +1,6 @@
-import { PromptTemplate } from "langchain/prompts";
 import { LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const chain = new LLMChain({
   llm: new OpenAI({ temperature: 0 }),

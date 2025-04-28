@@ -1,17 +1,17 @@
-import { BaseCallbackConfig } from "langchain/callbacks";
 import {
   collapseDocs,
   splitListOfDocs,
 } from "langchain/chains/combine_documents/reduce";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Document } from "langchain/document";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { ChatOpenAI } from "@langchain/openai";
 import { formatDocument } from "langchain/schema/prompt_template";
 import {
+  RunnableConfig,
   RunnablePassthrough,
   RunnableSequence,
-} from "langchain/schema/runnable";
+} from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 // Initialize the OpenAI model
 const model = new ChatOpenAI({});
@@ -62,12 +62,10 @@ const collapseChain = RunnableSequence.from([
 // Define a function to collapse a list of documents until the total number of tokens is within the limit
 const collapse = async (
   documents: Document[],
-  options?: {
-    config?: BaseCallbackConfig;
-  },
+  options?: RunnableConfig,
   tokenMax = 4000
 ) => {
-  const editableConfig = options?.config;
+  const editableConfig = options;
   let docs = documents;
   let collapseCount = 1;
   while ((await getNumTokens(docs)) > tokenMax) {

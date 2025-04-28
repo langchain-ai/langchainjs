@@ -1,5 +1,5 @@
-import { ClickHouseStore } from "langchain/vectorstores/clickhouse";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ClickHouseStore } from "@langchain/community/vectorstores/clickhouse";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 // Initialize ClickHouse store from texts
 const vectorStore = await ClickHouseStore.fromTexts(

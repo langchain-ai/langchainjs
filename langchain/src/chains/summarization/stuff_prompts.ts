@@ -1,5 +1,5 @@
 /* eslint-disable spaced-comment */
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `Write a concise summary of the following:
 

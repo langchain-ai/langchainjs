@@ -1,4 +1,5 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
+import { PromptTemplate } from "@langchain/core/prompts";
 import {
   DEFAULT_SQL_DATABASE_PROMPT,
   SQL_SAP_HANA_PROMPT,
@@ -6,8 +7,8 @@ import {
   SQL_MYSQL_PROMPT,
   SQL_POSTGRES_PROMPT,
   SQL_SQLITE_PROMPT,
+  SQL_ORACLE_PROMPT,
 } from "../chains/sql_db/sql_db_prompt.js";
-import { PromptTemplate } from "../prompts/index.js";
 
 interface RawResultTableAndColumn {
   table_name: string;
@@ -138,7 +139,10 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
-  if (appDataSource.options.type === "sqlite") {
+  if (
+    appDataSource.options.type === "sqlite" ||
+    appDataSource.options.type === "sqljs"
+  ) {
     sql =
       "SELECT \n" +
       "   m.name AS table_name,\n" +
@@ -161,7 +165,10 @@ export const getTableAndColumnsName = async (
     return formatToSqlTable(rep);
   }
 
-  if (appDataSource.options.type === "mysql") {
+  if (
+    appDataSource.options.type === "mysql" ||
+    appDataSource.options.type === "aurora-mysql"
+  ) {
     sql =
       "SELECT " +
       "TABLE_NAME AS table_name, " +
@@ -177,17 +184,17 @@ export const getTableAndColumnsName = async (
   }
 
   if (appDataSource.options.type === "mssql") {
-    sql =
-      "SELECT " +
-      "TABLE_NAME AS table_name, " +
-      "COLUMN_NAME AS column_name, " +
-      "DATA_TYPE AS data_type, " +
-      "IS_NULLABLE AS is_nullable " +
-      "FROM INFORMATION_SCHEMA.COLUMNS " +
-      "ORDER BY TABLE_NAME, ORDINAL_POSITION;";
+    const schema = appDataSource.options?.schema;
+    const sql = `SELECT
+    TABLE_NAME AS table_name,
+    COLUMN_NAME AS column_name,
+    DATA_TYPE AS data_type,
+    IS_NULLABLE AS is_nullable
+    FROM INFORMATION_SCHEMA.COLUMNS
+    ${schema && `WHERE TABLE_SCHEMA = '${schema}'`} 
+ORDER BY TABLE_NAME, ORDINAL_POSITION;`;
 
     const rep = await appDataSource.query(sql);
-
     return formatToSqlTable(rep);
   }
 
@@ -216,6 +223,20 @@ export const getTableAndColumnsName = async (
     );
 
     return formatToSqlTable(repLowerCase);
+  }
+  if (appDataSource.options.type === "oracle") {
+    const schemaName = appDataSource.options.schema;
+    const sql = `  
+      SELECT
+          TABLE_NAME AS "table_name",
+          COLUMN_NAME AS "column_name",
+          DATA_TYPE AS "data_type",
+          NULLABLE AS "is_nullable"
+      FROM ALL_TAB_COLS
+      WHERE
+          OWNER = UPPER('${schemaName}')`;
+    const rep = await appDataSource.query(sql);
+    return formatToSqlTable(rep);
   }
   throw new Error("Database type not implemented yet");
 };
@@ -258,11 +279,15 @@ export const generateTableInfoFromTables = async (
     let schema = null;
     if (appDataSource.options.type === "postgres") {
       schema = appDataSource.options?.schema ?? "public";
+    } else if (appDataSource.options.type === "mssql") {
+      schema = appDataSource.options?.schema;
     } else if (appDataSource.options.type === "sap") {
       schema =
         appDataSource.options?.schema ??
         appDataSource.options?.username ??
         "public";
+    } else if (appDataSource.options.type === "oracle") {
+      schema = appDataSource.options.schema;
     }
     let sqlCreateTableQuery = schema
       ? `CREATE TABLE "${schema}"."${currentTable.tableName}" (\n`
@@ -285,13 +310,18 @@ export const generateTableInfoFromTables = async (
       const schema = appDataSource.options?.schema ?? "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     } else if (appDataSource.options.type === "mssql") {
-      sqlSelectInfoQuery = `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
+      const schema = appDataSource.options?.schema;
+      sqlSelectInfoQuery = schema
+        ? `SELECT TOP ${nbSampleRow} * FROM ${schema}.[${currentTable.tableName}];\n`
+        : `SELECT TOP ${nbSampleRow} * FROM [${currentTable.tableName}];\n`;
     } else if (appDataSource.options.type === "sap") {
       const schema =
         appDataSource.options?.schema ??
         appDataSource.options?.username ??
         "public";
       sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
+    } else if (appDataSource.options.type === "oracle") {
+      sqlSelectInfoQuery = `SELECT * FROM "${schema}"."${currentTable.tableName}" WHERE ROWNUM <= '${nbSampleRow}'`;
     } else {
       sqlSelectInfoQuery = `SELECT * FROM "${currentTable.tableName}" LIMIT ${nbSampleRow};\n`;
     }
@@ -345,6 +375,10 @@ export const getPromptTemplateFromDataSource = (
 
   if (appDataSource.options.type === "sap") {
     return SQL_SAP_HANA_PROMPT;
+  }
+
+  if (appDataSource.options.type === "oracle") {
+    return SQL_ORACLE_PROMPT;
   }
 
   return DEFAULT_SQL_DATABASE_PROMPT;

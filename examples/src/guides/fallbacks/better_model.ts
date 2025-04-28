@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
+import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 const prompt = PromptTemplate.fromTemplate(
   `Return a JSON object containing the following value wrapped in an "input" key. Do not return anything else:\n{input}`
@@ -10,11 +9,11 @@ const prompt = PromptTemplate.fromTemplate(
 
 const badModel = new OpenAI({
   maxRetries: 0,
-  modelName: "text-ada-001",
+  model: "gpt-3.5-turbo-instruct",
 });
 
 const normalModel = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 
 const outputParser = StructuredOutputParser.fromZodSchema(
@@ -40,9 +39,7 @@ try {
 */
 }
 
-const chain = badChain.withFallbacks({
-  fallbacks: [goodChain],
-});
+const chain = badChain.withFallbacks([goodChain]);
 
 const result = await chain.invoke({
   input: "testing",

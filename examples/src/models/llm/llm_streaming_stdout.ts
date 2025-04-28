@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 
 // To enable streaming, we pass in `streaming: true` to the LLM constructor.
 // Additionally, we pass in a handler for the `handleLLMNewToken` event.
@@ -13,7 +13,7 @@ const chat = new OpenAI({
   ],
 });
 
-await chat.call("Write me a song about sparkling water.");
+await chat.invoke("Write me a song about sparkling water.");
 /*
 Verse 1
 Crystal clear and made with care

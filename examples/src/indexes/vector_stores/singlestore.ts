@@ -1,5 +1,5 @@
-import { SingleStoreVectorStore } from "langchain/vectorstores/singlestore";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { SingleStoreVectorStore } from "@langchain/community/vectorstores/singlestore";
+import { OpenAIEmbeddings } from "@langchain/openai";
 
 export const run = async () => {
   const vectorStore = await SingleStoreVectorStore.fromTexts(

@@ -1,0 +1,29 @@
+{
+  "name": "test-exports-tsc",
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "libs/*"
+  ],
+  "private": true,
+  "description": "TSC Tests for the things exported by the langchain package",
+  "main": "./index.mjs",
+  "scripts": {
+    "build": "tsc -m nodenext main.ts",
+    "test": "node ./main.js"
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/anthropic": "workspace:*",
+    "@langchain/community": "workspace:*",
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
+    "langchain": "workspace:*",
+    "typescript": "5.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "prettier": "^2.8.3"
+  }
+}

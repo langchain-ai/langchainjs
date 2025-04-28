@@ -1,7 +1,7 @@
 import { BufferMemory } from "langchain/memory";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
-import { XataChatMessageHistory } from "langchain/stores/message/xata";
+import { XataChatMessageHistory } from "@langchain/community/stores/message/xata";
 import { BaseClient } from "@xata.io/client";
 
 // if you use the generated client, you don't need this function.
@@ -34,7 +34,7 @@ const memory = new BufferMemory({
 const model = new ChatOpenAI();
 const chain = new ConversationChain({ llm: model, memory });
 
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 /*
 {
@@ -44,7 +44,7 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "What did I just say my name was?" });
+const res2 = await chain.invoke({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*

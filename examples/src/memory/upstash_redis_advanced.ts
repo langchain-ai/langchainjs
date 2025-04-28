@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { BufferMemory } from "langchain/memory";
-import { UpstashRedisChatMessageHistory } from "langchain/stores/message/upstash_redis";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
+import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";
 
 // Create your own Redis client
@@ -19,13 +19,13 @@ const memory = new BufferMemory({
 });
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   temperature: 0,
 });
 
 const chain = new ConversationChain({ llm: model, memory });
 
-const res1 = await chain.call({ input: "Hi! I'm Jim." });
+const res1 = await chain.invoke({ input: "Hi! I'm Jim." });
 console.log({ res1 });
 /*
 {
@@ -35,7 +35,7 @@ console.log({ res1 });
 }
 */
 
-const res2 = await chain.call({ input: "What did I just say my name was?" });
+const res2 = await chain.invoke({ input: "What did I just say my name was?" });
 console.log({ res2 });
 
 /*

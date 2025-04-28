@@ -1,5 +1,5 @@
-import { ZepVectorStore } from "langchain/vectorstores/zep";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { ZepVectorStore } from "@langchain/community/vectorstores/zep";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { randomUUID } from "crypto";
 

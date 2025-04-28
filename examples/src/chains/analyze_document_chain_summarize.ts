@@ -1,4 +1,4 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/openai";
 import { loadSummarizationChain, AnalyzeDocumentChain } from "langchain/chains";
 import * as fs from "fs";
 
@@ -9,7 +9,7 @@ const combineDocsChain = loadSummarizationChain(model);
 const chain = new AnalyzeDocumentChain({
   combineDocumentsChain: combineDocsChain,
 });
-const res = await chain.call({
+const res = await chain.invoke({
   input_document: text,
 });
 console.log({ res });

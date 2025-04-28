@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../../prompts/index.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const template = `You are assessing a submitted answer on a given task or input based on a set of criteria. Here is the data:
 [BEGIN DATA]

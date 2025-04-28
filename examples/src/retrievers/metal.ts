@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Metal from "@getmetal/metal-sdk";
-import { MetalRetriever } from "langchain/retrievers/metal";
+import { MetalRetriever } from "@langchain/community/retrievers/metal";
 
 export const run = async () => {
   const MetalSDK = Metal;
@@ -12,7 +12,7 @@ export const run = async () => {
   );
   const retriever = new MetalRetriever({ client });
 
-  const docs = await retriever.getRelevantDocuments("hello");
+  const docs = await retriever.invoke("hello");
 
   console.log(docs);
 };

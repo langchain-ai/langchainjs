@@ -1,6 +1,6 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { PromptTemplate } from "langchain/prompts";
-import { RunnableMap } from "langchain/schema/runnable";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableMap } from "@langchain/core/runnables";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({});
 const jokeChain = PromptTemplate.fromTemplate(

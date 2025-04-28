@@ -10,9 +10,22 @@ You'll need to install the official SageMaker SDK as a peer dependency:
 npm install @aws-sdk/client-sagemaker-runtime
 ```
 
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core
+```
+
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
 import SageMakerEndpointExample from "@examples/models/llm/sagemaker_endpoint.ts";
 
 <CodeBlock language="typescript">{SageMakerEndpointExample}</CodeBlock>
+
+## Related
+
+- LLM [conceptual guide](/docs/concepts/text_llms)
+- LLM [how-to guides](/docs/how_to/#llms)

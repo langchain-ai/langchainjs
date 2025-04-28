@@ -1,4 +1,11 @@
 import { z } from "zod";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import {
+  Example,
+  interpolateFString,
+  FewShotPromptTemplate,
+} from "@langchain/core/prompts";
+import { InputValues } from "@langchain/core/utils/types";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
@@ -7,7 +14,6 @@ import {
   Operators,
   StructuredQuery,
 } from "./ir.js";
-import { Example, InputValues } from "../../schema/index.js";
 import {
   DEFAULT_EXAMPLES,
   DEFAULT_PREFIX,
@@ -15,12 +21,20 @@ import {
   DEFAULT_SUFFIX,
   EXAMPLE_PROMPT,
 } from "./prompt.js";
-import { interpolateFString } from "../../prompts/template.js";
-import { LLMChain } from "../llm_chain.js";
-import { FewShotPromptTemplate } from "../../prompts/few_shot.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 import { AsymmetricStructuredOutputParser } from "../../output_parsers/structured.js";
-import { AttributeInfo } from "../../schema/query_constructor.js";
+
+/**
+ * A simple data structure that holds information about an attribute. It
+ * is typically used to provide metadata about attributes in other classes
+ * or data structures within the LangChain framework.
+ */
+export class AttributeInfo {
+  constructor(
+    public name: string,
+    public type: string,
+    public description: string
+  ) {}
+}
 
 export { QueryTransformer, type TraverseType };
 export {
@@ -165,8 +179,8 @@ function _getPrompt(
 /**
  * A type that represents options for the query constructor chain.
  */
-export type QueryConstructorChainOptions = {
-  llm: BaseLanguageModel;
+export type QueryConstructorRunnableOptions = {
+  llm: BaseLanguageModelInterface;
   documentContents: string;
   attributeInfo: AttributeInfo[];
   examples?: InputValues[];
@@ -174,7 +188,12 @@ export type QueryConstructorChainOptions = {
   allowedOperators?: Operator[];
 };
 
-export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
+/** @deprecated */
+export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
+
+export function loadQueryConstructorRunnable(
+  opts: QueryConstructorRunnableOptions
+) {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,
@@ -182,8 +201,9 @@ export function loadQueryConstructorChain(opts: QueryConstructorChainOptions) {
     opts.allowedOperators,
     opts.examples
   );
-  return new LLMChain({
-    llm: opts.llm,
-    prompt,
-  });
+  const outputParser = StructuredQueryOutputParser.fromComponents(
+    opts.allowedComparators,
+    opts.allowedOperators
+  );
+  return prompt.pipe(opts.llm).pipe(outputParser);
 }

@@ -1,13 +1,13 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import type { AgentAction, AgentFinish } from "@langchain/core/agents";
 import {
   FormatInstructionsOptions,
   OutputParserException,
-} from "../../schema/output_parser.js";
-import { renderTemplate } from "../../prompts/template.js";
+} from "@langchain/core/output_parsers";
+import { renderTemplate } from "@langchain/core/prompts";
 import { AgentActionOutputParser } from "../types.js";
 import { FORMAT_INSTRUCTIONS } from "./prompt.js";
-import { AgentAction, AgentFinish } from "../../schema/index.js";
 import { OutputFixingParser } from "../../output_parsers/fix.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
 
 export type ChatConversationalAgentOutputParserFormatInstructionsOptions =
   FormatInstructionsOptions & {
@@ -141,16 +141,16 @@ export class ChatConversationalAgentOutputParserWithRetries extends AgentActionO
 
   /**
    * Static method to create a new
-   * ChatConversationalAgentOutputParserWithRetries from a BaseLanguageModel
+   * ChatConversationalAgentOutputParserWithRetries from a BaseLanguageModelInterface
    * and options. If no base parser is provided in the options, a new
    * ChatConversationalAgentOutputParser is created. An OutputFixingParser
-   * is also created from the BaseLanguageModel and the base parser.
-   * @param llm BaseLanguageModel instance used to create the OutputFixingParser.
+   * is also created from the BaseLanguageModelInterface and the base parser.
+   * @param llm BaseLanguageModelInterface instance used to create the OutputFixingParser.
    * @param options Options for creating the ChatConversationalAgentOutputParserWithRetries instance.
    * @returns A new instance of ChatConversationalAgentOutputParserWithRetries.
    */
   static fromLLM(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     options: Omit<ChatConversationalAgentOutputParserArgs, "outputFixingParser">
   ): ChatConversationalAgentOutputParserWithRetries {
     const baseParser =

@@ -1,13 +1,10 @@
-import { LLMChain } from "../chains/llm_chain.js";
+import type { Runnable } from "@langchain/core/runnables";
+import { BaseOutputParser } from "@langchain/core/output_parsers";
+import type { AgentAction, AgentFinish } from "@langchain/core/agents";
+import type { BaseMessage } from "@langchain/core/messages";
+import type { ChainValues } from "@langchain/core/utils/types";
 import { SerializedLLMChain } from "../chains/serde.js";
-import {
-  AgentAction,
-  AgentFinish,
-  BaseMessage,
-  ChainValues,
-} from "../schema/index.js";
-import { BaseOutputParser } from "../schema/output_parser.js";
-import { Runnable } from "../schema/runnable/base.js";
+import { LLMChain } from "../chains/llm_chain.js";
 
 /**
  * Interface defining the input for creating an agent. It includes the
@@ -21,10 +18,27 @@ export interface AgentInput {
 }
 
 /**
- * Interface defining the input for creating an agent that uses runnables.
- * It includes the Runnable instance, and an optional list of stop strings.
+ * Interface defining the input for creating a single action agent
+ * that uses runnables.
  */
-export interface RunnableAgentInput {
+export interface RunnableSingleActionAgentInput {
+  runnable: Runnable<
+    ChainValues & {
+      agent_scratchpad?: string | BaseMessage[];
+      stop?: string[];
+    },
+    AgentAction | AgentFinish
+  >;
+  streamRunnable?: boolean;
+  defaultRunName?: string;
+}
+
+/**
+ * Interface defining the input for creating a multi-action agent that uses
+ * runnables. It includes the Runnable instance, and an optional list of
+ * stop strings.
+ */
+export interface RunnableMultiActionAgentInput {
   runnable: Runnable<
     ChainValues & {
       agent_scratchpad?: string | BaseMessage[];
@@ -32,8 +46,13 @@ export interface RunnableAgentInput {
     },
     AgentAction[] | AgentAction | AgentFinish
   >;
+  streamRunnable?: boolean;
+  defaultRunName?: string;
   stop?: string[];
 }
+
+/** @deprecated Renamed to RunnableMultiActionAgentInput. */
+export interface RunnableAgentInput extends RunnableMultiActionAgentInput {}
 
 /**
  * Abstract class representing an output parser specifically for agent

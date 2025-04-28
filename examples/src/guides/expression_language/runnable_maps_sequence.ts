@@ -1,18 +1,18 @@
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
-import { CohereEmbeddings } from "langchain/embeddings/cohere";
-import { PromptTemplate } from "langchain/prompts";
-import { StringOutputParser } from "langchain/schema/output_parser";
+import { CohereEmbeddings } from "@langchain/cohere";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
   RunnableSequence,
-} from "langchain/schema/runnable";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import type { Document } from "langchain/document";
+} from "@langchain/core/runnables";
+import { Document } from "@langchain/core/documents";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const model = new ChatAnthropic();
-const vectorstore = await HNSWLib.fromDocuments(
+const vectorstore = await MemoryVectorStore.fromDocuments(
   [{ pageContent: "mitochondria is the powerhouse of the cell", metadata: {} }],
-  new CohereEmbeddings()
+  new CohereEmbeddings({ model: "embed-english-v3.0" })
 );
 const retriever = vectorstore.asRetriever();
 const template = `Answer the question based only on the following context:

@@ -1,5 +1,5 @@
+import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain, LLMChainInput } from "../../chains/llm_chain.js";
-import { PromptTemplate } from "../../prompts/prompt.js";
 
 /** Chain to prioritize tasks. */
 export class TaskPrioritizationChain extends LLMChain {

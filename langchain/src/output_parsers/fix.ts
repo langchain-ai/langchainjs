@@ -1,12 +1,27 @@
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 import {
   BaseOutputParser,
   OutputParserException,
-} from "../schema/output_parser.js";
-import { BasePromptTemplate } from "../prompts/base.js";
+} from "@langchain/core/output_parsers";
+import { BasePromptTemplate } from "@langchain/core/prompts";
+import { Runnable } from "@langchain/core/runnables";
 import { LLMChain } from "../chains/llm_chain.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { Callbacks } from "../callbacks/manager.js";
 import { NAIVE_FIX_PROMPT } from "./prompts.js";
+
+interface OutputFixingParserRetryInput {
+  instructions: string;
+  completion: string;
+  error: OutputParserException;
+}
+
+function isLLMChain<T>(
+  x: LLMChain | Runnable<OutputFixingParserRetryInput, T>
+): x is LLMChain {
+  return (
+    (x as LLMChain).prompt !== undefined && (x as LLMChain).llm !== undefined
+  );
+}
 
 /**
  * Class that extends the BaseOutputParser to handle situations where the
@@ -24,7 +39,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
 
   parser: BaseOutputParser<T>;
 
-  retryChain: LLMChain;
+  retryChain: LLMChain | Runnable<OutputFixingParserRetryInput, T>;
 
   /**
    * Static method to create a new instance of OutputFixingParser using a
@@ -35,7 +50,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
    * @returns A new instance of OutputFixingParser.
    */
   static fromLLM<T>(
-    llm: BaseLanguageModel,
+    llm: BaseLanguageModelInterface,
     parser: BaseOutputParser<T>,
     fields?: {
       prompt?: BasePromptTemplate;
@@ -51,7 +66,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     retryChain,
   }: {
     parser: BaseOutputParser<T>;
-    retryChain: LLMChain;
+    retryChain: LLMChain | Runnable<OutputFixingParserRetryInput, T>;
   }) {
     super(...arguments);
     this.parser = parser;
@@ -72,16 +87,22 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     } catch (e) {
       // eslint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
-        const result = await this.retryChain.call(
-          {
-            instructions: this.parser.getFormatInstructions(),
-            completion,
-            error: e,
-          },
-          callbacks
-        );
-        const newCompletion: string = result[this.retryChain.outputKey];
-        return this.parser.parse(newCompletion);
+        const retryInput = {
+          instructions: this.parser.getFormatInstructions(),
+          completion,
+          error: e,
+        };
+
+        if (isLLMChain(this.retryChain)) {
+          const result = await this.retryChain.call(retryInput, callbacks);
+          const newCompletion: string = result[this.retryChain.outputKey];
+          return this.parser.parse(newCompletion, callbacks);
+        } else {
+          const result = await this.retryChain.invoke(retryInput, {
+            callbacks,
+          });
+          return result;
+        }
       }
       throw e;
     }

@@ -1,18 +1,18 @@
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import { OpenAI } from "langchain/llms/openai";
-import { StructuredTool } from "langchain/tools";
+import { OpenAI } from "@langchain/openai";
 import {
   GmailCreateDraft,
   GmailGetMessage,
   GmailGetThread,
   GmailSearch,
   GmailSendMessage,
-} from "langchain/tools/gmail";
+} from "@langchain/community/tools/gmail";
+import { StructuredTool } from "@langchain/core/tools";
 
 export async function run() {
   const model = new OpenAI({
     temperature: 0,
-    openAIApiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY,
   });
 
   // These are the default parameters for the Gmail tools
@@ -20,8 +20,10 @@ export async function run() {
   //     credentials: {
   //       clientEmail: process.env.GMAIL_CLIENT_EMAIL,
   //       privateKey: process.env.GMAIL_PRIVATE_KEY,
+  //       // Either (privateKey + clientEmail) or accessToken is required
+  //       accessToken: "an access token or function to get access token",
   //     },
-  //     scopes: ["https://mail.google.com/"],
+  //     scopes: ["https://mail.google.com/"], // Not required if using access token
   //   };
 
   // For custom parameters, uncomment the code above, replace the values with your own, and pass it to the tools below

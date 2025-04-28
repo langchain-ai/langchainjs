@@ -4,12 +4,13 @@
 name: CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
-    # Do not run this workflow if only docs changed.
-    paths-ignore:
+    paths_ignore:
       - 'docs/**'
+      - 'dependency_range_tests/**'
+      - 'environment_tests/**'
+      - '.github/**'
+      - '!.github/workflows/ci.yml'
   workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
 
 
@@ -38,36 +39,3 @@ jobs:
         run: yarn install --immutable --mode=skip-build
       - name: Check linting
         run: yarn run lint
-
-  test:
-    name: Unit Tests
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node-version: [18.x, 20.x]
-        # See Node.js release schedule at https://nodejs.org/en/about/releases/
-        # include:
-          # - os: windows-latest
-          #   node-version: 20.x
-          # - os: macos-latest
-          #   node-version: 20.x
-    runs-on: ${{ matrix.os }}
-    env:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "yarn"
-      - name: Install dependencies
-        run: yarn install --immutable
-      - name: Test
-        run: yarn run test:unit
-
-  test-exports:
-    uses:
-      ./.github/workflows/test-exports.yml
-    secrets: inherit

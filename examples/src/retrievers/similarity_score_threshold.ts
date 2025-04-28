@@ -1,5 +1,5 @@
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
 
 const vectorStore = await MemoryVectorStore.fromTexts(
@@ -22,9 +22,7 @@ const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
   kIncrement: 2, // How much to increase K by each time. It'll fetch N results, then N + kIncrement, then N + kIncrement * 2, etc.
 });
 
-const result = await retriever.getRelevantDocuments(
-  "What are buildings made out of?"
-);
+const result = await retriever.invoke("What are buildings made out of?");
 
 console.log(result);
 

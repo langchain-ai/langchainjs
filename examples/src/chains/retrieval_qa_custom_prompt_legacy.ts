@@ -1,10 +1,9 @@
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { PromptTemplate } from "langchain/prompts";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const promptTemplate = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -28,7 +27,7 @@ const chain = new RetrievalQAChain({
   combineDocumentsChain: loadQAStuffChain(model, { prompt }),
   retriever: vectorStore.asRetriever(),
 });
-const res = await chain.call({
+const res = await chain.invoke({
   query: "What did the president say about Justice Breyer?",
 });
 console.log({ res });

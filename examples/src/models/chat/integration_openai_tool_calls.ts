@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ToolMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { ToolMessage } from "@langchain/core/messages";
 
 // Mocked out function, could be a database/API call in production
 function getCurrentWeather(location: string, _unit?: string) {
@@ -18,7 +18,7 @@ function getCurrentWeather(location: string, _unit?: string) {
 
 // Bind function to the model as a tool
 const chat = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  model: "gpt-3.5-turbo-1106",
   maxTokens: 128,
 }).bind({
   tools: [

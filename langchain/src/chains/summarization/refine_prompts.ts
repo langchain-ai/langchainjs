@@ -1,4 +1,4 @@
-import { PromptTemplate } from "../../prompts/prompt.js";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const refinePromptTemplate = `Your job is to produce a final summary
 We have provided an existing summary up to a certain point: "{existing_answer}"

@@ -1,4 +1,4 @@
-import { AgentStep } from "../../schema/index.js";
+import { AgentStep } from "@langchain/core/agents";
 
 /**
  * Construct the scratchpad that lets the agent continue its thought process.

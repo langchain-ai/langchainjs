@@ -1,10 +1,10 @@
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
-import { CheerioWebBaseLoader } from "langchain/document_loaders/web/cheerio";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { Ollama } from "langchain/llms/ollama";
-import { PromptTemplate } from "langchain/prompts";
-import { HuggingFaceTransformersEmbeddings } from "langchain/embeddings/hf_transformers";
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { Ollama } from "@langchain/community/llms/ollama";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 const loader = new CheerioWebBaseLoader(
   "https://lilianweng.github.io/posts/2023-06-23-agent/"
@@ -52,7 +52,7 @@ const chain = new RetrievalQAChain({
   inputKey: "question",
 });
 
-const response = await chain.call({
+const response = await chain.invoke({
   question: "What are the approaches to Task Decomposition?",
 });
 

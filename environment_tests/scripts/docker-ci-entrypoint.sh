@@ -10,20 +10,32 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../package/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) .
 
+# make sure the .eslintrc makes it over
+if [ -f ../package/.eslintrc.json ]; then
+  cp ../package/.eslintrc.json .
+fi
+
+mkdir -p ./libs/langchain-core/
+mkdir -p ./libs/langchain-openai/
+mkdir -p ./libs/langchain-anthropic/
+mkdir -p ./libs/langchain-community/
+mkdir -p ./libs/langchain-cohere/
+mkdir -p ./libs/langchain/
+
+cp -r ../langchain-core/!(node_modules) ./libs/langchain-core
+cp -r ../langchain-openai/!(node_modules) ./libs/langchain-openai
+cp -r ../langchain-anthropic/!(node_modules) ./libs/langchain-anthropic
+cp -r ../langchain-community/!(node_modules) ./libs/langchain-community
+cp -r ../langchain-cohere/!(node_modules) ./libs/langchain-cohere
+cp -r ../langchain/!(node_modules) ./libs/langchain
+
 # copy cache
 mkdir -p ./.yarn
 cp -r ../root/.yarn/!(berry|cache) ./.yarn
 cp ../root/yarn.lock ../root/.yarnrc.yml .
 
-# Replace the workspace dependency with the local copy, and install all others
-# Avoid calling "yarn add ../langchain" as yarn berry does seem to hang for ~30s
-# before installation actually occurs
-sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": "..\/langchain-core"/g' package.json
-sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "..\/langchain-anthropic"/g' package.json
-sed -i 's/"@langchain\/openai": "workspace:\*"/"@langchain\/openai": "..\/langchain-openai"/g' package.json
-sed -i 's/"langchain": "workspace:\*"/"langchain": "..\/langchain"/g' package.json
-
-yarn install --no-immutable
+yarn plugin import workspace-tools
+yarn workspaces focus --production
 
 # Check the build command completes successfully
 yarn build

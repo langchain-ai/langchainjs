@@ -1,3 +1,7 @@
+---
+keywords: [openai]
+---
+
 # OpenAI
 
 All functionality related to OpenAI
@@ -16,20 +20,28 @@ All functionality related to OpenAI
 
 - Get an OpenAI api key and set it as an environment variable (`OPENAI_API_KEY`)
 
-## LLM
-
-See a [usage example](/docs/integrations/llms/openai).
-
-```typescript
-import { OpenAI } from "langchain/llms/openai";
-```
-
 ## Chat model
 
 See a [usage example](/docs/integrations/chat/openai).
 
 ```typescript
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
+```
+
+## LLM
+
+See a [usage example](/docs/integrations/llms/openai).
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/core
+```
+
+```typescript
+import { OpenAI } from "@langchain/openai";
 ```
 
 ## Text Embedding Model
@@ -37,15 +49,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 See a [usage example](/docs/integrations/text_embedding/openai)
 
 ```typescript
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-```
-
-## Retriever
-
-See a [usage example](/docs/integrations/retrievers/chatgpt-retriever-plugin).
-
-```typescript
-import { ChatGPTPluginRetriever } from "langchain/retrievers/remote";
+import { OpenAIEmbeddings } from "@langchain/openai";
 ```
 
 ## Chain

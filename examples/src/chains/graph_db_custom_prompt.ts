@@ -1,7 +1,7 @@
-import { Neo4jGraph } from "langchain/graphs/neo4j_graph";
-import { OpenAI } from "langchain/llms/openai";
+import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
+import { OpenAI } from "@langchain/openai";
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
-import { PromptTemplate } from "langchain/prompts";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 /**
  * This example uses Neo4j database, which is native graph database.

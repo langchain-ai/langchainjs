@@ -1,4 +1,4 @@
-import { GradientEmbeddings } from "langchain/embeddings/gradient_ai";
+import { GradientEmbeddings } from "@langchain/community/embeddings/gradient_ai";
 
 const model = new GradientEmbeddings({});
 const res = await model.embedQuery(

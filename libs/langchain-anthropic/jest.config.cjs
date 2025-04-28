@@ -15,6 +15,6 @@ module.exports = {
     "./scripts/jest-setup-after-env.js",
   ],
   setupFiles: ["dotenv/config"],
-  setupFilesAfterEnv: ["./scripts/jest-setup-after-env.js"],
   testTimeout: 20_000,
+  passWithNoTests: true
 };

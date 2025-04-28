@@ -1,6 +1,6 @@
 import { Runnable } from "../runnables/base.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
-import type { Document } from "./document.js";
+import type { DocumentInterface } from "./document.js";
 
 /**
  * Abstract base class for document transformation systems.
@@ -13,8 +13,8 @@ import type { Document } from "./document.js";
  * many smaller documents.
  */
 export abstract class BaseDocumentTransformer<
-  RunInput extends Document[] = Document[],
-  RunOutput extends Document[] = Document[]
+  RunInput extends DocumentInterface[] = DocumentInterface[],
+  RunOutput extends DocumentInterface[] = DocumentInterface[]
 > extends Runnable<RunInput, RunOutput> {
   lc_namespace = ["langchain_core", "documents", "transformers"];
 
@@ -32,7 +32,28 @@ export abstract class BaseDocumentTransformer<
    * @param _options Optional configuration object to customize the behavior of callbacks.
    * @returns A Promise that resolves to the transformed documents.
    */
-  invoke(input: RunInput, _options: BaseCallbackConfig): Promise<RunOutput> {
+  invoke(input: RunInput, _options?: BaseCallbackConfig): Promise<RunOutput> {
     return this.transformDocuments(input);
   }
+}
+
+/**
+ * Class for document transformers that return exactly one transformed document
+ * for each input document.
+ */
+export abstract class MappingDocumentTransformer extends BaseDocumentTransformer {
+  async transformDocuments(
+    documents: DocumentInterface[]
+  ): Promise<DocumentInterface[]> {
+    const newDocuments = [];
+    for (const document of documents) {
+      const transformedDocument = await this._transformDocument(document);
+      newDocuments.push(transformedDocument);
+    }
+    return newDocuments;
+  }
+
+  abstract _transformDocument(
+    document: DocumentInterface
+  ): Promise<DocumentInterface>;
 }

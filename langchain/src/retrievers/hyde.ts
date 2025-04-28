@@ -1,14 +1,16 @@
-import { Document } from "../document.js";
-import { BasePromptTemplate, StringPromptValue } from "../prompts/base.js";
-import { PromptTemplate } from "../prompts/prompt.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { Document } from "@langchain/core/documents";
+import { PromptTemplate, BasePromptTemplate } from "@langchain/core/prompts";
+import {
+  StringPromptValue,
+  BasePromptValue,
+} from "@langchain/core/prompt_values";
 import {
   VectorStore,
   VectorStoreRetriever,
   VectorStoreRetrieverInput,
-} from "../vectorstores/base.js";
-import { BaseLanguageModel } from "../base_language/index.js";
-import { BasePromptValue } from "../schema/index.js";
-import { CallbackManagerForRetrieverRun } from "../callbacks/manager.js";
+} from "@langchain/core/vectorstores";
+import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
 
 /**
  * A string that corresponds to a specific prompt template.
@@ -30,7 +32,7 @@ export type PromptKey =
  */
 export type HydeRetrieverOptions<V extends VectorStore> =
   VectorStoreRetrieverInput<V> & {
-    llm: BaseLanguageModel;
+    llm: BaseLanguageModelInterface;
     promptTemplate?: BasePromptTemplate | PromptKey;
   };
 
@@ -70,7 +72,7 @@ export class HydeRetriever<
     return ["langchain", "retrievers", "hyde"];
   }
 
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   promptTemplate?: BasePromptTemplate;
 

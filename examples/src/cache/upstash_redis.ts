@@ -1,5 +1,5 @@
-import { OpenAI } from "langchain/llms/openai";
-import { UpstashRedisCache } from "langchain/cache/upstash_redis";
+import { OpenAI } from "@langchain/openai";
+import { UpstashRedisCache } from "@langchain/community/caches/upstash_redis";
 
 // See https://docs.upstash.com/redis/howto/connectwithupstashredis#quick-start for connection options
 const cache = new UpstashRedisCache({
@@ -7,6 +7,7 @@ const cache = new UpstashRedisCache({
     url: "UPSTASH_REDIS_REST_URL",
     token: "UPSTASH_REDIS_REST_TOKEN",
   },
+  ttl: 3600,
 });
 
 const model = new OpenAI({ cache });

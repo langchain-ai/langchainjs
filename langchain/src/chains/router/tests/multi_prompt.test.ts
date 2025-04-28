@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
+import { BaseLLM } from "@langchain/core/language_models/llms";
+import { LLMResult } from "@langchain/core/outputs";
 import { MultiPromptChain } from "../multi_prompt.js";
-import { BaseLLM } from "../../../llms/base.js";
-import { LLMResult } from "../../../schema/index.js";
 
 let pickedPrompt: string;
 
@@ -66,7 +66,9 @@ test("Test MultiPromptChain", async () => {
     promptTemplates,
   });
 
-  const { text: result } = await multiPromptChain.call({ input: "Test input" });
+  const { text: result } = await multiPromptChain.invoke({
+    input: "Test input",
+  });
 
   expect(result).toEqual(`<from ${pickedPrompt}>`);
 });

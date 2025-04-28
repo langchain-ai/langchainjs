@@ -1,4 +1,4 @@
-import { GradientLLM } from "langchain/llms/gradient_ai";
+import { GradientLLM } from "@langchain/community/llms/gradient_ai";
 
 // Note that inferenceParameters are optional
 const model = new GradientLLM({

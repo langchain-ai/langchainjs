@@ -20,8 +20,12 @@ export {
 export {
   type ParsedToolCall,
   JsonOutputToolsParser,
+  type JsonOutputToolsParserParams,
+  JsonOutputKeyToolsParser,
+  type JsonOutputKeyToolsParserParams,
 } from "../output_parsers/openai_tools.js";
 export {
   HttpResponseOutputParser,
   type HttpResponseOutputParserInput,
 } from "./http_response.js";
+export { DatetimeOutputParser } from "./datetime.js";

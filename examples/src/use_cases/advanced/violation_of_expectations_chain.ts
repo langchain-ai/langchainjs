@@ -1,8 +1,7 @@
 import { ViolationOfExpectationsChain } from "langchain/experimental/chains/violation_of_expectations";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { AIMessage, HumanMessage } from "langchain/schema";
-import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 // Short GPT generated conversation between a human and an AI.
 const dummyMessages = [
@@ -48,14 +47,14 @@ const retriever = vectorStore.asRetriever();
 
 // Instantiate the LLM,
 const llm = new ChatOpenAI({
-  modelName: "gpt-4",
+  model: "gpt-4",
 });
 
 // And the chain.
 const voeChain = ViolationOfExpectationsChain.fromLLM(llm, retriever);
 
 // Requires an input key of "chat_history" with an array of messages.
-const result = await voeChain.call({
+const result = await voeChain.invoke({
   chat_history: dummyMessages,
 });
 

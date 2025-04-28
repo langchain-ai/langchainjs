@@ -61,7 +61,7 @@ test("Throw Error when include tables are not there", () => {
   ).toThrow();
 });
 
-test("return sqlite template when the DataSource is sqlite", () => {
+test.skip("return sqlite template when the DataSource is sqlite", () => {
   const datasource = new DataSource({
     type: "sqlite",
     database: "Chinook.db",

@@ -1,18 +1,30 @@
+import type {
+  BaseLanguageModel,
+  BaseLanguageModelInterface,
+} from "@langchain/core/language_models/base";
 import type { TiktokenModel } from "js-tiktoken/lite";
-import { DEFAULT_SQL_DATABASE_PROMPT } from "./sql_db_prompt.js";
-import { BaseChain, ChainInputs } from "../base.js";
-import type { OpenAI } from "../../llms/openai.js";
-import { LLMChain } from "../llm_chain.js";
-import type { SqlDatabase } from "../../sql_db.js";
-import { ChainValues } from "../../schema/index.js";
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { OpenAI } from "@langchain/openai";
+import { ChainValues } from "@langchain/core/utils/types";
+import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {
   calculateMaxTokens,
   getModelContextSize,
-} from "../../base_language/count_tokens.js";
-import { CallbackManagerForChainRun } from "../../callbacks/manager.js";
+} from "@langchain/core/language_models/base";
+import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
+import {
+  RunnablePassthrough,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import {
+  DEFAULT_SQL_DATABASE_PROMPT,
+  SQL_PROMPTS_MAP,
+  SqlDialect,
+} from "./sql_db_prompt.js";
+import { BaseChain, ChainInputs } from "../base.js";
+import { LLMChain } from "../llm_chain.js";
+import type { SqlDatabase } from "../../sql_db.js";
 import { getPromptTemplateFromDataSource } from "../../util/sql_utils.js";
-import { PromptTemplate } from "../../prompts/index.js";
 
 /**
  * Interface that extends the ChainInputs interface and defines additional
@@ -20,7 +32,7 @@ import { PromptTemplate } from "../../prompts/index.js";
  * for a SQL database chain.
  */
 export interface SqlDatabaseChainInput extends ChainInputs {
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
   database: SqlDatabase;
   topK?: number;
   inputKey?: string;
@@ -60,7 +72,7 @@ export class SqlDatabaseChain extends BaseChain {
   }
 
   // LLM wrapper to use
-  llm: BaseLanguageModel;
+  llm: BaseLanguageModelInterface;
 
   // SQL Database to connect to.
   database: SqlDatabase;
@@ -193,16 +205,133 @@ export class SqlDatabaseChain extends BaseChain {
     const maxToken = await calculateMaxTokens({
       prompt: stringWeSend,
       // Cast here to allow for other models that may not fit the union
-      modelName: llm.modelName as TiktokenModel,
+      modelName: llm.model as TiktokenModel,
     });
 
-    if (maxToken < llm.maxTokens) {
+    if (maxToken < (llm.maxTokens ?? -1)) {
       throw new Error(`The combination of the database structure and your question is too big for the model ${
-        llm.modelName
+        llm.model
       } which can compute only a max tokens of ${getModelContextSize(
-        llm.modelName
+        llm.model
       )}.
       We suggest you to use the includeTables parameters when creating the SqlDatabase object to select only a subset of the tables. You can also use a model which can handle more tokens.`);
     }
   }
+}
+
+export interface CreateSqlQueryChainFields {
+  llm: BaseLanguageModel;
+  db: SqlDatabase;
+  prompt?: BasePromptTemplate;
+  /**
+   * @default 5
+   */
+  k?: number;
+  dialect: SqlDialect;
+}
+
+type SqlInput = {
+  question: string;
+};
+
+type SqlInoutWithTables = SqlInput & {
+  tableNamesToUse: string[];
+};
+
+const strip = (text: string) => {
+  // Replace escaped quotes with actual quotes
+  let newText = text.replace(/\\"/g, '"').trim();
+  // Remove wrapping quotes if the entire string is wrapped in quotes
+  if (newText.startsWith('"') && newText.endsWith('"')) {
+    newText = newText.substring(1, newText.length - 1);
+  }
+  return newText;
+};
+
+const difference = (setA: Set<string>, setB: Set<string>) =>
+  new Set([...setA].filter((x) => !setB.has(x)));
+
+/**
+ * Create a SQL query chain that can create SQL queries for the given database.
+ * Returns a Runnable.
+ *
+ * @param {BaseLanguageModel} llm The language model to use in the chain.
+ * @param {SqlDatabase} db The database to use in the chain.
+ * @param {BasePromptTemplate | undefined} prompt The prompt to use in the chain.
+ * @param {BaseLanguageModel | undefined} k The amount of docs/results to return. Passed through the prompt input value `top_k`.
+ * @param {SqlDialect} dialect The SQL dialect to use in the chain.
+ * @returns {Promise<RunnableSequence<Record<string, unknown>, string>>} A runnable sequence representing the chain.
+ * @example ```typescript
+ * const datasource = new DataSource({
+ *   type: "sqlite",
+ *   database: "../../../../Chinook.db",
+ * });
+ * const db = await SqlDatabase.fromDataSourceParams({
+ *   appDataSource: datasource,
+ * });
+ * const llm = new ChatOpenAI({ temperature: 0 });
+ * const chain = await createSqlQueryChain({
+ *   llm,
+ *   db,
+ *   dialect: "sqlite",
+ * });
+ * ```
+ */
+export async function createSqlQueryChain({
+  llm,
+  db,
+  prompt,
+  k = 5,
+  dialect,
+}: CreateSqlQueryChainFields) {
+  let promptToUse: BasePromptTemplate;
+  if (prompt) {
+    promptToUse = prompt;
+  } else if (SQL_PROMPTS_MAP[dialect]) {
+    promptToUse = SQL_PROMPTS_MAP[dialect];
+  } else {
+    promptToUse = DEFAULT_SQL_DATABASE_PROMPT;
+  }
+
+  if (
+    difference(
+      new Set(["input", "top_k", "table_info"]),
+      new Set(promptToUse.inputVariables)
+    ).size > 0
+  ) {
+    throw new Error(
+      `Prompt must have input variables: 'input', 'top_k', 'table_info'. Received prompt with input variables: ` +
+        `${promptToUse.inputVariables}. Full prompt:\n\n${promptToUse}`
+    );
+  }
+  if (promptToUse.inputVariables.includes("dialect")) {
+    promptToUse = await promptToUse.partial({ dialect });
+  }
+
+  promptToUse = await promptToUse.partial({ top_k: k.toString() });
+
+  const inputs = {
+    input: (x: Record<string, unknown>) => {
+      if ("question" in x) {
+        return `${(x as SqlInput).question}\nSQLQuery: `;
+      }
+      throw new Error("Input must include a question property.");
+    },
+    table_info: async (x: Record<string, unknown>) =>
+      db.getTableInfo((x as SqlInoutWithTables).tableNamesToUse),
+  };
+
+  return RunnableSequence.from([
+    RunnablePassthrough.assign(inputs),
+    (x) => {
+      const newInputs = { ...x };
+      delete newInputs.question;
+      delete newInputs.tableNamesToUse;
+      return newInputs;
+    },
+    promptToUse,
+    llm.bind({ stop: ["\nSQLResult:"] }),
+    new StringOutputParser(),
+    strip,
+  ]);
 }

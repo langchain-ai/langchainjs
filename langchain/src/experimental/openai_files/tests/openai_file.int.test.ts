@@ -32,7 +32,7 @@ test("Use file with Open AI", async () => {
   const fileContent = await openAIFiles.retrieveFileContent({
     fileId: file.id,
   });
-  console.log(fileContent);
+  // console.log(fileContent);
   expect(fileContent).toBeDefined();
   /**
    * Output 

@@ -1,17 +1,15 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { ChatAnthropic } from "langchain/chat_models/anthropic";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatAnthropic } from "@langchain/anthropic";
 
 // Use a fake model name that will always throw an error
 const fakeOpenAIModel = new ChatOpenAI({
-  modelName: "potato!",
+  model: "potato!",
   maxRetries: 0,
 });
 
 const anthropicModel = new ChatAnthropic({});
 
-const modelWithFallback = fakeOpenAIModel.withFallbacks({
-  fallbacks: [anthropicModel],
-});
+const modelWithFallback = fakeOpenAIModel.withFallbacks([anthropicModel]);
 
 const result = await modelWithFallback.invoke("What is your name?");
 

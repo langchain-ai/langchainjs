@@ -1,11 +1,13 @@
 import { test, expect } from "@jest/globals";
 
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
-import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string.js";
-import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number.js";
-import { JsonSchema7ObjectType } from "zod-to-json-schema/src/parsers/object.js";
-import { JsonSchema7ArrayType } from "zod-to-json-schema/src/parsers/array.js";
-import { JsonSchema7Type } from "zod-to-json-schema/src/parseDef.js";
+import {
+  JsonSchema7StringType,
+  JsonSchema7NumberType,
+  JsonSchema7ObjectType,
+  JsonSchema7ArrayType,
+  JsonSchema7Type,
+} from "zod-to-json-schema";
 import { OpenAPISpec } from "../../../util/openapi.js";
 import { convertOpenAPISchemaToJSONSchema } from "../openapi.js";
 
@@ -40,6 +42,19 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
                   },
                   bar: {
                     type: "number",
+                  },
+                },
+              },
+            },
+            {
+              name: "objectParamWithRequiredFields",
+              in: "query",
+              schema: {
+                type: "object",
+                required: ["fooRequired"],
+                properties: {
+                  fooRequired: {
+                    type: "string",
                   },
                 },
               },
@@ -192,6 +207,12 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
   const typedObjectParamSchema = expectType("object", objectParamSchema);
   expectType("string", typedObjectParamSchema.properties.foo);
   expectType("number", typedObjectParamSchema.properties.bar);
+
+  const objectParamWithRequiredFieldSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "objectParamWithRequiredFields"),
+    spec
+  ) as JsonSchema7ObjectType;
+  expect(objectParamWithRequiredFieldSchema.required).toContain("fooRequired");
 
   const stringArrayParamSchema = convertOpenAPISchemaToJSONSchema(
     getParamSchema(createWidget, "stringArrayParam"),

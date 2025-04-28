@@ -1,10 +1,7 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
-import {
-  RequestsGetTool,
-  RequestsPostTool,
-  AIPluginTool,
-} from "langchain/tools";
+import { RequestsGetTool, RequestsPostTool } from "langchain/tools";
+import { AIPluginTool } from "@langchain/community/tools/aiplugin";
 
 export const run = async () => {
   const tools = [

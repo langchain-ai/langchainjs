@@ -1,7 +1,6 @@
 import { test } from "@jest/globals";
-import { OpenAIChat } from "../../../llms/openai-chat.js";
-import { ConsoleCallbackHandler } from "../../../callbacks/handlers/console.js";
-import { OpenAIEmbeddings } from "../../../embeddings/openai.js";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";
 import { MemoryVectorStore } from "../../../vectorstores/memory.js";
 
@@ -45,7 +44,7 @@ test("Test MultiPromptChain", async () => {
     embeddings
   );
 
-  const llm = new OpenAIChat({
+  const llm = new ChatOpenAI({
     callbacks: [new ConsoleCallbackHandler()],
   });
 
@@ -88,11 +87,17 @@ test("Test MultiPromptChain", async () => {
   });
 
   const [
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     { text: result1, sourceDocuments: sourceDocuments1 },
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     { text: result2, sourceDocuments: sourceDocuments2 },
+    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @ts-expect-error unused var
     { text: result3, sourceDocuments: sourceDocuments3 },
   ] = await Promise.all([testPromise1, testPromise2, testPromise3]);
 
-  console.log({ sourceDocuments1, sourceDocuments2, sourceDocuments3 });
-  console.log({ result1, result2, result3 });
+  // console.log({ sourceDocuments1, sourceDocuments2, sourceDocuments3 });
+  // console.log({ result1, result2, result3 });
 });

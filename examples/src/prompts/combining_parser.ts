@@ -1,10 +1,7 @@
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
-import {
-  StructuredOutputParser,
-  RegexParser,
-  CombiningOutputParser,
-} from "langchain/output_parsers";
+import { OpenAI } from "@langchain/openai";
+import { RegexParser, CombiningOutputParser } from "langchain/output_parsers";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StructuredOutputParser } from "@langchain/core/output_parsers";
 
 const answerParser = StructuredOutputParser.fromNamesAndDescriptions({
   answer: "answer to the user's question",
@@ -32,7 +29,7 @@ const model = new OpenAI({ temperature: 0 });
 const input = await prompt.format({
   question: "What is the capital of France?",
 });
-const response = await model.call(input);
+const response = await model.invoke(input);
 
 console.log(input);
 /*

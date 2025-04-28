@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
 
+import { ChatOpenAI } from "@langchain/openai";
 import { createTaggingChain } from "../tagging.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
 
 test("tagging chain", async () => {
   const chain = createTaggingChain(

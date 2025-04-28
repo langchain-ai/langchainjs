@@ -1,6 +1,6 @@
-import { BaseLanguageModel } from "../../base_language/index.js";
+import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
+import { BasePromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";
-import { BasePromptTemplate } from "../../prompts/base.js";
 import {
   StuffDocumentsChain,
   MapReduceDocumentsChain,
@@ -29,18 +29,18 @@ export type SummarizationChainParams = BaseParams &
         type?: "map_reduce";
         combineMapPrompt?: BasePromptTemplate;
         combinePrompt?: BasePromptTemplate;
-        combineLLM?: BaseLanguageModel;
+        combineLLM?: BaseLanguageModelInterface;
       } & Pick<MapReduceDocumentsChainInput, "returnIntermediateSteps">)
     | {
         type?: "refine";
         refinePrompt?: BasePromptTemplate;
-        refineLLM?: BaseLanguageModel;
+        refineLLM?: BaseLanguageModelInterface;
         questionPrompt?: BasePromptTemplate;
       }
   );
 
 export const loadSummarizationChain = (
-  llm: BaseLanguageModel,
+  llm: BaseLanguageModelInterface,
   params: SummarizationChainParams = { type: "map_reduce" }
 ) => {
   const { verbose } = params;

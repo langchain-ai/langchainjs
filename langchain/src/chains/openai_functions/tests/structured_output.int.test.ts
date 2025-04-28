@@ -1,13 +1,13 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 
-import { createStructuredOutputChainFromZod } from "../structured_output.js";
-import { ChatOpenAI } from "../../../chat_models/openai.js";
+import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
-} from "../../../prompts/chat.js";
+} from "@langchain/core/prompts";
+import { createStructuredOutputChainFromZod } from "../structured_output.js";
 
 test("structured output chain", async () => {
   const chain = createStructuredOutputChainFromZod(
@@ -41,7 +41,7 @@ test("structured output chain", async () => {
   );
 
   const response = await chain.call({ inputText: "A man, living in Poland." });
-  console.log("response", response);
+  // console.log("response", response);
 
   expect(response.person).toHaveProperty("name");
   expect(response.person).toHaveProperty("surname");

@@ -1,3 +1,3 @@
-import { awaitAllCallbacks } from "langchain/callbacks";
+import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
 await awaitAllCallbacks();

@@ -1,8 +1,8 @@
-import { BaseMessage } from "../schema/index.js";
+import { BaseMessage } from "@langchain/core/messages";
 import {
   BaseTransformOutputParser,
   StringOutputParser,
-} from "../schema/output_parser.js";
+} from "@langchain/core/output_parsers";
 
 export type HttpResponseOutputParserInput = {
   outputParser?: BaseTransformOutputParser;

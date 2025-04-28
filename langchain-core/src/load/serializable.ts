@@ -4,6 +4,9 @@ export interface BaseSerialized<T extends string> {
   lc: number;
   type: T;
   id: string[];
+  name?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph?: Record<string, any>;
 }
 
 export interface SerializedConstructor extends BaseSerialized<"constructor"> {
@@ -73,7 +76,11 @@ export function get_lc_unique_name(
   }
 }
 
-export abstract class Serializable {
+export interface SerializableInterface {
+  get lc_id(): string[];
+}
+
+export abstract class Serializable implements SerializableInterface {
   lc_serializable = false;
 
   lc_kwargs: SerializedFields;
@@ -133,8 +140,24 @@ export abstract class Serializable {
     return undefined;
   }
 
+  /**
+   * A manual list of keys that should be serialized.
+   * If not overridden, all fields passed into the constructor will be serialized.
+   */
+  get lc_serializable_keys(): string[] | undefined {
+    return undefined;
+  }
+
   constructor(kwargs?: SerializedFields, ..._args: never[]) {
-    this.lc_kwargs = kwargs || {};
+    if (this.lc_serializable_keys !== undefined) {
+      this.lc_kwargs = Object.fromEntries(
+        Object.entries(kwargs || {}).filter(([key]) =>
+          this.lc_serializable_keys?.includes(key)
+        )
+      );
+    } else {
+      this.lc_kwargs = kwargs ?? {};
+    }
   }
 
   toJSON(): Serialized {
