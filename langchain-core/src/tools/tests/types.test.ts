@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals";
 import { z } from "zod";
 import {
   DynamicStructuredTool,
@@ -7,7 +8,6 @@ import {
   Tool,
   ToolInterface,
 } from "../index.js";
-import { StringInputToolSchema } from "../types.js";
 
 const testDynamicTool = new DynamicTool({
   name: "test",
@@ -20,6 +20,15 @@ const testDynamicStructuredTool = new DynamicStructuredTool({
   description: "test",
   func: async (input: string) => `test ${input}`,
   schema: z.string(),
+});
+
+const testDynamicStructuredToolWithZodEffects = new DynamicStructuredTool({
+  name: "test",
+  description: "test",
+  func: async (input: string) => `test ${input}`,
+  schema: z
+    .object({ input: z.string().optional() })
+    .transform((data) => data.input),
 });
 
 describe("tool type tests", () => {
@@ -44,20 +53,19 @@ describe("tool type tests", () => {
 
   describe("DynamicStructuredTool", () => {
     it("should not be assignable to Tool", () => {
-      // @ts-expect-error
+      // @ts-expect-error DynamicStructuredTool uses a string schema and is not compatible with Tool
       const tool: Tool = testDynamicStructuredTool;
       expect(tool).toBe(testDynamicStructuredTool);
     });
     it("should not be assignable to ToolInterface if not narrowed to have input type `{ input: string }`", () => {
-      // @ts-expect-error
+      // @ts-expect-error DynamicStructuredTool uses a string schema and is not compatible with ToolInterface without proper narrowing
       const toolInterface: ToolInterface = testDynamicStructuredTool;
       expect(toolInterface).toBe(testDynamicStructuredTool);
     });
     it("should be assignable to ToolInterface if narrowed to use ZodEffects schema`", () => {
-      (dynamicStructuredTool: DynamicStructuredTool<StringInputToolSchema>) => {
-        const toolInterface: ToolInterface = dynamicStructuredTool;
-        expect(toolInterface).toBe(dynamicStructuredTool);
-      };
+      const toolInterface: ToolInterface =
+        testDynamicStructuredToolWithZodEffects;
+      expect(toolInterface).toBe(testDynamicStructuredToolWithZodEffects);
     });
     it("should be assignable to StructuredTool", () => {
       const structuredTool: StructuredTool = testDynamicStructuredTool;
