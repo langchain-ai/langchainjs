@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, jest, expect } from "@jest/globals";
 import {
+  AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
@@ -1304,4 +1305,85 @@ test.skip("Allow overriding", async () => {
   for await (const chunk of stream) {
     console.log(chunk);
   }
+});
+
+describe("reasoning summaries", () => {
+  const testReasoningSummaries = async (
+    extraConfig: Record<string, any>,
+    removePreviousOutputMetadata: boolean = false
+  ) => {
+    const prompt = "What is 3 to the power of 3?";
+    const llm = new ChatOpenAI({
+      model: "o4-mini",
+      reasoning: { summary: "auto" },
+      maxRetries: 0, // Ensure faster failure for testing
+      ...extraConfig,
+    });
+
+    const stream = await llm.stream(prompt);
+    const chunks: AIMessageChunk[] = [];
+    let finalChunk: AIMessageChunk | undefined;
+    let reasoningFound = false;
+    for await (const chunk of stream) {
+      expect(chunk).toBeInstanceOf(AIMessageChunk);
+      chunks.push(chunk);
+      finalChunk = !finalChunk ? chunk : finalChunk.concat(chunk);
+      if (finalChunk?.additional_kwargs.reasoning) {
+        reasoningFound = true;
+      }
+    }
+
+    expect(reasoningFound).toBe(true);
+    expect(finalChunk).toBeDefined();
+
+    // Check the final aggregated message
+    const reasoning = finalChunk?.additional_kwargs.reasoning as any;
+    expect(reasoning).toBeDefined();
+    expect(reasoning.id).toBeDefined();
+    expect(typeof reasoning.id).toBe("string");
+    expect(reasoning.type).toBe("reasoning");
+    expect(reasoning.summary).toBeDefined();
+    expect(Array.isArray(reasoning.summary)).toBe(true);
+    expect(reasoning.summary.length).toBeGreaterThan(0);
+
+    for (const summaryItem of reasoning.summary) {
+      expect(summaryItem.type).toBe("summary_text");
+      expect(typeof summaryItem.text).toBe("string");
+      expect(summaryItem.text.length).toBeGreaterThan(0);
+    }
+
+    const firstChunk = chunks[0];
+
+    const aiMessage =
+      chunks.length > 1
+        ? chunks.slice(1).reduce((acc, chunk) => acc.concat(chunk), firstChunk)
+        : firstChunk;
+
+    if (removePreviousOutputMetadata) {
+      delete aiMessage.response_metadata.output;
+    }
+
+    // Test passing reasoning back (might be tricky in isolated test)
+    const secondPrompt = "Thanks!";
+    const messages: BaseMessage[] = [
+      new HumanMessage(prompt),
+      aiMessage, // Pass the AI message with reasoning
+      new HumanMessage(secondPrompt),
+    ];
+    const secondResult = await llm.invoke(messages);
+    expect(secondResult).toBeInstanceOf(AIMessage);
+    expect(secondResult.content).toBeTruthy();
+  };
+
+  test("normal responses API usage (Zero Data Retention disabled)", async () => {
+    await testReasoningSummaries({});
+  });
+
+  test("Zero Data Retention enabled", async () => {
+    await testReasoningSummaries({ zdrEnabled: true });
+  });
+
+  test("Zero Data Retention enabled, and previous output metadata missing", async () => {
+    await testReasoningSummaries({ zdrEnabled: true }, true);
+  });
 });
