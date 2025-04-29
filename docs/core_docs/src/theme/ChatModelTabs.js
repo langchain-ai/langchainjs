@@ -49,9 +49,9 @@ const MODELS_WSO = ["openai", "anthropic", "gemini", "mistral", "groq", "vertex"
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
  * @property {boolean} [hideFireworks] - Whether or not to hide Fireworks chat model.
  * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
- * @property {boolean} [hideGroq] - Whether or not to hide Mistral chat model.
- * @property {boolean} [hideVertex] - Whether or not to hide Mistral chat model.
- * @property {boolean} [hideGemini] - Whether or not to hide Mistral chat model.
+ * @property {boolean} [hideGroq] - Whether or not to hide Groq chat model.
+ * @property {boolean} [hideVertex] - Whether or not to hide VertexAI chat model.
+ * @property {boolean} [hideGemini] - Whether or not to hide Google Gemini chat model.
  * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
  * @property {boolean} [onlyWso] - Only display models which have `withStructuredOutput` implemented.
  */
