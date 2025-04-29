@@ -31,9 +31,10 @@ const DEFAULTS = {
   mistralParams: `{\n  model: "mistral-large-latest",\n  temperature: 0\n}`,
   groqParams: `{\n  model: "llama-3.3-70b-versatile",\n  temperature: 0\n}`,
   vertexParams: `{\n  model: "gemini-1.5-flash",\n  temperature: 0\n}`,
+  geminiParams: `{\n  model: "gemini-2.0-flash",\n  temperature: 0\n}`,
 };
 
-const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
+const MODELS_WSO = ["openai", "anthropic", "gemini", "mistral", "groq", "vertex"];
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
@@ -50,7 +51,7 @@ const MODELS_WSO = ["openai", "anthropic", "mistral", "groq", "vertex"];
  * @property {boolean} [hideMistral] - Whether or not to hide Mistral chat model.
  * @property {boolean} [hideGroq] - Whether or not to hide Mistral chat model.
  * @property {boolean} [hideVertex] - Whether or not to hide Mistral chat model.
- *
+ * @property {boolean} [hideGemini] - Whether or not to hide Mistral chat model.
  * @property {string} [customVarName] - Custom variable name for the model. Defaults to `"model"`.
  * @property {boolean} [onlyWso] - Only display models which have `withStructuredOutput` implemented.
  */
@@ -69,10 +70,12 @@ export default function ChatModelTabs(props) {
   const mistralParams = props.mistralParams ?? DEFAULTS.mistralParams;
   const groqParams = props.groqParams ?? DEFAULTS.groqParams;
   const vertexParams = props.vertexParams ?? DEFAULTS.vertexParams;
+  const geminiParams = props.geminiParams ?? DEFAULTS.geminiParams;
   const providers = props.providers ?? [
     "groq",
     "openai",
     "anthropic",
+    "gemini",
     "fireworks",
     "mistral",
     "vertex",
@@ -94,6 +97,14 @@ export default function ChatModelTabs(props) {
       text: `import { ChatAnthropic } from "@langchain/anthropic";\n\nconst ${llmVarName} = new ChatAnthropic(${anthropicParams});`,
       envs: `ANTHROPIC_API_KEY=your-api-key`,
       dependencies: "@langchain/anthropic",
+    },
+    gemini: {
+      value: "gemini",
+      label: "Google Gemini",
+      default: false,
+      text: `import { ChatGoogleGenerativeAI } from "@langchain/google-genai";\n\nconst ${llmVarName} = new ChatGoogleGenerativeAI(${geminiParams});`,
+      envs: `GOOGLE_API_KEY=your-api-key`,
+      dependencies: "@langchain/google-genai",
     },
     fireworks: {
       value: "fireworks",
