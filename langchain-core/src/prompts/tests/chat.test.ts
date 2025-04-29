@@ -714,6 +714,7 @@ test("Multi part chat prompt template with dicts", async () => {
               {
                 id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
                 kwargs: {
+                  input_variables: ["text1"],
                   template: {
                     cache_control: { type: "ephemeral" },
                     text: "{text1}",
@@ -727,6 +728,7 @@ test("Multi part chat prompt template with dicts", async () => {
               {
                 id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
                 kwargs: {
+                  input_variables: ["myImage"],
                   template: { audio: { path: "{myImage}" }, type: "audio" },
                   template_format: "f-string",
                 },

@@ -13,21 +13,27 @@ export class DictPromptTemplate<
 
   template: Record<string, unknown>;
 
-  templateFormat: TemplateFormat = "f-string";
+  templateFormat: TemplateFormat;
+
+  inputVariables: Array<Extract<keyof RunInput, string>>;
+
+  static lc_name() {
+    return "DictPromptTemplate";
+  }
 
   constructor(fields: {
     template: Record<string, unknown>;
     templateFormat?: TemplateFormat;
   }) {
-    super(fields);
+    const templateFormat = fields.templateFormat ?? "f-string";
+    const inputVariables = _getInputVariables(
+      fields.template,
+      templateFormat
+    ) as Array<Extract<keyof RunInput, string>>;
+    super({ inputVariables, ...fields });
     this.template = fields.template;
-    this.templateFormat = fields.templateFormat ?? this.templateFormat;
-  }
-
-  get inputVariables(): Array<Extract<keyof RunInput, string>> {
-    return _getInputVariables(this.template, this.templateFormat) as Array<
-      Extract<keyof RunInput, string>
-    >;
+    this.templateFormat = templateFormat;
+    this.inputVariables = inputVariables;
   }
 
   async format(values: TypedPromptInputValues<RunInput>): Promise<RunOutput> {

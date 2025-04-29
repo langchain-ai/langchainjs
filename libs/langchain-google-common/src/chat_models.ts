@@ -190,6 +190,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   maxOutputTokens: number;
 
+  maxReasoningTokens: number;
+
   topP: number;
 
   topK: number;

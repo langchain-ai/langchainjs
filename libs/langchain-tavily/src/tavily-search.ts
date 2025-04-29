@@ -118,6 +118,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * ignored.
    */
   apiWrapper?: TavilySearchAPIWrapper;
+
+  /**
+   * The number of content chunks to retrieve from each source. Each chunk's length is maximum 500 characters. Available only when searchDepth is advanced. See https://docs.tavily.com/docs/rest-api/api-reference
+   *
+   * @default 3
+   */
+  chunksPerSource?: number;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
@@ -299,6 +306,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   timeRange?: TimeRange;
 
+  chunksPerSource?: number;
+
   handleToolError = true;
 
   apiWrapper: TavilySearchAPIWrapper;
@@ -341,6 +350,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.includeAnswer = params.includeAnswer ?? false;
     this.includeRawContent = params.includeRawContent ?? false;
     this.includeImageDescriptions = params.includeImageDescriptions ?? false;
+    this.chunksPerSource = params.chunksPerSource ?? 3;
   }
 
   async _call(
@@ -378,6 +388,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         includeAnswer: this.includeAnswer,
         includeRawContent: this.includeRawContent,
         includeImageDescriptions: this.includeImageDescriptions,
+        chunksPerSource: this.chunksPerSource,
       });
 
       if (
