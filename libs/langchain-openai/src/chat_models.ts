@@ -510,12 +510,11 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         // if we have the original response items, just reuse them
         if (
+          !zdrEnabled &&
           lcMsg.response_metadata.output != null &&
           Array.isArray(lcMsg.response_metadata.output) &&
           lcMsg.response_metadata.output.length > 0 &&
-          lcMsg.response_metadata.output.every(
-            (item) => "type" in item && "id" in item
-          )
+          lcMsg.response_metadata.output.every((item) => "type" in item)
         ) {
           return lcMsg.response_metadata.output;
         }
@@ -525,7 +524,7 @@ function _convertMessagesToOpenAIResponsesParams(
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (lcMsg.additional_kwargs.reasoning != null) {
+        if (!zdrEnabled && lcMsg.additional_kwargs.reasoning != null) {
           type FindType<T, TType extends string> = T extends { type: TType }
             ? T
             : never;
@@ -561,7 +560,7 @@ function _convertMessagesToOpenAIResponsesParams(
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id ? { id: lcMsg.id } : {}),
+          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
           content:
             typeof content === "string"
               ? content
@@ -598,7 +597,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                id: functionCallIds?.[toolCall.id!],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               })
             )
           );
@@ -609,7 +608,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                id: functionCallIds?.[toolCall.id],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
                 arguments: toolCall.function.arguments,
               })
             )
@@ -1863,7 +1862,14 @@ export class ChatOpenAI<
   useResponsesApi = false;
 
   /**
-   * Should be set to `true` in tenancies with Zero Data Retention
+   * Must be set to `true` in tenancies with Zero Data Retention. Setting to `true` will disable
+   * output storage in the Responses API, but this DOES NOT enable Zero Data Retention in your
+   * OpenAI organization or project. This must be configured directly with OpenAI.
+   *
+   * See:
+   * https://help.openai.com/en/articles/10503543-data-residency-for-the-openai-api
+   * https://platform.openai.com/docs/api-reference/responses/create#responses-create-store
+   *
    * @default false
    */
   zdrEnabled?: boolean | undefined;
@@ -2110,6 +2116,7 @@ export class ChatOpenAI<
         })(),
         parallel_tool_calls: options?.parallel_tool_calls,
         max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+        ...(this.zdrEnabled ? { store: false } : {}),
         ...this.modelKwargs,
       };
 
