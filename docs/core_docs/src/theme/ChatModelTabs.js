@@ -44,6 +44,7 @@ const MODELS_WSO = ["openai", "anthropic", "gemini", "mistral", "groq", "vertex"
  * @property {string} [mistralParams] - Parameters for Mistral chat model. Defaults to `"{\n  model: "mistral-large-latest",\n  temperature: 0\n}"`
  * @property {string} [groqParams] - Parameters for Groq chat model. Defaults to `"{\n  model: "mixtral-8x7b-32768",\n  temperature: 0\n}"`
  * @property {string} [vertexParams] - Parameters for Google VertexAI chat model. Defaults to `"{\n  model: "gemini-1.5-pro",\n  temperature: 0\n}"`
+ * @property {string} [geminiParams] - Parameters for Google Gemini chat model. Defaults to `"{\n  model: "gemini-2.0-flash",\n  temperature: 0\n}"`
  *
  * @property {boolean} [hideOpenai] - Whether or not to hide OpenAI chat model.
  * @property {boolean} [hideAnthropic] - Whether or not to hide Anthropic chat model.
