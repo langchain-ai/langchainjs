@@ -34,7 +34,14 @@ const DEFAULTS = {
   geminiParams: `{\n  model: "gemini-2.0-flash",\n  temperature: 0\n}`,
 };
 
-const MODELS_WSO = ["openai", "anthropic", "gemini", "mistral", "groq", "vertex"];
+const MODELS_WSO = [
+  "openai",
+  "anthropic",
+  "gemini",
+  "mistral",
+  "groq",
+  "vertex",
+];
 
 /**
  * @typedef {Object} ChatModelTabsProps - Component props.
