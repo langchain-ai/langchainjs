@@ -232,11 +232,9 @@ export class Chromia extends VectorStore {
       const id = documentIds[idx];
       const metadata = documents[idx].metadata || {};
       return [
-        JSON.stringify({
-          id,
-          content: documents[idx].pageContent,
-          metadata
-        }),
+        parseInt(id),
+        documents[idx].pageContent,
+        JSON.stringify(metadata),
         `[${embedding}]`]
     });
     const tx = this.client.addNop({
@@ -304,25 +302,18 @@ export class Chromia extends VectorStore {
         // "args": { "text_filter": `Paris` }
       }
     }) as {
+      id: string;
       text: string;
       distance: number;
+      metadata: string;
     }[];
 
     const result: [Document, number][] = searches.map((resp) => {
-      let parsed: any;
-
-      try {
-        parsed = JSON.parse(resp.text); // Expecting format: { id, content, metadata }
-      } catch (e) {
-        console.warn("Failed to parse vector response text:", resp.text);
-        parsed = { content: resp.text, metadata: {} };
-      }
-
       return [
         new Document({
-          id: parsed.id,
-          pageContent: parsed.content || parsed.text || "",
-          metadata: parsed.metadata || {},
+          id: resp.id,
+          pageContent: resp.text || "",
+          metadata: JSON.parse(resp.metadata) || {},
         }),
         resp.distance
       ];
