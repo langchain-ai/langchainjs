@@ -6,11 +6,13 @@ import {
   BaseMessage,
   BaseMessageChunk,
   HumanMessage,
+  ToolMessage,
   isAIMessage,
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
@@ -120,31 +122,60 @@ test("Test with built-in web search", async () => {
   assertResponse(boundResponse);
 });
 
-test("Test function calling", async () => {
-  const multiply = tool((args) => args.x * args.y, {
-    name: "multiply",
-    description: "Multiply two numbers",
-    schema: z.object({ x: z.number(), y: z.number() }),
-  });
+test.each(["stream", "invoke"])(
+  "Test function calling, %s",
+  async (invocationType: string) => {
+    const multiply = tool((args) => args.x * args.y, {
+      name: "multiply",
+      description: "Multiply two numbers",
+      schema: z.object({ x: z.number(), y: z.number() }),
+    });
 
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
-    multiply,
-    { type: "web_search_preview" },
-  ]);
+    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
+      multiply,
+      { type: "web_search_preview" },
+    ]);
 
-  const msg = (await llm.invoke("whats 5 * 4")) as AIMessage;
-  expect(msg.tool_calls).toMatchObject([
-    { name: "multiply", args: { x: 5, y: 4 } },
-  ]);
+    function invoke(
+      invocationType: string,
+      prompt: BaseLanguageModelInput
+    ): Promise<AIMessage | AIMessageChunk> {
+      if (invocationType === "invoke") {
+        return llm.invoke(prompt);
+      }
 
-  const full = await concatStream(llm.stream("whats 5 * 4"));
-  expect(full?.tool_calls).toMatchObject([
-    { name: "multiply", args: { x: 5, y: 4 } },
-  ]);
+      return concatStream(llm.stream(prompt));
+    }
 
-  const response = await llm.invoke("whats some good news from today");
-  assertResponse(response);
-});
+    const messages = [new HumanMessage("whats 5 * 4")];
+
+    const aiMessage = (await invoke(invocationType, messages)) as AIMessage;
+
+    messages.push(aiMessage);
+
+    expect(aiMessage.tool_calls).toMatchObject([
+      { name: "multiply", args: { x: 5, y: 4 } },
+    ]);
+
+    const toolMessage: ToolMessage = await multiply.invoke(
+      aiMessage.tool_calls![0]
+    );
+    messages.push(toolMessage);
+
+    expect(toolMessage.tool_call_id).toMatch(/^call_[a-zA-Z0-9]+$/);
+    expect(toolMessage.tool_call_id).toEqual(aiMessage.tool_calls![0].id);
+
+    const finalAiMessage = await invoke(invocationType, messages);
+
+    assertResponse(finalAiMessage);
+
+    const noToolCallResponse = await invoke(
+      invocationType,
+      "whats some good news from today"
+    );
+    assertResponse(noToolCallResponse);
+  }
+);
 
 test("Test structured output", async () => {
   const schema = z.object({ response: z.string() });
