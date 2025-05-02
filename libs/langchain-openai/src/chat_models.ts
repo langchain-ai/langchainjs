@@ -831,7 +831,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
       type: "tool_call_chunk",
       name: chunk.item.name,
       args: chunk.item.arguments,
-      id: chunk.item.id,
+      id: chunk.item.call_id,
       index: chunk.output_index,
     });
 
