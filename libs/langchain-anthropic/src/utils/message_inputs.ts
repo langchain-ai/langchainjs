@@ -29,6 +29,7 @@ import {
   AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
+  isAnthropicImageBlockParam,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -369,6 +370,8 @@ function _formatContent(content: MessageContent) {
           source,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
+      } else if (isAnthropicImageBlockParam(contentPart)) {
+        return contentPart;
       } else if (contentPart.type === "document") {
         // PDF
         return {
