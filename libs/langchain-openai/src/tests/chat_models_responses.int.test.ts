@@ -395,9 +395,6 @@ describe("reasoning summaries", () => {
         summary: "auto",
       },
       maxRetries: 0, // Ensure faster failure for testing
-      configuration: {
-        baseURL: "http://localhost:8080/v1",
-      },
       ...extraConfig,
     });
 
