@@ -474,11 +474,11 @@ describe.each(testGeminiModelNames)(
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+          "You will reply to all requests with as much detail as you can."
         ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
+        new HumanMessage(
+          "What is the answer to life, the universe, and everything?"
+        ),
       ]);
       const res = await model.stream(input);
       const resArray: BaseMessageChunk[] = [];
