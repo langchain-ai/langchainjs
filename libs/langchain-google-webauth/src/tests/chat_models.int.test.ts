@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { expect, test } from "@jest/globals";
+import { afterEach, expect, jest, test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
@@ -37,6 +37,7 @@ import {
 } from "@langchain/core/prompts";
 import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
+import MockedFunction = jest.MockedFunction;
 
 class WeatherTool extends StructuredTool {
   schema = z.object({
@@ -382,6 +383,9 @@ describe.each(testGeminiModelNames)(
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockedFunction<any>;
+
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
       recorder = new GoogleRequestRecorder();
@@ -403,12 +407,17 @@ describe.each(testGeminiModelNames)(
     }
 
     beforeEach(async () => {
+      warnSpy = jest.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
         // eslint-disable-next-line no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
     });
 
     test("invoke", async () => {
@@ -479,9 +488,20 @@ describe.each(testGeminiModelNames)(
       expect(resArray).toBeDefined();
       expect(resArray.length).toBeGreaterThanOrEqual(1);
 
+      // resArray.forEach((chunk, index) => {
+      //   console.log('***chunk', index, chunk);
+      // })
+
+      const firstChunk = resArray[0];
+      expect(firstChunk).toBeDefined();
+      expect(firstChunk.response_metadata).not.toHaveProperty("usage_metadata");
+
       const lastChunk = resArray[resArray.length - 1];
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
+      expect(lastChunk).toHaveProperty("usage_metadata");
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     test("function", async () => {
