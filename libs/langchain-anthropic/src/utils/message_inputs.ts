@@ -32,22 +32,20 @@ import {
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
-  const regex = /^data:(image\/.+);base64,(.+)$/;
-  const match = imageUrl.match(regex);
-  if (match === null) {
-    throw new Error(
-      [
-        "Anthropic only supports base64-encoded images currently.",
-        "Example: data:image/png;base64,/9j/4AAQSk...",
-      ].join("\n\n")
-    );
+  const parsed = parseBase64DataUrl({ dataUrl: imageUrl });
+  if (parsed) {
+    return {
+      type: "base64",
+      media_type: parsed.mime_type,
+      data: parsed.data,
+    };
   }
-  return {
-    type: "base64",
-    media_type: match[1] ?? "",
-    data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+  throw new Error(
+    [
+      "Anthropic only supports images as base64-encoded data URLs on `image_url` content blocks. For http image URLs please use the StandardImageBlock type (type = \"image\", source_type = \"url\") and be sure to specify the image MIME type.",
+      "Example: data:image/png;base64,/9j/4AAQSk...",
+    ].join("\n\n")
+  );
 }
 
 function _ensureMessageContents(
