@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  CallbackManagerForToolRun,
-  type Callbacks,
-} from "../callbacks/manager.js";
+import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
   BaseLangChainParams,
   ToolDefinition,
@@ -35,26 +32,18 @@ export type ZodObjectAny = z.ZodObject<any, any, any, any>;
  * - If the config is a runnable config and contains a toolCall property, it returns a ToolMessage
  * - Otherwise, it returns the original output type
  */
-export type ToolInvokeReturnType<TInput, TConfig, TOutput> =
-  TInput extends ToolCall
-    ? TOutput extends { lc_direct_tool_output: true }
-      ? TOutput
-      : ToolMessage
-    : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-    ? ToolMessage
-    : TOutput;
-
-/**
- * Conditional type that determines the return type of the {@link StructuredTool.call} method.
- * - If the config is a runnable config and contains a toolCall property with an id, it returns a ToolMessage
- * - Otherwise, it returns the original output type
- */
-export type ToolCallReturnType<TConfig, TOutput> = TConfig extends {
-  toolCall: { id: string };
+export type ToolReturnType<TInput, TConfig, TOutput> = TOutput extends {
+  lc_direct_tool_output: true;
 }
-  ? TOutput extends { lc_direct_tool_output: true }
-    ? TOutput
-    : ToolMessage
+  ? TOutput
+  : TConfig extends { toolCall: { id: string } }
+  ? ToolMessage
+  : TConfig extends { toolCall: { id: undefined } }
+  ? TOutput
+  : TConfig extends { toolCall: { id?: string } }
+  ? TOutput | ToolMessage
+  : TInput extends ToolCall
+  ? ToolMessage
   : TOutput;
 
 /**
@@ -218,11 +207,11 @@ export interface StructuredToolInterface<
    */
   invoke<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends RunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined
   >(
     arg: TArg,
     configArg?: TConfig
-  ): Promise<ToolInvokeReturnType<TArg, TConfig, ToolOutputT>>;
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -235,12 +224,15 @@ export interface StructuredToolInterface<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call<TConfig extends Callbacks | ToolRunnableConfig | undefined>(
-    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
+  call<
+    TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends ToolRunnableConfig | undefined
+  >(
+    arg: TArg,
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>>;
+  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
 
   /**
    * The name of the tool.
@@ -283,12 +275,12 @@ export interface ToolInterface<
    */
   call<
     TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends Callbacks | ToolRunnableConfig | undefined
+    TConfig extends ToolRunnableConfig | undefined
   >(
     // TODO: shouldn't this be narrowed based on SchemaT?
     arg: TArg,
     callbacks?: TConfig
-  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>>;
+  ): Promise<ToolReturnType<NonNullable<TArg>, TConfig, ToolOutputT>>;
 }
 
 /**
