@@ -697,6 +697,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     throw error;
   }
 
+  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -725,6 +726,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 
   for (const item of response.output) {
     if (item.type === "message") {
+      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
@@ -780,7 +782,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
   }
 
   return new AIMessage({
-    id: response.id,
+    id: messageId,
     content,
     tool_calls,
     invalid_tool_calls,
