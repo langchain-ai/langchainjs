@@ -867,12 +867,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if (!data) {
       return {};
     }
-    return {
-      usage_metadata: {
-        prompt_token_count: data.usageMetadata?.promptTokenCount,
-        candidates_token_count: data.usageMetadata?.candidatesTokenCount,
-        total_token_count: data.usageMetadata?.totalTokenCount,
-      },
+
+    const finish_reason = data.candidates[0]?.finishReason;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
         category: rating.category,
         probability: rating.probability,
@@ -882,11 +881,23 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       })),
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
-      finish_reason: data.candidates[0]?.finishReason,
+      finish_reason,
       finish_message: data.candidates[0]?.finishMessage,
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };
+
+    // Only add the usage_metadata on the last chunk
+    // sent while streaming (see issue 8102).
+    if (typeof finish_reason === "string") {
+      ret.usage_metadata = {
+        prompt_token_count: data.usageMetadata?.promptTokenCount,
+        candidates_token_count: data.usageMetadata?.candidatesTokenCount,
+        total_token_count: data.usageMetadata?.totalTokenCount,
+      };
+    }
+
+    return ret;
   }
 
   function responseToChatGeneration(
