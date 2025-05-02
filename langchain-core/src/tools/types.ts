@@ -30,15 +30,31 @@ export type ContentAndArtifact = [MessageContent, any];
 export type ZodObjectAny = z.ZodObject<any, any, any, any>;
 
 /**
- * Conditional type that determines the return type of a tool based on the input and configuration.
+ * Conditional type that determines the return type of the {@link StructuredTool.invoke} method.
  * - If the input is a ToolCall, it returns a ToolMessage
  * - If the config is a runnable config and contains a toolCall property, it returns a ToolMessage
  * - Otherwise, it returns the original output type
  */
-export type ToolReturnType<TInput, TConfig, TOutput> = TInput extends ToolCall
-  ? ToolMessage
-  : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
-  ? ToolMessage
+export type ToolInvokeReturnType<TInput, TConfig, TOutput> =
+  TInput extends ToolCall
+    ? TOutput extends { lc_direct_tool_output: true }
+      ? TOutput
+      : ToolMessage
+    : TConfig extends ToolRunnableConfig & { toolCall: ToolCall }
+    ? ToolMessage
+    : TOutput;
+
+/**
+ * Conditional type that determines the return type of the {@link StructuredTool.call} method.
+ * - If the config is a runnable config and contains a toolCall property with an id, it returns a ToolMessage
+ * - Otherwise, it returns the original output type
+ */
+export type ToolCallReturnType<TConfig, TOutput> = TConfig extends {
+  toolCall: { id: string };
+}
+  ? TOutput extends { lc_direct_tool_output: true }
+    ? TOutput
+    : ToolMessage
   : TOutput;
 
 /**
@@ -206,7 +222,7 @@ export interface StructuredToolInterface<
   >(
     arg: TArg,
     configArg?: TConfig
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
+  ): Promise<ToolInvokeReturnType<TArg, TConfig, ToolOutputT>>;
 
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
@@ -219,15 +235,12 @@ export interface StructuredToolInterface<
    * @param tags Optional tags for the tool.
    * @returns A Promise that resolves with a string.
    */
-  call<
-    TArg extends StructuredToolCallInput<SchemaT, SchemaInputT>,
-    TConfig extends Callbacks | ToolRunnableConfig | undefined
-  >(
-    arg: TArg,
+  call<TConfig extends Callbacks | ToolRunnableConfig | undefined>(
+    arg: StructuredToolCallInput<SchemaT, SchemaInputT>,
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>>;
 
   /**
    * The name of the tool.
@@ -275,7 +288,7 @@ export interface ToolInterface<
     // TODO: shouldn't this be narrowed based on SchemaT?
     arg: TArg,
     callbacks?: TConfig
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>>;
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>>;
 }
 
 /**

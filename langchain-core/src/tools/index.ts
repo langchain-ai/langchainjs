@@ -24,7 +24,7 @@ import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import type {
   StructuredToolCallInput,
   ToolInputSchemaBase,
-  ToolReturnType,
+  ToolInvokeReturnType,
   ResponseFormat,
   ToolInputSchemaInputType,
   ToolInputSchemaOutputType,
@@ -37,6 +37,7 @@ import type {
   StringInputToolSchema,
   ToolInterface,
   ToolOutputType,
+  ToolCallReturnType,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 
@@ -51,7 +52,7 @@ export type {
   StructuredToolParams,
   ToolInterface,
   ToolParams,
-  ToolReturnType,
+  ToolInvokeReturnType as ToolReturnType,
   ToolRunnableConfig,
   ToolInputSchemaBase as ToolSchemaBase,
 } from "./types.js";
@@ -136,7 +137,7 @@ export abstract class StructuredTool<
   >(
     input: TInput,
     config?: TConfig
-  ): Promise<ToolReturnType<TInput, TConfig, ToolOutputT>> {
+  ): Promise<ToolInvokeReturnType<TInput, TConfig, ToolOutputT>> {
     let toolInput: Exclude<
       StructuredToolCallInput<SchemaT, SchemaInputT>,
       ToolCall
@@ -160,7 +161,7 @@ export abstract class StructuredTool<
     }
 
     return this.call(toolInput, enrichedConfig) as Promise<
-      ToolReturnType<TInput, TConfig, ToolOutputT>
+      ToolInvokeReturnType<TInput, TConfig, ToolOutputT>
     >;
   }
 
@@ -183,7 +184,7 @@ export abstract class StructuredTool<
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>> {
     // Determine the actual input that needs parsing/validation.
     // If arg is a ToolCall, use its args; otherwise, use arg directly.
     const inputForValidation = _isToolCall(arg) ? arg.args : arg;
@@ -279,11 +280,15 @@ export abstract class StructuredTool<
       config &&
       typeof config === "object" &&
       "toolCall" in config &&
-      config.toolCall
+      config.toolCall != null &&
+      typeof config.toolCall === "object" &&
+      "id" in config.toolCall &&
+      typeof config.toolCall.id === "string"
     ) {
       // We've checked toolCall exists, assert the type to access .id
       toolCallId = (config as ToolRunnableConfig).toolCall?.id;
     }
+
     const formattedOutput = _formatToolOutput<ToolOutputT>({
       content,
       artifact,
@@ -291,8 +296,7 @@ export abstract class StructuredTool<
       name: this.name,
     });
     await runManager?.handleToolEnd(formattedOutput);
-    // Assert based on the new conditional type
-    return formattedOutput as ToolReturnType<TArg, TConfig, ToolOutputT>;
+    return formattedOutput as ToolCallReturnType<TConfig, ToolOutputT>;
   }
 }
 
@@ -337,16 +341,14 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
   >(
     arg: TArg,
     callbacks?: TConfig
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>> {
     // Prepare the input for the base class call method.
     // If arg is string or undefined, wrap it; otherwise, pass ToolCall or { input: ... } directly.
     const structuredArg =
       typeof arg === "string" || arg == null ? { input: arg } : arg;
 
     // Ensure TConfig is passed to super.call
-    return super.call(structuredArg, callbacks) as Promise<
-      ToolReturnType<TArg, TConfig, ToolOutputT>
-    >;
+    return super.call(structuredArg, callbacks);
   }
 }
 
@@ -383,7 +385,7 @@ export class DynamicTool<
   >(
     arg: TArg,
     configArg?: TConfig
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -453,7 +455,7 @@ export class DynamicStructuredTool<
     configArg?: TConfig,
     /** @deprecated */
     tags?: string[]
-  ): Promise<ToolReturnType<TArg, TConfig, ToolOutputT>> {
+  ): Promise<ToolCallReturnType<TConfig, ToolOutputT>> {
     const config = parseCallbackConfigArg(configArg);
     if (config.runName === undefined) {
       config.runName = this.name;
@@ -541,7 +543,7 @@ interface ToolWrapperParams<
  *
  * @function
  * @template {ToolInputSchemaBase} SchemaT The input schema for the tool.
- * @template {ToolReturnType} ToolOutputT The output type of the tool.
+ * @template {ToolInvokeReturnType} ToolOutputT The output type of the tool.
  *
  * @param {RunnableFunc<z.output<SchemaT>, ToolOutputT>} func - The function to invoke when the tool is called.
  * @param {ToolWrapperParams<SchemaT>} fields - An object containing the following properties:
