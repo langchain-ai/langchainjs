@@ -40,10 +40,36 @@ function _formatImage(imageUrl: string) {
       data: parsed.data,
     };
   }
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(imageUrl);
+  } catch {
+    throw new Error(
+      [
+        `Malformed image URL: ${JSON.stringify(
+          imageUrl
+        )}. Content blocks of type 'image_url' must be a valid http, https, or base64-encoded data URL.`,
+        "Example: data:image/png;base64,/9j/4AAQSk...",
+        "Example: https://example.com/image.jpg",
+      ].join("\n\n")
+    );
+  }
+
+  if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+    return {
+      type: "url",
+      url: imageUrl,
+    };
+  }
+
   throw new Error(
     [
-      "Anthropic only supports images as base64-encoded data URLs on `image_url` content blocks. For http image URLs please use the StandardImageBlock type (type = \"image\", source_type = \"url\") and be sure to specify the image MIME type.",
+      `Invalid image URL protocol: ${JSON.stringify(
+        parsedUrl.protocol
+      )}. Anthropic only supports images as http, https, or base64-encoded data URLs on 'image_url' content blocks.`,
       "Example: data:image/png;base64,/9j/4AAQSk...",
+      "Example: https://example.com/image.jpg",
     ].join("\n\n")
   );
 }
