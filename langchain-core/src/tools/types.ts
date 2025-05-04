@@ -10,7 +10,11 @@ import {
   RunnableToolLike,
   type RunnableInterface,
 } from "../runnables/base.js";
-import type { ToolCall, ToolMessage } from "../messages/tool.js";
+import {
+  type DirectToolOutput,
+  type ToolCall,
+  type ToolMessage,
+} from "../messages/tool.js";
 import type { MessageContent } from "../messages/base.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import { JSONSchema } from "../utils/json_schema.js";
@@ -32,19 +36,18 @@ export type ZodObjectAny = z.ZodObject<any, any, any, any>;
  * - If the config is a runnable config and contains a toolCall property, it returns a ToolMessage
  * - Otherwise, it returns the original output type
  */
-export type ToolReturnType<TInput, TConfig, TOutput> = TOutput extends {
-  lc_direct_tool_output: true;
-}
-  ? TOutput
-  : TConfig extends { toolCall: { id: string } }
-  ? ToolMessage
-  : TConfig extends { toolCall: { id: undefined } }
-  ? TOutput
-  : TConfig extends { toolCall: { id?: string } }
-  ? TOutput | ToolMessage
-  : TInput extends ToolCall
-  ? ToolMessage
-  : TOutput;
+export type ToolReturnType<TInput, TConfig, TOutput> =
+  TOutput extends DirectToolOutput
+    ? TOutput
+    : TConfig extends { toolCall: { id: string } }
+    ? ToolMessage
+    : TConfig extends { toolCall: { id: undefined } }
+    ? TOutput
+    : TConfig extends { toolCall: { id?: string } }
+    ? TOutput | ToolMessage
+    : TInput extends ToolCall
+    ? ToolMessage
+    : TOutput;
 
 /**
  * Base type that establishes the types of input schemas that can be used for LangChain tool
