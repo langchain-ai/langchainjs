@@ -18,7 +18,11 @@ import {
 import type { RunnableFunc } from "../runnables/base.js";
 import { isDirectToolOutput, ToolCall, ToolMessage } from "../messages/tool.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
-import { _isToolCall, ToolInputParsingException } from "./utils.js";
+import {
+  _configHasToolCallId,
+  _isToolCall,
+  ToolInputParsingException,
+} from "./utils.js";
 import { isZodSchema } from "../utils/types/is_zod_schema.js";
 import type {
   StructuredToolCallInput,
@@ -273,18 +277,8 @@ export abstract class StructuredTool<
       toolCallId = arg.id;
     }
     // Or if it was provided in the config's toolCall property
-    if (
-      !toolCallId &&
-      config &&
-      typeof config === "object" &&
-      "toolCall" in config &&
-      config.toolCall != null &&
-      typeof config.toolCall === "object" &&
-      "id" in config.toolCall &&
-      typeof config.toolCall.id === "string"
-    ) {
-      // We've checked toolCall exists, assert the type to access .id
-      toolCallId = (config as ToolRunnableConfig).toolCall?.id;
+    if (!toolCallId && _configHasToolCallId(config)) {
+      toolCallId = config.toolCall.id;
     }
 
     const formattedOutput = _formatToolOutput<ToolOutputT>({
