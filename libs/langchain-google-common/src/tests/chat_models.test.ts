@@ -143,6 +143,21 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(model.platform).toEqual("gcp");
   });
 
+  test("platform default key", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      apiKey: "test",
+    });
+
+    expect(model.platform).toEqual("gai");
+  });
+
   test("platform set", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -156,6 +171,79 @@ describe("Mock ChatGoogle - Gemini", () => {
     });
 
     expect(model.platform).toEqual("gai");
+  });
+
+  test("platform endpoint - gcp", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gai", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gai",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gai apiVersion", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gai",
+      apiVersion: "v1alpha",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://generativelanguage.googleapis.com/v1alpha/models/gemini-pro:generateContent`
+    );
   });
 
   test("1. Basic request format", async () => {
