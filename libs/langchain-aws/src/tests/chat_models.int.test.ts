@@ -516,12 +516,7 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
   expect(typeof result.tool_calls![0].args.location).toBe("string");
   expect(result.tool_calls![0].args.location.length).toBeGreaterThan(0);
 
-  messages.push(
-    new ToolMessage({
-      tool_call_id: result.tool_calls![0].id!,
-      content: await tools[0].invoke(result.tool_calls![0]),
-    })
-  );
+  messages.push(await tools[0].invoke(result.tool_calls![0]));
 
   const result2 = await modelWithTools.invoke(messages);
   expect(result2.content).toBeDefined();
