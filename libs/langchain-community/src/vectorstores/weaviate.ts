@@ -1,9 +1,5 @@
 import * as uuid from "uuid";
-import type {
-  WeaviateClient,
-  WeaviateObject,
-  Filters,
-} from "weaviate-client";
+import type { WeaviateClient, WeaviateObject, Filters } from "weaviate-client";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,

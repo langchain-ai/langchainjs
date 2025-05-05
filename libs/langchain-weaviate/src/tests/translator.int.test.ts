@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { test } from "@jest/globals";
-import weaviate, {  Filters, WeaviateClient }  from "weaviate-client";
+import weaviate, { Filters, WeaviateClient } from "weaviate-client";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { AttributeInfo } from "langchain/chains/query_constructor";
@@ -9,20 +9,21 @@ import { WeaviateStore } from "../vectorstores.js";
 import { WeaviateTranslator } from "../translator.js";
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 var client: WeaviateClient;
-const indexName = 'Test';
+const indexName = "Test";
 
 beforeAll(async () => {
   client = await (weaviate as any).connectToWeaviateCloud(
-    process.env.WEAVIATE_URL, { 
-      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ''),
+    process.env.WEAVIATE_URL,
+    {
+      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
       headers: {
-        'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY || '',  
-        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || '',  
-      }
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
+      },
     }
   );
 });
@@ -102,9 +103,13 @@ test("Weaviate Self Query Retriever Test", async () => {
     indexName: indexName,
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre"],
-  }
+  };
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, weaviateArgs);
+  const vectorStore = await WeaviateStore.fromDocuments(
+    docs,
+    embeddings,
+    weaviateArgs
+  );
   const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
@@ -113,7 +118,7 @@ test("Weaviate Self Query Retriever Test", async () => {
     structuredQueryTranslator: new WeaviateTranslator(),
   });
 
-  await sleep(3000)
+  await sleep(3000);
 
   const query2 = await selfQueryRetriever.invoke(
     "Which movies are rated higher than 8.5?"
@@ -237,12 +242,16 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
     indexName: indexName,
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre", "type"],
-  }
+  };
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, weaviateArgs);
-  
-  await sleep(3000)
-  const collection = client.collections.get(weaviateArgs.indexName)
+  const vectorStore = await WeaviateStore.fromDocuments(
+    docs,
+    embeddings,
+    weaviateArgs
+  );
+
+  await sleep(3000);
+  const collection = client.collections.get(weaviateArgs.indexName);
   const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
@@ -250,12 +259,12 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
     attributeInfo,
     structuredQueryTranslator: new WeaviateTranslator(),
     searchParams: {
-      filter: Filters.and(collection.filter.byProperty('type').equal('movie') ),
+      filter: Filters.and(collection.filter.byProperty("type").equal("movie")),
       mergeFiltersOperator: "or",
       k: docs.length,
     },
   });
-  
+
   const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
@@ -366,12 +375,13 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
     modelName: "gpt-3.5-turbo",
   });
   const client = await (weaviate as any).connectToWeaviateCloud(
-    process.env.WEAVIATE_URL, { 
-      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ''),
+    process.env.WEAVIATE_URL,
+    {
+      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
       headers: {
-        'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY || '',  
-        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || '',  
-      }
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
+      },
     }
   );
   const weaviateArgs = {
@@ -380,12 +390,15 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre", "type"],
   };
-  
 
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await WeaviateStore.fromDocuments(docs, embeddings, weaviateArgs);
-  await sleep(3000)
-  const collection = client.collections.get(weaviateArgs.indexName)
+  const vectorStore = await WeaviateStore.fromDocuments(
+    docs,
+    embeddings,
+    weaviateArgs
+  );
+  await sleep(3000);
+  const collection = client.collections.get(weaviateArgs.indexName);
   const selfQueryRetriever = SelfQueryRetriever.fromLLM({
     llm,
     vectorStore,
@@ -393,12 +406,12 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
     attributeInfo,
     structuredQueryTranslator: new WeaviateTranslator(),
     searchParams: {
-      filter: Filters.and(collection.filter.byProperty('type').equal('movie') ),
+      filter: Filters.and(collection.filter.byProperty("type").equal("movie")),
       mergeFiltersOperator: "and",
       k: docs.length,
     },
   });
-  
+
   const query4 = await selfQueryRetriever.invoke(
     "Wau wau wau wau hello gello hello?"
   );
