@@ -5,6 +5,7 @@ import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
+  BaseMessageLike,
   HumanMessage,
   MessageContentComplex,
   SystemMessage,
@@ -494,7 +495,9 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
     ),
   ];
   const modelWithTools = model.bindTools(tools);
-  const messages = [new HumanMessage("What is the current weather in London?")];
+  const messages: BaseMessageLike[] = [
+    new HumanMessage("What is the current weather in London?"),
+  ];
 
   const result = await modelWithTools.invoke(messages);
   messages.push(result);
