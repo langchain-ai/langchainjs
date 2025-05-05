@@ -293,22 +293,27 @@ abstract class BaseTavilyAPIWrapper {
   /**
    * Converts camelCase keys to snake_case for API compatibility
    * @param params The parameters with camelCase keys
-   * @returns The parameters with snake_case keys
+   * @returns The parameters with snake_case keys only
    */
   protected convertCamelToSnakeCase(
     params: Record<string, unknown>
   ): Record<string, unknown> {
-    return Object.entries(params).reduce((result, [key, value]) => {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(params)) {
       if (value === undefined) {
-        return result;
+        continue;
       }
       // Convert camelCase key to snake_case
       // Handle potential leading capital letter first
       let newKey = key.replace(/^[A-Z]/, (letter) => letter.toLowerCase());
       // Then handle subsequent capital letters
       newKey = newKey.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-      return { ...result, [newKey]: value };
-    }, {} as Record<string, unknown>);
+
+      result[newKey] = value;
+    }
+
+    return result;
   }
 }
 

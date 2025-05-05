@@ -136,6 +136,7 @@ describe("TavilySearch", () => {
       includeAnswer: false,
       includeRawContent: false,
       includeImageDescriptions: false,
+      chunksPerSource: 3,
     });
 
     expect(result).toEqual(mockResult);
@@ -187,6 +188,7 @@ describe("TavilySearch", () => {
       includeAnswer: false,
       includeRawContent: false,
       includeImageDescriptions: false,
+      chunksPerSource: 3,
     });
   });
 
@@ -238,6 +240,7 @@ describe("TavilySearch", () => {
       includeAnswer: true,
       includeRawContent: true,
       includeImageDescriptions: false,
+      chunksPerSource: 3,
     });
   });
 
