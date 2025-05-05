@@ -1,12 +1,13 @@
 import * as uuid from "uuid";
 import {
-  WeaviateClient,
-  FilterValue,
   configure,
-  DataObject,
+  type DataObject,
+  type FilterValue,
+  WeaviateClient,
+  type WeaviateField,
 } from "weaviate-client";
 import {
-  MaxMarginalRelevanceSearchOptions,
+  type MaxMarginalRelevanceSearchOptions,
   VectorStore,
 } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -15,16 +16,18 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 // Note this function is not generic, it is designed specifically for Weaviate
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
-export const flattenObjectForWeaviate = (obj: Record<string, any>) => {
-  const flattenedObject: Record<string, any> = {};
+export const flattenObjectForWeaviate = (obj: Record<string, unknown>) => {
+  const flattenedObject: Record<string, unknown> = {};
 
   for (const key in obj) {
     if (!Object.hasOwn(obj, key)) {
       continue;
     }
     const value = obj[key];
-    if (typeof obj[key] === "object" && !Array.isArray(value)) {
-      const recursiveResult = flattenObjectForWeaviate(value);
+    if (typeof value === "object" && !Array.isArray(value)) {
+      const recursiveResult = flattenObjectForWeaviate(
+        value as Record<string, unknown>
+      );
 
       for (const deepKey in recursiveResult) {
         if (Object.hasOwn(obj, key)) {
@@ -36,7 +39,7 @@ export const flattenObjectForWeaviate = (obj: Record<string, any>) => {
         flattenedObject[key] = value;
       } else if (
         typeof value[0] !== "object" &&
-        value.every((el: any) => typeof el === typeof value[0])
+        value.every((el: unknown) => typeof el === typeof value[0])
       ) {
         // Weaviate only supports arrays of primitive types,
         // where all elements are of the same type
@@ -122,7 +125,7 @@ export class WeaviateStore extends VectorStore {
     config: WeaviateLibArgs & { dimensions?: number }
   ): Promise<WeaviateStore> {
     const weaviateStore = new this(embeddings, config);
-    var collection = await weaviateStore.client.collections.exists(
+    const collection = await weaviateStore.client.collections.exists(
       weaviateStore.indexName
     );
     if (!collection) {
@@ -162,7 +165,9 @@ export class WeaviateStore extends VectorStore {
         throw new Error(
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
         );
-      const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
+      const flattenedMetadata = flattenObjectForWeaviate(
+        document.metadata
+      ) as Record<string, WeaviateField>;
       return {
         id: documentIds[index],
         vectors: vectors[index],
@@ -176,7 +181,7 @@ export class WeaviateStore extends VectorStore {
 
     try {
       const collection = this.client.collections.get(this.indexName);
-      var response;
+      let response;
       if (this.tenant) {
         response = await collection
           .withTenant(this.tenant)
@@ -240,9 +245,9 @@ export class WeaviateStore extends VectorStore {
       }
     } else if (filter) {
       if (this.tenant) {
-        collection.withTenant(this.tenant).data.deleteMany(filter);
+        await collection.withTenant(this.tenant).data.deleteMany(filter);
       } else {
-        collection.data.deleteMany(filter);
+        await collection.data.deleteMany(filter);
       }
     } else {
       throw new Error(
@@ -289,7 +294,7 @@ export class WeaviateStore extends VectorStore {
   ): Promise<[Document, number, number, number[]][]> {
     try {
       const collection = this.client.collections.get(this.indexName);
-      var result;
+      let result;
       if (this.tenant) {
         result = await collection
           .withTenant(this.tenant)
@@ -309,13 +314,13 @@ export class WeaviateStore extends VectorStore {
 
       const documents: [Document, number, number, number[]][] = [];
 
-      for (let data of result.objects) {
+      for (const data of result.objects) {
         const { properties = {}, metadata = {} } = data ?? {};
         const { [this.textKey]: text, ...rest } = properties;
 
         documents.push([
           new Document({
-            pageContent: String(data.properties?.[this.textKey] ?? ""),
+            pageContent: String(text ?? ""),
             metadata: {
               ...rest,
             },

@@ -8,24 +8,20 @@ import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { WeaviateStore } from "../vectorstores.js";
 import { WeaviateTranslator } from "../translator.js";
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-var client: WeaviateClient;
+let client: WeaviateClient;
 const indexName = "Test";
 
 beforeAll(async () => {
-  client = await (weaviate as any).connectToWeaviateCloud(
-    process.env.WEAVIATE_URL,
-    {
-      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
-      headers: {
-        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
-        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
-      },
-    }
-  );
+  expect(process.env.WEAVIATE_URL).toBeDefined();
+  expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
+
+  client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
+    authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
+    headers: {
+      "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+      "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
+    },
+  });
 });
 
 test("Weaviate Self Query Retriever Test", async () => {
@@ -100,40 +96,41 @@ test("Weaviate Self Query Retriever Test", async () => {
   });
   const weaviateArgs = {
     client,
-    indexName: indexName,
+    indexName,
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre"],
   };
   const documentContents = "Brief summary of a movie";
-  const vectorStore = await WeaviateStore.fromDocuments(
-    docs,
-    embeddings,
-    weaviateArgs
-  );
-  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
-    llm,
-    vectorStore,
-    documentContents,
-    attributeInfo,
-    structuredQueryTranslator: new WeaviateTranslator(),
-  });
+  try {
+    const vectorStore = await WeaviateStore.fromDocuments(
+      docs,
+      embeddings,
+      weaviateArgs
+    );
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
+      llm,
+      vectorStore,
+      documentContents,
+      attributeInfo,
+      structuredQueryTranslator: new WeaviateTranslator(),
+    });
 
-  await sleep(3000);
-
-  const query2 = await selfQueryRetriever.invoke(
-    "Which movies are rated higher than 8.5?"
-  );
-  // this query isn't correctly converted by Langchain selfQuery
-  // const _query3 = await selfQueryRetriever.invoke(
-  //   "Which movies are directed by Greta Gerwig?"
-  // );
-  const query4 = await selfQueryRetriever.invoke(
-    "Wau wau wau wau hello gello hello?"
-  );
-  // weaviate will always return results but with lesser score
-  expect(query4.length).toBe(4);
-  expect(query2.length).toBe(2);
-  client.collections.delete(indexName);
+    const query2 = await selfQueryRetriever.invoke(
+      "Which movies are rated higher than 8.5?"
+    );
+    // this query isn't correctly converted by Langchain selfQuery
+    // const _query3 = await selfQueryRetriever.invoke(
+    //   "Which movies are directed by Greta Gerwig?"
+    // );
+    const query4 = await selfQueryRetriever.invoke(
+      "Wau wau wau wau hello gello hello?"
+    );
+    // weaviate will always return results but with lesser score
+    expect(query4.length).toBe(4);
+    expect(query2.length).toBe(2);
+  } finally {
+    await client.collections.delete(indexName);
+  }
 });
 
 test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter Or Merge Operator", async () => {
@@ -239,7 +236,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
   });
   const weaviateArgs = {
     client,
-    indexName: indexName,
+    indexName,
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre", "type"],
   };
@@ -250,27 +247,31 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
     weaviateArgs
   );
 
-  await sleep(3000);
   const collection = client.collections.get(weaviateArgs.indexName);
-  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
-    llm,
-    vectorStore,
-    documentContents,
-    attributeInfo,
-    structuredQueryTranslator: new WeaviateTranslator(),
-    searchParams: {
-      filter: Filters.and(collection.filter.byProperty("type").equal("movie")),
-      mergeFiltersOperator: "or",
-      k: docs.length,
-    },
-  });
+  try {
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
+      llm,
+      vectorStore,
+      documentContents,
+      attributeInfo,
+      structuredQueryTranslator: new WeaviateTranslator(),
+      searchParams: {
+        filter: Filters.and(
+          collection.filter.byProperty("type").equal("movie")
+        ),
+        mergeFiltersOperator: "or",
+        k: docs.length,
+      },
+    });
 
-  const query4 = await selfQueryRetriever.invoke(
-    "Wau wau wau wau hello gello hello?"
-  );
-  // console.log(query4); // query4 has to return documents, since the default filter takes over with
-  expect(query4.length).toEqual(7);
-  client.collections.delete(indexName);
+    const query4 = await selfQueryRetriever.invoke(
+      "Wau wau wau wau hello gello hello?"
+    );
+    // console.log(query4); // query4 has to return documents, since the default filter takes over with
+    expect(query4.length).toEqual(7);
+  } finally {
+    await client.collections.delete(indexName);
+  }
 });
 
 test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Merge Operator", async () => {
@@ -374,8 +375,11 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
   const llm = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
   });
-  const client = await (weaviate as any).connectToWeaviateCloud(
-    process.env.WEAVIATE_URL,
+  expect(process.env.WEAVIATE_URL).toBeDefined();
+  expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
+
+  const client = await weaviate.connectToWeaviateCloud(
+    process.env.WEAVIATE_URL!,
     {
       authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
       headers: {
@@ -386,38 +390,42 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
   );
   const weaviateArgs = {
     client,
-    indexName: indexName,
+    indexName,
     textKey: "text",
     metadataKeys: ["year", "director", "rating", "genre", "type"],
   };
 
-  const documentContents = "Brief summary of a movie";
-  const vectorStore = await WeaviateStore.fromDocuments(
-    docs,
-    embeddings,
-    weaviateArgs
-  );
-  await sleep(3000);
-  const collection = client.collections.get(weaviateArgs.indexName);
-  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
-    llm,
-    vectorStore,
-    documentContents,
-    attributeInfo,
-    structuredQueryTranslator: new WeaviateTranslator(),
-    searchParams: {
-      filter: Filters.and(collection.filter.byProperty("type").equal("movie")),
-      mergeFiltersOperator: "and",
-      k: docs.length,
-    },
-  });
+  try {
+    const documentContents = "Brief summary of a movie";
+    const vectorStore = await WeaviateStore.fromDocuments(
+      docs,
+      embeddings,
+      weaviateArgs
+    );
+    const collection = client.collections.get(weaviateArgs.indexName);
+    const selfQueryRetriever = SelfQueryRetriever.fromLLM({
+      llm,
+      vectorStore,
+      documentContents,
+      attributeInfo,
+      structuredQueryTranslator: new WeaviateTranslator(),
+      searchParams: {
+        filter: Filters.and(
+          collection.filter.byProperty("type").equal("movie")
+        ),
+        mergeFiltersOperator: "and",
+        k: docs.length,
+      },
+    });
 
-  const query4 = await selfQueryRetriever.invoke(
-    "Wau wau wau wau hello gello hello?"
-  );
-  // console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter
-  expect(query4.length).toEqual(7);
-  client.collections.delete(indexName);
+    const query4 = await selfQueryRetriever.invoke(
+      "Wau wau wau wau hello gello hello?"
+    );
+    // console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter
+    expect(query4.length).toEqual(7);
+  } finally {
+    await client.collections.delete(indexName);
+  }
 });
 
 afterAll(async () => {

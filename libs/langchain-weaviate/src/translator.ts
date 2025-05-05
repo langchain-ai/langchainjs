@@ -4,18 +4,18 @@ import {
   isInt,
   isFloat,
   BaseTranslator,
-  Comparator,
+  type Comparator,
   Comparators,
   Comparison,
-  NOT,
+  type NOT,
   Operation,
-  Operator,
+  type Operator,
   Operators,
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
-import { WeaviateStore } from "./vectorstores.js";
 import { FilterValue } from "weaviate-client";
+import { WeaviateStore } from "./vectorstores.js";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -159,22 +159,27 @@ export class WeaviateTranslator<
    * @param comparison The comparison to visit.
    * @returns A WeaviateComparisonResult.
    */
-  visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
-    const result = {
+  visitComparison(comparison: Comparison): WeaviateComparisonResult {
+    const result: WeaviateComparisonResult = {
       operator: this.formatFunction(comparison.comparator),
       target: { property: comparison.attribute },
-      value: null as any,
+      value: "",
     };
-    if (isString(comparison.value)) {
-      result.value = comparison.value as string;
-    } else if (isInt(comparison.value)) {
-      result.value = parseInt(comparison.value as string, 10);
-    } else if (isFloat(comparison.value)) {
-      result.value = parseFloat(comparison.value as string);
+
+    if (typeof comparison.value === "string") {
+      if (isString(comparison.value)) {
+        result.value = comparison.value;
+      } else if (isInt(comparison.value)) {
+        result.value = parseInt(comparison.value, 10);
+      } else if (isFloat(comparison.value)) {
+        result.value = parseFloat(comparison.value as string);
+      } else {
+        throw new Error("Value type is not supported");
+      }
     } else {
-      throw new Error("Value type is not supported");
+      result.value = comparison.value;
     }
-    return result as this["VisitComparisonOutput"];
+    return result;
   }
 
   /**
