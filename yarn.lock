@@ -211,7 +211,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:>=0.14 <1, @anthropic-ai/sdk@npm:^0.37.0":
+"@anthropic-ai/sdk@npm:>=0.14 <1":
   version: 0.37.0
   resolution: "@anthropic-ai/sdk@npm:0.37.0"
   dependencies:
@@ -238,6 +238,21 @@ __metadata:
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
   checksum: 8000fc5a4e545057d8711f978a0de59c9a174398a81f700c9d279213790aaa4b2c100f96f2ef79447b8f1f3a04b8f094d60db66a06df8df96b31a3240d69cb5a
+  languageName: node
+  linkType: hard
+
+"@anthropic-ai/sdk@npm:^0.39.0":
+  version: 0.39.0
+  resolution: "@anthropic-ai/sdk@npm:0.39.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  checksum: 47f00c9d3ca2d497b25c688cdfd923474e2f16e774f67a3e2ef3f0c24cd80412687e3a2caee3024dd9a5d7a95e0717d85e3ffc9c4ba75ff6f1641d5820394a76
   languageName: node
   linkType: hard
 
@@ -6891,7 +6906,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.37.0
+    "@anthropic-ai/sdk": ^0.39.0
     "@anthropic-ai/vertex-sdk": ^0.4.1
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
@@ -6918,7 +6933,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -6959,7 +6974,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.5
   peerDependencies:
-    "@langchain/core": ">=0.3.41 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7943,7 +7958,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@^0.2.0, @langchain/google-common@^0.2.4, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
+"@langchain/google-common@^0.2.0, @langchain/google-common@^0.2.5, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -7974,17 +7989,17 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@workspace:libs/langchain-google-gauth, @langchain/google-gauth@~0.2.4":
+"@langchain/google-gauth@^0.2.5, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.4
+    "@langchain/google-common": ^0.2.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8009,7 +8024,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8047,7 +8062,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.3.17 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8057,8 +8072,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.0
-    "@langchain/google-webauth": ~0.2.4
+    "@langchain/google-common": ^0.2.5
+    "@langchain/google-webauth": ^0.2.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -8083,7 +8098,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8094,7 +8109,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.2.0
-    "@langchain/google-gauth": ~0.2.4
+    "@langchain/google-gauth": ^0.2.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -8119,17 +8134,17 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@workspace:libs/langchain-google-webauth, @langchain/google-webauth@~0.2.4":
+"@langchain/google-webauth@^0.2.5, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.4
+    "@langchain/google-common": ^0.2.5
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8435,7 +8450,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.93.0
+    openai: ^4.96.0
     prettier: ^2.8.3
     release-it: ^18.1.2
     rimraf: ^5.0.1
@@ -8444,7 +8459,7 @@ __metadata:
     zod: ^3.22.4
     zod-to-json-schema: ^3.22.3
   peerDependencies:
-    "@langchain/core": ">=0.3.39 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -28496,9 +28511,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.93.0":
-  version: 4.93.0
-  resolution: "openai@npm:4.93.0"
+"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.96.0":
+  version: 4.96.0
+  resolution: "openai@npm:4.96.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -28517,7 +28532,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: 39fa6635475590c05c5fcb1fd07708c8f23d430dad36037c49fe25020ada0a4a36801e5c443669acd8f947d52005e3b7cf0215ca4b76262007f9b1ea3c916a68
+  checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
   languageName: node
   linkType: hard
 
