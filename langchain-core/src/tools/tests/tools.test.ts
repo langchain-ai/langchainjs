@@ -1,9 +1,11 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, describe } from "@jest/globals";
 import { z } from "zod";
 
 import {
   DynamicStructuredTool,
+  StructuredToolParams,
   ToolInputParsingException,
+  isStructuredToolParams,
   tool,
 } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
@@ -354,4 +356,29 @@ Details: [
     "message": "Expected string, received number"
   }
 ]`);
+});
+
+describe("isStructuredToolParams", () => {
+  test("returns true for a tool with a zod schema", () => {
+    const zodToolParams: StructuredToolParams = {
+      name: "test",
+      schema: z.string(),
+    };
+    expect(isStructuredToolParams(zodToolParams)).toBe(true);
+  });
+  test("returns true for a tool with a json schema", () => {
+    const jsonToolParams: StructuredToolParams = {
+      name: "test",
+      schema: { type: "string", description: "test" },
+    };
+    expect(isStructuredToolParams(jsonToolParams)).toBe(true);
+  });
+  test("returns false for a tool with an invalid schema", () => {
+    const nonStructuredToolParams: StructuredToolParams = {
+      name: "test",
+      // @ts-expect-error Testing non-structured schema
+      schema: "not a schema",
+    };
+    expect(isStructuredToolParams(nonStructuredToolParams)).toBe(false);
+  });
 });
