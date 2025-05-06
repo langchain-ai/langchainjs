@@ -4,20 +4,18 @@ import {
   isInt,
   isFloat,
   BaseTranslator,
-  Comparator,
+  type Comparator,
   Comparators,
   Comparison,
-  NOT,
+  type NOT,
   Operation,
-  Operator,
+  type Operator,
   Operators,
   StructuredQuery,
   Visitor,
 } from "@langchain/core/structured_query";
+import { FilterValue } from "weaviate-client";
 import { WeaviateStore } from "./vectorstores.js";
-import {
-  FilterValue,
-} from "weaviate-client";
 
 type AllowedOperator = Exclude<Operator, NOT>;
 
@@ -142,10 +140,13 @@ export class WeaviateTranslator<
    * @returns A WeaviateOperationResult.
    */
   visitOperation(operation: Operation): this["VisitOperationOutput"] {
-    const args = operation.args?.map((arg) => arg.accept(this as Visitor)) as (WeaviateComparisonResult | WeaviateOperationResult)[];
-  
+    const args = operation.args?.map((arg) => arg.accept(this as Visitor)) as (
+      | WeaviateComparisonResult
+      | WeaviateOperationResult
+    )[];
+
     return {
-      operator: this.formatFunction(operation.operator),  // Usually 'And' or 'Or'
+      operator: this.formatFunction(operation.operator), // Usually 'And' or 'Or'
       filters: args,
       value: null,
     };
@@ -158,22 +159,27 @@ export class WeaviateTranslator<
    * @param comparison The comparison to visit.
    * @returns A WeaviateComparisonResult.
    */
-  visitComparison(comparison: Comparison): this["VisitComparisonOutput"] {
-    const result = {
+  visitComparison(comparison: Comparison): WeaviateComparisonResult {
+    const result: WeaviateComparisonResult = {
       operator: this.formatFunction(comparison.comparator),
-      target:  {property: comparison.attribute},
-      value: null as any,
+      target: { property: comparison.attribute },
+      value: "",
     };
-    if (isString(comparison.value)) {
-      result.value = comparison.value as string;
-    } else if (isInt(comparison.value)) {
-      result.value = parseInt(comparison.value as string, 10);
-    } else if (isFloat(comparison.value)) {
-      result.value = parseFloat(comparison.value as string);
+
+    if (typeof comparison.value === "string") {
+      if (isString(comparison.value)) {
+        result.value = comparison.value;
+      } else if (isInt(comparison.value)) {
+        result.value = parseInt(comparison.value, 10);
+      } else if (isFloat(comparison.value)) {
+        result.value = parseFloat(comparison.value as string);
+      } else {
+        throw new Error("Value type is not supported");
+      }
     } else {
-      throw new Error("Value type is not supported");
+      result.value = comparison.value;
     }
-    return result as this["VisitComparisonOutput"];
+    return result;
   }
 
   /**
@@ -188,7 +194,7 @@ export class WeaviateTranslator<
     let nextArg = {};
     if (query.filter) {
       nextArg = {
-        filter:  query.filter.accept(this as Visitor) ,
+        filter: query.filter.accept(this as Visitor),
       };
     }
     return nextArg;
@@ -210,10 +216,7 @@ export class WeaviateTranslator<
     generatedFilter: FilterValue | undefined,
     mergeType = "and"
   ): FilterValue | undefined {
-    if (
-      isFilterEmpty(defaultFilter) &&
-      isFilterEmpty(generatedFilter)
-    ) {
+    if (isFilterEmpty(defaultFilter) && isFilterEmpty(generatedFilter)) {
       return undefined;
     }
     if (isFilterEmpty(defaultFilter) || mergeType === "replace") {
@@ -234,16 +237,16 @@ export class WeaviateTranslator<
         defaultFilter as WeaviateVisitorResult,
         generatedFilter as WeaviateVisitorResult,
       ],
-      value: null
+      value: null,
     };
 
     if (mergeType === "or") {
       merged.operator = "Or";
     }
     const temp = {
-        operator: merged.operator,
-        operands: merged.filters,
-        value: null,  
+      operator: merged.operator,
+      operands: merged.filters,
+      value: null,
     } as FilterValue;
     return temp;
   }

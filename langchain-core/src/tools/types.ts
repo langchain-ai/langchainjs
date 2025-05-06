@@ -313,7 +313,14 @@ export function isStructuredToolParams(
     "name" in tool &&
     "schema" in tool &&
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    isZodSchema(tool.schema as Record<string, any>)
+    (isZodSchema(tool.schema as Record<string, any>) ||
+      (tool.schema != null &&
+        typeof tool.schema === "object" &&
+        "type" in tool.schema &&
+        typeof tool.schema.type === "string" &&
+        ["null", "boolean", "object", "array", "number", "string"].includes(
+          tool.schema.type
+        )))
   );
 }
 
