@@ -215,25 +215,32 @@ export class FakeChatModel extends BaseChatModel {
 }
 
 export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModelCallOptions> {
-  sleep?: number = 50;
+  sleep: number = 50;
 
-  responses?: BaseMessage[];
+  responses: BaseMessage[] = [];
 
-  chunks?: AIMessageChunk[] = [];
+  chunks: AIMessageChunk[] = [];
 
-  toolStyle?: "openai" | "anthropic" | "bedrock" | "google";
+  toolStyle: "openai" | "anthropic" | "bedrock" | "google" = "openai";
 
   thrownErrorString?: string;
 
   private tools: StructuredTool[] = [];
 
-  constructor(fields: FakeStreamingChatModelFields & BaseLLMParams) {
-    super(fields);
-    this.sleep = fields.sleep ?? this.sleep;
-    this.responses = fields.responses ?? [];
-    this.chunks = fields.chunks ?? [];
-    this.toolStyle = fields.toolStyle ?? this.toolStyle;
-    this.thrownErrorString = fields.thrownErrorString;
+  constructor({
+    sleep = 50,
+    responses = [],
+    chunks = [],
+    toolStyle = "openai",
+    thrownErrorString,
+    ...rest
+  }: FakeStreamingChatModelFields & BaseLLMParams) {
+    super(rest);
+    this.sleep = sleep;
+    this.responses = responses;
+    this.chunks = chunks;
+    this.toolStyle = toolStyle;
+    this.thrownErrorString = thrownErrorString;
   }
 
   _llmType() {
@@ -407,7 +414,7 @@ export class FakeRetriever extends BaseRetriever {
 export interface FakeStreamingChatModelCallOptions
   extends BaseChatModelCallOptions {}
 /**
- * Interface for the Constructor-field specific to the Fake Streaming Chat model.
+ * Interface for the Constructor-field specific to the Fake Streaming Chat model (all optional because we fill in defaults).
  */
 export interface FakeStreamingChatModelFields extends BaseChatModelParams {
   /** Milliseconds to pause between fallback char-by-char chunks */

@@ -30,6 +30,7 @@ import {
   SingleRunExtractor,
   FakeStreamingChatModel,
 } from "../../utils/testing/index.js";
+import { charChunks } from "../../utils/testing/helpers.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { RunnableConfig } from "../config.js";
@@ -593,23 +594,21 @@ describe("runId config", () => {
     expect(run.id).toBe(testId);
   });
 
-  test("FakeStreamingChatModel streams predefined chunks including tool calls", async () => {
-    class EchoTool extends StructuredTool<z.ZodObject<any>> {
-      name = "echo";
+  describe("FakeStreamingChatModel predefined chunks", () => {
+    test("streams predefined chunks including tool call", async () => {
+      class EchoTool extends StructuredTool<z.ZodObject<any>> {
+        name = "echo";
 
-      description = "Echo the input";
+        description = "Echo the input";
 
-      schema = z.object({ input: z.string() });
+        schema = z.object({ input: z.string() });
 
-      async _call(arg: z.output<this["schema"]>) {
-        return JSON.stringify(arg);
+        async _call(arg: z.output<this["schema"]>) {
+          return JSON.stringify(arg);
+        }
       }
-    }
 
-    const chunks = [
-      new AIMessageChunk({ content: "H" }),
-      new AIMessageChunk({ content: "i" }),
-      new AIMessageChunk({
+      const toolCallChunk = new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -619,30 +618,31 @@ describe("runId config", () => {
             args: { input: "hello" },
           },
         ],
-      }),
-      new AIMessageChunk({ content: "!" }),
-    ];
+      });
 
-    const model = new FakeStreamingChatModel({ chunks, sleep: 0 }).bindTools([
-      new EchoTool(),
-    ]);
+      const chunks = [...charChunks("Hi"), toolCallChunk, ...charChunks("!")];
 
-    const seen: string[] = [];
-    for await (const gen of await model.stream([], {})) {
-      seen.push(gen.content as string);
-    }
-    expect(seen).toEqual(["H", "i", "", "!"]);
-  });
+      const model = new FakeStreamingChatModel({ chunks, sleep: 0 }).bindTools([
+        new EchoTool(),
+      ]);
 
-  test("FakeStreamingChatModel fallback char streaming", async () => {
-    const model = new FakeStreamingChatModel({
-      responses: [new AIMessage("Hi")],
-      sleep: 0,
+      const seen: string[] = [];
+      for await (const gen of await model.stream([], {})) {
+        seen.push(gen.content as string);
+      }
+      expect(seen).toEqual(["H", "i", "", "!"]);
     });
-    const out: string[] = [];
-    for await (const gen of await model.stream([], {})) {
-      out.push(gen.content as string);
-    }
-    expect(out).toEqual(["H", "i"]);
+
+    test("FakeStreamingChatModel fallback char streaming", async () => {
+      const model = new FakeStreamingChatModel({
+        responses: [new AIMessage("Hi")],
+        sleep: 0,
+      });
+      const out: string[] = [];
+      for await (const gen of await model.stream([], {})) {
+        out.push(gen.content as string);
+      }
+      expect(out).toEqual(["H", "i"]);
+    });
   });
 });
