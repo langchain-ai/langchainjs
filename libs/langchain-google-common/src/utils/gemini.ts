@@ -1367,10 +1367,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
 
     // Add thinking configuration if explicitly set
-    if (typeof parameters.maxReasoningTokens !== "undefined") {
+    if (
+      typeof parameters.maxReasoningTokens !== "undefined" &&
+      parameters.maxReasoningTokens !== 0
+    ) {
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
-        includeThoughts: true,
+        includeThoughts: parameters.includeThoughts ?? true,
       };
     }
 
@@ -1583,6 +1586,16 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
         );
       }
     }
+  }
+
+  if (
+    typeof params.includeThoughts !== "undefined" &&
+    (typeof params.maxReasoningTokens === "undefined" ||
+      params.maxReasoningTokens === 0)
+  ) {
+    throw new Error(
+      "`includeThoughts` can only be set when thinking is enabled"
+    );
   }
 
   if (

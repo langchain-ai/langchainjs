@@ -165,6 +165,11 @@ export interface GoogleAIModelParams {
   reasoningEffort?: "low" | "medium" | "high";
 
   /**
+   * Whether to include the reasoning steps in the response.
+   */
+  includeThoughts?: boolean;
+
+  /**
    * Top-p changes how the model selects tokens for output.
    *
    * Tokens are selected from most probable to least until the sum
