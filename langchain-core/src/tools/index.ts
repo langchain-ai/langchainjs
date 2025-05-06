@@ -42,10 +42,6 @@ export type {
   ContentAndArtifact,
   DynamicToolInput,
   DynamicStructuredToolInput,
-  isLangChainTool,
-  isRunnableToolLike,
-  isStructuredTool,
-  isStructuredToolParams,
   ResponseFormat,
   StructuredToolCallInput,
   StructuredToolInterface,
@@ -55,6 +51,13 @@ export type {
   ToolReturnType,
   ToolRunnableConfig,
   ToolInputSchemaBase as ToolSchemaBase,
+} from "./types.js";
+
+export {
+  isLangChainTool,
+  isRunnableToolLike,
+  isStructuredTool,
+  isStructuredToolParams,
 } from "./types.js";
 
 export { ToolInputParsingException };
