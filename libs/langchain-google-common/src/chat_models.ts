@@ -192,8 +192,6 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   maxReasoningTokens: number;
 
-  includeThoughts: boolean;
-
   topP: number;
 
   topK: number;
