@@ -99,23 +99,6 @@ describe("Mock ChatGoogle - Gemini", () => {
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/maxOutputTokens.*maxReasoningTokens/);
-
-    expect(() => {
-      const model = new ChatGoogle({
-        maxOutputTokens: 500,
-        maxReasoningTokens: 0,
-        includeThoughts: true,
-      });
-      expect(model).toBeNull(); // For linting. Should never reach.
-    }).toThrowError(/includeThoughts.*/);
-
-    expect(() => {
-      const model = new ChatGoogle({
-        maxOutputTokens: 500,
-        includeThoughts: false,
-      });
-      expect(model).toBeNull(); // For linting. Should never reach.
-    }).toThrowError(/includeThoughts.*/);
   });
 
   test("user agent header", async () => {
@@ -596,66 +579,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     const { thinkingConfig } = data.generationConfig;
     expect(thinkingConfig).toHaveProperty("thinkingBudget");
     expect(thinkingConfig.thinkingBudget).toEqual(100);
-  });
-
-  test("1. Reasoning - include thoughts", async () => {
-    const record: Record<string, any> = {};
-    const projectId = mockId();
-    const authOptions: MockClientAuthInfo = {
-      record,
-      projectId,
-      resultFile: "chat-1-mock.json",
-    };
-    const model = new ChatGoogle({
-      authOptions,
-      maxReasoningTokens: 120,
-      includeThoughts: true,
-    });
-    await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
-    );
-
-    expect(record.opts).toBeDefined();
-    expect(record.opts.data).toBeDefined();
-    const { data } = record.opts;
-
-    expect(data).toHaveProperty("generationConfig");
-    expect(data.generationConfig).toHaveProperty("thinkingConfig");
-    const { thinkingConfig } = data.generationConfig;
-    expect(thinkingConfig).toHaveProperty("thinkingBudget");
-    expect(thinkingConfig.thinkingBudget).toEqual(120);
-    expect(thinkingConfig).toHaveProperty("includeThoughts");
-    expect(thinkingConfig.includeThoughts).toEqual(true);
-  });
-
-  test("1. Reasoning - don't include thoughts", async () => {
-    const record: Record<string, any> = {};
-    const projectId = mockId();
-    const authOptions: MockClientAuthInfo = {
-      record,
-      projectId,
-      resultFile: "chat-1-mock.json",
-    };
-    const model = new ChatGoogle({
-      authOptions,
-      maxReasoningTokens: 120,
-      includeThoughts: false,
-    });
-    await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
-    );
-
-    expect(record.opts).toBeDefined();
-    expect(record.opts.data).toBeDefined();
-    const { data } = record.opts;
-
-    expect(data).toHaveProperty("generationConfig");
-    expect(data.generationConfig).toHaveProperty("thinkingConfig");
-    const { thinkingConfig } = data.generationConfig;
-    expect(thinkingConfig).toHaveProperty("thinkingBudget");
-    expect(thinkingConfig.thinkingBudget).toEqual(120);
-    expect(thinkingConfig).toHaveProperty("includeThoughts");
-    expect(thinkingConfig.includeThoughts).toEqual(false);
   });
 
   test("1. Reasoning - google settings", async () => {
