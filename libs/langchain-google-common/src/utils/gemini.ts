@@ -20,7 +20,7 @@ import {
   isDataContentBlock,
   convertToProviderContentBlock,
   InputTokenDetails,
-  OutputTokenDetails,
+  OutputTokenDetails, ModalitiesTokenDetails,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -864,7 +864,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   ): void {
     modalityTokenCounts?.forEach((modalityTokenCount) => {
       const { modality, tokenCount } = modalityTokenCount;
-      const modalityLc = modality.toLowerCase();
+      const modalityLc: keyof ModalitiesTokenDetails = modality.toLowerCase() as keyof ModalitiesTokenDetails;
       const currentCount = details[modalityLc] ?? 0;
       // eslint-disable-next-line no-param-reassign
       details[modalityLc] = currentCount + tokenCount;
@@ -893,7 +893,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         usageMetadata?.candidatesTokensDetails,
         output_token_details
       );
-      if (usageMetadata?.thoughtsTokenCount) {
+      if (typeof usageMetadata?.thoughtsTokenCount === "number") {
         output_token_details.reasoning = usageMetadata.thoughtsTokenCount;
       }
 
