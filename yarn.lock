@@ -8552,7 +8552,7 @@ __metadata:
     "@rollup/wasm-node": ^4.19.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
-    "@tsconfig/recommended": ^1.0.3
+    "@tsconfig/recommended": ^1.0.8
     "@types/lodash": ^4
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
@@ -12375,6 +12375,13 @@ __metadata:
   version: 1.0.3
   resolution: "@tsconfig/recommended@npm:1.0.3"
   checksum: cf2bf93d419e28b98ac82d9587035daf7dc1e0ef9b8db873a7962967d8744df352ebd2986b046911889e989d4f2caec3bf5826a4c8a4b61572d03329fdc56b34
+  languageName: node
+  linkType: hard
+
+"@tsconfig/recommended@npm:^1.0.8":
+  version: 1.0.8
+  resolution: "@tsconfig/recommended@npm:1.0.8"
+  checksum: 042c543554520359a8f21ed3a18c0c23e5deee1cea3acd8d407892634354a322d42c2e378f4b3b4c9fe391f61a5701cd4e628d5b4cc60f9f17dfb817f3d46a7a
   languageName: node
   linkType: hard
 
