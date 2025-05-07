@@ -78,13 +78,25 @@ test("Test LangChain Hub while loading model", async () => {
   expect(res).toBeInstanceOf(AIMessage);
 });
 
-test("Test LangChain Hub while loading model with dynamic imports", async () => {
-  const pulledPrompt = await nodePull("jacob/lahzo-testing", {
+test("Test LangChain Hub while loading OpenAI model with dynamic imports", async () => {
+  const pulledPrompt = await nodePull("jacob/langchainjs-openai", {
     includeModel: true,
   });
   const res = await pulledPrompt.invoke({
-    agent: { name: "testing" },
-    messages: [new AIMessage("foo")],
+    question: "Generate JSON",
   });
   expect(res).toBeInstanceOf(AIMessage);
+  expect(typeof JSON.parse(res.content)).toEqual("object");
+});
+
+test("Test LangChain Hub while loading model with dynamic imports", async () => {
+  const pulledPrompt = await nodePull("jacob/groq-test", {
+    includeModel: true,
+  });
+  const res = await pulledPrompt.invoke({
+    question:
+      "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
+  });
+  expect(res).toBeInstanceOf(AIMessage);
+  expect(res.tool_calls?.length).toEqual(1);
 });

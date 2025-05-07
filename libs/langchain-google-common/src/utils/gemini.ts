@@ -6,23 +6,28 @@ import {
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
+  DataContentBlock,
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
   MessageContentText,
+  type StandardContentBlockConverter,
   SystemMessage,
   ToolMessage,
   UsageMetadata,
   isAIMessage,
+  parseBase64DataUrl,
+  isDataContentBlock,
+  convertToProviderContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
   ChatGenerationChunk,
   ChatResult,
 } from "@langchain/core/outputs";
-import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { concat } from "@langchain/core/utils/stream";
 import type {
   GoogleLLMResponse,
   GoogleAIModelParams,
@@ -55,7 +60,7 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
-import { zodToGeminiParameters } from "./zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
 export interface FunctionCall {
   name: string;
@@ -299,6 +304,123 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     );
   }
 
+  const standardContentBlockConverter: StandardContentBlockConverter<{
+    text: GeminiPartText;
+    image: GeminiPartFileData | GeminiPartInlineData;
+    audio: GeminiPartFileData | GeminiPartInlineData;
+    file: GeminiPartFileData | GeminiPartInlineData | GeminiPartText;
+  }> = {
+    providerName: "Google Gemini",
+
+    fromStandardTextBlock(block) {
+      return {
+        text: block.text,
+      };
+    },
+
+    fromStandardImageBlock(block): GeminiPartFileData | GeminiPartInlineData {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardAudioBlock(block): GeminiPartFileData | GeminiPartInlineData {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardFileBlock(
+      block
+    ): GeminiPartFileData | GeminiPartInlineData | GeminiPartText {
+      if (block.source_type === "text") {
+        return {
+          text: block.text,
+        };
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+  };
+
   async function messageContentComplexToPart(
     content: MessageContentComplex
   ): Promise<GeminiPart | null> {
@@ -329,7 +451,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   async function messageContentComplexToParts(
     content: MessageContentComplex[]
   ): Promise<(GeminiPart | null)[]> {
-    const contents = content.map(messageContentComplexToPart);
+    const contents = content.map((m) =>
+      isDataContentBlock(m)
+        ? convertToProviderContentBlock(m, standardContentBlockConverter)
+        : messageContentComplexToPart(m)
+    );
     return Promise.all(contents);
   }
 
@@ -442,8 +568,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const contentStr =
       typeof message.content === "string"
         ? message.content
-        : message.content.reduce(
-            (acc: string, content: MessageContentComplex) => {
+        : (
+            message.content as (MessageContentComplex | DataContentBlock)[]
+          ).reduce(
+            (
+              acc: string,
+              content: MessageContentComplex | DataContentBlock
+            ) => {
               if (content.type === "text") {
                 return acc + content.text;
               } else {
@@ -725,16 +856,22 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function responseToGenerationInfo(response: GoogleLLMResponse) {
-    if (!Array.isArray(response.data)) {
+    const data =
+      // eslint-disable-next-line no-nested-ternary
+      Array.isArray(response.data) && response.data[0]
+        ? response.data[0]
+        : response.data &&
+          (response.data as GenerateContentResponseData).candidates
+        ? (response.data as GenerateContentResponseData)
+        : undefined;
+    if (!data) {
       return {};
     }
-    const data = response.data[0];
-    return {
-      usage_metadata: {
-        prompt_token_count: data.usageMetadata?.promptTokenCount,
-        candidates_token_count: data.usageMetadata?.candidatesTokenCount,
-        total_token_count: data.usageMetadata?.totalTokenCount,
-      },
+
+    const finish_reason = data.candidates[0]?.finishReason;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
         category: rating.category,
         probability: rating.probability,
@@ -744,10 +881,23 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       })),
       citation_metadata: data.candidates[0]?.citationMetadata,
       grounding_metadata: data.candidates[0]?.groundingMetadata,
-      finish_reason: data.candidates[0]?.finishReason,
+      finish_reason,
+      finish_message: data.candidates[0]?.finishMessage,
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };
+
+    // Only add the usage_metadata on the last chunk
+    // sent while streaming (see issue 8102).
+    if (typeof finish_reason === "string") {
+      ret.usage_metadata = {
+        prompt_token_count: data.usageMetadata?.promptTokenCount,
+        candidates_token_count: data.usageMetadata?.candidatesTokenCount,
+        total_token_count: data.usageMetadata?.totalTokenCount,
+      };
+    }
+
+    return ret;
   }
 
   function responseToChatGeneration(
@@ -799,9 +949,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function partToChatGeneration(part: GeminiPart): ChatGeneration {
     const message = partToMessageChunk(part);
     const text = partToText(part);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const generationInfo: Record<string, any> = {};
+
     return new ChatGenerationChunk({
       text,
       message,
+      generationInfo,
     });
   }
 
@@ -867,49 +1021,169 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return ret;
   }
 
+  type GenerationTypes = {
+    content: ChatGeneration[];
+    reasoning: ChatGeneration[];
+  };
+
+  function combineContent(
+    gen: ChatGeneration[],
+    forceComplex: boolean = false
+  ): MessageContent {
+    const allString = gen.every(
+      (item) => typeof item.message.content === "string"
+    );
+    if (allString && !forceComplex) {
+      // Everything is a string, and we don't want to force it to return
+      // MessageContentComplex[], so concatenate the content into one string
+      return gen.map((item) => item.message.content).join("");
+    } else {
+      // We either have complex types, or we want to force them, so turn
+      // it into an array of complex types.
+      const ret: MessageContentComplex[] = [];
+      gen.forEach((item) => {
+        if (typeof item.message.content === "string") {
+          // If this is a string, turn it into a text type
+          ret.push({
+            text: item.message.content,
+          });
+        } else {
+          // Otherwise, add all the complex types to what we're returning
+          item.message.content.forEach((c) => {
+            ret.push(c);
+          });
+        }
+      });
+      return ret;
+    }
+  }
+
+  function combineText(gen: ChatGeneration[]): string {
+    return gen.map((item) => item.text ?? "").join("");
+  }
+
+  /*
+   * We don't really need the entire AIMessageChunk here, but it is
+   * a conventient way to combine all the Tool Calling information.
+   */
+  function combineToolCalls(gen: ChatGeneration[]): AIMessageChunk {
+    let ret = new AIMessageChunk("");
+
+    gen.forEach((item: ChatGeneration) => {
+      const message: AIMessageChunk = item?.message as AIMessageChunk;
+      ret = concat(ret, message);
+    });
+
+    return ret;
+  }
+
+  function combineAdditionalKwargs(
+    gen: ChatGeneration[]
+  ): Record<string, unknown> {
+    const ret: Record<string, unknown> = {};
+
+    gen.forEach((item: ChatGeneration) => {
+      const message: AIMessageChunk = item?.message as AIMessageChunk;
+      const kwargs = message?.additional_kwargs ?? {};
+      const keys = Object.keys(kwargs);
+      keys.forEach((key) => {
+        const value = kwargs[key];
+        if (
+          Object.hasOwn(ret, key) &&
+          Array.isArray(ret[key]) &&
+          Array.isArray(value)
+        ) {
+          (ret[key] as Array<unknown>).push(...value);
+        } else {
+          ret[key] = value;
+        }
+      });
+    });
+
+    return ret;
+  }
+
+  function combineGenerations(
+    generations: ChatGeneration[],
+    response: GoogleLLMResponse
+  ): ChatGeneration[] {
+    const gen: GenerationTypes = splitGenerationTypes(generations, response);
+    const combinedContent: MessageContent = combineContent(gen.content);
+    const combinedText = combineText(gen.content);
+    const combinedToolCalls = combineToolCalls(gen.content);
+    const kwargs = combineAdditionalKwargs(gen.content);
+    const lastContent = gen.content[gen.content.length - 1];
+
+    // Add usage metadata
+    let usageMetadata: UsageMetadata | undefined;
+    if ("usageMetadata" in response.data) {
+      usageMetadata = {
+        input_tokens: response.data.usageMetadata.promptTokenCount as number,
+        output_tokens: response.data.usageMetadata
+          .candidatesTokenCount as number,
+        total_tokens: response.data.usageMetadata.totalTokenCount as number,
+      };
+    }
+
+    // Add thinking / reasoning
+    // if (gen.reasoning && gen.reasoning.length > 0) {
+    //   kwargs.reasoning_content = combineContent(gen.reasoning, true);
+    // }
+
+    // Build the message and the generation chunk to return
+    const message = new AIMessageChunk({
+      content: combinedContent,
+      additional_kwargs: kwargs,
+      usage_metadata: usageMetadata,
+      tool_calls: combinedToolCalls.tool_calls,
+      invalid_tool_calls: combinedToolCalls.invalid_tool_calls,
+    });
+    return [
+      new ChatGenerationChunk({
+        message,
+        text: combinedText,
+        generationInfo: lastContent.generationInfo,
+      }),
+    ];
+  }
+
+  function splitGenerationTypes(
+    generations: ChatGeneration[],
+    _response: GoogleLLMResponse
+  ): GenerationTypes {
+    const content: ChatGeneration[] = [];
+    const reasoning: ChatGeneration[] = [];
+
+    generations.forEach((gen) => {
+      if (gen?.generationInfo?.thought) {
+        reasoning.push(gen);
+      } else {
+        content.push(gen);
+      }
+    });
+
+    return {
+      content,
+      reasoning,
+    };
+  }
+
+  /**
+   * Although this returns an array, only the first (or maybe last)
+   * element in the array is used. So we need to combine them into
+   * just one element that contains everything we need.
+   * @param response
+   */
   function responseToChatGenerations(
     response: GoogleLLMResponse
   ): ChatGeneration[] {
-    let ret = responseToGroundedChatGenerations(response);
+    const generations = responseToGroundedChatGenerations(response);
 
-    if (ret.length === 0) {
+    if (generations.length === 0) {
       return [];
     }
 
-    if (ret.every((item) => typeof item.message.content === "string")) {
-      const combinedContent = ret.map((item) => item.message.content).join("");
-      const combinedText = ret.map((item) => item.text).join("");
-      const toolCallChunks: ToolCallChunk[] | undefined = ret[
-        ret.length - 1
-      ]?.message.additional_kwargs?.tool_calls?.map((toolCall, i) => ({
-        name: toolCall.function.name,
-        args: toolCall.function.arguments,
-        id: toolCall.id,
-        index: i,
-        type: "tool_call_chunk",
-      }));
-      let usageMetadata: UsageMetadata | undefined;
-      if ("usageMetadata" in response.data) {
-        usageMetadata = {
-          input_tokens: response.data.usageMetadata.promptTokenCount as number,
-          output_tokens: response.data.usageMetadata
-            .candidatesTokenCount as number,
-          total_tokens: response.data.usageMetadata.totalTokenCount as number,
-        };
-      }
-      ret = [
-        new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: combinedContent,
-            additional_kwargs: ret[ret.length - 1]?.message.additional_kwargs,
-            tool_call_chunks: toolCallChunks,
-            usage_metadata: usageMetadata,
-          }),
-          text: combinedText,
-          generationInfo: ret[ret.length - 1].generationInfo,
-        }),
-      ];
-    }
+    const ret = combineGenerations(generations, response);
 
     // Add logprobs information to the message
     const candidate = (response?.data as GenerateContentResponseData)
@@ -1089,6 +1363,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
+      responseModalities: parameters.responseModalities,
     };
 
     // Add the logprobs if explicitly set
@@ -1099,6 +1374,26 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         typeof parameters.topLogprobs !== "undefined"
       ) {
         ret.logprobs = parameters.topLogprobs;
+      }
+    }
+
+    // Add thinking configuration if explicitly set
+    if (
+      typeof parameters.maxReasoningTokens !== "undefined" &&
+      parameters.maxReasoningTokens !== 0
+    ) {
+      ret.thinkingConfig = {
+        thinkingBudget: parameters.maxReasoningTokens,
+        // TODO: Expose this configuration to the user once google fully supports it
+        includeThoughts: false,
+      };
+    }
+
+    // Remove any undefined properties, so we don't send them
+    let attribute: keyof GeminiGenerationConfig;
+    for (attribute in ret) {
+      if (ret[attribute] === undefined) {
+        delete ret[attribute];
       }
     }
 
@@ -1153,7 +1448,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function structuredToolToFunctionDeclaration(
     tool: StructuredToolParams
   ): GeminiFunctionDeclaration {
-    const jsonSchema = zodToGeminiParameters(tool.schema);
+    const jsonSchema = schemaToGeminiParameters(tool.schema);
     return {
       name: tool.name,
       description: tool.description ?? `A function available to call.`,
@@ -1270,6 +1565,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     ) {
       ret.systemInstruction = systemInstruction;
     }
+    if (parameters.cachedContent) {
+      ret.cachedContent = parameters.cachedContent;
+    }
     return ret;
   }
 
@@ -1288,6 +1586,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 export function validateGeminiParams(params: GoogleAIModelParams): void {
   if (params.maxOutputTokens && params.maxOutputTokens < 0) {
     throw new Error("`maxOutputTokens` must be a positive integer");
+  }
+  if (typeof params.maxReasoningTokens !== "undefined") {
+    if (params.maxReasoningTokens < 0) {
+      throw new Error("`maxReasoningTokens` must be non-negative integer");
+    }
+    if (typeof params.maxOutputTokens !== "undefined") {
+      if (params.maxReasoningTokens >= params.maxOutputTokens) {
+        throw new Error(
+          "`maxOutputTokens` must be greater than `maxReasoningTokens`"
+        );
+      }
+    }
   }
 
   if (
@@ -1308,4 +1618,8 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
 
 export function isModelGemini(modelName: string): boolean {
   return modelName.toLowerCase().startsWith("gemini");
+}
+
+export function isModelGemma(modelName: string): boolean {
+  return modelName.toLowerCase().startsWith("gemma");
 }

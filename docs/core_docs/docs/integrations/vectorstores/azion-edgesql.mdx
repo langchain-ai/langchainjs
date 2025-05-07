@@ -1,0 +1,273 @@
+---
+sidebar_label: Azion EdgeSQL
+title: AzionVectorStore
+---
+
+export const quartoRawHtml = [
+  `
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Class</th>
+<th style="text-align: left;">Package</th>
+<th style="text-align: center;">[PY support]</th>
+<th style="text-align: center;">Package latest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://api.js.langchain.com/classes/langchain_community_vectorstores_azion_edgesql.AzionVectorStore.html"><code>AzionVectorStore</code></a></td>
+<td style="text-align: left;"><a href="https://npmjs.com/@langchain/community"><code>@langchain/community</code></a></td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;"><img src="https://img.shields.io/npm/v/@langchain/community?style=flat-square&amp;label=%20&amp;.png" alt="NPM - Version" /></td>
+</tr>
+</tbody>
+</table>
+`,
+];
+
+The `AzionVectorStore` is used to manage and search through a collection
+of documents using vector embeddings, directly on Azion’s Edge Plataform
+using Edge SQL.
+
+This guide provides a quick overview for getting started with Azion
+EdgeSQL [vector stores](../../../docs/concepts/#vectorstores). For
+detailed documentation of all `AzionVectorStore` features and
+configurations head to the [API
+reference](https://api.js.langchain.com/classes/_langchain_community.vectorstores_azion_edgesql.AzionVectorStore.html).
+
+## Overview
+
+### Integration details
+
+<div dangerouslySetInnerHTML={{ __html: quartoRawHtml[0] }} />
+
+## Setup
+
+To use the `AzionVectorStore` vector store, you will need to install the
+`@langchain/community` package. Besides that, you will need an [Azion
+account](https://www.azion.com/en/documentation/products/accounts/creating-account/)
+and a
+[Token](https://www.azion.com/en/documentation/products/guides/personal-tokens/)
+to use the Azion API, configuring it as environment variable
+`AZION_TOKEN`. Further information about this can be found in the
+[Documentation](https://www.azion.com/en/documentation/).
+
+This guide will also use [OpenAI
+embeddings](../../../docs/integrations/text_embedding/openai), which
+require you to install the `@langchain/openai` integration package. You
+can also use [other supported embeddings
+models](../../../docs/integrations/text_embedding) if you wish.
+
+```mdx-code-block
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+import Npm2Yarn from "@theme/Npm2Yarn";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+<Npm2Yarn>
+  azion @langchain/openai @langchain/community
+</Npm2Yarn>
+```
+
+### Credentials
+
+Once you’ve done this set the AZION_TOKEN environment variable:
+
+```typescript
+process.env.AZION_TOKEN = "your-api-key";
+```
+
+If you are using OpenAI embeddings for this guide, you’ll need to set
+your OpenAI key as well:
+
+```typescript
+process.env.OPENAI_API_KEY = "YOUR_API_KEY";
+```
+
+If you want to get automated tracing of your model calls you can also
+set your [LangSmith](https://docs.smith.langchain.com/) API key by
+uncommenting below:
+
+```typescript
+// process.env.LANGCHAIN_TRACING_V2="true"
+// process.env.LANGCHAIN_API_KEY="your-api-key"
+```
+
+## Instantiation
+
+```typescript
+import { AzionVectorStore } from "@langchain/community/vectorstores/azion_edgesql";
+import { OpenAIEmbeddings } from "@langchain/openai";
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+});
+
+// Instantiate with the constructor if the database and table have already been created
+const vectorStore = new AzionVectorStore(embeddings, {
+  dbName: "langchain",
+  tableName: "documents",
+});
+
+// If you have not created the database and table yet, you can do so with the setupDatabase method
+// await vectorStore.setupDatabase({ columns:["topic","language"], mode: "hybrid" })
+
+// OR instantiate with the static method if the database and table have not been created yet
+// const vectorStore = await AzionVectorStore.initialize(embeddingModel, { dbName: "langchain", tableName: "documents" }, { columns:[], mode: "hybrid" })
+```
+
+## Manage vector store
+
+### Add items to vector store
+
+```typescript
+import type { Document } from "@langchain/core/documents";
+
+const document1: Document = {
+  pageContent: "The powerhouse of the cell is the mitochondria",
+  metadata: { language: "en", topic: "biology" },
+};
+
+const document2: Document = {
+  pageContent: "Buildings are made out of brick",
+  metadata: { language: "en", topic: "history" },
+};
+
+const document3: Document = {
+  pageContent: "Mitochondria are made out of lipids",
+  metadata: { language: "en", topic: "biology" },
+};
+
+const document4: Document = {
+  pageContent: "The 2024 Olympics are in Paris",
+  metadata: { language: "en", topic: "history" },
+};
+
+const documents = [document1, document2, document3, document4];
+
+await vectorStore.addDocuments(documents);
+```
+
+```text
+Inserting chunks
+Inserting chunk 0
+Chunks inserted!
+```
+
+### Delete items from vector store
+
+```typescript
+await vectorStore.delete(["4"]);
+```
+
+```text
+Deleted 1 items from documents
+```
+
+## Query vector store
+
+Once your vector store has been created and the relevant documents have
+been added you will most likely wish to query it during the running of
+your chain or agent.
+
+### Query directly
+
+Performing a simple similarity search can be done as follows:
+
+```typescript
+const filter = [{ operator: "=", column: "language", value: "en" }];
+
+const hybridSearchResults = await vectorStore.azionHybridSearch("biology", {
+  kfts: 2,
+  kvector: 1,
+  filter: [{ operator: "=", column: "language", value: "en" }],
+});
+
+console.log("Hybrid Search Results");
+for (const doc of hybridSearchResults) {
+  console.log(`${JSON.stringify(doc)}`);
+}
+```
+
+```text
+Hybrid Search Results
+[{"pageContent":"The Australian dingo is a unique species that plays a key role in the ecosystem","metadata":{"searchtype":"fulltextsearch"},"id":"6"},-0.25748711028997995]
+[{"pageContent":"The powerhouse of the cell is the mitochondria","metadata":{"searchtype":"fulltextsearch"},"id":"16"},-0.31697985337654005]
+[{"pageContent":"Australia s indigenous people have inhabited the continent for over 65,000 years","metadata":{"searchtype":"similarity"},"id":"3"},0.14822345972061157]
+```
+
+```typescript
+const similaritySearchResults = await vectorStore.azionSimilaritySearch(
+  "australia",
+  { kvector: 3, filter: [{ operator: "=", column: "topic", value: "history" }] }
+);
+
+console.log("Similarity Search Results");
+for (const doc of similaritySearchResults) {
+  console.log(`${JSON.stringify(doc)}`);
+}
+```
+
+```text
+Similarity Search Results
+[{"pageContent":"Australia s indigenous people have inhabited the continent for over 65,000 years","metadata":{"searchtype":"similarity"},"id":"3"},0.4486490488052368]
+```
+
+### Query by turning into retriever
+
+You can also transform the vector store into a
+[retriever](../../../docs/concepts/#retrievers) for easier usage in your
+chains.
+
+```typescript
+const retriever = vectorStore.asRetriever({
+  // Optional filter
+  filter: filter,
+  k: 2,
+});
+await retriever.invoke("biology");
+```
+
+```text
+[
+  Document {
+    pageContent: 'Australia s indigenous people have inhabited the continent for over 65,000 years',
+    metadata: { searchtype: 'similarity' },
+    id: '3'
+  },
+  Document {
+    pageContent: 'Mitochondria are made out of lipids',
+    metadata: { searchtype: 'similarity' },
+    id: '18'
+  }
+]
+```
+
+### Usage for retrieval-augmented generation
+
+For guides on how to use this vector store for retrieval-augmented
+generation (RAG), see the following sections:
+
+- [Tutorials: working with external
+  knowledge](../../../docs/tutorials/#working-with-external-knowledge).
+- [How-to: Question and answer with
+  RAG](../../../docs/how_to/#qa-with-rag)
+- [Retrieval conceptual docs](../../../docs/concepts/retrieval)
+
+## API reference
+
+For detailed documentation of all AzionVectorStore features and
+configurations head to the [API
+reference](https://api.js.langchain.com/classes/_langchain_community.vectorstores_azion_edgesql.AzionVectorStore.html).
+
+## Related
+
+- Vector store [conceptual guide](/docs/concepts/#vectorstores)
+- Vector store [how-to guides](/docs/how_to/#vectorstores)

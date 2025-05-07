@@ -1,6 +1,6 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isModelGemini, validateGeminiParams } from "./gemini.js";
+import { isModelGemini, isModelGemma, validateGeminiParams } from "./gemini.js";
 import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -14,7 +14,7 @@ import {
 } from "../types.js";
 import {
   jsonSchemaToGeminiParameters,
-  zodToGeminiParameters,
+  schemaToGeminiParameters,
 } from "./zod_to_gemini_parameters.js";
 import { isModelClaude, validateClaudeParams } from "./anthropic.js";
 
@@ -97,7 +97,7 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
           ...funcs
         );
       } else if (isLangChainTool(tool)) {
-        const jsonSchema = zodToGeminiParameters(tool.schema);
+        const jsonSchema = schemaToGeminiParameters(tool.schema);
         geminiTools[functionDeclarationsIndex].functionDeclarations!.push({
           name: tool.name,
           description: tool.description ?? `A function available to call.`,
@@ -118,6 +118,26 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
   return geminiTools;
 }
 
+function reasoningEffortToReasoningTokens(
+  _modelName?: string,
+  effort?: string
+): number | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+  const maxEffort = 24 * 1024; // Max for Gemini 2.5 Flash
+  switch (effort) {
+    case "low":
+      return maxEffort / 3;
+    case "medium":
+      return (2 * maxEffort) / 3;
+    case "high":
+      return maxEffort;
+    default:
+      return undefined;
+  }
+}
+
 export function copyAIModelParamsInto(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined,
@@ -134,6 +154,16 @@ export function copyAIModelParamsInto(
     options?.maxOutputTokens ??
     params?.maxOutputTokens ??
     target.maxOutputTokens;
+  ret.maxReasoningTokens =
+    options?.maxReasoningTokens ??
+    params?.maxReasoningTokens ??
+    target?.maxReasoningTokens ??
+    options?.thinkingBudget ??
+    params?.thinkingBudget ??
+    target?.thinkingBudget ??
+    reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
   ret.presencePenalty =
@@ -159,6 +189,10 @@ export function copyAIModelParamsInto(
     options?.responseMimeType ??
     params?.responseMimeType ??
     target?.responseMimeType;
+  ret.responseModalities =
+    options?.responseModalities ??
+    params?.responseModalities ??
+    target?.responseModalities;
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
   const toolChoice = processToolChoice(
     options?.tool_choice,
@@ -175,6 +209,10 @@ export function copyAIModelParamsInto(
     ret.tools = convertToGeminiTools(tools as Record<string, any>[]);
   }
 
+  if (options?.cachedContent) {
+    ret.cachedContent = options.cachedContent;
+  }
+
   return ret;
 }
 
@@ -185,6 +223,8 @@ export function modelToFamily(
     return null;
   } else if (isModelGemini(modelName)) {
     return "gemini";
+  } else if (isModelGemma(modelName)) {
+    return "gemma";
   } else if (isModelClaude(modelName)) {
     return "claude";
   } else {
@@ -196,6 +236,7 @@ export function modelToPublisher(modelName: string | undefined): string {
   const family = modelToFamily(modelName);
   switch (family) {
     case "gemini":
+    case "gemma":
     case "palm":
       return "google";
 
@@ -214,6 +255,7 @@ export function validateModelParams(
   const model = testParams.model ?? testParams.modelName;
   switch (modelToFamily(model)) {
     case "gemini":
+    case "gemma": // TODO: Are we sure?
       return validateGeminiParams(testParams);
 
     case "claude":

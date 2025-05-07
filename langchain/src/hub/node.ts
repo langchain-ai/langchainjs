@@ -1,5 +1,10 @@
 import { Runnable } from "@langchain/core/runnables";
-import { basePush, basePull, generateModelImportMap } from "./base.js";
+import {
+  basePush,
+  basePull,
+  generateModelImportMap,
+  generateOptionalImportMap,
+} from "./base.js";
 import { load } from "../load/index.js";
 
 // TODO: Make this the default, add web entrypoint in next breaking release
@@ -30,7 +35,9 @@ export async function pull<T extends Runnable>(
     if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
       const modelName =
         promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
-      if (modelName === "ChatAnthropic") {
+      if (modelName === "ChatOpenAI") {
+        modelClass = (await import("@langchain/openai")).ChatOpenAI;
+      } else if (modelName === "ChatAnthropic") {
         modelClass = (await import("@langchain/anthropic")).ChatAnthropic;
       } else if (modelName === "ChatAzureOpenAI") {
         modelClass = (await import("@langchain/openai")).AzureChatOpenAI;
@@ -55,7 +62,7 @@ export async function pull<T extends Runnable>(
   const loadedPrompt = await load<T>(
     JSON.stringify(promptObject.manifest),
     undefined,
-    undefined,
+    generateOptionalImportMap(modelClass),
     generateModelImportMap(modelClass)
   );
   return loadedPrompt;

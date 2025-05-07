@@ -123,6 +123,13 @@ export interface GoogleAISafetySetting {
 
 export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
+export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
+
+export interface GoogleThinkingConfig {
+  thinkingBudget?: number;
+  includeThoughts?: boolean;
+}
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -137,8 +144,25 @@ export interface GoogleAIModelParams {
 
   /**
    * Maximum number of tokens to generate in the completion.
+   * This may include reasoning tokens (for backwards compatibility).
    */
   maxOutputTokens?: number;
+
+  /**
+   * The maximum number of the output tokens that will be used
+   * for the "thinking" or "reasoning" stages.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for "maxReasoningTokens"
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An OpenAI compatible parameter that will map to "maxReasoningTokens"
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -229,6 +253,11 @@ export interface GoogleAIModelParams {
    * logprobs must be set to true if this parameter is used.
    */
   topLogprobs?: number;
+
+  /**
+   * The modalities of the response.
+   */
+  responseModalities?: GoogleAIModelModality[];
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -257,6 +286,17 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * If empty, any one of the provided functions are called.
    */
   allowed_function_names?: string[];
+
+  /**
+   * Used to specify a previously created context cache to use with generation.
+   * For Vertex, this should be of the form:
+   * "projects/PROJECT_NUMBER/locations/LOCATION/cachedContents/CACHE_ID",
+   *
+   * See these guides for more information on how to use context caching:
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-create
+   * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
+   */
+  cachedContent?: string;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -516,6 +556,8 @@ export interface GeminiGenerationConfig {
   responseMimeType?: GoogleAIResponseMimeType;
   responseLogprobs?: boolean;
   logprobs?: number;
+  responseModalities?: GoogleAIModelModality[];
+  thinkingConfig?: GoogleThinkingConfig;
 }
 
 export interface GeminiRequest {
@@ -530,6 +572,7 @@ export interface GeminiRequest {
   };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
+  cachedContent?: string;
 }
 
 export interface GeminiResponseCandidate {
@@ -545,6 +588,7 @@ export interface GeminiResponseCandidate {
   groundingMetadata?: GeminiGroundingMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
+  finishMessage?: string;
 }
 
 interface GeminiResponsePromptFeedback {
@@ -558,7 +602,7 @@ export interface GenerateContentResponseData {
   usageMetadata: Record<string, unknown>;
 }
 
-export type GoogleLLMModelFamily = null | "palm" | "gemini";
+export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
 
 export type VertexModelFamily = GoogleLLMModelFamily | "claude";
 

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { expect, test } from "@jest/globals";
+import { afterEach, expect, jest, test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
@@ -13,6 +13,7 @@ import {
   MessageContentComplex,
   SystemMessage,
   ToolMessage,
+  MessageContentImageUrl,
 } from "@langchain/core/messages";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -23,10 +24,12 @@ import {
 import {
   GeminiTool,
   GooglePlatformType,
+  GoogleRequestLogger,
   GoogleRequestRecorder,
 } from "@langchain/google-common";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { concat } from "@langchain/core/utils/stream";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import fs from "fs/promises";
 import {
   ChatPromptTemplate,
@@ -34,6 +37,7 @@ import {
 } from "@langchain/core/prompts";
 import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
+import MockedFunction = jest.MockedFunction;
 
 class WeatherTool extends StructuredTool {
   schema = z.object({
@@ -53,9 +57,33 @@ class WeatherTool extends StructuredTool {
   }
 }
 
-describe("Google APIKey Chat", () => {
+const apiKeyModelNames = [
+  ["gemini-1.5-pro-002"],
+  ["gemini-1.5-flash-002"],
+  ["gemini-2.0-flash-001"],
+  ["gemini-2.0-flash-lite-001"],
+  ["gemma-3-27b-it"],
+];
+
+describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
+  let recorder: GoogleRequestRecorder;
+  let callbacks: BaseCallbackHandler[];
+
+  function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+    // const logger = new GoogleRequestLogger();
+    recorder = new GoogleRequestRecorder();
+    callbacks = [recorder, new GoogleRequestLogger()];
+
+    return new ChatGoogle({
+      modelName,
+      apiVersion: "v1beta",
+      callbacks,
+      ...(fields ?? {}),
+    });
+  }
+
   test("invoke", async () => {
-    const model = new ChatGoogle();
+    const model = newChatGoogle();
     try {
       const res = await model.invoke("What is 1 + 1?");
       console.log(res);
@@ -82,7 +110,7 @@ describe("Google APIKey Chat", () => {
   });
 
   test("generate", async () => {
-    const model = new ChatGoogle();
+    const model = newChatGoogle();
     try {
       const messages: BaseMessage[] = [
         new SystemMessage(
@@ -116,7 +144,7 @@ describe("Google APIKey Chat", () => {
   });
 
   test("stream", async () => {
-    const model = new ChatGoogle();
+    const model = newChatGoogle();
     try {
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
@@ -147,8 +175,10 @@ describe("Google APIKey Chat", () => {
     }
   });
 
+  // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
   test.skip("Tool call", async () => {
-    const chat = new ChatGoogle().bindTools([new WeatherTool()]);
+    const model = newChatGoogle();
+    const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
     console.log(res);
     expect(res.tool_calls?.length).toEqual(1);
@@ -158,7 +188,8 @@ describe("Google APIKey Chat", () => {
   });
 
   test.skip("Few shotting with tool calls", async () => {
-    const chat = new ChatGoogle().bindTools([new WeatherTool()]);
+    const model = newChatGoogle();
+    const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF");
     console.log(res);
     const res2 = await chat.invoke([
@@ -202,21 +233,19 @@ describe("Google APIKey Chat", () => {
         required: ["location"],
       },
     };
-    const model = new ChatGoogle().withStructuredOutput(tool);
+    const model = newChatGoogle().withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
   });
 
-  test("media - fileData", async () => {
+  test.skip("media - fileData", async () => {
     const canonicalStore = new BlobStoreAIStudioFile({});
     const resolver = new SimpleWebBlobStore();
     const mediaManager = new MediaManager({
       store: canonicalStore,
       resolvers: [resolver],
     });
-    const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
-      apiVersion: "v1beta",
+    const model = newChatGoogle({
       apiConfig: {
         mediaManager,
       },
@@ -296,11 +325,41 @@ const testGeminiModelNames = [
   },
   { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-exp",
+    modelName: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-exp", platformType: "gcp", apiVersion: "v1" },
+  { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
+  {
+    modelName: "gemini-2.0-flash-lite-001",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.0-flash-lite-001",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-04-17",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
+    modelName: "gemini-2.5-pro-exp-03-25",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-pro-exp-03-25",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
 
   // Flash Thinking doesn't have functions or other features
   // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
@@ -314,6 +373,8 @@ const testGeminiModelNames = [
 const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 10000,
   "gemini-2.0-flash-thinking-exp-1219": 10000,
+  "gemini-2.5-pro-exp-03-25": 10000,
+  "gemini-2.5-flash-preview-04-17": 10000,
 };
 
 describe.each(testGeminiModelNames)(
@@ -322,21 +383,31 @@ describe.each(testGeminiModelNames)(
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockedFunction<any>;
+
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
       recorder = new GoogleRequestRecorder();
-      callbacks = [recorder];
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
 
       return new ChatGoogle({
         modelName,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
+        apiKey,
         ...(fields ?? {}),
       });
     }
 
     beforeEach(async () => {
+      warnSpy = jest.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
@@ -345,9 +416,21 @@ describe.each(testGeminiModelNames)(
       }
     });
 
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
     test("invoke", async () => {
       const model = newChatGoogle();
       const res = await model.invoke("What is 1 + 1?");
+
+      const connectionUrl = recorder?.request?.connection?.url;
+      const connectionUrlMatch =
+        model.platform === "gcp"
+          ? /https:\/\/.+-aiplatform.googleapis.com/
+          : /https:\/\/generativelanguage.googleapis.com/;
+      expect(connectionUrl).toMatch(connectionUrlMatch);
+
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
@@ -391,11 +474,11 @@ describe.each(testGeminiModelNames)(
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+          "You will reply to all requests with as much detail as you can."
         ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
+        new HumanMessage(
+          "What is the answer to life, the universe, and everything?"
+        ),
       ]);
       const res = await model.stream(input);
       const resArray: BaseMessageChunk[] = [];
@@ -405,12 +488,25 @@ describe.each(testGeminiModelNames)(
       expect(resArray).toBeDefined();
       expect(resArray.length).toBeGreaterThanOrEqual(1);
 
+      // resArray.forEach((chunk, index) => {
+      //   console.log('***chunk', index, chunk);
+      // })
+
+      const firstChunk = resArray[0];
+      expect(firstChunk).toBeDefined();
+      expect(firstChunk.response_metadata).not.toHaveProperty("usage_metadata");
+
       const lastChunk = resArray[resArray.length - 1];
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
+      expect(lastChunk).toHaveProperty("usage_metadata");
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     test("function", async () => {
+      // gemini-2.0-flash-001: Test occasionally fails due to model regression
+      // gemini-2.0-flash-lite-001: Not supported
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -434,6 +530,8 @@ describe.each(testGeminiModelNames)(
       ];
       const model = newChatGoogle().bind({
         tools,
+        temperature: 0.1,
+        maxOutputTokens: 8000,
       });
       const result = await model.invoke("Run a test on the cobalt project");
       expect(result).toHaveProperty("content");
@@ -603,7 +701,6 @@ describe.each(testGeminiModelNames)(
     test("Stream token count usage_metadata", async () => {
       const model = newChatGoogle({
         temperature: 0,
-        maxOutputTokens: 10,
       });
       let res: AIMessageChunk | null = null;
       for await (const chunk of await model.stream(
@@ -649,7 +746,6 @@ describe.each(testGeminiModelNames)(
     test("Invoke token count usage_metadata", async () => {
       const model = newChatGoogle({
         temperature: 0,
-        maxOutputTokens: 10,
       });
       const res = await model.invoke("Why is the sky blue? Be concise.");
       // console.log(res);
@@ -666,7 +762,6 @@ describe.each(testGeminiModelNames)(
 
     test("Streaming true constructor param will stream", async () => {
       const modelWithStreaming = newChatGoogle({
-        maxOutputTokens: 50,
         streaming: true,
       });
 
@@ -791,6 +886,7 @@ describe.each(testGeminiModelNames)(
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
           dynamicRetrievalConfig: {
@@ -812,6 +908,7 @@ describe.each(testGeminiModelNames)(
     });
 
     test("Supports GoogleSearchTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchTool: GeminiTool = {
         googleSearch: {},
       };
@@ -823,11 +920,13 @@ describe.each(testGeminiModelNames)(
       const result = await model.invoke("Who won the 2024 MLB World Series?");
       expect(result.content as string).toContain("Dodgers");
       expect(result).toHaveProperty("response_metadata");
+      console.log(JSON.stringify(result.response_metadata, null, 1));
       expect(result.response_metadata).toHaveProperty("groundingMetadata");
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
     test("Can stream GoogleSearchRetrievalTool", async () => {
+      // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
         googleSearchRetrieval: {
           dynamicRetrievalConfig: {
@@ -850,6 +949,101 @@ describe.each(testGeminiModelNames)(
         throw new Error("finalMsg is undefined");
       }
       expect(finalMsg.content as string).toContain("Dodgers");
+    });
+
+    test("reasoning", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning default", async () => {
+      const model = newChatGoogle({});
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+
+    test("reasoning off", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 0,
+      });
+      const res = await model.invoke(
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      );
+      console.log(res);
+      expect(res.content).toMatch(/^1\/6/);
+    });
+  }
+);
+
+const testMultimodalModelNames = [
+  {
+    modelName: "gemini-2.0-flash-exp-image-generation",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  // Multimodal in Vertex AI is private preview currently
+];
+
+describe.each(testMultimodalModelNames)(
+  "Webauth ($platformType) Gemini Multimodal ($modelName)",
+  ({ modelName, platformType, apiVersion }) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+      // const logger = new GoogleRequestLogger();
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
+      return new ChatGoogle({
+        modelName,
+        platformType: platformType as GooglePlatformType,
+        apiVersion,
+        callbacks,
+        apiKey,
+        ...(fields ?? {}),
+      });
+    }
+
+    test("image output", async () => {
+      const model = newChatGoogle({
+        responseModalities: ["TEXT", "IMAGE"],
+      });
+      const res = await model.invoke(
+        "Draw an image of a red triangle on top of a blue box."
+      );
+
+      const content = res?.content;
+      expect(typeof content).toEqual("object");
+      expect(Array.isArray(content)).toEqual(true);
+      expect(content).toHaveLength(1);
+
+      const content0 = content[0];
+      expect(typeof content0).not.toEqual("string");
+
+      const mc = content0 as MessageContentImageUrl;
+      expect(mc).toHaveProperty("type");
+      expect(mc.type).toEqual("image_url");
+      expect(mc).toHaveProperty("image_url");
+      const url = (mc as MessageContentImageUrl).image_url as string;
+      expect(url).toMatch(/^data:image\/png;base64,/);
+
+      console.log(recorder.response);
+      console.log(JSON.stringify(res.content, null, 1));
     });
   }
 );

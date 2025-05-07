@@ -1,6 +1,6 @@
 {
   "name": "@langchain/redis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sample integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -59,7 +59,7 @@
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
     "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
+    "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",
