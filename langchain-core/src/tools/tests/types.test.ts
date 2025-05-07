@@ -26,7 +26,7 @@ const testDynamicStructuredTool = new DynamicStructuredTool({
 const testDynamicStructuredToolWithZodEffects = new DynamicStructuredTool({
   name: "test",
   description: "test",
-  func: async (input: { input: string }) => `test ${input.input}`,
+  func: async (input: string) => `test ${input}`,
   schema: z
     .object({ input: z.string().optional() })
     .transform((data) => data.input),
@@ -320,6 +320,14 @@ describe("tool type tests", () => {
           lc_direct_tool_output: true,
           output: "test test",
         });
+      });
+
+      it("should be the transformed schema output type when using ZodEffects schema", async () => {
+        const output: string =
+          await testDynamicStructuredToolWithZodEffects.invoke({
+            input: "test",
+          });
+        expect(output).toBe("test test");
       });
     });
 

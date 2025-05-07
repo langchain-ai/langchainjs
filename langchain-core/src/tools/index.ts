@@ -317,18 +317,6 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
     super(fields);
   }
 
-  override invoke<
-    TArg extends string | undefined | z.input<this["schema"]> | ToolCall,
-    TConfig extends ToolRunnableConfig | undefined
-  >(
-    input: TArg,
-    config?: TConfig
-  ): Promise<ToolReturnType<NonNullable<TArg>, TConfig, ToolOutputT>> {
-    return super.invoke(input, config) as Promise<
-      ToolReturnType<NonNullable<TArg>, TConfig, ToolOutputT>
-    >;
-  }
-
   /**
    * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
    *
