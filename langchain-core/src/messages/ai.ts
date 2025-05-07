@@ -21,17 +21,41 @@ export type AIMessageFields = BaseMessageFields & {
   usage_metadata?: UsageMetadata;
 };
 
+export type ModalitiesTokenDetails = {
+  /**
+   * Text tokens.
+   * Does not need to be reported, but some models will do so.
+   */
+  text?: number;
+
+  /**
+   * Image (non-video) tokens.
+   */
+  image?: number;
+
+  /**
+   * Audio tokens.
+   */
+  audio?: number;
+
+  /**
+   * Video tokens.
+   */
+  video?: number;
+
+  /**
+   * Document tokens.
+   * e.g. PDF
+   */
+  document?: number;
+}
+
 /**
  * Breakdown of input token counts.
  *
  * Does not *need* to sum to full input token count. Does *not* need to have all keys.
  */
-export type InputTokenDetails = {
-  /**
-   * Audio input tokens.
-   */
-  audio?: number;
-
+export type InputTokenDetails = ModalitiesTokenDetails & {
   /**
    * Input tokens that were cached and there was a cache hit.
    *
@@ -46,11 +70,6 @@ export type InputTokenDetails = {
    * Since there was a cache miss, the cache was created from these tokens.
    */
   cache_creation?: number;
-
-  /**
-   * Other, arbitrary, token types can be set with their count
-   */
-  [key: string]: number | undefined;
 };
 
 /**
@@ -58,12 +77,7 @@ export type InputTokenDetails = {
  *
  * Does *not* need to sum to full output token count. Does *not* need to have all keys.
  */
-export type OutputTokenDetails = {
-  /**
-   * Audio output tokens
-   */
-  audio?: number;
-
+export type OutputTokenDetails = ModalitiesTokenDetails & {
   /**
    * Reasoning output tokens.
    *
@@ -71,11 +85,6 @@ export type OutputTokenDetails = {
    * OpenAI's o1 models) that are not returned as part of model output.
    */
   reasoning?: number;
-
-  /**
-   * Other, arbitrary, token types can be set with their count
-   */
-  [key: string]: number | undefined;
 };
 
 /**
