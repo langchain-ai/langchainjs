@@ -48,7 +48,7 @@ export type ModalitiesTokenDetails = {
    * e.g. PDF
    */
   document?: number;
-}
+};
 
 /**
  * Breakdown of input token counts.

@@ -39,8 +39,10 @@ import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
 import MockedFunction = jest.MockedFunction;
 
-function propSum(o: Record<string,number>): number {
-  return Object.keys(o).map(key => o[key]).reduce((acc, val) => acc+val);
+function propSum(o: Record<string, number>): number {
+  return Object.keys(o)
+    .map((key) => o[key])
+    .reduce((acc, val) => acc + val);
 }
 
 class WeatherTool extends StructuredTool {

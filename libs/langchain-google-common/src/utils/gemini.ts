@@ -20,7 +20,8 @@ import {
   isDataContentBlock,
   convertToProviderContentBlock,
   InputTokenDetails,
-  OutputTokenDetails, ModalitiesTokenDetails,
+  OutputTokenDetails,
+  ModalitiesTokenDetails,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -864,7 +865,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   ): void {
     modalityTokenCounts?.forEach((modalityTokenCount) => {
       const { modality, tokenCount } = modalityTokenCount;
-      const modalityLc: keyof ModalitiesTokenDetails = modality.toLowerCase() as keyof ModalitiesTokenDetails;
+      const modalityLc: keyof ModalitiesTokenDetails =
+        modality.toLowerCase() as keyof ModalitiesTokenDetails;
       const currentCount = details[modalityLc] ?? 0;
       // eslint-disable-next-line no-param-reassign
       details[modalityLc] = currentCount + tokenCount;
