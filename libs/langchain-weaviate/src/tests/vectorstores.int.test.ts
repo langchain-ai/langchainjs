@@ -5,22 +5,6 @@ import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import * as dotenv from "dotenv";
 import { WeaviateStore } from "../vectorstores.js";
-import * as dotenv from "dotenv";
-
-dotenv.config();
-var client: WeaviateClient;
-
-beforeAll(async () => {
-  client = await (weaviate as any).connectToWeaviateCloud(
-    process.env.WEAVIATE_URL, { 
-      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ''),
-      headers: {
-        'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY || '',  
-        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || '',  
-      }
-    }
-  );
-});
 
 dotenv.config();
 let client: WeaviateClient;
@@ -415,7 +399,3 @@ afterAll(async () => {
 afterAll(async () => {
   await client.close();
 });
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
