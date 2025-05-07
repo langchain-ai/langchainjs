@@ -46,6 +46,11 @@ export type InputTokenDetails = {
    * Since there was a cache miss, the cache was created from these tokens.
    */
   cache_creation?: number;
+
+  /**
+   * Other, arbitrary, token types can be set with their count
+   */
+  [key: string]: number | undefined;
 };
 
 /**
@@ -66,6 +71,11 @@ export type OutputTokenDetails = {
    * OpenAI's o1 models) that are not returned as part of model output.
    */
   reasoning?: number;
+
+  /**
+   * Other, arbitrary, token types can be set with their count
+   */
+  [key: string]: number | undefined;
 };
 
 /**
