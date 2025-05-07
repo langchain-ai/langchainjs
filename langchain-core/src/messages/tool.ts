@@ -41,7 +41,7 @@ export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
  * a string and wrapped in a ToolMessage.
  */
 export interface DirectToolOutput {
-  readonly lc_direct_tool_output: boolean;
+  readonly lc_direct_tool_output: true;
 }
 
 export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
@@ -68,7 +68,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     return { tool_call_id: "tool_call_id" };
   }
 
-  lc_direct_tool_output = true;
+  lc_direct_tool_output = true as const;
 
   /**
    * Status of the tool invocation.
