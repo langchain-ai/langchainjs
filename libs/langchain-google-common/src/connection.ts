@@ -154,7 +154,7 @@ export abstract class GoogleHostConnection<
 
   _location: string | undefined;
 
-  apiVersion = "v1";
+  _apiVersion: string | undefined;
 
   constructor(
     fields: GoogleConnectionParams<AuthOptions> | undefined,
@@ -168,7 +168,7 @@ export abstract class GoogleHostConnection<
     this.platformType = fields?.platformType;
     this._endpoint = fields?.endpoint;
     this._location = fields?.location;
-    this.apiVersion = fields?.apiVersion ?? this.apiVersion;
+    this._apiVersion = fields?.apiVersion;
     this.client = client;
   }
 
@@ -178,6 +178,14 @@ export abstract class GoogleHostConnection<
 
   get computedPlatformType(): GooglePlatformType {
     return "gcp";
+  }
+
+  get computedApiVersion(): string {
+    return "v1";
+  }
+
+  get apiVersion(): string {
+    return this._apiVersion ?? this.computedApiVersion;
   }
 
   get location(): string {
@@ -294,6 +302,15 @@ export abstract class GoogleAIConnection<
       return "gai";
     } else {
       return "gcp";
+    }
+  }
+
+  get computedApiVersion(): string {
+    switch (this.platform) {
+      case "gai":
+        return "v1beta";
+      default:
+        return "v1";
     }
   }
 

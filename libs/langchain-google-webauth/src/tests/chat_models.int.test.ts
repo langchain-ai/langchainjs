@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { expect, test } from "@jest/globals";
+import { afterEach, expect, jest, test } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
@@ -37,6 +37,13 @@ import {
 } from "@langchain/core/prompts";
 import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
+import MockedFunction = jest.MockedFunction;
+
+function propSum(o: Record<string, number>): number {
+  return Object.keys(o)
+    .map((key) => o[key])
+    .reduce((acc, val) => acc + val);
+}
 
 class WeatherTool extends StructuredTool {
   schema = z.object({
@@ -382,6 +389,9 @@ describe.each(testGeminiModelNames)(
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockedFunction<any>;
+
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
       recorder = new GoogleRequestRecorder();
@@ -403,12 +413,17 @@ describe.each(testGeminiModelNames)(
     }
 
     beforeEach(async () => {
+      warnSpy = jest.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
         // eslint-disable-next-line no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
     });
 
     test("invoke", async () => {
@@ -433,10 +448,16 @@ describe.each(testGeminiModelNames)(
       expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
 
       expect(res).toHaveProperty("response_metadata");
-      expect(res.response_metadata).not.toHaveProperty("groundingMetadata");
-      expect(res.response_metadata).not.toHaveProperty("groundingSupport");
+      const meta = res.response_metadata;
+      expect(meta).not.toHaveProperty("groundingMetadata");
+      expect(meta).not.toHaveProperty("groundingSupport");
+      expect(meta).toHaveProperty("usage_metadata");
+      const usage = meta.usage_metadata;
 
-      console.log(recorder);
+      // Although LangChainJS doesn't require that the details sum to the
+      // available tokens, this should be the case for how we're doing Gemini.
+      expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
+      expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
     });
 
     test(`generate`, async () => {
@@ -465,11 +486,11 @@ describe.each(testGeminiModelNames)(
       const model = newChatGoogle();
       const input: BaseLanguageModelInput = new ChatPromptValue([
         new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+          "You will reply to all requests with as much detail as you can."
         ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
+        new HumanMessage(
+          "What is the answer to life, the universe, and everything?"
+        ),
       ]);
       const res = await model.stream(input);
       const resArray: BaseMessageChunk[] = [];
@@ -479,9 +500,20 @@ describe.each(testGeminiModelNames)(
       expect(resArray).toBeDefined();
       expect(resArray.length).toBeGreaterThanOrEqual(1);
 
+      // resArray.forEach((chunk, index) => {
+      //   console.log('***chunk', index, chunk);
+      // })
+
+      const firstChunk = resArray[0];
+      expect(firstChunk).toBeDefined();
+      expect(firstChunk.response_metadata).not.toHaveProperty("usage_metadata");
+
       const lastChunk = resArray[resArray.length - 1];
       expect(lastChunk).toBeDefined();
       expect(lastChunk._getType()).toEqual("ai");
+      expect(lastChunk).toHaveProperty("usage_metadata");
+
+      expect(warnSpy).not.toHaveBeenCalled();
     });
 
     test("function", async () => {
@@ -863,6 +895,21 @@ describe.each(testGeminiModelNames)(
 
       expect(typeof response.content).toBe("string");
       expect((response.content as string).length).toBeGreaterThan(15);
+
+      expect(response).toHaveProperty("response_metadata");
+      const meta = response.response_metadata;
+      expect(meta).not.toHaveProperty("groundingMetadata");
+      expect(meta).not.toHaveProperty("groundingSupport");
+      expect(meta).toHaveProperty("usage_metadata");
+      const usage = meta.usage_metadata;
+
+      // Although LangChainJS doesn't require that the details sum to the
+      // available tokens, this should be the case for how we're doing Gemini.
+      expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
+      expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
+      expect(usage.input_token_details).toHaveProperty("audio");
+
+      console.log(response);
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {

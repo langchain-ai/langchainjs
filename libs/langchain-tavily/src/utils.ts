@@ -291,48 +291,29 @@ abstract class BaseTavilyAPIWrapper {
   }
 
   /**
-   * Maps from camelCase parameter names to snake_case API parameter names
-   */
-  protected readonly camelToSnakeMap: Record<
-    keyof TavilySearchParams | keyof TavilyExtractParams,
-    string
-  > = {
-    query: "query",
-    topic: "topic",
-    searchDepth: "search_depth",
-    chunksPerSource: "chunks_per_source",
-    maxResults: "max_results",
-    timeRange: "time_range",
-    days: "days",
-    includeAnswer: "include_answer",
-    includeRawContent: "include_raw_content",
-    includeDomains: "include_domains",
-    excludeDomains: "exclude_domains",
-    includeImages: "include_images",
-    includeImageDescriptions: "include_image_descriptions",
-    urls: "urls",
-    extractDepth: "extract_depth",
-  };
-
-  /**
    * Converts camelCase keys to snake_case for API compatibility
    * @param params The parameters with camelCase keys
-   * @returns The parameters with snake_case keys
+   * @returns The parameters with snake_case keys only
    */
   protected convertCamelToSnakeCase(
-    params: Record<
-      keyof TavilySearchParams | keyof TavilyExtractParams,
-      unknown
-    >
-  ) {
-    return Object.entries(params).reduce((result, [key, value]) => {
+    params: Record<string, unknown>
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(params)) {
       if (value === undefined) {
-        return result;
+        continue;
       }
-      // Use explicit mapping for known keys, fall back to generic default key
-      const newKey = this.camelToSnakeMap[key] || key;
-      return { ...result, [newKey]: value };
-    }, {} as Record<keyof TavilySearchParams | keyof TavilyExtractParams, unknown>);
+      // Convert camelCase key to snake_case
+      // Handle potential leading capital letter first
+      let newKey = key.replace(/^[A-Z]/, (letter) => letter.toLowerCase());
+      // Then handle subsequent capital letters
+      newKey = newKey.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+      result[newKey] = value;
+    }
+
+    return result;
   }
 }
 
