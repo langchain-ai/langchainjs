@@ -596,10 +596,39 @@ interface GeminiResponsePromptFeedback {
   safetyRatings: GeminiSafetyRating[];
 }
 
+export type ModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface ModalityTokenCount {
+  modality: ModalityEnum;
+  tokenCount: number;
+}
+
+export interface GenerateContentResponseUsageMetadata {
+  promptTokenCount: number;
+  toolUsePromptTokenCount: number;
+  cachedContentTokenCount: number;
+  thoughtsTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+
+  promptTokensDetails: ModalityTokenCount[];
+  toolUsePromptTokensDetails: ModalityTokenCount[];
+  cacheTokensDetails: ModalityTokenCount[];
+  candidatesTokensDetails: ModalityTokenCount[];
+
+  [key: string]: unknown;
+}
+
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
-  usageMetadata: Record<string, unknown>;
+  usageMetadata: GenerateContentResponseUsageMetadata;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
