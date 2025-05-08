@@ -357,12 +357,12 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-pro-exp-03-25",
+    modelName: "gemini-2.5-pro-preview-05-06",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-pro-exp-03-25",
+    modelName: "gemini-2.5-pro-preview-05-06",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -380,6 +380,7 @@ const testGeminiModelDelay: Record<string, number> = {
   "gemini-2.0-flash-exp": 10000,
   "gemini-2.0-flash-thinking-exp-1219": 10000,
   "gemini-2.5-pro-exp-03-25": 10000,
+  "gemini-2.5-pro-preview-05-06": 10000,
   "gemini-2.5-flash-preview-04-17": 10000,
 };
 
@@ -1007,6 +1008,11 @@ describe.each(testGeminiModelNames)(
       );
       console.log(res);
       expect(res.content).toMatch(/^1\/6/);
+      expect(res).toHaveProperty("usage_metadata");
+      expect(res.usage_metadata).toHaveProperty("output_token_details");
+      expect(res.usage_metadata!.output_token_details).not.toHaveProperty(
+        "reasoning"
+      );
     });
   }
 );
