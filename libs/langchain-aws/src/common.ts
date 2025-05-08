@@ -297,7 +297,7 @@ function convertLangChainContentBlockToConverseContentBlock<
   }
 
   if (block.type === "image_url") {
-    return extractImageInfo(block.image_url);
+    return extractImageInfo(typeof block.image_url === "string" ? block.image_url : block.image_url.url);
   }
 
   if (block.type === "document" && block.document !== undefined) {
