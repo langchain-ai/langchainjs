@@ -39,6 +39,12 @@ import { ChatGoogle, ChatGoogleInput } from "../chat_models.js";
 import { BlobStoreAIStudioFile } from "../media.js";
 import MockedFunction = jest.MockedFunction;
 
+function propSum(o: Record<string, number>): number {
+  return Object.keys(o)
+    .map((key) => o[key])
+    .reduce((acc, val) => acc + val);
+}
+
 class WeatherTool extends StructuredTool {
   schema = z.object({
     locations: z
@@ -442,10 +448,16 @@ describe.each(testGeminiModelNames)(
       expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
 
       expect(res).toHaveProperty("response_metadata");
-      expect(res.response_metadata).not.toHaveProperty("groundingMetadata");
-      expect(res.response_metadata).not.toHaveProperty("groundingSupport");
+      const meta = res.response_metadata;
+      expect(meta).not.toHaveProperty("groundingMetadata");
+      expect(meta).not.toHaveProperty("groundingSupport");
+      expect(meta).toHaveProperty("usage_metadata");
+      const usage = meta.usage_metadata;
 
-      console.log(recorder);
+      // Although LangChainJS doesn't require that the details sum to the
+      // available tokens, this should be the case for how we're doing Gemini.
+      expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
+      expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
     });
 
     test(`generate`, async () => {
@@ -883,6 +895,21 @@ describe.each(testGeminiModelNames)(
 
       expect(typeof response.content).toBe("string");
       expect((response.content as string).length).toBeGreaterThan(15);
+
+      expect(response).toHaveProperty("response_metadata");
+      const meta = response.response_metadata;
+      expect(meta).not.toHaveProperty("groundingMetadata");
+      expect(meta).not.toHaveProperty("groundingSupport");
+      expect(meta).toHaveProperty("usage_metadata");
+      const usage = meta.usage_metadata;
+
+      // Although LangChainJS doesn't require that the details sum to the
+      // available tokens, this should be the case for how we're doing Gemini.
+      expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
+      expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
+      expect(usage.input_token_details).toHaveProperty("audio");
+
+      console.log(response);
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {
