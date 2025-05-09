@@ -1037,8 +1037,8 @@ export abstract class BaseChatModel<
     });
   }
 
-  //TODO document this better... it's overrides to allow access to bind tools
-  // @ts-ignore
+  // TODO document this better... it's overrides to allow access to bind tools
+  // @ts-expect-error damjan didn't have time to set types correctly
   override bind(
     kwargs: Partial<BaseChatModelCallOptions>
   ): RunnableBindingChat<OutputMessageType> {
@@ -1050,7 +1050,7 @@ export abstract class BaseChatModel<
     });
   }
 
-  // @ts-ignore
+  // @ts-expect-error damjan didn't have time to set types correctly
   override withConfig(
     config: Partial<BaseChatModelCallOptions>
   ): RunnableBindingChat<OutputMessageType> {
