@@ -17,6 +17,7 @@ import {
 import { StringOutputParser } from "../../output_parsers/string.js";
 import { Document } from "../../documents/document.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
+import { BaseChatModelCallOptions } from "../../language_models/chat_models.js";
 
 const chatModel = new FakeListChatModel({ responses: ["hey"], sleep: 500 });
 
@@ -39,7 +40,7 @@ const TEST_CASES = {
   },
   fallbacks: {
     runnable: chatModel
-      .bind({ thrownErrorString: "expected" })
+      .bind({ thrownErrorString: "expected" } as Partial<BaseChatModelCallOptions>)
       .withFallbacks({ fallbacks: [chatModel] }),
     input: "testing",
     skipStream: true,
