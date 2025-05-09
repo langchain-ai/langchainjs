@@ -71,7 +71,7 @@ describe("problemDemo", () => {
     const boundConfiguredModelResult = await boundConfiguredModel
       .invoke("Any arbitrary input");
 
-
+    expect(boundConfiguredModelResult.content).toEqual("stop")
     expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
   });
 
