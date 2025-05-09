@@ -11,7 +11,7 @@ export default async function setup() {
             // need for the wait strategy
             MONGOT_LOG_FILE: "/dev/stdout",
         })
-        .withWaitStrategy(Wait.forLogMessage(/starting on .*27027/).withStartupTimeout(30_000))
+        .withWaitStrategy(Wait.forLogMessage(/mongot.*27027/i).withStartupTimeout(30_000))
         .start();
 
     globalThis.__container = container;
