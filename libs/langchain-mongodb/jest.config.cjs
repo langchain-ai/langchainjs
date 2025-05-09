@@ -14,6 +14,8 @@ module.exports = {
     "\\.pnp\\.[^\\/]+$",
     "./scripts/jest-setup-after-env.js",
   ],
+  globalSetup: "./setup.ts",
+  globalTeardown: "./teardown.ts",
   setupFiles: ["dotenv/config"],
   testTimeout: 20_000,
   passWithNoTests: true,
