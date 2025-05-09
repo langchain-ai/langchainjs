@@ -1037,14 +1037,17 @@ export abstract class BaseChatModel<
     });
   }
 
-
   //TODO document this better... it's overrides to allow access to bind tools
   // @ts-ignore
   override bind(
     kwargs: Partial<BaseChatModelCallOptions>
   ): RunnableBindingChat<OutputMessageType> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableBindingChat<OutputMessageType>({ bound: this, kwargs, config: {} });
+    return new RunnableBindingChat<OutputMessageType>({
+      bound: this,
+      kwargs,
+      config: {},
+    });
   }
 
   // @ts-ignore
@@ -1060,29 +1063,31 @@ export abstract class BaseChatModel<
   }
 }
 
-class RunnableBindingChat<OutputMessageType  extends BaseMessageChunk> extends RunnableBinding<
+class RunnableBindingChat<
+  OutputMessageType extends BaseMessageChunk
+> extends RunnableBinding<
   BaseLanguageModelInput,
-  OutputMessageType ,
+  OutputMessageType,
   BaseChatModelCallOptions
 > {
-
-  constructor(fields: RunnableBindingArgs<BaseLanguageModelInput, OutputMessageType, BaseChatModelCallOptions>) {
+  constructor(
+    fields: RunnableBindingArgs<
+      BaseLanguageModelInput,
+      OutputMessageType,
+      BaseChatModelCallOptions
+    >
+  ) {
     super(fields);
   }
 
-  declare bound: BaseChatModel<
-    BaseChatModelCallOptions,
-  OutputMessageType
-    >
+  declare bound: BaseChatModel<BaseChatModelCallOptions, OutputMessageType>;
 
   bindTools(
     tools: BindToolsInput[],
     kwargs?: Partial<BaseChatModelCallOptions>
   ) {
     if (typeof this.bound.bindTools !== "function") {
-      throw new Error(
-        `".bindTools()" not supported by this chat model`
-      );
+      throw new Error(`".bindTools()" not supported by this chat model`);
     }
 
     return this.bound.bindTools(tools, {

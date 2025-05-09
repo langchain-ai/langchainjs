@@ -40,7 +40,9 @@ const TEST_CASES = {
   },
   fallbacks: {
     runnable: chatModel
-      .bind({ thrownErrorString: "expected" } as Partial<BaseChatModelCallOptions>)
+      .bind({
+        thrownErrorString: "expected",
+      } as Partial<BaseChatModelCallOptions>)
       .withFallbacks({ fallbacks: [chatModel] }),
     input: "testing",
     skipStream: true,

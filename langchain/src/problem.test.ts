@@ -2,7 +2,7 @@ import { FakeChatModel } from "@langchain/core/utils/testing";
 import { tool } from "@langchain/core/tools";
 import type {
   BaseChatModelCallOptions,
-  BindToolsInput
+  BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
 import { z } from "zod";
 import { RunnableConfig } from "@langchain/core/runnables";
@@ -21,15 +21,10 @@ import { RunnableConfig } from "@langchain/core/runnables";
 
 // Downside is that The model needs to manually override any function that returns RunnableBinding to return this new class.
 
-
-
 // I have a hunch there could be a mare generic way of doing this. RunnableBinding could be modified to proxy certain function calls to the bound object.
 // providing types for this would probably be annoying.
 
-
-
 // The tradeoff would need to be made based on the amount of classes that would need to expose additional configuration functions.
-
 
 class FakeChatModelWithBindTools extends FakeChatModel {
   override bindTools(
@@ -66,19 +61,25 @@ describe("problemDemo", () => {
     const modelWithConfig = model.withConfig(config);
     const configuredBoundModel = modelWithConfig.bindTools(tools);
 
-    const configuredBoundModelResult = await configuredBoundModel
-      .invoke("Any arbitrary input");
-    const boundConfiguredModelResult = await boundConfiguredModel
-      .invoke("Any arbitrary input");
+    const configuredBoundModelResult = await configuredBoundModel.invoke(
+      "Any arbitrary input"
+    );
+    const boundConfiguredModelResult = await boundConfiguredModel.invoke(
+      "Any arbitrary input"
+    );
 
-    expect(boundConfiguredModelResult.content).toEqual("stop")
-    expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
+    expect(boundConfiguredModelResult.content).toEqual("stop");
+    expect(configuredBoundModelResult.content).toEqual(
+      boundConfiguredModelResult.content
+    );
   });
 
   it("fails if bind tools is not defined", async () => {
     const model = new FakeChatModel({});
 
     const modelWithConfig = model.withConfig(config);
-    expect(() => modelWithConfig.bindTools(tools)).toThrow('".bindTools()" not supported by this chat model');
+    expect(() => modelWithConfig.bindTools(tools)).toThrow(
+      '".bindTools()" not supported by this chat model'
+    );
   });
 });
