@@ -68,6 +68,8 @@ const apiKeyModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
+  ["gemini-2.5-flash-preview-04-17"],
+  ["gemini-2.5-pro-preview-05-06"],
   ["gemma-3-27b-it"],
 ];
 
@@ -295,7 +297,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
-  test("image_url data", async () => {
+  test("image_url image data", async () => {
     const model = newChatGoogle({
     });
 
@@ -1027,6 +1029,108 @@ describe.each(testGeminiModelNames)(
         throw new Error("finalMsg is undefined");
       }
       expect(finalMsg.content as string).toContain("Dodgers");
+    });
+
+    test("image_url image data", async () => {
+      const model = newChatGoogle({
+      });
+
+      const dataPath = "src/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString('base64');
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const message: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "What is in this image?",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+        },
+      ];
+
+      const messages: BaseMessage[] = [
+        new HumanMessageChunk({ content: message }),
+      ];
+
+      try {
+        const res = await model.invoke(messages);
+
+        // console.log(res);
+
+        expect(res).toBeDefined();
+        expect(res._getType()).toEqual("ai");
+
+        const aiMessage = res as AIMessageChunk;
+        expect(aiMessage.content).toBeDefined();
+
+        expect(typeof aiMessage.content).toBe("string");
+        const text = aiMessage.content as string;
+        expect(text).toMatch(/blue/);
+
+        expect(aiMessage?.usage_metadata?.input_token_details?.image).toBeGreaterThan(0);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error(e);
+        console.error(JSON.stringify(e.details, null, 1));
+        throw e;
+      }
+    });
+
+    test("image_url video data", async () => {
+      const model = newChatGoogle({
+      });
+
+      const dataPath = "src/tests/data/rainbow.mp4";
+      const dataType = "video/mp4";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString('base64');
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const message: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+        },
+      ];
+
+      const messages: BaseMessage[] = [
+        new HumanMessageChunk({ content: message }),
+      ];
+
+      try {
+        const res = await model.invoke(messages);
+
+        // console.log(res);
+
+        expect(res).toBeDefined();
+        expect(res._getType()).toEqual("ai");
+
+        const aiMessage = res as AIMessageChunk;
+        expect(aiMessage.content).toBeDefined();
+
+        expect(typeof aiMessage.content).toBe("string");
+        const text = aiMessage.content as string;
+        expect(text).toMatch(/rainbow/);
+
+        // Gemini 1.5 does not include audio
+        expect(aiMessage?.usage_metadata?.input_token_details?.video).toBeGreaterThan(1024);
+        expect(aiMessage?.usage_metadata?.input_token_details?.audio).toBeGreaterThan(0);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        console.error(e);
+        console.error(JSON.stringify(e.details, null, 1));
+        throw e;
+      }
     });
 
     test("reasoning", async () => {
