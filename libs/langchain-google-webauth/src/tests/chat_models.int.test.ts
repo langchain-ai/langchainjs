@@ -294,6 +294,56 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       throw e;
     }
   });
+
+  test("image_url data", async () => {
+    const model = newChatGoogle({
+    });
+
+    const dataPath = "src/tests/data/blue-square.png";
+    const dataType = "image/png";
+    const data = await fs.readFile(dataPath);
+    const data64 = data.toString('base64');
+    const dataUri = `data:${dataType};base64,${data64}`;
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "image_url",
+        image_url: dataUri,
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    try {
+      const res = await model.invoke(messages);
+
+      // console.log(res);
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/blue/);
+
+      expect(aiMessage?.usage_metadata?.input_token_details?.image).toBeGreaterThan(0);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      console.error(e);
+      console.error(JSON.stringify(e.details, null, 1));
+      throw e;
+    }
+  });
 });
 
 const weatherTool = tool((_) => "no-op", {
