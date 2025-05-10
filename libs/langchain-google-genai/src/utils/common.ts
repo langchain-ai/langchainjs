@@ -74,7 +74,9 @@ export function convertAuthorToRole(
     case "function":
       return "function";
     default:
-      throw new Error(`Unknown / unsupported author: ${author}`);
+      // When using supervisor or swarm, the author will be the name of the agent
+      // and the role must be "system"
+      return "system";
   }
 }
 
