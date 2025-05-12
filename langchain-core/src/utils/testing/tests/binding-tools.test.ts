@@ -29,17 +29,6 @@ class FakeChatModelWithBindTools extends FakeChatModel {
         ...kwargs,
       } as Partial<BaseChatModelCallOptions>);
     }
-  // Implementation from BindingRunnable
-  // withConfig(
-  //   config: RunnableConfig
-  // ): Runnable<RunInput, RunOutput, CallOptions> {
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   return new (this.constructor as any)({
-  //     bound: this.bound,
-  //     kwargs: this.kwargs,
-  //     config: { ...this.config, ...config },
-  //   });
-  // }
 
   // Returns new model of the same type, with the config merged
   override withConfig(config: Partial<BaseChatModelCallOptions>) {
