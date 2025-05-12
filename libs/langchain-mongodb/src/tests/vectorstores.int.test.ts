@@ -35,7 +35,7 @@ beforeAll(async () => {
   client = new MongoClient(uri());
   await client.connect();
 
-  const namespace = "vectorstore.test";
+  const namespace = "langchain.test";
   const [dbName, collectionName] = namespace.split(".");
   collection = await client.db(dbName).createCollection(collectionName);
 
