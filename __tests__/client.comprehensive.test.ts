@@ -59,7 +59,15 @@ describe("MultiServerMCPClient", () => {
 
       // Initialize connections and verify
       await client.initializeConnections();
-      expect(SSEClientTransport).toHaveBeenCalled();
+      expect(SSEClientTransport).toHaveBeenCalledWith(
+        new URL(config["test-server"].url),
+        {
+          eventSourceInit: {},
+          requestInit: {
+            headers: config["test-server"].headers,
+          },
+        }
+      );
       expect(Client).toHaveBeenCalled();
     });
 
