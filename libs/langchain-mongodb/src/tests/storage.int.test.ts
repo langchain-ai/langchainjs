@@ -16,7 +16,7 @@ beforeAll(async () => {
     },
   });
   await client.connect();
-  collection = await client.db("langchain").createCollection("test");
+  collection = await client.db("langchain").createCollection("storage");
 });
 
 afterAll(async () => {
