@@ -3,7 +3,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
@@ -46,6 +45,8 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "../../language_models/base.js";
+
+import { toJsonSchema } from "../json_schema.js";
 
 import { VectorStore } from "../../vectorstores.js";
 import { cosine } from "../ml-distance/similarities.js";
@@ -225,7 +226,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   thrownErrorString?: string;
 
-  private tools: StructuredTool[] = [];
+  private tools: (StructuredTool | ToolSpec)[] = [];
 
   constructor({
     sleep = 50,
@@ -247,7 +248,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     return "fake";
   }
 
-  bindTools(tools: StructuredTool[]) {
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
     const merged = [...this.tools, ...tools];
 
     const toolDicts = merged.map((t) => {
@@ -258,28 +259,28 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
             function: {
               name: t.name,
               description: t.description,
-              parameters: zodToJsonSchema(t.schema),
+              parameters: toJsonSchema(t.schema),
             },
           };
         case "anthropic":
           return {
             name: t.name,
             description: t.description,
-            input_schema: zodToJsonSchema(t.schema),
+            input_schema: toJsonSchema(t.schema),
           };
         case "bedrock":
           return {
             toolSpec: {
               name: t.name,
               description: t.description,
-              inputSchema: zodToJsonSchema(t.schema),
+              inputSchema: toJsonSchema(t.schema),
             },
           };
         case "google":
           return {
             name: t.name,
             description: t.description,
-            parameters: zodToJsonSchema(t.schema),
+            parameters: toJsonSchema(t.schema),
           };
         default:
           throw new Error(`Unsupported tool style: ${this.toolStyle}`);
@@ -407,6 +408,12 @@ export class FakeRetriever extends BaseRetriever {
   ): Promise<Document<Record<string, any>>[]> {
     return this.output;
   }
+}
+/** Minimal shape actually needed by `bindTools` */
+export interface ToolSpec {
+  name: string;
+  description?: string;
+  schema: z.ZodTypeAny | Record<string, unknown>; // Either a Zod schema *or* a plain JSON-Schema object
 }
 /**
  * Interface specific to the Fake Streaming Chat model.
