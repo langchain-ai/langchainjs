@@ -889,6 +889,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
       const input_token_details: InputTokenDetails = {};
       addModalityCounts(usageMetadata.promptTokensDetails, input_token_details);
+      if (typeof usageMetadata?.cachedContentTokenCount === "number") {
+        input_token_details.cache_read = usageMetadata.cachedContentTokenCount;
+      }
 
       const output_token_details: OutputTokenDetails = {};
       addModalityCounts(

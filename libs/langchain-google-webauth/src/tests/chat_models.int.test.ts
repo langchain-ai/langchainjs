@@ -346,6 +346,60 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       throw e;
     }
   });
+
+  test("implicit caching", async () => {
+    const model = newChatGoogle({
+    });
+
+    const dataPath = "src/tests/data/rainbow.mp4";
+    const dataType = "video/mp4";
+    const data = await fs.readFile(dataPath);
+    const data64 = data.toString('base64');
+    const dataUri = `data:${dataType};base64,${data64}`;
+
+    const message1: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "Describe this video in detail.",
+      },
+      {
+        type: "image_url",
+        image_url: dataUri,
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message1 }),
+    ];
+
+    const res1 = await model.invoke(messages);
+    const size1 = res1?.usage_metadata?.total_tokens ?? 0;
+    const response1 = recorder.response;
+
+    const message2: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "Does the camera pan from left to right or right to left?"
+      }
+    ]
+
+    messages.push(res1);
+    messages.push(new HumanMessageChunk({content: message2}));
+    const res2 = await model.invoke(messages);
+    console.log(res2);
+    const response2 = recorder.response;
+
+    console.log('response1', JSON.stringify(response1, null, 1));
+    console.log('response2', JSON.stringify(response2, null, 1));
+
+    const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
+    // expect(cached2).toEqual(size1); // Why isn't this true?
+    expect(cached2).toBeGreaterThan(0);
+    expect(cached2).toBeLessThanOrEqual(size1);
+    // Results are highly inconsistent. Sometimes it won't cache.
+
+  }, 90000); // Increase timeout
+
 });
 
 const weatherTool = tool((_) => "no-op", {
@@ -1132,6 +1186,59 @@ describe.each(testGeminiModelNames)(
         throw e;
       }
     });
+
+    test("implicit caching", async () => {
+      const model = newChatGoogle({
+      });
+
+      const dataPath = "src/tests/data/rainbow.mp4";
+      const dataType = "video/mp4";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString('base64');
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const message1: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+        },
+      ];
+
+      const messages: BaseMessage[] = [
+        new HumanMessageChunk({ content: message1 }),
+      ];
+
+      const res1 = await model.invoke(messages);
+      const size1 = res1?.usage_metadata?.total_tokens ?? 0;
+      const response1 = recorder.response;
+
+      const message2: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "Does the camera pan from left to right or right to left?"
+        }
+      ]
+
+      messages.push(res1);
+      messages.push(new HumanMessageChunk({content: message2}));
+      const res2 = await model.invoke(messages);
+      console.log(res2);
+      const response2 = recorder.response;
+
+      console.log('response1', JSON.stringify(response1, null, 1));
+      console.log('response2', JSON.stringify(response2, null, 1));
+
+      const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
+      // expect(cached2).toEqual(size1); // Why isn't this true?
+      expect(cached2).toBeGreaterThan(0);
+      expect(cached2).toBeLessThanOrEqual(size1);
+      // Results are highly inconsistent. Sometimes it won't cache.
+
+    }, 90000); // Increase timeout
 
     test("reasoning", async () => {
       const model = newChatGoogle({
