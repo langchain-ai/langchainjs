@@ -31,6 +31,7 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { concat } from "@langchain/core/utils/stream";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import fs from "fs/promises";
+import Fs from "fs";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -1280,11 +1281,15 @@ describe.each(testGeminiModelNames)(
 
 const testMultimodalModelNames = [
   {
-    modelName: "gemini-2.0-flash-exp-image-generation",
+    modelName: "gemini-2.0-flash-preview-image-generation",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  // Multimodal in Vertex AI is private preview currently
+  {
+    modelName: "gemini-2.0-flash-preview-image-generation",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
 ];
 
 describe.each(testMultimodalModelNames)(
@@ -1324,20 +1329,28 @@ describe.each(testMultimodalModelNames)(
       const content = res?.content;
       expect(typeof content).toEqual("object");
       expect(Array.isArray(content)).toEqual(true);
-      expect(content).toHaveLength(1);
+      expect(content.length).toBeGreaterThanOrEqual(1);
 
-      const content0 = content[0];
-      expect(typeof content0).not.toEqual("string");
+      let imageCount = 0;
+      (content as MessageContentComplex[]).forEach(mc => {
+        if (mc?.type === 'image_url') {
+          const fn = `/tmp/${platformType}-${modelName}-${imageCount}.png`;
+          console.log(`(Content saved to ${fn})`);
+          imageCount += 1;
+          const url = (mc as MessageContentImageUrl).image_url as string;
+          expect(url).toMatch(/^data:image\/png;base64,/);
+          const data64 = url.substring("data:image.png;base64,".length);
+          const data = Buffer.from(data64, "base64");
+          Fs.writeFileSync(fn, data);
+        } else {
+          console.log("Content", mc);
+        }
+      })
 
-      const mc = content0 as MessageContentImageUrl;
-      expect(mc).toHaveProperty("type");
-      expect(mc.type).toEqual("image_url");
-      expect(mc).toHaveProperty("image_url");
-      const url = (mc as MessageContentImageUrl).image_url as string;
-      expect(url).toMatch(/^data:image\/png;base64,/);
+      expect(imageCount).toEqual(1);
 
-      console.log(recorder.response);
-      console.log(JSON.stringify(res.content, null, 1));
+      // console.log(recorder.response);
+      // console.log(JSON.stringify(res.content, null, 1));
     });
   }
 );
