@@ -414,7 +414,7 @@ MIT
 
 ## Acknowledgements
 
-Big thanks to [@vrknetha](https://github.com/vrknetha), [@cawstudios](https://caw.tech) for the initial implementation!
+Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www.knacklabs.ai) for the initial implementation!
 
 ## Contributing
 
