@@ -197,6 +197,56 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
   });
 
+  test("platform endpoint - gcp location", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      location: "luna-central1"
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://luna-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/luna-central1/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gcp global", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      location: "global",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
   test("platform endpoint - gai", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

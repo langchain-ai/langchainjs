@@ -201,7 +201,11 @@ export abstract class GoogleHostConnection<
   }
 
   get computedEndpoint(): string {
-    return `${this.location}-aiplatform.googleapis.com`;
+    if (this.location === 'global') {
+      return "aiplatform.googleapis.com";
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
+    }
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {
