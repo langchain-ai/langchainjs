@@ -1422,10 +1422,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
 
     // Add thinking configuration if explicitly set
-    if (
-      typeof parameters.maxReasoningTokens !== "undefined" &&
-      parameters.maxReasoningTokens !== 0
-    ) {
+    // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
+    if (typeof parameters.maxReasoningTokens !== "undefined") {
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
         // TODO: Expose this configuration to the user once google fully supports it
