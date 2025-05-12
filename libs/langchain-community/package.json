@@ -43,7 +43,7 @@
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
     "langsmith": "^0.3.16",
     "uuid": "^10.0.0",
-    "zod": "^3.22.3",
+    "zod": "^3.24.3",
     "zod-to-json-schema": "^3.22.5"
   },
   "devDependencies": {
@@ -203,6 +203,7 @@
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
+    "pinata": "^2.2.0",
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "prettier": "^2.8.3",
@@ -337,6 +338,7 @@
     "pg": "^8.11.0",
     "pg-copy-streams": "^6.0.5",
     "pickleparser": "^0.2.1",
+    "pinata": "^2.2.0",
     "playwright": "^1.32.1",
     "portkey-ai": "^0.1.11",
     "puppeteer": "*",
@@ -675,6 +677,9 @@
       "optional": true
     },
     "pickleparser": {
+      "optional": true
+    },
+    "pinata": {
       "optional": true
     },
     "playwright": {

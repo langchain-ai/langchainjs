@@ -7388,6 +7388,7 @@ __metadata:
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
+    pinata: ^2.2.0
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     prettier: ^2.8.3
@@ -7410,7 +7411,7 @@ __metadata:
     web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
     youtubei.js: ^12.2.0
-    zod: ^3.22.3
+    zod: ^3.24.3
     zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@arcjet/redact": ^v1.0.0-alpha.23
@@ -7524,6 +7525,7 @@ __metadata:
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
     pickleparser: ^0.2.1
+    pinata: ^2.2.0
     playwright: ^1.32.1
     portkey-ai: ^0.1.11
     puppeteer: "*"
@@ -7755,6 +7757,8 @@ __metadata:
     pg-copy-streams:
       optional: true
     pickleparser:
+      optional: true
+    pinata:
       optional: true
     playwright:
       optional: true
@@ -27841,7 +27845,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:3.3.2, node-fetch@npm:^3.3.2":
+"node-fetch@npm:3.3.2, node-fetch@npm:^3.3.1, node-fetch@npm:^3.3.2":
   version: 3.3.2
   resolution: "node-fetch@npm:3.3.2"
   dependencies:
@@ -29517,6 +29521,15 @@ __metadata:
   version: 3.0.0
   resolution: "pify@npm:3.0.0"
   checksum: 6cdcbc3567d5c412450c53261a3f10991665d660961e06605decf4544a61a97a54fefe70a68d5c37080ff9d6f4cf51444c90198d1ba9f9309a6c0d6e9f5c4fde
+  languageName: node
+  linkType: hard
+
+"pinata@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "pinata@npm:2.2.0"
+  dependencies:
+    node-fetch: ^3.3.1
+  checksum: 26c546413edcc85f2444c3a2d58f20b10f9c72e9e3203250cefb1a3324730dc912de59d591fb2d9ce4db8354fad3f9bc496a4434a3cb7af6b927b50cca87141b
   languageName: node
   linkType: hard
 
