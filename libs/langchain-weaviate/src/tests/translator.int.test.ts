@@ -9,7 +9,7 @@ import { WeaviateStore } from "../vectorstores.js";
 import { WeaviateTranslator } from "../translator.js";
 
 let client: WeaviateClient;
-const indexName = "Test";
+const indexName = "TestTranslate";
 
 beforeAll(async () => {
   expect(process.env.WEAVIATE_URL).toBeDefined();

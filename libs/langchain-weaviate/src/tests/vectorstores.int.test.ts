@@ -309,26 +309,30 @@ test("Initializing via constructor", async () => {
 });
 
 test("addDocuments & addVectors method works", async () => {
-  const store = new WeaviateStore(new OpenAIEmbeddings(), {
-    client,
-    indexName: "Test",
-    textKey: "text",
-    metadataKeys: ["foo"],
-  });
+  try {
+    const store = new WeaviateStore(new OpenAIEmbeddings(), {
+      client,
+      indexName: "Test",
+      textKey: "text",
+      metadataKeys: ["foo"],
+    });
 
-  const documents = [
-    new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
-    new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
-    new Document({ pageContent: "how are you", metadata: { foo: "qux" } }),
-    new Document({ pageContent: "bye now", metadata: { foo: "bar" } }),
-  ];
+    const documents = [
+      new Document({ pageContent: "hello world", metadata: { foo: "bar" } }),
+      new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
+      new Document({ pageContent: "how are you", metadata: { foo: "qux" } }),
+      new Document({ pageContent: "bye now", metadata: { foo: "bar" } }),
+    ];
 
-  const embeddings = await store.embeddings.embedDocuments(
-    documents.map((d) => d.pageContent)
-  );
+    const embeddings = await store.embeddings.embedDocuments(
+      documents.map((d) => d.pageContent)
+    );
 
-  const vectors = await store.addVectors(embeddings, documents);
-  expect(vectors).toHaveLength(4);
+    const vectors = await store.addVectors(embeddings, documents);
+    expect(vectors).toHaveLength(4);
+  } finally {
+    await client.collections.delete("Test");
+  }
 });
 
 test("maxMarginalRelevanceSearch", async () => {
@@ -390,10 +394,6 @@ test("fromExistingIndex", async () => {
   } finally {
     await client.collections.delete(weaviateArgs.indexName);
   }
-});
-
-afterAll(async () => {
-  await client.close();
 });
 
 afterAll(async () => {

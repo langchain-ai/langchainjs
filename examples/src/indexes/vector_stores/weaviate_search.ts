@@ -10,14 +10,14 @@ export async function run() {
     host: process.env.WEAVIATE_HOST || "localhost",
     apiKey: new ApiKey(process.env.WEAVIATE_API_KEY || "default"),
   });
-
-  // Create a store for an existing index
-  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), {
+  const weaviateArgs = {
     client,
     indexName: "Test",
     metadataKeys: ["foo"],
-  });
-
+  };
+  // Create a store for an existing index
+  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), weaviateArgs);
+  const collection = client.collections.get(weaviateArgs.indexName);
   // Search the index without any filters
   const results = await store.similaritySearch("hello world", 1);
   console.log(results);
@@ -28,13 +28,9 @@ export async function run() {
   // Search the index with a filter, in this case, only return results where
   // the "foo" metadata key is equal to "baz", see the Weaviate docs for more
   // https://weaviate.io/developers/weaviate/api/graphql/filters
-  const results2 = await store.similaritySearch("hello world", 1, {
-    where: {
-      operator: "Equal",
-      // path: ["foo"],
-      value: "baz",
-    },
-  });
+  const results2 = await store.similaritySearch("hello world", 1, 
+    collection.filter.byProperty("foo").equal("baz")
+  );
   console.log(results2);
   /*
   [ Document { pageContent: 'hi there', metadata: { foo: 'baz' } } ]
