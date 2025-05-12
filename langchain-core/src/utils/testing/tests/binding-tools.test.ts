@@ -36,11 +36,8 @@ class FakeChatModelWithBindTools extends FakeChatModel {
     const mergedConfig = this.mergeConfig(config);
     const newFields = { ...this, config: mergedConfig };
 
-    const newModel = new FakeChatModelWithBindTools(newFields);
-
-    newModel._boundConfig = mergedConfig;
-
-    return newModel;
+    // eslint-disable-next-line
+    return new (this.constructor as any)(newFields);
   }
 
   override async invoke(input: BaseLanguageModelInput, config?: Partial<BaseChatModelCallOptions>) {
@@ -52,30 +49,7 @@ class FakeChatModelWithBindTools extends FakeChatModel {
 
 
 describe("binding tools", () => {
-  it("should bind tools to a function and store them in the model", () => {
-    // Arrange
-    const model = new FakeChatModelWithBindTools({});
-    const echoTool = tool((input) => String(input), {
-      name: "echo",
-      description: "Echos the input",
-      schema: z.string(),
-    });
-    const tools = [echoTool];
-
-    // Act
-    const boundModel = model.bindTools(tools);
-
-    // Assert
-    // @ts-expect-error - types
-    expect(boundModel.kwargs?.tools).toBeDefined();
-    // @ts-expect-error - types
-    expect(boundModel.kwargs?.tools.length).toBe(1);
-    // @ts-expect-error - types
-    expect(boundModel.kwargs?.tools[0].name).toBe("echo");
-  });
-
   it("should bind tools to a function and return same content result", async () => {
-    // Arrange
     const model = new FakeChatModelWithBindTools({});
     const echoTool = tool((input) => String(input), {
       name: "echo",
@@ -90,13 +64,9 @@ describe("binding tools", () => {
     const boundConfiguredModel = model.bindTools(tools).withConfig(config);
 
 
-    // @ts-expect-error - types
     expect(configuredBoundModel.kwargs?.tools).toBeDefined();
-    // @ts-expect-error - types
     expect(configuredBoundModel.kwargs?.tools.length).toBe(1);
-    // @ts-expect-error - types
     expect(configuredBoundModel.kwargs?.tools[0].name).toBe("echo");
-    // @ts-expect-error - types
     expect(configuredBoundModel.kwargs?.tools[0].name).toEqual(boundConfiguredModel.kwargs?.tools[0].name);
 
   });
