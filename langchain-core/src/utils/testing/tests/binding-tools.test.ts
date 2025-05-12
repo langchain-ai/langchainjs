@@ -49,7 +49,7 @@ class FakeChatModelWithBindTools extends FakeChatModel {
 
 
 describe("binding tools", () => {
-  it("should bind tools to a function and return same content result", async () => {
+  it("should bind tools and store them in the model regardless of bind/config order", async () => {
     const model = new FakeChatModelWithBindTools({});
     const echoTool = tool((input) => String(input), {
       name: "echo",
@@ -57,7 +57,6 @@ describe("binding tools", () => {
       schema: z.string(),
     });
     const config = { stop: ["stop"] };
-    const input = "Any arbitrary input";
     const tools = [echoTool];
 
     const configuredBoundModel = model.withConfig(config).bindTools(tools);
