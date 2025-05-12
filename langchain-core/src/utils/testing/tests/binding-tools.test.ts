@@ -4,11 +4,16 @@ import { FakeChatModel } from "../index.js";
 import { BaseChatModelCallOptions, BaseChatModelParams, BindToolsInput } from "../../../language_models/chat_models.js";
 import { BaseLanguageModelInput } from "../../../language_models/base.js";
 
+type FakeChatModelWithBindToolsParams = BaseChatModelParams & { config?: Partial<BaseChatModelCallOptions> };
 
 class FakeChatModelWithBindTools extends FakeChatModel {
   private _boundConfig?: Partial<BaseChatModelCallOptions>;
 
-  constructor(fields: BaseChatModelParams & { config?: Partial<BaseChatModelCallOptions> }) {
+  private mergeConfig(config?: Partial<BaseChatModelCallOptions>) {
+    return { ...(this._boundConfig ?? {}), ...(config ?? {}) };
+  }
+
+  constructor(fields: FakeChatModelWithBindToolsParams) {
     super(fields);
     if (fields.config) {
       this._boundConfig = { ...fields.config };
@@ -38,15 +43,19 @@ class FakeChatModelWithBindTools extends FakeChatModel {
 
   // Returns new model of the same type, with the config merged
   override withConfig(config: Partial<BaseChatModelCallOptions>) {
-    const mergedConfig = { ...(this._boundConfig ?? {}), ...config };
+
+    const mergedConfig = this.mergeConfig(config);
     const newFields = { ...this, config: mergedConfig };
+
     const newModel = new FakeChatModelWithBindTools(newFields);
+
     newModel._boundConfig = mergedConfig;
+
     return newModel;
   }
 
   override async invoke(input: BaseLanguageModelInput, config?: Partial<BaseChatModelCallOptions>) {
-    const mergedConfig = { ...(this._boundConfig ?? {}), ...(config ?? {}) };
+    const mergedConfig = this.mergeConfig(config);
 
     return super.invoke(input, mergedConfig);
   }
