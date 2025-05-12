@@ -69,7 +69,6 @@ afterAll(async () => {
   if (isUsingLocalAtlas()) {
     await collection.dropSearchIndex("default");
   }
-  await collection.drop({ writeConcern: { w: "majority", wtimeout: 10_000 } });
   await client.close();
 });
 
