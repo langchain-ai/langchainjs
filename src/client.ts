@@ -12,7 +12,6 @@ import {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
-import Stream from "node:stream";
 import { loadMcpTools, LoadMcpToolsOptions } from "./tools.js";
 
 // Read package name from package.json
@@ -108,7 +107,6 @@ export function createStdioConnectionSchema() {
           z.literal("pipe"),
           z.literal("ignore"),
           z.literal("inherit"),
-          z.instanceof(Stream),
         ])
         .describe(
           "How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`"
