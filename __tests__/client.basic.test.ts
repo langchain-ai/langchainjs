@@ -21,6 +21,9 @@ const { StdioClientTransport } = await import(
 const { SSEClientTransport } = await import(
   "@modelcontextprotocol/sdk/client/sse.js"
 );
+const { StreamableHTTPClientTransport } = await import(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js"
+);
 
 describe("MultiServerMCPClient", () => {
   // Setup and teardown
@@ -63,6 +66,17 @@ describe("MultiServerMCPClient", () => {
       // Additional assertions to verify the connection was processed correctly
     });
 
+    test("should process valid streamable HTTP connection config", () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
+        },
+      });
+      expect(client).toBeDefined();
+      // Additional assertions to verify the connection was processed correctly
+    });
+
     test("should have a compile time error and a runtime error when the config is invalid", () => {
       expect(() => {
         // eslint-disable-next-line no-new
@@ -93,6 +107,7 @@ describe("MultiServerMCPClient", () => {
         command: "python",
         args: ["./script.py"],
         env: undefined,
+        stderr: "inherit",
       });
 
       expect(Client).toHaveBeenCalled();
@@ -111,6 +126,24 @@ describe("MultiServerMCPClient", () => {
       await client.initializeConnections();
 
       expect(SSEClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
+      expect(Client.prototype.connect).toHaveBeenCalled();
+      expect(Client.prototype.listTools).toHaveBeenCalled();
+    });
+
+    test("should initialize streamable HTTP connections correctly", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
+        },
+      });
+
+      await client.initializeConnections();
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
+        new URL("http://localhost:8000/mcp")
+      );
       expect(Client).toHaveBeenCalled();
       expect(Client.prototype.connect).toHaveBeenCalled();
       expect(Client.prototype.listTools).toHaveBeenCalled();
@@ -307,6 +340,10 @@ describe("MultiServerMCPClient", () => {
           transport: "sse",
           url: "http://localhost:8000/sse",
         },
+        server3: {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
+        },
       });
 
       await client.initializeConnections();
@@ -315,6 +352,7 @@ describe("MultiServerMCPClient", () => {
       // Verify that all transports were closed using the mock functions directly
       expect(StdioClientTransport.prototype.close).toHaveBeenCalled();
       expect(SSEClientTransport.prototype.close).toHaveBeenCalled();
+      expect(StreamableHTTPClientTransport.prototype.close).toHaveBeenCalled();
     });
 
     test("should handle errors during cleanup gracefully", async () => {
@@ -332,6 +370,107 @@ describe("MultiServerMCPClient", () => {
           transport: "stdio",
           command: "python",
           args: ["./script.py"],
+        },
+      });
+
+      await client.initializeConnections();
+      await client.close();
+
+      expect(closeMock).toHaveBeenCalledOnce();
+    });
+  });
+
+  // Streamable HTTP specific tests
+  describe("streamable HTTP transport", () => {
+    test("should throw when streamable HTTP config is missing required fields", () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new MultiServerMCPClient({
+          // @ts-expect-error missing url field
+          "test-server": {
+            transport: "http",
+            // Missing url field
+          },
+        });
+      }).toThrow(ZodError);
+    });
+
+    test("should throw when streamable HTTP URL is invalid", () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new MultiServerMCPClient({
+          "test-server": {
+            transport: "http",
+            url: "invalid-url", // Invalid URL format
+          },
+        });
+      }).toThrow(ZodError);
+    });
+
+    test("should handle mixed transport types including streamable HTTP", async () => {
+      const client = new MultiServerMCPClient({
+        "stdio-server": {
+          transport: "stdio",
+          command: "python",
+          args: ["./script.py"],
+        },
+        "sse-server": {
+          transport: "sse",
+          url: "http://localhost:8000/sse",
+        },
+        "streamable-server": {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Verify all transports were initialized
+      expect(StreamableHTTPClientTransport).toHaveBeenCalled();
+      expect(SSEClientTransport).toHaveBeenCalled();
+      expect(StdioClientTransport).toHaveBeenCalled();
+
+      // Get tools from all servers
+      const tools = await client.getTools();
+      expect(tools.length).toBeGreaterThan(0);
+    });
+
+    test("should throw on streamable HTTP connection failure", async () => {
+      (Client as Mock).mockImplementationOnce(() => ({
+        connect: vi
+          .fn()
+          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+      }));
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
+        },
+      });
+
+      await expect(() => client.initializeConnections()).rejects.toThrow(
+        MCPClientError
+      );
+    });
+
+    test("should handle errors during streamable HTTP cleanup gracefully", async () => {
+      const closeMock = vi
+        .fn()
+        .mockReturnValue(Promise.reject(new Error("Close failed")));
+
+      // Mock close to throw an error
+      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(() => ({
+        close: closeMock,
+        connect: vi.fn().mockReturnValue(Promise.resolve()),
+      }));
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          transport: "http",
+          url: "http://localhost:8000/mcp",
         },
       });
 

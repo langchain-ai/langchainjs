@@ -6,3 +6,4 @@ node_modules
 dist
 .yarn
 .env
+.eslintcache

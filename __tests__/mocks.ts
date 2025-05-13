@@ -70,3 +70,21 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => {
     SSEClientTransport,
   };
 });
+
+vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js", () => {
+  const streamableHTTPClientTransportPrototype = {
+    connect: vi.fn().mockReturnValue(Promise.resolve()),
+    send: vi.fn().mockReturnValue(Promise.resolve()),
+    close: vi.fn().mockReturnValue(Promise.resolve()),
+  };
+  const StreamableHTTPClientTransport = vi.fn().mockImplementation((config) => {
+    return {
+      ...streamableHTTPClientTransportPrototype,
+      config,
+    };
+  });
+  StreamableHTTPClientTransport.prototype = streamableHTTPClientTransportPrototype;
+  return {
+    StreamableHTTPClientTransport,
+  };
+});

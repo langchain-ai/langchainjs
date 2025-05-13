@@ -1,6 +1,10 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
 import { ZodError } from "zod";
-import { Connection } from "../src/client.js";
+import type {
+  ClientConfig,
+  Connection,
+  StdioConnection,
+} from "../src/client.js";
 
 import "./mocks.js";
 
@@ -10,6 +14,9 @@ const { StdioClientTransport } = await import(
 );
 const { SSEClientTransport } = await import(
   "@modelcontextprotocol/sdk/client/sse.js"
+);
+const { StreamableHTTPClientTransport } = await import(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js"
 );
 const { MultiServerMCPClient, MCPClientError } = await import(
   "../src/client.js"
@@ -41,6 +48,23 @@ describe("MultiServerMCPClient", () => {
       // Initialize connections and verify
       await client.initializeConnections();
       expect(StdioClientTransport).toHaveBeenCalled();
+      expect(Client).toHaveBeenCalled();
+    });
+
+    test("should process valid streamable HTTP connection config", async () => {
+      const config = {
+        "test-server": {
+          transport: "http" as const,
+          url: "http://localhost:8000/mcp",
+        },
+      };
+
+      const client = new MultiServerMCPClient(config);
+      expect(client).toBeDefined();
+
+      // Initialize connections and verify
+      await client.initializeConnections();
+      expect(StreamableHTTPClientTransport).toHaveBeenCalled();
       expect(Client).toHaveBeenCalled();
     });
 
@@ -324,6 +348,10 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
+      const conf = client.config;
+      expect(conf.additionalToolNamePrefix).toBe("mcp");
+      expect(conf.prefixToolNameWithServerName).toBe(true);
+
       await client.initializeConnections();
       const tools = await client.getTools();
 
@@ -518,6 +546,31 @@ describe("MultiServerMCPClient", () => {
 
       // Should have attempted to create transport
       expect(StdioClientTransport).toHaveBeenCalled();
+
+      // Should not have created a client
+      expect(Client).not.toHaveBeenCalled();
+    });
+
+    test("should throw on streamable HTTP transport creation errors", async () => {
+      // Force an error when creating transport
+      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(() => {
+        throw new Error("Streamable HTTP transport creation failed");
+      });
+
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          transport: "http" as const,
+          url: "http://localhost:8000/mcp",
+        },
+      });
+
+      // Should throw error when connecting
+      await expect(
+        async () => await client.initializeConnections()
+      ).rejects.toThrow();
+
+      // Should have attempted to create transport
+      expect(StreamableHTTPClientTransport).toHaveBeenCalled();
 
       // Should not have created a client
       expect(Client).not.toHaveBeenCalled();

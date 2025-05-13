@@ -95,15 +95,14 @@ async function _convertCallToolResult(
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: CallToolResultContent) => content.text)
+        .map((content) => content.text)
         .join("\n")}`
     );
   }
 
   const mcpTextAndImageContent: MessageContentComplex[] = (
     result.content.filter(
-      (content: CallToolResultContent) =>
-        content.type === "text" || content.type === "image"
+      (content) => content.type === "text" || content.type === "image"
     ) as (TextContent | ImageContent)[]
   ).map((content: TextContent | ImageContent) => {
     switch (content.type) {
@@ -134,7 +133,7 @@ async function _convertCallToolResult(
     await Promise.all(
       (
         result.content.filter(
-          (content: CallToolResultContent) => content.type === "resource"
+          (content) => content.type === "resource"
         ) as EmbeddedResource[]
       ).map((content: EmbeddedResource) =>
         _embeddedResourceToArtifact(content, client)

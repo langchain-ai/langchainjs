@@ -9,7 +9,8 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
 - 🔌 **Transport Options**
 
-  - Connect to MCP servers via stdio (local) or SSE (remote)
+  - Connect to MCP servers via stdio (local) or Streamable HTTP (remote)
+    - Streamable HTTP automatically falls back to SSE for compatibility with legacy MCP server implementations
   - Support for custom headers in SSE connections for authentication
   - Configurable reconnection strategies for both transport types
 
@@ -38,13 +39,13 @@ npm install @langchain/mcp-adapters
 
 ### Optional Dependencies
 
-For SSE connections with custom headers in Node.js:
+For SSE connections with custom headers in Node.js (does not apply to Streamable HTTP):
 
 ```bash
 npm install eventsource
 ```
 
-For enhanced SSE header support:
+For enhanced SSE header support (does not apply to Streamable HTTP):
 
 ```bash
 npm install extended-eventsource
@@ -155,14 +156,19 @@ const client = new MultiServerMCPClient({
       args: ["-y", "@modelcontextprotocol/server-filesystem"],
     },
 
-    // SSE transport example with reconnection configuration
+    // Sreamable HTTP transport example, with auth headers and automatic SSE fallback disabled (defaults to enabled)
     weather: {
-      transport: "sse",
-      url: "https://example.com/mcp-weather",
+      url: "https://example.com/weather/mcp",
       headers: {
         Authorization: "Bearer token123",
-      },
-      useNodeEventSource: true,
+      }
+      automaticSSEFallback: false
+    },
+
+    // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
+    github: {
+      transport: "sse", // also works with "type" field instead of "transport"
+      url: "https://example.com/mcp",
       reconnect: {
         enabled: true,
         maxAttempts: 5,
@@ -212,8 +218,8 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | Option                         | Type    | Default | Description                                                                          |
 | ------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------ |
 | `throwOnLoadError`             | boolean | `true`  | Whether to throw an error if a tool fails to load                                    |
-| `prefixToolNameWithServerName` | boolean | `false` | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
-| `additionalToolNamePrefix`     | string  | `""`    | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+| `prefixToolNameWithServerName` | boolean | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
+| `additionalToolNamePrefix`     | string  | `mcp`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
 
 ## Response Handling
 
@@ -361,8 +367,8 @@ Example Zod error for an invalid SSE URL:
 
 When using in browsers:
 
-- Native EventSource API doesn't support custom headers
-- Consider using a proxy or pass authentication via query parameters
+- EventSource API doesn't support custom headers for SSE
+- Consider using a proxy or pass authentication via query parameters to avoid leaking credentials to client
 - May require CORS configuration on the server side
 
 ## Troubleshooting
