@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {

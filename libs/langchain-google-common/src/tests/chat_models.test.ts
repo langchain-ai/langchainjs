@@ -173,6 +173,37 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(model.platform).toEqual("gai");
   });
 
+  test("platform vertexai true", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      apiKey: "test",
+      vertexai: true,
+    });
+
+    expect(model.platform).toEqual("gcp");
+  });
+
+  test("platform vertexai false", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      vertexai: false,
+    });
+
+    expect(model.platform).toEqual("gai");
+  });
+
   test("platform endpoint - gcp", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
