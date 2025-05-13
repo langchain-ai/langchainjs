@@ -82,5 +82,6 @@ export default async function setup() {
 
   // @ts-expect-error Assigning properties on the globalThis object is Jest's recommended practice of sharing
   // context between setup and teardown modules.
+  // See https://jestjs.io/docs/configuration#globalsetup-string.
   globalThis.__container = container;
 }
