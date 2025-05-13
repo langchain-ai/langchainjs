@@ -239,7 +239,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     const model = new ChatGoogle({
       authOptions,
       platformType: "gcp",
-      location: "luna-central1"
+      location: "luna-central1",
     });
     const messages: BaseMessageLike[] = [
       new HumanMessage("Flip a coin and tell me H for heads and T for tails"),

@@ -133,7 +133,6 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       expect(aiMessage.content).toBeDefined();
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
-
     } catch (e) {
       console.error(e);
       throw e;
@@ -321,13 +320,12 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   });
 
   test("image_url image data", async () => {
-    const model = newChatGoogle({
-    });
+    const model = newChatGoogle({});
 
     const dataPath = "src/tests/data/blue-square.png";
     const dataType = "image/png";
     const data = await fs.readFile(dataPath);
-    const data64 = data.toString('base64');
+    const data64 = data.toString("base64");
     const dataUri = `data:${dataType};base64,${data64}`;
 
     const message: MessageContentComplex[] = [
@@ -360,7 +358,9 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       const text = aiMessage.content as string;
       expect(text).toMatch(/blue/);
 
-      expect(aiMessage?.usage_metadata?.input_token_details?.image).toBeGreaterThan(0);
+      expect(
+        aiMessage?.usage_metadata?.input_token_details?.image
+      ).toBeGreaterThan(0);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -371,13 +371,12 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   });
 
   test("implicit caching", async () => {
-    const model = newChatGoogle({
-    });
+    const model = newChatGoogle({});
 
     const dataPath = "src/tests/data/rainbow.mp4";
     const dataType = "video/mp4";
     const data = await fs.readFile(dataPath);
-    const data64 = data.toString('base64');
+    const data64 = data.toString("base64");
     const dataUri = `data:${dataType};base64,${data64}`;
 
     const message1: MessageContentComplex[] = [
@@ -402,27 +401,25 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const message2: MessageContentComplex[] = [
       {
         type: "text",
-        text: "Does the camera pan from left to right or right to left?"
-      }
-    ]
+        text: "Does the camera pan from left to right or right to left?",
+      },
+    ];
 
     messages.push(res1);
-    messages.push(new HumanMessageChunk({content: message2}));
+    messages.push(new HumanMessageChunk({ content: message2 }));
     const res2 = await model.invoke(messages);
     console.log(res2);
     const response2 = recorder.response;
 
-    console.log('response1', JSON.stringify(response1, null, 1));
-    console.log('response2', JSON.stringify(response2, null, 1));
+    console.log("response1", JSON.stringify(response1, null, 1));
+    console.log("response2", JSON.stringify(response2, null, 1));
 
     const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
     // expect(cached2).toEqual(size1); // Why isn't this true?
     expect(cached2).toBeGreaterThan(0);
     expect(cached2).toBeLessThanOrEqual(size1);
     // Results are highly inconsistent. Sometimes it won't cache.
-
   }, 90000); // Increase timeout
-
 });
 
 const weatherTool = tool((_) => "no-op", {
@@ -1126,13 +1123,12 @@ describe.each(testGeminiModelNames)(
     });
 
     test("image_url image data", async () => {
-      const model = newChatGoogle({
-      });
+      const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/blue-square.png";
       const dataType = "image/png";
       const data = await fs.readFile(dataPath);
-      const data64 = data.toString('base64');
+      const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
       const message: MessageContentComplex[] = [
@@ -1165,7 +1161,9 @@ describe.each(testGeminiModelNames)(
         const text = aiMessage.content as string;
         expect(text).toMatch(/blue/);
 
-        expect(aiMessage?.usage_metadata?.input_token_details?.image).toBeGreaterThan(0);
+        expect(
+          aiMessage?.usage_metadata?.input_token_details?.image
+        ).toBeGreaterThan(0);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -1176,13 +1174,12 @@ describe.each(testGeminiModelNames)(
     });
 
     test("image_url video data", async () => {
-      const model = newChatGoogle({
-      });
+      const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
       const dataType = "video/mp4";
       const data = await fs.readFile(dataPath);
-      const data64 = data.toString('base64');
+      const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
       const message: MessageContentComplex[] = [
@@ -1216,8 +1213,12 @@ describe.each(testGeminiModelNames)(
         expect(text).toMatch(/rainbow/);
 
         // Gemini 1.5 does not include audio
-        expect(aiMessage?.usage_metadata?.input_token_details?.video).toBeGreaterThan(1024);
-        expect(aiMessage?.usage_metadata?.input_token_details?.audio).toBeGreaterThan(0);
+        expect(
+          aiMessage?.usage_metadata?.input_token_details?.video
+        ).toBeGreaterThan(1024);
+        expect(
+          aiMessage?.usage_metadata?.input_token_details?.audio
+        ).toBeGreaterThan(0);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -1228,13 +1229,12 @@ describe.each(testGeminiModelNames)(
     });
 
     test("implicit caching", async () => {
-      const model = newChatGoogle({
-      });
+      const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
       const dataType = "video/mp4";
       const data = await fs.readFile(dataPath);
-      const data64 = data.toString('base64');
+      const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
       const message1: MessageContentComplex[] = [
@@ -1259,25 +1259,24 @@ describe.each(testGeminiModelNames)(
       const message2: MessageContentComplex[] = [
         {
           type: "text",
-          text: "Does the camera pan from left to right or right to left?"
-        }
-      ]
+          text: "Does the camera pan from left to right or right to left?",
+        },
+      ];
 
       messages.push(res1);
-      messages.push(new HumanMessageChunk({content: message2}));
+      messages.push(new HumanMessageChunk({ content: message2 }));
       const res2 = await model.invoke(messages);
       console.log(res2);
       const response2 = recorder.response;
 
-      console.log('response1', JSON.stringify(response1, null, 1));
-      console.log('response2', JSON.stringify(response2, null, 1));
+      console.log("response1", JSON.stringify(response1, null, 1));
+      console.log("response2", JSON.stringify(response2, null, 1));
 
       const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
       // expect(cached2).toEqual(size1); // Why isn't this true?
       expect(cached2).toBeGreaterThan(0);
       expect(cached2).toBeLessThanOrEqual(size1);
       // Results are highly inconsistent. Sometimes it won't cache.
-
     }, 90000); // Increase timeout
 
     test("reasoning", async () => {
@@ -1371,8 +1370,8 @@ describe.each(testMultimodalModelNames)(
       expect(content.length).toBeGreaterThanOrEqual(1);
 
       let imageCount = 0;
-      (content as MessageContentComplex[]).forEach(mc => {
-        if (mc?.type === 'image_url') {
+      (content as MessageContentComplex[]).forEach((mc) => {
+        if (mc?.type === "image_url") {
           const fn = `/tmp/${platformType}-${modelName}-${imageCount}.png`;
           console.log(`(Content saved to ${fn})`);
           imageCount += 1;
@@ -1384,7 +1383,7 @@ describe.each(testMultimodalModelNames)(
         } else {
           console.log("Content", mc);
         }
-      })
+      });
 
       expect(imageCount).toEqual(1);
 

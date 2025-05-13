@@ -172,7 +172,9 @@ export abstract class GoogleHostConnection<
     this.client = client;
   }
 
-  fieldPlatformType(fields: GoogleConnectionParams<any> | undefined): GooglePlatformType | undefined {
+  fieldPlatformType(
+    fields: GoogleConnectionParams<any> | undefined
+  ): GooglePlatformType | undefined {
     if (typeof fields === "undefined") {
       return undefined;
     }
@@ -214,7 +216,7 @@ export abstract class GoogleHostConnection<
   }
 
   get computedEndpoint(): string {
-    if (this.location === 'global') {
+    if (this.location === "global") {
       return "aiplatform.googleapis.com";
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
@@ -311,8 +313,9 @@ export abstract class GoogleAIConnection<
     return this.client.clientType === "apiKey";
   }
 
-
-  fieldPlatformType(fields: GoogleConnectionParams<any> | undefined): GooglePlatformType | undefined {
+  fieldPlatformType(
+    fields: GoogleConnectionParams<any> | undefined
+  ): GooglePlatformType | undefined {
     const ret = super.fieldPlatformType(fields);
     if (typeof ret !== "undefined") {
       return ret;
