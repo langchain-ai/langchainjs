@@ -74,10 +74,10 @@ afterAll(async () => {
 
 /** adapted from langchain's python implementation
  * see https://github.com/langchain-ai/langchain-mongodb/blob/6ae485fd576a26c882ebe277b66628ddbb440545/libs/langchain-mongodb/tests/utils.py#L54
- * 
+ *
  * When a search index is created, all documents are indexed before the collection is queryable
  * with $vectorSearch.  However, when documents are added to a collection with an existing index,
- * the writes will return before the search index is updated.  This class patches the `addDocuments()` 
+ * the writes will return before the search index is updated.  This class patches the `addDocuments()`
  * method to wait until queries return the expected number of results before returning.
  */
 class PatchedVectorStore extends MongoDBAtlasVectorSearch {
