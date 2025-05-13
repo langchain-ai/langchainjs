@@ -20,6 +20,16 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
+    if (Array.isArray(obj.type)) {
+      // Gemini requires type be a string, so we use the first defined one
+      newObj.type = obj?.type[0];
+
+      // If type contains "null", which isn't allowed, set "nullable" to true
+      if (obj.type.includes("null")) {
+        newObj.nullable = true;
+      }
+    }
+
     for (const key in newObj) {
       if (key in newObj) {
         if (Array.isArray(newObj[key])) {
@@ -47,6 +57,8 @@ export function schemaToGeminiParameters<
 ): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
+  // Zod sometimes also makes an array of type (because of .nullish()),
+  // which needs cleaning up.
   const jsonSchema = removeAdditionalProperties(
     isZodSchema(schema) ? zodToJsonSchema(schema) : schema
   );

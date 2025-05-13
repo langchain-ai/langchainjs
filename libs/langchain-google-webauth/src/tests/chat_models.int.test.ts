@@ -305,6 +305,18 @@ const weatherTool = tool((_) => "no-op", {
   }),
 });
 
+const nullishWeatherTool = tool((_) => "no-op", {
+  name: "get_nullish_weather",
+  description:
+    "Get the weather of a specific location and return the temperature in Celsius.",
+  schema: z.object({
+    location: z
+      .string()
+      .nullish()
+      .describe("The name of city to get the weather for."),
+  }),
+});
+
 const calculatorTool = tool((_) => "no-op", {
   name: "calculator",
   description: "Calculate the result of a math expression.",
@@ -814,6 +826,26 @@ describe.each(testGeminiModelNames)(
       if (!result.tool_calls?.[0]) return;
       expect(result.tool_calls?.[0].name).toBe("calculator");
       expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+    });
+
+    test("Handle tools with nullish parameters", async () => {
+      const model = newChatGoogle();
+      const modelWithTools = model.bind({
+        tools: [nullishWeatherTool],
+      });
+
+      const result = await modelWithTools.invoke(
+        "Whats the weather like in paris today?"
+      );
+
+      console.log(result);
+
+      const func =
+        recorder?.request?.data?.tools?.[0]?.functionDeclarations?.[0];
+      expect(func).toBeDefined();
+      expect(func.name).toEqual("get_nullish_weather");
+      expect(func.parameters?.properties?.location?.type).toEqual("string");
+      expect(func.parameters?.properties?.location?.nullable).toEqual(true);
     });
 
     test(`stream tools`, async () => {

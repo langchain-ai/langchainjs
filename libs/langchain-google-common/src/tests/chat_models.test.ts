@@ -13,6 +13,7 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
 import { Serialized } from "@langchain/core/load/serializable";
+import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
@@ -1168,6 +1169,84 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(Array.isArray(parameters.required)).toBeTruthy();
     expect(parameters.required).toHaveLength(1);
     expect(parameters.required[0]).toBe("testName");
+  });
+
+  test("4. Functions Bind - zod request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
+      }),
+    });
+    const tools = [weatherTool];
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.bind({
+      tools,
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("get_weather");
+    expect(func.parameters?.required).toContain("location");
+    expect(func.parameters?.properties?.location?.type).toEqual("string");
+    expect(func.parameters?.properties?.location?.nullable).not.toBeDefined();
+
+    console.log(func);
+  });
+
+  test("4. Functions Bind - zod nullish request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const nullishWeatherTool = tool((_) => "no-op", {
+      name: "get_nullish_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z
+          .string()
+          .nullish()
+          .describe("The name of city to get the weather for."),
+      }),
+    });
+    const tools = [nullishWeatherTool];
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.bind({
+      tools,
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("get_nullish_weather");
+    expect(func.parameters?.properties?.location?.type).toEqual("string");
+    expect(func.parameters?.properties?.location?.nullable).toEqual(true);
   });
 
   test("4. Functions withStructuredOutput - Gemini format request", async () => {
