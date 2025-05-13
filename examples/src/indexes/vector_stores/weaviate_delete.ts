@@ -17,7 +17,10 @@ export async function run() {
     indexName: "Test",
     metadataKeys: ["foo"],
   };
-  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), weaviateArgs);
+  const store = await WeaviateStore.fromExistingIndex(
+    new OpenAIEmbeddings(),
+    weaviateArgs
+  );
   const collection = client.collections.get(weaviateArgs.indexName);
   const docs = [{ pageContent: "see ya!", metadata: { foo: "bar" } }];
 
@@ -58,10 +61,12 @@ export async function run() {
 
   // delete documents with filter
   await store.delete({
-    filter: collection.filter.byProperty("foo").equal("bar")
+    filter: collection.filter.byProperty("foo").equal("bar"),
   });
 
-  const results4 = await store.similaritySearch("hello world", 1, 
+  const results4 = await store.similaritySearch(
+    "hello world",
+    1,
     collection.filter.byProperty("foo").equal("bar")
   );
   console.log(results4);

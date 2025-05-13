@@ -37,10 +37,10 @@ test("WeaviateStore", async () => {
   ]);
 
   const results2 = await store.similaritySearch(
-      "hello world",
-      1,
-      Filters.and(collection.filter.byProperty("foo").equal("baz"))
-    );
+    "hello world",
+    1,
+    Filters.and(collection.filter.byProperty("foo").equal("baz"))
+  );
 
   expect(results2).toEqual([
     new Document({ pageContent: "hi there", metadata: { foo: "baz" } }),
@@ -162,14 +162,14 @@ test("WeaviateStore upsert + delete", async () => {
 
   expect(ids2).toEqual(ids);
   const results2 = await store.similaritySearch(
-      "hello world",
-      4,
-      Filters.and(
-        collection.filter
-          .byProperty("deletionTest")
-          .equal((createdAt + 1).toString())
-      )
-    );
+    "hello world",
+    4,
+    Filters.and(
+      collection.filter
+        .byProperty("deletionTest")
+        .equal((createdAt + 1).toString())
+    )
+  );
   expect(results2).toEqual([
     new Document({
       pageContent: "hello world upserted",
@@ -236,9 +236,9 @@ test("WeaviateStore delete with filter", async () => {
     filter: collection.filter.byProperty("foo").equal("bar"),
   });
   const results2 = await store.similaritySearch(
-      "hello world",
-      1,
-      collection.filter.byProperty("foo").equal("bar")
-    );
+    "hello world",
+    1,
+    collection.filter.byProperty("foo").equal("bar")
+  );
   expect(results2).toEqual([]);
 });
