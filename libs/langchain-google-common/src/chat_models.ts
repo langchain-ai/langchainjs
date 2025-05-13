@@ -196,6 +196,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   topK: number;
 
+  seed: number;
+
   presencePenalty: number;
 
   frequencyPenalty: number;

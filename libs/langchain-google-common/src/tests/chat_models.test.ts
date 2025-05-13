@@ -669,6 +669,53 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(caught).toBeTruthy();
   });
 
+  test("1. seed - default off", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).not.toHaveProperty("seed");
+  });
+
+  test("1. seed - value", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      seed: 6,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig.seed).toEqual(6);
+  });
+
   test("1. Reasoning - default off", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

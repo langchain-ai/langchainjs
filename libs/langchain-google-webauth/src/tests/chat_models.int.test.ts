@@ -118,6 +118,28 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
+  test("invoke seed", async () => {
+    const model = newChatGoogle({
+      seed: 6,
+    });
+    try {
+      const res = await model.invoke("What is 1 + 1?");
+      console.log(res);
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      console.log(aiMessage);
+      expect(aiMessage.content).toBeDefined();
+      expect(aiMessage.content.length).toBeGreaterThan(0);
+      expect(aiMessage.content[0]).toBeDefined();
+
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  });
+
   test("generate", async () => {
     const model = newChatGoogle();
     try {
@@ -566,6 +588,23 @@ describe.each(testGeminiModelNames)(
       // available tokens, this should be the case for how we're doing Gemini.
       expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
       expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
+    });
+
+    test("invoke seed", async () => {
+      const model = newChatGoogle({
+        seed: 6,
+      });
+      const res = await model.invoke("What is 1 + 1?");
+
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
+
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
+
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
     test(`generate`, async () => {

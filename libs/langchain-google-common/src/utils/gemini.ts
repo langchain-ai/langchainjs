@@ -1405,6 +1405,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       temperature: parameters.temperature,
       topK: parameters.topK,
       topP: parameters.topP,
+      seed: parameters.seed,
       presencePenalty: parameters.presencePenalty,
       frequencyPenalty: parameters.frequencyPenalty,
       maxOutputTokens: parameters.maxOutputTokens,

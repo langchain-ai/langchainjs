@@ -187,6 +187,11 @@ export interface GoogleAIModelParams {
   topK?: number;
 
   /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
+
+  /**
    * Presence penalty applied to the next token's logprobs
    * if the token has already been seen in the response.
    * This penalty is binary on/off and not dependant on the
@@ -551,6 +556,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
