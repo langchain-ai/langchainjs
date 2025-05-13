@@ -72,8 +72,32 @@ afterAll(async () => {
   await client.close();
 });
 
+/** adapted from langchain's python implementation
+ * see https://github.com/langchain-ai/langchain-mongodb/blob/6ae485fd576a26c882ebe277b66628ddbb440545/libs/langchain-mongodb/tests/utils.py#L54
+ * 
+ * When a search index is created, all documents are indexed before the collection is queryable
+ * with $vectorSearch.  However, when documents are added to a collection with an existing index,
+ * the writes will return before the search index is updated.  This class patches the `addDocuments()` 
+ * method to wait until queries return the expected number of results before returning.
+ */
+class PatchedVectorStore extends MongoDBAtlasVectorSearch {
+  async addDocuments(
+    documents: Document[],
+    options?: { ids?: string[] }
+  ): Promise<string[]> {
+    const docs = await super.addDocuments(documents, options);
+    for (;;) {
+      const results = await this.similaritySearch("sandwich", documents.length);
+      if (results.length === documents.length) {
+        return docs;
+      }
+      await setTimeout(1000);
+    }
+  }
+}
+
 test("MongoDBAtlasVectorSearch with external ids", async () => {
-  const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+  const vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
     collection,
   });
 
@@ -101,8 +125,6 @@ test("MongoDBAtlasVectorSearch with external ids", async () => {
     },
   ]);
 
-  // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
-  await setTimeout(5_000);
   const results: Document[] = await vectorStore.similaritySearch("Sandwich", 1);
 
   expect(results.length).toEqual(1);
@@ -135,15 +157,12 @@ test("MongoDBAtlasVectorSearch with external ids", async () => {
 
 test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
   const texts = ["foo", "foo", "foy"];
-  const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
+  const vectorStore = await PatchedVectorStore.fromTexts(
     texts,
     {},
     new OpenAIEmbeddings(),
     { collection, indexName: "default" }
   );
-
-  // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
-  await setTimeout(5000);
 
   const output = await vectorStore.maxMarginalRelevanceSearch("foo", {
     k: 10,
@@ -190,7 +209,7 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 });
 
 test("MongoDBAtlasVectorSearch upsert", async () => {
-  const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
+  const vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
     collection,
   });
 
@@ -206,8 +225,6 @@ test("MongoDBAtlasVectorSearch upsert", async () => {
     { pageContent: "That fence is purple.", metadata: { d: 1, e: 2 } },
   ]);
 
-  // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
-  await setTimeout(5000);
   const results: Document[] = await vectorStore.similaritySearch("Sandwich", 1);
 
   expect(results.length).toEqual(1);
@@ -219,8 +236,6 @@ test("MongoDBAtlasVectorSearch upsert", async () => {
     ids: [ids[2]],
   });
 
-  // we sleep 5 seconds to make sure the index in atlas has replicated the new documents
-  await setTimeout(5000);
   const results2: Document[] = await vectorStore.similaritySearch(
     "Sandwich",
     1
