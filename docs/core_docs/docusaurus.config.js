@@ -69,6 +69,12 @@ const config = {
         },
       }),
     }),
+    [
+      '@docusaurus/plugin-google-tag-manager',
+      {
+        containerId: 'GTM-NN9LVH7S',
+      },
+    ],
   ],
 
   presets: [
@@ -317,12 +323,7 @@ const config = {
     }),
 
   scripts: [
-    baseUrl + "js/google_analytics.js",
     baseUrl + "js/job_link.js",
-    {
-      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
-      async: true,
-    },
   ],
 
   customFields: {
