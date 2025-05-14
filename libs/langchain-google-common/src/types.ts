@@ -673,6 +673,7 @@ export interface GoogleAISafetyParams {
 export type GeminiJsonSchema = Record<string, unknown> & {
   properties?: Record<string, GeminiJsonSchema>;
   type: GeminiFunctionSchemaType;
+  nullable?: boolean;
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {
