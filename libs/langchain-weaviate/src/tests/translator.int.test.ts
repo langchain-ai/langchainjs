@@ -421,7 +421,7 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
     const query4 = await selfQueryRetriever.invoke(
       "Wau wau wau wau hello gello hello?"
     );
-    // console.log(query4); // query4 has to return empty array, since the default filter takes over with and filter
+    // query4 has to return empty array, since the default filter takes over with and filter
     expect(query4.length).toEqual(7);
   } finally {
     await client.collections.delete(indexName);
