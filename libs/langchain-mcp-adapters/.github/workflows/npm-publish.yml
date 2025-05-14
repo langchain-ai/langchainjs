@@ -1,0 +1,95 @@
+name: Publish to npm
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (patch, minor, major, or specific version)'
+        required: true
+        default: 'patch'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Version bump (automatic)
+        if: github.event_name == 'release'
+        run: |
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's/refs\/tags\/v//')
+          npm version $VERSION --no-git-tag-version
+
+      - name: Version bump (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Get current version before bump
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Try to bump version
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+          # Get new version after bump
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "New version: $NEW_VERSION"
+
+          # Check if this version already exists on npm
+          if npm view langchainjs-mcp-adapters@$NEW_VERSION version &> /dev/null; then
+            echo "Version $NEW_VERSION already exists on npm. Incrementing patch version."
+            # Reset to current version
+            npm version $CURRENT_VERSION --no-git-tag-version --allow-same-version
+            # Bump to next patch version
+            npm version patch --no-git-tag-version
+          fi
+
+          # Final version after all checks
+          FINAL_VERSION=$(node -p "require('./package.json').version")
+          echo "Final version to publish: $FINAL_VERSION"
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push version changes
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          git add package.json yarn.lock
+          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
+          git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
+          git push origin main
+          git push origin "v${NEW_VERSION}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

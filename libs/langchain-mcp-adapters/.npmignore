@@ -1,0 +1,49 @@
+# Source files
+src/
+
+# Examples
+examples/
+
+# Tests
+__tests__/
+*.test.ts
+jest.config.js
+
+# Development configs
+.eslintrc.js
+.eslintignore
+.prettierrc
+.prettierrc.json
+.prettierignore
+tsconfig.json
+.github/
+.husky/
+
+# Git files
+.git/
+.gitignore
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Coverage directory
+coverage/
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 
