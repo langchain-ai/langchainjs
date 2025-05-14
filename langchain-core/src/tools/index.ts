@@ -723,7 +723,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
 
 function _stringify(content: unknown): string {
   try {
-    return JSON.stringify(content, null, 2);
+    return JSON.stringify(content, null, 2) ?? "";
   } catch (_noOp) {
     return `${content}`;
   }
