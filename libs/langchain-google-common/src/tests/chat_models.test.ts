@@ -13,6 +13,7 @@ import {
 import { InMemoryStore } from "@langchain/core/stores";
 import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
 import { Serialized } from "@langchain/core/load/serializable";
+import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
@@ -173,6 +174,37 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(model.platform).toEqual("gai");
   });
 
+  test("platform vertexai true", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      apiKey: "test",
+      vertexai: true,
+    });
+
+    expect(model.platform).toEqual("gcp");
+  });
+
+  test("platform vertexai false", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      vertexai: false,
+    });
+
+    expect(model.platform).toEqual("gai");
+  });
+
   test("platform endpoint - gcp", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -194,6 +226,56 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     expect(record?.opts.url).toEqual(
       `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gcp location", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      location: "luna-central1",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://luna-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/luna-central1/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gcp global", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      location: "global",
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-pro:generateContent`
     );
   });
 
@@ -617,6 +699,53 @@ describe("Mock ChatGoogle - Gemini", () => {
       caught = true;
     }
     expect(caught).toBeTruthy();
+  });
+
+  test("1. seed - default off", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).not.toHaveProperty("seed");
+  });
+
+  test("1. seed - value", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      seed: 6,
+    });
+    await model.invoke(
+      "You roll two dice. What’s the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig.seed).toEqual(6);
   });
 
   test("1. Reasoning - default off", async () => {
@@ -1168,6 +1297,84 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(Array.isArray(parameters.required)).toBeTruthy();
     expect(parameters.required).toHaveLength(1);
     expect(parameters.required[0]).toBe("testName");
+  });
+
+  test("4. Functions Bind - zod request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const weatherTool = tool((_) => "no-op", {
+      name: "get_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z
+          .string()
+          .describe("The name of city to get the weather for."),
+      }),
+    });
+    const tools = [weatherTool];
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.bind({
+      tools,
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("get_weather");
+    expect(func.parameters?.required).toContain("location");
+    expect(func.parameters?.properties?.location?.type).toEqual("string");
+    expect(func.parameters?.properties?.location?.nullable).not.toBeDefined();
+
+    console.log(func);
+  });
+
+  test("4. Functions Bind - zod nullish request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const nullishWeatherTool = tool((_) => "no-op", {
+      name: "get_nullish_weather",
+      description:
+        "Get the weather of a specific location and return the temperature in Celsius.",
+      schema: z.object({
+        location: z
+          .string()
+          .nullish()
+          .describe("The name of city to get the weather for."),
+      }),
+    });
+    const tools = [nullishWeatherTool];
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.bind({
+      tools,
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("get_nullish_weather");
+    expect(func.parameters?.properties?.location?.type).toEqual("string");
+    expect(func.parameters?.properties?.location?.nullable).toEqual(true);
   });
 
   test("4. Functions withStructuredOutput - Gemini format request", async () => {

@@ -296,7 +296,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return MongoDBAtlasVectorSearch.fromDocuments(docs, embeddings, dbConfig);
+    return this.fromDocuments(docs, embeddings, dbConfig);
   }
 
   /**
