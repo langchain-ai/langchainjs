@@ -17,7 +17,7 @@ export interface ChatVertexAIInput extends ChatGoogleInput {}
  * export GOOGLE_VERTEX_AI_WEB_CREDENTIALS={"type":"service_account","project_id":"YOUR_PROJECT-12345",...}
  * ```
  *
- * ## [Constructor args](https://api.js.langchain.com/classes/langchain_community_chat_models_googlevertexai_web.ChatGoogleVertexAI.html#constructor)
+ * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_google_vertexai_web.index.ChatVertexAI.html#constructor)
  *
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_google_common_types.GoogleAIBaseLanguageModelCallOptions.html)
  *
