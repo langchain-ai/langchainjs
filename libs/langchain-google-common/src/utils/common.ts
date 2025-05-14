@@ -166,6 +166,7 @@ export function copyAIModelParamsInto(
     reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.seed = options?.seed ?? params?.seed ?? target.seed;
   ret.presencePenalty =
     options?.presencePenalty ??
     params?.presencePenalty ??

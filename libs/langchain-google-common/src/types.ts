@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {
@@ -185,6 +191,11 @@ export interface GoogleAIModelParams {
    * among the 3 most probable tokens (using temperature).
    */
   topK?: number;
+
+  /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
 
   /**
    * Presence penalty applied to the next token's logprobs
@@ -551,6 +562,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
