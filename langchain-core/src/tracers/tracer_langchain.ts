@@ -194,12 +194,12 @@ export class LangChainTracer
     try {
       return (
         // The type cast here provides forward compatibility. Old versions of LangSmith will just
-        // ignore the throwOnError arg.
+        // ignore the permitAbsentRunTree arg.
         (
           getCurrentRunTree as (
-            throwOnError: boolean
-          ) => ReturnType<typeof getCurrentRunTree>
-        )(false)
+            permitAbsentRunTree: boolean
+          ) => ReturnType<typeof getCurrentRunTree> | undefined
+        )(true)
       );
     } catch {
       return undefined;
