@@ -1199,7 +1199,6 @@ export class CallbackManager
     options?: CallbackManagerOptions
   ) {
     let callbackManager: CallbackManager | undefined;
-    let needsCopy = true;
     if (inheritableHandlers || localHandlers) {
       if (Array.isArray(inheritableHandlers) || !inheritableHandlers) {
         callbackManager = new CallbackManager();
@@ -1207,19 +1206,16 @@ export class CallbackManager
           inheritableHandlers?.map(ensureHandler) ?? [],
           true
         );
-        needsCopy = false; // we just created a fresh one, no need to go copying it
       } else {
         callbackManager = inheritableHandlers;
       }
 
-      if (needsCopy) {
-        callbackManager = callbackManager.copy(
-          Array.isArray(localHandlers)
-            ? localHandlers.map(ensureHandler)
-            : localHandlers?.handlers,
-          false
-        );
-      }
+      callbackManager = callbackManager.copy(
+        Array.isArray(localHandlers)
+          ? localHandlers.map(ensureHandler)
+          : localHandlers?.handlers,
+        false
+      );
     }
 
     const verboseEnabled =
