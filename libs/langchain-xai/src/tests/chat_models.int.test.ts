@@ -25,7 +25,7 @@ test("invoke with stop sequence", async () => {
     maxRetries: 0,
   });
   const message = new HumanMessage("Count to ten.");
-  const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
+  const res = await chat.withConfig({ stop: ["5", "five"] }).invoke([message]);
   // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
@@ -72,82 +72,7 @@ test("invoke with bound tools", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
-    .bind({
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "get_current_weather",
-            description: "Get the current weather in a given location",
-            parameters: {
-              type: "object",
-              properties: {
-                location: {
-                  type: "string",
-                  description: "The city and state, e.g. San Francisco, CA",
-                },
-                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-              },
-              required: ["location"],
-            },
-          },
-        },
-      ],
-      tool_choice: "auto",
-    })
-    .invoke([message]);
-  // console.log(JSON.stringify(res));
-  expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
-  expect(
-    JSON.parse(
-      res.additional_kwargs?.tool_calls?.[0].function.arguments ?? "{}"
-    )
-  ).toEqual(res.tool_calls?.[0].args);
-});
-
-test("stream with bound tools, yielding a single chunk", async () => {
-  const chat = new ChatXAI({
-    maxRetries: 0,
-  });
-  const message = new HumanMessage("What is the current weather in Hawaii?");
-  const stream = await chat
-    .bind({
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "get_current_weather",
-            description: "Get the current weather in a given location",
-            parameters: {
-              type: "object",
-              properties: {
-                location: {
-                  type: "string",
-                  description: "The city and state, e.g. San Francisco, CA",
-                },
-                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-              },
-              required: ["location"],
-            },
-          },
-        },
-      ],
-      tool_choice: "auto",
-    })
-    .stream([message]);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  for await (const chunk of stream) {
-    // console.log(JSON.stringify(chunk));
-  }
-});
-
-test("Few shotting with tool calls", async () => {
-  const chat = new ChatXAI({
-    model: "grok-2-1212",
-    temperature: 0,
-  }).bind({
-    tools: [
+    .bindTools([
       {
         type: "function",
         function: {
@@ -166,9 +91,79 @@ test("Few shotting with tool calls", async () => {
           },
         },
       },
-    ],
-    tool_choice: "auto",
+    ])
+    .withConfig({ tool_choice: "auto" })
+    .invoke([message]);
+  // console.log(JSON.stringify(res));
+  expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
+  expect(
+    JSON.parse(
+      res.additional_kwargs?.tool_calls?.[0].function.arguments ?? "{}"
+    )
+  ).toEqual(res.tool_calls?.[0].args);
+});
+
+test("stream with bound tools, yielding a single chunk", async () => {
+  const chat = new ChatXAI({
+    maxRetries: 0,
   });
+  const message = new HumanMessage("What is the current weather in Hawaii?");
+  const stream = await chat
+    .bindTools([
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ])
+    .withConfig({ tool_choice: "auto" })
+    .stream([message]);
+  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @ts-expect-error unused var
+  for await (const chunk of stream) {
+    // console.log(JSON.stringify(chunk));
+  }
+});
+
+test("Few shotting with tool calls", async () => {
+  const chat = new ChatXAI({
+    model: "grok-2-1212",
+    temperature: 0,
+  })
+    .bindTools([
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            },
+            required: ["location"],
+          },
+        },
+      },
+    ])
+    .withConfig({ tool_choice: "auto" });
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({

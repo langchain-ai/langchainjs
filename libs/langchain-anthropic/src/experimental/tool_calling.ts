@@ -411,7 +411,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
         keyName: functionName,
       });
     }
-    const llm = this.bind({
+    const llm = this.withConfig({
       tools,
       tool_choice: force
         ? {

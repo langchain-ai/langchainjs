@@ -650,30 +650,28 @@ describe("Tests for chat", () => {
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
       });
 
-      const modelWithTools = service.bind({
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "calculator",
-              description: "Can perform mathematical operations.",
-              parameters: {
-                type: "object",
-                properties: {
-                  operation: {
-                    type: "string",
-                    description: "The type of operation to execute.",
-                    enum: ["add", "subtract", "multiply", "divide"],
-                  },
-                  number1: { type: "number", description: "First integer" },
-                  number2: { type: "number", description: "Second integer" },
+      const modelWithTools = service.bindTools([
+        {
+          type: "function",
+          function: {
+            name: "calculator",
+            description: "Can perform mathematical operations.",
+            parameters: {
+              type: "object",
+              properties: {
+                operation: {
+                  type: "string",
+                  description: "The type of operation to execute.",
+                  enum: ["add", "subtract", "multiply", "divide"],
                 },
-                required: ["number1", "number2"],
+                number1: { type: "number", description: "First integer" },
+                number2: { type: "number", description: "Second integer" },
               },
+              required: ["number1", "number2"],
             },
           },
-        ],
-      });
+        },
+      ]);
       const res = await modelWithTools.invoke(
         "You are bad at calculations and need to use calculator at all times. What is 32 * 122"
       );

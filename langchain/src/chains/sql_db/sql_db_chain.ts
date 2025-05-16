@@ -330,7 +330,7 @@ export async function createSqlQueryChain({
       return newInputs;
     },
     promptToUse,
-    llm.bind({ stop: ["\nSQLResult:"] }),
+    llm.withConfig({ stop: ["\nSQLResult:"] }),
     new StringOutputParser(),
     strip,
   ]);

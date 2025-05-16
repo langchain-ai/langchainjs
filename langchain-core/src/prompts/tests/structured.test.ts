@@ -98,7 +98,7 @@ test("Test format", async () => {
 
   await expect(revivedChain.invoke({})).resolves.toEqual(schema);
 
-  const boundModel = model.bind({ runName: "boundModel" });
+  const boundModel = model.withConfig({ runName: "boundModel" });
 
   const chainWithBoundModel = prompt.pipe(boundModel);
 

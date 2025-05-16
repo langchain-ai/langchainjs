@@ -40,11 +40,11 @@ export type { AzureOpenAIInput };
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -296,7 +296,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>JSON Object Response Format</strong></summary>
  *
  * ```typescript
- * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlm = llm.withConfig({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );

@@ -2,7 +2,6 @@ import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
-import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -31,9 +30,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
-});
+const modelWithFunctions = model.bindTools(tools);
 
 const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
   steps.flatMap(({ action, observation }) => {

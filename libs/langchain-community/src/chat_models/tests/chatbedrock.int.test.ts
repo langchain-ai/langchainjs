@@ -415,7 +415,7 @@ test.skip("withStructuredOutput", async () => {
   expect(response.city.toLowerCase()).toBe("san francisco");
 });
 
-test(".bind tools", async () => {
+test(".withConfig tools", async () => {
   const weatherTool = z
     .object({
       city: z.string().describe("The city to get the weather for"),
@@ -431,7 +431,7 @@ test(".bind tools", async () => {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         name: "weather_tool",
@@ -469,7 +469,7 @@ test.skip(".bindTools with openai tool format", async () => {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         type: "function",
@@ -508,7 +508,7 @@ test("Streaming tool calls with Anthropic", async () => {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         name: "weather_tool",

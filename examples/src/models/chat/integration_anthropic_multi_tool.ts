@@ -34,9 +34,7 @@ const tools = [
 const model = new ChatAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
   model: "claude-3-opus-20240229",
-}).bind({
-  tools,
-});
+}).bindTools(tools);
 
 const prompt = ChatPromptTemplate.fromMessages([
   [

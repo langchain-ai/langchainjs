@@ -152,7 +152,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle().bind({ tools });
+    const model = new ChatGoogle().bindTools(tools);
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -196,7 +196,7 @@ describe("GAuth Chat", () => {
         ],
       },
     ];
-    const model = new ChatGoogle().bind({ tools });
+    const model = new ChatGoogle().bindTools(tools);
     const toolResult = {
       testPassed: true,
     };

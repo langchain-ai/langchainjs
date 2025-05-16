@@ -429,7 +429,7 @@ describe("response_format: json_schema", () => {
   it("can invoke", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
-    }).bind({
+    }).withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -454,7 +454,7 @@ describe("response_format: json_schema", () => {
   it("can stream", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
-    }).bind({
+    }).withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -486,7 +486,7 @@ describe("response_format: json_schema", () => {
   it("can invoke with a zod schema passed in", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
-    }).bind({
+    }).withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -511,7 +511,7 @@ describe("response_format: json_schema", () => {
   it("can stream with a zod schema passed in", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
-    }).bind({
+    }).withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {

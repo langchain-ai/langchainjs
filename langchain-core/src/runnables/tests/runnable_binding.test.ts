@@ -7,7 +7,7 @@ import { FakeChatModel, FakeStreamingLLM } from "../../utils/testing/index.js";
 test("Bind kwargs to a runnable", async () => {
   const llm = new FakeChatModel({});
   const result = await llm
-    .bind({ stop: ["testing"] })
+    .withConfig({ stop: ["testing"] })
     .pipe(new StringOutputParser())
     .invoke("Hi there!");
   console.log(result);
@@ -17,7 +17,7 @@ test("Bind kwargs to a runnable", async () => {
 test("Bind kwargs to a runnable with a batch call", async () => {
   const llm = new FakeChatModel({});
   const result = await llm
-    .bind({ stop: ["testing"] })
+    .withConfig({ stop: ["testing"] })
     .pipe(new StringOutputParser())
     .batch(["Hi there!", "hey hey", "Hi there!", "hey hey"]);
   console.log(result);
@@ -25,7 +25,7 @@ test("Bind kwargs to a runnable with a batch call", async () => {
 });
 
 test("Stream with RunnableBinding", async () => {
-  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
+  const llm = new FakeStreamingLLM({}).withConfig({ stop: ["dummy"] });
   const stream = await llm.pipe(new StringOutputParser()).stream("Hi there!");
   const chunks: string[] = [];
   for await (const chunk of stream) {
@@ -37,8 +37,8 @@ test("Stream with RunnableBinding", async () => {
 });
 
 test("Stream through a RunnableBinding if the bound runnable implements transform", async () => {
-  const llm = new FakeStreamingLLM({}).bind({ stop: ["dummy"] });
-  const outputParser = new StringOutputParser().bind({ callbacks: [] });
+  const llm = new FakeStreamingLLM({}).withConfig({ stop: ["dummy"] });
+  const outputParser = new StringOutputParser().withConfig({ callbacks: [] });
   const stream = await llm.pipe(outputParser).stream("Hi there!");
   const chunks: string[] = [];
   for await (const chunk of stream) {

@@ -1183,11 +1183,11 @@ export interface ChatOpenAIFields
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -1445,7 +1445,7 @@ export interface ChatOpenAIFields
  * <summary><strong>JSON Object Response Format</strong></summary>
  *
  * ```typescript
- * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlm = llm.withConfig({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
@@ -1637,7 +1637,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1674,7 +1674,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1963,7 +1963,7 @@ export class ChatOpenAI<
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) =>
         isBuiltInTool(tool)
           ? tool
@@ -3146,7 +3146,7 @@ export class ChatOpenAI<
     }
 
     if (method === "jsonMode") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
@@ -3155,7 +3155,7 @@ export class ChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else if (method === "jsonSchema") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: {
           type: "json_schema",
           json_schema: {
@@ -3184,7 +3184,7 @@ export class ChatOpenAI<
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,
@@ -3226,7 +3226,7 @@ export class ChatOpenAI<
             parameters: schema,
           };
         }
-        llm = this.bind({
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,

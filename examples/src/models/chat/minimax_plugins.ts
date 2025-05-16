@@ -9,7 +9,7 @@ const model = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
+}).withConfig({
   plugins: ["plugin_web_search"],
 });
 

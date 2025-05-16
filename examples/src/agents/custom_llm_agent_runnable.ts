@@ -13,7 +13,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
  * Instantiate the LLM and bind the stop token
  * @important The stop token must be set, if not the LLM will happily continue generating text forever.
  */
-const model = new OpenAI({ temperature: 0 }).bind({
+const model = new OpenAI({ temperature: 0 }).withConfig({
   stop: ["\nObservation"],
 });
 /** Define the tools */

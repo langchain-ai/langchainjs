@@ -1218,7 +1218,9 @@ export type RunnableBindingArgs<
    */
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
-  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
+  configFactories?: Array<
+    (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
+  >;
 };
 
 /**

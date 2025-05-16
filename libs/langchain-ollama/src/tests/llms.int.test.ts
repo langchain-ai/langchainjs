@@ -116,7 +116,7 @@ test("Test Ollama with an image", async () => {
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const model = new Ollama({
     model: "llava",
-  }).bind({
+  }).withConfig({
     images: [imageData.toString("base64")],
   });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment

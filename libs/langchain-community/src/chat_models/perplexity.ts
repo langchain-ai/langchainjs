@@ -411,7 +411,7 @@ export class ChatPerplexity
         `Perplexity only supports "jsonSchema" as a structured output method.`
       );
     }
-    const llm: Runnable<BaseLanguageModelInput> = this.bind({
+    const llm: Runnable<BaseLanguageModelInput> = this.withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {

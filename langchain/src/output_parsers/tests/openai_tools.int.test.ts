@@ -21,18 +21,16 @@ test("Extraction", async () => {
   const model = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     temperature: 0,
-  }).bind({
-    tools: [
-      {
-        type: "function",
-        function: {
-          name: "joke",
-          description: "A joke",
-          parameters: isZodSchema(schema) ? zodToJsonSchema(schema) : schema,
-        },
+  }).bindTools([
+    {
+      type: "function",
+      function: {
+        name: "joke",
+        description: "A joke",
+        parameters: isZodSchema(schema) ? zodToJsonSchema(schema) : schema,
       },
-    ],
-  });
+    },
+  ]);
 
   const parser = new JsonOutputToolsParser();
   const chain = prompt.pipe(model).pipe(parser);

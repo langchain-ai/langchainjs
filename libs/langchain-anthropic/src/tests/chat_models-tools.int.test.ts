@@ -203,9 +203,7 @@ test("Can bind & invoke StructuredTools", async () => {
 });
 
 test("Can bind & invoke AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
-  });
+  const modelWithTools = model.bindTools([anthropicTool]);
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
@@ -232,8 +230,7 @@ test("Can bind & invoke AnthropicTools", async () => {
 });
 
 test("Can bind & stream AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -303,8 +300,7 @@ test("stream events with no tool calls has string message content", async () => 
 });
 
 test("stream events with tool calls has raw message content", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",

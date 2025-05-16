@@ -216,11 +216,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({
-      modelName,
-    }).bind({
-      tools,
-    });
+    const model = new ChatVertexAI({ modelName }).bindTools(tools);
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -264,11 +260,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({
-      modelName,
-    }).bind({
-      tools,
-    });
+    const model = new ChatVertexAI({ modelName }).bindTools(tools);
     const toolResult = {
       testPassed: true,
     };
@@ -485,8 +477,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatVertexAI({
       modelName,
     });
-    const modelWithTools = model.bind({
-      tools: [calculatorTool, weatherTool],
+    const modelWithTools = model.bindTools([calculatorTool, weatherTool], {
       tool_choice: "calculator",
     });
 
@@ -785,9 +776,7 @@ describe.each(testAnthropicModelNames)(
         modelName,
         callbacks,
       });
-      const modelWithTools = model.bind({
-        tools: [weatherTool],
-      });
+      const modelWithTools = model.bindTools([weatherTool]);
 
       const result = await modelWithTools.invoke(
         "Whats the weather like in paris today?"

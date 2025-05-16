@@ -125,7 +125,7 @@ test.skip("Test Ollama with an image", async () => {
   const model = new Ollama({
     model: "llava",
     baseUrl: "http://127.0.0.1:11434",
-  }).bind({
+  }).withConfig({
     images: [imageData.toString("base64")],
   });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment

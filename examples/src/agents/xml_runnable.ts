@@ -20,7 +20,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
 const model = new ChatAnthropic({
   model: "claude-3-opus-20240229",
   temperature: 0,
-}).bind({
+}).withConfig({
   stop: ["</tool_input>", "</final_answer>"],
 });
 /** Define your list of tools. */

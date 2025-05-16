@@ -93,7 +93,7 @@ const runnableAgent = RunnableSequence.from([
   },
   prompt,
   // Important, otherwise the answer is only hallucinated
-  model.bind({ stop: ["\nObservation"] }),
+  model.withConfig({ stop: ["\nObservation"] }),
   outputParser,
 ]);
 

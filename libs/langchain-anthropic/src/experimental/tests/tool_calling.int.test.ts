@@ -39,7 +39,7 @@ test.skip("Test ChatAnthropicTools with tools", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
@@ -78,7 +78,7 @@ test.skip("Test ChatAnthropicTools with a forced function call", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
@@ -133,7 +133,7 @@ test.skip("ChatAnthropicTools with Zod schema", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
@@ -180,7 +180,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",

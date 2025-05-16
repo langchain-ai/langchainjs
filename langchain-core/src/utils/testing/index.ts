@@ -302,7 +302,7 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     });
     next.tools = merged;
 
-    return next.bind({ tools: wrapped } as BaseChatModelCallOptions);
+    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
   }
 
   async _generate(

@@ -32,10 +32,8 @@ test.skip("Test HuggingFace with stop sequence", async () => {
     temperature: 0.1,
     topP: 0.5,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
-  const res = await model
-    .bind({
+  await model
+    .withConfig({
       stop: ["ramento"],
     })
     .invoke(`What is the capital of California?`);

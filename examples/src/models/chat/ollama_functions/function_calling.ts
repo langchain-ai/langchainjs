@@ -1,11 +1,11 @@
-import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
+import { ChatOllama } from "@langchain/ollama";
 import { HumanMessage } from "@langchain/core/messages";
 
-const model = new OllamaFunctions({
+const model = new ChatOllama({
   temperature: 0.1,
   model: "mistral",
-}).bind({
-  functions: [
+})
+  .bindTools([
     {
       name: "get_current_weather",
       description: "Get the current weather in a given location",
@@ -21,12 +21,11 @@ const model = new OllamaFunctions({
         required: ["location"],
       },
     },
-  ],
-  // You can set the `function_call` arg to force the model to use a function
-  function_call: {
-    name: "get_current_weather",
-  },
-});
+  ])
+  .withConfig({
+    // You can set the `tool_choice` arg to force the model to use a function
+    tool_choice: "get_current_weather",
+  });
 
 const response = await model.invoke([
   new HumanMessage({

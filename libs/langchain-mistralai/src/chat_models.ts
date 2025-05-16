@@ -70,6 +70,7 @@ import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
+  RunnableBinding,
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
@@ -529,22 +530,19 @@ function _convertToolToMistralTool(
  * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_mistralai.ChatMistralAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
- *   stop: ["\n"],
- *   tools: [...],
- * });
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bindTools([...]) // tools array
+ *   .withConfig({
+ *     stop: ["\n"], // other call options
+ *   });
  *
- * // When calling `.bindTools`, call options should be passed via the second argument
- * const llmWithTools = llm.bindTools(
- *   [...],
- *   {
- *     tool_choice: "auto",
- *   }
- * );
+ * // You can also bind tools and call options like this
+ * const llmWithTools = llm.bindTools([...], {
+ *   tool_choice: "auto",
+ * });
  * ```
  *
  * ## Examples
@@ -995,10 +993,15 @@ export class ChatMistralAI<
     tools: ChatMistralAIToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    return this.bind({
-      tools: _convertToolToMistralTool(tools),
-      ...kwargs,
-    } as CallOptions);
+    const mistralTools = _convertToolToMistralTool(tools);
+    return new RunnableBinding({
+      bound: this,
+      kwargs: {
+        ...(kwargs ?? {}),
+        tools: mistralTools,
+      } as Partial<CallOptions>,
+      config: {},
+    });
   }
 
   /**
@@ -1330,7 +1333,7 @@ export class ChatMistralAI<
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
@@ -1343,17 +1346,16 @@ export class ChatMistralAI<
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: {
+              name: functionName,
+              description: asJsonSchema.description,
+              parameters: asJsonSchema,
             },
-          ],
+          },
+        ]).withConfig({
           tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
@@ -1377,13 +1379,12 @@ export class ChatMistralAI<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: openAIFunctionDefinition,
+          },
+        ]).withConfig({
           tool_choice: "any",
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({

@@ -116,9 +116,11 @@ export async function createOpenAIToolsAgent({
       ].join("\n")
     );
   }
-  const modelWithTools = llm.bind({
-    tools: tools.map((tool) => convertToOpenAITool(tool)),
-  });
+  const modelWithTools = llm.bindTools
+    ? llm.bindTools(tools)
+    : llm.withConfig({
+        tools: tools.map((tool) => convertToOpenAITool(tool)),
+      });
   const agent = AgentRunnableSequence.fromRunnables(
     [
       RunnablePassthrough.assign({
