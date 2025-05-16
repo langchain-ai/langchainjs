@@ -8,11 +8,11 @@
   "packageManager": "yarn@3.5.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/langchain-ai/langchainjs-mcp-adapters.git"
+    "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs-mcp-adapters#readme",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/",
   "bugs": {
-    "url": "https://github.com/langchain-ai/langchainjs-mcp-adapters/issues"
+    "url": "https://github.com/langchain-ai/langchainjs/issues"
   },
   "scripts": {
     "build": "run-s \"build:main\" \"build:examples\"",
@@ -30,12 +30,6 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   },
-  "lint-staged": {
-    "*.{js,ts}": [
-      "eslint --fix --ignore-pattern 'dist/**' --ignore-pattern 'examples/**'",
-      "prettier --write"
-    ]
-  },
   "keywords": [
     "langchain",
     "mcp",
@@ -43,7 +37,7 @@
     "ai",
     "tools"
   ],
-  "author": "Ravi Kiran Vemula",
+  "author": "LangChain",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.2",
@@ -80,8 +74,6 @@
     "eslint-plugin-vitest": "^0.5.4",
     "eventsource": "^3.0.6",
     "express": "^5.1.0",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.3",
     "release-it": "^17.6.0",
