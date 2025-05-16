@@ -5,7 +5,7 @@ const prompt = PromptTemplate.fromTemplate(`Tell me a joke about {subject}`);
 
 const model = new ChatOpenAI({});
 
-const chain = prompt.pipe(model.bind({ stop: ["\n"] }));
+const chain = prompt.pipe(model.withConfig({ stop: ["\n"] }));
 
 const result = await chain.invoke({ subject: "bears" });
 

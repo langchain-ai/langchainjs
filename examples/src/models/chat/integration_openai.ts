@@ -58,7 +58,7 @@ AIMessage {
 const jsonModeModel = new ChatOpenAI({
   model: "gpt-4-1106-preview",
   maxTokens: 128,
-}).bind({
+}).withConfig({
   response_format: {
     type: "json_object",
   },
