@@ -246,7 +246,7 @@ test.skip("Function calling ", async () => {
         content: "MM Assistant is an AI Assistant developed by minimax.",
       },
     ],
-  }).bind({
+  }).withConfig({
     functions: [weatherFunction],
   });
 
@@ -283,7 +283,7 @@ test.skip("Test ChatMinimax Function calling ", async () => {
         content: "MM Assistant is an AI Assistant developed by minimax.",
       },
     ],
-  }).bind({
+  }).withConfig({
     functions: [weatherFunction],
   });
 
@@ -307,7 +307,7 @@ test.skip("Test ChatMinimax Glyph", async () => {
         content: "MM Assistant is an AI Assistant developed by minimax.",
       },
     ],
-  }).bind({
+  }).withConfig({
     replyConstraints: {
       sender_type: "BOT",
       sender_name: "MM Assistant",
@@ -339,7 +339,7 @@ test.skip("Test ChatMinimax Plugins", async () => {
         content: "MM Assistant is an AI Assistant developed by minimax.",
       },
     ],
-  }).bind({
+  }).withConfig({
     plugins: ["plugin_web_search"],
   });
 
