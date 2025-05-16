@@ -345,7 +345,7 @@ export async function createStructuredChatAgent({
     tool_names: toolNames.join(", "),
   });
   // TODO: Add .bind to core runnable interface.
-  const llmWithStop = (llm as BaseLanguageModel).bind({
+  const llmWithStop = (llm as BaseLanguageModel).withConfig({
     stop: ["Observation"],
   });
   const agent = AgentRunnableSequence.fromRunnables(

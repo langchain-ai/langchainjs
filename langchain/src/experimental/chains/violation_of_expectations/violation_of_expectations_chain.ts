@@ -238,10 +238,11 @@ export class ViolationOfExpectationsChain
   ): Promise<PredictNextUserMessageResponse> {
     const messageString = this.getChatHistoryString(chatHistory);
 
-    const llmWithFunctions = this.llm.bind({
-      functions: [PREDICT_NEXT_USER_MESSAGE_FUNCTION],
-      function_call: { name: PREDICT_NEXT_USER_MESSAGE_FUNCTION.name },
-    });
+    const llmWithFunctions = this.llm
+      .bindTools([PREDICT_NEXT_USER_MESSAGE_FUNCTION])
+      .withConfig({
+        function_call: { name: PREDICT_NEXT_USER_MESSAGE_FUNCTION.name },
+      });
 
     const chain = PREDICT_NEXT_USER_MESSAGE_PROMPT.pipe(llmWithFunctions).pipe(
       this.jsonOutputParser
@@ -330,10 +331,11 @@ export class ViolationOfExpectationsChain
     userResponse?: BaseMessage;
     runManager?: CallbackManagerForChainRun;
   }): Promise<GetPredictionViolationsResponse> {
-    const llmWithFunctions = this.llm.bind({
-      functions: [PREDICTION_VIOLATIONS_FUNCTION],
-      function_call: { name: PREDICTION_VIOLATIONS_FUNCTION.name },
-    });
+    const llmWithFunctions = this.llm
+      .bindTools([PREDICTION_VIOLATIONS_FUNCTION])
+      .withConfig({
+        function_call: { name: PREDICTION_VIOLATIONS_FUNCTION.name },
+      });
 
     const chain = PREDICTION_VIOLATIONS_PROMPT.pipe(llmWithFunctions).pipe(
       this.jsonOutputParser
