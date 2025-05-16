@@ -538,7 +538,7 @@ describe("reasoning summaries", () => {
           environment: "browser",
         },
       ])
-      .bind({
+      .withConfig({
         truncation: "auto",
       });
 
