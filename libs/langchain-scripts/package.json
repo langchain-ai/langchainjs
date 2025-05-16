@@ -21,8 +21,9 @@
   },
   "scripts": {
     "build": "yarn clean && yarn turbo:command build:internal --filter=@langchain/scripts",
-    "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated",
-    "move:artifacts": "rimraf dist && mkdir -p dist && mv dist_build/* dist/",
+    "build:internal": "tsc --project ./tsconfig.build.json && yarn move:artifacts && yarn build:generated && yarn copy:template",
+    "move:artifacts": "rimraf dist && mkdir -p dist/build && cp -r dist_build/* dist/ && rimraf dist_build",
+    "copy:template": "cp src/build/tsup.config.template.ts dist/build/",
     "build:generated": "node bin/build.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "yarn turbo:command build --filter=@langchain/scripts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
@@ -37,7 +38,8 @@
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\"",
-    "create:integration:doc": "node dist/cli/docs/index.js"
+    "create:integration:doc": "node dist/cli/docs/index.js",
+    "check:types": "tsc --noEmit"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -52,13 +54,14 @@
     "rimraf": "^5.0.1",
     "rollup": "^4.5.2",
     "ts-morph": "^21.0.1",
+    "tsup": "^8.4.0",
     "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
-    "@tsconfig/recommended": "^1.0.3",
+    "@tsconfig/recommended": "^1.0.8",
     "@types/lodash": "^4",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
