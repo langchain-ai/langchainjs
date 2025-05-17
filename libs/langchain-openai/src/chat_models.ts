@@ -1917,7 +1917,6 @@ export class ChatOpenAI<
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.useResponsesApi = fields?.useResponsesApi ?? this.useResponsesApi;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
-    if (this.model === "o1") this.disableStreaming = true;
 
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;

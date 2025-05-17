@@ -1188,7 +1188,7 @@ test("Can stream o1-mini requests", async () => {
   expect(numChunks).toBeGreaterThan(3);
 });
 
-test("Doesn't stream o1 requests", async () => {
+test("Can stream o1 requests", async () => {
   const model = new ChatOpenAI({
     model: "o1",
   });
@@ -1212,7 +1212,7 @@ test("Doesn't stream o1 requests", async () => {
     expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
   }
 
-  expect(numChunks).toBe(1);
+  expect(numChunks).toBeGreaterThan(3);
 });
 
 test("Allows developer messages with o1", async () => {
