@@ -455,7 +455,7 @@ export class PrismaVectorStore<
             case OpMap.isNotNull:
               return this.Prisma.sql`${colRaw} ${opRaw}`;
             default:
-              return this.Prisma.sql`${colRaw} ${opRaw} ${value}`;
+              return this.Prisma.sql`${colRaw}::text ${opRaw} ${value}`;
           }
         })
       ),
