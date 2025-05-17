@@ -1,0 +1,79 @@
+# Oracle AI Vector Search: Document Processing
+
+## Load Documents
+
+Users have the flexibility to load documents from either the Oracle Database, a file system, or both, by appropriately configuring the loader parameters. For comprehensive details on these parameters, please consult the [Oracle AI Vector Search Guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_vector_chain1.html#GUID-73397E89-92FB-48ED-94BB-1AD960C4EA1F).
+
+A significant advantage of utilizing OracleDocLoader is its capability to process over 150 distinct file formats, eliminating the need for multiple loaders for different document types. For a complete list of the supported formats, please refer to the [Oracle Text Supported Document Formats](https://docs.oracle.com/en/database/oracle/oracle-database/23/ccref/oracle-text-supported-document-formats.html).
+
+Below is a sample code snippet that demonstrates how to use OracleDocLoader
+
+```typescript
+import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+
+/*
+// loading a local file
+loader_params = {"file": "<file>"};
+
+// loading from a local directory
+loader_params = {"dir": "<directory>"};
+*/
+
+// loading from Oracle Database table
+// make sure you have the table with this specification
+const loader_params = {
+  "owner": "testuser",
+  "tablename": "demo_tab",
+  "colname": "data",
+};
+
+// load the docs
+const loader = new OracleDocLoader(conn, loader_params);
+const docs = await loader.load();
+
+// verify
+console.log(`Number of docs loaded: ${docs.length}`);
+//console.log(`Document-0: ${docs[0].pageContent}`);
+```
+
+## Split Documents
+
+The documents may vary in size, ranging from small to very large. Users often prefer to chunk their documents into smaller sections to facilitate the generation of embeddings. A wide array of customization options is available for this splitting process. For comprehensive details regarding these parameters, please consult the [Oracle AI Vector Search Guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_vector_chain1.html#GUID-4E145629-7098-4C7C-804F-FC85D1F24240).
+
+Below is a sample code illustrating how to implement this:
+
+```typescript
+import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
+
+/*
+// Some examples
+// split by chars, max 500 chars
+splitter_params = {"split": "chars", "max": 500, "normalize": "all"};
+
+// split by words, max 100 words
+splitter_params = {"split": "words", "max": 100, "normalize": "all"};
+
+// split by sentence, max 20 sentences
+splitter_params = {"split": "sentence", "max": 20, "normalize": "all"};
+*/
+
+// split by default parameters
+const splitter_params = {"normalize": "all"};
+
+// get the splitter instance
+const splitter = new OracleTextSplitter(conn, splitter_params);
+
+let list_chunks = [];
+for (let[, doc]of docs.entries()) {
+  let chunks = await splitter.splitText(doc.pageContent);
+  list_chunks.push(chunks);
+}
+
+// verify
+console.log(`Number of Chunks: ${list_chunks.length}`);
+//console.log(`Chunk-0: ${list_chunks[0]}`); // content
+```
+
+## End to End Demo
+
+Please refer to our complete demo guide [Oracle AI Vector Search End-to-End Demo Guide](https://github.com/langchain-ai/langchainjs/tree/main/cookbook/oracleai.mdx) to build an end to end RAG pipeline with the help of Oracle AI Vector Search.
