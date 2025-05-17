@@ -1,0 +1,54 @@
+# UNREACHABLE_NODE
+
+LangGraph cannot identify an incoming edge to one of your nodes. Check to ensure you have added sufficient edges when constructing your graph.
+
+Alternatively, if you are returning [`Command`](/docs/how_to/command/) instances from your nodes to make your graphs edgeless, you will need to add an additional `ends` parameter when calling `addNode` to help LangGraph determine the destinations for your node.
+
+Here's an example:
+
+```typescript
+import { Annotation, Command } from "@langchain/langgraph";
+
+const StateAnnotation = Annotation.Root({
+  foo: Annotation<string>,
+});
+
+const nodeA = async (_state: typeof StateAnnotation.State) => {
+  const goto = Math.random() > 0.5 ? "nodeB" : "nodeC";
+  return new Command({
+    update: { foo: "a" },
+    goto,
+  });
+};
+
+const nodeB = async (state: typeof StateAnnotation.State) => {
+  return {
+    foo: state.foo + "|b",
+  };
+};
+
+const nodeC = async (state: typeof StateAnnotation.State) => {
+  return {
+    foo: state.foo + "|c",
+  };
+};
+
+import { StateGraph } from "@langchain/langgraph";
+
+// NOTE: there are no edges between nodes A, B and C!
+const graph = new StateGraph(StateAnnotation)
+  .addNode("nodeA", nodeA, {
+    // Explicitly specify "nodeB" and "nodeC" as potential destinations for nodeA
+    ends: ["nodeB", "nodeC"],
+  })
+  .addNode("nodeB", nodeB)
+  .addNode("nodeC", nodeC)
+  .addEdge("__start__", "nodeA")
+  .compile();
+```
+
+## Troubleshooting
+
+- Make sure that you have not forgotten to add edges between some of your nodes.
+
+- If you are returning Commands from your nodes, make sure that you're passing an ends array with the names of potential destination nodes as shown above.
