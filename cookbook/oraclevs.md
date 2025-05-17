@@ -1,5 +1,5 @@
-Oracle AI Vector Search with LangchainJS Integration
-Introduction
+# Oracle AI Vector Search with LangchainJS Integration
+## Introduction
 Oracle AI Vector Search enables semantic search on unstructured data while simultaneously providing relational search capabilities on business data, all within a unified system. This approach eliminates the need for a separate vector database, reducing data fragmentation and improving efficiency.
 
 By integrating Oracle AI Vector Search with Langchain, you can build a powerful pipeline for Retrieval Augmented Generation (RAG), leveraging Oracle's robust database features.
@@ -7,41 +7,41 @@ By integrating Oracle AI Vector Search with Langchain, you can build a powerful 
 Key Advantages of Oracle Database
 Oracle AI Vector Search is built on top of the Oracle Database, providing several key features:
 
-Partitioning Support
-Real Application Clusters (RAC) Scalability
-Exadata Smart Scans
-Geographically Distributed Shard Processing
-Transactional Capabilities
-Parallel SQL
-Disaster Recovery
-Advanced Security
-Oracle Machine Learning
-Oracle Graph Database
-Oracle Spatial and Graph
-Oracle Blockchain
-JSON Support
-Guide Overview
+* Partitioning Support
+* Real Application Clusters (RAC) Scalability
+* Exadata Smart Scans
+* Geographically Distributed Shard Processing
+* Transactional Capabilities
+* Parallel SQL
+* Disaster Recovery
+* Advanced Security
+* Oracle Machine Learning
+* Oracle Graph Database
+* Oracle Spatial and Graph
+* Oracle Blockchain
+* JSON Support
+## Guide Overview
 This guide demonstrates how to integrate Oracle AI Vector Search with Langchain to create an end-to-end RAG pipeline. You'll learn how to:
 
-Load documents from different sources using OracleDocLoader.
-Summarize documents inside or outside the database using OracleSummary.
-Generate embeddings either inside or outside the database using OracleEmbeddings.
-Chunk documents based on specific needs using OracleTextSplitter.
-Store, index, and query data using OracleVS.
-Getting Started
+* Load documents from different sources using OracleDocLoader.
+* Summarize documents inside or outside the database using OracleSummary.
+* Generate embeddings either inside or outside the database using OracleEmbeddings.
+* Chunk documents based on specific needs using OracleTextSplitter.
+* Store, index, and query data using OracleVS.
+## Getting Started
 If you're new to Oracle Database, consider using the free Oracle 23 AI Database to get started.
 
-Best Practices
-User Management: Create dedicated users for your Oracle Database projects instead of using the system user for security and control purposes. See the end-to-end guide for more details.
-User Privileges: Be sure to manage user privileges effectively to maintain database security. You can find more information in the official Oracle documentation.
-Prerequisites
+## Best Practices
+* User Management: Create dedicated users for your Oracle Database projects instead of using the system user for security and control purposes. See the end-to-end guide for more details.
+* User Privileges: Be sure to manage user privileges effectively to maintain database security. You can find more information in the official Oracle documentation.
+## Prerequisites
 To get started, install the Oracle JavaScript client driver:
 
 ``` typescript
 npm install oracledb
 ```
 
-Document Preparation
+## Document Preparation
 Assuming you have documents stored in a file system that you want to use with Oracle AI Vector Search and Langchain, these documents need to be instances of langchain/core/documents.
 
 Example: Ingesting JSON Documents
@@ -69,10 +69,10 @@ public async ingestJson(): Promise<Document[]> {
 }
 ```
 
-Langchain and Oracle Integration
+## Langchain and Oracle Integration
 The Oracle AI Vector Search Langchain library offers a rich set of APIs for document processing, which includes loading, chunking, summarizing, and embedding generation. Here's how to set up a connection and integrate Oracle with Langchain.
 
-Connecting to Oracle Database
+## Connecting to Oracle Database
 Below is an example of how to connect to an Oracle Database using both a direct connection and a connection pool:
 
 ```typescript
@@ -97,7 +97,7 @@ async function dbPool(): Promise<oracledb.Pool> {
 }
 ```
 
-Testing the Integration
+## Testing the Integration
 Here, we demonstrate how to create a test class TestsOracleVS to explore various features of Oracle Vector Store and its integration with Langchain.
 
 Example Test Class
