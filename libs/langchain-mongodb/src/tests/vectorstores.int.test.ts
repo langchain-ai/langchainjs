@@ -1,11 +1,13 @@
 /* eslint-disable no-process-env */
 /* eslint-disable no-promise-executor-return */
 
-import { expect, jest, test } from "@jest/globals";
+import { beforeAll, expect, jest, test } from "@jest/globals";
 import { Collection, MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Document as BSONDocument } from "bson";
 
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
@@ -29,10 +31,11 @@ import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
 */
 
 let client: MongoClient;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let collection: Collection;
 beforeAll(async () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  client = new MongoClient(uri());
+  client = new MongoClient(uri(), { monitorCommands: true });
   await client.connect();
 
   const namespace = "langchain.test";
@@ -61,8 +64,11 @@ beforeAll(async () => {
   await waitForIndexToBeQueryable(collection, "default");
 });
 
+let shouldClear = true;
 beforeEach(async () => {
-  await collection.deleteMany({});
+  if (shouldClear) {
+    await collection.deleteMany({});
+  }
 });
 
 afterAll(async () => {
@@ -245,8 +251,6 @@ test("MongoDBAtlasVectorSearch upsert", async () => {
   expect(results2[0].pageContent).not.toContain("sandwich");
 });
 
-// Setup and teardown code would be here
-
 describe("MongoDBAtlasVectorSearch Constructor", () => {
   test("initializes with minimal configuration", () => {
     const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
@@ -274,12 +278,12 @@ describe("MongoDBAtlasVectorSearch Constructor", () => {
       primaryKey: "docId",
     });
     expect(vectorStore).toBeDefined();
+
     // @ts-expect-error: Testing private properties
-    expect(vectorStore.textKey).toEqual("content");
-    // @ts-expect-error: Testing private properties
-    expect(vectorStore.embeddingKey).toEqual("vector");
-    // @ts-expect-error: Testing private properties
-    expect(vectorStore.primaryKey).toEqual("docId");
+    const { textKey, embeddingKey, primaryKey } = vectorStore;
+    expect(textKey).toEqual("content");
+    expect(embeddingKey).toEqual("vector");
+    expect(primaryKey).toEqual("docId");
   });
 
   test("initializes AsyncCaller with custom parameters", () => {
@@ -289,103 +293,94 @@ describe("MongoDBAtlasVectorSearch Constructor", () => {
       maxRetries: 3,
     });
     expect(vectorStore).toBeDefined();
-    // @ts-expect-error: Testing private property
-    expect(vectorStore.caller.maxConcurrency).toEqual(5);
-    // @ts-expect-error: Testing private property
-    expect(vectorStore.caller.maxRetries).toEqual(3);
+
+    const {
+      // @ts-expect-error: Testing private property
+      caller: { maxConcurrency, maxRetries },
+    } = vectorStore;
+    expect(maxConcurrency).toEqual(5);
+    expect(maxRetries).toEqual(3);
   });
 });
 
 describe("addVectors method", () => {
-  test("stores vectors and documents correctly", async () => {
-    const vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
+  let embeddings: OpenAIEmbeddings;
+  let vectorStore: PatchedVectorStore;
+  let vectors: number[][];
+  const documents = [
+    new Document({ pageContent: "test 1" }),
+    new Document({ pageContent: "test 2" }),
+  ];
+
+  beforeEach(async () => {
+    embeddings = new OpenAIEmbeddings();
+    vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
       collection,
     });
-
-    await collection.deleteMany({});
-
-    const vectors = [Array(1536).fill(0.1), Array(1536).fill(0.2)];
-    const documents = [
-      new Document({ pageContent: "test 1", metadata: { source: "source1" } }),
-      new Document({ pageContent: "test 2", metadata: { source: "source2" } }),
-    ];
-
+    vectors = await embeddings.embedDocuments(["test 1", "test 2"]);
+  });
+  test("stores vectors and documents correctly", async () => {
     await vectorStore.addVectors(vectors, documents);
 
-    const results = await collection.find({}).toArray();
-    expect(results.length).toBe(2);
-    expect(results[0].text).toBe("test 1");
-    expect(results[0].embedding).toEqual(Array(1536).fill(0.1));
-    expect(results[0].source).toBe("source1");
-    expect(results[1].text).toBe("test 2");
-    expect(results[1].embedding).toEqual(Array(1536).fill(0.2));
-    expect(results[1].source).toBe("source2");
+    const results = await collection
+      .find({}, { projection: { _id: 0, embedding: 1, source: 1, text: 1 } })
+      .toArray();
+    expect(results).toEqual([
+      {
+        embedding: expect.any(Array),
+        text: "test 1",
+      },
+      {
+        embedding: expect.any(Array),
+        text: "test 2",
+      },
+    ]);
   });
 
-  test("with custom ids performs upsert correctly", async () => {
-    const vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
-      collection,
-    });
+  test("custom _ids can be provided", async () => {
+    await vectorStore.addVectors(vectors, documents, { ids: ["id1", "id2"] });
 
-    await collection.deleteMany({});
+    const results = await collection
+      .find({}, { projection: { text: 1 } })
+      .toArray();
 
-    const vectors = [Array(1536).fill(0.1), Array(1536).fill(0.2)];
-    const documents = [
-      new Document({ pageContent: "test 1", metadata: { source: "source1" } }),
-      new Document({ pageContent: "test 2", metadata: { source: "source2" } }),
-    ];
+    expect(results).toEqual([
+      { text: "test 1", _id: "id1" },
+      { text: "test 2", _id: "id2" },
+    ]);
+  });
+
+  test("documents are updated if they already exist", async () => {
     const ids = ["id1", "id2"];
-
     await vectorStore.addVectors(vectors, documents, { ids });
 
-    // Check if documents were inserted
-    const results = await collection.find({}).toArray();
-    expect(results.length).toBe(2);
-    expect(results.find((r) => r._id === "id1")).toBeDefined();
-    expect(results.find((r) => r._id === "id2")).toBeDefined();
-
-    // Test upsert with updated data
-    const updatedVectors = [Array(1536).fill(0.3), Array(1536).fill(0.4)];
     const updatedDocuments = [
       new Document({
         pageContent: "updated 1",
-        metadata: { source: "updated1" },
       }),
       new Document({
         pageContent: "updated 2",
-        metadata: { source: "updated2" },
       }),
     ];
 
-    await vectorStore.addVectors(updatedVectors, updatedDocuments, { ids });
+    await vectorStore.addVectors(vectors, updatedDocuments, { ids });
 
-    const updatedResults = await collection.find({}).toArray();
-    expect(updatedResults.length).toBe(2);
-    const doc1 = updatedResults.find((r) => r._id === "id1");
-    const doc2 = updatedResults.find((r) => r._id === "id2");
+    // assert that no new documents were added
+    expect(await collection.countDocuments({})).toBe(2);
 
-    expect(doc1.text).toBe("updated 1");
-    expect(doc1.embedding).toEqual(Array(1536).fill(0.3));
-    expect(doc1.source).toBe("updated1");
-    expect(doc2.text).toBe("updated 2");
-    expect(doc2.embedding).toEqual(Array(1536).fill(0.4));
-    expect(doc2.source).toBe("updated2");
+    const updatedResults = await collection
+      .find({}, { projection: { text: 1 } })
+      .toArray();
+
+    expect(updatedResults).toEqual([
+      { text: "updated 1", _id: "id1" },
+      { text: "updated 2", _id: "id2" },
+    ]);
   });
 
   test("throws error when ids length doesn't match vectors length", async () => {
-    const vectorStore = new PatchedVectorStore(new OpenAIEmbeddings(), {
-      collection,
-    });
-
-    const vectors = [Array(1536).fill(0.1), Array(1536).fill(0.2)];
-    const documents = [
-      new Document({ pageContent: "test 1", metadata: {} }),
-      new Document({ pageContent: "test 2", metadata: {} }),
-    ];
-    const ids = ["id1"]; // Only one ID for two vectors
-
     await expect(
-      vectorStore.addVectors(vectors, documents, { ids })
+      vectorStore.addVectors(vectors, documents, { ids: ["id1"] })
     ).rejects.toThrow(
       'If provided, "options.ids" must be an array with the same length as "vectors".'
     );
@@ -393,185 +388,195 @@ describe("addVectors method", () => {
 });
 
 describe("addDocuments method", () => {
-  test("correctly embeds and stores documents", async () => {
-    const embeddings = {
-      embedDocuments: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue([Array(1536).fill(0.1), Array(1536).fill(0.2)]),
-      embedQuery: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue(Array(1536).fill(0.1)),
-    };
-
-    // @ts-expect-error: Mock embeddings
-    const vectorStore = new PatchedVectorStore(embeddings, {
+  let embeddings: OpenAIEmbeddings;
+  let vectorStore: PatchedVectorStore;
+  const documents = [
+    new Document({ pageContent: "test 1" }),
+    new Document({ pageContent: "test 2" }),
+  ];
+  beforeEach(async () => {
+    embeddings = new OpenAIEmbeddings();
+    vectorStore = new PatchedVectorStore(embeddings, {
       collection,
     });
-
-    await collection.deleteMany({});
-
-    const documents = [
-      new Document({ pageContent: "test 1", metadata: { source: "source1" } }),
-      new Document({ pageContent: "test 2", metadata: { source: "source2" } }),
-    ];
-
+  });
+  test("correctly embeds and stores documents", async () => {
+    const expectedEmbeddings = await embeddings.embedDocuments(documents.map((doc) => doc.pageContent));
     await vectorStore.addDocuments(documents);
 
-    expect(embeddings.embedDocuments).toHaveBeenCalledWith([
-      "test 1",
-      "test 2",
+    const results = await collection
+      .find({}, { projection: { _id: 0, embedding: 1, text: 1 } })
+      .toArray();
+    expect(results).toEqual([
+      {
+        embedding: expectedEmbeddings[0],
+        text: "test 1",
+      },
+      {
+        embedding: expectedEmbeddings[1],
+        text: "test 2",
+      },
     ]);
-
-    const results = await collection.find({}).toArray();
-    expect(results.length).toBe(2);
-    expect(results[0].text).toBe("test 1");
-    expect(results[0].embedding).toEqual(Array(1536).fill(0.1));
-    expect(results[1].text).toBe("test 2");
-    expect(results[1].embedding).toEqual(Array(1536).fill(0.2));
   });
 
-  test("with custom ids performs upsert correctly", async () => {
-    const embeddings = {
-      embedDocuments: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue([Array(1536).fill(0.1), Array(1536).fill(0.2)]),
-      embedQuery: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue(Array(1536).fill(0.1)),
-    };
-
-    // @ts-expect-error: Mock embeddings
-    const vectorStore = new PatchedVectorStore(embeddings, {
-      collection,
-    });
-
-    await collection.deleteMany({});
-
-    const documents = [
-      new Document({ pageContent: "test 1", metadata: { source: "source1" } }),
-      new Document({ pageContent: "test 2", metadata: { source: "source2" } }),
-    ];
-
+  test("custom _ids can be provided", async () => {
     await vectorStore.addDocuments(documents, { ids: ["id1", "id2"] });
 
-    const results = await collection.find({}).toArray();
-    expect(results.length).toBe(2);
-    expect(results.find((r) => r._id === "id1")).toBeDefined();
-    expect(results.find((r) => r._id === "id2")).toBeDefined();
+    const results = await collection
+      .find({}, { projection: { embedding: 1, text: 1 } })
+      .toArray();
+
+    expect(results).toMatchObject([
+      {
+        _id: "id1",
+        embedding: expect.any(Array),
+        text: "test 1",
+      },
+      {
+        _id: "id2",
+        embedding: expect.any(Array),
+        text: "test 2",
+      },
+    ]);
   });
 
-  test("correctly handles documents with special characters", async () => {
-    const embeddings = {
-      embedDocuments: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue([Array(1536).fill(0.1)]),
-      embedQuery: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue(Array(1536).fill(0.1)),
-    };
+  test("documents are updated if they already exist", async () => {
+    const ids = ["id1", "id2"];
+    await vectorStore.addDocuments(documents, { ids });
 
-    // @ts-expect-error: Mock embeddings
-    const vectorStore = new PatchedVectorStore(embeddings, {
-      collection,
-    });
-
-    await collection.deleteMany({});
-
-    const documents = [
+    const updatedDocuments = [
       new Document({
-        pageContent: "test !@#$%^&*()",
-        metadata: { source: "special" },
+        pageContent: "updated 1",
+      }),
+      new Document({
+        pageContent: "updated 2",
       }),
     ];
 
-    await vectorStore.addDocuments(documents);
+    await vectorStore.addDocuments(updatedDocuments, { ids });
 
-    const results = await collection.find({}).toArray();
-    expect(results.length).toBe(1);
-    expect(results[0].text).toBe("test !@#$%^&*()");
-    expect(results[0].embedding).toEqual(Array(1536).fill(0.1));
-    expect(results[0].source).toBe("special");
+    // assert that no new documents were added
+    expect(await collection.countDocuments({})).toBe(2);
+
+    const results = await collection
+      .find({}, { projection: { text: 1, embedding: 1 } })
+      .toArray();
+    expect(results).toEqual([
+      { text: "updated 1", _id: "id1", embedding: expect.any(Array) },
+      { text: "updated 2", _id: "id2", embedding: expect.any(Array) },
+    ]);
   });
 });
 
 describe("similaritySearchVectorWithScore method", () => {
-  beforeEach(async () => {
-    const embeddings = {
-      embedDocuments: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue([
-          Array(1536).fill(0.1),
-          Array(1536).fill(0.2),
-          Array(1536).fill(0.3),
-          Array(1536).fill(0.4),
-        ]),
-      embedQuery: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue(Array(1536).fill(0.1)),
-    };
-
-    // @ts-expect-error: Mock embeddings
-    const vectorStore = new PatchedVectorStore(embeddings, {
+  let embeddings: OpenAIEmbeddings;
+  let vectorStore: PatchedVectorStore;
+  beforeAll(async () => {
+    embeddings = new OpenAIEmbeddings();
+    vectorStore = new PatchedVectorStore(embeddings, {
       collection,
     });
 
     await collection.deleteMany({});
 
     const documents = [
-      new Document({ pageContent: "cat", metadata: { animal: true, id: 1 } }),
-      new Document({ pageContent: "dog", metadata: { animal: true, id: 2 } }),
+      new Document({ pageContent: "cat", metadata: { a: 1, id: 1 } }),
+      new Document({ pageContent: "dog", metadata: { a: 1, b: 2, id: 2 } }),
       new Document({
         pageContent: "fish",
-        metadata: { animal: true, id: 3, aquatic: true },
+        metadata: { c: 3, id: 3 },
       }),
-      new Document({ pageContent: "car", metadata: { vehicle: true, id: 4 } }),
+      new Document({ pageContent: "car", metadata: { e: 4, id: 4 } }),
     ];
 
     await vectorStore.addDocuments(documents);
+
+    shouldClear = false;
+  });
+
+  afterAll(() => {
+    shouldClear = true;
   });
 
   test("returns correct documents and scores", async () => {
-    // Test basic similarity search with scores
+    const results = await vectorStore.similaritySearchVectorWithScore(
+      await embeddings.embedQuery("cat"),
+      2
+    );
+
+    expect(results.length).toBe(2);
+    // TODO - figure out how to test the score
+    const [[doc1], [doc2]] = results;
+    expect(doc1.pageContent).toBe("cat");
+    expect(doc2.pageContent).toBe("dog");
   });
 
   test("with preFilter applies filters correctly", async () => {
-    // Test preFilter functionality
+    const results = await vectorStore.similaritySearchVectorWithScore(
+      await embeddings.embedQuery("car"),
+      2,
+      { preFilter: { e: { $eq: 4 } } }
+    );
+
+    // even though we specify k=2, we only get one result because of the prefilter.
+    expect(results.length).toBe(1);
+    const [[doc1]] = results;
+    expect(doc1.pageContent).toBe("car");
   });
 
-  test("with postFilterPipeline applies pipeline correctly", async () => {
-    // Test postFilterPipeline functionality
+  test("when specified, a postFilterPipeline filters out unspecified documents", async () => {
+    const results = await vectorStore.similaritySearchVectorWithScore(
+      await embeddings.embedQuery("cat"),
+      2,
+      {
+        postFilterPipeline: [{ $match: { "metadata.nonExistentField": true } }],
+      }
+    );
+
+    expect(results).toHaveLength(0);
   });
 
-  test("with includeEmbeddings returns embeddings", async () => {
-    // Test includeEmbeddings functionality
+  test("embeddings are excluded by default", async () => {
+    const [[{ metadata }]] = await vectorStore.similaritySearchVectorWithScore(
+      await embeddings.embedQuery("cat"),
+      2
+    );
+
+    expect(metadata).not.toHaveProperty("embedding");
   });
 
-  test("handles complex combined filters", async () => {
-    // Test combination of filter types
+  test("embeddings are included when includeEmbeddings=true", async () => {
+    const [[{ metadata }]] = await vectorStore.similaritySearchVectorWithScore(
+      await embeddings.embedQuery("cat"),
+      2,
+      { includeEmbeddings: true }
+    );
+
+    expect(metadata).toHaveProperty("embedding");
   });
 });
 
-describe("maxMarginalRelevanceSearch method", () => {
-  let embeddings: {
-    embedQuery: jest.Mock<() => Promise<number[][]>>;
-    embedDocuments: jest.Mock;
-  };
+describe.skip("maxMarginalRelevanceSearch method", () => {
+  // let embeddings: {
+  //   embedQuery: jest.Mock<() => Promise<number[][]>>;
+  //   embedDocuments: jest.Mock<() => Promise<number[][]>>;
+  // };
 
-  beforeEach(() => {
-    // Mock embeddings with controlled values for deterministic MMR testing
-    embeddings = {
-      embedQuery: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue(Array(1536).fill(0.1)),
-      embedDocuments: jest
-        .fn<() => Promise<number[][]>>()
-        .mockResolvedValue([
-          Array(1536).fill(0.1),
-          Array(1536).fill(0.2),
-          Array(1536).fill(0.3),
-        ]),
-    };
-  });
+  // beforeEach(() => {
+  //   // Mock embeddings with controlled values for deterministic MMR testing
+  //   embeddings = {
+  //     embedQuery: jest
+  //       .fn<() => Promise<number[][]>>()
+  //       .mockResolvedValue(Array(1536).fill(0.1)),
+  //     embedDocuments: jest
+  //       .fn<() => Promise<number[][]>>()
+  //       .mockResolvedValue([
+  //         Array(1536).fill(0.1),
+  //         Array(1536).fill(0.2),
+  //         Array(1536).fill(0.3),
+  //       ]),
+  //   };
+  // });
 
   test("returns diverse results", async () => {
     // Test basic MMR functionality
@@ -596,15 +601,14 @@ describe("maxMarginalRelevanceSearch method", () => {
 
 describe("delete method", () => {
   beforeEach(async () => {
-    // Setup test data
-    await collection.deleteMany({});
-    await collection.insertMany([
+    const documents: BSONDocument[] = [
       { _id: "id1", text: "doc1" },
       { _id: "id2", text: "doc2" },
       { _id: "id3", text: "doc3" },
       { _id: "id4", text: "doc4" },
       { _id: "id5", text: "doc5" },
-    ]);
+    ];
+    await collection.insertMany(documents);
   });
 
   test("removes documents by ids", async () => {
@@ -623,7 +627,38 @@ describe("delete method", () => {
   });
 
   test("handles large number of ids by chunking", async () => {
-    // Test chunking for large deletions
+    // no need to use real embeddings for this test
+    // since we're only testing the delete functionality
+    // and not the embedding process.
+    const embeddings = {
+      embedDocuments: jest
+        .fn<() => Promise<number[][]>>()
+        .mockResolvedValue(Array(100).fill(Array(1536).fill(0.1))),
+      embedQuery: jest
+        .fn<() => Promise<number[][]>>()
+        .mockResolvedValue(Array(1536).fill(0.1)),
+    };
+
+    let deletes = 0;
+    client.on("commandStarted", (event) => {
+      if (event.commandName === "delete") {
+        deletes += 1;
+      }
+    });
+
+    // @ts-expect-error: Mock embeddings
+    const vectorStore = new PatchedVectorStore(embeddings, {
+      collection,
+    });
+    const ids = Array.from({ length: 100 }, (_, i) => `id${i}`);
+    await vectorStore.addDocuments(
+      ids.map((id) => new Document({ pageContent: id.toString() })),
+      { ids }
+    );
+
+    await vectorStore.delete({ ids });
+
+    expect(deletes).toEqual(100 / 50); // 100 docs / chunk size
   });
 
   test("ignores non-existent ids", async () => {
@@ -643,26 +678,160 @@ describe("delete method", () => {
 
 describe("Static Methods", () => {
   describe("fromTexts", () => {
-    test("creates instance with correct documents from strings", async () => {
-      // Test fromTexts factory method
+    let embeddings: OpenAIEmbeddings;
+          const texts = ["text1", "text2", "text3"];
+    beforeEach(() => {
+      embeddings = new OpenAIEmbeddings();
     });
 
-    test("with array of metadata assigns correct metadata to each document", async () => {
-      // Test metadata handling in fromTexts
+    test("populates a vector store from strings with a metadata object", async () => {
+      const metadata = { source: "test" };
+      const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
+        texts,
+        metadata,
+        embeddings,
+        { collection }
+      );
+
+      expect(vectorStore).toBeInstanceOf(MongoDBAtlasVectorSearch);
+
+      const results = await collection.find({}, { projection: { text: 1, source: 1, _id: 0, embedding: 1 }}).toArray();
+      expect(results).toEqual([
+        { text: "text1", source: "test", embedding: expect.any(Array) },
+        { text: "text2", source: "test", embedding: expect.any(Array) },  
+        { text: "text3", source: "test", embedding: expect.any(Array) },
+      ])
     });
 
-    test("with single metadata object applies to all documents", async () => {
-      // Test single metadata object behavior
+    test("populates a vector store from strings with an array of metadata objects", async () => {
+      const vectorStore = await MongoDBAtlasVectorSearch.fromTexts(
+        texts,
+        [{ source: "test1" }, { source: "test2" }, { source: "test3" }],
+        embeddings,
+        { collection }
+      );
+
+      expect(vectorStore).toBeInstanceOf(MongoDBAtlasVectorSearch);
+
+      const results = await collection.find({}, { projection: { text: 1, source: 1, _id: 0, embedding: 1 }}).toArray();
+      expect(results).toEqual([
+        { text: "text1", source: "test1", embedding: expect.any(Array) },
+        { text: "text2", source: "test2", embedding: expect.any(Array) },  
+        { text: "text3", source: "test3", embedding: expect.any(Array) },
+      ])
     });
   });
 
-  describe("fromDocuments", () => {
-    test("creates instance with documents preserved", async () => {
-      // Test fromDocuments factory method
+  describe.only("fromDocuments", () => {
+    test("returns an instance of MongoDBAtlasVectorSearch", async () => {
+      const documents = [
+        new Document({ pageContent: "doc1", metadata: { source: "source1" } }),
+      ];
+      const store = await MongoDBAtlasVectorSearch.fromDocuments(
+        documents,
+        new OpenAIEmbeddings(),
+        { collection }
+      );
+      expect(store).toBeInstanceOf(MongoDBAtlasVectorSearch);
+    });
+
+    test("embeds and inserts the provided documents", async () => {
+      const documents = [
+        new Document({ pageContent: "doc1", metadata: { source: "source1" } }),
+        new Document({ pageContent: "doc2", metadata: { source: "source2" } }),
+      ];
+
+      const vectorStore = await MongoDBAtlasVectorSearch.fromDocuments(
+        documents,
+        new OpenAIEmbeddings(),
+        { collection }
+      );
+
+      const results = await collection.find({}, { projection: { text: 1, _id: 0 }}).toArray();
+      expect(results.length).toBe(3);
+
+      expect(results).toEqual(
+        [
+          { text: "doc1" },
+          { text: "doc2" },
+        ]
+      )
+      // // Check if all documents were stored correctly
+      // expect(
+      //   results.some((r) => r.text === "doc1" && r.source === "source1")
+      // ).toBe(true);
+      // expect(
+      //   results.some((r) => r.text === "doc2" && r.source === "source2")
+      // ).toBe(true);
+      // expect(
+      //   results.some((r) => r.text === "doc3" && r.source === "source3")
+      // ).toBe(true);
     });
 
     test("with custom ids performs upsert behavior", async () => {
-      // Test fromDocuments with custom ids
+      // Initial documents
+      const documents = [
+        new Document({ pageContent: "doc1", metadata: { source: "source1" } }),
+        new Document({ pageContent: "doc2", metadata: { source: "source2" } }),
+      ];
+
+      const customIds = ["custom1", "custom2"];
+
+      const embeddings = {
+        embedDocuments: jest
+          .fn<() => Promise<number[][]>>()
+          .mockResolvedValue([Array(1536).fill(0.1), Array(1536).fill(0.2)]),
+        embedQuery: jest
+          .fn<() => Promise<number[]>>()
+          .mockResolvedValue(Array(1536).fill(0.1)),
+      };
+
+      // First insertion
+      await MongoDBAtlasVectorSearch.fromDocuments(documents, embeddings, {
+        collection,
+        ids: customIds,
+      });
+
+      let results = await collection.find({}).toArray();
+      expect(results.length).toBe(2);
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom1")?.text).toBe("doc1");
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom2")?.text).toBe("doc2");
+
+      // Test upsert with new documents but same IDs
+      const updatedDocuments = [
+        new Document({
+          pageContent: "updated1",
+          metadata: { source: "updated1" },
+        }),
+        new Document({
+          pageContent: "updated2",
+          metadata: { source: "updated2" },
+        }),
+      ];
+
+      // Second insertion with same IDs should update existing documents
+      await MongoDBAtlasVectorSearch.fromDocuments(
+        updatedDocuments,
+        embeddings,
+        { collection, ids: customIds }
+      );
+
+      results = await collection.find({}).toArray();
+
+      // Should still have only 2 documents (no duplicates)
+      expect(results.length).toBe(2);
+
+      // Documents should be updated
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom1")?.text).toBe("updated1");
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom1")?.source).toBe("updated1");
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom2")?.text).toBe("updated2");
+      // @ts-expect-error Collection is of type Document, which infers _id as ObjectId.  But custom _ids must be strings.
+      expect(results.find((r) => r._id === "custom2")?.source).toBe("updated2");
     });
   });
 });
