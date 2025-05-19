@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import weaviate, { ApiKey } from "weaviate-ts-client";
+import weaviate, { ApiKey } from "weaviate-client";
 import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
@@ -12,12 +12,16 @@ export async function run() {
   });
 
   // Create a store for an existing index
-  const store = await WeaviateStore.fromExistingIndex(new OpenAIEmbeddings(), {
+  const weaviateArgs = {
     client,
     indexName: "Test",
     metadataKeys: ["foo"],
-  });
-
+  };
+  const store = await WeaviateStore.fromExistingIndex(
+    new OpenAIEmbeddings(),
+    weaviateArgs
+  );
+  const collection = client.collections.get(weaviateArgs.indexName);
   const docs = [{ pageContent: "see ya!", metadata: { foo: "bar" } }];
 
   // Also supports an additional {ids: []} parameter for upsertion
@@ -57,22 +61,14 @@ export async function run() {
 
   // delete documents with filter
   await store.delete({
-    filter: {
-      where: {
-        operator: "Equal",
-        path: ["foo"],
-        valueText: "bar",
-      },
-    },
+    filter: collection.filter.byProperty("foo").equal("bar"),
   });
 
-  const results4 = await store.similaritySearch("hello world", 1, {
-    where: {
-      operator: "Equal",
-      path: ["foo"],
-      valueText: "bar",
-    },
-  });
+  const results4 = await store.similaritySearch(
+    "hello world",
+    1,
+    collection.filter.byProperty("foo").equal("bar")
+  );
   console.log(results4);
   /*
   []

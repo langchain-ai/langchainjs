@@ -96,7 +96,7 @@
     "ioredis": "^5.3.2",
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
-    "langsmith": "^0.3.16",
+    "langsmith": "^0.3.29",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
     "mongodb": "^6.3.0",
@@ -111,7 +111,7 @@
     "typesense": "^1.5.3",
     "uuid": "^10.0.0",
     "voy-search": "0.6.2",
-    "weaviate-ts-client": "^2.0.0",
+    "weaviate-client": "^3.5.2",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },

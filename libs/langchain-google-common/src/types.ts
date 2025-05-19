@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {
@@ -185,6 +191,11 @@ export interface GoogleAIModelParams {
    * among the 3 most probable tokens (using temperature).
    */
   topK?: number;
+
+  /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
 
   /**
    * Presence penalty applied to the next token's logprobs
@@ -551,6 +562,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
@@ -596,10 +608,39 @@ interface GeminiResponsePromptFeedback {
   safetyRatings: GeminiSafetyRating[];
 }
 
+export type ModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface ModalityTokenCount {
+  modality: ModalityEnum;
+  tokenCount: number;
+}
+
+export interface GenerateContentResponseUsageMetadata {
+  promptTokenCount: number;
+  toolUsePromptTokenCount: number;
+  cachedContentTokenCount: number;
+  thoughtsTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+
+  promptTokensDetails: ModalityTokenCount[];
+  toolUsePromptTokensDetails: ModalityTokenCount[];
+  cacheTokensDetails: ModalityTokenCount[];
+  candidatesTokensDetails: ModalityTokenCount[];
+
+  [key: string]: unknown;
+}
+
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
-  usageMetadata: Record<string, unknown>;
+  usageMetadata: GenerateContentResponseUsageMetadata;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
@@ -632,6 +673,7 @@ export interface GoogleAISafetyParams {
 export type GeminiJsonSchema = Record<string, unknown> & {
   properties?: Record<string, GeminiJsonSchema>;
   type: GeminiFunctionSchemaType;
+  nullable?: boolean;
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {

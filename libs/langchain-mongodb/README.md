@@ -68,6 +68,17 @@ $ yarn test
 $ yarn test:int
 ```
 
+The tests in this package require an instance of MongoDB Atlas running, either running locally or as a remote Atlas cluster.  A URI pointing to
+an existing Atlas cluster can be provided to the tests by specifying the `MONGODB_ATLAS_URI` environment variable:
+
+```bash
+MONGODB_ATLAS_URI='<atlas URI>' yarn test:int
+```
+
+If running against a remote Atlas cluster, the user must have readWrite permissions on the `langchain` database.
+
+If no `MONGODB_ATLAS_URI` is provided, the test suite will attempt to launch an instance of local Atlas in a container using [testcontainers](https://testcontainers.com/).  This requires a container engine, see the [testcontainer backing engine documentation](https://node.testcontainers.org/supported-container-runtimes/) for details.
+
 ### Lint & Format
 
 Run the linter & formatter to ensure your code is up to standard:

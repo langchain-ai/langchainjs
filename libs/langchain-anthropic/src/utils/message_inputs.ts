@@ -116,7 +116,10 @@ function _ensureMessageContents(
             content: [
               {
                 type: "tool_result",
-                content: _formatContent(message.content),
+                // rare case: message.content could be undefined
+                ...(message.content != null
+                  ? { content: _formatContent(message.content) }
+                  : {}),
                 tool_use_id: (message as ToolMessage).tool_call_id,
               },
             ],
