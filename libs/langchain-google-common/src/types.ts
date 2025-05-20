@@ -308,6 +308,11 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
    */
   cachedContent?: string;
+
+  /**
+   * Custom metadata labels to associate with the API call.
+   */
+  labels?: Record<string, string>;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
@@ -585,6 +590,11 @@ export interface GeminiRequest {
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
   cachedContent?: string;
+
+  /**
+   * Custom metadata labels to associate with the API call.
+   */
+  labels?: Record<string, string>;
 }
 
 export interface GeminiResponseCandidate {
