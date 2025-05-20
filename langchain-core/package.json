@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=18"
   },
-  "main": "./index.js",
+  "main": "./indexing.js",
   "types": "./index.d.ts",
   "repository": {
     "type": "git",
