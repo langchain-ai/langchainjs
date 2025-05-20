@@ -44,6 +44,10 @@ export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
     return "gpt-4o";
   }
 
+  if (modelName.startsWith("gpt-4.1")) {
+    return "gpt-4.1";
+  }
+
   return modelName as TiktokenModel;
 };
 
@@ -66,6 +70,8 @@ export const getModelContextSize = (modelName: string): number => {
       return 32768;
     case "gpt-4":
       return 8192;
+    case "gpt-4.1":
+      return 32768;
     case "text-davinci-003":
       return 4097;
     case "text-curie-001":

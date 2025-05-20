@@ -7826,7 +7826,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
-    js-tiktoken: ^1.0.12
+    js-tiktoken: ^1.0.20
     langsmith: ^0.3.29
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
@@ -25910,6 +25910,15 @@ __metadata:
   dependencies:
     base64-js: ^1.5.1
   checksum: 07a0e9cd5cb05f304696ac74e76d48f960d62b0443b65f0d09adf79dc903d2fba82d2cff2907491259bbf8b59842c20f89fd1879d2c0249706e7c84507c687fd
+  languageName: node
+  linkType: hard
+
+"js-tiktoken@npm:^1.0.20":
+  version: 1.0.20
+  resolution: "js-tiktoken@npm:1.0.20"
+  dependencies:
+    base64-js: ^1.5.1
+  checksum: 29106a6faa65c85d13ead291ce17b007ef7c16918fdd570d4636b74da33e54b72af66f9d5dd963f2979733f70d4221e4a9655d236395719c5cc04620d9f1e2cd
   languageName: node
   linkType: hard
 

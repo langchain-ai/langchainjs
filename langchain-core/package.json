@@ -37,7 +37,7 @@
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
-    "js-tiktoken": "^1.0.12",
+    "js-tiktoken": "^1.0.20",
     "langsmith": "^0.3.29",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
