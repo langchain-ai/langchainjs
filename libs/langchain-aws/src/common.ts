@@ -11,7 +11,6 @@ import type {
   StandardFileBlock,
 } from "@langchain/core/messages";
 import {
-  mergeMessageRuns,
   AIMessage,
   AIMessageChunk,
   ToolMessage,
@@ -298,7 +297,11 @@ function convertLangChainContentBlockToConverseContentBlock<
   }
 
   if (block.type === "image_url") {
-    return extractImageInfo(block.image_url);
+    return extractImageInfo(
+      typeof block.image_url === "string"
+        ? block.image_url
+        : block.image_url.url
+    );
   }
 
   if (block.type === "document" && block.document !== undefined) {
@@ -471,9 +474,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   converseMessages: BedrockMessage[];
   converseSystem: BedrockSystemContentBlock[];
 } {
-  const mergedMessages = mergeMessageRuns(messages);
-
-  const converseSystem: BedrockSystemContentBlock[] = mergedMessages
+  const converseSystem: BedrockSystemContentBlock[] = messages
     .filter((msg) => msg._getType() === "system")
     .map((msg) => convertSystemMessageToConverseMessage(msg));
 

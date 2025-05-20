@@ -61,6 +61,7 @@
     "prettier": "^2.8.3",
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
+    "testcontainers": "^10.25.0",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",
     "uuid": "^10.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.24",
+  "version": "0.3.26",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -318,10 +318,6 @@
     "util/math.js",
     "util/math.d.ts",
     "util/math.d.cts",
-    "util/openapi.cjs",
-    "util/openapi.js",
-    "util/openapi.d.ts",
-    "util/openapi.d.cts",
     "util/time.cjs",
     "util/time.js",
     "util/time.d.ts",
@@ -549,7 +545,7 @@
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.3.16",
+    "langsmith": "^0.3.29",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
     "uuid": "^10.0.0",
@@ -1267,15 +1263,6 @@
       },
       "import": "./util/math.js",
       "require": "./util/math.cjs"
-    },
-    "./util/openapi": {
-      "types": {
-        "import": "./util/openapi.d.ts",
-        "require": "./util/openapi.d.cts",
-        "default": "./util/openapi.d.ts"
-      },
-      "import": "./util/openapi.js",
-      "require": "./util/openapi.cjs"
     },
     "./util/time": {
       "types": {

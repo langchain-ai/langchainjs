@@ -187,7 +187,7 @@ export abstract class Runnable<
    * @returns A new RunnableBinding with a config matching what's passed.
    */
   withConfig(
-    config: RunnableConfig
+    config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
