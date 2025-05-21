@@ -2,9 +2,11 @@
 
 ## Load Documents
 
-Users have the flexibility to load documents from either the Oracle Database, a file system, or both, by appropriately configuring the loader parameters. For comprehensive details on these parameters, please consult the [Oracle AI Vector Search Guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_vector_chain1.html#GUID-73397E89-92FB-48ED-94BB-1AD960C4EA1F).
+Users have the flexibility to load documents from either the Oracle Database, a file system, or both, by appropriately configuring the loader parameters. For comprehensive details on these parameters, please consult the [Oracle AI Vector Search Guide](https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-73397E89-92FB-48ED-94BB-1AD960C4EA1F).
 
-A significant advantage of utilizing OracleDocLoader is its capability to process over 150 distinct file formats, eliminating the need for multiple loaders for different document types. For a complete list of the supported formats, please refer to the [Oracle Text Supported Document Formats](https://docs.oracle.com/en/database/oracle/oracle-database/23/ccref/oracle-text-supported-document-formats.html).
+A significant advantage of utilizing OracleDocLoader is its capability to process over 150 distinct file formats, eliminating the need for multiple loaders for different document types. For a complete list of the supported formats, please refer to the [Oracle Text Supported Document Formats](https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-2EC9C942-0989-4FEE-909A-3575349AC706).
+
+After loading the documents, you can may want to split the text for embedding with OracleTextSplitter or generate a summary with OracleSummary.
 
 Below is a sample code snippet that demonstrates how to use OracleDocLoader
 
@@ -38,7 +40,7 @@ console.log(`Number of docs loaded: ${docs.length}`);
 
 ## Split Documents
 
-The documents may vary in size, ranging from small to very large. Users often prefer to chunk their documents into smaller sections to facilitate the generation of embeddings. A wide array of customization options is available for this splitting process. For comprehensive details regarding these parameters, please consult the [Oracle AI Vector Search Guide](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_vector_chain1.html#GUID-4E145629-7098-4C7C-804F-FC85D1F24240).
+The documents may vary in size, ranging from small to very large. You may need to chunk the documents into smaller sections to facilitate the generation of embeddings. A wide array of customization options is available for this splitting process. For comprehensive details regarding these parameters, please consult the [Oracle AI Vector Search Guide](https://www.oracle.com/pls/topic/lookup?ctx=dblatest&id=GUID-4E145629-7098-4C7C-804F-FC85D1F24240).
 
 Below is a sample code illustrating how to implement this:
 
@@ -76,4 +78,4 @@ console.log(`Number of Chunks: ${list_chunks.length}`);
 
 ## End to End Demo
 
-Please refer to our complete demo guide [Oracle AI Vector Search End-to-End Demo Guide](https://github.com/langchain-ai/langchainjs/tree/main/cookbook/oracleai.mdx) to build an end to end RAG pipeline with the help of Oracle AI Vector Search.
+Please refer to the complete demo guide [Oracle AI Vector Search End-to-End Demo Guide](https://github.com/langchain-ai/langchainjs/tree/main/cookbook/oracleai.mdx) to build an end to end RAG pipeline with the help of Oracle AI Vector Search.

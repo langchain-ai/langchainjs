@@ -1,4 +1,4 @@
-# OracleAI Vector Search
+# Oracle AI Vector Search
 
 Oracle AI Vector Search is designed for Artificial Intelligence (AI) workloads that allows you to query data based on semantics, rather than keywords.
 One of the biggest benefits of Oracle AI Vector Search is that semantic search on unstructured data can be combined with relational search on business data in one single system.
@@ -63,13 +63,6 @@ import {OracleSummary} from "@langchain/community/utils/oracle";
 
 const model = new OracleSummary(conn, summary_params, proxy);
 const summary = await model.getSummary(doc.pageContent);
-```
-
-## Vector Store
-
-Please check the [usage example](/docs/integrations/vectorstores/oracle).
-
-```typescript
 ```
 
 ## End to End Demo

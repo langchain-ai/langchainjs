@@ -26,11 +26,11 @@ This guide demonstrates how Oracle AI Vector Search can be used with Langchain t
 * Chunking them according to different requirements using Advanced Oracle Capabilities from OracleTextSplitter
 * Storing and Indexing them in a Vector Store and querying them for queries in OracleVS
 
-If you are just starting with Oracle Database, consider exploring the [free Oracle 23 AI](https://www.oracle.com/database/free/#resources) which provides a great introduction to setting up your database environment. While working with the database, it is often advisable to avoid using the system user by default; instead, you can create your own user for enhanced security and customization. For detailed steps on user creation, refer to our [end-to-end guide](https://github.com/langchain-ai/langchain/blob/master/cookbook/oracleai_demo.ipynb) which also shows how to set up a user in Oracle. Additionally, understanding user privileges is crucial for managing database security effectively. You can learn more about this topic in the official [Oracle guide](https://docs.oracle.com/en/database/oracle/oracle-database/19/admqs/administering-user-accounts-and-security.html#GUID-36B21D72-1BBB-46C9-A0C9-F0D2A8591B8D) on administering user accounts and security.
+If you are just starting with Oracle Database, consider exploring the [free Oracle 23 AI](https://www.oracle.com/database/free/#resources) which provides a great introduction to setting up your database environment. While working with the database, it is often advisable to avoid using the system user by default; instead, you can create your own user for enhanced security and customization. For detailed steps on user creation, refer to the [end-to-end guide](https://github.com/langchain-ai/langchain/blob/master/cookbook/oracleai_demo.ipynb) which also shows how to set up a user in Oracle. Additionally, understanding user privileges is crucial for managing database security effectively. You can learn more about this topic in the official [Oracle guide](https://docs.oracle.com/en/database/oracle/oracle-database/19/admqs/administering-user-accounts-and-security.html#GUID-36B21D72-1BBB-46C9-A0C9-F0D2A8591B8D) on administering user accounts and security.
 
 ## Prerequisites
 
-Please install the Oracle Javascript Client driver node-oracledb to use Langchain with Oracle AI Vector Search.
+Please install the Oracle Database Javascript Client driver node-oracledb to use Langchain with Oracle AI Vector Search.
 
 ```bash npm2yarn
 npm install oracledb
@@ -71,7 +71,7 @@ end;
 
 ## Process Documents using Oracle AI
 
-Consider the following scenario: users possess documents stored either in an Oracle Database or a file system and intend to utilize this data with Oracle AI Vector Search powered by Langchain.
+Consider the following scenario: you possess documents stored either in an Oracle Database or a file system and intend to utilize this data with Oracle AI Vector Search powered by Langchain.
 
 To prepare the documents for analysis, a comprehensive preprocessing workflow is necessary. Initially, the documents must be retrieved, summarized (if required), and chunked as needed. Subsequent steps involve generating embeddings for these chunks and integrating them into the Oracle AI Vector Store. Users can then conduct semantic searches on this data.
 
@@ -160,13 +160,13 @@ Connection successful
 Table created and populated
 ```
 
-With the inclusion of a demo user and a populated sample table, the remaining configuration involves setting up embedding and summary functionalities. Users are presented with multiple provider options, including local database solutions and third-party services such as Ocigenai, Hugging Face, and OpenAI. Should users opt for a third-party provider, they are required to establish credentials containing the necessary authentication details. Conversely, if selecting a database as the provider for embeddings, it is necessary to upload an ONNX model to the Oracle Database. No additional setup is required for summary functionalities when using the database option.
+With the inclusion of a demo user and a populated sample table, the remaining configuration involves setting up embedding and summary functionalities. Users are presented with multiple provider options, including local database solutions and third-party services such as Ocigenai, Hugging Face, and OpenAI. Should you opt for a third-party provider, you are required to establish credentials containing the necessary authentication details. Conversely, if selecting a database as the provider for embeddings, it is necessary to upload an ONNX model to the Oracle Database. No additional setup is required for summary functionalities when using the database option.
 
 ## Load ONNX Model
 
-Oracle accommodates a variety of embedding providers, enabling users to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
+Oracle accommodates a variety of embedding providers, enabling you to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
 
-**Important** : Should users opt for the database option, they must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
+**Important** : Should you opt for the database option, you must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
 
 A significant advantage of utilizing an ONNX model directly within Oracle is the enhanced security and performance it offers by eliminating the need to transmit data to external parties. Additionally, this method avoids the latency typically associated with network or REST API calls.
 
@@ -196,9 +196,9 @@ ONNX model loaded
 
 ## Create Credential
 
-When selecting third-party providers for generating embeddings, users are required to establish credentials to securely access the provider's endpoints.
+When selecting third-party providers for generating embeddings, you are required to establish credentials to securely access the provider's endpoints.
 
-**Important**: No credentials are necessary when opting for the 'database' provider to generate embeddings. However, should users decide to utilize a third-party provider, they must create credentials specific to the chosen provider.
+**Important**: No credentials are necessary when opting for the 'database' provider to generate embeddings. However, should you decide to utilize a third-party provider, you must create credentials specific to the chosen provider.
 
 Below is an illustrative example:
 
@@ -283,9 +283,9 @@ Connection successful
 Number of docs loaded: 3
 ```
 
-Oracle accommodates a variety of embedding providers, enabling users to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
+Oracle accommodates a variety of embedding providers, enabling you to choose between proprietary database solutions and third-party services such as OCIGENAI and HuggingFace. This selection dictates the methodology for generating and managing embeddings.
 
-**Important** : Should users opt for the database option, they must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
+**Important** : Should you opt for the database option, you must upload an ONNX model into the Oracle Database. Conversely, if a third-party provider is selected for embedding generation, uploading an ONNX model to Oracle Database is not required.
 
 A significant advantage of utilizing an ONNX model directly within Oracle is the enhanced security and performance it offers by eliminating the need to transmit data to external parties. Additionally, this method avoids the latency typically associated with network or REST API calls.
 
@@ -293,9 +293,9 @@ Below is the example code to upload an ONNX model into Oracle Database:
 
 ## Generate Summary
 
-Now that the user loaded the documents, they may want to generate a summary for each document. The Oracle AI Vector Search Langchain library offers a suite of APIs designed for document summarization. It supports multiple summarization providers such as Database, OCIGENAI, HuggingFace, among others, allowing users to select the provider that best meets their needs. To utilize these capabilities, users must configure the summary parameters as specified. For detailed information on these parameters, please consult the Oracle AI Vector Search Guide book.
+Now that the you have loaded the documents, you may want to generate a summary for each document. The Oracle AI Vector Search Langchain library offers a suite of APIs designed for document summarization. It supports multiple summarization providers such as Database, OCIGENAI, HuggingFace, among others, allowing you to select the provider that best meets their needs. To utilize these capabilities, you must configure the summary parameters as specified. For detailed information on these parameters, please consult the Oracle AI Vector Search Guide book.
 
-**Note**: The users may need to set proxy if they want to use some 3rd party summary generation providers other than Oracle's in-house and default provider: 'database'. If you don't have proxy, please remove the proxy parameter when you instantiate the OracleSummary.
+**Note**: You may need to set proxy if you want to use some 3rd party summary generation providers other than Oracle's in-house and default provider: 'database'. If you don't have proxy, please remove the proxy parameter when you instantiate the OracleSummary.
 
 The following sample code will show how to generate summary:
 
@@ -364,7 +364,7 @@ Number of Chunks: 3
 
 ## Generate Embeddings
 
-Now that the documents are chunked as per requirements, the users may want to generate embeddings for these chunks. Oracle AI Vector Search provides multiple methods for generating embeddings, utilizing either locally hosted ONNX models or third-party APIs. For comprehensive instructions on configuring these alternatives, please refer to the Oracle AI Vector Search Guide.
+Now that the documents are chunked as per requirements, you may want to generate embeddings for these chunks. Oracle AI Vector Search provides multiple methods for generating embeddings, utilizing either locally hosted ONNX models or third-party APIs. For comprehensive instructions on configuring these alternatives, please refer to the Oracle AI Vector Search Guide.
 
 **Note**: Users may need to configure a proxy to utilize third-party embedding generation providers, excluding the 'database' provider that utilizes an ONNX model.
 

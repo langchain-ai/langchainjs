@@ -1,5 +1,7 @@
 # Oracle AI Vector Search with LangchainJS Integration
+
 ## Introduction
+
 Oracle AI Vector Search enables semantic search on unstructured data while simultaneously providing relational search capabilities on business data, all within a unified system. This approach eliminates the need for a separate vector database, reducing data fragmentation and improving efficiency.
 
 By integrating Oracle AI Vector Search with Langchain, you can build a powerful pipeline for Retrieval Augmented Generation (RAG), leveraging Oracle's robust database features.
@@ -20,7 +22,9 @@ Oracle AI Vector Search is built on top of the Oracle Database, providing severa
 * Oracle Spatial and Graph
 * Oracle Blockchain
 * JSON Support
+
 ## Guide Overview
+
 This guide demonstrates how to integrate Oracle AI Vector Search with Langchain to create an end-to-end RAG pipeline. You'll learn how to:
 
 * Load documents from different sources using OracleDocLoader.
@@ -28,20 +32,26 @@ This guide demonstrates how to integrate Oracle AI Vector Search with Langchain 
 * Generate embeddings either inside or outside the database using OracleEmbeddings.
 * Chunk documents based on specific needs using OracleTextSplitter.
 * Store, index, and query data using OracleVS.
+
 ## Getting Started
-If you're new to Oracle Database, consider using the free Oracle 23 AI Database to get started.
+
+If you're new to Oracle Database, consider using the [free Oracle Database 23ai](https://www.oracle.com/database/free/) to get started.
 
 ## Best Practices
+
 * User Management: Create dedicated users for your Oracle Database projects instead of using the system user for security and control purposes. See the end-to-end guide for more details.
-* User Privileges: Be sure to manage user privileges effectively to maintain database security. You can find more information in the official Oracle documentation.
+* User Privileges: Be sure to manage user privileges effectively to maintain database security. You can find more information in the official Oracle Database documentation.
+
 ## Prerequisites
-To get started, install the Oracle JavaScript client driver:
+
+To get started, install the [Oracle Database JavaScript client driver](https://node-oracledb.readthedocs.io/en/latest/):
 
 ``` typescript
 npm install oracledb
 ```
 
 ## Document Preparation
+
 Assuming you have documents stored in a file system that you want to use with Oracle AI Vector Search and Langchain, these documents need to be instances of langchain/core/documents.
 
 Example: Ingesting JSON Documents
@@ -70,9 +80,11 @@ public async ingestJson(): Promise<Document[]> {
 ```
 
 ## Langchain and Oracle Integration
+
 The Oracle AI Vector Search Langchain library offers a rich set of APIs for document processing, which includes loading, chunking, summarizing, and embedding generation. Here's how to set up a connection and integrate Oracle with Langchain.
 
 ## Connecting to Oracle Database
+
 Below is an example of how to connect to an Oracle Database using both a direct connection and a connection pool:
 
 ```typescript
@@ -98,10 +110,7 @@ async function dbPool(): Promise<oracledb.Pool> {
 ```
 
 ## Testing the Integration
-Here, we demonstrate how to create a test class TestsOracleVS to explore various features of Oracle Vector Store and its integration with Langchain.
 
-Example Test Class
-Testing the Integration
 Here, we demonstrate how to create a test class TestsOracleVS to explore various features of Oracle Vector Store and its integration with Langchain.
 
 Example Test Class
@@ -140,7 +149,9 @@ class TestsOracleVS {
         await connection.close();
     }
 
-    // We are ready to test SimilaritySearchByVector - To this one passes an embedding which is a number array. a k value and a filter. This call returns documents ordered by distance.
+    // We are ready to test SimilaritySearchByVector
+    // This one passes an embedding which is a number array, a k value,
+    // and a filter. This call returns documents ordered by distance.
     public async testSimilaritySearchByVector(
         embedding: number[],
         k: number,
@@ -162,7 +173,9 @@ class TestsOracleVS {
         return await this.oraclevs.similaritySearchByVectorReturningEmbeddings( embedding, k, filter);
     }
     
-    // This call tests out the MaxMarginalRelevanceSearch the parameters are self explanatory. The Callback is reserved for future use.
+    // This call tests out the MaxMarginalRelevanceSearch
+    // the parameters are self explanatory.
+    // The Callback is reserved for future use.
     public async testMaxMarginalRelevanceSearch(
         query: string,
         options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
@@ -175,7 +188,8 @@ class TestsOracleVS {
         return this.oraclevs.maxMarginalRelevanceSearch(query, options, _callbacks);
     }
     
-    // This call is the same as above except that it takes a vector instead of a query as an argument.
+    // This call is the same as above except that it takes a vector
+    // instead of a query as an argument.
     public async testMaxMarginalRelevanceSearchByVector(
         query: number[],
         options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
@@ -270,4 +284,5 @@ async function runTestsOracleVS() {
     
 }
 ```
+
 That is all for now.
