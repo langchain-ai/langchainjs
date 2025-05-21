@@ -70,9 +70,9 @@ const config = {
       }),
     }),
     [
-      '@docusaurus/plugin-google-tag-manager',
+      "@docusaurus/plugin-google-tag-manager",
       {
-        containerId: 'GTM-NN9LVH7S',
+        containerId: "GTM-NN9LVH7S",
       },
     ],
   ],
@@ -322,9 +322,7 @@ const config = {
       },
     }),
 
-  scripts: [
-    baseUrl + "js/job_link.js",
-  ],
+  scripts: [baseUrl + "js/job_link.js"],
 
   customFields: {
     supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
