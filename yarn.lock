@@ -5972,10 +5972,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/inference@npm:^2.6.4":
-  version: 2.6.4
-  resolution: "@huggingface/inference@npm:2.6.4"
-  checksum: 7d48960a62d0621d4c3f1edd183aa5d7829d297110b5720c78291aac17ed58b6a9af8eaf8a3f2cbb9dabfda3cf48931f59cf491cdedefd624f90d93fa3927981
+"@huggingface/inference@npm:^3.13.2":
+  version: 3.13.2
+  resolution: "@huggingface/inference@npm:3.13.2"
+  dependencies:
+    "@huggingface/jinja": ^0.5.0
+    "@huggingface/tasks": ^0.19.6
+  checksum: 347192023adcaa2ec70d4de10b33306592c1b9fbef3cf0eec7de7a11821f2dfd733fbbb53be6e0dbf962a82b499ff816e705758f7c0b7d165367689c6f2ffd87
   languageName: node
   linkType: hard
 
@@ -5983,6 +5986,20 @@ __metadata:
   version: 0.3.2
   resolution: "@huggingface/jinja@npm:0.3.2"
   checksum: 4bc7d00b6f8655a0032c2d89e38a095d0a87ef81a1c12fb6fd0404e1319e1ef6eef87734502689c1df39db4e77a7bb5996e7b6c1b4d6a768ecfa5a48f2a939a7
+  languageName: node
+  linkType: hard
+
+"@huggingface/jinja@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@huggingface/jinja@npm:0.5.0"
+  checksum: 8bb04021f381158d5e358a166f8eec250785c0dc9f70a04b92d0aabddc8583a9f20026c808be59d4926787087399ca8f5a4cc8fc37749be35bea63473af19c53
+  languageName: node
+  linkType: hard
+
+"@huggingface/tasks@npm:^0.19.6":
+  version: 0.19.8
+  resolution: "@huggingface/tasks@npm:0.19.8"
+  checksum: 89377ebda7b5cdecf12e805b52eb8800d3f0fb337855e4d3b4e082aeae9c1ad5492f94ea9492e45d1c7c23779836bf168b7f21103be3fb1c1651be67fa0f89bb
   languageName: node
   linkType: hard
 
@@ -7264,7 +7281,7 @@ __metadata:
     "@google-ai/generativelanguage": ^2.5.0
     "@google-cloud/storage": ^7.15.2
     "@gradientai/nodejs-sdk": ^1.2.0
-    "@huggingface/inference": ^2.6.4
+    "@huggingface/inference": ^3.13.2
     "@huggingface/transformers": ^3.2.3
     "@ibm-cloud/watsonx-ai": ^1.6.4
     "@jest/globals": ^29.5.0
@@ -7449,7 +7466,7 @@ __metadata:
     "@google-ai/generativelanguage": "*"
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
-    "@huggingface/inference": ^2.6.4
+    "@huggingface/inference": ^3.13.2
     "@huggingface/transformers": ^3.2.3
     "@ibm-cloud/watsonx-ai": "*"
     "@lancedb/lancedb": ^0.12.0
