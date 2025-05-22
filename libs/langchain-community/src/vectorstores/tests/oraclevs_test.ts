@@ -1,10 +1,10 @@
-import oracledb from 'oracledb';
-import {promises as fs} from "fs";
-import {MaxMarginalRelevanceSearchOptions} from "@langchain/core/vectorstores";
-import {Document, DocumentInterface} from "@langchain/core/documents";
-import {Embeddings} from "@langchain/core/embeddings";
-import {Callbacks} from "@langchain/core/callbacks/manager";
-import {DistanceStrategy, createIndex, OracleVS} from "../oraclevs.js";
+import oracledb from "oracledb";
+import { promises as fs } from "fs";
+import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
+import { Document, DocumentInterface } from "@langchain/core/documents";
+import { Embeddings } from "@langchain/core/embeddings";
+import { Callbacks } from "@langchain/core/callbacks/manager";
+import { DistanceStrategy, createIndex, OracleVS } from "../oraclevs.js";
 import { HuggingFaceTransformersEmbeddings } from "../../embeddings/hf_transformers.js";
 
 interface DataRow {
@@ -16,56 +16,56 @@ interface DataRow {
 async function dbConnect(): Promise<oracledb.Connection> {
   // Create a connection
   const connection = await oracledb.getConnection({
-    user: 'shailendra',
-    password: 'shailendra1',
-    connectString: '138.2.233.65:1521/freepdb1'
+    user: getEnvironmentVariable("ORACLE_USERNAME"),
+    password: getEnvironmentVariable("ORACLE_PASSWORD"),
+    connectString: getEnvironmentVariable("ORACLE_DSN"),
   });
-  console.log('Connection pool started')
-  return connection
-
+  console.log("Connection pool started");
+  return connection;
 }
 
 async function dbPool(): Promise<oracledb.Pool> {
   // Create a connection pool
   const pool = await oracledb.createPool({
-    user: 'shailendra',
-    password: 'shailendra1',
-    connectString: '138.2.233.65:1521/freepdb1'
+    user: getEnvironmentVariable("ORACLE_USERNAME"),
+    password: getEnvironmentVariable("ORACLE_PASSWORD"),
+    connectString: getEnvironmentVariable("ORACLE_DSN"),
   });
 
-  console.log('Connection pool started')
-  return pool
+  console.log("Connection pool started");
+  return pool;
 }
-
 
 class TestsOracleVS {
   client: any | null = null;
 
-  docsDir = "/Users/skmishra/repo/frameworks/oraclevsjs/resources/downloads/oradocs/";
+  docsDir = getEnvironmentVariable("DEMO_DIRECTORY");
 
   filename: string;
 
   embeddingFunction: HuggingFaceTransformersEmbeddings;
 
-  dbConfig: Record<string, any>= {};
+  dbConfig: Record<string, any> = {};
 
   oraclevs!: OracleVS;
 
-  constructor(filename: string,
-              embeddingFunction: HuggingFaceTransformersEmbeddings) {
+  constructor(
+    filename: string,
+    embeddingFunction: HuggingFaceTransformersEmbeddings
+  ) {
     this.filename = filename;
     this.embeddingFunction = embeddingFunction;
   }
 
   async init(): Promise<void> {
-    this.client = await dbPool()
+    this.client = await dbPool();
 
     // code to create dbConfig
     this.dbConfig = {
-      "client": this.client,
-      "tableName": "some_tablenm",
-      "distanceStrategy": DistanceStrategy.DOT_PRODUCT,
-      "query": "What are salient features of oracledb",
+      client: this.client,
+      tableName: "some_tablenm",
+      distanceStrategy: DistanceStrategy.DOT_PRODUCT,
+      query: "What are salient features of oracledb",
     };
 
     try {
@@ -81,30 +81,30 @@ class TestsOracleVS {
       id: row.id,
       link: row.link,
     };
-    return new Document({pageContent: row.text, metadata});
+    return new Document({ pageContent: row.text, metadata });
   }
 
   public async testIngestJson(): Promise<Document[]> {
     try {
       const filePath = `${this.docsDir}${this.filename}`;
-      const fileContent = await fs.readFile(filePath, {encoding: 'utf8'});
+      const fileContent = await fs.readFile(filePath, { encoding: "utf8" });
       const jsonData: DataRow[] = JSON.parse(fileContent);
       return jsonData.map((row) => this.createDocument(row));
     } catch (error) {
-      console.error('An error occurred while ingesting JSON:', error);
+      console.error("An error occurred while ingesting JSON:", error);
       throw error; // Rethrow the error if you want the calling function to handle it
     }
   }
 
   public async testCreateIndex(): Promise<void> {
     try {
-      const connection : oracledb.Connection= await dbConnect()
+      const connection: oracledb.Connection = await dbConnect();
 
       await createIndex(connection, this.oraclevs, {
         idxName: "IVF",
         idxType: "IVF",
         neighborPart: 64,
-        accuracy: 90
+        accuracy: 90,
       });
 
       console.log("Index created successfully");
@@ -119,22 +119,22 @@ class TestsOracleVS {
   public async testSimilaritySearchByVector(
     embedding: number[],
     k: number,
-    filter?: OracleVS["FilterType"],
+    filter?: OracleVS["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
-    return this.oraclevs.similaritySearchVectorWithScore(
-      embedding,
-      k,
-      filter,
-    );
+    return this.oraclevs.similaritySearchVectorWithScore(embedding, k, filter);
   }
 
   public async testSimilaritySearchByVectorReturningEmbeddings(
     embedding: number[],
     // eslint-disable-next-line default-param-last
     k = 4,
-    filter?: OracleVS["FilterType"],
+    filter?: OracleVS["FilterType"]
   ): Promise<[Document, number, Float32Array | number[]][]> {
-    return await this.oraclevs.similaritySearchByVectorReturningEmbeddings( embedding, k, filter);
+    return await this.oraclevs.similaritySearchByVectorReturningEmbeddings(
+      embedding,
+      k,
+      filter
+    );
   }
 
   public async testMaxMarginalRelevanceSearch(
@@ -160,7 +160,11 @@ class TestsOracleVS {
       // eslint-disable-next-line no-param-reassign
       options = { k: 10, fetchK: 20 }; // Default values for the options
     }
-    return this.oraclevs!.maxMarginalRelevanceSearchByVector(query, options, _callbacks);
+    return this.oraclevs!.maxMarginalRelevanceSearchByVector(
+      query,
+      options,
+      _callbacks
+    );
   }
 
   public async testMaxMarginalRelevanceSearchWithScoreByVector(
@@ -172,10 +176,14 @@ class TestsOracleVS {
       // eslint-disable-next-line no-param-reassign
       options = { k: 10, fetchK: 20 }; // Default values for the options
     }
-    return this.oraclevs.maxMarginalRelevanceSearchWithScoreByVector(embedding, options, _callbacks)
+    return this.oraclevs.maxMarginalRelevanceSearchWithScoreByVector(
+      embedding,
+      options,
+      _callbacks
+    );
   }
 
-  testDelete( params: { ids?: string[], deleteAll?: boolean } ): Promise<void> {
+  testDelete(params: { ids?: string[]; deleteAll?: boolean }): Promise<void> {
     return this.oraclevs.delete(params);
   }
 }
@@ -200,17 +208,21 @@ async function runTestsOracleVS() {
   console.log("Embedding function initialized successfully");
 
   // Initialize the TestsOracleVS class
-  const testsOracleVS = new TestsOracleVS("concepts23c_small.json",
-    embeddingFunction);
+  const testsOracleVS = new TestsOracleVS(
+    "concepts23c_small.json",
+    embeddingFunction
+  );
 
   // Initialize connection and other setup
   await testsOracleVS.init();
 
   // Ingest JSON data to create documents
   const documents = await testsOracleVS.testIngestJson();
-  await OracleVS.fromDocuments(documents,
+  await OracleVS.fromDocuments(
+    documents,
     testsOracleVS.embeddingFunction,
-    testsOracleVS.dbConfig)
+    testsOracleVS.dbConfig
+  );
 
   // Create an index
   await testsOracleVS.testCreateIndex();
@@ -220,26 +232,37 @@ async function runTestsOracleVS() {
 
   // Perform a similarity search by vector
   const embedding = await embeddingFunction.embedQuery(query);
-  const similaritySearchByVector = await testsOracleVS.testSimilaritySearchByVector(embedding, 5);
+  const similaritySearchByVector =
+    await testsOracleVS.testSimilaritySearchByVector(embedding, 5);
   console.log("Similarity Search Results:", similaritySearchByVector);
 
   // Perform a similarity search by vector
   const similaritySearchByEmbeddings =
-    await testsOracleVS.testSimilaritySearchByVectorReturningEmbeddings(embedding, 5)
+    await testsOracleVS.testSimilaritySearchByVectorReturningEmbeddings(
+      embedding,
+      5
+    );
   console.log("Similarity Search Results:", similaritySearchByEmbeddings);
 
   const maxMarginalRelevanceSearch =
-    await testsOracleVS.testMaxMarginalRelevanceSearch(query)
+    await testsOracleVS.testMaxMarginalRelevanceSearch(query);
   console.log("Max Marginal Relevance Search:", maxMarginalRelevanceSearch);
 
   const maxMarginalRelevanceSearchByVector =
-    await testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding)
-  console.log("Max Marginal Relevance Search By Vector:", maxMarginalRelevanceSearchByVector);
+    await testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding);
+  console.log(
+    "Max Marginal Relevance Search By Vector:",
+    maxMarginalRelevanceSearchByVector
+  );
 
   const maxMarginalRelevanceSearchWithScoreByVector =
-    await testsOracleVS.testMaxMarginalRelevanceSearchWithScoreByVector(embedding)
-  console.log("Max Marginal Relevance Search By Vector:", maxMarginalRelevanceSearchWithScoreByVector);
-
+    await testsOracleVS.testMaxMarginalRelevanceSearchWithScoreByVector(
+      embedding
+    );
+  console.log(
+    "Max Marginal Relevance Search By Vector:",
+    maxMarginalRelevanceSearchWithScoreByVector
+  );
 }
 
 // Run the demonstration

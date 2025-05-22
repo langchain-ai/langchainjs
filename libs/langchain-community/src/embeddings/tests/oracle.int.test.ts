@@ -6,7 +6,7 @@ import { OracleEmbeddings } from "../oracle.js";
 test("Test embedQuery", async () => {
   const pref = {
     provider: "database",
-    model: getEnvironmentVariable("ORACLE_MODEL"),
+    model: getEnvironmentVariable("ORACLE_ONNX_MODEL"),
   };
   const connection = await oracledb.getConnection({
     user: getEnvironmentVariable("ORACLE_USERNAME"),
@@ -32,7 +32,7 @@ test("Test embedDocuments", async () => {
 
   const pref = {
     provider: "database",
-    model: getEnvironmentVariable("ORACLE_MODEL"),
+    model: getEnvironmentVariable("ORACLE_ONNX_MODEL"),
   };
   const connection = await oracledb.getConnection({
     user: getEnvironmentVariable("ORACLE_USERNAME"),
