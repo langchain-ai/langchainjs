@@ -128,6 +128,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
       if (!("owner" in this.pref) || !("colname" in this.pref)) {
         throw new Error(`Invalid preferences: missing owner or colname`);
       }
+
       // SQL doesn't accept backslash to escape a double quote (\"). If string contains \" change to "
       if (
         this.pref.tablename.startsWith('\\"') &&
@@ -135,6 +136,11 @@ export class OracleDocLoader extends BaseDocumentLoader {
       ) {
         this.pref.tablename = this.pref.tablename.replaceAll("\\", "");
       }
+
+      // Check if names are invalid
+      const sql = `select sys.dbms_assert.simple_sql_name('${this.pref.colname}'), sys.dbms_assert.qualified_sql_name('${this.pref.owner}.${this.pref.tablename}') from dual`;
+      await this.conn.execute(<string>sql);
+
       const result = await this.conn.execute(
         <string>(
           `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text, dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata from ${this.pref.owner}.${this.pref.tablename} t`
