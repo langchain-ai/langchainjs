@@ -15,6 +15,7 @@ import {
 import type {
   ToolConfiguration,
   GuardrailConfiguration,
+  PerformanceConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -141,6 +142,12 @@ export interface ChatBedrockConverseInput
   guardrailConfig?: GuardrailConfiguration;
 
   /**
+   * Model performance configuration.
+   * See https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html
+   */
+  performanceConfig?: PerformanceConfiguration;
+
+  /**
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
@@ -153,7 +160,10 @@ export interface ChatBedrockConverseCallOptions
   extends BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
-      "additionalModelRequestFields" | "streamUsage"
+      | "additionalModelRequestFields"
+      | "streamUsage"
+      | "guardrailConfig"
+      | "performanceConfig"
     > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
@@ -648,6 +658,8 @@ export class ChatBedrockConverse
 
   guardrailConfig?: GuardrailConfiguration;
 
+  performanceConfig?: PerformanceConfiguration;
+
   client: BedrockRuntimeClient;
 
   /**
@@ -714,6 +726,7 @@ export class ChatBedrockConverse
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
+    this.performanceConfig = rest?.performanceConfig;
 
     if (rest?.supportsToolChoiceValues === undefined) {
       if (this.model.includes("claude-3")) {
@@ -783,7 +796,8 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
-      guardrailConfig: this.guardrailConfig,
+      guardrailConfig: options?.guardrailConfig,
+      performanceConfig: options?.performanceConfig,
     };
   }
 
