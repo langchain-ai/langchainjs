@@ -6,6 +6,7 @@ import { Embeddings } from "@langchain/core/embeddings";
 import { Callbacks } from "@langchain/core/callbacks/manager";
 import { DistanceStrategy, createIndex, OracleVS } from "../oraclevs.js";
 import { HuggingFaceTransformersEmbeddings } from "../../embeddings/hf_transformers.js";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 interface DataRow {
   id: string;
