@@ -1,17 +1,16 @@
 import { test, expect } from "@jest/globals";
 import { ChatVertexAI } from "../chat_models.js";
-import { MockClient } from "@langchain/google-common/src/tests/mock.ts";
+
+// Define a minimal local type for the parts of GoogleAbstractedClientOps we need
+interface MinimalClientOps {
+  data?: { labels?: Record<string, string>; [key: string]: any };
+  // Add other fields from GoogleAbstractedClientOps if they become necessary for the mock
+}
 
 test("ChatVertexAI should pass labels to the API call", async () => {
-  const mockClient = new MockClient();
   const chatModel = new ChatVertexAI({
     model: "gemini-pro",
-    // We need to force the client to be the mock client for testing purposes.
-    // This is a bit of a hack, ideally there would be a cleaner way to inject mocks.
-    // For now, we'll cast the chatModel to access the protected connection property.
-    // In a real scenario, testing lower-level components or refactoring for dependency injection would be better.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client: mockClient as any,
+    // No longer injecting a mock client directly
   });
 
   const labels = {
@@ -19,11 +18,52 @@ test("ChatVertexAI should pass labels to the API call", async () => {
     "session-id": "abc",
   };
 
+  // Spy on the request method of the internal client
+  // The actual path to 'request' might be deeper depending on client structure
+  // (chatModel as any).connection.client is the GAuthClient instance
+  const clientRequestSpy = jest.spyOn(
+    (chatModel as any).connection.client,
+    "request"
+  );
+
+  // Mock a basic successful response to allow 'invoke' to complete
+  clientRequestSpy.mockResolvedValueOnce({
+    data: {
+      candidates: [
+        {
+          content: { parts: [{ text: "mocked response" }], role: "model" },
+          finishReason: "STOP",
+          index: 0,
+          safetyRatings: [],
+        },
+      ],
+      promptFeedback: { safetyRatings: [] },
+      usageMetadata: { // Add usageMetadata to avoid potential errors if the model expects it
+        promptTokenCount: 0,
+        candidatesTokenCount: 0,
+        totalTokenCount: 0,
+      }
+    },
+    status: 200,
+    statusText: "OK",
+    headers: {},
+    config: {},
+  } as any); // Cast as any to satisfy the spy's expected return type if complex
+
   await chatModel.invoke("hello", {
     labels,
   });
 
+  // Assert that the spy was called
+  expect(clientRequestSpy).toHaveBeenCalled();
+
   // Assert that the mock client's request record contains the labels
-  // The request format is based on the Gemini API request structure
-  expect(mockClient.record.opts.data.labels).toEqual(labels);
+  // The request options are the first argument to client.request
+  const requestOptions = clientRequestSpy.mock.calls[0][0] as MinimalClientOps;
+  // The actual data payload within GoogleAbstractedClientOps is under the 'data' property, which is 'unknown'
+  // We expect it to be an object with a 'labels' field for this test.
+  expect(requestOptions.data?.labels).toEqual(labels);
+
+  // Restore the spy to avoid affecting other tests
+  clientRequestSpy.mockRestore();
 });
