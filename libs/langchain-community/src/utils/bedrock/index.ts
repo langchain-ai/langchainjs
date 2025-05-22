@@ -150,7 +150,7 @@ export interface BaseBedrockInput {
 
   /**
    * Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21.
-   * @deprecated Use .bind({ "stop": [...] }) instead
+   * @deprecated Use .withConfig({ "stop": [...] }) instead
    * */
   stopSequences?: string[];
 
