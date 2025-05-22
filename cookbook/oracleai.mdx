@@ -18,7 +18,7 @@ In addition, your vectors can benefit from all of Oracle Database’s most power
 * [Oracle Blockchain](https://docs.oracle.com/en/database/oracle/oracle-database/23/arpls/dbms_blockchain_table.html#GUID-B469E277-978E-4378-A8C1-26D3FF96C9A6)
 * [JSON](https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-in-oracle-database.html)
 
-This guide demonstrates how Oracle AI Vector Search can be used with Langchain to serve an end-to-end RAG pipeline. This guide goes through examples of:
+This guide demonstrates how Oracle AI Vector Search can be used with LangChain to serve an end-to-end RAG pipeline. This guide goes through examples of:
 
 * Loading the documents from various sources using OracleDocLoader
 * Summarizing them within/outside the database using OracleSummary
@@ -30,7 +30,7 @@ If you are just starting with Oracle Database, consider exploring the [free Orac
 
 ## Prerequisites
 
-Please install the Oracle Database Javascript Client driver node-oracledb to use Langchain with Oracle AI Vector Search.
+Please install the Oracle Database Javascript Client driver node-oracledb to use LangChain with Oracle AI Vector Search.
 
 ```bash npm2yarn
 npm install oracledb
@@ -71,13 +71,13 @@ end;
 
 ## Process Documents using Oracle AI
 
-Consider the following scenario: you possess documents stored either in an Oracle Database or a file system and intend to utilize this data with Oracle AI Vector Search powered by Langchain.
+Consider the following scenario: you possess documents stored either in an Oracle Database or a file system and intend to utilize this data with Oracle AI Vector Search powered by LangChain.
 
 To prepare the documents for analysis, a comprehensive preprocessing workflow is necessary. Initially, the documents must be retrieved, summarized (if required), and chunked as needed. Subsequent steps involve generating embeddings for these chunks and integrating them into the Oracle AI Vector Store. Users can then conduct semantic searches on this data.
 
-The Oracle AI Vector Search Langchain library encompasses a suite of document processing tools that facilitate document loading, chunking, summary generation, and embedding creation.
+The Oracle AI Vector Search LangChain library encompasses a suite of document processing tools that facilitate document loading, chunking, summary generation, and embedding creation.
 
-In the sections that follow, we will detail the utilization of Oracle AI Langchain APIs to effectively implement each of these processes.
+In the sections that follow, we will detail the utilization of Oracle AI LangChain APIs to effectively implement each of these processes.
 
 ## Connect to Demo User
 
@@ -293,7 +293,7 @@ Below is the example code to upload an ONNX model into Oracle Database:
 
 ## Generate Summary
 
-Now that the you have loaded the documents, you may want to generate a summary for each document. The Oracle AI Vector Search Langchain library offers a suite of APIs designed for document summarization. It supports multiple summarization providers such as Database, OCIGENAI, HuggingFace, among others, allowing you to select the provider that best meets their needs. To utilize these capabilities, you must configure the summary parameters as specified. For detailed information on these parameters, please consult the Oracle AI Vector Search Guide book.
+Now that the you have loaded the documents, you may want to generate a summary for each document. The Oracle AI Vector Search LangChain library offers a suite of APIs designed for document summarization. It supports multiple summarization providers such as Database, OCIGENAI, HuggingFace, among others, allowing you to select the provider that best meets their needs. To utilize these capabilities, you must configure the summary parameters as specified. For detailed information on these parameters, please consult the Oracle AI Vector Search Guide book.
 
 **Note**: You may need to set proxy if you want to use some 3rd party summary generation providers other than Oracle's in-house and default provider: 'database'. If you don't have proxy, please remove the proxy parameter when you instantiate the OracleSummary.
 
@@ -406,7 +406,7 @@ Number of embeddings: 3
 
 ## Create Oracle AI Vector Store
 
-Now that you know how to use Oracle AI Langchain library APIs individually to process the documents, let us show how to integrate with Oracle AI Vector Store to facilitate the semantic searches.
+Now that you know how to use Oracle AI LangChain library APIs individually to process the documents, let us show how to integrate with Oracle AI Vector Store to facilitate the semantic searches.
 
 Let's combine all document processing stages together. Here is the sample code below:
 

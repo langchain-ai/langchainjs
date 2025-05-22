@@ -1,10 +1,10 @@
-# Oracle AI Vector Search with LangchainJS Integration
+# Oracle AI Vector Search with LangChain.js Integration
 
 ## Introduction
 
 Oracle AI Vector Search enables semantic search on unstructured data while simultaneously providing relational search capabilities on business data, all within a unified system. This approach eliminates the need for a separate vector database, reducing data fragmentation and improving efficiency.
 
-By integrating Oracle AI Vector Search with Langchain, you can build a powerful pipeline for Retrieval Augmented Generation (RAG), leveraging Oracle's robust database features.
+By integrating Oracle AI Vector Search with LangChain, you can build a powerful pipeline for Retrieval Augmented Generation (RAG), leveraging Oracle's robust database features.
 
 Key Advantages of Oracle Database
 Oracle AI Vector Search is built on top of the Oracle Database, providing several key features:
@@ -25,7 +25,7 @@ Oracle AI Vector Search is built on top of the Oracle Database, providing severa
 
 ## Guide Overview
 
-This guide demonstrates how to integrate Oracle AI Vector Search with Langchain to create an end-to-end RAG pipeline. You'll learn how to:
+This guide demonstrates how to integrate Oracle AI Vector Search with LangChain to create an end-to-end RAG pipeline. You'll learn how to:
 
 * Load documents from different sources using OracleDocLoader.
 * Summarize documents inside or outside the database using OracleSummary.
@@ -52,7 +52,7 @@ npm install oracledb
 
 ## Document Preparation
 
-Assuming you have documents stored in a file system that you want to use with Oracle AI Vector Search and Langchain, these documents need to be instances of langchain/core/documents.
+Assuming you have documents stored in a file system that you want to use with Oracle AI Vector Search and LangChain, these documents need to be instances of langchain/core/documents.
 
 Example: Ingesting JSON Documents
 In the following TypeScript example, we demonstrate how to ingest documents from JSON files:
@@ -79,9 +79,9 @@ public async ingestJson(): Promise<Document[]> {
 }
 ```
 
-## Langchain and Oracle Integration
+## LangChain and Oracle Integration
 
-The Oracle AI Vector Search Langchain library offers a rich set of APIs for document processing, which includes loading, chunking, summarizing, and embedding generation. Here's how to set up a connection and integrate Oracle with Langchain.
+The Oracle AI Vector Search LangChain library offers a rich set of APIs for document processing, which includes loading, chunking, summarizing, and embedding generation. Here's how to set up a connection and integrate Oracle with LangChain.
 
 ## Connecting to Oracle Database
 
@@ -111,7 +111,7 @@ async function dbPool(): Promise<oracledb.Pool> {
 
 ## Testing the Integration
 
-Here, we demonstrate how to create a test class TestsOracleVS to explore various features of Oracle Vector Store and its integration with Langchain.
+Here, we demonstrate how to create a test class TestsOracleVS to explore various features of Oracle Vector Store and its integration with LangChain.
 
 Example Test Class
 
