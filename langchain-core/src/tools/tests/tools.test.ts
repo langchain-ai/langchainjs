@@ -56,6 +56,34 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
   expect(toolResult).toBe("msg_content");
 });
 
+test("ToolMessage content coerces to empty string when tool returns undefined", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const weatherTool = tool(
+    () => {
+      return undefined;
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+    }
+  );
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult).toHaveProperty("content", "");
+});
+
 test("Does not return tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with no id is passed in", async () => {
   const weatherSchema = z.object({
     location: z.string(),
