@@ -7273,7 +7273,7 @@ __metadata:
     "@langchain/openai": ">=0.2.0 <0.6.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
-    "@langchain/weaviate": ^0.1.1
+    "@langchain/weaviate": ^0.2.0
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
     "@mendable/firecrawl-js": ^1.4.3
@@ -8769,7 +8769,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/weaviate@^0.1.1, @langchain/weaviate@workspace:*, @langchain/weaviate@workspace:libs/langchain-weaviate":
+"@langchain/weaviate@^0.2.0, @langchain/weaviate@workspace:*, @langchain/weaviate@workspace:libs/langchain-weaviate":
   version: 0.0.0-use.local
   resolution: "@langchain/weaviate@workspace:libs/langchain-weaviate"
   dependencies:
