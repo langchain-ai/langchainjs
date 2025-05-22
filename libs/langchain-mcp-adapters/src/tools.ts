@@ -265,6 +265,8 @@ export async function loadMcpTools(
         .map(async (tool: MCPTool) => {
           try {
             if (!tool.inputSchema.properties) {
+              // Workaround for MCP SDK not consistently providing properties
+              // eslint-disable-next-line no-param-reassign
               tool.inputSchema.properties = {};
             }
 
