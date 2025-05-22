@@ -48,6 +48,11 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
    * Google API key to use
    */
   apiKey?: string;
+
+  /**
+   * Google API base URL to use
+   */
+  baseUrl?: string;
 }
 
 /**
@@ -120,9 +125,14 @@ export class GoogleGenerativeAIEmbeddings
       );
     }
 
-    this.client = new GoogleGenerativeAI(this.apiKey).getGenerativeModel({
-      model: this.model,
-    });
+    this.client = new GoogleGenerativeAI(this.apiKey).getGenerativeModel(
+      {
+        model: this.model,
+      },
+      {
+        baseUrl: fields?.baseUrl,
+      }
+    );
   }
 
   private _convertToContent(text: string): EmbedContentRequest {
