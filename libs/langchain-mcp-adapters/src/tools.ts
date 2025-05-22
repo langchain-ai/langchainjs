@@ -8,6 +8,7 @@ import type {
   Tool as MCPTool,
 } from "@modelcontextprotocol/sdk/types.js";
 import {
+  DynamicTool,
   DynamicStructuredTool,
   type DynamicStructuredToolInput,
   type StructuredToolInterface,
@@ -264,18 +265,30 @@ export async function loadMcpTools(
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
-            const dst = new DynamicStructuredTool({
-              name: `${toolNamePrefix}${tool.name}`,
-              description: tool.description || "",
-              schema: tool.inputSchema,
-              responseFormat: "content_and_artifact",
-              func: _callTool.bind(
-                null,
-                serverName,
-                tool.name,
-                client
-              ) as DynamicStructuredToolInput["func"],
-            });
+            const dst = tool.inputSchema?.properties
+              ? new DynamicStructuredTool({
+                  name: `${toolNamePrefix}${tool.name}`,
+                  description: tool.description || "",
+                  schema: tool.inputSchema,
+                  responseFormat: "content_and_artifact",
+                  func: _callTool.bind(
+                    null,
+                    serverName,
+                    tool.name,
+                    client
+                  ) as DynamicStructuredToolInput["func"],
+                })
+              : new DynamicTool({
+                  name: `${toolNamePrefix}${tool.name}`,
+                  description: tool.description || "",
+                  responseFormat: "content_and_artifact",
+                  func: _callTool.bind(
+                    null,
+                    serverName,
+                    tool.name,
+                    client
+                  ) as DynamicStructuredToolInput["func"],
+                });
             getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
           } catch (error) {
