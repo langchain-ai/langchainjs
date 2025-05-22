@@ -175,7 +175,7 @@ describe("Simplified Tool Adapter Tests", () => {
       );
 
       expect(mockClient.callTool).toHaveBeenCalledWith({
-        arguments: undefined,
+        arguments: {},
         name: "weather",
       });
     });

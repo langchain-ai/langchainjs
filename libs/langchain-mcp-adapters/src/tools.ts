@@ -12,6 +12,7 @@ import {
   DynamicStructuredTool,
   type DynamicStructuredToolInput,
   type StructuredToolInterface,
+  ToolInterface,
 } from "@langchain/core/tools";
 import {
   MessageContent,
@@ -238,7 +239,7 @@ export async function loadMcpTools(
   serverName: string,
   client: Client,
   options?: LoadMcpToolsOptions
-): Promise<StructuredToolInterface[]> {
+): Promise<(StructuredToolInterface | ToolInterface)[]> {
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
@@ -282,12 +283,8 @@ export async function loadMcpTools(
                   name: `${toolNamePrefix}${tool.name}`,
                   description: tool.description || "",
                   responseFormat: "content_and_artifact",
-                  func: _callTool.bind(
-                    null,
-                    serverName,
-                    tool.name,
-                    client
-                  ) as DynamicStructuredToolInput["func"],
+                  func: async (_input: string) =>
+                    _callTool(serverName, tool.name, client, {}),
                 });
             getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
