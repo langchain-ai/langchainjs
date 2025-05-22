@@ -582,13 +582,12 @@ function _oldConvertDeltaToMessageChunk(
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_groq.ChatGroqCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
- *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -1113,7 +1112,7 @@ export class ChatGroq extends BaseChatModel<
     tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
@@ -1371,7 +1370,7 @@ export class ChatGroq extends BaseChatModel<
     let llm: Runnable<BaseLanguageModelInput>;
 
     if (method === "jsonMode") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: { type: "json_object" },
       });
       if (isZodSchema(schema)) {
@@ -1382,17 +1381,16 @@ export class ChatGroq extends BaseChatModel<
     } else {
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: {
+              name: functionName,
+              description: asJsonSchema.description,
+              parameters: asJsonSchema,
             },
-          ],
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {
@@ -1422,13 +1420,12 @@ export class ChatGroq extends BaseChatModel<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: openAIFunctionDefinition,
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {

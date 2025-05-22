@@ -1,9 +1,5 @@
 import { ChatPromptValueInterface } from "../prompt_values.js";
-import {
-  RunnableLike,
-  Runnable,
-  type RunnableBinding,
-} from "../runnables/base.js";
+import { RunnableLike, Runnable, RunnableBinding } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 import { InputValues } from "../utils/types/index.js";
 import {
@@ -91,15 +87,15 @@ export class StructuredPrompt<
       isWithStructuredOutput(coerceable.bound)
     ) {
       return super.pipe(
-        this.method
-          ? coerceable.bound
-              .withStructuredOutput(this.schema, { method: this.method })
-              .bind(coerceable.kwargs ?? {})
-              .withConfig(coerceable.config)
-          : coerceable.bound
-              .withStructuredOutput(this.schema)
-              .bind(coerceable.kwargs ?? {})
-              .withConfig(coerceable.config)
+        new RunnableBinding({
+          bound: coerceable.bound.withStructuredOutput(
+            this.schema,
+            ...(this.method ? [{ method: this.method }] : [])
+          ),
+          kwargs: coerceable.kwargs ?? {},
+          config: coerceable.config,
+          configFactories: coerceable.configFactories,
+        })
       );
     }
 

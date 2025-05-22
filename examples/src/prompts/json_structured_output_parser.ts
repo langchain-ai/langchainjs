@@ -6,7 +6,7 @@ import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai
 const parser = new JsonOutputFunctionsParser();
 
 // Define the function schema
-const extractionFunctionSchema = {
+const extractionFunctionDefinition = {
   name: "extractor",
   description: "Extracts fields from the input.",
   parameters: {
@@ -35,8 +35,8 @@ const model = new ChatOpenAI({ model: "gpt-4" });
 
 // Create a new runnable, bind the function to the model, and pipe the output through the parser
 const runnable = model
-  .bind({
-    functions: [extractionFunctionSchema],
+  .bindTools([extractionFunctionDefinition])
+  .withConfig({
     function_call: { name: "extractor" },
   })
   .pipe(parser);

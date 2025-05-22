@@ -20,29 +20,27 @@ function getCurrentWeather(location: string, _unit?: string) {
 const chat = new ChatOpenAI({
   model: "gpt-3.5-turbo-1106",
   maxTokens: 128,
-}).bind({
-  tools: [
+})
+  .bindTools([
     {
-      type: "function",
-      function: {
-        name: "get_current_weather",
-        description: "Get the current weather in a given location",
-        parameters: {
-          type: "object",
-          properties: {
-            location: {
-              type: "string",
-              description: "The city and state, e.g. San Francisco, CA",
-            },
-            unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+      name: "get_current_weather",
+      description: "Get the current weather in a given location",
+      parameters: {
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The city and state, e.g. San Francisco, CA",
           },
-          required: ["location"],
+          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
         },
+        required: ["location"],
       },
     },
-  ],
-  tool_choice: "auto",
-});
+  ])
+  .withConfig({
+    tool_choice: "auto",
+  });
 
 // Ask initial question that requires multiple tool calls
 const res = await chat.invoke([
