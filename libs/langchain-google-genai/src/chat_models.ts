@@ -871,9 +871,12 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    await runManager?.handleLLMNewToken(
-      generationResult.generations[0].text ?? ""
-    );
+    // may not have generations in output if there was a refusal for safety reasons
+    if (generationResult.generations?.length > 0) {
+      await runManager?.handleLLMNewToken(
+        generationResult.generations[0]?.text ?? ""
+      );
+    }
     return generationResult;
   }
 
