@@ -27,3 +27,37 @@ test("Test loading PDF from file", async () => {
   expect(docs[0].pageContent).toContain("You");
   expect(docs[0].pageContent).toContain("Need");
 });
+
+test("Test loading from directory", async () => {
+  const connection = await oracledb.getConnection({
+    user: getEnvironmentVariable("ORACLE_USERNAME"),
+    password: getEnvironmentVariable("ORACLE_PASSWORD"),
+    connectString: getEnvironmentVariable("ORACLE_DSN"),
+  });
+  const pref = {
+    dir: getEnvironmentVariable("DEMO_DIRECTORY"),
+  };
+  const loader = new OracleDocLoader(connection, pref);
+  const docs = await loader.load();
+  await connection.close();
+
+  expect(docs.length).toBeGreaterThanOrEqual(1);
+});
+
+test("Test loading from table", async () => {
+  const connection = await oracledb.getConnection({
+    user: getEnvironmentVariable("ORACLE_USERNAME"),
+    password: getEnvironmentVariable("ORACLE_PASSWORD"),
+    connectString: getEnvironmentVariable("ORACLE_DSN"),
+  });
+  const pref = {
+    owner: getEnvironmentVariable("DEMO_OWNER"),
+    tablename: getEnvironmentVariable("DEMO_TABLE"),
+    colname: getEnvironmentVariable("DEMO_COLUMN"),
+  };
+  const loader = new OracleDocLoader(connection, pref);
+  const docs = await loader.load();
+  await connection.close();
+
+  expect(docs.length).toBeGreaterThanOrEqual(1);
+});
