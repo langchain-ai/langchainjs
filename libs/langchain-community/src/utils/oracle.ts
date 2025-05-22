@@ -35,11 +35,11 @@ export class OracleSummary {
     let summary = "";
     const result = await this.conn.execute(
       <string>(
-        `select dbms_vector_chain.utl_to_summary(:content, json(:pref)) data from dual`
+        `select dbms_vector_chain.utl_to_summary(:content, :pref) data from dual`
       ),
       <oracledb.BindParameters>{
         content: { val: text, dir: oracledb.BIND_IN, type: oracledb.CLOB },
-        pref: JSON.stringify(this.pref),
+        pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
       },
       <oracledb.ExecuteOptions>(
         (<unknown>{ fetchInfo: { DATA: { type: oracledb.STRING } } })

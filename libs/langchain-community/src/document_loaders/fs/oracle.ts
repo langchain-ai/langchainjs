@@ -58,11 +58,11 @@ export class OracleDocLoader extends BaseDocumentLoader {
 
       const result = await this.conn.execute(
         <string>(
-          `select dbms_vector_chain.utl_to_text(:content, json(:pref)) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
+          `select dbms_vector_chain.utl_to_text(:content, :pref) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
         ),
         <oracledb.BindParameters>{
           content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
-          pref: JSON.stringify(this.pref),
+          pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
         },
         <oracledb.ExecuteOptions>(<unknown>{
           resultSet: true, // return a ResultSet (default is false)
@@ -94,11 +94,11 @@ export class OracleDocLoader extends BaseDocumentLoader {
 
         const result = await this.conn.execute(
           <string>(
-            `select dbms_vector_chain.utl_to_text(:content, json(:pref)) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
+            `select dbms_vector_chain.utl_to_text(:content, :pref) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
           ),
           <oracledb.BindParameters>{
             content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
-            pref: JSON.stringify(this.pref),
+            pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
           },
           <oracledb.ExecuteOptions>(<unknown>{
             resultSet: true, // return a ResultSet (default is false)
@@ -137,10 +137,10 @@ export class OracleDocLoader extends BaseDocumentLoader {
       }
       const result = await this.conn.execute(
         <string>(
-          `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json(:pref)) text, dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata from ${this.pref.owner}.${this.pref.tablename} t`
+          `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text, dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata from ${this.pref.owner}.${this.pref.tablename} t`
         ),
         <oracledb.BindParameters>{
-          pref: JSON.stringify(this.pref),
+          pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
         },
         <oracledb.ExecuteOptions>(<unknown>{
           resultSet: true, // return a ResultSet (default is false)

@@ -33,11 +33,11 @@ export class OracleTextSplitter extends TextSplitter {
 
     const result = await this.conn.execute(
       <string>(
-        `select t.column_value as data from dbms_vector_chain.utl_to_chunks(:content, json(:pref)) t`
+        `select t.column_value as data from dbms_vector_chain.utl_to_chunks(:content, :pref) t`
       ),
       <oracledb.BindParameters>{
         content: { val: text, dir: oracledb.BIND_IN, type: oracledb.CLOB },
-        pref: JSON.stringify(this.pref),
+        pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
       },
       <oracledb.ExecuteOptions>(
         (<unknown>{ fetchInfo: { DATA: { type: oracledb.STRING } } })

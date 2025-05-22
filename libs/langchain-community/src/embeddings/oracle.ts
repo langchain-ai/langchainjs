@@ -62,11 +62,11 @@ end;`,
       for (const clean_text of clean_texts) {
         const result = await this.conn.execute(
           <string>(
-            `select t.column_value as data from dbms_vector_chain.utl_to_embeddings(:content, json(:pref)) t`
+            `select t.column_value as data from dbms_vector_chain.utl_to_embeddings(:content, :pref) t`
           ),
           <oracledb.BindParameters>{
             content: clean_text,
-            pref: JSON.stringify(this.pref),
+            pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
           },
           <oracledb.ExecuteOptions>(
             (<unknown>{ fetchInfo: { DATA: { type: oracledb.STRING } } })
@@ -101,11 +101,11 @@ end;`,
 
       const result = await this.conn.execute(
         <string>(
-          `select t.column_value as data from dbms_vector_chain.utl_to_embeddings(:content, json(:pref)) t`
+          `select t.column_value as data from dbms_vector_chain.utl_to_embeddings(:content, :pref) t`
         ),
         <oracledb.BindParameters>{
           content: inputs,
-          pref: JSON.stringify(this.pref),
+          pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
         },
         <oracledb.ExecuteOptions>(
           (<unknown>{ fetchInfo: { DATA: { type: oracledb.STRING } } })
