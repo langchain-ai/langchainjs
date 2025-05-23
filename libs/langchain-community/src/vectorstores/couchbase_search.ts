@@ -38,7 +38,7 @@ export interface AddVectorOptions {
  * @property {boolean} scopedIndex - Whether to use a scoped index for vector search. Defaults to true.
  * @property {AddVectorOptions} addVectorOptions - Options for adding vectors with specific id/metadata
  */
-export interface CouchbaseVectorStoreArgs {
+export interface CouchbaseSearchVectorStoreArgs {
   cluster: Cluster;
   bucketName: string;
   scopeName: string;
@@ -57,16 +57,19 @@ export interface CouchbaseVectorStoreArgs {
  * If nothing is specified, defaults to all the fields stored in the index.
  * - `searchOptions`:  Optional search options that are passed to Couchbase search. Defaults to empty object.
  */
-type CouchbaseVectorStoreFilter = {
+type CouchbaseSearchVectorStoreFilter = {
   fields?: any;
   searchOptions?: any;
 };
 
 /**
- * @deprecated Use CouchbaseSearchVectorStore instead. This class will be removed in a future release.
+ * Class for interacting with the Couchbase database. It extends the
+ * VectorStore class and provides methods for adding vectors and
+ * documents, and searching for similar vectors.
+ * Initiate the class using initialize() method.
  */
-export class CouchbaseVectorStore extends VectorStore {
-  declare FilterType: CouchbaseVectorStoreFilter;
+export class CouchbaseSearchVectorStore extends VectorStore {
+  declare FilterType: CouchbaseSearchVectorStoreFilter;
 
   private metadataKey = "metadata";
 
@@ -106,7 +109,7 @@ export class CouchbaseVectorStore extends VectorStore {
    */
   private constructor(
     embedding: EmbeddingsInterface,
-    config: CouchbaseVectorStoreArgs
+    config: CouchbaseSearchVectorStoreArgs
   ) {
     super(embedding, config);
   }
@@ -122,9 +125,9 @@ export class CouchbaseVectorStore extends VectorStore {
    */
   static async initialize(
     embeddings: EmbeddingsInterface,
-    config: CouchbaseVectorStoreArgs
+    config: CouchbaseSearchVectorStoreArgs
   ) {
-    const store = new CouchbaseVectorStore(embeddings, config);
+    const store = new CouchbaseSearchVectorStore(embeddings, config);
 
     const {
       cluster,
@@ -268,12 +271,11 @@ export class CouchbaseVectorStore extends VectorStore {
         `Collection ${this.collectionName} not found in scope ${this.scopeName} in Couchbase bucket ${this.bucketName}`
       );
     }
-
     return true;
   }
 
   _vectorstoreType(): string {
-    return "couchbase";
+    return "couchbase-search";
   }
 
   /**
@@ -282,12 +284,14 @@ export class CouchbaseVectorStore extends VectorStore {
    * @returns - formatted metadata fields
    */
   private formatMetadata = (fields: any) => {
-    delete fields[this.textKey];
+    const fieldsCopy = { ...fields };
+    delete fieldsCopy[this.textKey];
     const metadataFields: { [key: string]: any } = {};
-    // eslint-disable-next-line guard-for-in
-    for (const key in fields) {
-      const newKey = key.replace(`${this.metadataKey}.`, "");
-      metadataFields[newKey] = fields[key];
+    for (const key in fieldsCopy) {
+      if (Object.prototype.hasOwnProperty.call(fieldsCopy, key)) {
+        const newKey = key.replace(`${this.metadataKey}.`, "");
+        metadataFields[newKey] = fieldsCopy[key];
+      }
     }
     return metadataFields;
   };
@@ -310,7 +314,7 @@ export class CouchbaseVectorStore extends VectorStore {
   async similaritySearchVectorWithScore(
     queryEmbeddings: number[],
     k = 4,
-    filter: CouchbaseVectorStoreFilter = {}
+    filter: CouchbaseSearchVectorStoreFilter = {}
   ): Promise<[Document, number][]> {
     let { fields } = filter;
     const { searchOptions } = filter;
@@ -382,7 +386,7 @@ export class CouchbaseVectorStore extends VectorStore {
   async similaritySearchByVector(
     queryEmbeddings: number[],
     k = 4,
-    filter: CouchbaseVectorStoreFilter = {}
+    filter: CouchbaseSearchVectorStoreFilter = {}
   ): Promise<Document[]> {
     const docsWithScore = await this.similaritySearchVectorWithScore(
       queryEmbeddings,
@@ -412,7 +416,7 @@ export class CouchbaseVectorStore extends VectorStore {
   async similaritySearch(
     query: string,
     k = 4,
-    filter: CouchbaseVectorStoreFilter = {}
+    filter: CouchbaseSearchVectorStoreFilter = {}
   ): Promise<Document[]> {
     const queryEmbeddings = await this.embeddings.embedQuery(query);
     const docsWithScore = await this.similaritySearchVectorWithScore(
@@ -443,7 +447,7 @@ export class CouchbaseVectorStore extends VectorStore {
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: CouchbaseVectorStoreFilter = {}
+    filter: CouchbaseSearchVectorStoreFilter = {}
   ): Promise<[Document, number][]> {
     const queryEmbeddings = await this.embeddings.embedQuery(query);
     const docsWithScore = await this.similaritySearchVectorWithScore(
@@ -558,13 +562,14 @@ export class CouchbaseVectorStore extends VectorStore {
   ) {
     const texts = documents.map(({ pageContent }) => pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
-    if (!options.metadata) {
-      options.metadata = metadatas;
-    }
+    const optionsWithMetadata = {
+      ...options,
+      metadata: options.metadata ?? metadatas,
+    };
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents,
-      options
+      optionsWithMetadata
     );
   }
 
@@ -580,8 +585,8 @@ export class CouchbaseVectorStore extends VectorStore {
   static async fromDocuments(
     documents: Document[],
     embeddings: EmbeddingsInterface,
-    config: CouchbaseVectorStoreArgs
-  ): Promise<CouchbaseVectorStore> {
+    config: CouchbaseSearchVectorStoreArgs
+  ): Promise<CouchbaseSearchVectorStore> {
     const store = await this.initialize(embeddings, config);
     await store.addDocuments(documents, config.addVectorOptions);
     return store;
@@ -603,8 +608,8 @@ export class CouchbaseVectorStore extends VectorStore {
     texts: string[],
     metadatas: any,
     embeddings: EmbeddingsInterface,
-    config: CouchbaseVectorStoreArgs
-  ): Promise<CouchbaseVectorStore> {
+    config: CouchbaseSearchVectorStoreArgs
+  ): Promise<CouchbaseSearchVectorStore> {
     const docs = [];
 
     for (let i = 0; i < texts.length; i += 1) {
