@@ -1,3 +1,4 @@
+const path = require("node:path");
 module.exports = {
   extends: [
     "airbnb-base",
@@ -8,7 +9,11 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 12,
     parser: "@typescript-eslint/parser",
-    project: ["./tsconfig.json", "./tsconfig.examples.json", "./tsconfig.tests.json"],
+    project: [
+      path.join(__dirname, "tsconfig.json"),
+      path.join(__dirname, "tsconfig.examples.json"),
+      path.join(__dirname, "tsconfig.tests.json"),
+    ],
     sourceType: "module",
   },
   plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-vitest"],
