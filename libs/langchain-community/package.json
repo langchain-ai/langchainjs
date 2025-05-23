@@ -1592,6 +1592,15 @@
       "import": "./vectorstores/couchbase.js",
       "require": "./vectorstores/couchbase.cjs"
     },
+    "./vectorstores/couchbase_search": {
+      "types": {
+        "import": "./vectorstores/couchbase_search.d.ts",
+        "require": "./vectorstores/couchbase_search.d.cts",
+        "default": "./vectorstores/couchbase_search.d.ts"
+      },
+      "import": "./vectorstores/couchbase_search.js",
+      "require": "./vectorstores/couchbase_search.cjs"
+    },
     "./vectorstores/elasticsearch": {
       "types": {
         "import": "./vectorstores/elasticsearch.d.ts",
@@ -3663,6 +3672,10 @@
     "vectorstores/couchbase.js",
     "vectorstores/couchbase.d.ts",
     "vectorstores/couchbase.d.cts",
+    "vectorstores/couchbase_search.cjs",
+    "vectorstores/couchbase_search.js",
+    "vectorstores/couchbase_search.d.ts",
+    "vectorstores/couchbase_search.d.cts",
     "vectorstores/elasticsearch.cjs",
     "vectorstores/elasticsearch.js",
     "vectorstores/elasticsearch.d.ts",
