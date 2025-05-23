@@ -42,6 +42,8 @@ export type AnthropicServerToolUseBlockParam =
   Anthropic.Messages.ServerToolUseBlockParam;
 export type AnthropicWebSearchToolResultBlockParam =
   Anthropic.Messages.WebSearchToolResultBlockParam;
+export type AnthropicWebSearchResultBlockParam =
+  Anthropic.Messages.WebSearchResultBlockParam;
 
 // Union of all possible content block types including server tool use
 export type AnthropicContentBlock =
@@ -53,7 +55,8 @@ export type AnthropicContentBlock =
   | AnthropicThinkingBlockParam
   | AnthropicRedactedThinkingBlockParam
   | AnthropicServerToolUseBlockParam
-  | AnthropicWebSearchToolResultBlockParam;
+  | AnthropicWebSearchToolResultBlockParam
+  | AnthropicWebSearchResultBlockParam;
 
 export function isAnthropicImageBlockParam(
   block: unknown

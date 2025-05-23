@@ -352,6 +352,7 @@ function _formatContent(content: MessageContent) {
     "input_json_delta",
     "server_tool_use",
     "web_search_tool_result",
+    "web_search_result",
   ];
   const textTypes = ["text", "text_delta"];
 
