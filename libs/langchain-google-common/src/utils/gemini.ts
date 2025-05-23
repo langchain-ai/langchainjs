@@ -1594,6 +1594,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const ret: GeminiRequest = {
       contents,
       generationConfig,
+      labels: parameters.labels,
     };
     if (tools && tools.length) {
       ret.tools = tools;
