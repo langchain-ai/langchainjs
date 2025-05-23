@@ -53,7 +53,7 @@ export abstract class GoogleConnection<
     this.streaming = streaming ?? false;
   }
 
-  abstract buildUrl(): Promise<string>;
+  abstract buildUrl(callMethod?: string): Promise<string>;
 
   abstract buildMethod(): GoogleAbstractedClientOpsMethod;
 
@@ -95,9 +95,10 @@ export abstract class GoogleConnection<
   async _buildOpts(
     data: unknown | undefined,
     _options: CallOptions,
-    requestHeaders: Record<string, string> = {}
+    requestHeaders: Record<string, string> = {},
+    callMethod: string | undefined = undefined
   ): Promise<GoogleAbstractedClientOps> {
-    const url = await this.buildUrl();
+    const url = await this.buildUrl(callMethod);
     const method = this.buildMethod();
     const infoHeaders = (await this._clientInfoHeaders()) ?? {};
     const additionalHeaders = (await this.additionalHeaders()) ?? {};
@@ -135,6 +136,15 @@ export abstract class GoogleConnection<
     );
     const response: unknown = callResponse; // Done for typecast safety, I guess
     return <ResponseType>response;
+  }
+
+  async _requestCountTokens(data: unknown | undefined): Promise<number> {
+    const opts = await this._buildOpts(data, {} as CallOptions, {}, 'countTokens');
+    const { totalTokens } = await this.caller.callWithOptions(
+      {},
+      async () => this.client.request(opts)
+    ) as { totalTokens: number };
+    return totalTokens;
   }
 }
 
@@ -361,41 +371,41 @@ export abstract class GoogleAIConnection<
 
   abstract buildUrlMethod(): Promise<string>;
 
-  async buildUrlGenerativeLanguage(): Promise<string> {
+  async buildUrlGenerativeLanguage(callMethod?: string): Promise<string> {
     const method = await this.buildUrlMethod();
-    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.model}:${method}`;
+    const url = `https://generativelanguage.googleapis.com/${this.apiVersion}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
-  async buildUrlVertexExpress(): Promise<string> {
+  async buildUrlVertexExpress(callMethod?: string): Promise<string> {
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `https://aiplatform.googleapis.com/${this.apiVersion}/publishers/${publisher}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
-  async buildUrlVertexLocation(): Promise<string> {
+  async buildUrlVertexLocation(callMethod?: string): Promise<string> {
     const projectId = await this.client.getProjectId();
     const method = await this.buildUrlMethod();
     const publisher = this.modelPublisher;
-    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${method}`;
+    const url = `https://${this.endpoint}/${this.apiVersion}/projects/${projectId}/locations/${this.location}/publishers/${publisher}/models/${this.model}:${callMethod ?? method}`;
     return url;
   }
 
-  async buildUrlVertex(): Promise<string> {
+  async buildUrlVertex(callMethod?: string): Promise<string> {
     if (this.isApiKey) {
-      return this.buildUrlVertexExpress();
+      return this.buildUrlVertexExpress(callMethod);
     } else {
-      return this.buildUrlVertexLocation();
+      return this.buildUrlVertexLocation(callMethod);
     }
   }
 
-  async buildUrl(): Promise<string> {
+  async buildUrl(callMethod?: string): Promise<string> {
     switch (this.platform) {
       case "gai":
-        return this.buildUrlGenerativeLanguage();
+        return this.buildUrlGenerativeLanguage(callMethod);
       default:
-        return this.buildUrlVertex();
+        return this.buildUrlVertex(callMethod);
     }
   }
 
@@ -403,6 +413,14 @@ export abstract class GoogleAIConnection<
     input: InputType,
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown>;
+
+  async requestCountTokens(
+    input: InputType,
+    parameters: GoogleAIModelRequestParams
+  ): Promise<number> {
+    const data = await this.formatData(input, parameters);
+    return await this._requestCountTokens(data);
+  }
 
   async request(
     input: InputType,
