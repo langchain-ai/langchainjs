@@ -29,6 +29,8 @@ import {
   AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
+  AnthropicServerToolUseBlockParam,
+  AnthropicWebSearchToolResultBlockParam,
   isAnthropicImageBlockParam,
 } from "../types.js";
 
@@ -344,7 +346,13 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 };
 
 function _formatContent(content: MessageContent) {
-  const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
+  const toolTypes = [
+    "tool_use",
+    "tool_result",
+    "input_json_delta",
+    "server_tool_use",
+    "web_search_tool_result",
+  ];
   const textTypes = ["text", "text_delta"];
 
   if (typeof content === "string") {
@@ -545,6 +553,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicDocumentBlockParam
           | AnthropicThinkingBlockParam
           | AnthropicRedactedThinkingBlockParam
+          | AnthropicServerToolUseBlockParam
+          | AnthropicWebSearchToolResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -554,6 +564,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicDocumentBlockParam
     | AnthropicThinkingBlockParam
     | AnthropicRedactedThinkingBlockParam
+    | AnthropicServerToolUseBlockParam
+    | AnthropicWebSearchToolResultBlockParam
   > => {
     if (typeof content === "string") {
       return [
