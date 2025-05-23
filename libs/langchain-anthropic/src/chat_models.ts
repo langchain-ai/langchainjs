@@ -100,6 +100,26 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isBuiltinTool(
+  tool: any
+): tool is
+  | Anthropic.Messages.ToolBash20250124
+  | Anthropic.Messages.ToolTextEditor20250124
+  | Anthropic.Messages.WebSearchTool20250305 {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    typeof tool.type === "string" &&
+    typeof tool.name === "string" &&
+    ((tool.type === "bash_20250124" && tool.name === "bash_20250124") ||
+      (tool.type === "text_editor_20250124" &&
+        tool.name === "text_editor_20250124") ||
+      (tool.type === "web_search_20250305" &&
+        tool.name === "web_search_20250305"))
+  );
+}
+
 /**
  * Input to AnthropicChat class.
  */
@@ -720,11 +740,14 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): Anthropic.Messages.Tool[] | undefined {
+  ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
     return tools.map((tool) => {
+      if (isBuiltinTool(tool)) {
+        return tool;
+      }
       if (isAnthropicTool(tool)) {
         return tool;
       }
