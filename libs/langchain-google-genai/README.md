@@ -99,7 +99,7 @@ The value of `image_url` can be any of the following:
 
 - A public image URL
 - An accessible gcs file (e.g., "gcs://path/to/file.png")
-- A base64 encoded image (e.g., `data:image/png;base64,abcd124`)
+- A base64 encoded image (e.g., `data:image/png;base64,abcd124`). **Note:** For OpenAI compatibility, you must include a `metadata` property, e.g., `{ name: "image.png" }` for images.
 - A PIL image
 
 ## Embeddings
