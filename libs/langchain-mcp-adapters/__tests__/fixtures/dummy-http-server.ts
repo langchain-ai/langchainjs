@@ -45,6 +45,27 @@ export function createDummyHttpServer(
     }
   );
 
+  server.tool(
+    "sleep_tool",
+    "A test tool that sleeps for the given number of milliseconds before returning",
+    { sleepMsec: z.number().int().positive() },
+    async ({ sleepMsec }) => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, sleepMsec);
+      });
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              message: "done",
+            }),
+          },
+        ],
+      };
+    }
+  );
+
   if (options.testHeaders) {
     server.tool(
       "check_headers",

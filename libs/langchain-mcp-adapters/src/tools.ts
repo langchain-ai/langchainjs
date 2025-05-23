@@ -1,15 +1,14 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
-  CallToolResult,
   TextContent,
   ImageContent,
   EmbeddedResource,
   ReadResourceResult,
   Tool as MCPTool,
 } from "@modelcontextprotocol/sdk/types.js";
+import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
   DynamicStructuredTool,
-  type DynamicStructuredToolInput,
   type StructuredToolInterface,
 } from "@langchain/core/tools";
 import {
@@ -18,6 +17,8 @@ import {
   MessageContentImageUrl,
   MessageContentText,
 } from "@langchain/core/messages";
+import { RunnableConfig } from "@langchain/core/runnables";
+import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import debug from "debug";
 
 // Replace direct initialization with lazy initialization
@@ -29,12 +30,16 @@ function getDebugLog() {
   return debugLog;
 }
 
-export type CallToolResultContentType =
-  CallToolResult["content"][number]["type"];
+export type CallToolResult = Awaited<
+  ReturnType<typeof Client.prototype.callTool>
+>;
+
 export type CallToolResultContent =
   | TextContent
   | ImageContent
   | EmbeddedResource;
+
+export type CallToolResultContentType = CallToolResultContent["type"];
 
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
@@ -65,6 +70,15 @@ export class ToolException extends Error {
     super(message);
     this.name = "ToolException";
   }
+}
+
+export function isToolException(error: unknown): error is ToolException {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "ToolException"
+  );
 }
 
 /**
@@ -161,31 +175,46 @@ async function _convertCallToolResult(
  * @param client - The MCP client
  * @param toolName - The name of the tool (forwarded to the client)
  * @param args - The arguments to pass to the tool
+ * @param config - Optional RunnableConfig with timeout settings
  * @returns A tuple of [textContent, nonTextContent]
  */
 async function _callTool(
   serverName: string,
   toolName: string,
   client: Client,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  config?: RunnableConfig
 ): Promise<[MessageContent, EmbeddedResource[]]> {
-  let result: CallToolResult;
   try {
     getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
-    result = (await client.callTool({
-      name: toolName,
-      arguments: args,
-    })) as CallToolResult;
+
+    // Extract timeout from RunnableConfig and pass to MCP SDK
+    const requestOptions: RequestOptions = {
+      ...(config?.timeout ? { timeout: config.timeout } : {}),
+      ...(config?.signal ? { signal: config.signal } : {}),
+    };
+
+    const callToolArgs: Parameters<typeof client.callTool> = [
+      {
+        name: toolName,
+        arguments: args,
+      },
+    ];
+
+    if (Object.keys(requestOptions).length > 0) {
+      callToolArgs.push(undefined); // optional output schema arg
+      callToolArgs.push(requestOptions);
+    }
+
+    const result = await client.callTool(...callToolArgs);
+    return _convertCallToolResult(serverName, toolName, result, client);
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (error instanceof ToolException) {
+    if (isToolException(error)) {
       throw error;
     }
     throw new ToolException(`Error calling tool ${toolName}: ${String(error)}`);
   }
-
-  return _convertCallToolResult(serverName, toolName, result, client);
 }
 
 export type LoadMcpToolsOptions = {
@@ -275,12 +304,13 @@ export async function loadMcpTools(
               description: tool.description || "",
               schema: tool.inputSchema,
               responseFormat: "content_and_artifact",
-              func: _callTool.bind(
-                null,
-                serverName,
-                tool.name,
-                client
-              ) as DynamicStructuredToolInput["func"],
+              func: async (
+                args: Record<string, unknown>,
+                _runManager?: CallbackManagerForToolRun,
+                config?: RunnableConfig
+              ) => {
+                return _callTool(serverName, tool.name, client, args, config);
+              },
             });
             getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;

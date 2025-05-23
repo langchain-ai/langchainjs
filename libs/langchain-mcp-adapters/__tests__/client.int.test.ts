@@ -443,10 +443,10 @@ describe('MultiServerMCPClient Integration Tests', () => {
         const sseTools = tools.filter(t => t.name.includes('sse-server'));
 
         expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(1);
-        expect(sseTools.length).toBe(1);
+        expect(httpTools.length).toBe(2);
+        expect(sseTools.length).toBe(2);
 
-        expect(tools.length).toBe(4);
+        expect(tools.length).toBe(6);
 
         // Test tool from each server
         const stdioTestTool = tools.find(t => t.name.includes('stdio-server') && t.name.includes('test_tool'));
@@ -1147,5 +1147,76 @@ describe('MultiServerMCPClient Integration Tests', () => {
         await client.close();
       }
     });
+  });
+
+  describe('Timeout Configuration', () => {
+    it.each(["http", "sse"] as const)(
+      "%s should respect RunnableConfig timeout for tool calls",
+      async (transport: "http" | "sse") => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Test with a reasonable timeout (should succeed)
+          const result = await testTool!.invoke(
+            { sleepMsec: 100 },
+            { timeout: 1000 } // 1 second
+          );
+          expect(result).toContain("done");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should throw timeout error when tool call exceeds configured timeout",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "timeout-error-test",
+          {
+            disableStreamableHttp: transport === "sse",
+            supportSSEFallback: transport === "sse",
+          }
+        );
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          await expect(
+            testTool!.invoke(
+              { sleepMsec: 1000 },
+              { timeout: 5 } // 5 milliseconds
+            )
+          ).rejects.toThrowError(
+            /TimeoutError: The operation was aborted due to timeout/
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
   });
 }); 

@@ -224,6 +224,54 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | `prefixToolNameWithServerName` | boolean | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
 | `additionalToolNamePrefix`     | string  | `mcp`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
 
+## Tool Timeout Configuration
+
+MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
+
+```typescript
+const client = new MultiServerMCPClient({
+  'data-processor': {
+    command: 'python',
+    args: ['data_server.py']
+  }
+});
+
+const tools = await client.getTools();
+const slowTool = tools.find(t => t.name.includes('process_large_dataset'));
+
+// You can use withConfig to set tool-specific timeouts before handing
+// the tool off to a LangGraph ToolNode or some other part of your
+// application
+const slowToolWithTimeout = slowTool.withConfig({ timeout: 300000 }); // 5 min timeout
+
+// This invocation will respect the 5 minute timeout
+const result = await slowToolWithTimeout.invoke(
+  { dataset: 'huge_file.csv' },
+);
+
+// or you can invoke directly without withConfig
+const directResult = await slowTool.invoke(
+  { dataset: 'huge_file.csv' },
+  { timeout: 300000 }
+);
+
+// Quick timeout for fast operations
+const quickResult = await fastTool.invoke(
+  { query: 'simple_lookup' },
+  { timeout: 5000 } // 5 seconds
+);
+
+// Default timeout (60 seconds from MCP SDK) when no config provided
+const normalResult = await tool.invoke({ input: 'normal_processing' });
+```
+
+Timeouts can be configured using the following `RunnableConfig` fields:
+
+| Parameter | Type | Default | Description |
+| --------- | ---- | ------- | ----------- |
+| `timeout` | number | 60000 | Timeout in milliseconds for the tool call |
+| `signal`  | AbortSignal | undefined | An AbortSignal that, when asserted, will cancel the tool call |
+
 ## Response Handling
 
 MCP tools return results in the `content_and_artifact` format which can include:
