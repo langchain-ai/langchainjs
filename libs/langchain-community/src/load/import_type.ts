@@ -11,6 +11,7 @@ export interface SecretMap {
   AWS_SESSION_TOKEN?: string;
   AZURE_AISEARCH_ENDPOINT?: string;
   AZURE_AISEARCH_KEY?: string;
+  AZURE_BLOB_CONNECTION_STRING?: string;
   AZURE_COSMOSDB_CONNECTION_STRING?: string;
   BAIDU_API_KEY?: string;
   BAIDU_SECRET_KEY?: string;

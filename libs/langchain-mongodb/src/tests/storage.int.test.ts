@@ -1,31 +1,29 @@
 /* eslint-disable no-process-env */
 import { v4 as uuidv4 } from "uuid";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { Collection, MongoClient, ServerApiVersion } from "mongodb";
 import { MongoDBStore } from "../storage.js";
+import { uri } from "./utils.js";
 
-test("MongoDBStore can set and retrieve", async () => {
-  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
+let client: MongoClient;
+let collection: Collection;
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!, {
+beforeAll(async () => {
+  client = new MongoClient(uri(), {
     serverApi: {
       version: ServerApiVersion.v1,
       strict: true,
       deprecationErrors: true,
     },
   });
+  await client.connect();
+  collection = await client.db("langchain").createCollection("storage");
+});
 
-  try {
-    await client.connect();
-  } catch (e) {
-    // console.error("Failed to connect");
-    throw Error(e as string);
-  }
+afterAll(async () => {
+  await client.close();
+});
 
-  const namespace = "langchain.test";
-  const [dbName, collectionName] = namespace.split(".");
-  const collection = client.db(dbName).collection(collectionName);
-
+test("MongoDBStore can set and retrieve", async () => {
   const store = new MongoDBStore({
     collection,
   });
@@ -66,27 +64,10 @@ test("MongoDBStore can set and retrieve", async () => {
       yieldedKeys.push(key);
     }
     await store.mdelete(yieldedKeys);
-
-    await client.close();
   }
 });
 
 test("MongoDBStore can delete", async () => {
-  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    },
-  });
-
-  const namespace = "langchain.test";
-  const [dbName, collectionName] = namespace.split(".");
-  const collection = client.db(dbName).collection(collectionName);
-
   const store = new MongoDBStore({
     collection,
   });
@@ -118,75 +99,39 @@ test("MongoDBStore can delete", async () => {
       yieldedKeys.push(key);
     }
     await store.mdelete(yieldedKeys);
-
-    await client.close();
   }
 });
 
 test("MongoDBStore can yield keys", async () => {
-  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    },
+  const store = new MongoDBStore({
+    collection,
   });
 
-  const namespace = "langchain.test";
-  const [dbName, collectionName] = namespace.split(".");
-  const collection = client.db(dbName).collection(collectionName);
+  const docs = [
+    [uuidv4(), "Dogs are tough."],
+    [uuidv4(), "Cats are tough."],
+  ];
+  const encoder = new TextEncoder();
+  const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
+    doc[0],
+    encoder.encode(doc[1]),
+  ]);
+  await store.mset(docsAsKVPairs);
 
-  try {
-    const store = new MongoDBStore({
-      collection,
-    });
+  const keys = store.yieldKeys();
 
-    const docs = [
-      [uuidv4(), "Dogs are tough."],
-      [uuidv4(), "Cats are tough."],
-    ];
-    const encoder = new TextEncoder();
-    const docsAsKVPairs: Array<[string, Uint8Array]> = docs.map((doc) => [
-      doc[0],
-      encoder.encode(doc[1]),
-    ]);
-    await store.mset(docsAsKVPairs);
-
-    const keys = store.yieldKeys();
-
-    const yieldedKeys = [];
-    for await (const key of keys) {
-      yieldedKeys.push(key);
-    }
-
-    expect(yieldedKeys.sort()).toEqual(docs.map((doc) => doc[0]).sort());
-
-    // delete
-    await store.mdelete(yieldedKeys);
-  } finally {
-    await client.close();
+  const yieldedKeys = [];
+  for await (const key of keys) {
+    yieldedKeys.push(key);
   }
+
+  expect(yieldedKeys.sort()).toEqual(docs.map((doc) => doc[0]).sort());
+
+  // delete
+  await store.mdelete(yieldedKeys);
 });
 
 test("MongoDBStore can yield keys with prefix", async () => {
-  expect(process.env.MONGODB_ATLAS_URI).toBeDefined();
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const client = new MongoClient(process.env.MONGODB_ATLAS_URI!, {
-    serverApi: {
-      version: ServerApiVersion.v1,
-      strict: true,
-      deprecationErrors: true,
-    },
-  });
-
-  const namespace = "langchain.test";
-  const [dbName, collectionName] = namespace.split(".");
-  const collection = client.db(dbName).collection(collectionName);
-
   const store = new MongoDBStore({
     collection,
   });
@@ -217,6 +162,5 @@ test("MongoDBStore can yield keys with prefix", async () => {
       yieldedKeys.push(key);
     }
     await store.mdelete(yieldedKeys);
-    await client.close();
   }
 });

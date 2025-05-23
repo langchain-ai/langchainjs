@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {
@@ -125,6 +131,11 @@ export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
+export interface GoogleThinkingConfig {
+  thinkingBudget?: number;
+  includeThoughts?: boolean;
+}
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -139,8 +150,25 @@ export interface GoogleAIModelParams {
 
   /**
    * Maximum number of tokens to generate in the completion.
+   * This may include reasoning tokens (for backwards compatibility).
    */
   maxOutputTokens?: number;
+
+  /**
+   * The maximum number of the output tokens that will be used
+   * for the "thinking" or "reasoning" stages.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for "maxReasoningTokens"
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An OpenAI compatible parameter that will map to "maxReasoningTokens"
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -163,6 +191,11 @@ export interface GoogleAIModelParams {
    * among the 3 most probable tokens (using temperature).
    */
   topK?: number;
+
+  /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
 
   /**
    * Presence penalty applied to the next token's logprobs
@@ -529,12 +562,14 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
   responseLogprobs?: boolean;
   logprobs?: number;
   responseModalities?: GoogleAIModelModality[];
+  thinkingConfig?: GoogleThinkingConfig;
 }
 
 export interface GeminiRequest {
@@ -573,10 +608,39 @@ interface GeminiResponsePromptFeedback {
   safetyRatings: GeminiSafetyRating[];
 }
 
+export type ModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface ModalityTokenCount {
+  modality: ModalityEnum;
+  tokenCount: number;
+}
+
+export interface GenerateContentResponseUsageMetadata {
+  promptTokenCount: number;
+  toolUsePromptTokenCount: number;
+  cachedContentTokenCount: number;
+  thoughtsTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+
+  promptTokensDetails: ModalityTokenCount[];
+  toolUsePromptTokensDetails: ModalityTokenCount[];
+  cacheTokensDetails: ModalityTokenCount[];
+  candidatesTokensDetails: ModalityTokenCount[];
+
+  [key: string]: unknown;
+}
+
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
-  usageMetadata: Record<string, unknown>;
+  usageMetadata: GenerateContentResponseUsageMetadata;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
@@ -609,6 +673,7 @@ export interface GoogleAISafetyParams {
 export type GeminiJsonSchema = Record<string, unknown> & {
   properties?: Record<string, GeminiJsonSchema>;
   type: GeminiFunctionSchemaType;
+  nullable?: boolean;
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {

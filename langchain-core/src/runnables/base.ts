@@ -145,6 +145,8 @@ export abstract class Runnable<
    * Bind arguments to a Runnable, returning a new Runnable.
    * @param kwargs
    * @returns A new RunnableBinding that, when invoked, will apply the bound args.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
    */
   bind(
     kwargs: Partial<CallOptions>
@@ -156,6 +158,8 @@ export abstract class Runnable<
   /**
    * Return a new Runnable that maps a list of inputs to a list of outputs,
    * by calling invoke() with each input.
+   *
+   * @deprecated This will be removed in the next breaking release.
    */
   map(): Runnable<RunInput[], RunOutput[], CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -164,7 +168,8 @@ export abstract class Runnable<
 
   /**
    * Add retry logic to an existing runnable.
-   * @param kwargs
+   * @param fields.stopAfterAttempt The number of attempts to retry.
+   * @param fields.onFailedAttempt A function that is called when a retry fails.
    * @returns A new RunnableRetry that, when invoked, will retry according to the parameters.
    */
   withRetry(fields?: {
@@ -187,7 +192,7 @@ export abstract class Runnable<
    * @returns A new RunnableBinding with a config matching what's passed.
    */
   withConfig(
-    config: RunnableConfig
+    config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
@@ -1208,13 +1213,19 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
+  /**
+   * @deprecated use {@link config} instead
+   */
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
-  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
+  configFactories?: Array<
+    (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
+  >;
 };
 
 /**
- * A runnable that delegates calls to another runnable with a set of kwargs.
+ * Wraps a runnable and applies partial config upon invocation.
+ *
  * @example
  * ```typescript
  * import {
@@ -1304,11 +1315,21 @@ export class RunnableBinding<
     );
   }
 
+  /**
+   * Binds the runnable with the specified arguments.
+   * @param kwargs The arguments to bind the runnable with.
+   * @returns A new instance of the `RunnableBinding` class that is bound with the specified arguments.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
+   */
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
+    return new (this.constructor as {
+      new (
+        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
+      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
+    })({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
       config: this.config,
@@ -1316,10 +1337,13 @@ export class RunnableBinding<
   }
 
   withConfig(
-    config: RunnableConfig
+    config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
+    return new (this.constructor as {
+      new (
+        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
+      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
+    })({
       bound: this.bound,
       kwargs: this.kwargs,
       config: { ...this.config, ...config },
@@ -1330,11 +1354,13 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
-      bound: this.bound.withRetry(fields),
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableRetry({
+      bound: this.bound,
       kwargs: this.kwargs,
       config: this.config,
+      maxAttemptNumber: fields?.stopAfterAttempt,
+      ...fields,
     });
   }
 
@@ -1521,6 +1547,8 @@ export class RunnableBinding<
  *
  * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
  * ```
+ *
+ * @deprecated This will be removed in the next breaking release.
  */
 export class RunnableEach<
   RunInputItem,
@@ -1548,6 +1576,8 @@ export class RunnableEach<
    * Binds the runnable with the specified arguments.
    * @param kwargs The arguments to bind the runnable with.
    * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
    */
   bind(kwargs: Partial<CallOptions>) {
     return new RunnableEach({

@@ -701,7 +701,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
         },
       },
     ],
-  }).bind({
+  }).withConfig({
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });
@@ -724,7 +724,7 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
         },
       },
     ],
-  }).bind({
+  }).withConfig({
     functions: [extractionFunctionSchema],
     function_call: { name: "extractor" },
   });

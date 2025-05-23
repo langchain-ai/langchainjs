@@ -5,13 +5,17 @@ import {
   AIMessageChunk,
   BaseMessage,
   BaseMessageChunk,
+  HumanMessage,
+  ToolMessage,
   isAIMessage,
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
+import { ChatOpenAIReasoningSummary } from "../types.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -118,31 +122,60 @@ test("Test with built-in web search", async () => {
   assertResponse(boundResponse);
 });
 
-test("Test function calling", async () => {
-  const multiply = tool((args) => args.x * args.y, {
-    name: "multiply",
-    description: "Multiply two numbers",
-    schema: z.object({ x: z.number(), y: z.number() }),
-  });
+test.each(["stream", "invoke"])(
+  "Test function calling, %s",
+  async (invocationType: string) => {
+    const multiply = tool((args) => args.x * args.y, {
+      name: "multiply",
+      description: "Multiply two numbers",
+      schema: z.object({ x: z.number(), y: z.number() }),
+    });
 
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
-    multiply,
-    { type: "web_search_preview" },
-  ]);
+    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
+      multiply,
+      { type: "web_search_preview" },
+    ]);
 
-  const msg = (await llm.invoke("whats 5 * 4")) as AIMessage;
-  expect(msg.tool_calls).toMatchObject([
-    { name: "multiply", args: { x: 5, y: 4 } },
-  ]);
+    function invoke(
+      invocationType: string,
+      prompt: BaseLanguageModelInput
+    ): Promise<AIMessage | AIMessageChunk> {
+      if (invocationType === "invoke") {
+        return llm.invoke(prompt);
+      }
 
-  const full = await concatStream(llm.stream("whats 5 * 4"));
-  expect(full?.tool_calls).toMatchObject([
-    { name: "multiply", args: { x: 5, y: 4 } },
-  ]);
+      return concatStream(llm.stream(prompt));
+    }
 
-  const response = await llm.invoke("whats some good news from today");
-  assertResponse(response);
-});
+    const messages = [new HumanMessage("whats 5 * 4")];
+
+    const aiMessage = (await invoke(invocationType, messages)) as AIMessage;
+
+    messages.push(aiMessage);
+
+    expect(aiMessage.tool_calls).toMatchObject([
+      { name: "multiply", args: { x: 5, y: 4 } },
+    ]);
+
+    const toolMessage: ToolMessage = await multiply.invoke(
+      aiMessage.tool_calls![0]
+    );
+    messages.push(toolMessage);
+
+    expect(toolMessage.tool_call_id).toMatch(/^call_[a-zA-Z0-9]+$/);
+    expect(toolMessage.tool_call_id).toEqual(aiMessage.tool_calls![0].id);
+
+    const finalAiMessage = await invoke(invocationType, messages);
+
+    assertResponse(finalAiMessage);
+
+    const noToolCallResponse = await invoke(
+      invocationType,
+      "whats some good news from today"
+    );
+    assertResponse(noToolCallResponse);
+  }
+);
 
 test("Test structured output", async () => {
   const schema = z.object({ response: z.string() });
@@ -379,28 +412,142 @@ test("Test computer call", async () => {
   expect(computerCall).toBeDefined();
 });
 
-test("it can handle passing back reasoning outputs alongside computer calls", async () => {
-  const model = new ChatOpenAI({
-    model: "computer-use-preview",
-    useResponsesApi: true,
-  })
-    .bindTools([
-      {
-        type: "computer_use_preview",
-        display_width: 1024,
-        display_height: 768,
-        environment: "browser",
+describe("reasoning summaries", () => {
+  const testReasoningSummaries = async (
+    requestType: "stream" | "invoke",
+    extraConfig: Record<string, unknown> = {},
+    removePreviousOutputMetadata: boolean = false
+  ) => {
+    const prompt = "What is 3 to the power of 3?";
+    const llm = new ChatOpenAI({
+      model: "o4-mini",
+      reasoning: {
+        effort: "low",
+        summary: "auto",
       },
-    ])
-    .bind({
-      truncation: "auto",
+      maxRetries: 0, // Ensure faster failure for testing
+      ...extraConfig,
     });
 
-  // The REASONING_OUTPUT_MESSAGES array contains a series of messages, which include
-  // one AI message that has both a reasoning output and a computer call.
-  // This test ensures we pass the reasoning output back to the model, as the OpenAI API
-  // requires it's passed back if managing the messages history manually.
-  const response = await model.invoke(REASONING_OUTPUT_MESSAGES);
+    let aiMessage: AIMessage | AIMessageChunk;
 
-  expect(response).toBeDefined();
+    if (requestType === "stream") {
+      const stream = await llm.stream(prompt);
+      const chunks: AIMessageChunk[] = [];
+
+      for await (const chunk of stream) {
+        expect(chunk).toBeInstanceOf(AIMessageChunk);
+        chunks.push(chunk);
+      }
+      const firstChunk = chunks[0];
+
+      aiMessage =
+        chunks.length > 1
+          ? chunks
+              .slice(1)
+              .reduce((acc, chunk) => acc.concat(chunk), firstChunk)
+          : firstChunk;
+    } else {
+      aiMessage = await llm.invoke(prompt);
+    }
+
+    expect(aiMessage.id).toMatch(/^msg_[a-f0-9]+$/);
+
+    // Check the final aggregated message
+    const reasoning = aiMessage?.additional_kwargs
+      .reasoning as ChatOpenAIReasoningSummary;
+    expect(reasoning).toBeDefined();
+    expect(reasoning.id).toBeDefined();
+    expect(typeof reasoning.id).toBe("string");
+    expect(reasoning.id).toMatch(/^rs_[a-f0-9]+$/);
+    expect(reasoning.type).toBe("reasoning");
+    expect(reasoning.summary).toBeDefined();
+    expect(Array.isArray(reasoning.summary)).toBe(true);
+    expect(reasoning.summary.length).toBeGreaterThan(0);
+
+    for (const summaryItem of reasoning.summary) {
+      expect(summaryItem.type).toBe("summary_text");
+      expect(typeof summaryItem.text).toBe("string");
+      expect(summaryItem.text.length).toBeGreaterThan(0);
+    }
+
+    if (removePreviousOutputMetadata) {
+      delete aiMessage.response_metadata.output;
+    }
+
+    // Test passing reasoning back (might be tricky in isolated test)
+    const secondPrompt = "Thanks!";
+    const messages: BaseMessage[] = [
+      new HumanMessage(prompt),
+      aiMessage, // Pass the AI message with reasoning
+      new HumanMessage(secondPrompt),
+    ];
+    const secondResult = await llm.invoke(messages);
+    expect(secondResult).toBeInstanceOf(AIMessage);
+    expect(secondResult.content).toBeTruthy();
+  };
+
+  test.each(["stream", "invoke"])(
+    "normal responses API usage (Zero Data Retention disabled), %s",
+    async (requestType) => {
+      await testReasoningSummaries(requestType as "stream" | "invoke");
+    }
+  );
+
+  test.each(["stream", "invoke"])(
+    "Zero Data Retention disabled, previous output metadata missing, %s",
+    async (requestType) => {
+      await testReasoningSummaries(
+        requestType as "stream" | "invoke",
+        {},
+        true
+      );
+    }
+  );
+
+  test.each(["stream", "invoke"])(
+    "Zero Data Retention enabled, %s",
+    async (requestType) => {
+      await testReasoningSummaries(requestType as "stream" | "invoke", {
+        zdrEnabled: true,
+      });
+    }
+  );
+
+  test.each(["stream", "invoke"])(
+    "Zero Data Retention enabled, and previous output metadata missing, %s",
+    async (requestType) => {
+      await testReasoningSummaries(
+        requestType as "stream" | "invoke",
+        { zdrEnabled: true },
+        true
+      );
+    }
+  );
+
+  test("it can handle passing back reasoning outputs alongside computer calls", async () => {
+    const model = new ChatOpenAI({
+      model: "computer-use-preview",
+      useResponsesApi: true,
+    })
+      .bindTools([
+        {
+          type: "computer_use_preview",
+          display_width: 1024,
+          display_height: 768,
+          environment: "browser",
+        },
+      ])
+      .withConfig({
+        truncation: "auto",
+      });
+
+    // The REASONING_OUTPUT_MESSAGES array contains a series of messages, which include
+    // one AI message that has both a reasoning output and a computer call.
+    // This test ensures we pass the reasoning output back to the model, as the OpenAI API
+    // requires it's passed back if managing the messages history manually.
+    const response = await model.invoke(REASONING_OUTPUT_MESSAGES);
+
+    expect(response).toBeDefined();
+  });
 });
