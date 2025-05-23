@@ -18,7 +18,6 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
   - Connect to multiple MCP servers simultaneously
   - Auto-organize tools by server or access them as a flattened collection
-  - Convenient configuration via JSON file
 
 - 🧩 **Agent Integration**
 

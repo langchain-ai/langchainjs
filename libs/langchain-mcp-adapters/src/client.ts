@@ -614,8 +614,8 @@ export class MultiServerMCPClient {
     const transport = new StdioClientTransport({
       command,
       args,
-      env,
       stderr,
+      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
 
     this._transportInstances[serverName] = transport;
@@ -696,6 +696,19 @@ export class MultiServerMCPClient {
       }
     }
     return code;
+  }
+
+  private _createAuthenticationErrorMessage(
+    serverName: string,
+    url: string,
+    transport: "HTTP" | "SSE",
+    originalError: string
+  ): string {
+    return (
+      `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
+      `Please check your credentials, authorization headers, or OAuth configuration. ` +
+      `Original error: ${originalError}`
+    );
   }
 
   private _toSSEConnectionURL(url: string): string {
@@ -781,12 +794,36 @@ export class MultiServerMCPClient {
                   url: sseUrl,
                 });
               } catch (secondSSEError) {
+                // Provide specific error message for authentication failures
+                if (code === 401) {
+                  throw new MCPClientError(
+                    this._createAuthenticationErrorMessage(
+                      serverName,
+                      url,
+                      "HTTP",
+                      `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
+                    ),
+                    serverName
+                  );
+                }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
                   serverName
                 );
               }
             } else {
+              // Provide specific error message for authentication failures
+              if (code === 401) {
+                throw new MCPClientError(
+                  this._createAuthenticationErrorMessage(
+                    serverName,
+                    url,
+                    "HTTP",
+                    `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
+                  ),
+                  serverName
+                );
+              }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
                 serverName
@@ -794,6 +831,18 @@ export class MultiServerMCPClient {
             }
           }
         } else {
+          // Provide specific error message for authentication failures
+          if (code === 401) {
+            throw new MCPClientError(
+              this._createAuthenticationErrorMessage(
+                serverName,
+                url,
+                "HTTP",
+                `${error}`
+              ),
+              serverName
+            );
+          }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
             serverName
@@ -838,8 +887,28 @@ export class MultiServerMCPClient {
           this._setupSSEReconnect(serverName, transport, connection, reconnect);
         }
       } catch (error) {
+        // Check if this is already a wrapped error that should be re-thrown
+        if (error && (error as Error).name === "MCPClientError") {
+          throw error;
+        }
+
+        // Check if this is an authentication error that needs better messaging
+        const isAuthError = error && this._getHttpErrorCode(error) === 401;
+
+        if (isAuthError) {
+          throw new MCPClientError(
+            this._createAuthenticationErrorMessage(
+              serverName,
+              url,
+              "SSE",
+              `${error}`
+            ),
+            serverName
+          );
+        }
+
         throw new MCPClientError(
-          `Failed to connect to SSE server "${serverName}": ${error}`,
+          `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
           serverName
         );
       }
@@ -880,26 +949,57 @@ export class MultiServerMCPClient {
     headers?: Record<string, string>,
     authProvider?: OAuthClientProvider
   ): Promise<SSEClientTransport> {
-    const options: SSEClientTransportOptions = {
-      ...(authProvider ? { authProvider } : {}),
-      ...(headers ? { requestInit: { headers } } : {}),
-    };
+    const options: SSEClientTransportOptions = {};
 
-    if (options.authProvider) {
+    if (authProvider) {
+      options.authProvider = authProvider;
       getDebugLog()(
         `DEBUG: Using OAuth authentication for SSE transport to server "${serverName}"`
       );
     }
 
-    if (options.requestInit?.headers) {
+    if (headers) {
+      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
+      // and also via requestInit.headers for subsequent POST requests
+      options.eventSourceInit = {
+        fetch: async (url, init) => {
+          const requestHeaders = new Headers(init?.headers);
+
+          // Add OAuth token if authProvider is available
+          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
+          if (authProvider) {
+            const tokens = await authProvider.tokens();
+            if (tokens) {
+              requestHeaders.set(
+                "Authorization",
+                `Bearer ${tokens.access_token}`
+              );
+            }
+          }
+
+          // Add our custom headers
+          Object.entries(headers).forEach(([key, value]) => {
+            requestHeaders.set(key, value);
+          });
+          // Always include Accept header for SSE
+          requestHeaders.set("Accept", "text/event-stream");
+
+          return fetch(url, {
+            ...init,
+            headers: requestHeaders,
+          });
+        },
+      };
+
+      // Also include headers for POST requests
+      options.requestInit = { headers };
+
       getDebugLog()(
         `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
       );
     }
 
-    return Object.keys(options).length > 0
-      ? new SSEClientTransport(new URL(url), options)
-      : new SSEClientTransport(new URL(url));
+    return new SSEClientTransport(new URL(url), options);
   }
 
   private async _createStreamableHTTPTransport(
