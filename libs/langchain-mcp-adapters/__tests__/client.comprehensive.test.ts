@@ -86,7 +86,6 @@ describe("MultiServerMCPClient", () => {
       expect(SSEClientTransport).toHaveBeenCalledWith(
         new URL(config["test-server"].url),
         {
-          eventSourceInit: {},
           requestInit: {
             headers: config["test-server"].headers,
           },
