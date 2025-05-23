@@ -622,8 +622,8 @@ const FEATURE_TABLES = {
         idsInAddDocuments: false,
       },
       {
-        name: "CouchbaseVectorStore",
-        link: "couchbase",
+        name: "CouchbaseSearchVectorStore",
+        link: "couchbase_search",
         deleteById: true,
         filtering: true,
         searchByVector: false,
