@@ -265,6 +265,7 @@ test("convertMessageContentToParts: correctly handles base64 standard image bloc
       source_type: "base64",
       data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
       mime_type: "image/png",
+      metadata: { name: "test.png" }, // required for OpenAI compatibility
     },
   ];
   const message = new HumanMessage({ content });
