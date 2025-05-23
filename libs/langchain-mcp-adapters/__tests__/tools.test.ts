@@ -122,12 +122,16 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy in New York."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        arguments: {
-          city: "New York",
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          arguments: {
+            city: "New York",
+          },
+          name: "weather",
         },
-        name: "weather",
-      });
+        undefined,
+        undefined
+      );
     });
 
     test("should load tool with no input parameters", async () => {
@@ -174,10 +178,14 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        arguments: {},
-        name: "weather",
-      });
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          arguments: {},
+          name: "weather",
+        },
+        undefined,
+        undefined
+      );
     });
 
     test("should handle empty tool list", async () => {
