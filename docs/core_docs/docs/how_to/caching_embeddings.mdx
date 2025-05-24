@@ -20,13 +20,65 @@ The cache backed embedder is a wrapper around an embedder that caches embeddings
 
 The text is hashed and the hash is used as the key in the cache.
 
-The main supported way to initialized a `CacheBackedEmbeddings` is the `fromBytesStore` static method. This takes in the following parameters:
+The main supported way to initialize a `CacheBackedEmbeddings` is the `fromBytesStore` static method. This takes in the following parameters:
 
 - `underlyingEmbeddings`: The embeddings model to use.
-- `documentEmbeddingCache`: The cache to use for storing document embeddings.
+- `documentEmbeddingStore`: The cache to use for storing document embeddings.
 - `namespace`: (optional, defaults to "") The namespace to use for document cache. This namespace is used to avoid collisions with other caches. For example, you could set it to the name of the embedding model used.
+- `queryEmbeddingStore`: (optional) The cache to use for storing **query embeddings**. If provided, query embeddings will also be cached and reused.
+
+**Query embedding caching is optional:**  
+If you do not provide a `queryEmbeddingStore`, only document embeddings will be cached. If you want to cache query embeddings as well, pass a `queryEmbeddingStore` when initializing `CacheBackedEmbeddings`.
 
 **Attention:** Be sure to set the namespace parameter to avoid collisions of the same text embedded using different embeddings models.
+
+## Caching query embeddings
+
+You can cache both document and query embeddings by passing a `queryEmbeddingStore`:
+
+```typescript
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { CacheBackedEmbeddings } from "@langchain/core/embeddings";
+import { InMemoryStore } from "@langchain/core/storage";
+
+const underlyingEmbeddings = new OpenAIEmbeddings();
+
+const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
+  underlyingEmbeddings,
+  new InMemoryStore(), // document embedding cache
+  {
+    namespace: underlyingEmbeddings.modelName,
+    queryEmbeddingStore: new InMemoryStore(), // query embedding cache
+  }
+);
+
+// Now both document and query embeddings are cached!
+const docEmbedding = await cacheBackedEmbeddings.embedDocuments([
+  "Hello world",
+]);
+const queryEmbedding = await cacheBackedEmbeddings.embedQuery("What is AI?");
+```
+
+## Cache expiration and store management
+
+:::caution
+`CacheBackedEmbeddings` does **not** implement any cache expiration or eviction policy.  
+If you want cache entries to expire or be removed, you must configure this behavior in your underlying store (for example, using Redis TTL or a custom cleanup process).
+:::
+
+### Store separation recommendation
+
+We recommend using **separate stores** for document embeddings and query embeddings:
+
+- **Document embedding cache store**: Usually, you want to keep these embeddings for a long time, since documents rarely change. Only clear this cache if you permanently switch embedding models or update your document corpus.
+- **Query embedding cache store**: This cache may accumulate many entries from random or one-off queries. It's often helpful to periodically clear unused or old entries from this store to save space and keep your cache efficient.
+
+Keeping these stores separate allows you to manage their lifecycles independently and avoid accidentally deleting important document embeddings when cleaning up query caches.
+
+> **Note:**  
+> `documentEmbeddingStore` and `queryEmbeddingStore` are used only for caching embeddings by key (such as a hash of the text).  
+> They are **not** vector databases and are **not** used for similarity search or retrieval.  
+> For retrieval or similarity search, use a dedicated vector store or vector database.
 
 ## In-memory
 

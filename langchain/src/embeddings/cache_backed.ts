@@ -15,6 +15,7 @@ import { EncoderBackedStore } from "../storage/encoder_backed.js";
 export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
   underlyingEmbeddings: EmbeddingsInterface;
   documentEmbeddingStore: BaseStore<string, number[]>;
+  queryEmbeddingStore?: BaseStore<string, number[]>;
 }
 
 /**
@@ -26,6 +27,9 @@ export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
  *
  * If need be, the interface can be extended to accept other implementations
  * of the value serializer and deserializer, as well as the key encoder.
+ *
+ * To enable query caching, pass a `queryEmbeddingStore` when initializing.
+ *
  * @example
  * ```typescript
  * const underlyingEmbeddings = new OpenAIEmbeddings();
@@ -35,6 +39,7 @@ export interface CacheBackedEmbeddingsFields extends AsyncCallerParams {
  *   new ConvexKVStore({ ctx }),
  *   {
  *     namespace: underlyingEmbeddings.modelName,
+ *     queryEmbeddingStore: new ConvexKVStore({ ctx })
  *   },
  * );
  *
@@ -69,28 +74,34 @@ export class CacheBackedEmbeddings extends Embeddings {
 
   protected documentEmbeddingStore: BaseStore<string, number[]>;
 
+  protected queryEmbeddingStore?: BaseStore<string, number[]>;
+
   constructor(fields: CacheBackedEmbeddingsFields) {
     super(fields);
     this.underlyingEmbeddings = fields.underlyingEmbeddings;
     this.documentEmbeddingStore = fields.documentEmbeddingStore;
+    this.queryEmbeddingStore = fields.queryEmbeddingStore;
   }
 
   /**
    * Embed query text.
    *
-   * This method does not support caching at the moment.
+   * If a query embedding is already in cache, it is retrieved rather than recomputed.
+   * If missing, the query is embedded, stored, and returned.
    *
-   * Support for caching queries is easy to implement, but might make
-   * sense to hold off to see the most common patterns.
-   *
-   * If the cache has an eviction policy, we may need to be a bit more careful
-   * about sharing the cache between documents and queries. Generally,
-   * one is OK evicting query caches, but document caches should be kept.
-   *
-   * @param document The text to embed.
-   * @returns The embedding for the given text.
+   * @param document The query text to embed.
+   * @returns The embedding vector for the query text.
    */
   async embedQuery(document: string): Promise<number[]> {
+    if (this.queryEmbeddingStore) {
+      const cachedEmbedding = await this.queryEmbeddingStore.mget([document]);
+      if (cachedEmbedding[0]) {
+        return cachedEmbedding[0];
+      }
+      const embedding = await this.underlyingEmbeddings.embedQuery(document);
+      await this.queryEmbeddingStore.mset([[document, embedding]]);
+      return embedding;
+    }
     return this.underlyingEmbeddings.embedQuery(document);
   }
 
@@ -106,11 +117,11 @@ export class CacheBackedEmbeddings extends Embeddings {
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
     const vectors = await this.documentEmbeddingStore.mget(documents);
-    const missingIndicies = [];
-    const missingDocuments = [];
-    for (let i = 0; i < vectors.length; i += 1) {
+    const missingIndices: number[] = [];
+    const missingDocuments: string[] = [];
+    for (let i = 0; i < vectors.length; i++) {
       if (vectors[i] === undefined) {
-        missingIndicies.push(i);
+        missingIndices.push(i);
         missingDocuments.push(documents[i]);
       }
     }
@@ -122,8 +133,8 @@ export class CacheBackedEmbeddings extends Embeddings {
         (document, i) => [document, missingVectors[i]]
       );
       await this.documentEmbeddingStore.mset(keyValuePairs);
-      for (let i = 0; i < missingIndicies.length; i += 1) {
-        vectors[missingIndicies[i]] = missingVectors[i];
+      for (let i = 0; i < missingIndices.length; i++) {
+        vectors[missingIndices[i]] = missingVectors[i];
       }
     }
     return vectors as number[][];
@@ -135,6 +146,7 @@ export class CacheBackedEmbeddings extends Embeddings {
    * @param underlyingEmbeddings Embeddings used to populate the cache for new documents.
    * @param documentEmbeddingStore Stores raw document embedding values. Keys are hashes of the document content.
    * @param options.namespace Optional namespace for store keys.
+   * @param options.queryEmbeddingStore Optional cache for query embeddings.
    * @returns A new CacheBackedEmbeddings instance.
    */
   static fromBytesStore(
@@ -142,11 +154,12 @@ export class CacheBackedEmbeddings extends Embeddings {
     documentEmbeddingStore: BaseStore<string, Uint8Array>,
     options?: {
       namespace?: string;
+      queryEmbeddingStore?: BaseStore<string, Uint8Array>;
     }
   ) {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-    const encoderBackedStore = new EncoderBackedStore<
+    const documentEncoderBackedStore = new EncoderBackedStore<
       string,
       number[],
       Uint8Array
@@ -157,9 +170,19 @@ export class CacheBackedEmbeddings extends Embeddings {
       valueDeserializer: (serializedValue) =>
         JSON.parse(decoder.decode(serializedValue)),
     });
+    const queryEncoderBackedStore = options?.queryEmbeddingStore
+      ? new EncoderBackedStore<string, number[], Uint8Array>({
+          store: options.queryEmbeddingStore,
+          keyEncoder: (key) => (options?.namespace ?? "") + insecureHash(key),
+          valueSerializer: (value) => encoder.encode(JSON.stringify(value)),
+          valueDeserializer: (serializedValue) =>
+            JSON.parse(decoder.decode(serializedValue)),
+        })
+      : undefined;
     return new this({
       underlyingEmbeddings,
-      documentEmbeddingStore: encoderBackedStore,
+      documentEmbeddingStore: documentEncoderBackedStore,
+      queryEmbeddingStore: queryEncoderBackedStore,
     });
   }
 }
