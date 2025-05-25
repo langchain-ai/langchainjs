@@ -265,13 +265,12 @@ const quickResult = await fastTool.invoke(
 const normalResult = await tool.invoke({ input: 'normal_processing' });
 ```
 
-### Timeout Configuration
+Timeouts can be configured using the following `RunnableConfig` fields:
 
 | Parameter | Type | Default | Description |
 | --------- | ---- | ------- | ----------- |
 | `timeout` | number | 60000 | Timeout in milliseconds for the tool call |
-
-**Note**: Timeout configuration uses the MCP SDK's built-in request timeout mechanism, ensuring proper error handling and cleanup when operations exceed the specified time limit.
+| `signal`  | AbortSignal | undefined | An AbortSignal that, when asserted, will cancel the tool call |
 
 ## Response Handling
 
