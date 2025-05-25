@@ -230,11 +230,9 @@ MCP tools support timeout configuration through LangChain's standard `RunnableCo
 
 ```typescript
 const client = new MultiServerMCPClient({
-  mcpServers: {
-    'data-processor': {
-      command: 'python',
-      args: ['data_server.py']
-    }
+  'data-processor': {
+    command: 'python',
+    args: ['data_server.py']
   }
 });
 
