@@ -308,6 +308,17 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     );
   }
 
+  function messageContentReasoning(content: MessageContentReasoning): GeminiPartText | null {
+    if (content?.reasoning && content?.reasoning.length > 0) {
+      return {
+        text: content.reasoning,
+        thought: true,
+      }
+    } else {
+      return null;
+    }
+  }
+
   const standardContentBlockConverter: StandardContentBlockConverter<{
     text: GeminiPartText;
     image: GeminiPartFileData | GeminiPartInlineData;
@@ -442,9 +453,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         break;
       case "media":
         return await messageContentMedia(content);
+      case "reasoning":
+        return messageContentReasoning(content as MessageContentReasoning);
       default:
         throw new Error(
-          `Unsupported type "${content.type}" received while converting message to message parts: ${content}`
+          `Unsupported type "${content.type}" received while converting message to message parts: ${JSON.stringify(content)}`
         );
     }
     throw new Error(
@@ -649,6 +662,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
+  type MessageContentReasoning = {
+    type: "reasoning";
+    reasoning: string;
+  }
+
+  function thoughtPartToMessageContent(part: GeminiPartText): MessageContentReasoning {
+    return {
+      type: "reasoning",
+      reasoning: part.text,
+    }
+  }
+
   function textPartToMessageContent(part: GeminiPartText): MessageContentText {
     return {
       type: "text",
@@ -679,6 +704,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       .map((part) => {
         if (part === undefined || part === null) {
           return null;
+        } else if (part.thought) {
+          return thoughtPartToMessageContent(part as GeminiPartText);
         } else if ("text" in part) {
           return textPartToMessageContent(part);
         } else if ("inlineData" in part) {
@@ -1100,6 +1127,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         if (typeof item.message.content === "string") {
           // If this is a string, turn it into a text type
           ret.push({
+            type: "text",
             text: item.message.content,
           });
         } else {
@@ -1428,10 +1456,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // Add thinking configuration if explicitly set
     // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
     if (typeof parameters.maxReasoningTokens !== "undefined") {
+      const includeThoughts = parameters.maxReasoningTokens > 0;
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
-        // TODO: Expose this configuration to the user once google fully supports it
-        includeThoughts: false,
+        includeThoughts,
       };
     }
 

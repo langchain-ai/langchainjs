@@ -344,18 +344,22 @@ export interface GoogleRawResponse extends GoogleResponse {
   data: Blob;
 }
 
-export interface GeminiPartText {
+export interface GeminiPartBase {
+  thought?: boolean; // Output only
+}
+
+export interface GeminiPartText extends GeminiPartBase {
   text: string;
 }
 
-export interface GeminiPartInlineData {
+export interface GeminiPartInlineData extends GeminiPartBase {
   inlineData: {
     mimeType: string;
     data: string;
   };
 }
 
-export interface GeminiPartFileData {
+export interface GeminiPartFileData extends GeminiPartBase {
   fileData: {
     mimeType: string;
     fileUri: string;
@@ -363,7 +367,7 @@ export interface GeminiPartFileData {
 }
 
 // AI Studio only?
-export interface GeminiPartFunctionCall {
+export interface GeminiPartFunctionCall extends GeminiPartBase {
   functionCall: {
     name: string;
     args?: object;
@@ -371,7 +375,7 @@ export interface GeminiPartFunctionCall {
 }
 
 // AI Studio Only?
-export interface GeminiPartFunctionResponse {
+export interface GeminiPartFunctionResponse extends GeminiPartBase {
   functionResponse: {
     name: string;
     response: object;

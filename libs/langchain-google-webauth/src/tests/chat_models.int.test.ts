@@ -485,12 +485,12 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-preview-04-17",
+    modelName: "gemini-2.5-flash-preview-05-20",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-preview-04-17",
+    modelName: "gemini-2.5-flash-preview-05-20",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -1311,41 +1311,6 @@ describe.each(testGeminiModelNames)(
       // Results are highly inconsistent. Sometimes it won't cache.
     }, 90000); // Increase timeout
 
-    test("reasoning", async () => {
-      const model = newChatGoogle({
-        maxReasoningTokens: 12000,
-      });
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-    });
-
-    test("reasoning default", async () => {
-      const model = newChatGoogle({});
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-    });
-
-    test("reasoning off", async () => {
-      const model = newChatGoogle({
-        maxReasoningTokens: 0,
-      });
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-      expect(res).toHaveProperty("usage_metadata");
-      expect(res.usage_metadata).toHaveProperty("output_token_details");
-      expect(res.usage_metadata!.output_token_details).not.toHaveProperty(
-        "reasoning"
-      );
-    });
   }
 );
 
@@ -1424,3 +1389,147 @@ describe.each(testMultimodalModelNames)(
     });
   }
 );
+
+const testReasoningModelNames = [
+  {
+    modelName: "gemini-2.5-flash-preview-05-20",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-05-20",
+    platformType: "gcp",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-05-06",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-05-06",
+    platformType: "gcp",
+  },
+];
+
+describe.each(testReasoningModelNames)(
+  "Webauth ($platformType) Reasoning($modelName)",
+  ({ modelName, platformType }) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockedFunction<any>;
+
+    function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+      // const logger = new GoogleRequestLogger();
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
+      return new ChatGoogle({
+        modelName,
+        platformType: platformType as GooglePlatformType,
+        callbacks,
+        apiKey,
+        ...(fields ?? {}),
+      });
+    }
+
+    beforeEach(async () => {
+      warnSpy = jest.spyOn(global.console, "warn");
+      const delay = testGeminiModelDelay[modelName] ?? 0;
+      if (delay) {
+        console.log(`Delaying for ${delay}ms`);
+        // eslint-disable-next-line no-promise-executor-return
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    test("default", async () => {
+      // By default, it should not return reasoning tokens, tho it should report some
+      const model = newChatGoogle();
+      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(false);
+      expect(typeof response.content).toEqual("string");
+      expect(response.content).toMatch(/^1\/6/);
+
+      expect(response?.usage_metadata?.output_token_details?.reasoning).toBeGreaterThan(0);
+    });
+
+    test("content", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(true);
+      const content: MessageContentComplex[] = response.content as MessageContentComplex[];
+      expect(content.length).toBeGreaterThanOrEqual(2);
+      expect(content.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
+      expect(content.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+
+      expect(response?.usage_metadata?.output_token_details?.reasoning).toBeGreaterThan(0);
+    });
+
+    test("off", async () => {
+      // By default, it should not return reasoning tokens, and should not report any
+      const model = newChatGoogle({
+        maxReasoningTokens: 0,
+      });
+      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(false);
+      expect(typeof response.content).toEqual("string");
+
+      expect(response).toHaveProperty("usage_metadata");
+      expect(response.usage_metadata).toHaveProperty("output_token_details");
+      expect(response.usage_metadata!.output_token_details).not.toHaveProperty(
+        "reasoning"
+      );
+
+    });
+
+    test("conversation", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const prompt1 = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const history: BaseMessageChunk[] = [
+        new HumanMessageChunk(prompt1)
+      ];
+      const response1 = await model.invoke(history);
+      history.push(response1)
+      console.log(response1);
+
+      expect(Array.isArray(response1.content)).toEqual(true);
+      const content1: MessageContentComplex[] = response1.content as MessageContentComplex[];
+      expect(content1.length).toBeGreaterThanOrEqual(2);
+      expect(content1.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
+      expect(content1.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+
+      const prompt2 = "How about 1?"
+      history.push(new HumanMessageChunk(prompt2));
+      const response2 = await model.invoke(history);
+      console.log(response2);
+
+      expect(Array.isArray(response2.content)).toEqual(true);
+      const content2: MessageContentComplex[] = response2.content as MessageContentComplex[];
+      expect(content2.length).toBeGreaterThanOrEqual(2);
+      expect(content2.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
+      expect(content2.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+    });
+
+  });
