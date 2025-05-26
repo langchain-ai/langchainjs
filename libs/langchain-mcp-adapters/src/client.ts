@@ -572,7 +572,7 @@ export class MultiServerMCPClient {
       args,
       env,
       stderr,
-      cwd
+      cwd,
     });
 
     this._transportInstances[serverName] = transport;
