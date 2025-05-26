@@ -183,15 +183,10 @@ export class FakeChatModel extends BaseChatModel {
   }
   
   // The bindTools method is part of BaseChatModel. 
-  // It allows user code to assign a set of tools to a tool-calling model for it to
-  // use. Rather than mutating its instance of BaseChatModel, 
-  // it returns a new Runnable with the tool binding applied.
+  // It allows user code to assign a set of tools to a tool-calling model for it to use. 
+  // Rather than mutating its instance of BaseChatModel, it returns a new Runnable with the tool binding applied.
   override bindTools(tools: BindToolsInput[], kwargs?: Partial<BaseChatModelCallOptions>) {
     _tools = [...this._tools, ...tools];
-  }
-
-  override withConfig(config: Partial<BaseChatModelCallOptions>): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions> {
-    
   }
 
   async _generate(
