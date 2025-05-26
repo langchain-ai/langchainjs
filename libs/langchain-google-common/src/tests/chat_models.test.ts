@@ -853,6 +853,74 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(8192);
   });
 
+  test("1. Labels - provided in request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const labels = {
+      "user-id": "123",
+      "session-id": "abc",
+      "environment": "test",
+    };
+    await model.invoke("Hello", { labels });
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("labels");
+    expect(data.labels).toEqual(labels);
+  });
+
+  test("1. Labels - not provided in request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    await model.invoke("Hello");
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).not.toHaveProperty("labels");
+  });
+
+  test("1. Labels - empty object", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    const labels = {};
+    await model.invoke("Hello", { labels });
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("labels");
+    expect(data.labels).toEqual(labels);
+  });
+
   test("2. Safety - settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

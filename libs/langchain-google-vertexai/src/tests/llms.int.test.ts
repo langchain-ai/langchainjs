@@ -101,6 +101,20 @@ describe("GAuth LLM", () => {
     expect(res.length).toBeGreaterThan(0);
     // console.log("res", res);
   });
+
+  test("labels integration", async () => {
+    const model = new VertexAI();
+    const labels = {
+      "environment": "test",
+      "component": "llm-labels",
+      "test-type": "integration",
+    };
+
+    const res = await model.invoke("What is 1 + 1?", { labels });
+    expect(res).toBeDefined();
+    expect(res.length).toBeGreaterThan(0);
+    expect(res).toMatch(/2/);
+  });
 });
 
 describe("GAuth LLM gai", () => {
