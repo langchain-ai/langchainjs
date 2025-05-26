@@ -73,6 +73,7 @@ import {
 } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
   InteropZodType,
   isInteropZodSchema,
@@ -499,21 +500,41 @@ function _convertDeltaToMessageChunk(
 
 function _convertToolToMistralTool(
   tools: ChatMistralAIToolType[]
-): MistralAITool[] {
+): MistralAITool[] | undefined {
+  if (!tools || !tools.length) {
+    return undefined;
+  }
   return tools.map((tool) => {
+    // If already a MistralAITool with a 'function' property, return as is
     if ("function" in tool) {
-      return tool as MistralAITool;
+      return {
+        type: tool.type ?? "function",
+        function: tool.function,
+      };
     }
 
-    const description = tool.description ?? `Tool: ${tool.name}`;
-    return {
-      type: "function",
-      function: {
-        name: tool.name,
-        description,
-        parameters: toJsonSchema(tool.schema),
-      },
-    };
+    // If it's a LangChain tool, convert to MistralAITool
+    if (isLangChainTool(tool)) {
+      const description = tool.description ?? `Tool: ${tool.name}`;
+      return {
+        type: "function",
+        function: {
+          name: tool.name,
+          description,
+          parameters: isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
+            : tool.schema,
+        },
+      };
+    }
+
+    throw new Error(
+      `Unknown tool type passed to ChatMistral: ${JSON.stringify(
+        tool,
+        null,
+        2
+      )}`
+    );
   });
 }
 

@@ -87,6 +87,43 @@ test("Can call tools using structured tools", async () => {
   expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
 });
 
+test("Can handle Tools with non-Zod JSON schema", async () => {
+  // Mock DynamicStructuredTool with plain JSON schema (not Zod)
+  const mockDynamicTool = {
+    lc_serializable: false,
+    lc_runnable: true,
+    name: 'add_numbers',
+    description: 'Add two numbers together',
+    schema: {
+      type: 'object',
+      properties: {
+        a: { type: 'number', description: 'First number' },
+        b: { type: 'number', description: 'Second number' }
+      },
+      required: ['a', 'b']
+    },
+    func: async (args: { a: number; b: number }) => `The sum is ${args.a + args.b}`
+  };
+
+  const model = new ChatMistralAI({
+    model: "mistral-large-latest",
+  }).bindTools([mockDynamicTool]);
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful assistant that uses tools to perform calculations"],
+    ["human", "What is 15 + 27?"],
+  ]);
+  
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({});
+  
+  // Verify the tool call was made correctly
+  expect(response.tool_calls?.length).toEqual(1);
+  expect(response.tool_calls?.[0].name).toBe("add_numbers");
+  expect(response.tool_calls?.[0].args?.a).toBeDefined();
+  expect(response.tool_calls?.[0].args?.b).toBeDefined();
+});
+
 test("Can call tools using raw tools", async () => {
   const tools = [
     {
