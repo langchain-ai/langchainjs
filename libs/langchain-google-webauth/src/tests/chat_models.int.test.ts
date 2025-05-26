@@ -69,7 +69,7 @@ const apiKeyModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
-  ["gemini-2.5-flash-preview-04-17"],
+  ["gemini-2.5-flash-preview-05-20"],
   ["gemini-2.5-pro-preview-05-06"],
   ["gemma-3-27b-it"],
 ];
@@ -206,15 +206,20 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   });
 
   // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
-  test.skip("Tool call", async () => {
+  test("Tool call", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
     console.log(res);
+    console.log(JSON.stringify(res?.tool_calls?.[0].args));
     expect(res.tool_calls?.length).toEqual(1);
     expect(res.tool_calls?.[0].args).toEqual(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
     );
+    const tc = res.tool_calls![0];
+    expect(tc.args.locations).toHaveLength(2);
+    expect(tc.args.locations.some((l:Record<string,string>) => l.name === "SF" || l.name === "San Francisco")).toEqual(true);
+    expect(tc.args.locations.some((l:Record<string,string>) => l.name === "LA" || l.name === "Los Angeles")).toEqual(true);
   });
 
   test.skip("Few shotting with tool calls", async () => {
@@ -673,8 +678,10 @@ describe.each(testGeminiModelNames)(
     });
 
     test("function", async () => {
-      // gemini-2.0-flash-001: Test occasionally fails due to model regression
-      // gemini-2.0-flash-lite-001: Not supported
+      // gemini-1.5-flash-002: Test fails with nonsensical error:
+      //  The available tools lack the necessary functionality to answer this question.  The `get_weather` function is defined but not implemented, so I cannot retrieve weather information.
+      /*
+      // This tool definition was failing in Gemini 2.0+
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -696,12 +703,13 @@ describe.each(testGeminiModelNames)(
           ],
         },
       ];
+      */
+      const tools = [weatherTool];
       const model = newChatGoogle().bind({
         tools,
         temperature: 0.1,
-        maxOutputTokens: 8000,
       });
-      const result = await model.invoke("Run a test on the cobalt project");
+      const result = await model.invoke("What is the weather in New York?");
       expect(result).toHaveProperty("content");
       expect(result.content).toBe("");
       const args = result?.lc_kwargs?.additional_kwargs;
@@ -716,10 +724,10 @@ describe.each(testGeminiModelNames)(
       const func = call.function;
       expect(func).toBeDefined();
       expect(func).toHaveProperty("name");
-      expect(func.name).toBe("test");
+      expect(func.name).toBe("get_weather");
       expect(func).toHaveProperty("arguments");
       expect(typeof func.arguments).toBe("string");
-      expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+      expect(func.arguments.replaceAll("\n", "")).toBe('{"location":"New York"}');
     });
 
     test("function reply", async () => {
