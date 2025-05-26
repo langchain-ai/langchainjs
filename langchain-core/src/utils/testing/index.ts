@@ -192,7 +192,7 @@ export class FakeChatModel extends BaseChatModel {
       tools: merged,
     });
 
-    return next.withConfig({ tools: merged } as BaseChatModelCallOptions);
+    return next.withConfig({ tools: merged, ...kwargs } as BaseChatModelCallOptions);
   }
 
   async _generate(
