@@ -3,6 +3,13 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+
+import {
+  BaseChatModel,
+  type BaseChatModelCallOptions,
+  type BindToolsInput
+} from "../chat_models.js";
+import { tool } from "../../tools/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
@@ -394,3 +401,33 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
 });
+
+test(`Test withConfig and bindTools order`, async () => {
+  const model = new FakeChatModel({});
+
+  const echoTool = tool((input) => String(input), {
+    name: "echo",
+    description: "Echos the input",
+    schema: z.string(),
+  });
+
+  const config = {
+    stop: ["stop"],
+  };
+
+  const tools = [echoTool];
+
+  const configuredBoundModel = model.withConfig(config).bindTools(tools);
+  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
+
+  const configuredBoundModelResult = await configuredBoundModel
+    .invoke("Any arbitrary input");
+  const boundConfiguredModelResult = await boundConfiguredModel
+    .invoke("Any arbitrary input");
+
+  console.log(configuredBoundModelResult.content);
+  console.log(boundConfiguredModelResult.content);
+
+  expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
+});
+

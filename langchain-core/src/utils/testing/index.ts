@@ -17,6 +17,7 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
   BaseChatModelParams,
+  BindToolsInput,
 } from "../../language_models/chat_models.js";
 import { BaseLLMParams, LLM } from "../../language_models/llms.js";
 import {
@@ -171,6 +172,8 @@ export class FakeStreamingLLM extends LLM {
 }
 
 export class FakeChatModel extends BaseChatModel {
+  _tools: BindToolsInput[] = [];
+
   _combineLLMOutput() {
     return [];
   }
@@ -178,11 +181,23 @@ export class FakeChatModel extends BaseChatModel {
   _llmType(): string {
     return "fake";
   }
+  
+  // The bindTools method is part of BaseChatModel. 
+  // It allows user code to assign a set of tools to a tool-calling model for it to
+  // use. Rather than mutating its instance of BaseChatModel, 
+  // it returns a new Runnable with the tool binding applied.
+  override bindTools(tools: BindToolsInput[], kwargs?: Partial<BaseChatModelCallOptions>) {
+    _tools = [...this._tools, ...tools];
+  }
+
+  override withConfig(config: Partial<BaseChatModelCallOptions>): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions> {
+    
+  }
 
   async _generate(
     messages: BaseMessage[],
     options?: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     if (options?.stop?.length) {
       return {
