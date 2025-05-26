@@ -50,6 +50,7 @@ Then initialize
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatGoogleGenerativeAI({
   modelName: "gemini-pro",

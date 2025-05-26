@@ -118,7 +118,7 @@ export function createOpenAIFnRunnable<
     };
   }
 
-  const llmWithKwargs = (llm as Runnable).bind(llmKwargs);
+  const llmWithKwargs = (llm as Runnable).withConfig(llmKwargs);
   return prompt.pipe(llmWithKwargs).pipe(outputParser);
 }
 
