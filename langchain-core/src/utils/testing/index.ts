@@ -195,6 +195,13 @@ export class FakeChatModel extends BaseChatModel {
     return next.withConfig({ tools: merged, ...kwargs } as BaseChatModelCallOptions);
   }
 
+  override withConfig(config: Partial<BaseChatModelCallOptions>): FakeChatModel {
+    return new FakeChatModel({
+      ...this,
+      ...config,
+    });
+  }
+
   async _generate(
     messages: BaseMessage[],
     options?: this["ParsedCallOptions"],

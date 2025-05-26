@@ -138,36 +138,35 @@ test(`Test ChatModel bindTools`, async () => {
   const response = await modelWithTools.invoke("Hello there!");
   expect(response.content).toEqual("Hello there!");
 });
+ 
+test(`Test ChatModel withConfig and bindTools order`, async () => {
+  const model = new FakeChatModel({});
 
-// test(`Test ChatModel withConfig and bindTools order`, async () => {
-//   const model = new FakeChatModel({});
+  const echoTool = tool((input) => String(input), {
+    name: "echo",
+    description: "Echos the input",
+    schema: z.string(),
+  });
 
-//   const echoTool = tool((input) => String(input), {
-//     name: "echo",
-//     description: "Echos the input",
-//     schema: z.string(),
-//   });
+  const config = {
+    stop: ["stop"],
+  };
 
-//   const config = {
-//     stop: ["stop"],
-//   };
+  const tools = [echoTool];
 
-//   const tools = [echoTool];
+  const configuredBoundModel = model.withConfig(config).bindTools(tools);
+  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
 
-//   const configuredBoundModel = model.withConfig(config).bindTools(tools);
-//   const boundConfiguredModel = model.bindTools(tools).withConfig(config);
+  const configuredBoundModelResult = await configuredBoundModel
+    .invoke("Any arbitrary input");
+  const boundConfiguredModelResult = await boundConfiguredModel
+    .invoke("Any arbitrary input");
 
-//   const configuredBoundModelResult = await configuredBoundModel
-//     .invoke("Any arbitrary input");
-//   const boundConfiguredModelResult = await boundConfiguredModel
-//     .invoke("Any arbitrary input");
+  // console.log(configuredBoundModelResult.content);
+  // console.log(boundConfiguredModelResult.content);
 
-//   console.log(configuredBoundModelResult.content);
-//   console.log(boundConfiguredModelResult.content);
-
-//   expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
-// });
-
+  expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
+});
 
 test("Test ChatModel legacy params withStructuredOutput", async () => {
   const model = new FakeListChatModel({
