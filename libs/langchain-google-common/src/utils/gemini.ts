@@ -50,7 +50,7 @@ import type {
   GeminiLogprobsResult,
   GeminiLogprobsResultCandidate,
   GeminiLogprobsTopCandidate,
-  ModalityTokenCount,
+  ModalityTokenCount, GeminiUrlContextMetadata,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -886,6 +886,21 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
+  function candidateToUrlContextMetadata(
+    candidate: GeminiResponseCandidate
+  ): GeminiUrlContextMetadata | undefined {
+    const retrieval = candidate?.urlRetrievalMetadata?.urlRetrievalContexts ?? [];
+    const context = candidate?.urlContextMetadata?.urlMetadata ?? [];
+    const all = [...retrieval, ...context];
+    if (all.length === 0) {
+      return undefined;
+    } else {
+      return {
+        urlMetadata: all,
+      }
+    }
+  }
+
   function addModalityCounts(
     modalityTokenCounts: ModalityTokenCount[],
     details: InputTokenDetails | OutputTokenDetails
@@ -969,6 +984,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason,
       finish_message: data.candidates[0]?.finishMessage,
+      url_context_metadata: candidateToUrlContextMetadata(data.candidates[0]),
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };

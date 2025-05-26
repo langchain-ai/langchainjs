@@ -1136,6 +1136,29 @@ describe.each(testGeminiModelNames)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
+    test.only("URL Context Tool", async () => {
+      // Not available on Gemini 1.5
+      // Not available on Gemini 2.0 Flash Lite (but available on Flash)
+      // Not available on Vertex
+      const urlTool: GeminiTool = {
+        urlContext: {},
+      };
+      const model = newChatGoogle().bindTools([urlTool]);
+      const url = "https://js.langchain.com/";
+      const prompt = `Summarize this web page: ${url}`;
+      const result = await model.invoke(prompt);
+      const meta = result.response_metadata;
+      console.log(JSON.stringify(meta, null, 1));
+      expect(meta).toHaveProperty("url_context_metadata");
+      expect(meta).toHaveProperty("groundingMetadata");
+      expect(meta).toHaveProperty("groundingSupport");
+      const context = meta.url_context_metadata;
+      expect(context).toHaveProperty("urlMetadata");
+      expect(Array.isArray(context.urlMetadata)).toEqual(true);
+      expect(context.urlMetadata[0].retrievedUrl).toEqual(url);
+      expect(context.urlMetadata[0].urlRetrievalStatus).toEqual("URL_RETRIEVAL_STATUS_SUCCESS");
+    });
+
     test("Can stream GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
