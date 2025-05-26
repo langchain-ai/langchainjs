@@ -91,3 +91,11 @@ test("Test OpenAIEmbeddings.embedDocuments with v3 and dimensions", async () => 
   expect(res[0].length).toBe(127);
   expect(res[1].length).toBe(127);
 });
+
+test("Test OpenAIEmbeddings.embedQuery with base64 encoding", async () => {
+  const embeddings = new OpenAIEmbeddings({
+    encodingFormat: "base64",
+  });
+  const res = await embeddings.embedQuery("Hello world");
+  expect(typeof res).toBe("string");
+});
