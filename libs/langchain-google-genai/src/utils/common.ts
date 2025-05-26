@@ -345,14 +345,32 @@ export function convertMessageContentToParts(
         `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
       );
     }
+
+    const result = Array.isArray(message.content)
+      ? (message.content
+          .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+          .filter((p) => p !== undefined) as Part[])
+      : message.content;
+
+    if (message.status === "error") {
+      return [
+        {
+          functionResponse: {
+            name: messageName,
+            // The API expects an object with an `error` field if the function call fails.
+            // `error` must be a valid object (not a string or array), so we wrap `message.content` here
+            response: { error: { details: result } },
+          },
+        },
+      ];
+    }
+
     return [
       {
         functionResponse: {
           name: messageName,
-          response:
-            typeof message.content === "string"
-              ? { result: message.content }
-              : message.content,
+          // again, can't have a string or array value for `response`, so we wrap it as an object here
+          response: { result },
         },
       },
     ];
