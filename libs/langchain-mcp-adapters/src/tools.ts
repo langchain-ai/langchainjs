@@ -1,6 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
-  CallToolResult,
   TextContent,
   ImageContent,
   EmbeddedResource,
@@ -31,12 +30,16 @@ function getDebugLog() {
   return debugLog;
 }
 
-export type CallToolResultContentType =
-  CallToolResult["content"][number]["type"];
+export type CallToolResult = Awaited<
+  ReturnType<typeof Client.prototype.callTool>
+>;
+
 export type CallToolResultContent =
   | TextContent
   | ImageContent
   | EmbeddedResource;
+
+export type CallToolResultContentType = CallToolResultContent["type"];
 
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
@@ -67,6 +70,15 @@ export class ToolException extends Error {
     super(message);
     this.name = "ToolException";
   }
+}
+
+export function isToolException(error: unknown): error is ToolException {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "ToolException"
+  );
 }
 
 /**
@@ -173,38 +185,36 @@ async function _callTool(
   args: Record<string, unknown>,
   config?: RunnableConfig
 ): Promise<[MessageContent, EmbeddedResource[]]> {
-  let result: CallToolResult;
   try {
     getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
-    let requestOptions: RequestOptions | undefined = {
+    const requestOptions: RequestOptions = {
       ...(config?.timeout ? { timeout: config.timeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
     };
 
-    if (Object.keys(requestOptions).length === 0) {
-      requestOptions = undefined;
-    }
-
-    result = (await client.callTool(
+    const callToolArgs: Parameters<typeof client.callTool> = [
       {
         name: toolName,
         arguments: args,
       },
-      undefined,
-      requestOptions
-    )) as CallToolResult;
+    ];
+
+    if (Object.keys(requestOptions).length > 0) {
+      callToolArgs.push(undefined); // optional output schema arg
+      callToolArgs.push(requestOptions);
+    }
+
+    const result = await client.callTool(...callToolArgs);
+    return _convertCallToolResult(serverName, toolName, result, client);
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (error instanceof ToolException) {
+    if (isToolException(error)) {
       throw error;
     }
     throw new ToolException(`Error calling tool ${toolName}: ${String(error)}`);
   }
-
-  return _convertCallToolResult(serverName, toolName, result, client);
 }
 
 export type LoadMcpToolsOptions = {

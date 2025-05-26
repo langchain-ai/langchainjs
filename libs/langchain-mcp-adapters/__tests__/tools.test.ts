@@ -128,9 +128,7 @@ describe("Simplified Tool Adapter Tests", () => {
             city: "New York",
           },
           name: "weather",
-        },
-        undefined,
-        undefined
+        }
       );
     });
 
@@ -178,14 +176,10 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith(
-        {
-          arguments: {},
-          name: "weather",
-        },
-        undefined,
-        undefined
-      );
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        arguments: {},
+        name: "weather",
+      });
     });
 
     test("should handle empty tool list", async () => {
