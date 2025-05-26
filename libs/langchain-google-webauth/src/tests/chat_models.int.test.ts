@@ -1136,7 +1136,7 @@ describe.each(testGeminiModelNames)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
-    test.only("URL Context Tool", async () => {
+    test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash Lite (but available on Flash)
       // Not available on Vertex
