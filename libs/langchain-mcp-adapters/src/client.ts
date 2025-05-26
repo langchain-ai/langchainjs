@@ -559,7 +559,7 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStdioConnection
   ): Promise<void> {
-    const { command, args, env, restart, stderr } = connection;
+    const { command, args, env, restart, stderr, cwd } = connection;
 
     getDebugLog()(
       `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
@@ -572,6 +572,7 @@ export class MultiServerMCPClient {
       args,
       env,
       stderr,
+      cwd,
     });
 
     this._transportInstances[serverName] = transport;
