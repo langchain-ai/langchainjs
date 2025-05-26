@@ -205,7 +205,7 @@ export class FakeChatModel extends BaseChatModel {
   async _generate(
     messages: BaseMessage[],
     options?: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     if (options?.stop?.length) {
       return {

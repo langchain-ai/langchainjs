@@ -451,5 +451,3 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
 });
-
-
