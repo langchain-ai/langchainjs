@@ -74,6 +74,7 @@ import {
 } from "@langchain/core/runnables";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
@@ -496,21 +497,41 @@ function _convertDeltaToMessageChunk(
 
 function _convertToolToMistralTool(
   tools: ChatMistralAIToolType[]
-): MistralAITool[] {
+): MistralAITool[] | undefined {
+  if (!tools || !tools.length) {
+    return undefined;
+  }
   return tools.map((tool) => {
+    // If already a MistralAITool with a 'function' property, return as is
     if ("function" in tool) {
-      return tool as MistralAITool;
+      return {
+        type: tool.type ?? "function",
+        function: tool.function,
+      };
     }
 
-    const description = tool.description ?? `Tool: ${tool.name}`;
-    return {
-      type: "function",
-      function: {
-        name: tool.name,
-        description,
-        parameters: zodToJsonSchema(tool.schema),
-      },
-    };
+    // If it's a LangChain tool, convert to MistralAITool
+    if (isLangChainTool(tool)) {
+      const description = tool.description ?? `Tool: ${tool.name}`;
+      return {
+        type: "function",
+        function: {
+          name: tool.name,
+          description,
+          parameters: isZodSchema(tool.schema)
+            ? zodToJsonSchema(tool.schema)
+            : tool.schema,
+        },
+      };
+    }
+
+    throw new Error(
+      `Unknown tool type passed to ChatMistral: ${JSON.stringify(
+        tool,
+        null,
+        2
+      )}`
+    );
   });
 }
 
