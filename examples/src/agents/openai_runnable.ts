@@ -2,7 +2,6 @@ import { AgentExecutor } from "langchain/agents";
 import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
-import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -40,9 +39,7 @@ const prompt = ChatPromptTemplate.fromMessages([
  * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
-const modelWithFunctions = model.bind({
-  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
-});
+const modelWithFunctions = model.bindTools(tools);
 /**
  * Define a new agent steps parser.
  */

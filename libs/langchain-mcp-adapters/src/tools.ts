@@ -264,6 +264,12 @@ export async function loadMcpTools(
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
+            if (!tool.inputSchema.properties) {
+              // Workaround for MCP SDK not consistently providing properties
+              // eslint-disable-next-line no-param-reassign
+              tool.inputSchema.properties = {};
+            }
+
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",

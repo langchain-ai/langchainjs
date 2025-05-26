@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
@@ -22,18 +21,13 @@ const person = z.object({
 const model = new ChatOpenAI({
   model: "gpt-3.5-turbo-1106",
   temperature: 0,
-}).bind({
-  tools: [
-    {
-      type: "function",
-      function: {
-        name: "person",
-        description: "A person",
-        parameters: zodToJsonSchema(person),
-      },
-    },
-  ],
-});
+}).bindTools([
+  {
+    name: "person",
+    description: "A person",
+    schema: person,
+  },
+]);
 
 const parser = new JsonOutputToolsParser();
 const chain = prompt.pipe(model).pipe(parser);

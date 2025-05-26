@@ -302,7 +302,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions
   > {
-    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+    return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
   // Replace
@@ -515,10 +515,7 @@ export abstract class ChatGoogleBase<AuthOptions>
         keyName: functionName,
       });
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: functionName,
-    });
+    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
