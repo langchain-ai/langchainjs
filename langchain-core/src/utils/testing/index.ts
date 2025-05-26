@@ -172,7 +172,7 @@ export class FakeStreamingLLM extends LLM {
 }
 
 export class FakeChatModel extends BaseChatModel {
-  _tools: BindToolsInput[] = [];
+  private tools: BindToolsInput[] = [];
 
   _combineLLMOutput() {
     return [];
@@ -182,11 +182,17 @@ export class FakeChatModel extends BaseChatModel {
     return "fake";
   }
   
-  // The bindTools method is part of BaseChatModel. 
-  // It allows user code to assign a set of tools to a tool-calling model for it to use. 
-  // Rather than mutating its instance of BaseChatModel, it returns a new Runnable with the tool binding applied.
+  // Inspired by FakeStreamingChatModel.bindTools
   override bindTools(tools: BindToolsInput[], kwargs?: Partial<BaseChatModelCallOptions>) {
-    _tools = [...this._tools, ...tools];
+    const merged = [...this.tools, ...tools];
+
+    // Create new Runnable with tool binding applied
+    const next = new FakeChatModel({
+      ...this,
+      tools: merged,
+    });
+
+    return next.withConfig({ tools: merged } as BaseChatModelCallOptions);
   }
 
   async _generate(

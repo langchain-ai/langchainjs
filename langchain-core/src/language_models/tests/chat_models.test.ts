@@ -131,6 +131,36 @@ test("Test ChatModel uses callbacks with a cache", async () => {
   expect(response2.content).toEqual(acc);
 });
 
+test(`Test ChatModel withConfig and bindTools order`, async () => {
+  const model = new FakeChatModel({});
+
+  const echoTool = tool((input) => String(input), {
+    name: "echo",
+    description: "Echos the input",
+    schema: z.string(),
+  });
+
+  const config = {
+    stop: ["stop"],
+  };
+
+  const tools = [echoTool];
+
+  const configuredBoundModel = model.withConfig(config).bindTools(tools);
+  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
+
+  const configuredBoundModelResult = await configuredBoundModel
+    .invoke("Any arbitrary input");
+  const boundConfiguredModelResult = await boundConfiguredModel
+    .invoke("Any arbitrary input");
+
+  console.log(configuredBoundModelResult.content);
+  console.log(boundConfiguredModelResult.content);
+
+  expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
+});
+
+
 test("Test ChatModel legacy params withStructuredOutput", async () => {
   const model = new FakeListChatModel({
     responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
@@ -402,32 +432,4 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   );
 });
 
-test(`Test withConfig and bindTools order`, async () => {
-  const model = new FakeChatModel({});
-
-  const echoTool = tool((input) => String(input), {
-    name: "echo",
-    description: "Echos the input",
-    schema: z.string(),
-  });
-
-  const config = {
-    stop: ["stop"],
-  };
-
-  const tools = [echoTool];
-
-  const configuredBoundModel = model.withConfig(config).bindTools(tools);
-  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
-
-  const configuredBoundModelResult = await configuredBoundModel
-    .invoke("Any arbitrary input");
-  const boundConfiguredModelResult = await boundConfiguredModel
-    .invoke("Any arbitrary input");
-
-  console.log(configuredBoundModelResult.content);
-  console.log(boundConfiguredModelResult.content);
-
-  expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
-});
 
