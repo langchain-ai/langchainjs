@@ -87,6 +87,61 @@ export function createDummyHttpServer(
     );
   }
 
+  server.tool(
+    "audio_tool",
+    "A tool that returns a dummy audio content.",
+    // Input schema: a single string 'input'
+    {
+      input: z.string().describe("Some input string for the audio tool"),
+    },
+    async ({ input }, extra) => {
+      // Static base64 encoded minimal WAV file (1-byte silent audio)
+      // This is a valid WAV file: RIFF header, WAVE format, fmt chunk (PCM, 44100Hz, 1 channel, 16-bit), data chunk (1 byte of 0x00)
+      const base64Audio = "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Audio input was: ${input}, server: ${name}`,
+          },
+          {
+            type: "audio",
+            mimeType: "audio/wav",
+            data: base64Audio,
+          },
+        ],
+      };
+    }
+  );
+
+  server.tool(
+    "image_tool",
+    "A tool that returns a dummy image and text content.",
+    // Input schema: a single string 'input'
+    {
+      input: z.string().describe("Some input string for the image tool"),
+    },
+    async ({ input }, extra) => {
+      // Static base64 encoded minimal PNG file (1x1 black pixel)
+      const base64Image = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Image input was: ${input}, server: ${name}`,
+          },
+          {
+            type: "image",
+            mimeType: "image/png",
+            data: base64Image,
+          },
+        ],
+      };
+    }
+  );
+
   const app = express();
   app.use(express.json());
 
