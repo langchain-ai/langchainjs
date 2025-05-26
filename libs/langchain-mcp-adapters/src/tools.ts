@@ -289,7 +289,7 @@ async function _callTool({
     }
 
     const result = await client.callTool(...callToolArgs);
-    return await _convertCallToolResult({
+    return _convertCallToolResult({
       serverName,
       toolName,
       result,
