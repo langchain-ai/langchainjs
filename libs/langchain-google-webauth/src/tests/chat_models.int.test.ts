@@ -72,6 +72,7 @@ const apiKeyModelNames = [
   ["gemini-2.5-flash-preview-05-20"],
   ["gemini-2.5-pro-preview-05-06"],
   ["gemma-3-27b-it"],
+  ["gemma-3n-e4b-it"],
 ];
 
 describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
@@ -206,6 +207,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   });
 
   // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
+  // Gemma 3n reports: "Function calling is not enabled for models/gemma-3n-e4b-it"
   test("Tool call", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
@@ -324,6 +326,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
+  // Gemma 3n reports: "Image input modality is not enabled for models/gemma-3n-e4b-it"
   test("image_url image data", async () => {
     const model = newChatGoogle({});
 
