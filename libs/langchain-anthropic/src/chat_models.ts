@@ -100,9 +100,8 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isBuiltinTool(
-  tool: any
+  tool: unknown
 ): tool is
   | Anthropic.Messages.ToolBash20250124
   | Anthropic.Messages.ToolTextEditor20250124
@@ -110,6 +109,8 @@ function isBuiltinTool(
   return (
     typeof tool === "object" &&
     tool !== null &&
+    "type" in tool &&
+    "name" in tool &&
     typeof tool.type === "string" &&
     typeof tool.name === "string" &&
     ((tool.type === "bash_20250124" && tool.name === "bash_20250124") ||
