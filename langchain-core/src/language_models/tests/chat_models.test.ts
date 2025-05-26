@@ -138,6 +138,19 @@ test(`Test ChatModel bindTools`, async () => {
   const response = await modelWithTools.invoke("Hello there!");
   expect(response.content).toEqual("Hello there!");
 });
+
+test(`Test ChatModel stackedConfig is merged`, async () => {
+  const model = new FakeChatModel({});
+  const modelWithConfig = model.withConfig({
+    stop: ["stop"],
+  }).withConfig({
+    runId: "myRunId",
+  });
+
+  await modelWithConfig.invoke("Hello there!");
+  
+  // TODO: Verify that the config is merged
+});
  
 test(`Test ChatModel withConfig and bindTools order`, async () => {
   const model = new FakeChatModel({});
@@ -162,8 +175,8 @@ test(`Test ChatModel withConfig and bindTools order`, async () => {
   const boundConfiguredModelResult = await boundConfiguredModel
     .invoke("Any arbitrary input");
 
-  // console.log(configuredBoundModelResult.content);
-  // console.log(boundConfiguredModelResult.content);
+  console.log(configuredBoundModelResult.content);
+  console.log(boundConfiguredModelResult.content);
 
   expect(configuredBoundModelResult.content).toEqual(boundConfiguredModelResult.content);
 });
