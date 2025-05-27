@@ -1239,7 +1239,8 @@ describe.each(testGeminiModelNames)(
       }
     });
 
-    test("image_url video data", async () => {
+    // Vertex AI doesn't (yet?) support fps, but does support startOffset and endOffset
+    test.only("image_url video data", async () => {
       const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
@@ -1248,43 +1249,72 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      const message: MessageContentComplex[] = [
-        {
-          type: "text",
-          text: "Describe this video in detail.",
-        },
-        {
-          type: "image_url",
-          image_url: dataUri,
-        },
-      ];
-
-      const messages: BaseMessage[] = [
-        new HumanMessageChunk({ content: message }),
-      ];
-
       try {
-        const res = await model.invoke(messages);
+        const message1: MessageContentComplex[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "image_url",
+            image_url: dataUri,
+          },
+        ];
+
+        const messages1: BaseMessage[] = [
+          new HumanMessageChunk({ content: message1 }),
+        ];
+
+        const res1 = await model.invoke(messages1);
 
         // console.log(res);
 
-        expect(res).toBeDefined();
-        expect(res._getType()).toEqual("ai");
+        expect(res1).toBeDefined();
+        expect(res1._getType()).toEqual("ai");
 
-        const aiMessage = res as AIMessageChunk;
-        expect(aiMessage.content).toBeDefined();
+        const aiMessage1 = res1 as AIMessageChunk;
+        expect(aiMessage1.content).toBeDefined();
 
-        expect(typeof aiMessage.content).toBe("string");
-        const text = aiMessage.content as string;
+        expect(typeof aiMessage1.content).toBe("string");
+        const text = aiMessage1.content as string;
         expect(text).toMatch(/rainbow/);
 
         // Gemini 1.5 does not include audio
+        const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details?.video as number;
+        expect(typeof videoTokens1).toEqual("number");
+        expect(videoTokens1).toBeGreaterThan(1024);
         expect(
-          aiMessage?.usage_metadata?.input_token_details?.video
-        ).toBeGreaterThan(1024);
-        expect(
-          aiMessage?.usage_metadata?.input_token_details?.audio
+          aiMessage1?.usage_metadata?.input_token_details?.audio
         ).toBeGreaterThan(0);
+
+        // Now run it again, but this time sample two frames / second
+        const message2: MessageContentComplex[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "image_url",
+            image_url: dataUri,
+            videoMetadata: {
+              fps: 2.0,
+            },
+          },
+        ];
+
+        const messages2: BaseMessage[] = [
+          new HumanMessageChunk({ content: message2 }),
+        ];
+
+        const res2 = await model.invoke(messages2);
+        const aiMessage2 = res2 as AIMessageChunk;
+
+        const videoTokens2 = aiMessage2?.usage_metadata?.input_token_details?.video;
+        expect(typeof videoTokens2).toEqual("number");
+        expect(videoTokens2).toEqual(videoTokens1 * 2);
+
+        console.log('tokens 1', JSON.stringify( aiMessage1?.usage_metadata?.input_token_details, null, 1));
+        console.log('tokens 2', JSON.stringify( aiMessage2?.usage_metadata?.input_token_details, null, 1));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -1292,7 +1322,7 @@ describe.each(testGeminiModelNames)(
         console.error(JSON.stringify(e.details, null, 1));
         throw e;
       }
-    });
+    }, 90000);
 
     test("implicit caching", async () => {
       const model = newChatGoogle({});

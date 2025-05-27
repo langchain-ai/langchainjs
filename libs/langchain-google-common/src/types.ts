@@ -348,18 +348,28 @@ export interface GeminiPartBase {
   thought?: boolean; // Output only
 }
 
+export interface GeminiVideoMetadata {
+  fps?: number;  // Double in range (0.0, 24.0]
+  startOffset?: string;
+  endOffset?: string;
+}
+
+export interface GeminiPartBaseFile extends GeminiPartBase {
+  videoMetadata?: GeminiVideoMetadata;
+}
+
 export interface GeminiPartText extends GeminiPartBase {
   text: string;
 }
 
-export interface GeminiPartInlineData extends GeminiPartBase {
+export interface GeminiPartInlineData extends GeminiPartBaseFile {
   inlineData: {
     mimeType: string;
     data: string;
   };
 }
 
-export interface GeminiPartFileData extends GeminiPartBase {
+export interface GeminiPartFileData extends GeminiPartBaseFile {
   fileData: {
     mimeType: string;
     fileUri: string;

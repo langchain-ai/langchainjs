@@ -235,7 +235,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
-  function messageContentImageUrl(
+  function messageContentImageUrlData(
     content: MessageContentImageUrl
   ): GeminiPartInlineData | GeminiPartFileData {
     const url: string =
@@ -262,6 +262,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
+  function messageContentImageUrl(
+    content: MessageContentImageUrl
+  ): GeminiPartInlineData | GeminiPartFileData {
+    const ret = messageContentImageUrlData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
+  }
+
   async function blobToFileData(blob: MediaBlob): Promise<GeminiPartFileData> {
     return {
       fileData: {
@@ -277,7 +285,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return config?.mediaManager?.getMediaBlob(uri);
   }
 
-  async function messageContentMedia(
+  async function messageContentMediaData(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
@@ -306,6 +314,28 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     throw new Error(
       `Invalid media content: ${JSON.stringify(content, null, 1)}`
     );
+  }
+
+  function supplementVideoMetadata(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: MessageContentImageUrl | Record<string,any>,
+    ret: GeminiPartInlineData | GeminiPartFileData
+  ): GeminiPartInlineData | GeminiPartFileData {
+    // Add videoMetadata if defined
+    if ("videoMetadata" in content && typeof ret === "object") {
+      // eslint-disable-next-line no-param-reassign
+      ret.videoMetadata = content.videoMetadata;
+    }
+    return ret;
+  }
+
+  async function messageContentMedia(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): Promise<GeminiPartInlineData | GeminiPartFileData> {
+    const ret = await messageContentMediaData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
   }
 
   function messageContentReasoning(content: MessageContentReasoning): GeminiPartText | null {
