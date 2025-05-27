@@ -41,26 +41,50 @@ export type InferInteropZodOutput<T> = T extends z3.ZodType<
 export function isZodSchemaV4(
   schema: unknown
 ): schema is z4.$ZodType<unknown, unknown> {
-  return typeof schema === "object" && schema !== null && "_zod" in schema;
+  if (typeof schema !== "object" || schema === null) {
+    return false;
+  }
+
+  const obj = schema as Record<string, unknown>;
+  if (!("_zod" in obj)) {
+    return false;
+  }
+
+  const zod = obj._zod;
+  return (
+    typeof zod === "object" &&
+    zod !== null &&
+    "def" in (zod as Record<string, unknown>)
+  );
 }
 
 export function isZodSchemaV3(
   schema: unknown
 ): schema is z3.ZodType<unknown, z3.ZodTypeDef, unknown> {
-  return typeof schema === "object" && schema !== null && "_def" in schema;
+  if (typeof schema !== "object" || schema === null) {
+    return false;
+  }
+
+  const obj = schema as Record<string, unknown>;
+  if (!("_def" in obj) || "_zod" in obj) {
+    return false;
+  }
+
+  const def = obj._def;
+  return (
+    typeof def === "object" &&
+    def !== null &&
+    "typeName" in (def as Record<string, unknown>)
+  );
 }
 
 /**
  * Given either a Zod schema, or plain object, determine if the input is a Zod schema.
  *
- * @param {InteropZodType<RunOutput> | Record<string, unknown>} input
+ * @param {unknown} input
  * @returns {boolean} Whether or not the provided input is a Zod schema.
  */
-export function isZodSchema<
-  RunOutput extends Record<string, unknown> = Record<string, unknown>
->(
-  input: InteropZodType<RunOutput> | Record<string, unknown>
-): input is InteropZodType<RunOutput> {
+export function isZodSchema(input: unknown): input is InteropZodType {
   if (!input) {
     return false;
   }
@@ -107,18 +131,163 @@ export function safeParseInteropZodSchema<T>(
  * A shapeless schema is one that does not define any object shape,
  * such as ZodString, ZodNumber, ZodBoolean, ZodAny, etc.
  * For ZodObject, it must have no shape keys to be considered shapeless.
+ * ZodRecord schemas are considered shapeless since they define dynamic
+ * key-value mappings without fixed keys.
  *
  * @param schema The Zod schema to check.
  * @returns {boolean} True if the schema is shapeless, false otherwise.
  */
 export function isShapelessZodSchema(schema: unknown): boolean {
-  if (!isZodSchema(schema as Record<string, unknown>)) {
+  if (!isZodSchema(schema)) {
     return false;
   }
-  // `shape` exists as a property in v3 and v4
-  if (typeof schema === "object" && schema !== null && "shape" in schema) {
+
+  // Check for v3 schemas
+  if (isZodSchemaV3(schema)) {
+    const def = schema._def as { typeName?: string };
+
+    // ZodObject is only shaped if it has actual shape keys
+    if (def.typeName === "ZodObject") {
+      const obj = schema as { shape?: Record<string, unknown> };
+      return !obj.shape || Object.keys(obj.shape).length === 0;
+    }
+
+    // ZodRecord is shapeless (dynamic key-value mapping)
+    if (def.typeName === "ZodRecord") {
+      return true;
+    }
+  }
+
+  // Check for v4 schemas
+  if (isZodSchemaV4(schema)) {
+    const def = schema._zod.def;
+
+    // Object type is only shaped if it has actual shape keys
+    if (def.type === "object") {
+      const obj = schema as { shape?: Record<string, unknown> };
+      return !obj.shape || Object.keys(obj.shape).length === 0;
+    }
+
+    // Record type is shapeless (dynamic key-value mapping)
+    if (def.type === "record") {
+      return true;
+    }
+  }
+
+  // For other schemas, check if they have a `shape` property
+  // If they don't have shape, they're likely shapeless
+  if (typeof schema === "object" && schema !== null && !("shape" in schema)) {
     return true;
   }
+
+  return false;
+}
+
+/**
+ * Determines if the provided Zod schema should be treated as a simple string schema
+ * that maps to DynamicTool. This aligns with the type-level constraint of
+ * InteropZodType<string, unknown> which only matches schemas that output strings.
+ *
+ * This function checks if the schema's output type is a string, including:
+ * - Basic string schemas (z.string())
+ * - Transformed schemas that output strings (z.object().transform(() => string))
+ * - Other schemas that ultimately resolve to string outputs
+ *
+ * @param schema The Zod schema to check.
+ * @returns {boolean} True if the schema should be treated as a simple string schema, false otherwise.
+ */
+export function isSimpleStringZodSchema(
+  schema: unknown
+): schema is InteropZodType<string, unknown> {
+  if (!isZodSchema(schema)) {
+    return false;
+  }
+
+  // For v3 schemas
+  if (isZodSchemaV3(schema)) {
+    const def = schema._def as {
+      typeName?: string;
+      innerType?: unknown;
+      type?: unknown;
+    };
+
+    // Handle ZodRecord - records are not simple string schemas even though they're shapeless
+    if (def.typeName === "ZodRecord") {
+      return false;
+    }
+
+    // Handle ZodObject - objects are not simple string schemas
+    if (def.typeName === "ZodObject") {
+      return false;
+    }
+
+    // Handle ZodEffects (transforms, refinements, etc.)
+    if (def.typeName === "ZodEffects") {
+      // For transforms, we need to check if the output would be a string
+      // This is complex to determine statically, so we'll use a heuristic:
+      // If it's a shapeless schema (no object structure), it's likely a string transform
+      return isShapelessZodSchema(schema);
+    }
+
+    // Handle basic ZodString
+    if (def.typeName === "ZodString") {
+      return true;
+    }
+
+    // Handle ZodBranded - branded strings are still strings
+    if (def.typeName === "ZodBranded") {
+      return isSimpleStringZodSchema(def.type);
+    }
+
+    // Handle ZodCatch - catch operations preserve the underlying type
+    if (def.typeName === "ZodCatch") {
+      return isSimpleStringZodSchema(def.innerType);
+    }
+
+    // Handle ZodDefault - defaults eliminate undefined/null, so if the inner type
+    // would be a simple string schema, the default makes it a simple string schema too
+    if (def.typeName === "ZodDefault") {
+      return isSimpleStringZodSchema(def.innerType);
+    }
+
+    return false;
+  }
+
+  // For v4 schemas
+  if (isZodSchemaV4(schema)) {
+    const def = schema._zod.def;
+
+    // Handle record type - records are not simple string schemas even though they're shapeless
+    if (def.type === "record") {
+      return false;
+    }
+
+    // Handle object type - objects are not simple string schemas
+    if (def.type === "object") {
+      return false;
+    }
+
+    // Handle pipe operations (v4 transforms)
+    if (def.type === "pipe") {
+      // Similar to v3, we'll use the same heuristic to determine if the output would be a string.
+      return isShapelessZodSchema(schema);
+    }
+
+    // Handle basic string
+    if (def.type === "string") {
+      return true;
+    }
+
+    // Handle defaults - they eliminate undefined/null from the output type
+    if (def.type === "default") {
+      return isSimpleStringZodSchema(
+        (def as { innerType?: unknown }).innerType
+      );
+    }
+
+    return false;
+  }
+
   return false;
 }
 

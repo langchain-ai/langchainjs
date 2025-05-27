@@ -7,6 +7,7 @@ import {
   StructuredToolInterface,
   Tool,
   ToolInterface,
+  tool,
 } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 
@@ -64,7 +65,7 @@ describe("tool type tests", () => {
       });
 
       it("should be assignable to ToolOutputT when input is not ToolCall", async () => {
-        const output: string = await testDynamicTool.invoke("test");
+        const output: string = await testDynamicTool.invoke({ input: "test" });
         expect(output).toBe("test test");
       });
 
@@ -420,6 +421,127 @@ describe("tool type tests", () => {
           output: "test test",
         });
       });
+    });
+  });
+});
+
+describe("tool factory function type tests", () => {
+  describe("with no schema (defaults to string)", () => {
+    it("should return DynamicTool when no schema is provided", () => {
+      const testTool = tool(
+        async (input) => {
+          const typedInput: string = input;
+          return `processed: ${typedInput}`;
+        },
+        {
+          name: "test_tool",
+          description: "A test tool",
+        }
+      );
+      const dynamicTool: DynamicTool<string> = testTool;
+      expect(dynamicTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicTool);
+      // @ts-expect-error dynamicTool should not be assignable to DynamicStructuredTool.
+      // If it is assignable, that would indicate that the tool factory is using the
+      // overload with the union return type (bad).
+      const _structuredTool: DynamicStructuredTool = testTool;
+      expect(_structuredTool).toBe(testTool);
+    });
+  });
+
+  describe("with Zod string schema", () => {
+    it("should return DynamicTool when schema is z.string()", () => {
+      const testTool = tool(
+        async (input) => {
+          const typedInput: string = input;
+          return `processed: ${typedInput}`;
+        },
+        {
+          name: "test_tool",
+          description: "A test tool",
+          schema: z.string(),
+        }
+      );
+
+      const dynamicTool: DynamicTool<string> = testTool;
+      expect(dynamicTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicTool);
+      // @ts-expect-error dynamicTool should not be assignable to DynamicStructuredTool.
+      // If it is assignable, that would indicate that the tool factory is using the
+      // overload with the union return type (bad).
+      const _structuredTool: DynamicStructuredTool = testTool;
+      expect(_structuredTool).toBe(testTool);
+    });
+
+    it("should return DynamicStructuredTool when schema is z.string().optional() (non-standard schema)", () => {
+      const testTool = tool(
+        async (input) => {
+          const typedInput: string | undefined = input;
+          return `processed: ${typedInput ?? "empty"}`;
+        },
+        {
+          name: "test_tool",
+          schema: z.string().optional(),
+        }
+      );
+
+      const structuredTool: DynamicStructuredTool = testTool;
+      expect(structuredTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicStructuredTool);
+      // @ts-expect-error structuredTool should not be assignable to DynamicTool.
+      // If it is assignable, that would indicate that the tool factory is using the
+      // overload with the union return type (bad).
+      const _dynamicTool: DynamicTool = testTool;
+      expect(_dynamicTool).toBe(testTool);
+    });
+  });
+
+  describe("with Zod object schema", () => {
+    it("should return DynamicStructuredTool when schema is z.object()", () => {
+      const testTool = tool(
+        async (input) => {
+          const typedInput: { name: string; age: number } = input;
+          return `Hello ${typedInput.name}, you are ${typedInput.age} years old`;
+        },
+        {
+          name: "greet_tool",
+          description: "Greets a person",
+          schema: z.object({
+            name: z.string(),
+            age: z.number(),
+          }),
+        }
+      );
+
+      const structuredTool: DynamicStructuredTool<
+        z.ZodObject<{ name: z.ZodString; age: z.ZodNumber }>,
+        { name: string; age: number },
+        { name: string; age: number },
+        string
+      > = testTool;
+      expect(structuredTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicStructuredTool);
+      // @ts-expect-error structuredTool should not be assignable to DynamicTool.
+      // If it is assignable, that would indicate that the tool factory is using the
+      // overload with the union return type (bad).
+      const _dynamicTool: DynamicTool = testTool;
+      expect(_dynamicTool).toBe(testTool);
+    });
+
+    it("should return DynamicTool when schema is transformed into a string", () => {
+      const testTool = tool(async (input) => `result: ${input}`, {
+        name: "test_tool",
+        schema: z.object({ value: z.string() }).transform((obj) => obj.value),
+      });
+
+      const dynamicTool: DynamicTool<string> = testTool;
+      expect(dynamicTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicTool);
+      // @ts-expect-error dynamicTool should not be assignable to DynamicStructuredTool.
+      // If it is assignable, that would indicate that the tool factory is using the
+      // overload with the union return type (bad).
+      const _structuredTool: DynamicStructuredTool = testTool;
+      expect(_structuredTool).toBe(testTool);
     });
   });
 });

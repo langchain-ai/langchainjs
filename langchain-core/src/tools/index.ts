@@ -27,9 +27,8 @@ import {
   InferInteropZodInput,
   InferInteropZodOutput,
   InteropZodObject,
-  InteropZodString,
   InteropZodType,
-  isShapelessZodSchema,
+  isSimpleStringZodSchema,
   isZodSchema,
 } from "../utils/types/zod.js";
 import type {
@@ -547,12 +546,12 @@ interface ToolWrapperParams<
  * @param {ToolWrapperParams<SchemaT>} fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
- * @param {InteropZodObject | InteropZodString | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
+ * @param {InteropZodObject | InteropZodType<string, unknown> | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
 export function tool<
-  SchemaT extends InteropZodString,
+  SchemaT extends InteropZodType<string, unknown>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<
@@ -588,10 +587,9 @@ export function tool<
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   SchemaT extends
     | InteropZodObject
-    | InteropZodString
+    | InteropZodType<string, unknown>
     | JSONSchema = InteropZodObject,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
@@ -602,11 +600,11 @@ export function tool<
 ):
   | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
   | DynamicTool<ToolOutputT> {
-  const isShapeless = isShapelessZodSchema(fields.schema);
+  const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
 
-  // If the schema is not provided, or it's a shapeless schema (e.g. a ZodString), create a DynamicTool
-  if (!fields.schema || isShapeless || isStringJSONSchema) {
+  // If the schema is not provided, or it's a simple string schema, create a DynamicTool
+  if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
     return new DynamicTool<ToolOutputT>({
       ...fields,
       description:
