@@ -344,18 +344,32 @@ export interface GoogleRawResponse extends GoogleResponse {
   data: Blob;
 }
 
-export interface GeminiPartText {
+export interface GeminiPartBase {
+  thought?: boolean; // Output only
+}
+
+export interface GeminiVideoMetadata {
+  fps?: number; // Double in range (0.0, 24.0]
+  startOffset?: string;
+  endOffset?: string;
+}
+
+export interface GeminiPartBaseFile extends GeminiPartBase {
+  videoMetadata?: GeminiVideoMetadata;
+}
+
+export interface GeminiPartText extends GeminiPartBase {
   text: string;
 }
 
-export interface GeminiPartInlineData {
+export interface GeminiPartInlineData extends GeminiPartBaseFile {
   inlineData: {
     mimeType: string;
     data: string;
   };
 }
 
-export interface GeminiPartFileData {
+export interface GeminiPartFileData extends GeminiPartBaseFile {
   fileData: {
     mimeType: string;
     fileUri: string;
@@ -363,7 +377,7 @@ export interface GeminiPartFileData {
 }
 
 // AI Studio only?
-export interface GeminiPartFunctionCall {
+export interface GeminiPartFunctionCall extends GeminiPartBase {
   functionCall: {
     name: string;
     args?: object;
@@ -371,7 +385,7 @@ export interface GeminiPartFunctionCall {
 }
 
 // AI Studio Only?
-export interface GeminiPartFunctionResponse {
+export interface GeminiPartFunctionResponse extends GeminiPartBase {
   functionResponse: {
     name: string;
     response: object;
@@ -460,6 +474,25 @@ export interface GeminiRetrievalMetadata {
   googleSearchDynamicRetrievalScore: number;
 }
 
+export type GeminiUrlRetrievalStatus =
+  | "URL_RETRIEVAL_STATUS_SUCCESS"
+  | "URL_RETRIEVAL_STATUS_ERROR";
+
+export interface GeminiUrlRetrievalContext {
+  retrievedUrl: string;
+  urlRetrievalStatus: GeminiUrlRetrievalStatus;
+}
+
+export interface GeminiUrlRetrievalMetadata {
+  urlRetrievalContexts: GeminiUrlRetrievalContext[];
+}
+
+export type GeminiUrlMetadata = GeminiUrlRetrievalContext;
+
+export interface GeminiUrlContextMetadata {
+  urlMetadata: GeminiUrlMetadata[];
+}
+
 export interface GeminiLogprobsResult {
   topCandidates: GeminiLogprobsTopCandidate[];
   chosenCandidates: GeminiLogprobsResultCandidate[];
@@ -491,6 +524,7 @@ export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
   googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
   googleSearch?: GoogleSearch; // Gemini-2.0
+  urlContext?: UrlContext;
   retrieval?: VertexAIRetrieval;
 }
 
@@ -511,6 +545,7 @@ export const GeminiSearchToolAttributes = [
 export const GeminiToolAttributes = [
   "functionDeclaration",
   "retrieval",
+  "urlContext",
   ...GeminiSearchToolAttributes,
 ];
 
@@ -522,6 +557,8 @@ export interface GoogleSearchRetrieval {
 }
 
 export interface GoogleSearch {}
+
+export interface UrlContext {}
 
 export interface VertexAIRetrieval {
   vertexAiSearch: {
@@ -598,6 +635,8 @@ export interface GeminiResponseCandidate {
   safetyRatings: GeminiSafetyRating[];
   citationMetadata?: GeminiCitationMetadata;
   groundingMetadata?: GeminiGroundingMetadata;
+  urlRetrievalMetadata?: GeminiUrlRetrievalMetadata;
+  urlContextMetadata?: GeminiUrlContextMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
   finishMessage?: string;
