@@ -57,9 +57,8 @@ export class OracleDocLoader extends BaseDocumentLoader {
       const data = fs.readFileSync(this.pref.file);
 
       const result = await this.conn.execute(
-        <string>(
-          `select dbms_vector_chain.utl_to_text(:content, :pref) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
-        ),
+        <string>`select dbms_vector_chain.utl_to_text(:content, :pref) text,\
+                        dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`,
         <oracledb.BindParameters>{
           content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
           pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
@@ -93,9 +92,8 @@ export class OracleDocLoader extends BaseDocumentLoader {
         const data = fs.readFileSync(file);
 
         const result = await this.conn.execute(
-          <string>(
-            `select dbms_vector_chain.utl_to_text(:content, :pref) text, dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`
-          ),
+          <string>`select dbms_vector_chain.utl_to_text(:content, :pref) text,\
+                          dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`,
           <oracledb.BindParameters>{
             content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
             pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
@@ -138,12 +136,24 @@ export class OracleDocLoader extends BaseDocumentLoader {
       }
 
       // Check if names are invalid
-      const sql = `select sys.dbms_assert.simple_sql_name('${this.pref.colname}'), sys.dbms_assert.qualified_sql_name('${this.pref.owner}.${this.pref.tablename}') from dual`;
-      await this.conn.execute(<string>sql);
+      const col = this.pref.colname;
+      const owner = this.pref.owner;
+      const table = this.pref.tablename;
+      const qn = `${owner}.${table}`;
+      try {
+        const sql = `select sys.dbms_assert.simple_sql_name(:col),\
+                            sys.dbms_assert.qualified_sql_name(:qn) from dual`;
+        const binds = [col, qn];
+        await this.conn.execute(sql, binds);
+      } catch (error) {
+        throw new Error(`Invalid owner, table, or column name`);
+      }
 
       const result = await this.conn.execute(
         <string>(
-          `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text, dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata from ${this.pref.owner}.${this.pref.tablename} t`
+          `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text,\
+                  dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata\
+                  from ${this.pref.owner}.${this.pref.tablename} t`
         ),
         <oracledb.BindParameters>{
           pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },

@@ -36,10 +36,10 @@ export class OracleEmbeddings extends Embeddings {
   ) {
     await conn.execute(
       `begin
-  dbms_data_mining.drop_model(model_name => :model, force => true);
-  dbms_vector.load_onnx_model(:path, :filename, :model,
-  json('{"function" : "embedding", "embeddingOutput" : "embedding" , "input": {"input": ["DATA"]}}'));
-end;`,
+         dbms_data_mining.drop_model(model_name => :model, force => true);
+         dbms_vector.load_onnx_model(:path, :filename, :model,
+         json('{"function" : "embedding", "embeddingOutput" : "embedding" , "input": {"input": ["DATA"]}}'));
+       end;`,
       { path: dir, filename: onnx_file, model: model_name }
     );
   }
