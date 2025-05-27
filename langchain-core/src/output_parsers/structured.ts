@@ -1,18 +1,19 @@
 import { z } from "zod";
 import {
-  zodToJsonSchema,
-  JsonSchema7Type,
-  JsonSchema7ArrayType,
-  JsonSchema7ObjectType,
-  JsonSchema7StringType,
-  JsonSchema7NumberType,
-  JsonSchema7NullableType,
-} from "zod-to-json-schema";
-import {
   BaseOutputParser,
   FormatInstructionsOptions,
   OutputParserException,
 } from "./base.js";
+import { InteropZodType, InferInteropZodOutput } from "../utils/types/zod.js";
+import {
+  toJsonSchema,
+  type JsonSchema7Type,
+  type JsonSchema7ArrayType,
+  type JsonSchema7ObjectType,
+  type JsonSchema7StringType,
+  type JsonSchema7NumberType,
+  type JsonSchema7NullableType,
+} from "../utils/json_schema.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;

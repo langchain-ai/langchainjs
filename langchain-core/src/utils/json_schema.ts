@@ -105,3 +105,18 @@ export function validatesOnlyStrings(schema: unknown): boolean {
 
   return false;
 }
+
+// Re-export of the types used throughout langchain for json schema serialization.
+// The plan is to eventually nix zod-to-json-schema altogether in place for
+// zod v4 / a more standardized way of serializing validated inputs, so its re-exported
+// here to remove the dependency on zod-to-json-schema in downstream packages until
+// a determination is made.
+
+export {
+  type JsonSchema7Type,
+  type JsonSchema7ArrayType,
+  type JsonSchema7ObjectType,
+  type JsonSchema7StringType,
+  type JsonSchema7NumberType,
+  type JsonSchema7NullableType,
+} from "zod-to-json-schema";
