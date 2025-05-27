@@ -713,7 +713,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -737,7 +737,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       seed: 6,
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -760,7 +760,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -784,7 +784,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       maxReasoningTokens: 100,
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -811,7 +811,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       thinkingBudget: 120,
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -839,7 +839,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       reasoningEffort: "low",
     });
     await model.invoke(
-      "You roll two dice. What’s the probability they add up to 7?"
+      "You roll two dice. What's the probability they add up to 7?"
     );
 
     expect(record.opts).toBeDefined();
@@ -1361,9 +1361,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     const baseModel = new ChatGoogle({
       authOptions,
     });
-    const model = baseModel.bind({
-      tools,
-    });
+    const model = baseModel.bindTools(tools);
 
     const result = await model.invoke("What?");
 
@@ -1432,9 +1430,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     const baseModel = new ChatGoogle({
       authOptions,
     });
-    const model = baseModel.bind({
-      tools,
-    });
+    const model = baseModel.bindTools(tools);
 
     await model.invoke("What?");
 
@@ -1473,9 +1469,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     const baseModel = new ChatGoogle({
       authOptions,
     });
-    const model = baseModel.bind({
-      tools,
-    });
+    const model = baseModel.bindTools(tools);
 
     await model.invoke("What?");
 
@@ -1590,9 +1584,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-    }).bind({
-      tools,
-    });
+    }).bindTools(tools);
 
     const result = await model.invoke("What?");
 
@@ -1657,9 +1649,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-    }).bind({
-      tools,
-    });
+    }).bindTools(tools);
 
     const result = await model.invoke("What?");
 
@@ -1725,9 +1715,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-    }).bind({
-      tools,
-    });
+    }).bindTools(tools);
     const toolResult = {
       testPassed: true,
     };

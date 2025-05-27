@@ -767,9 +767,7 @@ describe.each(testGeminiModelNames)(
           ],
         },
       ];
-      const model = newChatGoogle().bind({
-        tools,
-      });
+      const model = newChatGoogle().bindTools(tools);
       const toolResult = {
         testPassed: true,
       };
@@ -978,8 +976,7 @@ describe.each(testGeminiModelNames)(
 
     test("Can force a model to invoke a tool", async () => {
       const model = newChatGoogle();
-      const modelWithTools = model.bind({
-        tools: [calculatorTool, weatherTool],
+      const modelWithTools = model.bindTools([calculatorTool, weatherTool], {
         tool_choice: "calculator",
       });
 
@@ -996,9 +993,7 @@ describe.each(testGeminiModelNames)(
 
     test("Handle tools with nullish parameters", async () => {
       const model = newChatGoogle();
-      const modelWithTools = model.bind({
-        tools: [nullishWeatherTool],
-      });
+      const modelWithTools = model.bindTools([nullishWeatherTool]);
 
       const result = await modelWithTools.invoke(
         "Whats the weather like in paris today?"

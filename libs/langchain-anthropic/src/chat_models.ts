@@ -235,9 +235,8 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  *
  * ```typescript
  * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * const llmWithArgsBound = llm.bindTools([...]).withConfig({
  *   stop: ["\n"],
- *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -760,7 +759,7 @@ export class ChatAnthropicMessages<
     tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: this.formatStructuredToolToAnthropic(tools),
       ...kwargs,
     } as Partial<CallOptions>);
@@ -1150,7 +1149,7 @@ export class ChatAnthropicMessages<
 
       console.warn(thinkingAdmonition);
 
-      llm = this.bind({
+      llm = this.withConfig({
         tools,
       } as Partial<CallOptions>);
 
@@ -1163,7 +1162,7 @@ export class ChatAnthropicMessages<
 
       llm = llm.pipe(raiseIfNoToolCalls);
     } else {
-      llm = this.bind({
+      llm = this.withConfig({
         tools,
         tool_choice: {
           type: "tool",
