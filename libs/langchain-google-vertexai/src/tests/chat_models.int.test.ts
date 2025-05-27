@@ -831,54 +831,6 @@ describe.each(testAnthropicModelNames)(
   }
 );
 
-describe("ChatVertexAI Labels Integration", () => {
-  test("should include labels in API request and get successful response", async () => {
-    const model = new ChatVertexAI({
-      modelName: "gemini-1.5-flash-002", // Use a stable model for this test
-    });
-
-    const labels = {
-      "environment": "test",
-      "component": "langchain-labels",
-      "user-id": "integration-test-user",
-    };
-
-    // This is an integration test, so we actually make the API call
-    const result = await model.invoke("What is 1 + 1?", { labels });
-
-    expect(result).toBeDefined();
-    expect(result._getType()).toEqual("ai");
-
-    const aiMessage = result as AIMessage;
-    expect(aiMessage.content).toBeDefined();
-    expect(typeof aiMessage.content).toBe("string");
-
-    // Check that the answer is reasonable
-    const text = aiMessage.content as string;
-    expect(text).toMatch(/2/);
-  });
-
-  test("should work without labels", async () => {
-    const model = new ChatVertexAI({
-      modelName: "gemini-1.5-flash-002", // Use a stable model for this test
-    });
-
-    // This is an integration test without labels
-    const result = await model.invoke("What is 1 + 1?");
-
-    expect(result).toBeDefined();
-    expect(result._getType()).toEqual("ai");
-
-    const aiMessage = result as AIMessage;
-    expect(aiMessage.content).toBeDefined();
-    expect(typeof aiMessage.content).toBe("string");
-
-    // Check that the answer is reasonable
-    const text = aiMessage.content as string;
-    expect(text).toMatch(/2/);
-  });
-});
-
 const testAnthropicThinkingModelNames = [["claude-3-7-sonnet@20250219"]];
 describe.each(testAnthropicThinkingModelNames)(
   "GAuth Anthropic Thinking (%s)",

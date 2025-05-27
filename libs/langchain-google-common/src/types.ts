@@ -269,6 +269,24 @@ export interface GoogleAIModelParams {
    * The modalities of the response.
    */
   responseModalities?: GoogleAIModelModality[];
+
+  /**
+   * Custom metadata labels to associate with the request.
+   * Only supported on Vertex AI (Google Cloud Platform).
+   * Labels are key-value pairs where both keys and values must be strings.
+   *
+   * Example:
+   * ```typescript
+   * {
+   *   labels: {
+   *     "team": "research",
+   *     "component": "frontend",
+   *     "environment": "production"
+   *   }
+   * }
+   * ```
+   */
+  labels?: Record<string, string>;
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -308,11 +326,6 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    * https://cloud.google.com/vertex-ai/generative-ai/docs/context-cache/context-cache-use
    */
   cachedContent?: string;
-
-  /**
-   * Custom metadata labels to associate with the API call.
-   */
-  labels?: Record<string, string>;
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>

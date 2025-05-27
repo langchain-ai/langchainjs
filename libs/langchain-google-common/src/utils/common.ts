@@ -214,6 +214,8 @@ export function copyAIModelParamsInto(
     ret.cachedContent = options.cachedContent;
   }
 
+  ret.labels = options?.labels ?? params?.labels ?? target?.labels;
+
   return ret;
 }
 

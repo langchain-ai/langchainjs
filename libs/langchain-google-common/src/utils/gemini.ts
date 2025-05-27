@@ -1595,9 +1595,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       contents,
       generationConfig,
     };
-    if (parameters.labels) {
-      ret.labels = parameters.labels;
-    }
     if (tools && tools.length) {
       ret.tools = tools;
     }
@@ -1616,6 +1613,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
     if (parameters.cachedContent) {
       ret.cachedContent = parameters.cachedContent;
+    }
+    if (parameters.labels && Object.keys(parameters.labels).length > 0) {
+      ret.labels = parameters.labels;
     }
     return ret;
   }
