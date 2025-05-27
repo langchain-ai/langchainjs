@@ -15,7 +15,19 @@ import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
-import { loadMcpTools, LoadMcpToolsOptions } from "./tools.js";
+import { loadMcpTools } from "./tools.js";
+import {
+  type ClientConfig,
+  type Connection,
+  type ResolvedClientConfig,
+  type ResolvedConnection,
+  type ResolvedStdioConnection,
+  type ResolvedStreamableHTTPConnection,
+  clientConfigSchema,
+  connectionSchema,
+  type LoadMcpToolsOptions,
+  _resolveAndApplyOverrideHandlingOverrides,
+} from "./types.js";
 
 // Read package name from package.json
 let debugLog: debug.Debugger;
@@ -25,356 +37,6 @@ function getDebugLog() {
   }
   return debugLog;
 }
-
-/**
- * Zod schema for validating OAuthClientProvider interface
- * Since OAuthClientProvider has methods, we create a custom validator
- */
-export function createOAuthClientProviderSchema() {
-  // would've rather imported this from the MCP SDK, but they don't have a type for it, so this is
-  // the best I could do.
-  return z.custom<OAuthClientProvider>(
-    (val) => {
-      if (!val || typeof val !== "object") return false;
-
-      // Check required properties and methods exist
-      const requiredMethods = [
-        "redirectUrl",
-        "clientMetadata",
-        "clientInformation",
-        "tokens",
-        "saveTokens",
-      ];
-
-      // redirectUrl can be a string, URL, or getter returning string/URL
-      if (!("redirectUrl" in val)) return false;
-
-      // clientMetadata can be an object or getter returning an object
-      if (!("clientMetadata" in val)) return false;
-
-      // Check that required methods exist (they can be functions or getters)
-      for (const method of requiredMethods) {
-        if (!(method in val)) return false;
-      }
-
-      return true;
-    },
-    {
-      message:
-        "Must be a valid OAuthClientProvider implementation with required properties: redirectUrl, clientMetadata, clientInformation, tokens, saveTokens",
-    }
-  );
-}
-
-/**
- * Stdio transport restart configuration
- */
-export function createStdioRestartSchema() {
-  return z
-    .object({
-      /**
-       * Whether to automatically restart the process if it exits
-       */
-      enabled: z
-        .boolean()
-        .describe("Whether to automatically restart the process if it exits")
-        .optional(),
-      /**
-       * Maximum number of restart attempts
-       */
-      maxAttempts: z
-        .number()
-        .describe("The maximum number of restart attempts")
-        .optional(),
-      /**
-       * Delay in milliseconds between restart attempts
-       */
-      delayMs: z
-        .number()
-        .describe("The delay in milliseconds between restart attempts")
-        .optional(),
-    })
-    .describe("Configuration for stdio transport restart");
-}
-
-/**
- * Stdio transport connection
- */
-export function createStdioConnectionSchema() {
-  return z
-    .object({
-      /**
-       * Optional transport type, inferred from the structure of the config if not provided. Included
-       * for compatibility with common MCP client config file formats.
-       */
-      transport: z.literal("stdio").optional(),
-      /**
-       * Optional transport type, inferred from the structure of the config if not provided. Included
-       * for compatibility with common MCP client config file formats.
-       */
-      type: z.literal("stdio").optional(),
-      /**
-       * The executable to run the server (e.g. `node`, `npx`, etc)
-       */
-      command: z.string().describe("The executable to run the server"),
-      /**
-       * Array of command line arguments to pass to the executable
-       */
-      args: z
-        .array(z.string())
-        .describe("Command line arguments to pass to the executable"),
-      /**
-       * Environment variables to set when spawning the process.
-       */
-      env: z
-        .record(z.string())
-        .describe("The environment to use when spawning the process")
-        .optional(),
-      /**
-       * The encoding to use when reading from the process
-       */
-      encoding: z
-        .string()
-        .describe("The encoding to use when reading from the process")
-        .optional(),
-      /**
-       * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
-       *
-       * The default is "inherit", meaning messages to stderr will be printed to the parent process's stderr.
-       *
-       * @default "inherit"
-       */
-      stderr: z
-        .union([
-          z.literal("overlapped"),
-          z.literal("pipe"),
-          z.literal("ignore"),
-          z.literal("inherit"),
-        ])
-        .describe(
-          "How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`"
-        )
-        .optional()
-        .default("inherit"),
-      /**
-       * The working directory to use when spawning the process.
-       */
-      cwd: z
-        .string()
-        .describe("The working directory to use when spawning the process")
-        .optional(),
-      /**
-       * Additional restart settings
-       */
-      restart: createStdioRestartSchema()
-        .describe("Settings for automatically restarting the server")
-        .optional(),
-    })
-    .describe("Configuration for stdio transport connection");
-}
-
-/**
- * Streamable HTTP transport reconnection configuration
- */
-export function createStreamableReconnectSchema() {
-  return z
-    .object({
-      /**
-       * Whether to automatically reconnect if the connection is lost
-       */
-      enabled: z
-        .boolean()
-        .describe(
-          "Whether to automatically reconnect if the connection is lost"
-        )
-        .optional(),
-      /**
-       * Maximum number of reconnection attempts
-       */
-      maxAttempts: z
-        .number()
-        .describe("The maximum number of reconnection attempts")
-        .optional(),
-      /**
-       * Delay in milliseconds between reconnection attempts
-       */
-      delayMs: z
-        .number()
-        .describe("The delay in milliseconds between reconnection attempts")
-        .optional(),
-    })
-    .describe("Configuration for streamable HTTP transport reconnection");
-}
-
-/**
- * Streamable HTTP transport connection
- */
-export function createStreamableHTTPConnectionSchema() {
-  return z
-    .object({
-      /**
-       * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-       * to connect using streamable HTTP.
-       */
-      transport: z.union([z.literal("http"), z.literal("sse")]).optional(),
-      /**
-       * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-       * to connect using streamable HTTP.
-       */
-      type: z.union([z.literal("http"), z.literal("sse")]).optional(),
-      /**
-       * The URL to connect to
-       */
-      url: z.string().url(),
-      /**
-       * Additional headers to send with the request, useful for authentication
-       */
-      headers: z.record(z.string()).optional(),
-      /**
-       * OAuth client provider for automatic authentication handling.
-       * When provided, the transport will automatically handle token refresh,
-       * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
-       * This is the recommended approach for authentication instead of manual headers.
-       */
-      authProvider: createOAuthClientProviderSchema().optional(),
-      /**
-       * Additional reconnection settings.
-       */
-      reconnect: createStreamableReconnectSchema().optional(),
-      /**
-       * Whether to automatically fallback to SSE if Streamable HTTP is not available or not supported
-       *
-       * @default true
-       */
-      automaticSSEFallback: z.boolean().optional().default(true),
-    })
-    .describe("Configuration for streamable HTTP transport connection");
-}
-
-/**
- * Create combined schema for all transport connection types
- */
-export function createConnectionSchema() {
-  return z
-    .union([
-      createStdioConnectionSchema(),
-      createStreamableHTTPConnectionSchema(),
-    ])
-    .describe("Configuration for a single MCP server");
-}
-
-/**
- * {@link MultiServerMCPClient} configuration
- */
-export function createClientConfigSchema() {
-  return z
-    .object({
-      /**
-       * A map of server names to their configuration
-       */
-      mcpServers: z
-        .record(createConnectionSchema())
-        .describe("A map of server names to their configuration"),
-      /**
-       * Whether to throw an error if a tool fails to load
-       *
-       * @default true
-       */
-      throwOnLoadError: z
-        .boolean()
-        .describe("Whether to throw an error if a tool fails to load")
-        .optional()
-        .default(true),
-      /**
-       * Whether to prefix tool names with the server name. Prefixes are separated by double
-       * underscores (example: `calculator_server_1__add`).
-       *
-       * @default true
-       */
-      prefixToolNameWithServerName: z
-        .boolean()
-        .describe("Whether to prefix tool names with the server name")
-        .optional()
-        .default(true),
-      /**
-       * An additional prefix to add to the tool name Prefixes are separated by double underscores
-       * (example: `mcp__add`).
-       *
-       * @default "mcp"
-       */
-      additionalToolNamePrefix: z
-        .string()
-        .describe("An additional prefix to add to the tool name")
-        .optional()
-        .default("mcp"),
-      /**
-       * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-       * image or audio content. This option has no effect on handling of embedded resource tool output.
-       *
-       * @default false
-       */
-      useStandardContentBlocks: z
-        .boolean()
-        .describe(
-          "If true, the tool will use LangChain's standard multimodal content blocks for tools that output image or audio content. This option has no effect on handling of embedded resource tool output."
-        )
-        .optional()
-        .default(false),
-    })
-    .describe("Configuration for the MCP client");
-}
-
-/**
- * Configuration for stdio transport connection
- */
-export type StdioConnection = z.input<
-  ReturnType<typeof createStdioConnectionSchema>
->;
-
-/**
- * Type for {@link StdioConnection} with default values applied.
- */
-export type ResolvedStdioConnection = z.infer<
-  ReturnType<typeof createStdioConnectionSchema>
->;
-
-/**
- * Configuration for streamable HTTP transport connection
- */
-export type StreamableHTTPConnection = z.input<
-  ReturnType<typeof createStreamableHTTPConnectionSchema>
->;
-
-/**
- * Type for {@link StreamableHTTPConnection} with default values applied.
- */
-export type ResolvedStreamableHTTPConnection = z.infer<
-  ReturnType<typeof createStreamableHTTPConnectionSchema>
->;
-
-/**
- * Union type for all transport connection types
- */
-export type Connection = z.input<ReturnType<typeof createConnectionSchema>>;
-
-/**
- * Type for {@link MultiServerMCPClient} configuration
- */
-export type ClientConfig = z.input<ReturnType<typeof createClientConfigSchema>>;
-
-/**
- * Type for {@link Connection} with default values applied.
- */
-export type ResolvedConnection = z.infer<
-  ReturnType<typeof createConnectionSchema>
->;
-
-/**
- * Type for {@link MultiServerMCPClient} configuration, with default values applied.
- */
-export type ResolvedClientConfig = z.infer<
-  ReturnType<typeof createClientConfigSchema>
->;
 
 /**
  * Error class for MCP client operations
@@ -457,7 +119,7 @@ export class MultiServerMCPClient {
 
   private _connections?: Record<string, ResolvedConnection>;
 
-  private _loadToolsOptions: LoadMcpToolsOptions;
+  private _loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
 
   private _cleanupFunctions: Array<() => Promise<void>> = [];
 
@@ -481,18 +143,18 @@ export class MultiServerMCPClient {
   /**
    * Create a new MultiServerMCPClient.
    *
-   * @param connections - Optional connections to initialize
+   * @param config - Configuration object
    */
   constructor(config: ClientConfig | Record<string, Connection>) {
     let parsedServerConfig: ResolvedClientConfig;
 
-    const configSchema = createClientConfigSchema();
+    const configSchema = clientConfigSchema;
 
     if ("mcpServers" in config) {
       parsedServerConfig = configSchema.parse(config);
     } else {
       // two step parse so parse errors are referencing the correct object paths
-      const parsedMcpServers = z.record(createConnectionSchema()).parse(config);
+      const parsedMcpServers = z.record(connectionSchema).parse(config);
 
       parsedServerConfig = configSchema.parse({ mcpServers: parsedMcpServers });
     }
@@ -501,13 +163,23 @@ export class MultiServerMCPClient {
       throw new MCPClientError("No MCP servers provided");
     }
 
-    this._loadToolsOptions = {
-      throwOnLoadError: parsedServerConfig.throwOnLoadError,
-      prefixToolNameWithServerName:
-        parsedServerConfig.prefixToolNameWithServerName,
-      additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
-      useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
-    };
+    for (const [serverName, serverConfig] of Object.entries(
+      parsedServerConfig.mcpServers
+    )) {
+      const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
+        parsedServerConfig.outputHandling,
+        serverConfig.outputHandling
+      );
+
+      this._loadToolsOptions[serverName] = {
+        throwOnLoadError: parsedServerConfig.throwOnLoadError,
+        prefixToolNameWithServerName:
+          parsedServerConfig.prefixToolNameWithServerName,
+        additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
+        useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
+        ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
+      };
+    }
 
     this._config = parsedServerConfig;
     this._connections = parsedServerConfig.mcpServers;
@@ -617,7 +289,7 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStdioConnection
   ): Promise<void> {
-    const { command, args, env, restart, stderr, cwd } = connection;
+    const { command, args, env, restart, stderr } = connection;
 
     getDebugLog()(
       `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
@@ -630,7 +302,6 @@ export class MultiServerMCPClient {
       args,
       stderr,
       ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
-      cwd,
     });
 
     this._transportInstances[serverName] = transport;
@@ -1117,7 +788,7 @@ export class MultiServerMCPClient {
       const tools = await loadMcpTools(
         serverName,
         client,
-        this._loadToolsOptions
+        this._loadToolsOptions[serverName]
       );
       this._serverNameToTools[serverName] = tools;
       getDebugLog()(

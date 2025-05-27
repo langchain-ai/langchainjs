@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Server } from 'node:http';
-import { join } from 'node:path';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { Server } from "node:http";
+import { join } from "node:path";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type { OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
+import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
 import type {
   Base64ContentBlock,
   DataContentBlock,
@@ -10,10 +10,12 @@ import type {
   MessageContentText,
   StandardAudioBlock,
   MessageContentImageUrl,
-} from '@langchain/core/messages';
+} from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/dist/messages/tool.js";
-import { MultiServerMCPClient } from '../src/client.js';
-import { createDummyHttpServer } from './fixtures/dummy-http-server.js';
+import type { StructuredToolInterface } from "@langchain/core/tools";
+import { MultiServerMCPClient } from "../src/client.js";
+import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
+import { type ClientConfig } from "../src/types.js";
 
 // Manages dummy MCP servers for testing
 class TestMCPServers {
@@ -25,7 +27,7 @@ class TestMCPServers {
 
     return {
       command: "node",
-      args: ["--loader", "tsx", fixturePath, name],
+      args: ["--loader", "tsx", "--no-warnings", fixturePath, name],
     };
   }
 
@@ -202,7 +204,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
           await client.getTools();
           expect.fail("Expected authentication error but got success");
         } catch (error) {
-          console.log("Actual error message:", (error as Error).message);
           expect(error).toEqual(
             expect.objectContaining({
               name: "MCPClientError",
@@ -480,10 +481,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const sseTools = tools.filter((t) => t.name.includes("sse-server"));
 
         expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(4);
-        expect(sseTools.length).toBe(4);
+        expect(httpTools.length).toBe(5);
+        expect(sseTools.length).toBe(5);
 
-        expect(tools.length).toBe(10);
+        expect(tools.length).toBe(12);
 
         // Test tool from each server
         const stdioTestTool = tools.find(
@@ -1317,66 +1318,72 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Multimodal Content Handling (including Audio)", () => {
-    it.each(["http", "sse"])("should correctly handle tools returning audio content (%s)", async (transport) => {
-      const { baseUrl } = await testServers.createHTTPServer("http-audio-test", {
-        disableStreamableHttp: transport === "sse",
-        supportSSEFallback: transport === "sse",
-      });
-      
-      const client = new MultiServerMCPClient({
-        mcpServers: {
-          "audio-server": {
-            transport: transport as "http" | "sse",
-            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-          },
-        },
-        // Ensure we test with standard content blocks as per README recommendation for new apps
-        useStandardContentBlocks: true,
-      });
+    it.each(["http", "sse"])(
+      "should correctly handle tools returning audio content (%s)",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "http-audio-test",
+          {
+            disableStreamableHttp: transport === "sse",
+            supportSSEFallback: transport === "sse",
+          }
+        );
 
-      try {
-        const tools = await client.getTools();
-        const audioTool = tools.find((t) => t.name.includes("audio_tool"));
-        expect(audioTool).toBeDefined();
-        const fakeToolCall: ToolCall = {
-          name: audioTool!.name,
-          args: {
-            input: "test audio input",
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "audio-server": {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
           },
-          id: "fake-tool-call-id",
-          type: "tool_call",
+          // Ensure we test with standard content blocks as per README recommendation for new apps
+          useStandardContentBlocks: true,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const audioTool = tools.find((t) => t.name.includes("audio_tool"));
+          expect(audioTool).toBeDefined();
+          const fakeToolCall: ToolCall = {
+            name: audioTool!.name,
+            args: {
+              input: "test audio input",
+            },
+            id: "fake-tool-call-id",
+            type: "tool_call",
+          };
+
+          const { content, artifact } = await audioTool!.invoke(fakeToolCall);
+
+          expect(artifact).toEqual([]);
+
+          // Expect content to be an array of MessageContentComplex or DataContentBlock
+          expect(Array.isArray(content)).toBe(true);
+          const contentArray = content as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+
+          const textBlock = contentArray.find(
+            (c) => c.type === "text"
+          ) as MessageContentText;
+          expect(textBlock).toBeDefined();
+          expect(textBlock.text).toContain("Audio input was: test audio input");
+          expect(textBlock.text).toContain("http-audio-test");
+
+          const audioBlock = contentArray.find(
+            (c) => c.type === "audio"
+          ) as StandardAudioBlock & Base64ContentBlock;
+          expect(audioBlock).toBeDefined();
+          expect(audioBlock.source_type).toBe("base64");
+          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(typeof audioBlock.data).toBe("string");
+          expect(audioBlock.data.length).toBeGreaterThan(10);
+        } finally {
+          await client.close();
         }
-
-        const { content, artifact } = await audioTool!.invoke(fakeToolCall);
-        
-        expect(artifact).toEqual([]);
-
-        // Expect content to be an array of MessageContentComplex or DataContentBlock
-        expect(Array.isArray(content)).toBe(true);
-        const contentArray = content as (
-          | MessageContentComplex
-          | DataContentBlock
-        )[];
-
-        const textBlock = contentArray.find(
-          (c) => c.type === "text"
-        ) as MessageContentText;
-        expect(textBlock).toBeDefined();
-        expect(textBlock.text).toContain("Audio input was: test audio input");
-        expect(textBlock.text).toContain("http-audio-test");
-
-        const audioBlock = contentArray.find(
-          (c) => c.type === "audio"
-        ) as StandardAudioBlock & Base64ContentBlock;
-        expect(audioBlock).toBeDefined();
-        expect(audioBlock.source_type).toBe("base64");
-        expect(audioBlock.mime_type).toBe("audio/wav");
-        expect(typeof audioBlock.data).toBe("string");
-        expect(audioBlock.data.length).toBeGreaterThan(10);
-      } finally {
-        await client.close();
       }
-    });
+    );
   });
 
   describe("useStandardContentBlocks Configuration", () => {
@@ -1548,4 +1555,504 @@ describe("MultiServerMCPClient Integration Tests", () => {
       }
     );
   });
-}); 
+
+  describe("Output Handling Configuration", () => {
+    const serverNameBase = "output-handling-test";
+    const imageToolInput: ToolCall = {
+      type: "tool_call",
+      name: "resource_tool",
+      id: "fake-tool-call-id",
+      args: { input: "test output handling" },
+    };
+    const resourceToolInput: ToolCall = {
+      type: "tool_call",
+      name: "resource_tool",
+      id: "fake-tool-call-id",
+      args: { input: "test output handling" },
+    };
+    const audioToolInput: ToolCall = {
+      type: "tool_call",
+      name: "audio_tool",
+      id: "fake-tool-call-id",
+      args: { input: "test output handling" },
+    };
+    const findTool = (
+      tools: StructuredToolInterface[],
+      partialName: string
+    ) => {
+      const tool = tools.find((t) => t.name.includes(partialName));
+      expect(tool).toBeDefined();
+      return tool!;
+    };
+
+    it.each(["http", "sse"] as const)(
+      "should use default output handling when not specified (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-default-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+
+          const { content: imgContentResult, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+
+          expect(Array.isArray(imgContentResult)).toBe(true);
+          expect(imgArtifact).toEqual([]);
+
+          const imgContentArray = imgContentResult as MessageContentComplex[];
+          
+          expect(imgContentArray).toHaveLength(2);
+          expect(imgContentArray).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(imageToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "image_url",
+                image_url: expect.objectContaining({
+                  url: expect.stringMatching(/^data:image\/png;base64,/),
+                }),
+              }),
+            ])
+          );
+
+          const { content: resContentResult, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          
+          if (typeof resContentResult === "string") {
+            expect(resContentResult).toContain(resourceToolInput.args.input);
+          } else {
+            expect(Array.isArray(resContentResult)).toBe(true);
+            const resContentArray = resContentResult as MessageContentComplex[];
+            expect(resContentArray).toHaveLength(1);
+            expect(resContentArray[0]).toEqual(
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(resourceToolInput.args.input),
+              })
+            );
+          }
+          expect(resArtifact).toEqual([
+            expect.objectContaining({
+              type: "resource",
+              resource: expect.objectContaining({
+                uri: "mem://test.txt",
+                mimeType: "text/plain",
+                text: "This is a test resource.",
+              }),
+            }),
+          ]);
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should send all output to artifact when client outputHandling is 'artifact' (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-client-artifact-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          outputHandling: "artifact",
+          useStandardContentBlocks: false,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+          const audioTool = findTool(tools, "audio_tool");
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+          
+          expect(imgContent).toEqual([]);
+          expect(imgArtifact).toHaveLength(2);
+          expect(imgArtifact).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(imageToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "image",
+                data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+                mimeType: "image/png"
+              }),
+            ])
+          );
+
+          const { content: resContent, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          expect(resContent).toEqual([]);
+          expect(resArtifact).toHaveLength(2);
+          expect(resArtifact).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(resourceToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "resource",
+                resource: expect.objectContaining({ uri: "mem://test.txt" }),
+              }),
+            ])
+          );
+
+          const { content: audioContent, artifact: audioArtifact } =
+            await audioTool.invoke(audioToolInput);
+          expect(audioContent).toEqual([]);
+          expect(audioArtifact).toHaveLength(2);
+          expect(audioArtifact).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(audioToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "audio",
+                data: "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA",
+                mimeType: "audio/wav"
+              }),
+            ])
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should send all output to content when client outputHandling is 'content' (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-client-content-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          outputHandling: "content",
+          useStandardContentBlocks: false,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+          expect(imgArtifact).toEqual([]);
+          expect(Array.isArray(imgContent)).toBe(true);
+          const imgContentArray = imgContent as MessageContentComplex[];
+          expect(imgContentArray).toHaveLength(2);
+          expect(imgContentArray).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(imageToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "image_url",
+                image_url: expect.objectContaining({
+                  url: expect.stringMatching(/^data:image\/png;base64,/),
+                }),
+              }),
+            ])
+          );
+
+          const { content: resContent, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          expect(resArtifact).toEqual([]);
+          expect(Array.isArray(resContent)).toBe(true);
+          const resContentArray = resContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+          expect(resContentArray).toHaveLength(2);
+          expect(resContentArray).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "text",
+                text: expect.stringContaining(resourceToolInput.args.input),
+              }),
+              expect.objectContaining({
+                type: "file",
+                source_type: "text",
+                mime_type: "text/plain",
+                text: "This is a test resource.",
+                metadata: { uri: "mem://test.txt" },
+              }),
+            ])
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should use client-level detailed outputHandling (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-client-detailed-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          outputHandling: {
+            text: "content",
+            image: "artifact",
+            audio: "content",
+            resource: "content",
+          },
+          useStandardContentBlocks: false,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+          if (typeof imgContent === "string") {
+            expect(imgContent).toContain(imageToolInput.args.input);
+          } else {
+            const imgContentArray = imgContent as MessageContentComplex[];
+            expect(imgContentArray).toHaveLength(1);
+            expect(imgContentArray[0]).toEqual(
+              expect.objectContaining({ type: "text" })
+            );
+          }
+          expect(imgArtifact).toHaveLength(1);
+          expect(imgArtifact[0]).toEqual(
+            {
+              type: "image",
+              data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+              mimeType: "image/png"
+            }
+          );
+
+          const { content: resContent, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          expect(resArtifact).toEqual([]);
+          const resContentArray = resContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+          expect(resContentArray).toHaveLength(2);
+          expect(resContentArray).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ type: "text" }),
+              expect.objectContaining({
+                type: "file",
+                metadata: { uri: "mem://test.txt" },
+              }),
+            ])
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should allow server-specific outputHandling to override client-level (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-server-override-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const clientConfig: ClientConfig = {
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+              outputHandling: {
+                image: "content",
+                resource: "artifact",
+              },
+            },
+          },
+          outputHandling: "artifact",
+          useStandardContentBlocks: false,
+        };
+        const client = new MultiServerMCPClient(clientConfig);
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+          const imgContentArray = imgContent as MessageContentComplex[];
+          expect(imgContentArray).toHaveLength(1);
+          expect(imgContentArray[0]).toEqual({
+            image_url: {
+              url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+            },
+            type: "image_url",
+          });
+          expect(imgArtifact).toHaveLength(1);
+          expect(imgArtifact[0]).toEqual({
+            type: "text",
+            text: expect.stringContaining(imageToolInput.args.input),
+          });
+
+          const { content: resContent, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          expect(resContent).toEqual([]);
+          expect(resArtifact).toHaveLength(2);
+          expect(resArtifact).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ type: "text" }),
+              expect.objectContaining({
+                type: "resource",
+                resource: expect.objectContaining({ uri: "mem://test.txt" }),
+              }),
+            ])
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should respect outputHandling with useStandardContentBlocks=true (%s)",
+      async (transport) => {
+        const serverName = `${serverNameBase}-std-blocks-${transport}`;
+        const { baseUrl } = await testServers.createHTTPServer(serverName, {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          outputHandling: {
+            text: "content",
+            image: "artifact",
+            audio: "content",
+            resource: "artifact",
+          },
+          useStandardContentBlocks: true,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = findTool(tools, "image_tool");
+          const audioTool = findTool(tools, "audio_tool");
+          const resourceTool = findTool(tools, "resource_tool");
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool.invoke(imageToolInput);
+          if (typeof imgContent === "string") {
+            expect(imgContent).toContain(imageToolInput.args.input);
+          } else if (Array.isArray(imgContent)) {
+            const imgContentArray = imgContent as DataContentBlock[];
+            expect(imgContentArray).toHaveLength(1);
+            expect(imgContentArray[0]).toEqual(
+              expect.objectContaining({ type: "text", source_type: "text" })
+            );
+          } else {
+            expect(imgContent).toEqual([]);
+          }
+          expect(imgArtifact).toHaveLength(1);
+          expect(imgArtifact[0]).toEqual(
+            expect.objectContaining({
+              type: "image",
+              source_type: "base64",
+              mime_type: "image/png",
+            })
+          );
+
+          const { content: audioContent, artifact: audioArtifact } =
+            await audioTool.invoke(audioToolInput);
+          expect(audioArtifact).toEqual([]);
+          const audioContentArray = audioContent as DataContentBlock[];
+          expect(audioContentArray).toHaveLength(2);
+          expect(audioContentArray).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({ type: "text", source_type: "text" }),
+              expect.objectContaining({
+                type: "audio",
+                source_type: "base64",
+                mime_type: "audio/wav",
+              }),
+            ])
+          );
+
+          const { content: resContent, artifact: resArtifact } =
+            await resourceTool.invoke(resourceToolInput);
+          if (typeof resContent === "string") {
+            expect(resContent).toContain(resourceToolInput.args.input);
+          } else if (Array.isArray(resContent)) {
+            const resContentArray = resContent as DataContentBlock[];
+            expect(resContentArray).toHaveLength(1);
+            expect(resContentArray[0]).toEqual(
+              expect.objectContaining({ type: "text", source_type: "text" })
+            );
+          } else {
+            expect(resContent).toEqual([]);
+          }
+          expect(resArtifact).toHaveLength(1);
+          expect(resArtifact[0]).toEqual(
+            expect.objectContaining({
+              type: "file",
+              source_type: "text",
+              mime_type: "text/plain",
+              metadata: { uri: "mem://test.txt" },
+            })
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+  });
+});

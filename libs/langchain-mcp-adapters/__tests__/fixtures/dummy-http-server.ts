@@ -142,6 +142,33 @@ export function createDummyHttpServer(
     }
   );
 
+  server.tool(
+    "resource_tool",
+    "A tool that returns a dummy resource and text content.",
+    {
+      input: z.string().describe("Some input string for the resource tool"),
+    },
+    async ({ input }, extra) => {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Resource input was: ${input}, server: ${name}`,
+          },
+          {
+            type: "resource",
+            resource: {
+              uri: "mem://test.txt",
+              mimeType: "text/plain",
+              text: "This is a test resource.",
+              // No blob, to test text-based resource handling
+            },
+          },
+        ],
+      };
+    }
+  );
+
   const app = express();
   app.use(express.json());
 

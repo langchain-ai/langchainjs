@@ -16,19 +16,22 @@ import { runExample as runFileSystemExample } from "./filesystem_langgraph_examp
 
 async function runExample() {
   const client = new MultiServerMCPClient({
-    filesystem: {
-      transport: "stdio",
-      command: "docker",
-      args: [
-        "run",
-        "-i",
-        "--rm",
-        "-v",
-        "mcp-filesystem-data:/projects",
-        "mcp/filesystem",
-        "/projects",
-      ],
+    mcpServers: {
+      filesystem: {
+        transport: "stdio" as const,
+        command: "docker",
+        args: [
+          "run",
+          "-i",
+          "--rm",
+          "-v",
+          "mcp-filesystem-data:/projects",
+          "mcp/filesystem",
+          "/projects",
+        ],
+      },
     },
+    useStandardContentBlocks: true,
   });
 
   await runFileSystemExample(client);

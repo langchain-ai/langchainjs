@@ -59,7 +59,6 @@ describe("MultiServerMCPClient", () => {
           transport: "sse",
           url: "http://localhost:8000/sse",
           headers: { Authorization: "Bearer token" },
-          useNodeEventSource: true,
         },
       });
       expect(client).toBeDefined();
