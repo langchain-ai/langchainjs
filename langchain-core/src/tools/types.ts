@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
   BaseLangChainParams,
@@ -16,7 +15,12 @@ import {
   type ToolMessage,
 } from "../messages/tool.js";
 import type { MessageContent } from "../messages/base.js";
-import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import {
+  InferInteropZodInput,
+  InferInteropZodOutput,
+  InteropZodType,
+  isZodSchema,
+} from "../utils/types/zod.js";
 import { JSONSchema } from "../utils/json_schema.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
@@ -26,9 +30,6 @@ export type ToolOutputType = any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectAny = z.ZodObject<any, any, any, any>;
 
 /**
  * Conditional type that determines the return type of the {@link StructuredTool.invoke} method.
@@ -53,7 +54,7 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
  * Base type that establishes the types of input schemas that can be used for LangChain tool
  * definitions.
  */
-export type ToolInputSchemaBase = z.ZodAny | JSONSchema;
+export type ToolInputSchemaBase = InteropZodType | JSONSchema;
 
 /**
  * Parameters for the Tool classes.
@@ -107,7 +108,11 @@ export interface StructuredToolParams
  * types will be the same.
  */
 export type ToolInputSchemaOutputType<T extends ToolInputSchemaBase> =
-  T extends z.ZodSchema ? z.output<T> : T extends JSONSchema ? unknown : never;
+  T extends InteropZodType
+    ? InferInteropZodOutput<T>
+    : T extends JSONSchema
+    ? unknown
+    : never;
 
 /**
  * Utility type that resolves the input type of a tool input schema.
@@ -121,7 +126,11 @@ export type ToolInputSchemaOutputType<T extends ToolInputSchemaBase> =
  * types will be the same.
  */
 export type ToolInputSchemaInputType<T extends ToolInputSchemaBase> =
-  T extends z.ZodSchema ? z.input<T> : T extends JSONSchema ? unknown : never;
+  T extends InteropZodType
+    ? InferInteropZodInput<T>
+    : T extends JSONSchema
+    ? unknown
+    : never;
 
 /**
  * Defines the type that will be passed into a tool handler function as a result of a tool call.
@@ -146,20 +155,9 @@ export type StructuredToolCallInput<
  * This is primarily used for creating simple string-based tools where the LLM
  * only needs to provide a single text value as input to the tool.
  */
-export type StringInputToolSchema = z.ZodEffects<
-  z.ZodObject<
-    { input: z.ZodOptional<z.ZodString> },
-    "strip",
-    z.ZodTypeAny,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any
-  >,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
+export type StringInputToolSchema = InteropZodType<
+  string | undefined,
+  { input?: string }
 >;
 
 /**

@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
@@ -8,6 +7,10 @@ import {
   BaseCumulativeTransformOutputParserInput,
 } from "../transform.js";
 import { isAIMessage } from "../../messages/ai.js";
+import {
+  InteropZodType,
+  getZodSafeParseIssues,
+} from "../../utils/types/zod.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -202,7 +205,7 @@ export type JsonOutputKeyToolsParserParams<
 > = {
   keyName: string;
   returnSingle?: boolean;
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 } & JsonOutputToolsParserParams;
 
 /**
@@ -229,7 +232,7 @@ export class JsonOutputKeyToolsParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
   constructor(params: JsonOutputKeyToolsParserParams<T>) {
     super(params);
@@ -251,7 +254,7 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(getZodSafeParseIssues(zodParsedResult))}`,
         JSON.stringify(result, null, 2)
       );
     }
