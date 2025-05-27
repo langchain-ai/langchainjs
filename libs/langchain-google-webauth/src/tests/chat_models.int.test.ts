@@ -220,8 +220,18 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     );
     const tc = res.tool_calls![0];
     expect(tc.args.locations).toHaveLength(2);
-    expect(tc.args.locations.some((l:Record<string,string>) => l.name === "SF" || l.name === "San Francisco")).toEqual(true);
-    expect(tc.args.locations.some((l:Record<string,string>) => l.name === "LA" || l.name === "Los Angeles")).toEqual(true);
+    expect(
+      tc.args.locations.some(
+        (l: Record<string, string>) =>
+          l.name === "SF" || l.name === "San Francisco"
+      )
+    ).toEqual(true);
+    expect(
+      tc.args.locations.some(
+        (l: Record<string, string>) =>
+          l.name === "LA" || l.name === "Los Angeles"
+      )
+    ).toEqual(true);
   });
 
   test.skip("Few shotting with tool calls", async () => {
@@ -730,7 +740,9 @@ describe.each(testGeminiModelNames)(
       expect(func.name).toBe("get_weather");
       expect(func).toHaveProperty("arguments");
       expect(typeof func.arguments).toBe("string");
-      expect(func.arguments.replaceAll("\n", "")).toBe('{"location":"New York"}');
+      expect(func.arguments.replaceAll("\n", "")).toBe(
+        '{"location":"New York"}'
+      );
     });
 
     test("function reply", async () => {
@@ -1159,7 +1171,9 @@ describe.each(testGeminiModelNames)(
       expect(context).toHaveProperty("urlMetadata");
       expect(Array.isArray(context.urlMetadata)).toEqual(true);
       expect(context.urlMetadata[0].retrievedUrl).toEqual(url);
-      expect(context.urlMetadata[0].urlRetrievalStatus).toEqual("URL_RETRIEVAL_STATUS_SUCCESS");
+      expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
+        "URL_RETRIEVAL_STATUS_SUCCESS"
+      );
     });
 
     test("Can stream GoogleSearchRetrievalTool", async () => {
@@ -1280,7 +1294,8 @@ describe.each(testGeminiModelNames)(
         expect(text).toMatch(/rainbow/);
 
         // Gemini 1.5 does not include audio
-        const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details?.video as number;
+        const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+          ?.video as number;
         expect(typeof videoTokens1).toEqual("number");
         expect(videoTokens1).toBeGreaterThan(1024);
         expect(
@@ -1309,12 +1324,27 @@ describe.each(testGeminiModelNames)(
         const res2 = await model.invoke(messages2);
         const aiMessage2 = res2 as AIMessageChunk;
 
-        const videoTokens2 = aiMessage2?.usage_metadata?.input_token_details?.video;
+        const videoTokens2 =
+          aiMessage2?.usage_metadata?.input_token_details?.video;
         expect(typeof videoTokens2).toEqual("number");
         expect(videoTokens2).toEqual(videoTokens1 * 2);
 
-        console.log('tokens 1', JSON.stringify( aiMessage1?.usage_metadata?.input_token_details, null, 1));
-        console.log('tokens 2', JSON.stringify( aiMessage2?.usage_metadata?.input_token_details, null, 1));
+        console.log(
+          "tokens 1",
+          JSON.stringify(
+            aiMessage1?.usage_metadata?.input_token_details,
+            null,
+            1
+          )
+        );
+        console.log(
+          "tokens 2",
+          JSON.stringify(
+            aiMessage2?.usage_metadata?.input_token_details,
+            null,
+            1
+          )
+        );
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -1374,7 +1404,6 @@ describe.each(testGeminiModelNames)(
       expect(cached2).toBeLessThanOrEqual(size1);
       // Results are highly inconsistent. Sometimes it won't cache.
     }, 90000); // Increase timeout
-
   }
 );
 
@@ -1518,7 +1547,8 @@ describe.each(testReasoningModelNames)(
     test("default", async () => {
       // By default, it should not return reasoning tokens, tho it should report some
       const model = newChatGoogle();
-      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
       console.log(response);
 
@@ -1526,24 +1556,34 @@ describe.each(testReasoningModelNames)(
       expect(typeof response.content).toEqual("string");
       expect(response.content).toMatch(/^1\/6/);
 
-      expect(response?.usage_metadata?.output_token_details?.reasoning).toBeGreaterThan(0);
+      expect(
+        response?.usage_metadata?.output_token_details?.reasoning
+      ).toBeGreaterThan(0);
     });
 
     test("content", async () => {
       const model = newChatGoogle({
         maxReasoningTokens: 12000,
       });
-      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
       console.log(response);
 
       expect(Array.isArray(response.content)).toEqual(true);
-      const content: MessageContentComplex[] = response.content as MessageContentComplex[];
+      const content: MessageContentComplex[] =
+        response.content as MessageContentComplex[];
       expect(content.length).toBeGreaterThanOrEqual(2);
-      expect(content.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
-      expect(content.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+      expect(
+        content.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
 
-      expect(response?.usage_metadata?.output_token_details?.reasoning).toBeGreaterThan(0);
+      expect(
+        response?.usage_metadata?.output_token_details?.reasoning
+      ).toBeGreaterThan(0);
     });
 
     test("off", async () => {
@@ -1551,7 +1591,8 @@ describe.each(testReasoningModelNames)(
       const model = newChatGoogle({
         maxReasoningTokens: 0,
       });
-      const prompt = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
       console.log(response);
 
@@ -1563,37 +1604,45 @@ describe.each(testReasoningModelNames)(
       expect(response.usage_metadata!.output_token_details).not.toHaveProperty(
         "reasoning"
       );
-
     });
 
     test("conversation", async () => {
       const model = newChatGoogle({
         maxReasoningTokens: 12000,
       });
-      const prompt1 = "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      const history: BaseMessageChunk[] = [
-        new HumanMessageChunk(prompt1)
-      ];
+      const prompt1 =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const history: BaseMessageChunk[] = [new HumanMessageChunk(prompt1)];
       const response1 = await model.invoke(history);
-      history.push(response1)
+      history.push(response1);
       console.log(response1);
 
       expect(Array.isArray(response1.content)).toEqual(true);
-      const content1: MessageContentComplex[] = response1.content as MessageContentComplex[];
+      const content1: MessageContentComplex[] =
+        response1.content as MessageContentComplex[];
       expect(content1.length).toBeGreaterThanOrEqual(2);
-      expect(content1.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
-      expect(content1.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+      expect(
+        content1.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content1.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
 
-      const prompt2 = "How about 1?"
+      const prompt2 = "How about 1?";
       history.push(new HumanMessageChunk(prompt2));
       const response2 = await model.invoke(history);
       console.log(response2);
 
       expect(Array.isArray(response2.content)).toEqual(true);
-      const content2: MessageContentComplex[] = response2.content as MessageContentComplex[];
+      const content2: MessageContentComplex[] =
+        response2.content as MessageContentComplex[];
       expect(content2.length).toBeGreaterThanOrEqual(2);
-      expect(content2.filter(c => c.type === "reasoning").length).toBeGreaterThanOrEqual(1);
-      expect(content2.filter(c => c.type === "text").length).toBeGreaterThanOrEqual(1);
+      expect(
+        content2.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content2.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
     });
-
-  });
+  }
+);

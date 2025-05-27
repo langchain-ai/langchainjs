@@ -1113,7 +1113,7 @@ describe("Mock ChatGoogle - Gemini", () => {
         mimeType: "image/png",
         videoMetadata: {
           fps: 12,
-        }
+        },
       },
     ];
 
@@ -1167,7 +1167,7 @@ describe("Mock ChatGoogle - Gemini", () => {
         mimeType: "image/png",
         videoMetadata: {
           fps: 12,
-        }
+        },
       },
     ];
 

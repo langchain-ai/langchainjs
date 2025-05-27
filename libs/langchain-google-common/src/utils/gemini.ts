@@ -50,7 +50,8 @@ import type {
   GeminiLogprobsResult,
   GeminiLogprobsResultCandidate,
   GeminiLogprobsTopCandidate,
-  ModalityTokenCount, GeminiUrlContextMetadata,
+  ModalityTokenCount,
+  GeminiUrlContextMetadata,
 } from "../types.js";
 import { GoogleAISafetyError } from "./safety.js";
 import { MediaBlob } from "../experimental/utils/media_core.js";
@@ -318,7 +319,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function supplementVideoMetadata(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: MessageContentImageUrl | Record<string,any>,
+    content: MessageContentImageUrl | Record<string, any>,
     ret: GeminiPartInlineData | GeminiPartFileData
   ): GeminiPartInlineData | GeminiPartFileData {
     // Add videoMetadata if defined
@@ -338,12 +339,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return ret;
   }
 
-  function messageContentReasoning(content: MessageContentReasoning): GeminiPartText | null {
+  function messageContentReasoning(
+    content: MessageContentReasoning
+  ): GeminiPartText | null {
     if (content?.reasoning && content?.reasoning.length > 0) {
       return {
         text: content.reasoning,
         thought: true,
-      }
+      };
     } else {
       return null;
     }
@@ -487,7 +490,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         return messageContentReasoning(content as MessageContentReasoning);
       default:
         throw new Error(
-          `Unsupported type "${content.type}" received while converting message to message parts: ${JSON.stringify(content)}`
+          `Unsupported type "${
+            content.type
+          }" received while converting message to message parts: ${JSON.stringify(
+            content
+          )}`
         );
     }
     throw new Error(
@@ -695,13 +702,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   type MessageContentReasoning = {
     type: "reasoning";
     reasoning: string;
-  }
+  };
 
-  function thoughtPartToMessageContent(part: GeminiPartText): MessageContentReasoning {
+  function thoughtPartToMessageContent(
+    part: GeminiPartText
+  ): MessageContentReasoning {
     return {
       type: "reasoning",
       reasoning: part.text,
-    }
+    };
   }
 
   function textPartToMessageContent(part: GeminiPartText): MessageContentText {
@@ -919,7 +928,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function candidateToUrlContextMetadata(
     candidate: GeminiResponseCandidate
   ): GeminiUrlContextMetadata | undefined {
-    const retrieval = candidate?.urlRetrievalMetadata?.urlRetrievalContexts ?? [];
+    const retrieval =
+      candidate?.urlRetrievalMetadata?.urlRetrievalContexts ?? [];
     const context = candidate?.urlContextMetadata?.urlMetadata ?? [];
     const all = [...retrieval, ...context];
     if (all.length === 0) {
@@ -927,7 +937,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     } else {
       return {
         urlMetadata: all,
-      }
+      };
     }
   }
 

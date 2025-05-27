@@ -349,7 +349,7 @@ export interface GeminiPartBase {
 }
 
 export interface GeminiVideoMetadata {
-  fps?: number;  // Double in range (0.0, 24.0]
+  fps?: number; // Double in range (0.0, 24.0]
   startOffset?: string;
   endOffset?: string;
 }
@@ -475,8 +475,8 @@ export interface GeminiRetrievalMetadata {
 }
 
 export type GeminiUrlRetrievalStatus =
-  "URL_RETRIEVAL_STATUS_SUCCESS" |
-  "URL_RETRIEVAL_STATUS_ERROR";
+  | "URL_RETRIEVAL_STATUS_SUCCESS"
+  | "URL_RETRIEVAL_STATUS_ERROR";
 
 export interface GeminiUrlRetrievalContext {
   retrievedUrl: string;
