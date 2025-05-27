@@ -155,10 +155,8 @@ export type StructuredToolCallInput<
  * This is primarily used for creating simple string-based tools where the LLM
  * only needs to provide a single text value as input to the tool.
  */
-export type StringInputToolSchema = InteropZodType<
-  string | undefined,
-  { input?: string }
->;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type StringInputToolSchema = InteropZodType<string | undefined, any>;
 
 /**
  * Defines the type for input to a tool's call method.

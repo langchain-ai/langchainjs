@@ -546,12 +546,12 @@ interface ToolWrapperParams<
  * @param {ToolWrapperParams<SchemaT>} fields - An object containing the following properties:
  * @param {string} fields.name The name of the tool.
  * @param {string | undefined} fields.description The description of the tool. Defaults to either the description on the Zod schema, or `${fields.name} tool`.
- * @param {InteropZodObject | InteropZodType<string, unknown> | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
+ * @param {InteropZodObject | InteropZodType<string> | undefined} fields.schema The Zod schema defining the input for the tool. If undefined, it will default to a Zod string schema.
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
 export function tool<
-  SchemaT extends InteropZodType<string, unknown>,
+  SchemaT extends InteropZodType<string>,
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<
@@ -589,7 +589,7 @@ export function tool<
 export function tool<
   SchemaT extends
     | InteropZodObject
-    | InteropZodType<string, unknown>
+    | InteropZodType<string>
     | JSONSchema = InteropZodObject,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,

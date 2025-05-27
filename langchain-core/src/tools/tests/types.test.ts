@@ -14,20 +14,20 @@ import { ToolCall, ToolMessage } from "../../messages/tool.js";
 const testDynamicTool = new DynamicTool({
   name: "test",
   description: "test",
-  func: async (input: string) => `test ${input}`,
+  func: async (input) => `test ${input}`,
 });
 
 const testDynamicStructuredTool = new DynamicStructuredTool({
   name: "test",
   description: "test",
-  func: async (input: { input: string }) => `test ${input.input}`,
+  func: async ({ input }) => `test ${input}`,
   schema: z.object({ input: z.string() }),
 });
 
 const testDynamicStructuredToolWithZodEffects = new DynamicStructuredTool({
   name: "test",
   description: "test",
-  func: async (input: string) => `test ${input}`,
+  func: async (input) => `test ${input}`,
   schema: z
     .object({ input: z.string().optional() })
     .transform((data) => data.input),
@@ -528,20 +528,20 @@ describe("tool factory function type tests", () => {
       expect(_dynamicTool).toBe(testTool);
     });
 
-    it("should return DynamicTool when schema is transformed into a string", () => {
+    it("should return DynamicStructuredTool when schema is transformed into a string", () => {
       const testTool = tool(async (input) => `result: ${input}`, {
         name: "test_tool",
         schema: z.object({ value: z.string() }).transform((obj) => obj.value),
       });
 
-      const dynamicTool: DynamicTool<string> = testTool;
-      expect(dynamicTool).toBe(testTool);
-      expect(testTool).toBeInstanceOf(DynamicTool);
-      // @ts-expect-error dynamicTool should not be assignable to DynamicStructuredTool.
+      const structuredTool: DynamicStructuredTool = testTool;
+      expect(structuredTool).toBe(testTool);
+      expect(testTool).toBeInstanceOf(DynamicStructuredTool);
+      // @ts-expect-error structuredTool should not be assignable to DynamicTool.
       // If it is assignable, that would indicate that the tool factory is using the
       // overload with the union return type (bad).
-      const _structuredTool: DynamicStructuredTool = testTool;
-      expect(_structuredTool).toBe(testTool);
+      const _dynamicTool: DynamicTool = testTool;
+      expect(_dynamicTool).toBe(testTool);
     });
   });
 });

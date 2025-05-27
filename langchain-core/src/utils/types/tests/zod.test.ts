@@ -232,21 +232,29 @@ describe("Zod utility functions", () => {
         expect(isSimpleStringZodSchema(z3.string().regex(/test/))).toBe(true);
       });
 
-      it("should return true for string schemas with defaults", () => {
-        expect(isSimpleStringZodSchema(z3.string().default("test"))).toBe(true);
+      it("should return false for string schemas with defaults", () => {
+        expect(isSimpleStringZodSchema(z3.string().default("test"))).toBe(
+          false
+        );
         expect(
           isSimpleStringZodSchema(z3.string().min(1).default("test"))
-        ).toBe(true);
+        ).toBe(false);
       });
 
-      it("should return true for string transforms that are shapeless", () => {
+      it("should return false for string transforms (input/output types may differ)", () => {
         const stringTransform = z3.string().transform((s) => s.toUpperCase());
-        expect(isSimpleStringZodSchema(stringTransform)).toBe(true);
+        expect(isSimpleStringZodSchema(stringTransform)).toBe(false);
 
         const objectToStringTransform = z3
           .object({ value: z3.string() })
           .transform((obj) => obj.value);
-        expect(isSimpleStringZodSchema(objectToStringTransform)).toBe(true);
+        expect(isSimpleStringZodSchema(objectToStringTransform)).toBe(false);
+      });
+
+      it("should return false for optional and nullable string schemas", () => {
+        expect(isSimpleStringZodSchema(z3.string().optional())).toBe(false);
+        expect(isSimpleStringZodSchema(z3.string().nullable())).toBe(false);
+        expect(isSimpleStringZodSchema(z3.string().nullish())).toBe(false);
       });
 
       it("should return false for non-string schemas", () => {
@@ -279,21 +287,29 @@ describe("Zod utility functions", () => {
         expect(isSimpleStringZodSchema(z4.string().regex(/test/))).toBe(true);
       });
 
-      it("should return true for string schemas with defaults", () => {
-        expect(isSimpleStringZodSchema(z4.string().default("test"))).toBe(true);
+      it("should return false for string schemas with defaults", () => {
+        expect(isSimpleStringZodSchema(z4.string().default("test"))).toBe(
+          false
+        );
         expect(
           isSimpleStringZodSchema(z4.string().min(1).default("test"))
-        ).toBe(true);
+        ).toBe(false);
       });
 
-      it("should return true for string transforms that are shapeless", () => {
+      it("should return false for string transforms (input/output types may differ)", () => {
         const stringTransform = z4.string().transform((s) => s.toUpperCase());
-        expect(isSimpleStringZodSchema(stringTransform)).toBe(true);
+        expect(isSimpleStringZodSchema(stringTransform)).toBe(false);
 
         const objectToStringTransform = z4
           .object({ value: z4.string() })
           .transform((obj) => obj.value);
-        expect(isSimpleStringZodSchema(objectToStringTransform)).toBe(true);
+        expect(isSimpleStringZodSchema(objectToStringTransform)).toBe(false);
+      });
+
+      it("should return false for optional and nullable string schemas", () => {
+        expect(isSimpleStringZodSchema(z4.string().optional())).toBe(false);
+        expect(isSimpleStringZodSchema(z4.string().nullable())).toBe(false);
+        expect(isSimpleStringZodSchema(z4.string().nullish())).toBe(false);
       });
 
       it("should return false for non-string schemas", () => {
@@ -510,7 +526,7 @@ describe("Zod utility functions", () => {
 
       expect(isZodSchema(brandedV3)).toBe(true);
       expect(isShapelessZodSchema(brandedV3)).toBe(true);
-      expect(isSimpleStringZodSchema(brandedV3)).toBe(true);
+      expect(isSimpleStringZodSchema(brandedV3)).toBe(false);
     });
 
     it("should handle catch and pipe operations", () => {
@@ -518,7 +534,7 @@ describe("Zod utility functions", () => {
 
       expect(isZodSchema(catchSchemaV3)).toBe(true);
       expect(isShapelessZodSchema(catchSchemaV3)).toBe(true);
-      expect(isSimpleStringZodSchema(catchSchemaV3)).toBe(true);
+      expect(isSimpleStringZodSchema(catchSchemaV3)).toBe(false);
     });
   });
 });

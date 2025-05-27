@@ -59,7 +59,11 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
-import { InferInteropZodOutput, InteropZodType } from "../utils/types/zod.js";
+import {
+  InferInteropZodOutput,
+  InteropZodType,
+  isSimpleStringZodSchema,
+} from "../utils/types/zod.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -3460,7 +3464,7 @@ export function convertRunnableToTool<RunInput, RunOutput>(
   const name = fields.name ?? runnable.getName();
   const description = fields.description ?? fields.schema?.description;
 
-  if (fields.schema.constructor === z.ZodString) {
+  if (isSimpleStringZodSchema(fields.schema)) {
     return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(
       {
         name,
