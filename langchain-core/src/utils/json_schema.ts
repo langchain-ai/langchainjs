@@ -1,7 +1,7 @@
-import type { z } from "zod";
+import * as z4 from "zod/v4";
 import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
-import { isZodSchema } from "./types/is_zod_schema.js";
+import { InteropZodType, isZodSchemaV3, isZodSchemaV4 } from "./types/zod.js";
 
 export type JSONSchema = JsonSchema7Type;
 
@@ -12,9 +12,12 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  * @param schema - The schema to convert.
  * @returns The converted schema.
  */
-export function toJsonSchema(schema: z.ZodType | JSONSchema): JSONSchema {
-  if (isZodSchema(schema)) {
-    return zodToJsonSchema(schema) as JSONSchema;
+export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
+  if (isZodSchemaV4(schema)) {
+    return z4.toJSONSchema(schema);
+  }
+  if (isZodSchemaV3(schema)) {
+    return zodToJsonSchema(schema);
   }
   return schema;
 }

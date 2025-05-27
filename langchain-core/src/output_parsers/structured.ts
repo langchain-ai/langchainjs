@@ -90,7 +90,7 @@ Your output will be parsed and type-checked according to the provided schema ins
 
 Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-${JSON.stringify(zodToJsonSchema(this.schema))}
+${JSON.stringify(toJsonSchema(this.schema))}
 \`\`\`
 `;
   }
@@ -143,7 +143,7 @@ export class JsonMarkdownStructuredOutputParser<
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
-      zodToJsonSchema(this.schema)
+      toJsonSchema(this.schema)
     )
       .replaceAll("{", "{".repeat(interpolationDepth))
       .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;

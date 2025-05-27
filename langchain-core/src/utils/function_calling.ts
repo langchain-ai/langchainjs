@@ -19,9 +19,8 @@ export {
 /**
  * Formats a `StructuredTool` or `RunnableToolLike` instance into a format
  * that is compatible with OpenAI function calling. If `StructuredTool` or
- * `RunnableToolLike` has a zod schema, it uses the `zodToJsonSchema`
- * function to convert the schema of the `StructuredTool` or `RunnableToolLike`
- * into a JSON schema, which is then used as the parameters for the OpenAI function.
+ * `RunnableToolLike` has a zod schema, the output will be converted into a
+ * JSON schema, which is then used as the parameters for the OpenAI tool.
  *
  * @param {StructuredToolInterface | RunnableToolLike} tool The tool to convert to an OpenAI function.
  * @returns {FunctionDefinition} The inputted tool in OpenAI function format.
@@ -53,9 +52,8 @@ export function convertToOpenAIFunction(
 /**
  * Formats a `StructuredTool` or `RunnableToolLike` instance into a
  * format that is compatible with OpenAI tool calling. If `StructuredTool` or
- * `RunnableToolLike` has a zod schema, it uses the `zodToJsonSchema`
- * function to convert the schema of the `StructuredTool` or `RunnableToolLike`
- * into a JSON schema, which is then used as the parameters for the OpenAI tool.
+ * `RunnableToolLike` has a zod schema, the output will be converted into a
+ * JSON schema, which is then used as the parameters for the OpenAI tool.
  *
  * @param {StructuredToolInterface | Record<string, any> | RunnableToolLike} tool The tool to convert to an OpenAI tool.
  * @returns {ToolDefinition} The inputted tool in OpenAI tool format.
