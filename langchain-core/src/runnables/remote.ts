@@ -269,6 +269,8 @@ function serialize<RunInput>(input: RunInput): any {
  * `.invoke()`, `.stream()`, `.streamEvents()`, etc. methods that
  * other runnables support.
  *
+ * @deprecated LangServe is no longer actively developed - please consider using LangGraph Platform.
+ *
  * @param url - The base URL of the LangServe endpoint.
  * @param options - Optional configuration for the remote runnable, including timeout and headers.
  * @param fetch - Optional custom fetch implementation.

@@ -12,11 +12,13 @@ const modelWithCalculator = new ChatTogetherAI({
   apiKey: process.env.TOGETHER_AI_API_KEY,
   // Together JSON mode/tool calling only supports a select number of models
   model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-}).bind({
+})
   // Bind the tool to the model.
-  tools: [calculatorTool],
-  tool_choice: calculatorTool, // Specify what tool the model should use
-});
+  .bindTools([calculatorTool])
+  .withConfig({
+    // Specify what tool the model should use
+    tool_choice: calculatorTool,
+  });
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a super not-so-smart mathmatician."],

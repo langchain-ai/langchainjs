@@ -271,9 +271,7 @@ const prompt = new HumanMessage(
 test("ChatGoogleGenerativeAI can bind and invoke langchain tools", async () => {
   const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
 
-  const modelWithTools = model.bind({
-    tools: [new FakeBrowserTool()],
-  });
+  const modelWithTools = model.bindTools([new FakeBrowserTool()]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
   expect(toolCalls).toBeDefined();
@@ -290,9 +288,7 @@ test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
     model: "gemini-1.5-pro",
   });
 
-  const modelWithTools = model.bind({
-    tools: [new FakeBrowserTool()],
-  });
+  const modelWithTools = model.bindTools([new FakeBrowserTool()]);
   let finalChunk: AIMessageChunk | undefined;
   for await (const chunk of await modelWithTools.stream([prompt])) {
     if (!finalChunk) {
@@ -323,9 +319,7 @@ test("ChatGoogleGenerativeAI can handle streaming tool messages.", async () => {
 
   const browserTool = new FakeBrowserTool();
 
-  const modelWithTools = model.bind({
-    tools: [browserTool],
-  });
+  const modelWithTools = model.bindTools([browserTool]);
   let finalChunk: AIMessageChunk | undefined;
   const fullPrompt = [
     new SystemMessage(
@@ -369,9 +363,7 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
 
   const browserTool = new FakeBrowserTool();
 
-  const modelWithTools = model.bind({
-    tools: [browserTool],
-  });
+  const modelWithTools = model.bindTools([browserTool]);
   const fullPrompt = [
     new SystemMessage(
       "You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."
@@ -400,9 +392,7 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
 test("ChatGoogleGenerativeAI can bind and invoke genai tools", async () => {
   const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
 
-  const modelWithTools = model.bind({
-    tools: [googleGenAITool],
-  });
+  const modelWithTools = model.bindTools([googleGenAITool]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
   expect(toolCalls).toBeDefined();

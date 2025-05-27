@@ -270,24 +270,16 @@ export type TavilySearchResponse =
   | TavilySearchResponseWithSimpleImages;
 
 /**
- * A wrapper that encapsulates access to the Tavily Search API. Primarily used for testing.
+ * Base wrapper class with shared functionality for Tavily API wrappers.
  */
-export class TavilySearchAPIWrapper {
+abstract class BaseTavilyAPIWrapper {
   tavilyApiKey?: string;
 
   /**
-   * Constructs a new instance of the TavilySearchAPIWrapper.
+   * Constructs a new instance of the BaseTavilyAPIWrapper.
    * @param fields The fields used to initialize the wrapper.
    */
-  constructor(fields: {
-    /**
-     * The API key used for authentication with the Tavily Search API.
-     *
-     * If unspecified, the wrapper will use the API key found in the environment variable
-     * `TAVILY_API_KEY`.
-     */
-    tavilyApiKey?: string;
-  }) {
+  constructor(fields: { tavilyApiKey?: string }) {
     const apiKey =
       fields.tavilyApiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
     if (!apiKey) {
@@ -298,6 +290,37 @@ export class TavilySearchAPIWrapper {
     this.tavilyApiKey = apiKey;
   }
 
+  /**
+   * Converts camelCase keys to snake_case for API compatibility
+   * @param params The parameters with camelCase keys
+   * @returns The parameters with snake_case keys only
+   */
+  protected convertCamelToSnakeCase(
+    params: Record<string, unknown>
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined) {
+        continue;
+      }
+      // Convert camelCase key to snake_case
+      // Handle potential leading capital letter first
+      let newKey = key.replace(/^[A-Z]/, (letter) => letter.toLowerCase());
+      // Then handle subsequent capital letters
+      newKey = newKey.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+      result[newKey] = value;
+    }
+
+    return result;
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Search API. Primarily used for testing.
+ */
+export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
   /**
    * Performs a search using the Tavily Search API.
    * @param params The parameters for the search.
@@ -317,10 +340,13 @@ export class TavilySearchAPIWrapper {
       "Content-Type": "application/json",
     };
 
+    // Convert camelCase to snake_case for API compatibility
+    const apiParams = this.convertCamelToSnakeCase(params);
+
     const response = await fetch(`${TAVILY_BASE_URL}/search`, {
       method: "POST",
       headers,
-      body: JSON.stringify(params),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {
@@ -337,24 +363,7 @@ export class TavilySearchAPIWrapper {
 /**
  * A wrapper that encapsulates access to the Tavily Extract API. Primarily used for testing.
  */
-export class TavilyExtractAPIWrapper {
-  tavilyApiKey?: string;
-
-  /**
-   * Constructs a new instance of the TavilyExtractAPIWrapper.
-   * @param fields The fields used to initialize the wrapper.
-   */
-  constructor(fields: { tavilyApiKey?: string }) {
-    const apiKey =
-      fields.tavilyApiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
-    if (!apiKey) {
-      throw new Error(
-        "Tavily API key not found. Please provide it as an argument or set the TAVILY_API_KEY environment variable."
-      );
-    }
-    this.tavilyApiKey = apiKey;
-  }
-
+export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
   /**
    * Extracts content from one or more URLs using the Tavily Extract API.
    * @param params The parameters for the extraction. See {@link TavilyExtractParams}.
@@ -368,10 +377,12 @@ export class TavilyExtractAPIWrapper {
       "Content-Type": "application/json",
     };
 
+    const apiParams = this.convertCamelToSnakeCase(params);
+
     const response = await fetch(`${TAVILY_BASE_URL}/extract`, {
       method: "POST",
       headers,
-      body: JSON.stringify(params),
+      body: JSON.stringify(apiParams),
     });
 
     if (!response.ok) {

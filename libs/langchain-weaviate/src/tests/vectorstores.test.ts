@@ -1,5 +1,4 @@
 import { test, expect } from "@jest/globals";
-
 import { flattenObjectForWeaviate } from "../vectorstores.js";
 
 test("flattenObjectForWeaviate", () => {

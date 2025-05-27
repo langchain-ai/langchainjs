@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "LangChain AWS integration",
   "type": "module",
   "engines": {
@@ -40,7 +40,7 @@
     "zod-to-json-schema": "^3.22.5"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.41 <0.4.0"
+    "@langchain/core": ">=0.3.48 <0.4.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.734.0",

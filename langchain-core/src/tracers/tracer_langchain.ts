@@ -192,7 +192,15 @@ export class LangChainTracer
 
   static getTraceableRunTree(): RunTree | undefined {
     try {
-      return getCurrentRunTree();
+      return (
+        // The type cast here provides forward compatibility. Old versions of LangSmith will just
+        // ignore the permitAbsentRunTree arg.
+        (
+          getCurrentRunTree as (
+            permitAbsentRunTree: boolean
+          ) => ReturnType<typeof getCurrentRunTree> | undefined
+        )(true)
+      );
     } catch {
       return undefined;
     }

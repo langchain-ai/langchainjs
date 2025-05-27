@@ -1209,6 +1209,7 @@ export class CallbackManager
       } else {
         callbackManager = inheritableHandlers;
       }
+
       callbackManager = callbackManager.copy(
         Array.isArray(localHandlers)
           ? localHandlers.map(ensureHandler)
