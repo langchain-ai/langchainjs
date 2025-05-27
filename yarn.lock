@@ -5533,51 +5533,51 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-arm64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.4.2"
+"@couchbase/couchbase-darwin-arm64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-darwin-arm64-napi@npm:4.4.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-darwin-x64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.4.2"
+"@couchbase/couchbase-darwin-x64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-darwin-x64-napi@npm:4.4.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-arm64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.4.2"
+"@couchbase/couchbase-linux-arm64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-linux-arm64-napi@npm:4.4.6"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linux-x64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.4.2"
+"@couchbase/couchbase-linux-x64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-linux-x64-napi@npm:4.4.6"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.2"
+"@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-linuxmusl-arm64-napi@npm:4.4.6"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.2"
+"@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-linuxmusl-x64-napi@npm:4.4.6"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"@couchbase/couchbase-win32-x64-napi@npm:4.4.2":
-  version: 4.4.2
-  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.4.2"
+"@couchbase/couchbase-win32-x64-napi@npm:4.4.6":
+  version: 4.4.6
+  resolution: "@couchbase/couchbase-win32-x64-napi@npm:4.4.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -9120,7 +9120,7 @@ __metadata:
     closevector-web: 0.1.6
     cohere-ai: ">=6.0.0"
     convex: ^1.3.1
-    couchbase: ^4.3.0
+    couchbase: ^4.4.6
     crypto-js: ^4.2.0
     d3-dsv: ^2.0.0
     datastore-core: ^9.2.9
@@ -21321,17 +21321,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"couchbase@npm:^4.3.0":
-  version: 4.4.2
-  resolution: "couchbase@npm:4.4.2"
+"couchbase@npm:^4.4.6":
+  version: 4.4.6
+  resolution: "couchbase@npm:4.4.6"
   dependencies:
-    "@couchbase/couchbase-darwin-arm64-napi": 4.4.2
-    "@couchbase/couchbase-darwin-x64-napi": 4.4.2
-    "@couchbase/couchbase-linux-arm64-napi": 4.4.2
-    "@couchbase/couchbase-linux-x64-napi": 4.4.2
-    "@couchbase/couchbase-linuxmusl-arm64-napi": 4.4.2
-    "@couchbase/couchbase-linuxmusl-x64-napi": 4.4.2
-    "@couchbase/couchbase-win32-x64-napi": 4.4.2
+    "@couchbase/couchbase-darwin-arm64-napi": 4.4.6
+    "@couchbase/couchbase-darwin-x64-napi": 4.4.6
+    "@couchbase/couchbase-linux-arm64-napi": 4.4.6
+    "@couchbase/couchbase-linux-x64-napi": 4.4.6
+    "@couchbase/couchbase-linuxmusl-arm64-napi": 4.4.6
+    "@couchbase/couchbase-linuxmusl-x64-napi": 4.4.6
+    "@couchbase/couchbase-win32-x64-napi": 4.4.6
     cmake-js: ^7.3.0
     node-addon-api: ^8.0.0
   dependenciesMeta:
@@ -21349,7 +21349,7 @@ __metadata:
       optional: true
     "@couchbase/couchbase-win32-x64-napi":
       optional: true
-  checksum: 452dcdc01f9277fc6e15668eb4ab67b6afff0945a8832a598b1009068fe82edcb76d4fbf0704d9351deba74348ee25759ddba5efbfed14dae23fca13cf4714a5
+  checksum: 728e9ca4348d916088ff41ac0f916b0b87972a612fcedbd7d2ed1cd1440c4615f3c502c38219f88e4204ae20e12fc3e3de8006494ca0ed33a98a4313b5549fde
   languageName: node
   linkType: hard
 
