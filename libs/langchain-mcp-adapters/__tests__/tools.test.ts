@@ -130,6 +130,56 @@ describe("Simplified Tool Adapter Tests", () => {
       });
     });
 
+    test("should load tool with no input parameters", async () => {
+      // Set up mock response
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "weather",
+              description: "Get the current weather",
+              inputSchema: {
+                type: "object",
+              },
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation((params) => {
+        return Promise.resolve({
+          content: [
+            {
+              type: "text",
+              text: `It is currently 70 degrees and cloudy.`,
+            },
+          ],
+        });
+      });
+
+      // Load tools
+      const tools = await loadMcpTools(
+        "mockServer(should load tool with no input parameters)",
+        mockClient as Client
+      );
+
+      // Verify results
+      expect(tools.length).toBe(1);
+      expect(tools[0].name).toBe("weather");
+
+      const weatherTool = tools[0];
+
+      // should invoke the tool when input is valid
+      await expect(weatherTool.invoke({})).resolves.toEqual(
+        "It is currently 70 degrees and cloudy."
+      );
+
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        arguments: {},
+        name: "weather",
+      });
+    });
+
     test("should handle empty tool list", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(

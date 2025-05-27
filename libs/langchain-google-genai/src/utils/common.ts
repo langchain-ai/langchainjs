@@ -6,6 +6,9 @@ import {
   type FunctionDeclaration as GenerativeAIFunctionDeclaration,
   POSSIBLE_ROLES,
   FunctionCallPart,
+  TextPart,
+  FileDataPart,
+  InlineDataPart,
 } from "@google/generative-ai";
 import {
   AIMessage,
@@ -20,6 +23,10 @@ import {
   isAIMessage,
   isBaseMessage,
   isToolMessage,
+  StandardContentBlockConverter,
+  parseBase64DataUrl,
+  convertToProviderContentBlock,
+  isDataContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -115,6 +122,215 @@ function inferToolNameFromPreviousMessages(
     })?.name;
 }
 
+function _getStandardContentBlockConverter(isMultimodalModel: boolean) {
+  const standardContentBlockConverter: StandardContentBlockConverter<{
+    text: TextPart;
+    image: FileDataPart | InlineDataPart;
+    audio: FileDataPart | InlineDataPart;
+    file: FileDataPart | InlineDataPart | TextPart;
+  }> = {
+    providerName: "Google Gemini",
+
+    fromStandardTextBlock(block) {
+      return {
+        text: block.text,
+      };
+    },
+
+    fromStandardImageBlock(block): FileDataPart | InlineDataPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support images");
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardAudioBlock(block): FileDataPart | InlineDataPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support audio");
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardFileBlock(block): FileDataPart | InlineDataPart | TextPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support files");
+      }
+      if (block.source_type === "text") {
+        return {
+          text: block.text,
+        };
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+  };
+  return standardContentBlockConverter;
+}
+
+function _convertLangChainContentToPart(
+  content: MessageContentComplex,
+  isMultimodalModel: boolean
+): Part | undefined {
+  if (isDataContentBlock(content)) {
+    return convertToProviderContentBlock(
+      content,
+      _getStandardContentBlockConverter(isMultimodalModel)
+    );
+  }
+
+  if (content.type === "text") {
+    return { text: content.text };
+  } else if (content.type === "executableCode") {
+    return { executableCode: content.executableCode };
+  } else if (content.type === "codeExecutionResult") {
+    return { codeExecutionResult: content.codeExecutionResult };
+  } else if (content.type === "image_url") {
+    if (!isMultimodalModel) {
+      throw new Error(`This model does not support images`);
+    }
+    let source;
+    if (typeof content.image_url === "string") {
+      source = content.image_url;
+    } else if (
+      typeof content.image_url === "object" &&
+      "url" in content.image_url
+    ) {
+      source = content.image_url.url;
+    } else {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+    const [dm, data] = source.split(",");
+    if (!dm.startsWith("data:")) {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+
+    const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
+    if (encoding !== "base64") {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+
+    return {
+      inlineData: {
+        data,
+        mimeType,
+      },
+    };
+  } else if (content.type === "media") {
+    return messageContentMedia(content);
+  } else if (content.type === "tool_use") {
+    return {
+      functionCall: {
+        name: content.name,
+        args: content.input,
+      },
+    };
+  } else if (
+    content.type?.includes("/") &&
+    // Ensure it's a single slash.
+    content.type.split("/").length === 2 &&
+    "data" in content &&
+    typeof content.data === "string"
+  ) {
+    return {
+      inlineData: {
+        mimeType: content.type,
+        data: content.data,
+      },
+    };
+  } else if ("functionCall" in content) {
+    // No action needed here — function calls will be added later from message.tool_calls
+    return undefined;
+  } else {
+    if ("type" in content) {
+      throw new Error(`Unknown content type ${content.type}`);
+    } else {
+      throw new Error(`Unknown content ${JSON.stringify(content)}`);
+    }
+  }
+}
+
 export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
@@ -150,73 +366,11 @@ export function convertMessageContentToParts(
   }
 
   if (Array.isArray(message.content)) {
-    message.content.forEach((c) => {
-      if (c.type === "text") {
-        messageParts.push({ text: c.text });
-      } else if (c.type === "executableCode") {
-        messageParts.push({ executableCode: c.executableCode });
-      } else if (c.type === "codeExecutionResult") {
-        messageParts.push({ codeExecutionResult: c.codeExecutionResult });
-      } else if (c.type === "image_url") {
-        if (!isMultimodalModel) {
-          throw new Error(`This model does not support images`);
-        }
-        let source;
-        if (typeof c.image_url === "string") {
-          source = c.image_url;
-        } else if (typeof c.image_url === "object" && "url" in c.image_url) {
-          source = c.image_url.url;
-        } else {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
-        const [dm, data] = source.split(",");
-        if (!dm.startsWith("data:")) {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
-
-        const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
-        if (encoding !== "base64") {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
-
-        messageParts.push({
-          inlineData: {
-            data,
-            mimeType,
-          },
-        });
-      } else if (c.type === "media") {
-        messageParts.push(messageContentMedia(c));
-      } else if (c.type === "tool_use") {
-        functionCalls.push({
-          functionCall: {
-            name: c.name,
-            args: c.input,
-          },
-        });
-      } else if (
-        c.type?.includes("/") &&
-        // Ensure it's a single slash.
-        c.type.split("/").length === 2 &&
-        "data" in c &&
-        typeof c.data === "string"
-      ) {
-        messageParts.push({
-          inlineData: {
-            mimeType: c.type,
-            data: c.data,
-          },
-        });
-      } else if ("functionCall" in c) {
-        // No action needed here — function calls will be added later from message.tool_calls
-      } else {
-        if ("type" in c) {
-          throw new Error(`Unknown content type ${c.type}`);
-        } else {
-          throw new Error(`Unknown content ${JSON.stringify(c)}`);
-        }
-      }
-    });
+    messageParts.push(
+      ...(message.content
+        .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+        .filter((p) => p !== undefined) as Part[])
+    );
   }
 
   if (isAIMessage(message) && message.tool_calls?.length) {
