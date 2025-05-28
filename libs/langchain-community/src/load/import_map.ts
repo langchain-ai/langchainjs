@@ -43,6 +43,7 @@ export * as llms__friendli from "../llms/friendli.js";
 export * as llms__ollama from "../llms/ollama.js";
 export * as llms__togetherai from "../llms/togetherai.js";
 export * as llms__yandex from "../llms/yandex.js";
+export * as vectorstores__couchbase_search from "../vectorstores/couchbase_search.js";
 export * as vectorstores__prisma from "../vectorstores/prisma.js";
 export * as vectorstores__turbopuffer from "../vectorstores/turbopuffer.js";
 export * as vectorstores__vectara from "../vectorstores/vectara.js";
