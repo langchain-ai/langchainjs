@@ -52,11 +52,14 @@ async function runExample() {
 
     // Create a client with configurations for the everything server only
     client = new MultiServerMCPClient({
-      everything: {
-        transport: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-everything"],
+      mcpServers: {
+        everything: {
+          transport: "stdio" as const,
+          command: "npx",
+          args: ["-y", "@modelcontextprotocol/server-everything"],
+        },
       },
+      useStandardContentBlocks: true,
     });
 
     // Get the tools (flattened array is the default now)
