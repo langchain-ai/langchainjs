@@ -1,4 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
+import Anthropic from "@anthropic-ai/sdk";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
@@ -27,7 +28,7 @@ describe("Anthropic Server Tools Content Blocks", () => {
     expect(result.messages[0].role).toBe("assistant");
     expect(Array.isArray(result.messages[0].content)).toBe(true);
 
-    const content = result.messages[0].content as any[];
+    const content = result.messages[0].content as Anthropic.ContentBlockParam[];
     expect(content).toHaveLength(2);
     expect(content[0]).toEqual({
       type: "text",
@@ -73,7 +74,7 @@ describe("Anthropic Server Tools Content Blocks", () => {
     expect(result.messages[0].role).toBe("user");
     expect(Array.isArray(result.messages[0].content)).toBe(true);
 
-    const content = result.messages[0].content as any[];
+    const content = result.messages[0].content as Anthropic.ContentBlockParam[];
     expect(content).toHaveLength(1);
     expect(content[0]).toEqual({
       type: "web_search_tool_result",
@@ -150,14 +151,16 @@ describe("Anthropic Server Tools Content Blocks", () => {
 
     // Check AI message with server_tool_use
     expect(result.messages[1].role).toBe("assistant");
-    const aiContent = result.messages[1].content as any[];
+    const aiContent = result.messages[1]
+      .content as Anthropic.Messages.ContentBlockParam[];
     expect(aiContent).toHaveLength(2);
     expect(aiContent[0].type).toBe("text");
     expect(aiContent[1].type).toBe("server_tool_use");
 
     // Check human message with web_search_tool_result
     expect(result.messages[2].role).toBe("user");
-    const userContent = result.messages[2].content as any[];
+    const userContent = result.messages[2]
+      .content as Anthropic.ContentBlockParam[];
     expect(userContent).toHaveLength(1);
     expect(userContent[0].type).toBe("web_search_tool_result");
 
@@ -185,7 +188,7 @@ describe("Anthropic Server Tools Content Blocks", () => {
 
     const result = _convertMessagesToAnthropicPayload([message]);
 
-    const content = result.messages[0].content as any[];
+    const content = result.messages[0].content as Anthropic.ContentBlockParam[];
     expect(content[0]).toEqual({
       type: "server_tool_use",
       id: "toolu_01ABC123",
@@ -219,8 +222,8 @@ describe("Anthropic Server Tools Content Blocks", () => {
 
     const result = _convertMessagesToAnthropicPayload([message]);
 
-    const content = result.messages[0].content as any[];
-    expect(content[0].content[0]).toEqual({
+    const content = result.messages[0].content as Anthropic.ContentBlockParam[];
+    expect(content[0]).toEqual({
       type: "web_search_result",
       title: "Complete Example",
       url: "https://example.com/full",

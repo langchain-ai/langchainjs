@@ -110,7 +110,7 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
     typeof tool.type === "string" &&
     typeof tool.name === "string" &&
     (tool.name === "bash" ||
-      tool.name === "text_editor" ||
+      tool.name === "str_replace_editor" ||
       tool.name === "web_search")
   );
 }

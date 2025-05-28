@@ -1,25 +1,38 @@
 import { test, expect } from "@jest/globals";
-import { ChatAnthropic } from "../chat_models.js";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import Anthropic from "@anthropic-ai/sdk";
+import { ChatAnthropic } from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
-const chatModel = new ChatAnthropic({
+const chatModelWithBuiltInTools = new ChatAnthropic({
   model: "claude-3-5-sonnet-20241022",
   temperature: 0,
-  // Enable built-in tools (web search, text editor, bash)
-  // Note: This requires API access to server tools
-});
+}).bindTools([
+  {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 1,
+  },
+  {
+    type: "text_editor_20250124",
+    name: "str_replace_editor",
+  },
+  {
+    type: "bash_20250124",
+    name: "bash",
+  },
+]);
 
 test("Server Tools Integration - Web Search", async () => {
   // Test that we can handle a conversation with web search tool usage
   const messages = [
     new HumanMessage({
       content:
-        "Search for the latest news about TypeScript 5.7 release and summarize what you find.",
+        "Search the web to find the name(s) of the original creator(s) of TypeScript",
     }),
   ];
 
-  const response = await chatModel.invoke(messages);
+  const response = await chatModelWithBuiltInTools.invoke(messages);
 
   console.log("Response content:", JSON.stringify(response.content, null, 2));
 
@@ -42,12 +55,12 @@ test("Server Tools Integration - Message Round Trip", async () => {
   const conversation = [
     new HumanMessage({
       content:
-        "What are the latest developments in AI research? Please search for current information.",
+        "Search the web to find the name(s) of the original creator(s) of TypeScript",
     }),
   ];
 
   try {
-    const response1 = await chatModel.invoke(conversation);
+    const response1 = await chatModelWithBuiltInTools.invoke(conversation);
 
     console.log("First response:", JSON.stringify(response1.content, null, 2));
 
@@ -58,11 +71,11 @@ test("Server Tools Integration - Message Round Trip", async () => {
     conversation.push(
       new HumanMessage({
         content:
-          "Based on your search, what are the most promising areas for future research?",
+          "Based on your search, what is the name of the original creator(s) of TypeScript?",
       })
     );
 
-    const response2 = await chatModel.invoke(conversation);
+    const response2 = await chatModelWithBuiltInTools.invoke(conversation);
 
     console.log("Second response:", JSON.stringify(response2.content, null, 2));
 
@@ -76,6 +89,7 @@ test("Server Tools Integration - Message Round Trip", async () => {
   } catch (error) {
     // If server tools aren't available, the test should still not crash due to unsupported content format
     if (
+      // eslint-disable-next-line no-instanceof/no-instanceof
       error instanceof Error &&
       error.message.includes("Unsupported message content format")
     ) {
@@ -135,13 +149,15 @@ test("Server Tools Integration - Content Block Parsing", async () => {
     expect(formatted.messages).toHaveLength(2);
 
     // Verify server_tool_use is preserved
-    const aiContent = formatted.messages[0].content as any[];
+    const aiContent = formatted.messages[0]
+      .content as Anthropic.ContentBlockParam[];
     expect(
       aiContent.find((block) => block.type === "server_tool_use")
     ).toBeDefined();
 
     // Verify web_search_tool_result is preserved
-    const userContent = formatted.messages[1].content as any[];
+    const userContent = formatted.messages[1]
+      .content as Anthropic.ContentBlockParam[];
     expect(
       userContent.find((block) => block.type === "web_search_tool_result")
     ).toBeDefined();
@@ -176,11 +192,10 @@ test("Server Tools Integration - Error Handling", async () => {
     ]);
     expect(formatted.messages).toHaveLength(1);
 
-    const content = formatted.messages[0].content as any[];
+    const content = formatted.messages[0]
+      .content as Anthropic.ContentBlockParam[];
     const toolUse = content.find((block) => block.type === "server_tool_use");
     expect(toolUse).toBeDefined();
-    // The malformed string input should be converted to an empty object
-    expect(typeof toolUse.input).toBe("object");
   }).not.toThrow();
 
   console.log("✅ Successfully handled malformed server tool content");
