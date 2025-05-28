@@ -35,6 +35,7 @@ import {
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
 import {
+  AnthropicBuiltInToolUnion,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -100,12 +101,7 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
-function isBuiltinTool(
-  tool: unknown
-): tool is
-  | Anthropic.Messages.ToolBash20250124
-  | Anthropic.Messages.ToolTextEditor20250124
-  | Anthropic.Messages.WebSearchTool20250305 {
+function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
   return (
     typeof tool === "object" &&
     tool !== null &&
@@ -113,11 +109,9 @@ function isBuiltinTool(
     "name" in tool &&
     typeof tool.type === "string" &&
     typeof tool.name === "string" &&
-    ((tool.type === "bash_20250124" && tool.name === "bash_20250124") ||
-      (tool.type === "text_editor_20250124" &&
-        tool.name === "text_editor_20250124") ||
-      (tool.type === "web_search_20250305" &&
-        tool.name === "web_search_20250305"))
+    (tool.name === "bash" ||
+      tool.name === "text_editor" ||
+      tool.name === "web_search")
   );
 }
 

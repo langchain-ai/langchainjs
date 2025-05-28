@@ -117,3 +117,9 @@ export function isAnthropicImageBlockParam(
 
   return false;
 }
+
+// Type for built-in tools only (excludes custom Tool type)
+export type AnthropicBuiltInToolUnion = Exclude<
+  Anthropic.Messages.ToolUnion,
+  Anthropic.Messages.Tool
+>;
