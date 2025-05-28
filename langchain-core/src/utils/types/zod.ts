@@ -1,5 +1,6 @@
-import * as z3 from "zod/v3";
-import * as z4 from "zod/v4/core";
+import type * as z3 from "zod/v3";
+import type * as z4 from "zod/v4/core";
+import { parse } from "zod/v4/core";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
@@ -108,7 +109,7 @@ export function safeParseInteropZodSchema<T>(
 ): InteropZodSafeParseResult<T> {
   if (isZodSchemaV4(schema)) {
     try {
-      const result = z4.parse(schema, input);
+      const result = parse(schema, input);
       return {
         success: true,
         data: result,
@@ -232,6 +233,12 @@ export function isSimpleStringZodSchema(
   return false;
 }
 
+/**
+ * Extracts the issues from a Zod safe parse result.
+ *
+ * @param result - The result of a Zod safe parse operation.
+ * @returns An array of Zod issues if there are any, otherwise an empty array.
+ */
 export function getZodSafeParseIssues<T>(
   result: InteropZodSafeParseResult<T>
 ): InteropZodIssue[] {
