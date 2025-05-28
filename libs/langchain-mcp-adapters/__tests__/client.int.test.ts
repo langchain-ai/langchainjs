@@ -3,6 +3,15 @@ import { Server } from 'node:http';
 import { join } from 'node:path';
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
+import type {
+  Base64ContentBlock,
+  DataContentBlock,
+  MessageContentComplex,
+  MessageContentText,
+  StandardAudioBlock,
+  MessageContentImageUrl,
+} from '@langchain/core/messages';
+import type { ToolCall } from "@langchain/core/dist/messages/tool.js";
 import { MultiServerMCPClient } from '../src/client.js';
 import { createDummyHttpServer } from './fixtures/dummy-http-server.js';
 
@@ -59,7 +68,7 @@ class TestMCPServers {
   }
 }
 
-describe('MultiServerMCPClient Integration Tests', () => {
+describe("MultiServerMCPClient Integration Tests", () => {
   let testServers: TestMCPServers;
 
   beforeEach(() => {
@@ -70,52 +79,52 @@ describe('MultiServerMCPClient Integration Tests', () => {
     await testServers.cleanup();
   });
 
-  describe('Stdio Transport', () => {
-    it('should connect to and communicate with a stdio MCP server', async () => {
-      const { command, args } = testServers.createStdioServer('stdio-test');
-      
+  describe("Stdio Transport", () => {
+    it("should connect to and communicate with a stdio MCP server", async () => {
+      const { command, args } = testServers.createStdioServer("stdio-test");
+
       const client = new MultiServerMCPClient({
-        'stdio-server': {
+        "stdio-server": {
           command,
           args,
-          env: { TEST_VAR: 'test-value' }
-        }
+          env: { TEST_VAR: "test-value" },
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'test input' });
-        expect(result).toContain('test input');
-        expect(result).toContain('stdio-test');
+        const result = await testTool!.invoke({ input: "test input" });
+        expect(result).toContain("test input");
+        expect(result).toContain("stdio-test");
 
-        const envTool = tools.find(t => t.name.includes('check_env'));
+        const envTool = tools.find((t) => t.name.includes("check_env"));
         expect(envTool).toBeDefined();
 
-        const envResult = await envTool!.invoke({ varName: 'TEST_VAR' });
-        expect(envResult).toBe('test-value');
+        const envResult = await envTool!.invoke({ varName: "TEST_VAR" });
+        expect(envResult).toBe("test-value");
       } finally {
         await client.close();
       }
     });
 
-    it('should handle stdio server restart configuration', async () => {
-      const { command, args } = testServers.createStdioServer('stdio-restart');
-      
+    it("should handle stdio server restart configuration", async () => {
+      const { command, args } = testServers.createStdioServer("stdio-restart");
+
       const client = new MultiServerMCPClient({
-        'stdio-server': {
+        "stdio-server": {
           command,
           args,
           restart: {
             enabled: true,
             maxAttempts: 2,
-            delayMs: 100
-          }
-        }
+            delayMs: 100,
+          },
+        },
       });
 
       try {
@@ -127,43 +136,43 @@ describe('MultiServerMCPClient Integration Tests', () => {
     });
   });
 
-  describe('HTTP Transport', () => {
-    it('should connect to and communicate with an HTTP MCP server', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('http-test');
-      
+  describe("HTTP Transport", () => {
+    it("should connect to and communicate with an HTTP MCP server", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("http-test");
+
       const client = new MultiServerMCPClient({
-        'http-server': {
-          url: `${baseUrl}/mcp`
-        }
+        "http-server": {
+          url: `${baseUrl}/mcp`,
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'http test' });
-        expect(result).toContain('http test');
-        expect(result).toContain('http-test');
+        const result = await testTool!.invoke({ input: "http test" });
+        expect(result).toContain("http test");
+        expect(result).toContain("http-test");
       } finally {
         await client.close();
       }
     });
 
-    it('should handle authentication headers', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('http-auth', { 
-        requireAuth: true 
+    it("should handle authentication headers", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("http-auth", {
+        requireAuth: true,
       });
-      
+
       const client = new MultiServerMCPClient({
-        'http-server': {
+        "http-server": {
           url: `${baseUrl}/mcp`,
           headers: {
-            'Authorization': 'Bearer test-token'
-          }
-        }
+            Authorization: "Bearer test-token",
+          },
+        },
       });
 
       try {
@@ -174,30 +183,32 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should fail gracefully with invalid authentication', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('http-auth-fail', { 
-        requireAuth: true 
+    it("should fail gracefully with invalid authentication", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("http-auth-fail", {
+        requireAuth: true,
       });
-      
+
       const client = new MultiServerMCPClient({
-        'http-server': {
+        "http-server": {
           url: `${baseUrl}/mcp`,
           headers: {
-            'Authorization': 'Bearer invalid-token'
-          }
-        }
+            Authorization: "Bearer invalid-token",
+          },
+        },
       });
 
       try {
         try {
           await client.getTools();
-          expect.fail('Expected authentication error but got success');
+          expect.fail("Expected authentication error but got success");
         } catch (error) {
-          console.log('Actual error message:', (error as Error).message);
+          console.log("Actual error message:", (error as Error).message);
           expect(error).toEqual(
             expect.objectContaining({
-              name: 'MCPClientError',
-              message: expect.stringMatching(/Authentication failed.*HTTP.*server.*http-server/i)
+              name: "MCPClientError",
+              message: expect.stringMatching(
+                /Authentication failed.*HTTP.*server.*http-server/i
+              ),
             })
           );
         }
@@ -206,61 +217,73 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should set authorization headers for streamableHttp transport - success case', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('streamable-auth-success', { 
-        requireAuth: true,
-        testHeaders: true  // Enable header inspection
-      });
-      
+    it("should set authorization headers for streamableHttp transport - success case", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "streamable-auth-success",
+        {
+          requireAuth: true,
+          testHeaders: true, // Enable header inspection
+        }
+      );
+
       const client = new MultiServerMCPClient({
-        'streamable-server': {
+        "streamable-server": {
           url: `${baseUrl}/mcp`,
           headers: {
-            'Authorization': 'Bearer test-token',
-            'X-API-Key': 'my-api-key'
-          }
-        }
+            Authorization: "Bearer test-token",
+            "X-API-Key": "my-api-key",
+          },
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'streamable auth test' });
-        expect(result).toContain('streamable auth test');
-        expect(result).toContain('streamable-auth-success');
+        const result = await testTool!.invoke({
+          input: "streamable auth test",
+        });
+        expect(result).toContain("streamable auth test");
+        expect(result).toContain("streamable-auth-success");
 
         // Actually test that X-API-Key was received
-        const headerTool = tools.find(t => t.name.includes('check_headers'));
-        const headerResult = await headerTool!.invoke({ headerName: 'X-API-Key' });
-        expect(headerResult).toBe('my-api-key');
+        const headerTool = tools.find((t) => t.name.includes("check_headers"));
+        const headerResult = await headerTool!.invoke({
+          headerName: "X-API-Key",
+        });
+        expect(headerResult).toBe("my-api-key");
       } finally {
         await client.close();
       }
     });
 
-    it('should set authorization headers for streamableHttp transport - failure case', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('streamable-auth-fail', { 
-        requireAuth: true 
-      });
-      
+    it("should set authorization headers for streamableHttp transport - failure case", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "streamable-auth-fail",
+        {
+          requireAuth: true,
+        }
+      );
+
       const client = new MultiServerMCPClient({
-        'streamable-server': {
+        "streamable-server": {
           url: `${baseUrl}/mcp`,
           headers: {
-            'Authorization': 'Bearer wrong-token'
-          }
-        }
+            Authorization: "Bearer wrong-token",
+          },
+        },
       });
 
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Authentication failed.*HTTP.*server.*streamable-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Authentication failed.*HTTP.*server.*streamable-server/i
+            ),
           })
         );
       } finally {
@@ -268,18 +291,21 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should automatically fallback to SSE when streamable HTTP fails', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('http-sse-fallback', { 
-        disableStreamableHttp: true,
-        supportSSEFallback: true 
-      });
-      
+    it("should automatically fallback to SSE when streamable HTTP fails", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "http-sse-fallback",
+        {
+          disableStreamableHttp: true,
+          supportSSEFallback: true,
+        }
+      );
+
       // Configure client to connect to a non-existent streamable HTTP endpoint
       // but with SSE fallback available
       const client = new MultiServerMCPClient({
-        'http-server': {
-          url: `${baseUrl}/mcp`
-        }
+        "http-server": {
+          url: `${baseUrl}/mcp`,
+        },
       });
 
       try {
@@ -292,12 +318,12 @@ describe('MultiServerMCPClient Integration Tests', () => {
     });
   });
 
-  describe('SSE Transport', () => {
-    it('should connect to SSE MCP server when explicitly configured', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('sse-explicit', { 
-        supportSSEFallback: true 
+  describe("SSE Transport", () => {
+    it("should connect to SSE MCP server when explicitly configured", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("sse-explicit", {
+        supportSSEFallback: true,
       });
-      
+
       const client = new MultiServerMCPClient({
         "sse-server": {
           transport: "sse",
@@ -309,74 +335,81 @@ describe('MultiServerMCPClient Integration Tests', () => {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'sse test' });
-        expect(result).toContain('sse test');
+        const result = await testTool!.invoke({ input: "sse test" });
+        expect(result).toContain("sse test");
       } finally {
         await client.close();
       }
     });
 
-    it('should set authorization headers for SSE transport - success case', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('sse-auth-success', { 
-        requireAuth: true,
-        testHeaders: true,
-        supportSSEFallback: true 
-      });
-      
+    it("should set authorization headers for SSE transport - success case", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "sse-auth-success",
+        {
+          requireAuth: true,
+          testHeaders: true,
+          supportSSEFallback: true,
+        }
+      );
+
       const client = new MultiServerMCPClient({
-        'sse-server': {
-          transport: 'sse',
+        "sse-server": {
+          transport: "sse",
           url: `${baseUrl}/sse`,
           headers: {
-            'Authorization': 'Bearer test-token',
-            'X-Custom-Header': 'sse-value'
-          }
-        }
+            Authorization: "Bearer test-token",
+            "X-Custom-Header": "sse-value",
+          },
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
-        
-        const headerTool = tools.find(t => t.name.includes('check_headers'));
-        const headerResult = await headerTool!.invoke({ headerName: 'X-Custom-Header' });
-        expect(headerResult).toBe('sse-value');
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const headerTool = tools.find((t) => t.name.includes("check_headers"));
+        const headerResult = await headerTool!.invoke({
+          headerName: "X-Custom-Header",
+        });
+        expect(headerResult).toBe("sse-value");
+
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'sse auth test' });
-        expect(result).toContain('sse auth test');
-        expect(result).toContain('sse-auth-success');
+        const result = await testTool!.invoke({ input: "sse auth test" });
+        expect(result).toContain("sse auth test");
+        expect(result).toContain("sse-auth-success");
       } finally {
         await client.close();
       }
     });
 
-    it('should set authorization headers for SSE transport - failure case', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('sse-auth-fail', { 
+    it("should set authorization headers for SSE transport - failure case", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("sse-auth-fail", {
         requireAuth: true,
-        supportSSEFallback: true 
+        supportSSEFallback: true,
       });
-      
+
       const client = new MultiServerMCPClient({
-        'sse-server': {
-          transport: 'sse',
+        "sse-server": {
+          transport: "sse",
           url: `${baseUrl}/sse`,
           headers: {
-            'Authorization': 'Bearer invalid-token'
-          }
-        }
+            Authorization: "Bearer invalid-token",
+          },
+        },
       });
 
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Authentication failed.*SSE.*server.*sse-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Authentication failed.*SSE.*server.*sse-server/i
+            ),
           })
         );
       } finally {
@@ -384,52 +417,56 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should handle SSE transport without authorization when not required', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('sse-no-auth', { 
-        supportSSEFallback: true 
+    it("should handle SSE transport without authorization when not required", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("sse-no-auth", {
+        supportSSEFallback: true,
       });
-      
+
       const client = new MultiServerMCPClient({
-        'sse-server': {
-          transport: 'sse',
-          url: `${baseUrl}/sse`
+        "sse-server": {
+          transport: "sse",
+          url: `${baseUrl}/sse`,
           // No headers provided - should still work
-        }
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'sse no auth test' });
-        expect(result).toContain('sse no auth test');
-        expect(result).toContain('sse-no-auth');
+        const result = await testTool!.invoke({ input: "sse no auth test" });
+        expect(result).toContain("sse no auth test");
+        expect(result).toContain("sse-no-auth");
       } finally {
         await client.close();
       }
     });
   });
 
-  describe('Multiple Servers', () => {
-    it('should connect to multiple servers of different transport types', async () => {
-      const { command, args } = testServers.createStdioServer('multi-stdio');
-      const { baseUrl: streamableHttpBaseUrl } = await testServers.createHTTPServer('multi-http');
-      const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer('multi-sse', { 
-        supportSSEFallback: true 
-      });
-      
+  describe("Multiple Servers", () => {
+    it("should connect to multiple servers of different transport types", async () => {
+      const { command, args } = testServers.createStdioServer("multi-stdio");
+      const { baseUrl: streamableHttpBaseUrl } =
+        await testServers.createHTTPServer("multi-http");
+      const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
+        "multi-sse",
+        {
+          supportSSEFallback: true,
+        }
+      );
+
       const client = new MultiServerMCPClient({
-        'stdio-server': {
+        "stdio-server": {
           command,
-          args
+          args,
         },
-        'http-server': {
-          url: `${streamableHttpBaseUrl}/mcp`
+        "http-server": {
+          url: `${streamableHttpBaseUrl}/mcp`,
         },
-        'sse-server': {
+        "sse-server": {
           url: `${sseBaseUrl}/sse`,
           transport: "sse",
         },
@@ -438,67 +475,76 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         const tools = await client.getTools();
         // Check tools from each server
-        const stdioTools = tools.filter(t => t.name.includes('stdio-server'));
-        const httpTools = tools.filter(t => t.name.includes('http-server'));
-        const sseTools = tools.filter(t => t.name.includes('sse-server'));
+        const stdioTools = tools.filter((t) => t.name.includes("stdio-server"));
+        const httpTools = tools.filter((t) => t.name.includes("http-server"));
+        const sseTools = tools.filter((t) => t.name.includes("sse-server"));
 
         expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(1);
-        expect(sseTools.length).toBe(1);
+        expect(httpTools.length).toBe(4);
+        expect(sseTools.length).toBe(4);
 
-        expect(tools.length).toBe(4);
+        expect(tools.length).toBe(10);
 
         // Test tool from each server
-        const stdioTestTool = tools.find(t => t.name.includes('stdio-server') && t.name.includes('test_tool'));
-        const result = await stdioTestTool!.invoke({ input: 'multi-server test' });
-        expect(result).toContain('multi-stdio');
+        const stdioTestTool = tools.find(
+          (t) => t.name.includes("stdio-server") && t.name.includes("test_tool")
+        );
+        const result = await stdioTestTool!.invoke({
+          input: "multi-server test",
+        });
+        expect(result).toContain("multi-stdio");
       } finally {
         await client.close();
       }
     });
 
-    it('should filter tools by server name', async () => {
-      const { command, args } = testServers.createStdioServer('filter-stdio');
-      const { baseUrl: streamableHttpBaseUrl } = await testServers.createHTTPServer('filter-http');
+    it("should filter tools by server name", async () => {
+      const { command, args } = testServers.createStdioServer("filter-stdio");
+      const { baseUrl: streamableHttpBaseUrl } =
+        await testServers.createHTTPServer("filter-http");
 
       const client = new MultiServerMCPClient({
-        'stdio-server': {
+        "stdio-server": {
           command,
-          args
+          args,
         },
-        'http-server': {
-          url: `${streamableHttpBaseUrl}/mcp`
-        }
+        "http-server": {
+          url: `${streamableHttpBaseUrl}/mcp`,
+        },
       });
 
       try {
         const allTools = await client.getTools();
-        const stdioTools = await client.getTools('stdio-server');
-        const httpTools = await client.getTools('http-server');
+        const stdioTools = await client.getTools("stdio-server");
+        const httpTools = await client.getTools("http-server");
 
         expect(allTools.length).toBe(stdioTools.length + httpTools.length);
-        expect(stdioTools.every(t => t.name.includes('stdio-server'))).toBe(true);
-        expect(httpTools.every(t => t.name.includes('http-server'))).toBe(true);
+        expect(stdioTools.every((t) => t.name.includes("stdio-server"))).toBe(
+          true
+        );
+        expect(httpTools.every((t) => t.name.includes("http-server"))).toBe(
+          true
+        );
       } finally {
         await client.close();
       }
     });
 
-    it('should provide access to individual server clients', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('client-access');
+    it("should provide access to individual server clients", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("client-access");
 
       const client = new MultiServerMCPClient({
-        'test-server': {
-          url: `${baseUrl}/mcp`
-        }
+        "test-server": {
+          url: `${baseUrl}/mcp`,
+        },
       });
 
       try {
         await client.initializeConnections();
-        const serverClient = await client.getClient('test-server');
+        const serverClient = await client.getClient("test-server");
         expect(serverClient).toBeDefined();
 
-        const nonExistentClient = await client.getClient('nonexistent');
+        const nonExistentClient = await client.getClient("nonexistent");
         expect(nonExistentClient).toBeUndefined();
       } finally {
         await client.close();
@@ -506,8 +552,8 @@ describe('MultiServerMCPClient Integration Tests', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle connection failures gracefully', async () => {
+  describe("Error Handling", () => {
+    it("should handle connection failures gracefully", async () => {
       const client = new MultiServerMCPClient({
         "failing-server": {
           url: "http://totally-not-a-server.fakeurl.example.com:9999/mcp", // Non-existent server
@@ -517,8 +563,10 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to connect to.*server.*failing-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to connect to.*server.*failing-server/i
+            ),
           })
         );
       } finally {
@@ -526,19 +574,21 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should handle invalid stdio command', async () => {
+    it("should handle invalid stdio command", async () => {
       const client = new MultiServerMCPClient({
-        'failing-stdio': {
-          command: 'nonexistent-command',
-          args: []
-        }
+        "failing-stdio": {
+          command: "nonexistent-command",
+          args: [],
+        },
       });
 
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to connect to stdio server.*failing-stdio/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to connect to stdio server.*failing-stdio/i
+            ),
           })
         );
       } finally {
@@ -547,36 +597,40 @@ describe('MultiServerMCPClient Integration Tests', () => {
     });
   });
 
-  describe('Configuration', () => {
-    it('should respect tool name prefixing configuration', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('prefix-test');
+  describe("Configuration", () => {
+    it("should respect tool name prefixing configuration", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("prefix-test");
 
       const clientWithPrefix = new MultiServerMCPClient({
         mcpServers: {
-          'test-server': {
-            url: `${baseUrl}/mcp`
-          }
+          "test-server": {
+            url: `${baseUrl}/mcp`,
+          },
         },
         prefixToolNameWithServerName: true,
-        additionalToolNamePrefix: 'custom'
+        additionalToolNamePrefix: "custom",
       });
 
       const clientWithoutPrefix = new MultiServerMCPClient({
         mcpServers: {
-          'test-server': {
-            url: `${baseUrl}/mcp`
-          }
+          "test-server": {
+            url: `${baseUrl}/mcp`,
+          },
         },
         prefixToolNameWithServerName: false,
-        additionalToolNamePrefix: ''
+        additionalToolNamePrefix: "",
       });
 
       try {
         const toolsWithPrefix = await clientWithPrefix.getTools();
         const toolsWithoutPrefix = await clientWithoutPrefix.getTools();
 
-        const prefixedTool = toolsWithPrefix.find(t => t.name.includes('custom__test-server__'));
-        const unprefixedTool = toolsWithoutPrefix.find(t => t.name === 'test_tool');
+        const prefixedTool = toolsWithPrefix.find((t) =>
+          t.name.includes("custom__test-server__")
+        );
+        const unprefixedTool = toolsWithoutPrefix.find(
+          (t) => t.name === "test_tool"
+        );
 
         expect(prefixedTool).toBeDefined();
         expect(unprefixedTool).toBeDefined();
@@ -586,21 +640,21 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should allow config inspection', async () => {
+    it("should allow config inspection", async () => {
       const config = {
         mcpServers: {
-          'test-server': {
-            url: 'http://example.com/mcp'
-          }
+          "test-server": {
+            url: "http://example.com/mcp",
+          },
         },
         throwOnLoadError: false,
-        prefixToolNameWithServerName: true
+        prefixToolNameWithServerName: true,
       };
 
       const client = new MultiServerMCPClient(config);
 
       const inspectedConfig = client.config;
-      expect(inspectedConfig.mcpServers['test-server']).toBeDefined();
+      expect(inspectedConfig.mcpServers["test-server"]).toBeDefined();
       expect(inspectedConfig.throwOnLoadError).toBe(false);
       expect(inspectedConfig.prefixToolNameWithServerName).toBe(true);
 
@@ -612,8 +666,8 @@ describe('MultiServerMCPClient Integration Tests', () => {
     });
   });
 
-  describe('OAuth Authentication', () => {
-    it('should use OAuth provider for HTTP transport authentication', async () => {
+  describe("OAuth Authentication", () => {
+    it("should use OAuth provider for HTTP transport authentication", async () => {
       const { baseUrl } = await testServers.createHTTPServer("http-oauth", {
         requireAuth: true,
       });
@@ -677,29 +731,29 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should use OAuth provider for SSE transport authentication', async () => {
-      const { baseUrl } = await testServers.createHTTPServer('sse-oauth', { 
+    it("should use OAuth provider for SSE transport authentication", async () => {
+      const { baseUrl } = await testServers.createHTTPServer("sse-oauth", {
         requireAuth: true,
-        supportSSEFallback: true 
+        supportSSEFallback: true,
       });
-      
+
       // Create a mock OAuth provider
       const mockAuthProvider: OAuthClientProvider = {
-        redirectUrl: 'unused',
+        redirectUrl: "unused",
         clientMetadata: {
           redirect_uris: [],
-          scope: 'read write',
+          scope: "read write",
         },
         async clientInformation() {
           return {
-            client_id: 'test-client-id',
+            client_id: "test-client-id",
             redirect_uri: this.redirectUrl,
           };
         },
         async tokens() {
           return {
-            access_token: 'test-token',
-            token_type: 'Bearer',
+            access_token: "test-token",
+            token_type: "Bearer",
             expires_in: 3600,
           };
         },
@@ -710,40 +764,45 @@ describe('MultiServerMCPClient Integration Tests', () => {
           // Mock implementation
         },
         async codeVerifier() {
-          return 'mock-code-verifier';
+          return "mock-code-verifier";
         },
         async redirectToAuthorization() {
-          throw new Error('Mock OAuth provider - authorization redirect not implemented');
-        }
+          throw new Error(
+            "Mock OAuth provider - authorization redirect not implemented"
+          );
+        },
       };
-      
+
       const client = new MultiServerMCPClient({
-        'sse-oauth-server': {
-          transport: 'sse',
+        "sse-oauth-server": {
+          transport: "sse",
           url: `${baseUrl}/sse`,
-          authProvider: mockAuthProvider
-        }
+          authProvider: mockAuthProvider,
+        },
       });
 
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
 
-        const testTool = tools.find(t => t.name.includes('test_tool'));
+        const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: 'sse oauth test' });
-        expect(result).toContain('sse oauth test');
-        expect(result).toContain('sse-oauth');
+        const result = await testTool!.invoke({ input: "sse oauth test" });
+        expect(result).toContain("sse oauth test");
+        expect(result).toContain("sse-oauth");
       } finally {
         await client.close();
       }
     });
 
-    it('should fail gracefully when OAuth provider returns invalid tokens for HTTP transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("http-oauth-invalid", {
-        requireAuth: true,
-      });
+    it("should fail gracefully when OAuth provider returns invalid tokens for HTTP transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "http-oauth-invalid",
+        {
+          requireAuth: true,
+        }
+      );
 
       // Create a mock OAuth provider that returns invalid tokens
       const mockAuthProvider: OAuthClientProvider = {
@@ -792,8 +851,10 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to connect to.*server.*oauth-invalid-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to connect to.*server.*oauth-invalid-server/i
+            ),
           })
         );
       } finally {
@@ -801,10 +862,13 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should fail gracefully when OAuth provider returns no tokens for HTTP transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("http-oauth-no-tokens", {
-        requireAuth: true,
-      });
+    it("should fail gracefully when OAuth provider returns no tokens for HTTP transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "http-oauth-no-tokens",
+        {
+          requireAuth: true,
+        }
+      );
 
       // Create a mock OAuth provider that returns no tokens
       const mockAuthProvider: OAuthClientProvider = {
@@ -849,8 +913,10 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to connect to.*server.*oauth-no-tokens-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to connect to.*server.*oauth-no-tokens-server/i
+            ),
           })
         );
       } finally {
@@ -858,11 +924,14 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should fail gracefully when OAuth provider throws errors for SSE transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("sse-oauth-error", {
-        requireAuth: true,
-        supportSSEFallback: true,
-      });
+    it("should fail gracefully when OAuth provider throws errors for SSE transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "sse-oauth-error",
+        {
+          requireAuth: true,
+          supportSSEFallback: true,
+        }
+      );
 
       // Create a mock OAuth provider that throws errors
       const mockAuthProvider: OAuthClientProvider = {
@@ -908,8 +977,10 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to (connect to|create).*server.*sse-oauth-error-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to (connect to|create).*server.*sse-oauth-error-server/i
+            ),
           })
         );
       } finally {
@@ -917,11 +988,14 @@ describe('MultiServerMCPClient Integration Tests', () => {
       }
     });
 
-    it('should use OAuth provider with additional custom headers for HTTP transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("http-oauth-headers", {
-        requireAuth: true,
-        testHeaders: true,
-      });
+    it("should use OAuth provider with additional custom headers for HTTP transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "http-oauth-headers",
+        {
+          requireAuth: true,
+          testHeaders: true,
+        }
+      );
 
       // Create a mock OAuth provider
       const mockAuthProvider: OAuthClientProvider = {
@@ -986,26 +1060,35 @@ describe('MultiServerMCPClient Integration Tests', () => {
         const headerTool = tools.find((t) => t.name.includes("check_headers"));
         expect(headerTool).toBeDefined();
 
-        const apiKeyResult = await headerTool!.invoke({ headerName: "X-Custom-API-Key" });
+        const apiKeyResult = await headerTool!.invoke({
+          headerName: "X-Custom-API-Key",
+        });
         expect(apiKeyResult).toBe("custom-api-key-123");
 
-        const requestIdResult = await headerTool!.invoke({ headerName: "X-Request-ID" });
+        const requestIdResult = await headerTool!.invoke({
+          headerName: "X-Request-ID",
+        });
         expect(requestIdResult).toBe("req-oauth-headers-456");
 
         // Verify OAuth authorization header is also present
-        const authHeaderResult = await headerTool!.invoke({ headerName: "Authorization" });
+        const authHeaderResult = await headerTool!.invoke({
+          headerName: "Authorization",
+        });
         expect(authHeaderResult).toBe("Bearer test-token");
       } finally {
         await client.close();
       }
     });
 
-    it('should use OAuth provider with additional custom headers for SSE transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("sse-oauth-headers", {
-        requireAuth: true,
-        testHeaders: true,
-        supportSSEFallback: true,
-      });
+    it("should use OAuth provider with additional custom headers for SSE transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "sse-oauth-headers",
+        {
+          requireAuth: true,
+          testHeaders: true,
+          supportSSEFallback: true,
+        }
+      );
 
       // Create a mock OAuth provider
       const mockAuthProvider: OAuthClientProvider = {
@@ -1063,7 +1146,9 @@ describe('MultiServerMCPClient Integration Tests', () => {
         const testTool = tools.find((t) => t.name.includes("test_tool"));
         expect(testTool).toBeDefined();
 
-        const result = await testTool!.invoke({ input: "sse oauth with headers" });
+        const result = await testTool!.invoke({
+          input: "sse oauth with headers",
+        });
         expect(result).toContain("sse oauth with headers");
         expect(result).toContain("sse-oauth-headers");
 
@@ -1071,25 +1156,34 @@ describe('MultiServerMCPClient Integration Tests', () => {
         const headerTool = tools.find((t) => t.name.includes("check_headers"));
         expect(headerTool).toBeDefined();
 
-        const customHeaderResult = await headerTool!.invoke({ headerName: "X-SSE-Custom-Header" });
+        const customHeaderResult = await headerTool!.invoke({
+          headerName: "X-SSE-Custom-Header",
+        });
         expect(customHeaderResult).toBe("sse-custom-value-789");
 
-        const correlationIdResult = await headerTool!.invoke({ headerName: "X-Correlation-ID" });
+        const correlationIdResult = await headerTool!.invoke({
+          headerName: "X-Correlation-ID",
+        });
         expect(correlationIdResult).toBe("corr-sse-oauth-101112");
 
         // Verify OAuth authorization header is also present
-        const authHeaderResult = await headerTool!.invoke({ headerName: "Authorization" });
+        const authHeaderResult = await headerTool!.invoke({
+          headerName: "Authorization",
+        });
         expect(authHeaderResult).toBe("Bearer test-token");
       } finally {
         await client.close();
       }
     });
 
-    it('should fail gracefully when OAuth provider returns invalid tokens for SSE transport', async () => {
-      const { baseUrl } = await testServers.createHTTPServer("sse-oauth-invalid", {
-        requireAuth: true,
-        supportSSEFallback: true,
-      });
+    it("should fail gracefully when OAuth provider returns invalid tokens for SSE transport", async () => {
+      const { baseUrl } = await testServers.createHTTPServer(
+        "sse-oauth-invalid",
+        {
+          requireAuth: true,
+          supportSSEFallback: true,
+        }
+      );
 
       // Create a mock OAuth provider that returns invalid tokens
       const mockAuthProvider: OAuthClientProvider = {
@@ -1139,13 +1233,319 @@ describe('MultiServerMCPClient Integration Tests', () => {
       try {
         await expect(client.getTools()).rejects.toThrow(
           expect.objectContaining({
-            name: 'MCPClientError',
-            message: expect.stringMatching(/Failed to (connect to|create).*server.*sse-oauth-invalid-server/i)
+            name: "MCPClientError",
+            message: expect.stringMatching(
+              /Failed to (connect to|create).*server.*sse-oauth-invalid-server/i
+            ),
           })
         );
       } finally {
         await client.close();
       }
     });
+  });
+
+  describe("Timeout Configuration", () => {
+    it.each(["http", "sse"] as const)(
+      "%s should respect RunnableConfig timeout for tool calls",
+      async (transport: "http" | "sse") => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Test with a reasonable timeout (should succeed)
+          const result = await testTool!.invoke(
+            { sleepMsec: 100 },
+            { timeout: 1000 } // 1 second
+          );
+          expect(result).toContain("done");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should throw timeout error when tool call exceeds configured timeout",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "timeout-error-test",
+          {
+            disableStreamableHttp: transport === "sse",
+            supportSSEFallback: transport === "sse",
+          }
+        );
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          await expect(
+            testTool!.invoke(
+              { sleepMsec: 1000 },
+              { timeout: 5 } // 5 milliseconds
+            )
+          ).rejects.toThrowError(
+            /TimeoutError: The operation was aborted due to timeout/
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+  });
+
+  describe("Multimodal Content Handling (including Audio)", () => {
+    it.each(["http", "sse"])("should correctly handle tools returning audio content (%s)", async (transport) => {
+      const { baseUrl } = await testServers.createHTTPServer("http-audio-test", {
+        disableStreamableHttp: transport === "sse",
+        supportSSEFallback: transport === "sse",
+      });
+      
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "audio-server": {
+            transport: transport as "http" | "sse",
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+          },
+        },
+        // Ensure we test with standard content blocks as per README recommendation for new apps
+        useStandardContentBlocks: true,
+      });
+
+      try {
+        const tools = await client.getTools();
+        const audioTool = tools.find((t) => t.name.includes("audio_tool"));
+        expect(audioTool).toBeDefined();
+        const fakeToolCall: ToolCall = {
+          name: audioTool!.name,
+          args: {
+            input: "test audio input",
+          },
+          id: "fake-tool-call-id",
+          type: "tool_call",
+        }
+
+        const { content, artifact } = await audioTool!.invoke(fakeToolCall);
+        
+        expect(artifact).toEqual([]);
+
+        // Expect content to be an array of MessageContentComplex or DataContentBlock
+        expect(Array.isArray(content)).toBe(true);
+        const contentArray = content as (
+          | MessageContentComplex
+          | DataContentBlock
+        )[];
+
+        const textBlock = contentArray.find(
+          (c) => c.type === "text"
+        ) as MessageContentText;
+        expect(textBlock).toBeDefined();
+        expect(textBlock.text).toContain("Audio input was: test audio input");
+        expect(textBlock.text).toContain("http-audio-test");
+
+        const audioBlock = contentArray.find(
+          (c) => c.type === "audio"
+        ) as StandardAudioBlock & Base64ContentBlock;
+        expect(audioBlock).toBeDefined();
+        expect(audioBlock.source_type).toBe("base64");
+        expect(audioBlock.mime_type).toBe("audio/wav");
+        expect(typeof audioBlock.data).toBe("string");
+        expect(audioBlock.data.length).toBeGreaterThan(10);
+      } finally {
+        await client.close();
+      }
+    });
+  });
+
+  describe("useStandardContentBlocks Configuration", () => {
+    const serverName = "content-block-test-server";
+    const toolInput = { input: "test standard blocks" };
+    const fakeToolCallBase = {
+      id: "fake-tool-id-standard-blocks",
+      type: "tool_call" as const,
+    };
+
+    it.each(["http", "sse"] as const)(
+      "should use Standard Content Blocks when useStandardContentBlocks is true (%s)",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "http-std-true",
+          {
+            disableStreamableHttp: transport === "sse",
+            supportSSEFallback: transport === "sse",
+          }
+        );
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              transport: transport as "http" | "sse",
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          useStandardContentBlocks: true,
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = tools.find((t) => t.name.includes("image_tool"));
+          const audioTool = tools.find((t) => t.name.includes("audio_tool"));
+          expect(imageTool).toBeDefined();
+          expect(audioTool).toBeDefined();
+
+          // Test Image Tool
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool!.invoke({
+              ...fakeToolCallBase,
+              name: imageTool!.name,
+              args: toolInput,
+            });
+          expect(imgArtifact).toEqual([]);
+          const imgContentArray = imgContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+
+          const imgTextBlock = imgContentArray.find(
+            (c) => c.type === "text"
+          ) as MessageContentText;
+          expect(imgTextBlock.text).toContain(
+            "Image input was: test standard blocks"
+          );
+          const imgBlock = imgContentArray.find(
+            (c) => c.type === "image"
+          ) as Base64ContentBlock;
+          expect(imgBlock.source_type).toBe("base64");
+          expect(imgBlock.mime_type).toBe("image/png");
+          expect(typeof imgBlock.data).toBe("string");
+
+          // Test Audio Tool (should always use StandardAudioBlock)
+          const { content: audioContent, artifact: audioArtifact } =
+            await audioTool!.invoke({
+              ...fakeToolCallBase,
+              name: audioTool!.name,
+              args: toolInput,
+            });
+          expect(audioArtifact).toEqual([]);
+          const audioContentArray = audioContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+
+          const audioTextBlock = audioContentArray.find(
+            (c) => c.type === "text"
+          ) as MessageContentText;
+          expect(audioTextBlock.text).toContain(
+            "Audio input was: test standard blocks"
+          );
+          const audioBlock = audioContentArray.find(
+            (c) => c.type === "audio"
+          ) as StandardAudioBlock & Base64ContentBlock;
+          expect(audioBlock.source_type).toBe("base64");
+          expect(audioBlock.mime_type).toBe("audio/wav");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "should use legacy ImageUrl when useStandardContentBlocks is false (%s)",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "http-std-false",
+          {
+            disableStreamableHttp: transport === "sse",
+            supportSSEFallback: transport === "sse",
+          }
+        );
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            [serverName]: {
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          /* useStandardContentBlocks: false */ // defaults to false
+        });
+
+        try {
+          const tools = await client.getTools();
+          const imageTool = tools.find((t) => t.name.includes("image_tool"));
+          expect(imageTool).toBeDefined();
+
+          const { content: imgContent, artifact: imgArtifact } =
+            await imageTool!.invoke({
+              ...fakeToolCallBase,
+              name: imageTool!.name,
+              args: toolInput,
+            });
+          expect(imgArtifact).toEqual([]);
+          const imgContentArray = imgContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+
+          const imgTextBlock = imgContentArray.find(
+            (c) => c.type === "text"
+          ) as MessageContentText;
+          expect(imgTextBlock.text).toContain(
+            "Image input was: test standard blocks"
+          );
+          // Check for legacy image_url format
+          const imgUrlBlock = imgContentArray.find(
+            (c) => c.type === "image_url"
+          ) as MessageContentImageUrl;
+          expect(imgUrlBlock).toBeDefined();
+          const imageUrl =
+            typeof imgUrlBlock.image_url === "string"
+              ? imgUrlBlock.image_url
+              : imgUrlBlock.image_url.url;
+          expect(imageUrl).toMatch(/^data:image\/png;base64,/);
+
+          // Audio should still use StandardAudioBlock
+          const audioTool = tools.find((t) => t.name.includes("audio_tool"));
+          expect(audioTool).toBeDefined();
+          const { content: audioContent, artifact: audioArtifact } =
+            await audioTool!.invoke({
+              ...fakeToolCallBase,
+              name: audioTool!.name,
+              args: toolInput,
+            });
+          expect(audioArtifact).toEqual([]);
+          const audioContentArray = audioContent as (
+            | MessageContentComplex
+            | DataContentBlock
+          )[];
+          const audioBlock = audioContentArray.find(
+            (c) => c.type === "audio"
+          ) as StandardAudioBlock & Base64ContentBlock;
+          expect(audioBlock.source_type).toBe("base64");
+          expect(audioBlock.mime_type).toBe("audio/wav");
+        } finally {
+          await client.close();
+        }
+      }
+    );
   });
 }); 

@@ -223,16 +223,84 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | `throwOnLoadError`             | boolean | `true`  | Whether to throw an error if a tool fails to load                                    |
 | `prefixToolNameWithServerName` | boolean | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
 | `additionalToolNamePrefix`     | string  | `mcp`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+| `useStandardContentBlocks`     | boolean | `false` | If true, uses LangChain's standard multimodal content blocks. Defaults to false for backward compatibility; recommended to set true for new applications |
 
-## Response Handling
+## Tool Timeout Configuration
 
-MCP tools return results in the `content_and_artifact` format which can include:
+MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
 
-- **Text content**: Plain text responses
-- **Image content**: Base64-encoded images with MIME type
-- **Embedded resources**: Files, structured data, or other resources
+```typescript
+const client = new MultiServerMCPClient({
+  'data-processor': {
+    command: 'python',
+    args: ['data_server.py']
+  }
+});
 
-Example for handling different content types:
+const tools = await client.getTools();
+const slowTool = tools.find(t => t.name.includes('process_large_dataset'));
+
+// You can use withConfig to set tool-specific timeouts before handing
+// the tool off to a LangGraph ToolNode or some other part of your
+// application
+const slowToolWithTimeout = slowTool.withConfig({ timeout: 300000 }); // 5 min timeout
+
+// This invocation will respect the 5 minute timeout
+const result = await slowToolWithTimeout.invoke(
+  { dataset: 'huge_file.csv' },
+);
+
+// or you can invoke directly without withConfig
+const directResult = await slowTool.invoke(
+  { dataset: 'huge_file.csv' },
+  { timeout: 300000 }
+);
+
+// Quick timeout for fast operations
+const quickResult = await fastTool.invoke(
+  { query: 'simple_lookup' },
+  { timeout: 5000 } // 5 seconds
+);
+
+// Default timeout (60 seconds from MCP SDK) when no config provided
+const normalResult = await tool.invoke({ input: 'normal_processing' });
+```
+
+Timeouts can be configured using the following `RunnableConfig` fields:
+
+| Parameter | Type | Default | Description |
+| --------- | ---- | ------- | ----------- |
+| `timeout` | number | 60000 | Timeout in milliseconds for the tool call |
+| `signal`  | AbortSignal | undefined | An AbortSignal that, when asserted, will cancel the tool call |
+
+## Reading Tool Outputs
+
+The tools returned by `client.getTools` and `loadMcpTools` are LangChain tools that return ordinary LangChain `ToolMessage` objects. See the table below for the different types of tool output supported by MCP, and how we map them into the LangChain `ToolMessage` object:
+
+| MCP Tool Output Type | LangChain Mapping | Notes |
+| -------------------- | ----------------- | ----- |
+| **Text content** | Added to `ToolMessage.content` | See [Content Block Formats](#content-block-formats) for format details |
+| **Image content** | Added to `ToolMessage.content` | See [Content Block Formats](#content-block-formats) for format details |
+| **Audio content** | Added to `ToolMessage.content` | See [Content Block Formats](#content-block-formats) for format details |
+| **Embedded resources** | Added to `ToolMessage.artifact` array | Embedded resources are not transformed in any way before adding them to the arfifact array |
+
+### Content Block Formats
+
+The `useStandardContentBlocks` option controls how content blocks returned by tools are formatted in the `ToolMessage.content` field. This option defaults to `false` for backward compatibility with existing applications, but **new applications should set this to `true`** to use LangChain's standard multimodal content blocks.
+
+**When `useStandardContentBlocks` is `false` (default for backward compatibility):**
+- **Images**: Returned as [`MessageContentImageUrl`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentImageUrl.html) objects with base64 data URLs (`data:image/png;base64,<data>`)
+- **Audio**: Returned as [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
+- **Text**: Returned as [`MessageContentText`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentText.html) objects.
+
+**When `useStandardContentBlocks` is `true` (recommended for new applications):**
+- **Images**: Returned as base64 [`StandardImageBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardImageBlock.html) objects.
+- **Audio**: Returned as base64 [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
+- **Text**: Returned as [`StandardTextBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardTextBlock.html) objects.
+
+**Note**: The `useStandardContentBlocks` does not impact embedded resources. Embedded resources are always assigned to `ToolMessage.artifact` as an array of MCP `EmbeddedResource` objects, regardless of whether their MIME type indicates one of the formats specified above.
+
+### Example Usage
 
 ```ts
 const tool = tools.find((t) => t.name === "mcp__math__calculate");
@@ -248,12 +316,19 @@ const [textContent, artifacts] = result;
 if (typeof textContent === "string") {
   console.log("Result:", textContent);
 } else {
-  // Handle complex content (text + images)
+  // Handle complex content (text + images/audio)
   textContent.forEach((item) => {
     if (item.type === "text") {
       console.log("Text:", item.text);
     } else if (item.type === "image_url") {
+      // Legacy format (useStandardContentBlocks: false)
       console.log("Image URL:", item.image_url.url);
+    } else if (item.type === "image") {
+      // Standard format (useStandardContentBlocks: true)
+      console.log("Image data:", item.data, "MIME:", item.mime_type);
+    } else if (item.type === "audio") {
+      // Audio always uses standard format
+      console.log("Audio data:", item.data, "MIME:", item.mime_type);
     }
   });
 }
@@ -262,6 +337,45 @@ if (typeof textContent === "string") {
 if (artifacts.length > 0) {
   console.log("Received artifacts:", artifacts);
 }
+```
+
+### Response Format Examples
+
+**Legacy format** (`useStandardContentBlocks: false`):
+```ts
+const [content, artifacts] = await imageTool.invoke({ prompt: "a cat" });
+// content structure:
+[
+  {
+    type: "text",
+    text: "Generated an image of a cat"
+  },
+  {
+    type: "image_url",
+    image_url: {
+      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+    }
+  }
+]
+```
+
+**Standard format** (`useStandardContentBlocks: true`):
+```ts
+const [content, artifacts] = await imageTool.invoke({ prompt: "a cat" });
+// content structure:
+[
+  {
+    type: "text",
+    source_type: "text",
+    text: "Generated an image of a cat"
+  },
+  {
+    type: "image",
+    source_type: "base64",
+    data: "iVBORw0KGgoAAAANSUhEUgAA...",
+    mime_type: "image/png"
+  }
+]
 ```
 
 ## OAuth 2.0 Authentication

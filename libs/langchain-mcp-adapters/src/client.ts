@@ -307,6 +307,19 @@ export function createClientConfigSchema() {
         .describe("An additional prefix to add to the tool name")
         .optional()
         .default("mcp"),
+      /**
+       * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
+       * image or audio content. This option has no effect on handling of embedded resource tool output.
+       *
+       * @default false
+       */
+      useStandardContentBlocks: z
+        .boolean()
+        .describe(
+          "If true, the tool will use LangChain's standard multimodal content blocks for tools that output image or audio content. This option has no effect on handling of embedded resource tool output."
+        )
+        .optional()
+        .default(false),
     })
     .describe("Configuration for the MCP client");
 }
@@ -493,6 +506,7 @@ export class MultiServerMCPClient {
       prefixToolNameWithServerName:
         parsedServerConfig.prefixToolNameWithServerName,
       additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
+      useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
     };
 
     this._config = parsedServerConfig;
