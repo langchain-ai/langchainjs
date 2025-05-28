@@ -5972,13 +5972,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/inference@npm:^3.13.2":
-  version: 3.13.2
-  resolution: "@huggingface/inference@npm:3.13.2"
+"@huggingface/inference@npm:^3.15.0":
+  version: 3.15.0
+  resolution: "@huggingface/inference@npm:3.15.0"
   dependencies:
     "@huggingface/jinja": ^0.5.0
-    "@huggingface/tasks": ^0.19.6
-  checksum: 347192023adcaa2ec70d4de10b33306592c1b9fbef3cf0eec7de7a11821f2dfd733fbbb53be6e0dbf962a82b499ff816e705758f7c0b7d165367689c6f2ffd87
+    "@huggingface/tasks": ^0.19.9
+  checksum: dbb441498e28184fa09cbc757d7f0b9697ab7a3d00fda830b12dafb91e60640cb738dbaa431172fc3ce87c4522ec0645e1fc34fcf6ec9cc6faa17fd40b4c611e
   languageName: node
   linkType: hard
 
@@ -5996,10 +5996,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@huggingface/tasks@npm:^0.19.6":
-  version: 0.19.8
-  resolution: "@huggingface/tasks@npm:0.19.8"
-  checksum: 89377ebda7b5cdecf12e805b52eb8800d3f0fb337855e4d3b4e082aeae9c1ad5492f94ea9492e45d1c7c23779836bf168b7f21103be3fb1c1651be67fa0f89bb
+"@huggingface/tasks@npm:^0.19.9":
+  version: 0.19.10
+  resolution: "@huggingface/tasks@npm:0.19.10"
+  checksum: e17ed2e858319f16fc242925f13ae4d4d470e96492d3aea0d2c75525c2c265e2cd5a92e12b91e08631b26505901c433d3553622d870442f59c296b9e4d5ad55f
   languageName: node
   linkType: hard
 
@@ -7281,7 +7281,7 @@ __metadata:
     "@google-ai/generativelanguage": ^2.5.0
     "@google-cloud/storage": ^7.15.2
     "@gradientai/nodejs-sdk": ^1.2.0
-    "@huggingface/inference": ^3.13.2
+    "@huggingface/inference": ^3.15.0
     "@huggingface/transformers": ^3.2.3
     "@ibm-cloud/watsonx-ai": ^1.6.4
     "@jest/globals": ^29.5.0
@@ -7466,7 +7466,7 @@ __metadata:
     "@google-ai/generativelanguage": "*"
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
     "@gradientai/nodejs-sdk": ^1.2.0
-    "@huggingface/inference": ^3.13.2
+    "@huggingface/inference": ^3.15.0
     "@huggingface/transformers": ^3.2.3
     "@ibm-cloud/watsonx-ai": "*"
     "@lancedb/lancedb": ^0.12.0
