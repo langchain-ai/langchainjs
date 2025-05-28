@@ -2,13 +2,16 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   SSEClientTransport,
+  type SSEClientTransportOptions,
   type SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
 import {
   StreamableHTTPClientTransport,
-  StreamableHTTPError,
+  type StreamableHTTPClientTransportOptions,
+  type StreamableHTTPError,
   type StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
@@ -21,6 +24,46 @@ function getDebugLog() {
     debugLog = debug("@langchain/mcp-adapters:client");
   }
   return debugLog;
+}
+
+/**
+ * Zod schema for validating OAuthClientProvider interface
+ * Since OAuthClientProvider has methods, we create a custom validator
+ */
+export function createOAuthClientProviderSchema() {
+  // would've rather imported this from the MCP SDK, but they don't have a type for it, so this is
+  // the best I could do.
+  return z.custom<OAuthClientProvider>(
+    (val) => {
+      if (!val || typeof val !== "object") return false;
+
+      // Check required properties and methods exist
+      const requiredMethods = [
+        "redirectUrl",
+        "clientMetadata",
+        "clientInformation",
+        "tokens",
+        "saveTokens",
+      ];
+
+      // redirectUrl can be a string, URL, or getter returning string/URL
+      if (!("redirectUrl" in val)) return false;
+
+      // clientMetadata can be an object or getter returning an object
+      if (!("clientMetadata" in val)) return false;
+
+      // Check that required methods exist (they can be functions or getters)
+      for (const method of requiredMethods) {
+        if (!(method in val)) return false;
+      }
+
+      return true;
+    },
+    {
+      message:
+        "Must be a valid OAuthClientProvider implementation with required properties: redirectUrl, clientMetadata, clientInformation, tokens, saveTokens",
+    }
+  );
 }
 
 /**
@@ -188,11 +231,12 @@ export function createStreamableHTTPConnectionSchema() {
        */
       headers: z.record(z.string()).optional(),
       /**
-       * Whether to use Node's EventSource for SSE connections (not applicable to streamable HTTP)
-       *
-       * @default false
+       * OAuth client provider for automatic authentication handling.
+       * When provided, the transport will automatically handle token refresh,
+       * 401 error retries, and OAuth 2.0 flows according to RFC 6750.
+       * This is the recommended approach for authentication instead of manual headers.
        */
-      useNodeEventSource: z.boolean().optional().default(false),
+      authProvider: createOAuthClientProviderSchema().optional(),
       /**
        * Additional reconnection settings.
        */
@@ -570,8 +614,8 @@ export class MultiServerMCPClient {
     const transport = new StdioClientTransport({
       command,
       args,
-      env,
       stderr,
+      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
       cwd,
     });
 
@@ -655,6 +699,19 @@ export class MultiServerMCPClient {
     return code;
   }
 
+  private _createAuthenticationErrorMessage(
+    serverName: string,
+    url: string,
+    transport: "HTTP" | "SSE",
+    originalError: string
+  ): string {
+    return (
+      `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
+      `Please check your credentials, authorization headers, or OAuth configuration. ` +
+      `Original error: ${originalError}`
+    );
+  }
+
   private _toSSEConnectionURL(url: string): string {
     const urlObj = new URL(url);
     const pathnameParts = urlObj.pathname.split("/");
@@ -679,6 +736,7 @@ export class MultiServerMCPClient {
       reconnect,
       type: typeField,
       transport: transportField,
+      authProvider,
     } = connection;
 
     const automaticSSEFallback = connection.automaticSSEFallback ?? true;
@@ -686,7 +744,7 @@ export class MultiServerMCPClient {
     const transportType = typeField || transportField;
 
     getDebugLog()(
-      `DEBUG: Creating SSE transport for server "${serverName}" with URL: ${url}`
+      `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
     );
 
     if (transportType === "http" || transportType == null) {
@@ -694,7 +752,8 @@ export class MultiServerMCPClient {
         serverName,
         url,
         headers,
-        reconnect
+        reconnect,
+        authProvider
       );
       this._transportInstances[serverName] = transport;
 
@@ -736,12 +795,36 @@ export class MultiServerMCPClient {
                   url: sseUrl,
                 });
               } catch (secondSSEError) {
+                // Provide specific error message for authentication failures
+                if (code === 401) {
+                  throw new MCPClientError(
+                    this._createAuthenticationErrorMessage(
+                      serverName,
+                      url,
+                      "HTTP",
+                      `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
+                    ),
+                    serverName
+                  );
+                }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
                   serverName
                 );
               }
             } else {
+              // Provide specific error message for authentication failures
+              if (code === 401) {
+                throw new MCPClientError(
+                  this._createAuthenticationErrorMessage(
+                    serverName,
+                    url,
+                    "HTTP",
+                    `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
+                  ),
+                  serverName
+                );
+              }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
                 serverName
@@ -749,6 +832,18 @@ export class MultiServerMCPClient {
             }
           }
         } else {
+          // Provide specific error message for authentication failures
+          if (code === 401) {
+            throw new MCPClientError(
+              this._createAuthenticationErrorMessage(
+                serverName,
+                url,
+                "HTTP",
+                `${error}`
+              ),
+              serverName
+            );
+          }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
             serverName
@@ -769,14 +864,14 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStreamableHTTPConnection // used for both SSE and streamable HTTP
   ): Promise<void> {
-    const { url, headers, useNodeEventSource, reconnect } = connection;
+    const { url, headers, reconnect, authProvider } = connection;
 
     try {
       const transport = await this._createSSETransport(
         serverName,
         url,
         headers,
-        useNodeEventSource
+        authProvider
       );
       this._transportInstances[serverName] = transport;
 
@@ -793,8 +888,28 @@ export class MultiServerMCPClient {
           this._setupSSEReconnect(serverName, transport, connection, reconnect);
         }
       } catch (error) {
+        // Check if this is already a wrapped error that should be re-thrown
+        if (error && (error as Error).name === "MCPClientError") {
+          throw error;
+        }
+
+        // Check if this is an authentication error that needs better messaging
+        const isAuthError = error && this._getHttpErrorCode(error) === 401;
+
+        if (isAuthError) {
+          throw new MCPClientError(
+            this._createAuthenticationErrorMessage(
+              serverName,
+              url,
+              "SSE",
+              `${error}`
+            ),
+            serverName
+          );
+        }
+
         throw new MCPClientError(
-          `Failed to connect to SSE server "${serverName}": ${error}`,
+          `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
           serverName
         );
       }
@@ -822,155 +937,127 @@ export class MultiServerMCPClient {
 
   /**
    * Create an SSE transport with appropriate EventSource implementation
+   *
+   * @param serverName - The name of the server
+   * @param url - The URL of the server
+   * @param headers - The headers to send with the request
+   * @param authProvider - The OAuth client provider to use for authentication
+   * @returns The SSE transport
    */
   private async _createSSETransport(
     serverName: string,
     url: string,
     headers?: Record<string, string>,
-    useNodeEventSource?: boolean
+    authProvider?: OAuthClientProvider
   ): Promise<SSEClientTransport> {
-    if (!headers) {
-      // Simple case - no headers, use default transport
-      return new SSEClientTransport(new URL(url));
-    }
+    const options: SSEClientTransportOptions = {};
 
-    getDebugLog()(
-      `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-    );
-
-    // If useNodeEventSource is true, try Node.js implementations
-    if (useNodeEventSource) {
-      return await this._createNodeEventSourceTransport(
-        serverName,
-        url,
-        headers
+    if (authProvider) {
+      options.authProvider = authProvider;
+      getDebugLog()(
+        `DEBUG: Using OAuth authentication for SSE transport to server "${serverName}"`
       );
     }
 
-    // For browser environments, use the basic requestInit approach
-    getDebugLog()(
-      `DEBUG: Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`
-    );
-    getDebugLog()(
-      `DEBUG: For better headers support in browsers, consider using a custom SSE implementation.`
-    );
+    if (headers) {
+      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
+      // and also via requestInit.headers for subsequent POST requests
+      options.eventSourceInit = {
+        fetch: async (url, init) => {
+          const requestHeaders = new Headers(init?.headers);
 
-    return new SSEClientTransport(new URL(url), {
-      requestInit: { headers },
-    });
+          // Add OAuth token if authProvider is available
+          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
+          if (authProvider) {
+            const tokens = await authProvider.tokens();
+            if (tokens) {
+              requestHeaders.set(
+                "Authorization",
+                `Bearer ${tokens.access_token}`
+              );
+            }
+          }
+
+          // Add our custom headers
+          Object.entries(headers).forEach(([key, value]) => {
+            requestHeaders.set(key, value);
+          });
+          // Always include Accept header for SSE
+          requestHeaders.set("Accept", "text/event-stream");
+
+          return fetch(url, {
+            ...init,
+            headers: requestHeaders,
+          });
+        },
+      };
+
+      // Also include headers for POST requests
+      options.requestInit = { headers };
+
+      getDebugLog()(
+        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
+      );
+    }
+
+    return new SSEClientTransport(new URL(url), options);
   }
 
   private async _createStreamableHTTPTransport(
     serverName: string,
     url: string,
     headers?: Record<string, string>,
-    reconnect?: ResolvedStreamableHTTPConnection["reconnect"]
+    reconnect?: ResolvedStreamableHTTPConnection["reconnect"],
+    authProvider?: OAuthClientProvider
   ): Promise<StreamableHTTPClientTransport> {
-    if (!headers) {
-      // Simple case - no headers, use default transport
-      return new StreamableHTTPClientTransport(new URL(url));
-    } else {
+    const options: StreamableHTTPClientTransportOptions = {
+      ...(authProvider ? { authProvider } : {}),
+      ...(headers ? { requestInit: { headers } } : {}),
+    };
+
+    if (reconnect != null) {
+      const reconnectionOptions: StreamableHTTPReconnectionOptions = {
+        initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
+        maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
+        maxRetries: reconnect?.maxAttempts ?? 2, // MCP default
+        reconnectionDelayGrowFactor: 1.5, // MCP default
+      };
+
+      if (reconnect.enabled === false) {
+        reconnectionOptions.maxRetries = 0;
+      }
+
+      options.reconnectionOptions = reconnectionOptions;
+    }
+
+    if (options.requestInit?.headers) {
       getDebugLog()(
         `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
       );
-
-      // partial options object for setting up reconnections
-      const r: {
-        reconnectionOptions: StreamableHTTPReconnectionOptions;
-      } = {
-        reconnectionOptions: {
-          initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
-          maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
-          maxRetries: reconnect?.maxAttempts ?? 2, // MCP default
-          reconnectionDelayGrowFactor: 1.5, // MCP default
-        },
-      };
-
-      if (reconnect != null && reconnect.enabled === false) {
-        r.reconnectionOptions.maxRetries = 0;
-      }
-
-      return new StreamableHTTPClientTransport(new URL(url), {
-        requestInit: { headers },
-        // don't set if reconnect is null so we rely on SDK defaults
-        ...(reconnect == null ? {} : r),
-      });
     }
-  }
 
-  /**
-   * Create an EventSource transport for Node.js environments
-   */
-  private async _createNodeEventSourceTransport(
-    serverName: string,
-    url: string,
-    headers: Record<string, string>
-  ): Promise<SSEClientTransport> {
-    // First try to use extended-eventsource which has better headers support
-    try {
-      const ExtendedEventSourceModule = await import("extended-eventsource");
-      const ExtendedEventSource = ExtendedEventSourceModule.EventSource;
-
+    if (options.authProvider) {
       getDebugLog()(
-        `DEBUG: Using Extended EventSource for server "${serverName}"`
+        `DEBUG: Using OAuth authentication for Streamable HTTP transport to server "${serverName}"`
       );
-      getDebugLog()(
-        `DEBUG: Setting headers for Extended EventSource: ${JSON.stringify(
-          headers
-        )}`
-      );
+    }
 
-      // Override the global EventSource with the extended implementation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (globalThis as any).EventSource = ExtendedEventSource;
-
-      // For Extended EventSource, create the SSE transport
-      return new SSEClientTransport(new URL(url), {
-        eventSourceInit: {},
-        requestInit: { headers },
-      });
-    } catch (extendedError) {
-      // Fall back to standard eventsource if extended-eventsource is not available
-      getDebugLog()(
-        `DEBUG: Extended EventSource not available, falling back to standard EventSource: ${extendedError}`
-      );
-
-      try {
-        // Dynamically import the eventsource package
-        // eslint-disable-next-line import/no-extraneous-dependencies
-        const EventSourceModule = await import("eventsource");
-        const EventSource =
-          "default" in EventSourceModule
-            ? EventSourceModule.default
-            : EventSourceModule.EventSource;
-
+    if (options.reconnectionOptions) {
+      if (options.reconnectionOptions.maxRetries === 0) {
         getDebugLog()(
-          `DEBUG: Using Node.js EventSource for server "${serverName}"`
+          `DEBUG: Disabling reconnection for Streamable HTTP transport to server "${serverName}"`
         );
+      } else {
         getDebugLog()(
-          `DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`
+          `DEBUG: Using custom reconnection options for Streamable HTTP transport to server "${serverName}"`
         );
-
-        // Override the global EventSource with the Node.js implementation
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).EventSource = EventSource;
-
-        // Create transport with headers correctly configured for Node.js EventSource
-        return new SSEClientTransport(new URL(url), {
-          // Pass the headers to both eventSourceInit and requestInit for compatibility
-          requestInit: { headers },
-        });
-      } catch (nodeError) {
-        getDebugLog()(
-          `WARN: Failed to load EventSource packages for server "${serverName}". Headers may not be applied to SSE connection: ${nodeError}`
-        );
-
-        // Last resort fallback
-        return new SSEClientTransport(new URL(url), {
-          requestInit: { headers },
-        });
       }
     }
+
+    // Only pass options if there are any, otherwise use default constructor
+    return Object.keys(options).length > 0
+      ? new StreamableHTTPClientTransport(new URL(url), options)
+      : new StreamableHTTPClientTransport(new URL(url));
   }
 
   /**

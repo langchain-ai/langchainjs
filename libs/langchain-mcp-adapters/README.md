@@ -18,7 +18,6 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
   - Connect to multiple MCP servers simultaneously
   - Auto-organize tools by server or access them as a flattened collection
-  - Convenient configuration via JSON file
 
 - 🧩 **Agent Integration**
 
@@ -35,20 +34,6 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
 ```bash
 npm install @langchain/mcp-adapters
-```
-
-### Optional Dependencies
-
-For SSE connections with custom headers in Node.js (does not apply to Streamable HTTP):
-
-```bash
-npm install eventsource
-```
-
-For enhanced SSE header support (does not apply to Streamable HTTP):
-
-```bash
-npm install extended-eventsource
 ```
 
 # Example: Manage the MCP Client yourself
@@ -165,6 +150,24 @@ const client = new MultiServerMCPClient({
       automaticSSEFallback: false
     },
 
+    // OAuth 2.0 authentication (recommended for secure servers)
+    "oauth-protected-server": {
+      url: "https://protected.example.com/mcp",
+      authProvider: new MyOAuthProvider({
+        // Your OAuth provider implementation
+        redirectUrl: "https://myapp.com/oauth/callback",
+        clientMetadata: {
+          redirect_uris: ["https://myapp.com/oauth/callback"],
+          client_name: "My MCP Client",
+          scope: "mcp:read mcp:write"
+        }
+      }),
+      // Can still include custom headers for non-auth purposes
+      headers: {
+        "User-Agent": "My-MCP-Client/1.0"
+      }
+    },
+
     // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
     github: {
       transport: "sse", // also works with "type" field instead of "transport"
@@ -261,6 +264,77 @@ if (artifacts.length > 0) {
 }
 ```
 
+## OAuth 2.0 Authentication
+
+For secure MCP servers that require OAuth 2.0 authentication, you can use the `authProvider` option instead of manually managing headers. This provides automatic token refresh, error handling, and standards-compliant OAuth flows.
+
+New in v0.4.6.
+
+### Basic OAuth Setup
+
+```ts
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+
+class MyOAuthProvider implements OAuthClientProvider {
+  constructor(private config: {
+    redirectUrl: string;
+    clientMetadata: OAuthClientMetadata;
+  }) {}
+
+  get redirectUrl() { return this.config.redirectUrl; }
+  get clientMetadata() { return this.config.clientMetadata; }
+
+  // Implement token storage (localStorage, database, etc.)
+  tokens(): OAuthTokens | undefined {
+    const stored = localStorage.getItem("mcp_tokens");
+    return stored ? JSON.parse(stored) : undefined;
+  }
+
+  async saveTokens(tokens: OAuthTokens): Promise<void> {
+    localStorage.setItem("mcp_tokens", JSON.stringify(tokens));
+  }
+
+  // Implement other required methods...
+  // See MCP SDK documentation for complete examples
+}
+
+const client = new MultiServerMCPClient({
+  "secure-server": {
+    url: "https://secure-mcp-server.example.com/mcp",
+    authProvider: new MyOAuthProvider({
+      redirectUrl: "https://myapp.com/oauth/callback",
+      clientMetadata: {
+        redirect_uris: ["https://myapp.com/oauth/callback"],
+        client_name: "My MCP Client",
+        scope: "mcp:read mcp:write"
+      }
+    })
+  }
+});
+```
+
+### OAuth Features
+
+The `authProvider` automatically handles:
+
+- ✅ **Token Refresh**: Automatically refreshes expired access tokens using refresh tokens
+- ✅ **401 Error Recovery**: Automatically retries requests after successful authentication  
+- ✅ **PKCE Security**: Uses Proof Key for Code Exchange for enhanced security
+- ✅ **Standards Compliance**: Follows OAuth 2.0 and RFC 6750 specifications
+- ✅ **Transport Compatibility**: Works with both StreamableHTTP and SSE transports
+
+### OAuth vs Manual Headers
+
+| Aspect | OAuth Provider | Manual Headers |
+|--------|----------------|----------------|
+| **Token Refresh** | ✅ Automatic | ❌ Manual implementation required |
+| **401 Handling** | ✅ Automatic retry | ❌ Manual error handling required |
+| **Security** | ✅ PKCE, secure flows | ⚠️ Depends on implementation |
+| **Standards** | ✅ RFC 6750 compliant | ⚠️ Requires manual compliance |
+| **Complexity** | ✅ Simple configuration | ❌ Complex implementation |
+
+**Recommendation**: Use `authProvider` for production OAuth servers, and `headers` only for simple token-based auth or debugging.
+
 ## Reconnection Strategies
 
 Both transport types support automatic reconnection:
@@ -287,7 +361,6 @@ Both transport types support automatic reconnection:
   transport: "sse",
   url: "https://example.com/mcp-server",
   headers: { "Authorization": "Bearer token123" },
-  useNodeEventSource: true,
   reconnect: {
     enabled: true,      // Enable automatic reconnection
     maxAttempts: 5,     // Maximum reconnection attempts
@@ -362,32 +435,6 @@ Example Zod error for an invalid SSE URL:
   "name": "ZodError"
 }
 ```
-
-## Browser Environments
-
-When using in browsers:
-
-- EventSource API doesn't support custom headers for SSE
-- Consider using a proxy or pass authentication via query parameters to avoid leaking credentials to client
-- May require CORS configuration on the server side
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Connection Failures**:
-
-   - Verify the MCP server is running
-   - Check command paths and network connectivity
-
-2. **Tool Execution Errors**:
-
-   - Examine server logs for error messages
-   - Ensure input parameters match the expected schema
-
-3. **Headers Not Applied**:
-   - Install the recommended `extended-eventsource` package
-   - Set `useNodeEventSource: true` in SSE connections
 
 ### Debug Logging
 
