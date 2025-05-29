@@ -1,0 +1,59 @@
+# MongoDB Atlas Semantic Cache
+
+This page documents the MongoDB Atlas integration for **semantic caching** of LLM generation outputs. See [MongoDB Atlas](docs/integrations/vectorstores/mongodb_atlas) for additional setup and configuration information.
+
+Semantic caching allows you to cache and retrieve generations based on vector similarity, so that similar prompts can share cached results.
+
+## Install dependencies
+
+You'll first need to install the [`@langchain/mongodb`](https://www.npmjs.com/package/@langchain/mongodb) as well as [`mongodb`](https://www.npmjs.com/package/mongodb):
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install mongodb @langchain/mongodb @langchain/core
+```
+
+## Set up the cache collection
+
+You will need the `mongodb` driver package to manage your database, collection(s), and vector search indexes. The `@langchain/mongodb` package provides the integration for LangChain and expects a ready-to-use collection and vector search index.
+
+You can set up a vector collection either through the MongoDB Atlas UI or with commands such as the following:
+
+```typescript
+import { MongoClient } from "mongodb";
+
+const client = new MongoClient(process.env.MONGODB_ATLAS_URI);
+await client.connect();
+const db = client.db("db_name");
+const collection = db.collection("collection_name");
+
+// Create a search index. The dimensions must match your embedding dimensions.
+await collection.createSearchIndex({
+  name: "default",
+  definition: {
+    mappings: {
+      dynamic: true,
+      fields: {
+        embedding: {
+          dimensions: 1024,
+          similarity: "cosine",
+          type: "knnVector",
+        },
+      },
+    },
+  },
+});
+```
+
+Note that the initial creation of a vector search index takes some time (it may take more than 30 seconds). If you query the vector index while it is initializing, you may receive an error or an empty response. Also, each time a new document (vector embedding, etc.) is added, the index needs to update before it can return the new document as part of its response. You can query the vector index while it is being updated, but it will return data based on the old index.
+
+## LLM call with semantic caching
+
+import MongoDBAtlasSemanticCacheExample from "@examples/cache/semantic_cache/mongodb_atlas.ts";
+
+import CodeBlock from "@theme/CodeBlock";
+
+<CodeBlock language="typescript">{MongoDBAtlasSemanticCacheExample}</CodeBlock>
