@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 import { ChatMistralAI } from "../chat_models.js";
 import {
   _isValidMistralToolCallId,
@@ -28,6 +30,55 @@ describe("Mistral Tool Call ID Conversion", () => {
       expect(_isValidMistralToolCallId(convertedId)).toBe(true);
     }
   });
+});
+
+test("Tool conversion handles both Zod schemas and JSON schemas", () => {
+  const model = new ChatMistralAI({ apiKey: "test" });
+  const zodTool = {
+    name: "zodTool",
+    description: "A tool with Zod schema",
+    schema: z.object({
+      input: z.string().describe("Input parameter"),
+    }),
+  };
+  const jsonSchemaTool = {
+    name: "jsonSchemaTool",
+    description: "A tool with JSON schema",
+    schema: {
+      type: "object",
+      properties: {
+        input: {
+          type: "string",
+          description: "Input parameter",
+        },
+      },
+      required: ["input"],
+    },
+  };
+
+  expect(() => {
+    const modelWithTools = model.bindTools([zodTool, jsonSchemaTool]);
+    expect(modelWithTools).toBeDefined();
+  }).not.toThrow();
+
+  const mcpLikeTool = new DynamicStructuredTool({
+    name: "mcpLikeTool",
+    description: "Tool similar to MCP tools",
+    schema: {
+      type: "object",
+      properties: {
+        city: { type: "string" },
+      },
+      required: ["city"],
+    },
+    func: async () => "test result",
+  });
+
+  // This should also not throw an error
+  expect(() => {
+    const modelWithMcpTool = model.bindTools([mcpLikeTool]);
+    expect(modelWithMcpTool).toBeDefined();
+  }).not.toThrow();
 });
 
 test("Serialization", () => {
