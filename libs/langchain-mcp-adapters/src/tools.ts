@@ -3,6 +3,7 @@ import type {
   EmbeddedResource,
   ReadResourceResult,
   Tool as MCPTool,
+  ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
@@ -500,9 +501,20 @@ export async function loadMcpTools(
     ...(options ?? {}),
   };
 
+  const mcpTools: MCPTool[] = [];
+
   // Get tools in a single operation
-  const toolsResponse = await client.listTools();
-  getDebugLog()(`INFO: Found ${toolsResponse.tools?.length || 0} MCP tools`);
+  let toolsResponse: ListToolsResult | undefined;
+  do {
+    toolsResponse = await client.listTools({
+      ...(toolsResponse?.nextCursor
+        ? { cursor: toolsResponse.nextCursor }
+        : {}),
+    });
+    mcpTools.push(...(toolsResponse.tools || []));
+  } while (toolsResponse.nextCursor);
+
+  getDebugLog()(`INFO: Found ${mcpTools.length} MCP tools`);
 
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
@@ -513,7 +525,7 @@ export async function loadMcpTools(
   // Filter out tools without names and convert in a single map operation
   return (
     await Promise.all(
-      (toolsResponse.tools || [])
+      mcpTools
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
