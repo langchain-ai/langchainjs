@@ -51,7 +51,6 @@ import {
   type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { z } from "zod";
 import {
   Runnable,
   RunnableLambda,
@@ -68,7 +67,6 @@ import {
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type {
@@ -76,6 +74,16 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+  isZodSchemaV3,
+  isZodSchemaV4,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { makeParseableResponseFormat } from "openai/lib/parser.mjs";
+import z4 from "zod/v4/core";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -1983,9 +1991,9 @@ export class ChatOpenAI<
       resFormat &&
       resFormat.type === "json_schema" &&
       resFormat.json_schema.schema &&
-      isZodSchema(resFormat.json_schema.schema)
+      isInteropZodSchema(resFormat.json_schema.schema)
     ) {
-      return zodResponseFormat(
+      return interopZodResponseFormat(
         resFormat.json_schema.schema,
         resFormat.json_schema.name,
         {
@@ -3060,7 +3068,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -3071,7 +3079,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -3082,7 +3090,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -3095,7 +3103,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -3106,7 +3114,7 @@ export class ChatOpenAI<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
     let method;
     let includeRaw;
@@ -3148,7 +3156,7 @@ export class ChatOpenAI<
       llm = this.withConfig({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
@@ -3159,13 +3167,13 @@ export class ChatOpenAI<
           type: "json_schema",
           json_schema: {
             name: name ?? "extract",
-            description: schema.description,
+            description: getSchemaDescription(schema),
             schema,
             strict: config?.strict,
           },
         },
       } as Partial<CallOptions>);
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         const altParser = StructuredOutputParser.fromZodSchema(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
           (aiMessage: AIMessageChunk) => {
@@ -3181,8 +3189,8 @@ export class ChatOpenAI<
     } else {
       let functionName = name ?? "extract";
       // Is function calling
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
           tools: [
             {
@@ -3272,17 +3280,6 @@ export class ChatOpenAI<
   }
 }
 
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
-}
-
 function isStructuredOutputMethodParams(
   x: unknown
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3293,4 +3290,43 @@ function isStructuredOutputMethodParams(
     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
       "object"
   );
+}
+
+function interopZodResponseFormat(
+  zodSchema: InteropZodType,
+  name: string,
+  props: Omit<ResponseFormatJSONSchema.JSONSchema, "schema" | "strict" | "name">
+) {
+  if (isZodSchemaV3(zodSchema)) {
+    return zodResponseFormat(zodSchema, name, props);
+  }
+  if (isZodSchemaV4(zodSchema)) {
+    return makeParseableResponseFormat(
+      {
+        type: "json_schema",
+        json_schema: {
+          ...props,
+          name,
+          strict: true,
+          schema: z4.toJSONSchema(zodSchema, {
+            cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
+            reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
+            override(ctx) {
+              ctx.jsonSchema.title = name; // equivalent to `name` property
+              // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
+              // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
+            },
+            /// property equivalents from native `zodResponseFormat` fn
+            // openaiStrictMode: true,
+            // name,
+            // nameStrategy: 'duplicate-ref',
+            // $refStrategy: 'extract-to-root',
+            // nullableStrategy: 'property',
+          }),
+        },
+      },
+      (content) => z4.parse(zodSchema, JSON.parse(content))
+    );
+  }
+  throw new Error("Unsupported schema response format");
 }
