@@ -1,6 +1,8 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
+import { z } from "zod";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   ChatWatsonx,
   ChatWatsonxConstructor,
@@ -153,6 +155,62 @@ describe("LLM unit tests", () => {
         ...fakeAuthProp,
       });
       expect(intance).toBeDefined();
+    });
+
+    test("Tool conversion handles both Zod schemas and JSON schemas", () => {
+      const testProps: ChatWatsonxInput = {
+        model: "ibm/granite-13b-chat-v2",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+      };
+      const model = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const zodTool = {
+        name: "zodTool",
+        description: "A tool with Zod schema",
+        schema: z.object({
+          input: z.string().describe("Input parameter"),
+        }),
+      };
+
+      const jsonSchemaTool = {
+        name: "jsonSchemaTool",
+        description: "A tool with JSON schema",
+        schema: {
+          type: "object",
+          properties: {
+            input: {
+              type: "string",
+              description: "Input parameter",
+            },
+          },
+          required: ["input"],
+        },
+      };
+
+      expect(() => {
+        const modelWithTools = model.bindTools([zodTool, jsonSchemaTool]);
+        expect(modelWithTools).toBeDefined();
+      }).not.toThrow();
+
+      const mcpLikeTool = new DynamicStructuredTool({
+        name: "mcpLikeTool",
+        description: "Tool similar to MCP tools",
+        schema: {
+          type: "object",
+          properties: {
+            city: { type: "string" },
+          },
+          required: ["city"],
+        },
+        func: async () => "test result",
+      });
+
+      expect(() => {
+        const modelWithMcpTool = model.bindTools([mcpLikeTool]);
+        expect(modelWithMcpTool).toBeDefined();
+      }).not.toThrow();
     });
   });
 
