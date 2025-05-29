@@ -11,7 +11,7 @@ import {
 } from "@langchain/core/messages";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatMistralAI } from "../chat_models.js";
 import { _mistralContentChunkToMessageContentComplex } from "../utils.js";
 
@@ -435,7 +435,7 @@ describe("withStructuredOutput", () => {
       .describe("A calculator schema");
 
     const modelWithStructuredOutput = model.withStructuredOutput(
-      zodToJsonSchema(calculatorSchema),
+      toJsonSchema(calculatorSchema),
       {
         name: "calculator",
       }
@@ -473,7 +473,7 @@ describe("withStructuredOutput", () => {
 
     const modelWithStructuredOutput = model.withStructuredOutput({
       name: "calculator",
-      parameters: zodToJsonSchema(calculatorSchema),
+      parameters: toJsonSchema(calculatorSchema),
     });
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -502,7 +502,7 @@ describe("withStructuredOutput", () => {
       number2: z.number(),
     });
     const modelWithStructuredOutput = model.withStructuredOutput(
-      zodToJsonSchema(calculatorSchema),
+      toJsonSchema(calculatorSchema),
       {
         name: "calculator",
         method: "jsonMode",
