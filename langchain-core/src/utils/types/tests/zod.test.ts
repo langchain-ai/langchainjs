@@ -6,9 +6,9 @@ import * as z4 from "zod/v4";
 import {
   isZodSchemaV3,
   isZodSchemaV4,
-  isZodSchema,
   isShapelessZodSchema,
   isSimpleStringZodSchema,
+  isInteropZodSchema,
 } from "../zod.js";
 
 describe("Zod utility functions", () => {
@@ -74,57 +74,57 @@ describe("Zod utility functions", () => {
     });
   });
 
-  describe("isZodSchema", () => {
+  describe("isInteropZodSchema", () => {
     it("should return true for v3 schemas", () => {
-      expect(isZodSchema(z3.string())).toBe(true);
-      expect(isZodSchema(z3.number())).toBe(true);
-      expect(isZodSchema(z3.object({ name: z3.string() }))).toBe(true);
-      expect(isZodSchema(z3.array(z3.string()))).toBe(true);
-      expect(isZodSchema(z3.string().optional())).toBe(true);
-      expect(isZodSchema(z3.string().default("test"))).toBe(true);
-      expect(isZodSchema(z3.string().transform((s) => s.toUpperCase()))).toBe(
-        true
-      );
+      expect(isInteropZodSchema(z3.string())).toBe(true);
+      expect(isInteropZodSchema(z3.number())).toBe(true);
+      expect(isInteropZodSchema(z3.object({ name: z3.string() }))).toBe(true);
+      expect(isInteropZodSchema(z3.array(z3.string()))).toBe(true);
+      expect(isInteropZodSchema(z3.string().optional())).toBe(true);
+      expect(isInteropZodSchema(z3.string().default("test"))).toBe(true);
+      expect(
+        isInteropZodSchema(z3.string().transform((s) => s.toUpperCase()))
+      ).toBe(true);
     });
 
     it("should return true for v4 schemas", () => {
-      expect(isZodSchema(z4.string())).toBe(true);
-      expect(isZodSchema(z4.number())).toBe(true);
-      expect(isZodSchema(z4.object({ name: z4.string() }))).toBe(true);
-      expect(isZodSchema(z4.array(z4.string()))).toBe(true);
-      expect(isZodSchema(z4.string().optional())).toBe(true);
-      expect(isZodSchema(z4.string().default("test"))).toBe(true);
-      expect(isZodSchema(z4.string().transform((s) => s.toUpperCase()))).toBe(
-        true
-      );
+      expect(isInteropZodSchema(z4.string())).toBe(true);
+      expect(isInteropZodSchema(z4.number())).toBe(true);
+      expect(isInteropZodSchema(z4.object({ name: z4.string() }))).toBe(true);
+      expect(isInteropZodSchema(z4.array(z4.string()))).toBe(true);
+      expect(isInteropZodSchema(z4.string().optional())).toBe(true);
+      expect(isInteropZodSchema(z4.string().default("test"))).toBe(true);
+      expect(
+        isInteropZodSchema(z4.string().transform((s) => s.toUpperCase()))
+      ).toBe(true);
     });
 
     it("should return false for falsy values", () => {
-      expect(isZodSchema(null)).toBe(false);
-      expect(isZodSchema(undefined)).toBe(false);
-      expect(isZodSchema(false)).toBe(false);
-      expect(isZodSchema(0)).toBe(false);
-      expect(isZodSchema("")).toBe(false);
+      expect(isInteropZodSchema(null)).toBe(false);
+      expect(isInteropZodSchema(undefined)).toBe(false);
+      expect(isInteropZodSchema(false)).toBe(false);
+      expect(isInteropZodSchema(0)).toBe(false);
+      expect(isInteropZodSchema("")).toBe(false);
     });
 
     it("should return false for non-object values", () => {
-      expect(isZodSchema("string")).toBe(false);
-      expect(isZodSchema(123)).toBe(false);
-      expect(isZodSchema(true)).toBe(false);
-      expect(isZodSchema(Symbol("test"))).toBe(false);
+      expect(isInteropZodSchema("string")).toBe(false);
+      expect(isInteropZodSchema(123)).toBe(false);
+      expect(isInteropZodSchema(true)).toBe(false);
+      expect(isInteropZodSchema(Symbol("test"))).toBe(false);
     });
 
     it("should return false for arrays", () => {
-      expect(isZodSchema([])).toBe(false);
-      expect(isZodSchema([1, 2, 3])).toBe(false);
-      expect(isZodSchema(["string"])).toBe(false);
+      expect(isInteropZodSchema([])).toBe(false);
+      expect(isInteropZodSchema([1, 2, 3])).toBe(false);
+      expect(isInteropZodSchema(["string"])).toBe(false);
     });
 
     it("should return false for plain objects", () => {
-      expect(isZodSchema({})).toBe(false);
-      expect(isZodSchema({ name: "test" })).toBe(false);
-      expect(isZodSchema({ _def: "fake" })).toBe(false);
-      expect(isZodSchema({ _zod: "fake" })).toBe(false);
+      expect(isInteropZodSchema({})).toBe(false);
+      expect(isInteropZodSchema({ name: "test" })).toBe(false);
+      expect(isInteropZodSchema({ _def: "fake" })).toBe(false);
+      expect(isInteropZodSchema({ _zod: "fake" })).toBe(false);
     });
   });
 

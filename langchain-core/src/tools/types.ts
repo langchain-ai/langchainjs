@@ -19,7 +19,7 @@ import {
   InferInteropZodInput,
   InferInteropZodOutput,
   InteropZodType,
-  isZodSchema,
+  isInteropZodSchema,
 } from "../utils/types/zod.js";
 import { JSONSchema } from "../utils/json_schema.js";
 
@@ -383,7 +383,7 @@ export function isStructuredToolParams(
     "name" in tool &&
     "schema" in tool &&
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (isZodSchema(tool.schema as Record<string, any>) ||
+    (isInteropZodSchema(tool.schema as Record<string, any>) ||
       (tool.schema != null &&
         typeof tool.schema === "object" &&
         "type" in tool.schema &&

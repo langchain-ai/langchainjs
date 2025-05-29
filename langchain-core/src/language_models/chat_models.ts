@@ -52,7 +52,7 @@ import { RunnablePassthrough } from "../runnables/passthrough.js";
 import {
   getSchemaDescription,
   InteropZodType,
-  isZodSchema,
+  isInteropZodSchema,
 } from "../utils/types/zod.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
@@ -968,7 +968,7 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",

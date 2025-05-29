@@ -78,13 +78,16 @@ export function isZodSchemaV3(
   );
 }
 
+/** Re-export for backwards compatibility */
+export const isZodSchema = isZodSchemaV3;
+
 /**
  * Given either a Zod schema, or plain object, determine if the input is a Zod schema.
  *
  * @param {unknown} input
  * @returns {boolean} Whether or not the provided input is a Zod schema.
  */
-export function isZodSchema(input: unknown): input is InteropZodType {
+export function isInteropZodSchema(input: unknown): input is InteropZodType {
   if (!input) {
     return false;
   }
@@ -192,7 +195,7 @@ export function getSchemaDescription(
  * @returns {boolean} True if the schema is shapeless, false otherwise.
  */
 export function isShapelessZodSchema(schema: unknown): boolean {
-  if (!isZodSchema(schema)) {
+  if (!isInteropZodSchema(schema)) {
     return false;
   }
 
@@ -263,7 +266,7 @@ export function isShapelessZodSchema(schema: unknown): boolean {
 export function isSimpleStringZodSchema(
   schema: unknown
 ): schema is InteropZodType<string | undefined> {
-  if (!isZodSchema(schema)) {
+  if (!isInteropZodSchema(schema)) {
     return false;
   }
 

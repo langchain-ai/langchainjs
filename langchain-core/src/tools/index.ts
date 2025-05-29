@@ -30,7 +30,7 @@ import {
   InteropZodObject,
   InteropZodType,
   isSimpleStringZodSchema,
-  isZodSchema,
+  isInteropZodSchema,
 } from "../utils/types/zod.js";
 import type {
   StructuredToolCallInput,
@@ -199,7 +199,7 @@ export abstract class StructuredTool<
     const inputForValidation = _isToolCall(arg) ? arg.args : arg;
 
     let parsed: SchemaOutputT; // This will hold the successfully parsed input of the expected output type.
-    if (isZodSchema(this.schema)) {
+    if (isInteropZodSchema(this.schema)) {
       try {
         // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
         parsed = await interopParseAsync(
