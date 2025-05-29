@@ -4,7 +4,11 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "./base.js";
-import { InteropZodType, InferInteropZodOutput } from "../utils/types/zod.js";
+import {
+  InteropZodType,
+  InferInteropZodOutput,
+  interopParseAsync,
+} from "../utils/types/zod.js";
 import {
   toJsonSchema,
   type JsonSchema7Type,
@@ -113,7 +117,7 @@ ${JSON.stringify(toJsonSchema(this.schema))}
         })
         .replace(/\n/g, "");
 
-      return await this.schema.parseAsync(JSON.parse(escapedJson));
+      return await interopParseAsync(this.schema, JSON.parse(escapedJson));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,

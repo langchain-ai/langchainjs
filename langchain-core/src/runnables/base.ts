@@ -60,7 +60,9 @@ import {
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
 import {
+  getSchemaDescription,
   InferInteropZodOutput,
+  interopParseAsync,
   InteropZodType,
   isSimpleStringZodSchema,
 } from "../utils/types/zod.js";
@@ -3410,7 +3412,7 @@ export class RunnableToolLike<
 
         if (_isToolCall(input)) {
           try {
-            toolInput = await this.schema.parseAsync(input.args);
+            toolInput = await interopParseAsync(this.schema, input.args);
           } catch (e) {
             throw new ToolInputParsingException(
               `Received tool input did not match expected schema`,
@@ -3462,7 +3464,7 @@ export function convertRunnableToTool<RunInput, RunOutput>(
   }
 ): RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
-  const description = fields.description ?? fields.schema?.description;
+  const description = fields.description ?? getSchemaDescription(fields.schema);
 
   if (isSimpleStringZodSchema(fields.schema)) {
     return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(

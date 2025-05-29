@@ -9,7 +9,7 @@ import {
 import { isAIMessage } from "../../messages/ai.js";
 import {
   InteropZodType,
-  getZodSafeParseIssues,
+  interopSafeParseAsync,
 } from "../../utils/types/zod.js";
 
 export type ParsedToolCall = {
@@ -245,7 +245,7 @@ export class JsonOutputKeyToolsParser<
     if (this.zodSchema === undefined) {
       return result as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    const zodParsedResult = await interopSafeParseAsync(this.zodSchema, result);
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -254,7 +254,7 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(getZodSafeParseIssues(zodParsedResult))}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error?.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }

@@ -19,7 +19,7 @@ export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV3(schema)) {
     return zodToJsonSchema(schema);
   }
-  return schema;
+  return schema as JSONSchema;
 }
 
 /**

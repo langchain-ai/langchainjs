@@ -1,6 +1,5 @@
 import type * as z3 from "zod/v3";
-import type * as z4 from "zod/v4/core";
-import { parse } from "zod/v4/core";
+import * as z4 from "zod/v4/core";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
@@ -103,16 +102,26 @@ export function isZodSchema(input: unknown): input is InteropZodType {
 
 type InteropZodSafeParseResult<T> = z3.SafeParseReturnType<T, T>;
 
-export function safeParseInteropZodSchema<T>(
+/**
+ * Asynchronously parses the input using the provided Zod schema (v3 or v4) and returns a safe parse result.
+ * This function handles both Zod v3 and v4 schemas, returning a result object indicating success or failure.
+ *
+ * @template T - The expected output type of the schema.
+ * @param {InteropZodType<T>} schema - The Zod schema (v3 or v4) to use for parsing.
+ * @param {unknown} input - The input value to parse.
+ * @returns {Promise<InteropZodSafeParseResult<T>>} A promise that resolves to a safe parse result object.
+ * @throws {Error} If the schema is not a recognized Zod v3 or v4 schema.
+ */
+export async function interopSafeParseAsync<T>(
   schema: InteropZodType<T>,
   input: unknown
-): InteropZodSafeParseResult<T> {
+): Promise<InteropZodSafeParseResult<T>> {
   if (isZodSchemaV4(schema)) {
     try {
-      const result = parse(schema, input);
+      const data = await z4.parseAsync(schema, input);
       return {
         success: true,
-        data: result,
+        data,
       };
     } catch (error) {
       return {
@@ -125,6 +134,50 @@ export function safeParseInteropZodSchema<T>(
     return schema.safeParse(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
+ * Asynchronously parses the input using the provided Zod schema (v3 or v4) and returns the parsed value.
+ * Throws an error if parsing fails or if the schema is not a recognized Zod v3 or v4 schema.
+ *
+ * @template T - The expected output type of the schema.
+ * @param {InteropZodType<T>} schema - The Zod schema (v3 or v4) to use for parsing.
+ * @param {unknown} input - The input value to parse.
+ * @returns {Promise<T>} A promise that resolves to the parsed value.
+ * @throws {Error} If parsing fails or the schema is not a recognized Zod v3 or v4 schema.
+ */
+export async function interopParseAsync<T>(
+  schema: InteropZodType<T>,
+  input: unknown
+): Promise<T> {
+  if (isZodSchemaV4(schema)) {
+    return z4.parse(schema, input);
+  }
+  if (isZodSchemaV3(schema)) {
+    return schema.parse(input);
+  }
+  throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
+ * Retrieves the description from a schema definition (v3, v4, or plain object), if available.
+ *
+ * @param {unknown} schema - The schema to extract the description from.
+ * @returns {string | undefined} The description of the schema, or undefined if not present.
+ */
+export function getSchemaDescription(
+  schema: InteropZodType<unknown> | Record<string, unknown>
+): string | undefined {
+  if (isZodSchemaV4(schema)) {
+    return z4.globalRegistry.get(schema)?.description;
+  }
+  if (isZodSchemaV3(schema)) {
+    return schema.description;
+  }
+  if ("description" in schema && typeof schema.description === "string") {
+    return schema.description;
+  }
+  return undefined;
 }
 
 /**
@@ -231,16 +284,4 @@ export function isSimpleStringZodSchema(
   }
 
   return false;
-}
-
-/**
- * Extracts the issues from a Zod safe parse result.
- *
- * @param result - The result of a Zod safe parse operation.
- * @returns An array of Zod issues if there are any, otherwise an empty array.
- */
-export function getZodSafeParseIssues<T>(
-  result: InteropZodSafeParseResult<T>
-): InteropZodIssue[] {
-  return result.error?.issues ?? [];
 }

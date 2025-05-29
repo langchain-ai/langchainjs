@@ -26,6 +26,7 @@ import {
 import {
   InferInteropZodInput,
   InferInteropZodOutput,
+  interopParseAsync,
   InteropZodObject,
   InteropZodType,
   isSimpleStringZodSchema,
@@ -201,7 +202,8 @@ export abstract class StructuredTool<
     if (isZodSchema(this.schema)) {
       try {
         // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
-        parsed = await (this.schema as InteropZodType).parseAsync(
+        parsed = await interopParseAsync(
+          this.schema as InteropZodType,
           inputForValidation as Exclude<TArg, ToolCall>
         );
       } catch (e) {
