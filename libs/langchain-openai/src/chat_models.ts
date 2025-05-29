@@ -83,7 +83,7 @@ import {
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { makeParseableResponseFormat } from "openai/lib/parser.mjs";
-import z4 from "zod/v4/core";
+import * as z4 from "zod/v4/core";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
