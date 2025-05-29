@@ -15,6 +15,10 @@ import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
+import {
+  InferInteropZodInput,
+  InferInteropZodOutput,
+} from "@langchain/core/utils/types";
 import { loadMcpTools, LoadMcpToolsOptions } from "./tools.js";
 
 // Read package name from package.json
@@ -327,52 +331,56 @@ export function createClientConfigSchema() {
 /**
  * Configuration for stdio transport connection
  */
-export type StdioConnection = z.input<
+export type StdioConnection = InferInteropZodInput<
   ReturnType<typeof createStdioConnectionSchema>
 >;
 
 /**
  * Type for {@link StdioConnection} with default values applied.
  */
-export type ResolvedStdioConnection = z.infer<
+export type ResolvedStdioConnection = InferInteropZodOutput<
   ReturnType<typeof createStdioConnectionSchema>
 >;
 
 /**
  * Configuration for streamable HTTP transport connection
  */
-export type StreamableHTTPConnection = z.input<
+export type StreamableHTTPConnection = InferInteropZodInput<
   ReturnType<typeof createStreamableHTTPConnectionSchema>
 >;
 
 /**
  * Type for {@link StreamableHTTPConnection} with default values applied.
  */
-export type ResolvedStreamableHTTPConnection = z.infer<
+export type ResolvedStreamableHTTPConnection = InferInteropZodOutput<
   ReturnType<typeof createStreamableHTTPConnectionSchema>
 >;
 
 /**
  * Union type for all transport connection types
  */
-export type Connection = z.input<ReturnType<typeof createConnectionSchema>>;
+export type Connection = InferInteropZodInput<
+  ReturnType<typeof createConnectionSchema>
+>;
 
 /**
  * Type for {@link MultiServerMCPClient} configuration
  */
-export type ClientConfig = z.input<ReturnType<typeof createClientConfigSchema>>;
+export type ClientConfig = InferInteropZodInput<
+  ReturnType<typeof createClientConfigSchema>
+>;
 
 /**
  * Type for {@link Connection} with default values applied.
  */
-export type ResolvedConnection = z.infer<
+export type ResolvedConnection = InferInteropZodOutput<
   ReturnType<typeof createConnectionSchema>
 >;
 
 /**
  * Type for {@link MultiServerMCPClient} configuration, with default values applied.
  */
-export type ResolvedClientConfig = z.infer<
+export type ResolvedClientConfig = InferInteropZodOutput<
   ReturnType<typeof createClientConfigSchema>
 >;
 
