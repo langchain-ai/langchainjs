@@ -3,8 +3,11 @@ import {
   ToolDefinition,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { zodToJsonSchema, type JsonSchema7Type } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  toJsonSchema,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
 
 /**
  * Render the tool name and description in plain text.
@@ -62,7 +65,9 @@ export function renderTextDescriptionAndArgs(
   return (tools as StructuredToolInterface[])
     .map((tool) => {
       const jsonSchema = (
-        isZodSchema(tool.schema) ? zodToJsonSchema(tool.schema) : tool.schema
+        isInteropZodSchema(tool.schema)
+          ? toJsonSchema(tool.schema)
+          : tool.schema
       ) as { properties?: Record<string, JsonSchema7Type> } | undefined;
       return `${tool.name}: ${tool.description}, args: ${JSON.stringify(
         jsonSchema?.properties

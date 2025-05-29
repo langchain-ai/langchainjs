@@ -1,9 +1,9 @@
 import type { OpenAIClient } from "@langchain/openai";
 import {
-  JsonSchema7ObjectType,
-  JsonSchema7ArrayType,
-  JsonSchema7Type,
-} from "zod-to-json-schema";
+  type JsonSchema7ObjectType,
+  type JsonSchema7ArrayType,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";

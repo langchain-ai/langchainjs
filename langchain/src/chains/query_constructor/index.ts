@@ -5,7 +5,10 @@ import {
   interpolateFString,
   FewShotPromptTemplate,
 } from "@langchain/core/prompts";
-import { InputValues } from "@langchain/core/utils/types";
+import {
+  InferInteropZodOutput,
+  InputValues,
+} from "@langchain/core/utils/types";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
@@ -89,7 +92,7 @@ export class StructuredQueryOutputParser extends AsymmetricStructuredOutputParse
   async outputProcessor({
     query,
     filter,
-  }: z.infer<typeof queryInputSchema>): Promise<StructuredQuery> {
+  }: InferInteropZodOutput<typeof queryInputSchema>): Promise<StructuredQuery> {
     let myQuery = query;
     if (myQuery.length === 0) {
       myQuery = " ";
