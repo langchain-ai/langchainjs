@@ -182,8 +182,11 @@ describe("mset()", () => {
 
     const [document] = await collection.find().limit(1).toArray();
 
-    // @ts-expect-error asdf
-    expect((document._id as string).startsWith("customNamespace/")).toBe(true);
+    // By default, mongodb's collection is an ObjectId.  But the store
+    // automatically inserts _id as a string, unless a custom primaryKey is set.
+    expect(
+      (document._id as unknown as string).startsWith("customNamespace/")
+    ).toBe(true);
   });
 
   test("populates the store with the primaryKey set when `primaryKey` is set to a non-default value", async () => {

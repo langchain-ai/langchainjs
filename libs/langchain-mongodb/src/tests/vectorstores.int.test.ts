@@ -64,7 +64,7 @@ beforeAll(async () => {
   await waitForIndexToBeQueryable(collection, "default");
 });
 
-let shouldClear = true;
+const shouldClear = true;
 beforeEach(async () => {
   if (shouldClear) {
     await collection.deleteMany({});
@@ -476,7 +476,7 @@ describe("addDocuments method", () => {
 describe("similaritySearchVectorWithScore method", () => {
   let embeddings: OpenAIEmbeddings;
   let vectorStore: PatchedVectorStore;
-  beforeAll(async () => {
+  beforeEach(async () => {
     embeddings = new OpenAIEmbeddings();
     vectorStore = new PatchedVectorStore(embeddings, {
       collection,
@@ -495,12 +495,6 @@ describe("similaritySearchVectorWithScore method", () => {
     ];
 
     await vectorStore.addDocuments(documents);
-
-    shouldClear = false;
-  });
-
-  afterAll(() => {
-    shouldClear = true;
   });
 
   test("returns correct documents and scores", async () => {
@@ -562,6 +556,10 @@ describe("similaritySearchVectorWithScore method", () => {
 });
 
 describe("maxMarginalRelevanceSearch method", () => {
+  // The tests in this suite mock the embeddings to return a consistent set of vectors.
+  // This is necessary because the actual embedding process is not deterministic (can change
+  // with different models) and we want to ensure the tests are stable and predictable.
+
   const embeddings = {
     embedQuery: async () => [[0.5, 0.5, 0.5]],
   };
@@ -607,7 +605,14 @@ describe("maxMarginalRelevanceSearch method", () => {
 
     spy = jest
       .spyOn(vectorStore, "similaritySearchVectorWithScore")
-      .mockImplementation(async () => documents.map((doc) => [doc, 0]));
+      .mockImplementation(async () =>
+        documents.map((doc) => {
+          // the similarity score is not used by the maxMarginalRelevanceSearch, so
+          // use a dummy value of 0.
+          const docWithSimilarity = [doc, 0] as [Document, number];
+          return docWithSimilarity;
+        })
+      );
   });
 
   test("returns k results", async () => {
