@@ -8,9 +8,15 @@ import type {
   BaseLanguageModelInput,
   FunctionDefinition,
 } from "@langchain/core/language_models/base";
-import { isZodSchema, type InputValues } from "@langchain/core/utils/types";
+import {
+  isInteropZodSchema,
+  type InputValues,
+} from "@langchain/core/utils/types";
 import type { BaseMessage } from "@langchain/core/messages";
-import { zodToJsonSchema, type JsonSchema7Type } from "zod-to-json-schema";
+import {
+  toJsonSchema,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 
 /**
@@ -214,8 +220,8 @@ export function createStructuredOutputRunnable<
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
 ): Runnable<RunInput, RunOutput> {
   const { outputSchema, llm, prompt, outputParser } = config;
-  const jsonSchema = isZodSchema(outputSchema)
-    ? zodToJsonSchema(outputSchema)
+  const jsonSchema = isInteropZodSchema(outputSchema)
+    ? toJsonSchema(outputSchema)
     : outputSchema;
   const oaiFunction: FunctionDefinition = {
     name: "outputFormatter",

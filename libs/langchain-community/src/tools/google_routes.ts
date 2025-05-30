@@ -1,5 +1,6 @@
 import { StructuredTool } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { z } from "zod";
 
 /**
@@ -207,6 +208,63 @@ export interface GoogleRoutesAPIParams {
   apiKey?: string;
 }
 
+const defaultGoogleRoutesSchema = z.object({
+  origin: z
+    .string()
+    .describe(`Origin address, can be either a place or an address.`),
+  destination: z
+    .string()
+    .describe(`Destination address, can be either a place or an address.`),
+  travel_mode: z
+    .enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"])
+    .describe(`The mode of transport`),
+  computeAlternativeRoutes: z
+    .boolean()
+    .describe(
+      `Compute alternative routes, set to true if user wants multiple routes, false otherwise.`
+    ),
+  departureTime: z
+    .string()
+    .optional()
+    .describe(
+      `Time that the user wants to depart.
+      There cannot be a departure time if an arrival time is specified.
+      Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
+      For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
+      For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
+      If the departure time is not specified it should not be included.          
+      `
+    ),
+  arrivalTime: z
+    .string()
+    .optional()
+    .describe(
+      `Time that the user wants to arrive.
+      There cannot be an arrival time if a departure time is specified.
+      Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
+      For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
+      For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
+      Reminder that the arrival time must be in the future, if the user asks for a arrival time in the past instead of processing the request, warn them that it is not possible to calculate a route for a past time.
+      If the user asks for a arrival time in a passed hour today, calculate it for the next day.
+      If the arrival time is not specified it should not be included. `
+    ),
+  transitPreferences: z
+    .object({
+      routingPreference: z.enum(["LESS_WALKING", "FEWER_TRANSFERS"])
+        .describe(`Transit routing preference.
+        By default, it should not be included.`),
+    })
+    .optional()
+    .describe(
+      `Transit routing preference.
+       By default, it should not be included.`
+    ),
+  extraComputations: z
+    .array(z.enum(["TOLLS"]))
+    .optional()
+    .describe(`Calculate tolls for the route.`),
+});
+
 /**
  * Class for interacting with the Google Routes API
  * It extends the StructuredTool class to perform retrieval.
@@ -228,22 +286,7 @@ export class GoogleRoutesAPI extends StructuredTool {
 
   protected apiKey: string;
 
-  schema: z.ZodObject<{
-    origin: z.ZodString;
-    destination: z.ZodString;
-    travel_mode: z.ZodEnum<
-      ["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"]
-    >;
-    computeAlternativeRoutes: z.ZodBoolean;
-    departureTime: z.ZodOptional<z.ZodString>;
-    arrivalTime: z.ZodOptional<z.ZodString>;
-    transitPreferences: z.ZodOptional<
-      z.ZodObject<{
-        routingPreference: z.ZodEnum<["LESS_WALKING", "FEWER_TRANSFERS"]>;
-      }>
-    >;
-    extraComputations: z.ZodOptional<z.ZodArray<z.ZodEnum<["TOLLS"]>>>;
-  }>;
+  schema: typeof defaultGoogleRoutesSchema = defaultGoogleRoutesSchema;
 
   constructor(fields?: GoogleRoutesAPIParams) {
     super(...arguments);
@@ -264,67 +307,12 @@ export class GoogleRoutesAPI extends StructuredTool {
     - Other modes: Route description, distance, duration, warnings, alternative routes, tolls prices, and expected departure/arrival times.
     
     Current time in user's timezone: ${new Date().toLocaleString()}.
-`;
-
-    this.schema = z.object({
-      origin: z
-        .string()
-        .describe(`Origin address, can be either a place or an address.`),
-      destination: z
-        .string()
-        .describe(`Destination address, can be either a place or an address.`),
-      travel_mode: z
-        .enum(["DRIVE", "WALK", "BICYCLE", "TRANSIT", "TWO_WHEELER"])
-        .describe(`The mode of transport`),
-      computeAlternativeRoutes: z
-        .boolean()
-        .describe(
-          `Compute alternative routes, set to true if user wants multiple routes, false otherwise.`
-        ),
-      departureTime: z
-        .string()
-        .optional()
-        .describe(
-          `Time that the user wants to depart.
-          There cannot be a departure time if an arrival time is specified.
-          Expected departure time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
-          For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
-          For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
-          If the departure time is not specified it should not be included.          
-          `
-        ),
-      arrivalTime: z
-        .string()
-        .optional()
-        .describe(
-          `Time that the user wants to arrive.
-          There cannot be an arrival time if a departure time is specified.
-          Expected arrival time should be provided as a timestamp in RFC3339 format: YYYY-MM-DDThh:mm:ss+00:00. The date should be in UTC time and the +00:00 represents the UTC offset. 
-          For instance, if the the user's timezone is -5, the offset would be -05:00 meaning YYYY-MM-DDThh:mm:ss-05:00 with YYYY-MM-DDThh:mm:ss being in UTC. 
-          For reference, here is the current time in UTC: ${new Date().toISOString()} and the user's timezone offset is ${getTimezoneOffsetInHours()}. 
-          Reminder that the arrival time must be in the future, if the user asks for a arrival time in the past instead of processing the request, warn them that it is not possible to calculate a route for a past time.
-          If the user asks for a arrival time in a passed hour today, calculate it for the next day.
-          If the arrival time is not specified it should not be included. `
-        ),
-      transitPreferences: z
-        .object({
-          routingPreference: z.enum(["LESS_WALKING", "FEWER_TRANSFERS"])
-            .describe(`Transit routing preference.
-            By default, it should not be included.`),
-        })
-        .optional()
-        .describe(
-          `Transit routing preference.
-           By default, it should not be included.`
-        ),
-      extraComputations: z
-        .array(z.enum(["TOLLS"]))
-        .optional()
-        .describe(`Calculate tolls for the route.`),
-    });
+    `;
   }
 
-  async _call(input: z.infer<typeof GoogleRoutesAPI.prototype.schema>) {
+  async _call(
+    input: InferInteropZodOutput<typeof GoogleRoutesAPI.prototype.schema>
+  ) {
     const {
       origin,
       destination,

@@ -7,7 +7,12 @@ import {
   StructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-import { z } from "zod";
+import {
+  InteropZodObject,
+  isZodSchemaV3,
+  isZodSchemaV4,
+} from "@langchain/core/utils/types";
+import { z as z4 } from "zod/v4";
 import {
   authenticateAndSetInstance,
   jsonSchemaToZod,
@@ -29,9 +34,9 @@ export class WatsonxTool extends StructuredTool implements WatsonxToolParams {
 
   service: WatsonXAI;
 
-  schema: z.ZodObject<any>;
+  schema: InteropZodObject;
 
-  configSchema?: z.ZodObject<any>;
+  configSchema?: InteropZodObject;
 
   toolConfig?: Record<string, any>;
 
@@ -74,9 +79,16 @@ export class WatsonxTool extends StructuredTool implements WatsonxToolParams {
       this.toolConfig = config;
       return;
     }
-    const result = this.configSchema.safeParse(config);
-    if (!result.success) console.warn(result.error.message);
-    this.toolConfig = result.data;
+    if (isZodSchemaV3(this.configSchema)) {
+      const result = this.configSchema.safeParse(config);
+      if (!result.success) console.warn(result.error.message);
+      this.toolConfig = result.data;
+    }
+    if (isZodSchemaV4(this.configSchema)) {
+      const result = z4.safeParse(this.configSchema, config);
+      if (!result.success) console.warn(result.error.message);
+      this.toolConfig = result.data;
+    }
   }
 }
 

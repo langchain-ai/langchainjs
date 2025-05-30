@@ -8,7 +8,7 @@ import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
 import { TavilySearchResults } from "../../tools/tavily_search.js";
@@ -436,7 +436,7 @@ test(".withConfig tools", async () => {
       {
         name: "weather_tool",
         description: weatherTool.description,
-        input_schema: zodToJsonSchema(weatherTool),
+        input_schema: toJsonSchema(weatherTool),
       },
     ],
   });
@@ -476,7 +476,7 @@ test.skip(".bindTools with openai tool format", async () => {
         function: {
           name: "weather_tool",
           description: weatherTool.description,
-          parameters: zodToJsonSchema(weatherTool),
+          parameters: toJsonSchema(weatherTool),
         },
       },
     ],
@@ -513,7 +513,7 @@ test("Streaming tool calls with Anthropic", async () => {
       {
         name: "weather_tool",
         description: weatherTool.description,
-        input_schema: zodToJsonSchema(weatherTool),
+        input_schema: toJsonSchema(weatherTool),
       },
     ],
   });

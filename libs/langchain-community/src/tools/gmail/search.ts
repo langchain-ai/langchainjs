@@ -1,5 +1,6 @@
 import { gmail_v1 } from "googleapis";
 import { z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { SEARCH_DESCRIPTION } from "./descriptions.js";
 
@@ -18,7 +19,7 @@ export class GmailSearch extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: z.output<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
     const { query, maxResults = 10, resource = "messages" } = arg;
 
     try {

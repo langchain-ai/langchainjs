@@ -12,16 +12,17 @@ import {
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   StructuredTool,
   StructuredToolParams,
   tool,
 } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { concat } from "@langchain/core/utils/stream";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
@@ -68,7 +69,7 @@ class AdderTool extends StructuredTool {
 
   schema = adderSchema;
 
-  async _call(input: z.infer<typeof adderSchema>) {
+  async _call(input: InferInteropZodOutput<typeof adderSchema>) {
     const sum = input.a + input.b;
     return JSON.stringify({ result: sum });
   }
@@ -1018,7 +1019,7 @@ export abstract class ChatModelIntegrationTests<
         function: {
           name: "math_addition",
           description: adderSchema.description,
-          parameters: zodToJsonSchema(adderSchema),
+          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
         },
       },
     ]);
@@ -1312,7 +1313,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);
@@ -1411,7 +1412,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);

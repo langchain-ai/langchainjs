@@ -1,4 +1,4 @@
-import { JsonSchema7ObjectType } from "zod-to-json-schema";
+import { type JsonSchema7ObjectType } from "@langchain/core/utils/json_schema";
 import {
   compare,
   type Operation as JSONPatchOperation,

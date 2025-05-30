@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 import { ChatOpenAI } from "../chat_models.js";
 
@@ -10,7 +10,7 @@ describe("strict tool calling", () => {
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: zodToJsonSchema(
+      parameters: toJsonSchema(
         z.object({
           location: z.string().describe("The location to get the weather for"),
         })
