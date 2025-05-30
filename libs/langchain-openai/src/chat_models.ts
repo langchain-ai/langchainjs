@@ -1,3 +1,4 @@
+import * as z4 from "zod/v4/core";
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import type {
   ChatCompletionContentPartText,
@@ -82,8 +83,6 @@ import {
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { makeParseableResponseFormat } from "openai/lib/parser.mjs";
-import * as z4 from "zod/v4/core";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -3290,6 +3289,27 @@ function isStructuredOutputMethodParams(
     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
       "object"
   );
+}
+
+// inlined from openai/lib/parser.ts
+function makeParseableResponseFormat<ParsedT>(
+  response_format: ResponseFormatJSONSchema,
+  parser: (content: string) => ParsedT
+) {
+  const obj = { ...response_format };
+
+  Object.defineProperties(obj, {
+    $brand: {
+      value: "auto-parseable-response-format",
+      enumerable: false,
+    },
+    $parseRaw: {
+      value: parser,
+      enumerable: false,
+    },
+  });
+
+  return obj;
 }
 
 function interopZodResponseFormat(
