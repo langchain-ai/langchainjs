@@ -186,7 +186,7 @@ test("Tool can accept single string input", async () => {
     type: "tool_call",
   } as const;
 
-  const stringTool = tool<z.ZodString>(
+  const stringTool = tool(
     (input: string, config): string => {
       expect(config).toMatchObject({ configurable: { foo: "bar" } });
       if (config.configurable.usesToolCall) {
