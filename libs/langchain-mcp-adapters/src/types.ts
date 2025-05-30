@@ -7,6 +7,10 @@ import {
   ZodRawShape,
   UnknownKeysParam,
   Primitive,
+  ZodDefault,
+  ZodOptional,
+  ZodNullable,
+  ZodEffects,
 } from "zod";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -38,7 +42,29 @@ function isZodLiteral(schema: unknown): schema is ZodLiteral<Primitive> {
  * Zod schema for an individual content item within a CallToolResult.
  * Derived from CallToolResultSchema.
  */
-const callToolResultContentSchema = CallToolResultSchema.shape.content.element;
+/**
+ * Recursively unwrap common Zod wrappers (default, optional, nullable, effects)
+ */
+function unwrapSchema(schema) {
+  const def = schema._def;
+  switch (def?.typeName) {
+    case ZodDefault.name:
+    case ZodOptional.name:
+    case ZodNullable.name:
+      return unwrapSchema(def.innerType);
+    case ZodEffects.name:
+      return unwrapSchema(def.schema);
+    default:
+      return schema;
+  }
+}
+
+/**
+ * Zod schema for an individual content item within a CallToolResult.
+ * Derived from CallToolResultSchema, with wrappers unwrapped.
+ */
+const arraySchema = CallToolResultSchema.shape.content;
+const callToolResultContentSchema = unwrapSchema(arraySchema).element;
 export type CallToolResultContent = z.output<
   typeof callToolResultContentSchema
 >;
