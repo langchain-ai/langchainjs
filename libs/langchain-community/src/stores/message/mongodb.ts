@@ -1,4 +1,9 @@
-import { Collection, Document as MongoDBDocument, ObjectId } from "mongodb";
+import {
+  Collection,
+  Document as MongoDBDocument,
+  ObjectId,
+  UpdateFilter,
+} from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
@@ -51,7 +56,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
       { _id: new ObjectId(this.sessionId) },
       {
         $push: { messages: { $each: messages } },
-      },
+      } as unknown as UpdateFilter<ChatHistoryDocument>,
       { upsert: true }
     );
   }
@@ -59,4 +64,9 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   async clear(): Promise<void> {
     await this.collection.deleteOne({ _id: new ObjectId(this.sessionId) });
   }
+}
+
+interface ChatHistoryDocument extends MongoDBDocument {
+  _id: ObjectId;
+  messages: any[];
 }
