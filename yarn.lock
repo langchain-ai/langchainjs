@@ -8258,7 +8258,6 @@ __metadata:
   resolution: "@langchain/mcp-adapters@workspace:libs/langchain-mcp-adapters"
   dependencies:
     "@eslint/js": ^9.21.0
-    "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/langgraph": ^0.2.62
     "@langchain/openai": "workspace:*"
