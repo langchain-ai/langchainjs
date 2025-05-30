@@ -1,4 +1,7 @@
-import { InferenceClient, InferenceProviderOrPolicy } from "@huggingface/inference";
+import {
+  InferenceClient,
+  InferenceProviderOrPolicy,
+} from "@huggingface/inference";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -50,7 +53,10 @@ export class HuggingFaceInferenceEmbeddings
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.endpointUrl = fields?.endpointUrl;
     this.provider =
-      fields?.provider ?? getEnvironmentVariable("HUGGINGFACEHUB_PROVIDER") as InferenceProviderOrPolicy | undefined;
+      fields?.provider ??
+      (getEnvironmentVariable("HUGGINGFACEHUB_PROVIDER") as
+        | InferenceProviderOrPolicy
+        | undefined);
     this.client = this.endpointUrl
       ? new InferenceClient(this.apiKey).endpoint(this.endpointUrl)
       : new InferenceClient(this.apiKey);
