@@ -36,9 +36,9 @@ function isZodLiteral(schema: unknown): schema is ZodLiteral<Primitive> {
 
 /**
  * Zod schema for an individual content item within a CallToolResult.
- * Derived from CallToolResultSchema.
  */
-const callToolResultContentSchema = CallToolResultSchema.shape.content.element;
+const callToolResultContentSchema =
+  CallToolResultSchema.shape.content._def.innerType.element;
 export type CallToolResultContent = z.output<
   typeof callToolResultContentSchema
 >;
