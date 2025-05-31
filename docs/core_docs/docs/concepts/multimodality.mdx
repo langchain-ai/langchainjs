@@ -40,15 +40,21 @@ import { HumanMessage } from "@langchain/core/messages";
 const message = new HumanMessage({
   content: [
     { type: "text", text: "describe the weather in this image" },
-    { type: "image_url", image_url: { url: image_url } },
+    { 
+      type: "image", 
+      source_type: "base64", 
+      mime_type: "image/png", 
+      data: imageData, 
+      metadata: { name: "image.png" } // required for OpenAI
+    },
   ],
 });
 const response = await model.invoke([message]);
 ```
 
 :::caution
-The exact format of the content blocks may vary depending on the model provider. Please refer to the chat model's
-integration documentation for the correct format. Find the integration in the [chat model integration table](/docs/integrations/chat/).
+The exact format of the content blocks may vary depending on the model provider. **For OpenAI models, when using base64-encoded content blocks (such as images or PDFs), you must include a `metadata` property. For images, use `{ name: fileName }`. For PDFs, use `{ filename: fileName }`. If omitted, you will receive an error: "missing required metadata property".**
+Please refer to the chat model's integration documentation for the correct format. Find the integration in the [chat model integration table](/docs/integrations/chat/).
 :::
 
 #### Outputs
