@@ -378,7 +378,7 @@ describe("trimMessages can trim", () => {
     ]);
   });
 
-  it(`First tokens, allowing partial messages, have to trim the last 10 characters of the last message`, async () => {
+  it("First tokens, allowing partial messages, have to trim the last 10 characters of the last message", async () => {
     // For the purpose of this test, we'll override the dummy token counter to count characters.
     const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory({
       countTokensByMessageContent: (content: MessageContent): number =>
@@ -407,7 +407,7 @@ describe("trimMessages can trim", () => {
         { type: "text", text: "This is the SECOND 4 token block." },
       ],
       "This is a 4 token text. The full message is 10 tokens.",
-      "This is a 4 token text. The full message is "
+      "This is a 4 token text. The full message is ",
     ]);
   });
 

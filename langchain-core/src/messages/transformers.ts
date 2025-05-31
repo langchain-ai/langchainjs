@@ -4,10 +4,10 @@ import { Runnable, RunnableLambda } from "../runnables/base.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessage,
+  MessageType,
   BaseMessageChunk,
   BaseMessageFields,
   isBaseMessageChunk,
-  MessageType,
 } from "./base.js";
 import {
   ChatMessage,
