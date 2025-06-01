@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "0.4.5",
+  "version": "0.5.2",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -40,7 +40,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.2",
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "debug": "^4.4.0",
     "zod": "^3.24.2"
   },

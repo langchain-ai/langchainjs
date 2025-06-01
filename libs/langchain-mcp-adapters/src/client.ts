@@ -2,17 +2,32 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   SSEClientTransport,
+  type SSEClientTransportOptions,
   type SseError,
 } from "@modelcontextprotocol/sdk/client/sse.js";
 import {
   StreamableHTTPClientTransport,
-  StreamableHTTPError,
+  type StreamableHTTPClientTransportOptions,
+  type StreamableHTTPError,
   type StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
-import { loadMcpTools, LoadMcpToolsOptions } from "./tools.js";
+import { loadMcpTools } from "./tools.js";
+import {
+  type ClientConfig,
+  type Connection,
+  type ResolvedClientConfig,
+  type ResolvedConnection,
+  type ResolvedStdioConnection,
+  type ResolvedStreamableHTTPConnection,
+  clientConfigSchema,
+  connectionSchema,
+  type LoadMcpToolsOptions,
+  _resolveAndApplyOverrideHandlingOverrides,
+} from "./types.js";
 
 // Read package name from package.json
 let debugLog: debug.Debugger;
@@ -22,302 +37,6 @@ function getDebugLog() {
   }
   return debugLog;
 }
-
-/**
- * Stdio transport restart configuration
- */
-export function createStdioRestartSchema() {
-  return z
-    .object({
-      /**
-       * Whether to automatically restart the process if it exits
-       */
-      enabled: z
-        .boolean()
-        .describe("Whether to automatically restart the process if it exits")
-        .optional(),
-      /**
-       * Maximum number of restart attempts
-       */
-      maxAttempts: z
-        .number()
-        .describe("The maximum number of restart attempts")
-        .optional(),
-      /**
-       * Delay in milliseconds between restart attempts
-       */
-      delayMs: z
-        .number()
-        .describe("The delay in milliseconds between restart attempts")
-        .optional(),
-    })
-    .describe("Configuration for stdio transport restart");
-}
-
-/**
- * Stdio transport connection
- */
-export function createStdioConnectionSchema() {
-  return z
-    .object({
-      /**
-       * Optional transport type, inferred from the structure of the config if not provided. Included
-       * for compatibility with common MCP client config file formats.
-       */
-      transport: z.literal("stdio").optional(),
-      /**
-       * Optional transport type, inferred from the structure of the config if not provided. Included
-       * for compatibility with common MCP client config file formats.
-       */
-      type: z.literal("stdio").optional(),
-      /**
-       * The executable to run the server (e.g. `node`, `npx`, etc)
-       */
-      command: z.string().describe("The executable to run the server"),
-      /**
-       * Array of command line arguments to pass to the executable
-       */
-      args: z
-        .array(z.string())
-        .describe("Command line arguments to pass to the executable"),
-      /**
-       * Environment variables to set when spawning the process.
-       */
-      env: z
-        .record(z.string())
-        .describe("The environment to use when spawning the process")
-        .optional(),
-      /**
-       * The encoding to use when reading from the process
-       */
-      encoding: z
-        .string()
-        .describe("The encoding to use when reading from the process")
-        .optional(),
-      /**
-       * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
-       *
-       * The default is "inherit", meaning messages to stderr will be printed to the parent process's stderr.
-       *
-       * @default "inherit"
-       */
-      stderr: z
-        .union([
-          z.literal("overlapped"),
-          z.literal("pipe"),
-          z.literal("ignore"),
-          z.literal("inherit"),
-        ])
-        .describe(
-          "How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`"
-        )
-        .optional()
-        .default("inherit"),
-      /**
-       * The working directory to use when spawning the process.
-       */
-      cwd: z
-        .string()
-        .describe("The working directory to use when spawning the process")
-        .optional(),
-      /**
-       * Additional restart settings
-       */
-      restart: createStdioRestartSchema()
-        .describe("Settings for automatically restarting the server")
-        .optional(),
-    })
-    .describe("Configuration for stdio transport connection");
-}
-
-/**
- * Streamable HTTP transport reconnection configuration
- */
-export function createStreamableReconnectSchema() {
-  return z
-    .object({
-      /**
-       * Whether to automatically reconnect if the connection is lost
-       */
-      enabled: z
-        .boolean()
-        .describe(
-          "Whether to automatically reconnect if the connection is lost"
-        )
-        .optional(),
-      /**
-       * Maximum number of reconnection attempts
-       */
-      maxAttempts: z
-        .number()
-        .describe("The maximum number of reconnection attempts")
-        .optional(),
-      /**
-       * Delay in milliseconds between reconnection attempts
-       */
-      delayMs: z
-        .number()
-        .describe("The delay in milliseconds between reconnection attempts")
-        .optional(),
-    })
-    .describe("Configuration for streamable HTTP transport reconnection");
-}
-
-/**
- * Streamable HTTP transport connection
- */
-export function createStreamableHTTPConnectionSchema() {
-  return z
-    .object({
-      /**
-       * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-       * to connect using streamable HTTP.
-       */
-      transport: z.union([z.literal("http"), z.literal("sse")]).optional(),
-      /**
-       * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
-       * to connect using streamable HTTP.
-       */
-      type: z.union([z.literal("http"), z.literal("sse")]).optional(),
-      /**
-       * The URL to connect to
-       */
-      url: z.string().url(),
-      /**
-       * Additional headers to send with the request, useful for authentication
-       */
-      headers: z.record(z.string()).optional(),
-      /**
-       * Whether to use Node's EventSource for SSE connections (not applicable to streamable HTTP)
-       *
-       * @default false
-       */
-      useNodeEventSource: z.boolean().optional().default(false),
-      /**
-       * Additional reconnection settings.
-       */
-      reconnect: createStreamableReconnectSchema().optional(),
-      /**
-       * Whether to automatically fallback to SSE if Streamable HTTP is not available or not supported
-       *
-       * @default true
-       */
-      automaticSSEFallback: z.boolean().optional().default(true),
-    })
-    .describe("Configuration for streamable HTTP transport connection");
-}
-
-/**
- * Create combined schema for all transport connection types
- */
-export function createConnectionSchema() {
-  return z
-    .union([
-      createStdioConnectionSchema(),
-      createStreamableHTTPConnectionSchema(),
-    ])
-    .describe("Configuration for a single MCP server");
-}
-
-/**
- * {@link MultiServerMCPClient} configuration
- */
-export function createClientConfigSchema() {
-  return z
-    .object({
-      /**
-       * A map of server names to their configuration
-       */
-      mcpServers: z
-        .record(createConnectionSchema())
-        .describe("A map of server names to their configuration"),
-      /**
-       * Whether to throw an error if a tool fails to load
-       *
-       * @default true
-       */
-      throwOnLoadError: z
-        .boolean()
-        .describe("Whether to throw an error if a tool fails to load")
-        .optional()
-        .default(true),
-      /**
-       * Whether to prefix tool names with the server name. Prefixes are separated by double
-       * underscores (example: `calculator_server_1__add`).
-       *
-       * @default true
-       */
-      prefixToolNameWithServerName: z
-        .boolean()
-        .describe("Whether to prefix tool names with the server name")
-        .optional()
-        .default(true),
-      /**
-       * An additional prefix to add to the tool name Prefixes are separated by double underscores
-       * (example: `mcp__add`).
-       *
-       * @default "mcp"
-       */
-      additionalToolNamePrefix: z
-        .string()
-        .describe("An additional prefix to add to the tool name")
-        .optional()
-        .default("mcp"),
-    })
-    .describe("Configuration for the MCP client");
-}
-
-/**
- * Configuration for stdio transport connection
- */
-export type StdioConnection = z.input<
-  ReturnType<typeof createStdioConnectionSchema>
->;
-
-/**
- * Type for {@link StdioConnection} with default values applied.
- */
-export type ResolvedStdioConnection = z.infer<
-  ReturnType<typeof createStdioConnectionSchema>
->;
-
-/**
- * Configuration for streamable HTTP transport connection
- */
-export type StreamableHTTPConnection = z.input<
-  ReturnType<typeof createStreamableHTTPConnectionSchema>
->;
-
-/**
- * Type for {@link StreamableHTTPConnection} with default values applied.
- */
-export type ResolvedStreamableHTTPConnection = z.infer<
-  ReturnType<typeof createStreamableHTTPConnectionSchema>
->;
-
-/**
- * Union type for all transport connection types
- */
-export type Connection = z.input<ReturnType<typeof createConnectionSchema>>;
-
-/**
- * Type for {@link MultiServerMCPClient} configuration
- */
-export type ClientConfig = z.input<ReturnType<typeof createClientConfigSchema>>;
-
-/**
- * Type for {@link Connection} with default values applied.
- */
-export type ResolvedConnection = z.infer<
-  ReturnType<typeof createConnectionSchema>
->;
-
-/**
- * Type for {@link MultiServerMCPClient} configuration, with default values applied.
- */
-export type ResolvedClientConfig = z.infer<
-  ReturnType<typeof createClientConfigSchema>
->;
 
 /**
  * Error class for MCP client operations
@@ -400,7 +119,7 @@ export class MultiServerMCPClient {
 
   private _connections?: Record<string, ResolvedConnection>;
 
-  private _loadToolsOptions: LoadMcpToolsOptions;
+  private _loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
 
   private _cleanupFunctions: Array<() => Promise<void>> = [];
 
@@ -424,18 +143,18 @@ export class MultiServerMCPClient {
   /**
    * Create a new MultiServerMCPClient.
    *
-   * @param connections - Optional connections to initialize
+   * @param config - Configuration object
    */
   constructor(config: ClientConfig | Record<string, Connection>) {
     let parsedServerConfig: ResolvedClientConfig;
 
-    const configSchema = createClientConfigSchema();
+    const configSchema = clientConfigSchema;
 
     if ("mcpServers" in config) {
       parsedServerConfig = configSchema.parse(config);
     } else {
       // two step parse so parse errors are referencing the correct object paths
-      const parsedMcpServers = z.record(createConnectionSchema()).parse(config);
+      const parsedMcpServers = z.record(connectionSchema).parse(config);
 
       parsedServerConfig = configSchema.parse({ mcpServers: parsedMcpServers });
     }
@@ -444,12 +163,23 @@ export class MultiServerMCPClient {
       throw new MCPClientError("No MCP servers provided");
     }
 
-    this._loadToolsOptions = {
-      throwOnLoadError: parsedServerConfig.throwOnLoadError,
-      prefixToolNameWithServerName:
-        parsedServerConfig.prefixToolNameWithServerName,
-      additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
-    };
+    for (const [serverName, serverConfig] of Object.entries(
+      parsedServerConfig.mcpServers
+    )) {
+      const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
+        parsedServerConfig.outputHandling,
+        serverConfig.outputHandling
+      );
+
+      this._loadToolsOptions[serverName] = {
+        throwOnLoadError: parsedServerConfig.throwOnLoadError,
+        prefixToolNameWithServerName:
+          parsedServerConfig.prefixToolNameWithServerName,
+        additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
+        useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
+        ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
+      };
+    }
 
     this._config = parsedServerConfig;
     this._connections = parsedServerConfig.mcpServers;
@@ -570,8 +300,8 @@ export class MultiServerMCPClient {
     const transport = new StdioClientTransport({
       command,
       args,
-      env,
       stderr,
+      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
 
     this._transportInstances[serverName] = transport;
@@ -654,6 +384,19 @@ export class MultiServerMCPClient {
     return code;
   }
 
+  private _createAuthenticationErrorMessage(
+    serverName: string,
+    url: string,
+    transport: "HTTP" | "SSE",
+    originalError: string
+  ): string {
+    return (
+      `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
+      `Please check your credentials, authorization headers, or OAuth configuration. ` +
+      `Original error: ${originalError}`
+    );
+  }
+
   private _toSSEConnectionURL(url: string): string {
     const urlObj = new URL(url);
     const pathnameParts = urlObj.pathname.split("/");
@@ -678,6 +421,7 @@ export class MultiServerMCPClient {
       reconnect,
       type: typeField,
       transport: transportField,
+      authProvider,
     } = connection;
 
     const automaticSSEFallback = connection.automaticSSEFallback ?? true;
@@ -685,7 +429,7 @@ export class MultiServerMCPClient {
     const transportType = typeField || transportField;
 
     getDebugLog()(
-      `DEBUG: Creating SSE transport for server "${serverName}" with URL: ${url}`
+      `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
     );
 
     if (transportType === "http" || transportType == null) {
@@ -693,7 +437,8 @@ export class MultiServerMCPClient {
         serverName,
         url,
         headers,
-        reconnect
+        reconnect,
+        authProvider
       );
       this._transportInstances[serverName] = transport;
 
@@ -735,12 +480,36 @@ export class MultiServerMCPClient {
                   url: sseUrl,
                 });
               } catch (secondSSEError) {
+                // Provide specific error message for authentication failures
+                if (code === 401) {
+                  throw new MCPClientError(
+                    this._createAuthenticationErrorMessage(
+                      serverName,
+                      url,
+                      "HTTP",
+                      `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
+                    ),
+                    serverName
+                  );
+                }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
                   serverName
                 );
               }
             } else {
+              // Provide specific error message for authentication failures
+              if (code === 401) {
+                throw new MCPClientError(
+                  this._createAuthenticationErrorMessage(
+                    serverName,
+                    url,
+                    "HTTP",
+                    `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
+                  ),
+                  serverName
+                );
+              }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
                 serverName
@@ -748,6 +517,18 @@ export class MultiServerMCPClient {
             }
           }
         } else {
+          // Provide specific error message for authentication failures
+          if (code === 401) {
+            throw new MCPClientError(
+              this._createAuthenticationErrorMessage(
+                serverName,
+                url,
+                "HTTP",
+                `${error}`
+              ),
+              serverName
+            );
+          }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
             serverName
@@ -768,14 +549,14 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStreamableHTTPConnection // used for both SSE and streamable HTTP
   ): Promise<void> {
-    const { url, headers, useNodeEventSource, reconnect } = connection;
+    const { url, headers, reconnect, authProvider } = connection;
 
     try {
       const transport = await this._createSSETransport(
         serverName,
         url,
         headers,
-        useNodeEventSource
+        authProvider
       );
       this._transportInstances[serverName] = transport;
 
@@ -792,8 +573,28 @@ export class MultiServerMCPClient {
           this._setupSSEReconnect(serverName, transport, connection, reconnect);
         }
       } catch (error) {
+        // Check if this is already a wrapped error that should be re-thrown
+        if (error && (error as Error).name === "MCPClientError") {
+          throw error;
+        }
+
+        // Check if this is an authentication error that needs better messaging
+        const isAuthError = error && this._getHttpErrorCode(error) === 401;
+
+        if (isAuthError) {
+          throw new MCPClientError(
+            this._createAuthenticationErrorMessage(
+              serverName,
+              url,
+              "SSE",
+              `${error}`
+            ),
+            serverName
+          );
+        }
+
         throw new MCPClientError(
-          `Failed to connect to SSE server "${serverName}": ${error}`,
+          `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
           serverName
         );
       }
@@ -821,155 +622,127 @@ export class MultiServerMCPClient {
 
   /**
    * Create an SSE transport with appropriate EventSource implementation
+   *
+   * @param serverName - The name of the server
+   * @param url - The URL of the server
+   * @param headers - The headers to send with the request
+   * @param authProvider - The OAuth client provider to use for authentication
+   * @returns The SSE transport
    */
   private async _createSSETransport(
     serverName: string,
     url: string,
     headers?: Record<string, string>,
-    useNodeEventSource?: boolean
+    authProvider?: OAuthClientProvider
   ): Promise<SSEClientTransport> {
-    if (!headers) {
-      // Simple case - no headers, use default transport
-      return new SSEClientTransport(new URL(url));
-    }
+    const options: SSEClientTransportOptions = {};
 
-    getDebugLog()(
-      `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-    );
-
-    // If useNodeEventSource is true, try Node.js implementations
-    if (useNodeEventSource) {
-      return await this._createNodeEventSourceTransport(
-        serverName,
-        url,
-        headers
+    if (authProvider) {
+      options.authProvider = authProvider;
+      getDebugLog()(
+        `DEBUG: Using OAuth authentication for SSE transport to server "${serverName}"`
       );
     }
 
-    // For browser environments, use the basic requestInit approach
-    getDebugLog()(
-      `DEBUG: Using browser EventSource for server "${serverName}". Headers may not be applied correctly.`
-    );
-    getDebugLog()(
-      `DEBUG: For better headers support in browsers, consider using a custom SSE implementation.`
-    );
+    if (headers) {
+      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
+      // and also via requestInit.headers for subsequent POST requests
+      options.eventSourceInit = {
+        fetch: async (url, init) => {
+          const requestHeaders = new Headers(init?.headers);
 
-    return new SSEClientTransport(new URL(url), {
-      requestInit: { headers },
-    });
+          // Add OAuth token if authProvider is available
+          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
+          if (authProvider) {
+            const tokens = await authProvider.tokens();
+            if (tokens) {
+              requestHeaders.set(
+                "Authorization",
+                `Bearer ${tokens.access_token}`
+              );
+            }
+          }
+
+          // Add our custom headers
+          Object.entries(headers).forEach(([key, value]) => {
+            requestHeaders.set(key, value);
+          });
+          // Always include Accept header for SSE
+          requestHeaders.set("Accept", "text/event-stream");
+
+          return fetch(url, {
+            ...init,
+            headers: requestHeaders,
+          });
+        },
+      };
+
+      // Also include headers for POST requests
+      options.requestInit = { headers };
+
+      getDebugLog()(
+        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
+      );
+    }
+
+    return new SSEClientTransport(new URL(url), options);
   }
 
   private async _createStreamableHTTPTransport(
     serverName: string,
     url: string,
     headers?: Record<string, string>,
-    reconnect?: ResolvedStreamableHTTPConnection["reconnect"]
+    reconnect?: ResolvedStreamableHTTPConnection["reconnect"],
+    authProvider?: OAuthClientProvider
   ): Promise<StreamableHTTPClientTransport> {
-    if (!headers) {
-      // Simple case - no headers, use default transport
-      return new StreamableHTTPClientTransport(new URL(url));
-    } else {
+    const options: StreamableHTTPClientTransportOptions = {
+      ...(authProvider ? { authProvider } : {}),
+      ...(headers ? { requestInit: { headers } } : {}),
+    };
+
+    if (reconnect != null) {
+      const reconnectionOptions: StreamableHTTPReconnectionOptions = {
+        initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
+        maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
+        maxRetries: reconnect?.maxAttempts ?? 2, // MCP default
+        reconnectionDelayGrowFactor: 1.5, // MCP default
+      };
+
+      if (reconnect.enabled === false) {
+        reconnectionOptions.maxRetries = 0;
+      }
+
+      options.reconnectionOptions = reconnectionOptions;
+    }
+
+    if (options.requestInit?.headers) {
       getDebugLog()(
         `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
       );
-
-      // partial options object for setting up reconnections
-      const r: {
-        reconnectionOptions: StreamableHTTPReconnectionOptions;
-      } = {
-        reconnectionOptions: {
-          initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
-          maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
-          maxRetries: reconnect?.maxAttempts ?? 2, // MCP default
-          reconnectionDelayGrowFactor: 1.5, // MCP default
-        },
-      };
-
-      if (reconnect != null && reconnect.enabled === false) {
-        r.reconnectionOptions.maxRetries = 0;
-      }
-
-      return new StreamableHTTPClientTransport(new URL(url), {
-        requestInit: { headers },
-        // don't set if reconnect is null so we rely on SDK defaults
-        ...(reconnect == null ? {} : r),
-      });
     }
-  }
 
-  /**
-   * Create an EventSource transport for Node.js environments
-   */
-  private async _createNodeEventSourceTransport(
-    serverName: string,
-    url: string,
-    headers: Record<string, string>
-  ): Promise<SSEClientTransport> {
-    // First try to use extended-eventsource which has better headers support
-    try {
-      const ExtendedEventSourceModule = await import("extended-eventsource");
-      const ExtendedEventSource = ExtendedEventSourceModule.EventSource;
-
+    if (options.authProvider) {
       getDebugLog()(
-        `DEBUG: Using Extended EventSource for server "${serverName}"`
+        `DEBUG: Using OAuth authentication for Streamable HTTP transport to server "${serverName}"`
       );
-      getDebugLog()(
-        `DEBUG: Setting headers for Extended EventSource: ${JSON.stringify(
-          headers
-        )}`
-      );
+    }
 
-      // Override the global EventSource with the extended implementation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (globalThis as any).EventSource = ExtendedEventSource;
-
-      // For Extended EventSource, create the SSE transport
-      return new SSEClientTransport(new URL(url), {
-        eventSourceInit: {},
-        requestInit: { headers },
-      });
-    } catch (extendedError) {
-      // Fall back to standard eventsource if extended-eventsource is not available
-      getDebugLog()(
-        `DEBUG: Extended EventSource not available, falling back to standard EventSource: ${extendedError}`
-      );
-
-      try {
-        // Dynamically import the eventsource package
-        // eslint-disable-next-line import/no-extraneous-dependencies
-        const EventSourceModule = await import("eventsource");
-        const EventSource =
-          "default" in EventSourceModule
-            ? EventSourceModule.default
-            : EventSourceModule.EventSource;
-
+    if (options.reconnectionOptions) {
+      if (options.reconnectionOptions.maxRetries === 0) {
         getDebugLog()(
-          `DEBUG: Using Node.js EventSource for server "${serverName}"`
+          `DEBUG: Disabling reconnection for Streamable HTTP transport to server "${serverName}"`
         );
+      } else {
         getDebugLog()(
-          `DEBUG: Setting headers for EventSource: ${JSON.stringify(headers)}`
+          `DEBUG: Using custom reconnection options for Streamable HTTP transport to server "${serverName}"`
         );
-
-        // Override the global EventSource with the Node.js implementation
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).EventSource = EventSource;
-
-        // Create transport with headers correctly configured for Node.js EventSource
-        return new SSEClientTransport(new URL(url), {
-          // Pass the headers to both eventSourceInit and requestInit for compatibility
-          requestInit: { headers },
-        });
-      } catch (nodeError) {
-        getDebugLog()(
-          `WARN: Failed to load EventSource packages for server "${serverName}". Headers may not be applied to SSE connection: ${nodeError}`
-        );
-
-        // Last resort fallback
-        return new SSEClientTransport(new URL(url), {
-          requestInit: { headers },
-        });
       }
     }
+
+    // Only pass options if there are any, otherwise use default constructor
+    return Object.keys(options).length > 0
+      ? new StreamableHTTPClientTransport(new URL(url), options)
+      : new StreamableHTTPClientTransport(new URL(url));
   }
 
   /**
@@ -1015,7 +788,7 @@ export class MultiServerMCPClient {
       const tools = await loadMcpTools(
         serverName,
         client,
-        this._loadToolsOptions
+        this._loadToolsOptions[serverName]
       );
       this._serverNameToTools[serverName] = tools;
       getDebugLog()(

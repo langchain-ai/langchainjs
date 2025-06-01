@@ -69,9 +69,10 @@ const apiKeyModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
-  ["gemini-2.5-flash-preview-04-17"],
+  ["gemini-2.5-flash-preview-05-20"],
   ["gemini-2.5-pro-preview-05-06"],
   ["gemma-3-27b-it"],
+  ["gemma-3n-e4b-it"],
 ];
 
 describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
@@ -206,15 +207,31 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   });
 
   // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
-  test.skip("Tool call", async () => {
+  // Gemma 3n reports: "Function calling is not enabled for models/gemma-3n-e4b-it"
+  test("Tool call", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
     console.log(res);
+    console.log(JSON.stringify(res?.tool_calls?.[0].args));
     expect(res.tool_calls?.length).toEqual(1);
     expect(res.tool_calls?.[0].args).toEqual(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
     );
+    const tc = res.tool_calls![0];
+    expect(tc.args.locations).toHaveLength(2);
+    expect(
+      tc.args.locations.some(
+        (l: Record<string, string>) =>
+          l.name === "SF" || l.name === "San Francisco"
+      )
+    ).toEqual(true);
+    expect(
+      tc.args.locations.some(
+        (l: Record<string, string>) =>
+          l.name === "LA" || l.name === "Los Angeles"
+      )
+    ).toEqual(true);
   });
 
   test.skip("Few shotting with tool calls", async () => {
@@ -319,6 +336,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
+  // Gemma 3n reports: "Image input modality is not enabled for models/gemma-3n-e4b-it"
   test("image_url image data", async () => {
     const model = newChatGoogle({});
 
@@ -485,12 +503,12 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-preview-04-17",
+    modelName: "gemini-2.5-flash-preview-05-20",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-preview-04-17",
+    modelName: "gemini-2.5-flash-preview-05-20",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -673,8 +691,10 @@ describe.each(testGeminiModelNames)(
     });
 
     test("function", async () => {
-      // gemini-2.0-flash-001: Test occasionally fails due to model regression
-      // gemini-2.0-flash-lite-001: Not supported
+      // gemini-1.5-flash-002: Test fails with nonsensical error:
+      //  The available tools lack the necessary functionality to answer this question.  The `get_weather` function is defined but not implemented, so I cannot retrieve weather information.
+      /*
+      // This tool definition was failing in Gemini 2.0+
       const tools: GeminiTool[] = [
         {
           functionDeclarations: [
@@ -696,11 +716,13 @@ describe.each(testGeminiModelNames)(
           ],
         },
       ];
-      const model = newChatGoogle().bindTools(tools, {
+      */
+      const tools = [weatherTool];
+      const model = newChatGoogle().bind({
+        tools,
         temperature: 0.1,
-        maxOutputTokens: 8000,
       });
-      const result = await model.invoke("Run a test on the cobalt project");
+      const result = await model.invoke("What is the weather in New York?");
       expect(result).toHaveProperty("content");
       expect(result.content).toBe("");
       const args = result?.lc_kwargs?.additional_kwargs;
@@ -715,10 +737,12 @@ describe.each(testGeminiModelNames)(
       const func = call.function;
       expect(func).toBeDefined();
       expect(func).toHaveProperty("name");
-      expect(func.name).toBe("test");
+      expect(func.name).toBe("get_weather");
       expect(func).toHaveProperty("arguments");
       expect(typeof func.arguments).toBe("string");
-      expect(func.arguments.replaceAll("\n", "")).toBe('{"testName":"cobalt"}');
+      expect(func.arguments.replaceAll("\n", "")).toBe(
+        '{"location":"New York"}'
+      );
     });
 
     test("function reply", async () => {
@@ -1122,6 +1146,31 @@ describe.each(testGeminiModelNames)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
+    test("URL Context Tool", async () => {
+      // Not available on Gemini 1.5
+      // Not available on Gemini 2.0 Flash Lite (but available on Flash)
+      // Not available on Vertex
+      const urlTool: GeminiTool = {
+        urlContext: {},
+      };
+      const model = newChatGoogle().bindTools([urlTool]);
+      const url = "https://js.langchain.com/";
+      const prompt = `Summarize this web page: ${url}`;
+      const result = await model.invoke(prompt);
+      const meta = result.response_metadata;
+      console.log(JSON.stringify(meta, null, 1));
+      expect(meta).toHaveProperty("url_context_metadata");
+      expect(meta).toHaveProperty("groundingMetadata");
+      expect(meta).toHaveProperty("groundingSupport");
+      const context = meta.url_context_metadata;
+      expect(context).toHaveProperty("urlMetadata");
+      expect(Array.isArray(context.urlMetadata)).toEqual(true);
+      expect(context.urlMetadata[0].retrievedUrl).toEqual(url);
+      expect(context.urlMetadata[0].urlRetrievalStatus).toEqual(
+        "URL_RETRIEVAL_STATUS_SUCCESS"
+      );
+    });
+
     test("Can stream GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
       const searchRetrievalTool = {
@@ -1199,7 +1248,8 @@ describe.each(testGeminiModelNames)(
       }
     });
 
-    test("image_url video data", async () => {
+    // Vertex AI doesn't (yet?) support fps, but does support startOffset and endOffset
+    test.only("image_url video data", async () => {
       const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
@@ -1208,43 +1258,88 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      const message: MessageContentComplex[] = [
-        {
-          type: "text",
-          text: "Describe this video in detail.",
-        },
-        {
-          type: "image_url",
-          image_url: dataUri,
-        },
-      ];
-
-      const messages: BaseMessage[] = [
-        new HumanMessageChunk({ content: message }),
-      ];
-
       try {
-        const res = await model.invoke(messages);
+        const message1: MessageContentComplex[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "image_url",
+            image_url: dataUri,
+          },
+        ];
+
+        const messages1: BaseMessage[] = [
+          new HumanMessageChunk({ content: message1 }),
+        ];
+
+        const res1 = await model.invoke(messages1);
 
         // console.log(res);
 
-        expect(res).toBeDefined();
-        expect(res._getType()).toEqual("ai");
+        expect(res1).toBeDefined();
+        expect(res1._getType()).toEqual("ai");
 
-        const aiMessage = res as AIMessageChunk;
-        expect(aiMessage.content).toBeDefined();
+        const aiMessage1 = res1 as AIMessageChunk;
+        expect(aiMessage1.content).toBeDefined();
 
-        expect(typeof aiMessage.content).toBe("string");
-        const text = aiMessage.content as string;
+        expect(typeof aiMessage1.content).toBe("string");
+        const text = aiMessage1.content as string;
         expect(text).toMatch(/rainbow/);
 
         // Gemini 1.5 does not include audio
+        const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+          ?.video as number;
+        expect(typeof videoTokens1).toEqual("number");
+        expect(videoTokens1).toBeGreaterThan(1024);
         expect(
-          aiMessage?.usage_metadata?.input_token_details?.video
-        ).toBeGreaterThan(1024);
-        expect(
-          aiMessage?.usage_metadata?.input_token_details?.audio
+          aiMessage1?.usage_metadata?.input_token_details?.audio
         ).toBeGreaterThan(0);
+
+        // Now run it again, but this time sample two frames / second
+        const message2: MessageContentComplex[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "image_url",
+            image_url: dataUri,
+            videoMetadata: {
+              fps: 2.0,
+            },
+          },
+        ];
+
+        const messages2: BaseMessage[] = [
+          new HumanMessageChunk({ content: message2 }),
+        ];
+
+        const res2 = await model.invoke(messages2);
+        const aiMessage2 = res2 as AIMessageChunk;
+
+        const videoTokens2 =
+          aiMessage2?.usage_metadata?.input_token_details?.video;
+        expect(typeof videoTokens2).toEqual("number");
+        expect(videoTokens2).toEqual(videoTokens1 * 2);
+
+        console.log(
+          "tokens 1",
+          JSON.stringify(
+            aiMessage1?.usage_metadata?.input_token_details,
+            null,
+            1
+          )
+        );
+        console.log(
+          "tokens 2",
+          JSON.stringify(
+            aiMessage2?.usage_metadata?.input_token_details,
+            null,
+            1
+          )
+        );
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
@@ -1252,7 +1347,7 @@ describe.each(testGeminiModelNames)(
         console.error(JSON.stringify(e.details, null, 1));
         throw e;
       }
-    });
+    }, 90000);
 
     test("implicit caching", async () => {
       const model = newChatGoogle({});
@@ -1304,42 +1399,6 @@ describe.each(testGeminiModelNames)(
       expect(cached2).toBeLessThanOrEqual(size1);
       // Results are highly inconsistent. Sometimes it won't cache.
     }, 90000); // Increase timeout
-
-    test("reasoning", async () => {
-      const model = newChatGoogle({
-        maxReasoningTokens: 12000,
-      });
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-    });
-
-    test("reasoning default", async () => {
-      const model = newChatGoogle({});
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-    });
-
-    test("reasoning off", async () => {
-      const model = newChatGoogle({
-        maxReasoningTokens: 0,
-      });
-      const res = await model.invoke(
-        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain."
-      );
-      console.log(res);
-      expect(res.content).toMatch(/^1\/6/);
-      expect(res).toHaveProperty("usage_metadata");
-      expect(res.usage_metadata).toHaveProperty("output_token_details");
-      expect(res.usage_metadata!.output_token_details).not.toHaveProperty(
-        "reasoning"
-      );
-    });
   }
 );
 
@@ -1415,6 +1474,170 @@ describe.each(testMultimodalModelNames)(
 
       // console.log(recorder.response);
       // console.log(JSON.stringify(res.content, null, 1));
+    });
+  }
+);
+
+const testReasoningModelNames = [
+  {
+    modelName: "gemini-2.5-flash-preview-05-20",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-05-20",
+    platformType: "gcp",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-05-06",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-05-06",
+    platformType: "gcp",
+  },
+];
+
+describe.each(testReasoningModelNames)(
+  "Webauth ($platformType) Reasoning($modelName)",
+  ({ modelName, platformType }) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let warnSpy: MockedFunction<any>;
+
+    function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+      // const logger = new GoogleRequestLogger();
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
+      return new ChatGoogle({
+        modelName,
+        platformType: platformType as GooglePlatformType,
+        callbacks,
+        apiKey,
+        ...(fields ?? {}),
+      });
+    }
+
+    beforeEach(async () => {
+      warnSpy = jest.spyOn(global.console, "warn");
+      const delay = testGeminiModelDelay[modelName] ?? 0;
+      if (delay) {
+        console.log(`Delaying for ${delay}ms`);
+        // eslint-disable-next-line no-promise-executor-return
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    test("default", async () => {
+      // By default, it should not return reasoning tokens, tho it should report some
+      const model = newChatGoogle();
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(false);
+      expect(typeof response.content).toEqual("string");
+      expect(response.content).toMatch(/^1\/6/);
+
+      expect(
+        response?.usage_metadata?.output_token_details?.reasoning
+      ).toBeGreaterThan(0);
+    });
+
+    test("content", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(true);
+      const content: MessageContentComplex[] =
+        response.content as MessageContentComplex[];
+      expect(content.length).toBeGreaterThanOrEqual(2);
+      expect(
+        content.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
+
+      expect(
+        response?.usage_metadata?.output_token_details?.reasoning
+      ).toBeGreaterThan(0);
+    });
+
+    test("off", async () => {
+      // By default, it should not return reasoning tokens, and should not report any
+      const model = newChatGoogle({
+        maxReasoningTokens: 0,
+      });
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(false);
+      expect(typeof response.content).toEqual("string");
+
+      expect(response).toHaveProperty("usage_metadata");
+      expect(response.usage_metadata).toHaveProperty("output_token_details");
+      expect(response.usage_metadata!.output_token_details).not.toHaveProperty(
+        "reasoning"
+      );
+    });
+
+    test("conversation", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: 12000,
+      });
+      const prompt1 =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const history: BaseMessageChunk[] = [new HumanMessageChunk(prompt1)];
+      const response1 = await model.invoke(history);
+      history.push(response1);
+      console.log(response1);
+
+      expect(Array.isArray(response1.content)).toEqual(true);
+      const content1: MessageContentComplex[] =
+        response1.content as MessageContentComplex[];
+      expect(content1.length).toBeGreaterThanOrEqual(2);
+      expect(
+        content1.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content1.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
+
+      const prompt2 = "How about 1?";
+      history.push(new HumanMessageChunk(prompt2));
+      const response2 = await model.invoke(history);
+      console.log(response2);
+
+      expect(Array.isArray(response2.content)).toEqual(true);
+      const content2: MessageContentComplex[] =
+        response2.content as MessageContentComplex[];
+      expect(content2.length).toBeGreaterThanOrEqual(2);
+      expect(
+        content2.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content2.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
     });
   }
 );
