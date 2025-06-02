@@ -499,7 +499,7 @@ function _convertMessagesToOpenAIResponsesParams(
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
-          id: toolMessage.id,
+          id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output:
             typeof toolMessage.content !== "string"
               ? JSON.stringify(toolMessage.content)
