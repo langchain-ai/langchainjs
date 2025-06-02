@@ -29,10 +29,10 @@ describe.skip("CouchbaseSearchVectorStore", () => {
     cluster: process.env.COUCHBASE_CLUSTER || "couchbase://localhost",
     username: process.env.COUCHBASE_USERNAME || "Administrator",
     password: process.env.COUCHBASE_PASSWORD || "password",
-    bucketName: "pdf-chat",
+    bucketName: "test-bucket",
     scopeName: "_default",
     collectionName: "_default",
-    indexName: "pdf-search",
+    indexName: "test-index",
     textKey: "text",
     embeddingKey: "embedding",
   };
