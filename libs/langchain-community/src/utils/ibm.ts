@@ -43,7 +43,8 @@ export const authenticateAndSetInstance = ({
       }),
     });
   } else if (watsonxAIAuthType === "cp4d" && watsonxAIUrl) {
-    if (watsonxAIUsername && watsonxAIPassword && watsonxAIApikey)
+    // cp4d auth requires username with either Password of ApiKey but not both.
+    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey))
       return WatsonXAI.newInstance({
         version,
         serviceUrl,
