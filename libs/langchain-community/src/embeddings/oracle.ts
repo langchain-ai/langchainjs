@@ -5,7 +5,7 @@ import oracledb from "oracledb";
  * Generate embeddings using models through Oracle
  * @example
  * ```typescript
- * const embedder = new OracleDocLoader(conn, params, proxy);
+ * const embedder = new OracleEmbeddings(conn, params, proxy);
  * const embed = await embedder.embedQuery(chunk);
  * ```
  */

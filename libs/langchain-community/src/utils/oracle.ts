@@ -4,7 +4,7 @@ import oracledb from "oracledb";
  * Generate a summary using models through Oracle
  * @example
  * ```typescript
- * const model = new OracleSummary(conn, params);
+ * const model = new OracleSummary(conn, params, proxy);
  * let summary = await model.getSummary(doc.pageContent);
  * ```
  */
