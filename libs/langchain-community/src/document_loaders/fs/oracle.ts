@@ -53,161 +53,144 @@ export class OracleDocLoader extends BaseDocumentLoader {
     const docs = [];
 
     if ("file" in this.pref) {
-      // don't specify an encoding to use binary
-      const data = fs.readFileSync(this.pref.file);
-
-      const result = await this.conn.execute(
-        <string>`select dbms_vector_chain.utl_to_text(:content, :pref) text,\
-                        dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`,
-        <oracledb.BindParameters>{
-          content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
-          pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
-        },
-        <oracledb.ExecuteOptions>(<unknown>{
-          resultSet: true, // return a ResultSet (default is false)
-          fetchInfo: {
-            TEXT: { type: oracledb.STRING },
-            METADATA: { type: oracledb.STRING },
-          },
-        })
-      );
-
-      const rs = result.resultSet;
-      let row;
-      if (rs != null) {
-        while ((row = await rs.getRow())) {
-          const [plain_text, metadata] = await this._extract(row);
-          docs.push(
-            new Document({
-              pageContent: <string>plain_text,
-              metadata: <Record<string, any>>metadata,
-            })
-          );
-        }
-        await rs.close();
+      const doc = await this._loadFromFile(this.pref.file);
+      if (doc != null) {
+        docs.push(doc);
       }
     } else if ("dir" in this.pref) {
       for (const file of listDir(this.pref.dir)) {
-        // don't specify an encoding to use binary
-        const data = fs.readFileSync(file);
-
-        const result = await this.conn.execute(
-          <string>`select dbms_vector_chain.utl_to_text(:content, :pref) text,\
-                          dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`,
-          <oracledb.BindParameters>{
-            content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
-            pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
-          },
-          <oracledb.ExecuteOptions>(<unknown>{
-            resultSet: true, // return a ResultSet (default is false)
-            fetchInfo: {
-              TEXT: { type: oracledb.STRING },
-              METADATA: { type: oracledb.STRING },
-            },
-          })
-        );
-
-        const rs = result.resultSet;
-        let row;
-        if (rs != null) {
-          while ((row = await rs.getRow())) {
-            const [plain_text, metadata] = await this._extract(row);
-            docs.push(
-              new Document({
-                pageContent: <string>plain_text,
-                metadata: <Record<string, any>>metadata,
-              })
-            );
-          }
-          await rs.close();
+        const doc = await this._loadFromFile(file);
+        if (doc != null) {
+          docs.push(doc);
         }
       }
     } else if ("tablename" in this.pref) {
       if (!("owner" in this.pref) || !("colname" in this.pref)) {
         throw new Error(`Invalid preferences: missing owner or colname`);
       }
-
-      // SQL doesn't accept backslash to escape a double quote (\"). If string contains \" change to "
-      if (
-        this.pref.tablename.startsWith('\\"') &&
-        this.pref.tablename.endsWith('\\"')
-      ) {
-        this.pref.tablename = this.pref.tablename.replaceAll("\\", "");
-      }
-
-      // Check if names are invalid
-      const col = this.pref.colname;
-      const owner = this.pref.owner;
-      const table = this.pref.tablename;
-      const qn = `${owner}.${table}`;
-      try {
-        const sql = `select sys.dbms_assert.simple_sql_name(:col),\
-                            sys.dbms_assert.qualified_sql_name(:qn) from dual`;
-        const binds = [col, qn];
-        await this.conn.execute(sql, binds);
-      } catch (error) {
-        throw new Error(`Invalid owner, table, or column name`);
-      }
-
-      const result = await this.conn.execute(
-        <string>(
-          `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text,\
-                  dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata\
-                  from ${this.pref.owner}.${this.pref.tablename} t`
-        ),
-        <oracledb.BindParameters>{
-          pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
-        },
-        <oracledb.ExecuteOptions>(<unknown>{
-          resultSet: true, // return a ResultSet (default is false)
-          fetchInfo: {
-            TEXT: { type: oracledb.STRING },
-            METADATA: { type: oracledb.STRING },
-          },
-        })
+      docs.push(
+        await this._loadFromTable(
+          this.pref.owner,
+          this.pref.tablename,
+          this.pref.colname
+        )
       );
-
-      const rs = result.resultSet;
-      let row;
-      if (rs != null) {
-        while ((row = await rs.getRow())) {
-          const [plain_text, metadata] = await this._extract(row);
-          docs.push(
-            new Document({
-              pageContent: <string>plain_text,
-              metadata: <Record<string, any>>metadata,
-            })
-          );
-        }
-        await rs.close();
-      }
     } else {
-      throw new Error(`Invalid preferences: missing file or tablename`);
+      throw new Error(`Invalid preferences: missing file, dir, or tablename`);
+    }
+
+    return docs;
+  }
+
+  // load from file
+  private async _loadFromFile(filename): Promise<[Document, string]> {
+    let doc = null;
+
+    // don't specify an encoding to use binary
+    const data = fs.readFileSync(filename);
+
+    const result = await this.conn.execute(
+      <string>`select dbms_vector_chain.utl_to_text(:content, :pref) text,\
+                        dbms_vector_chain.utl_to_text(:content, json('{"plaintext": "false"}')) metadata from dual`,
+      <oracledb.BindParameters>{
+        content: { val: data, dir: oracledb.BIND_IN, type: oracledb.BLOB },
+        pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
+      },
+      <oracledb.ExecuteOptions>(<unknown>{
+        resultSet: true, // return a ResultSet (default is false)
+        fetchInfo: {
+          TEXT: { type: oracledb.STRING },
+          METADATA: { type: oracledb.STRING },
+        },
+      })
+    );
+    const resultSet = result.resultSet;
+    try {
+      for await (const row of resultSet) {
+        const [plain_text, metadata] = await this._extract(row);
+        doc = new Document({
+          pageContent: <string>plain_text,
+          metadata: <Record<string, any>>metadata,
+        });
+      }
+    } finally {
+      await resultSet.close();
+    }
+
+    return doc;
+  }
+
+  // load from table
+  private async _loadFromTable(
+    owner,
+    table,
+    col
+  ): Promise<[Document[], string, string, string]> {
+    const docs = [];
+
+    // Check if names are invalid
+    const qn = `${owner}.${table}`;
+    try {
+      const sql = `select sys.dbms_assert.simple_sql_name(:col),\
+                            sys.dbms_assert.qualified_sql_name(:qn) from dual`;
+      const binds = [col, qn];
+      await this.conn.execute(sql, binds);
+    } catch (error) {
+      throw new Error(`Invalid owner, table, or column name`);
+    }
+
+    const result = await this.conn.execute(
+      <string>(
+        `select dbms_vector_chain.utl_to_text(t.${this.pref.colname}, :pref) text,\
+                  dbms_vector_chain.utl_to_text(t.${this.pref.colname}, json('{"plaintext": "false"}')) metadata\
+                  from ${owner}.${table} t`
+      ),
+      <oracledb.BindParameters>{
+        pref: { val: this.pref, type: oracledb.DB_TYPE_JSON },
+      },
+      <oracledb.ExecuteOptions>(<unknown>{
+        resultSet: true, // return a ResultSet (default is false)
+        fetchInfo: {
+          TEXT: { type: oracledb.STRING },
+          METADATA: { type: oracledb.STRING },
+        },
+      })
+    );
+
+    const resultSet = result.resultSet;
+    try {
+      for await (const row of resultSet) {
+        const [plain_text, metadata] = await this._extract(row);
+        docs.push(
+          new Document({
+            pageContent: <string>plain_text,
+            metadata: <Record<string, any>>metadata,
+          })
+        );
+      }
+    } finally {
+      await resultSet.close();
     }
 
     return docs;
   }
 
   // extract plain text and metadata from a row
-  async _extract(row: any) {
-    let plain_text = "";
-    let metadata: Record<string, string> = {};
+  private async _extract(row: any): Promise<[string, Record<string, string>]> {
+    const [text, htmlMetadata] = row;
+    const metadata: Record<string, string> = {};
 
-    if (row != null) {
-      [plain_text] = row;
-      const [, html_metadata] = row;
+    const parser = new htmlparser2.Parser({
+      onopentag(name, attrs) {
+        if (name === "meta" && attrs.name) {
+          metadata[attrs.name] = attrs.content;
+        }
+      },
+    });
 
-      const parser = new htmlparser2.Parser({
-        onopentag(name, attributes) {
-          if (name === "meta" && attributes.name !== undefined) {
-            metadata[attributes.name] = attributes.content;
-          }
-        },
-      });
-      parser.write(html_metadata);
-      parser.end();
-    }
+    parser.write(htmlMetadata);
+    parser.end();
 
-    return [plain_text, metadata];
+    return [text, metadata];
   }
 }
