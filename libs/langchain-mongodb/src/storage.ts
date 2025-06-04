@@ -182,9 +182,7 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       regexPattern = `^${this._getPrefixedKey(".*")}`;
     }
 
-    let totalDocsYielded = 0;
-
-    let cursor = await this.collection
+    const cursor = this.collection
       .find(
         {
           [this.primaryKey]: { $regex: regexPattern },
@@ -193,29 +191,10 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
           batchSize: this.yieldKeysScanBatchSize,
         }
       )
-      .toArray();
+      .map((key) => this._getDeprefixedKey(key[this.primaryKey]));
 
-    for (const key of cursor) {
-      yield this._getDeprefixedKey(key[this.primaryKey]);
-    }
-    totalDocsYielded += cursor.length;
-    while (cursor.length !== 0) {
-      cursor = await this.collection
-        .find(
-          {
-            [this.primaryKey]: { $regex: regexPattern },
-          },
-          {
-            batchSize: this.yieldKeysScanBatchSize,
-            skip: totalDocsYielded,
-          }
-        )
-        .toArray();
-
-      for (const key of cursor) {
-        yield this._getDeprefixedKey(key[this.primaryKey]);
-      }
-      totalDocsYielded += cursor.length;
+    for await (const document of cursor) {
+      yield document;
     }
   }
 }
