@@ -29,7 +29,7 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Headers | Record<string, string>;
 }
 
 /**
