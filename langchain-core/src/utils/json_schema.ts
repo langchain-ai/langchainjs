@@ -1,4 +1,4 @@
-import * as z4 from "zod/v4";
+import * as z4 from "zod/v4/core";
 import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import { InteropZodType, isZodSchema, isZodSchemaV4 } from "./types/zod.js";
