@@ -1,18 +1,19 @@
 import { z } from "zod";
 import {
-  zodToJsonSchema,
-  JsonSchema7Type,
-  JsonSchema7ArrayType,
-  JsonSchema7ObjectType,
-  JsonSchema7StringType,
-  JsonSchema7NumberType,
-  JsonSchema7NullableType,
-} from "zod-to-json-schema";
-import {
   BaseOutputParser,
   FormatInstructionsOptions,
   OutputParserException,
 } from "./base.js";
+import { interopParseAsync } from "../utils/types/zod.js";
+import {
+  toJsonSchema,
+  type JsonSchema7Type,
+  type JsonSchema7ArrayType,
+  type JsonSchema7ObjectType,
+  type JsonSchema7StringType,
+  type JsonSchema7NumberType,
+  type JsonSchema7NullableType,
+} from "../utils/json_schema.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -89,7 +90,7 @@ Your output will be parsed and type-checked according to the provided schema ins
 
 Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-${JSON.stringify(zodToJsonSchema(this.schema))}
+${JSON.stringify(toJsonSchema(this.schema))}
 \`\`\`
 `;
   }
@@ -112,7 +113,7 @@ ${JSON.stringify(zodToJsonSchema(this.schema))}
         })
         .replace(/\n/g, "");
 
-      return await this.schema.parseAsync(JSON.parse(escapedJson));
+      return await interopParseAsync(this.schema, JSON.parse(escapedJson));
     } catch (e) {
       throw new OutputParserException(
         `Failed to parse. Text: "${text}". Error: ${e}`,
@@ -142,7 +143,7 @@ export class JsonMarkdownStructuredOutputParser<
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
-      zodToJsonSchema(this.schema)
+      toJsonSchema(this.schema)
     )
       .replaceAll("{", "{".repeat(interpolationDepth))
       .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;

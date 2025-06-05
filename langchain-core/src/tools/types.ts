@@ -16,7 +16,7 @@ import {
   type ToolMessage,
 } from "../messages/tool.js";
 import type { MessageContent } from "../messages/base.js";
-import { isZodSchema } from "../utils/types/zod.js";
+import { isInteropZodSchema } from "../utils/types/zod.js";
 import { JSONSchema } from "../utils/json_schema.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
@@ -387,7 +387,7 @@ export function isStructuredToolParams(
     "name" in tool &&
     "schema" in tool &&
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (isZodSchema(tool.schema as Record<string, any>) ||
+    (isInteropZodSchema(tool.schema as Record<string, any>) ||
       (tool.schema != null &&
         typeof tool.schema === "object" &&
         "type" in tool.schema &&
