@@ -107,6 +107,7 @@ export class OpenAIAssistantRunnable<
         {
           thread_id: parsedStepsInput.threadId,
           tool_outputs: parsedStepsInput.toolOutputs,
+          thread_id: parsedStepsInput.threadId,
         }
       );
     } else if (!("threadId" in input)) {
