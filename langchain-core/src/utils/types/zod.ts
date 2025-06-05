@@ -2,15 +2,21 @@ import type * as z3 from "zod/v3";
 import type * as z4 from "zod/v4/core";
 import { parseAsync, parse, globalRegistry } from "zod/v4/core";
 
+export type ZodStringV3 = z3.ZodString;
+
+export type ZodStringV4 = z4.$ZodType<string, unknown>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
+
+export type ZodObjectV4 = z4.$ZodObject;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InteropZodObject = z3.ZodObject<any, any, any, any> | z4.$ZodObject;
-
-export type InteropZodString = z3.ZodString | z4.$ZodString;
+export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
@@ -74,7 +80,7 @@ export function isZodSchemaV3(
   const def = obj._def;
   return (
     typeof def === "object" &&
-    def !== null &&
+    def != null &&
     "typeName" in (def as Record<string, unknown>)
   );
 }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
