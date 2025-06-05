@@ -23,7 +23,12 @@ import {
   _isToolCall,
   ToolInputParsingException,
 } from "./utils.js";
-import { isZodSchema } from "../utils/types/zod.js";
+import {
+  interopParseAsync,
+  InteropZodType,
+  isSimpleStringZodSchema,
+  isInteropZodSchema,
+} from "../utils/types/zod.js";
 import type {
   StructuredToolCallInput,
   ToolInputSchemaBase,
@@ -192,10 +197,11 @@ export abstract class StructuredTool<
     const inputForValidation = _isToolCall(arg) ? arg.args : arg;
 
     let parsed: SchemaOutputT; // This will hold the successfully parsed input of the expected output type.
-    if (isZodSchema(this.schema)) {
+    if (isInteropZodSchema(this.schema)) {
       try {
         // Validate the inputForValidation - TS needs help here as it can't exclude ToolCall based on the check
-        parsed = await (this.schema as z.ZodSchema).parseAsync(
+        parsed = await interopParseAsync(
+          this.schema as InteropZodType,
           inputForValidation as Exclude<TArg, ToolCall>
         );
       } catch (e) {
@@ -594,15 +600,11 @@ export function tool<
   :
       | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
       | DynamicTool<ToolOutputT> {
-  const isShapelessZodSchema =
-    fields.schema &&
-    isZodSchema(fields.schema) &&
-    (!("shape" in fields.schema) || !fields.schema.shape);
-
+  const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
 
-  // If the schema is not provided, or it's a shapeless schema (e.g. a ZodString), create a DynamicTool
-  if (!fields.schema || isShapelessZodSchema || isStringJSONSchema) {
+  // If the schema is not provided, or it's a simple string schema, create a DynamicTool
+  if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
     return new DynamicTool<ToolOutputT>({
       ...fields,
       description:
