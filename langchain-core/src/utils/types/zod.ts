@@ -85,6 +85,11 @@ export function isZodSchema<
 >(
   schema: z3.ZodType<RunOutput> | Record<string, unknown>
 ): schema is z3.ZodType<RunOutput> {
+  if (isZodSchemaV4(schema)) {
+    console.warn(
+      "[WARNING] Attempting to use Zod 4 schema in a context where Zod 3 schema is expected. This may cause unexpected behavior."
+    );
+  }
   return isZodSchemaV3(schema);
 }
 
