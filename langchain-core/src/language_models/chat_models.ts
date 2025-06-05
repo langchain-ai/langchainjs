@@ -1,3 +1,5 @@
+import type { ZodType as ZodTypeV3 } from "zod/v3";
+import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 import {
   AIMessage,
   type BaseMessage,
@@ -907,7 +909,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -918,7 +920,29 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | ZodTypeV3<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
