@@ -75,6 +75,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18

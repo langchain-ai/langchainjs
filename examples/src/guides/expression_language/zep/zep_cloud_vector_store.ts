@@ -27,6 +27,7 @@ const zepClient = new ZepClient({
 });
 
 const vectorStore = await ZepCloudVectorStore.init({
+  // @ts-expect-error - Mismatched ZepClient due to resolution issues
   client: zepClient,
   collectionName,
 });

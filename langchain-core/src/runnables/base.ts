@@ -3326,7 +3326,9 @@ export class RunnablePick<
       const picked = this.keys
         .map((key) => [key, input[key]])
         .filter((v) => v[1] !== undefined);
-      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+      return picked.length === 0
+        ? (undefined as RunOutput)
+        : Object.fromEntries(picked);
     }
   }
 

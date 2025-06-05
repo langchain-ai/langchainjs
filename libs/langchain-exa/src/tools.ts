@@ -8,7 +8,7 @@ import Exa, { ContentsOptions, RegularSearchOptions } from "exa-js";
 export type ExaSearchRetrieverFields<
   T extends ContentsOptions = { text: true }
 > = ToolParams & {
-  client: Exa.default;
+  client: Exa;
   searchArgs?: RegularSearchOptions & T;
 };
 
@@ -95,7 +95,7 @@ export class ExaSearchResults<
 
   name = "exa_search_results_json";
 
-  private client: Exa.default;
+  private client: Exa;
 
   searchArgs?: RegularSearchOptions & T;
 
@@ -127,7 +127,7 @@ export class ExaFindSimilarResults<
 
   name = "exa_find_similar_results_json";
 
-  private client: Exa.default;
+  private client: Exa;
 
   searchArgs?: RegularSearchOptions & T;
 
