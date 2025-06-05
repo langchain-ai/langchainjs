@@ -21,6 +21,7 @@
     "chromadb": "npm:/chromadb",
     "dotenv/": "npm:/dotenv/",
     "zod": "npm:/zod",
+    "zod-to-json-schema": "npm:/zod-to-json-schema",
     "node-llama-cpp": "npm:/node-llama-cpp",
     "pdf-parse": "npm:/pdf-parse",
     "peggy": "npm:/peggy",

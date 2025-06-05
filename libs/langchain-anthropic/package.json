@@ -36,7 +36,9 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "fast-xml-parser": "^4.4.1"
+    "fast-xml-parser": "^4.4.1",
+    "zod": "^3.25.32",
+    "zod-to-json-schema": "^3.22.4"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.48 <0.4.0"
@@ -53,7 +55,7 @@
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",
@@ -63,8 +65,7 @@
     "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
-    "typescript": "~5.1.6",
-    "zod": "^3.25.32"
+    "typescript": "~5.1.6"
   },
   "publishConfig": {
     "access": "public"

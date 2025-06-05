@@ -1,7 +1,7 @@
-import * as z4 from "zod/v4/core";
+import { toJSONSchema } from "zod/v4/core";
 import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
-import { InteropZodType, isZodSchema, isZodSchemaV4 } from "./types/zod.js";
+import { isZodSchemaV3, isZodSchemaV4, InteropZodType } from "./types/zod.js";
 
 export type JSONSchema = JsonSchema7Type;
 
@@ -14,9 +14,9 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  */
 export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV4(schema)) {
-    return z4.toJSONSchema(schema);
+    return toJSONSchema(schema);
   }
-  if (isZodSchema(schema)) {
+  if (isZodSchemaV3(schema)) {
     return zodToJsonSchema(schema);
   }
   return schema as JSONSchema;

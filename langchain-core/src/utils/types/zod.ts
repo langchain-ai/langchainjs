@@ -78,8 +78,14 @@ export function isZodSchemaV3(
   );
 }
 
-/** Re-export for backwards compatibility */
-export const isZodSchema = isZodSchemaV3;
+/** Backward compatible isZodSchema for Zod 3 */
+export function isZodSchema<
+  RunOutput extends Record<string, unknown> = Record<string, unknown>
+>(
+  schema: z3.ZodType<RunOutput> | Record<string, unknown>
+): schema is z3.ZodType<RunOutput> {
+  return isZodSchemaV3(schema);
+}
 
 /**
  * Given either a Zod schema, or plain object, determine if the input is a Zod schema.
@@ -97,7 +103,10 @@ export function isInteropZodSchema(input: unknown): input is InteropZodType {
   if (Array.isArray(input)) {
     return false;
   }
-  if (isZodSchemaV4(input) || isZodSchemaV3(input)) {
+  if (
+    isZodSchemaV4(input) ||
+    isZodSchemaV3(input as z3.ZodType<Record<string, unknown>>)
+  ) {
     return true;
   }
   return false;
@@ -133,7 +142,7 @@ export async function interopSafeParseAsync<T>(
       };
     }
   }
-  if (isZodSchemaV3(schema)) {
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
     return schema.safeParse(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
@@ -156,7 +165,7 @@ export async function interopParseAsync<T>(
   if (isZodSchemaV4(schema)) {
     return z4.parse(schema, input);
   }
-  if (isZodSchemaV3(schema)) {
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
     return schema.parse(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
@@ -174,8 +183,8 @@ export function getSchemaDescription(
   if (isZodSchemaV4(schema)) {
     return z4.globalRegistry.get(schema)?.description;
   }
-  if (isZodSchemaV3(schema)) {
-    return schema.description;
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+    return schema.description as string | undefined;
   }
   if ("description" in schema && typeof schema.description === "string") {
     return schema.description;
@@ -200,7 +209,8 @@ export function isShapelessZodSchema(schema: unknown): boolean {
   }
 
   // Check for v3 schemas
-  if (isZodSchemaV3(schema)) {
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+    // @ts-expect-error - zod v3 types are not compatible with zod v4 types
     const def = schema._def as { typeName?: string };
 
     // ZodObject is only shaped if it has actual shape keys
@@ -271,7 +281,8 @@ export function isSimpleStringZodSchema(
   }
 
   // For v3 schemas
-  if (isZodSchemaV3(schema)) {
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+    // @ts-expect-error - zod v3 types are not compatible with zod v4 types
     const def = schema._def as { typeName?: string };
 
     // Only accept basic ZodString
