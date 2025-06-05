@@ -36,7 +36,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.755.0",
     "@aws-sdk/client-kendra": "^3.750.0",
     "@aws-sdk/credential-provider-node": "^3.750.0",
-    "zod": "^3.25.32",
+    "zod": "^3.23.8",
     "zod-to-json-schema": "^3.22.5"
   },
   "peerDependencies": {
@@ -68,7 +68,8 @@
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "<5.2.0",
+    "zod": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"

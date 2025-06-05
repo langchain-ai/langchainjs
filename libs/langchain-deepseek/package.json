@@ -33,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/openai": "^0.5.5",
-    "zod": "^3.25.32"
+    "zod": "^3.24.1"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0 <0.4.0"
