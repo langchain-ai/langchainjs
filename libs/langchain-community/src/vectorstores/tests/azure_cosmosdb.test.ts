@@ -104,7 +104,12 @@ test("AzureCosmosDBVectorStore deletes documents", async () => {
   expect(mockCollection.deleteMany).toHaveBeenCalledTimes(1);
   expect(mockCollection.deleteMany).toHaveBeenCalledWith({});
 
-  await store.delete({ ids: ["id1234567890", "id2345678901"] });
+  await store.delete({
+    ids: [
+      Buffer.from("id1234567890").toString("hex"),
+      Buffer.from("id2345678901").toString("hex"),
+    ],
+  });
 
   expect(mockCollection.deleteMany).toHaveBeenCalledTimes(2);
   expect(mockCollection.deleteMany.mock.calls[1][0]).toMatchObject({ _id: {} });

@@ -37,7 +37,7 @@ import {
  */
 export class ChatTencentHunyuan extends BaseChatTencentHunyuan {
   constructor(fields?: Partial<TencentHunyuanChatInput> & BaseChatModelParams) {
-    super({ ...fields, sign } ?? { sign });
+    super({ ...fields, sign });
   }
 }
 

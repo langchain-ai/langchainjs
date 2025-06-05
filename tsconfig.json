@@ -8,7 +8,7 @@
       "DOM"
     ],
     "module": "ES2020",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,

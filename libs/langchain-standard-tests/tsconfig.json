@@ -6,7 +6,7 @@
     "target": "ES2021",
     "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,

@@ -30,7 +30,7 @@ const docs = [
 test.skip("create new collection as a RocksetVectorStore", async () => {
   store = await RocksetStore.withNewCollection(embeddings, {
     collectionName: "langchain_demo",
-    client: rockset.default(
+    client: rockset(
       process.env.ROCKSET_API_KEY ?? "",
       `https://api.${process.env.ROCKSET_API_REGION ?? "usw2a1"}.rockset.com`
     ),

@@ -9,7 +9,7 @@ import {
  */
 export class TencentHunyuanEmbeddings extends BaseTencentHunyuanEmbeddings {
   constructor(fields?: TencentHunyuanEmbeddingsParams) {
-    super({ ...fields, sign } ?? { sign });
+    super({ ...fields, sign });
   }
 }
 

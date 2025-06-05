@@ -326,9 +326,8 @@ export class SimpleSequentialChain
   _validateChains() {
     for (const chain of this.chains) {
       if (
-        chain.inputKeys.filter(
-          (k) => !chain.memory?.memoryKeys.includes(k) ?? true
-        ).length !== 1
+        chain.inputKeys.filter((k) => !chain.memory?.memoryKeys.includes(k))
+          .length !== 1
       ) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${

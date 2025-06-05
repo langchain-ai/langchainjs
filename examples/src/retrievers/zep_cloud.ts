@@ -1,7 +1,6 @@
 import { ZepCloudRetriever } from "@langchain/community/retrievers/zep_cloud";
 import { randomUUID } from "crypto";
-import { ZepClient } from "@getzep/zep-cloud";
-import { Message } from "@getzep/zep-cloud/api";
+import { ZepClient, type Zep } from "@getzep/zep-cloud";
 
 function sleep(ms: number) {
   // eslint-disable-next-line no-promise-executor-return
@@ -70,7 +69,7 @@ const zepClient = new ZepClient({
 
 // Add chat messages to memory
 for (const chatMessage of chatMessages) {
-  let m: Message;
+  let m: Zep.Message;
   if (chatMessage.role === "AI") {
     m = { role: "ai", roleType: "assistant", content: chatMessage.message };
   } else {

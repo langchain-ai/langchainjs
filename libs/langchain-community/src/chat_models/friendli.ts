@@ -339,7 +339,7 @@ export class ChatFriendli extends BaseChatModel<BaseChatModelCallOptions> {
       })
     );
 
-    if (response.status !== 200 ?? !response.body) {
+    if (response.status !== 200 || !response.body) {
       const errorResponse = await response.json();
       throw new Error(JSON.stringify(errorResponse));
     }

@@ -198,7 +198,7 @@ export class GithubRepoLoader
     });
     this.ignorePaths = ignorePaths;
     if (ignorePaths) {
-      this.ignore = ignore.default().add(ignorePaths);
+      this.ignore = ignore().add(ignorePaths);
     }
     if (this.accessToken) {
       this.headers = {

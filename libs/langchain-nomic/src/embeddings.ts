@@ -156,7 +156,7 @@ export class NomicEmbeddings
         task_type: this.taskType,
         dimensionality: this.dimensionality,
       });
-      return result;
+      return result as NomicEmbeddingsResult;
     });
   }
 }

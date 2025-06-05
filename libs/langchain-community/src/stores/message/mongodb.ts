@@ -2,6 +2,7 @@ import { Collection, Document as MongoDBDocument, ObjectId } from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
+  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
@@ -27,13 +28,15 @@ export interface MongoDBChatMessageHistoryInput {
 export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
   lc_namespace = ["langchain", "stores", "message", "mongodb"];
 
-  private collection: Collection<MongoDBDocument>;
+  private collection: Collection<{ messages: StoredMessage[] }>;
 
   private sessionId: string;
 
   constructor({ collection, sessionId }: MongoDBChatMessageHistoryInput) {
     super();
-    this.collection = collection;
+    this.collection = collection as unknown as Collection<{
+      messages: StoredMessage[];
+    }>;
     this.sessionId = sessionId;
   }
 
@@ -49,9 +52,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
     const messages = mapChatMessagesToStoredMessages([message]);
     await this.collection.updateOne(
       { _id: new ObjectId(this.sessionId) },
-      {
-        $push: { messages: { $each: messages } },
-      },
+      { $push: { messages: { $each: messages } } },
       { upsert: true }
     );
   }
