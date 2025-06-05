@@ -38,11 +38,9 @@ beforeAll(async () => {
   client = new MongoClient(uri(), { monitorCommands: true });
   await client.connect();
 
-  const namespace = "langchain.test";
+  const namespace = "langchain_test.vectorstores";
   const [dbName, collectionName] = namespace.split(".");
   collection = await client.db(dbName).createCollection(collectionName);
-
-  if (!isUsingLocalAtlas()) return;
 
   await collection.createSearchIndex({
     name: "default",
