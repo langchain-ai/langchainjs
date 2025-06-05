@@ -611,62 +611,76 @@ function _convertMessagesToOpenAIResponsesParams(
           ? lcMsg.response_metadata.output
           : additional_kwargs.tool_outputs;
 
-        let computerCalls: Array<ResponsesInputItem> = [];
+        const fallthroughCallTypes: ResponsesInputItem["type"][] = [
+          "computer_call",
+          "mcp_call",
+          "code_interpreter_call",
+        ];
 
         if (toolOutputs != null) {
           const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
-
-          computerCalls = castToolOutputs?.filter(
-            (item) => item.type === "computer_call"
+          const fallthroughCalls = castToolOutputs?.filter((item) =>
+            fallthroughCallTypes.includes(item.type)
           );
-
-          if (computerCalls.length > 0) input.push(...computerCalls);
+          if (fallthroughCalls.length > 0) input.push(...fallthroughCalls);
         }
 
         return input;
       }
 
-      const content =
-        typeof lcMsg.content === "string"
-          ? lcMsg.content
-          : lcMsg.content.flatMap((item) => {
-              if (isDataContentBlock(item)) {
-                return convertToProviderContentBlock(
-                  item,
-                  completionsApiContentBlockConverter
-                );
-              }
-
-              if (item.type === "text") {
-                return { type: "input_text", text: item.text };
-              }
-
-              if (item.type === "image_url") {
-                const image_url =
-                  typeof item.image_url === "string"
-                    ? item.image_url
-                    : item.image_url.url;
-                const detail =
-                  typeof item.image_url === "string"
-                    ? "auto"
-                    : item.image_url.detail;
-
-                return { type: "input_image", image_url, detail };
-              }
-
-              if (
-                item.type === "input_text" ||
-                item.type === "input_image" ||
-                item.type === "input_file"
-              ) {
-                return item;
-              }
-
-              return [];
-            });
-
       if (role === "user" || role === "system" || role === "developer") {
-        return { type: "message", role, content };
+        if (typeof lcMsg.content === "string") {
+          return { type: "message", role, content: lcMsg.content };
+        }
+
+        const messages: ResponsesInputItem[] = [];
+        const content = lcMsg.content.flatMap((item) => {
+          if (item.type === "mcp_approval_response") {
+            messages.push({
+              type: "mcp_approval_response",
+              approval_request_id: item.approval_request_id,
+              approve: item.approve,
+            });
+          }
+          if (isDataContentBlock(item)) {
+            return convertToProviderContentBlock(
+              item,
+              completionsApiContentBlockConverter
+            );
+          }
+          if (item.type === "text") {
+            return {
+              type: "input_text",
+              text: item.text,
+            };
+          }
+          if (item.type === "image_url") {
+            return {
+              type: "input_image",
+              image_url:
+                typeof item.image_url === "string"
+                  ? item.image_url
+                  : item.image_url.url,
+              detail:
+                typeof item.image_url === "string"
+                  ? "auto"
+                  : item.image_url.detail,
+            };
+          }
+          if (
+            item.type === "input_text" ||
+            item.type === "input_image" ||
+            item.type === "input_file"
+          ) {
+            return item;
+          }
+          return [];
+        });
+
+        if (content.length > 0) {
+          messages.push({ type: "message", role, content });
+        }
+        return messages;
       }
 
       console.warn(
@@ -830,9 +844,15 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     };
   } else if (
     chunk.type === "response.output_item.done" &&
-    (chunk.item.type === "web_search_call" ||
-      chunk.item.type === "file_search_call" ||
-      chunk.item.type === "computer_call")
+    [
+      "web_search_call",
+      "file_search_call",
+      "computer_call",
+      "code_interpreter_call",
+      "mcp_call",
+      "mcp_list_tools",
+      "mcp_approval_request",
+    ].includes(chunk.item.type)
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
   } else if (chunk.type === "response.created") {

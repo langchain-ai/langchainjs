@@ -71,7 +71,6 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   for (const toolOutput of (message.additional_kwargs.tool_outputs ??
     []) as Record<string, unknown>[]) {
     expect(toolOutput.id).toBeDefined();
-    expect(toolOutput.status).toBeDefined();
     expect(toolOutput.type).toBeDefined();
   }
 }
@@ -317,6 +316,105 @@ test("Test file search", async () => {
 
   expect(isAIMessageChunk(full)).toBe(true);
   assertResponse(full);
+});
+
+test("Test Code Interpreter", async () => {
+  const model = new ChatOpenAI({
+    model: "o4-mini",
+    useResponsesApi: true,
+  });
+
+  const modelWithAutoInterpreter = model.bindTools([
+    { type: "code_interpreter", container: { type: "auto" } },
+  ]);
+
+  const response = await modelWithAutoInterpreter.invoke(
+    "Write and run code to answer the question: what is 3^3?"
+  );
+  assertResponse(response);
+  expect(response.additional_kwargs.tool_outputs).toBeDefined();
+
+  const toolOutputs = response.additional_kwargs.tool_outputs as Record<
+    string,
+    unknown
+  >[];
+  expect(toolOutputs).toBeTruthy();
+  expect(Array.isArray(toolOutputs)).toBe(true);
+  expect(
+    toolOutputs.some((output) => output.type === "code_interpreter_call")
+  ).toBe(true);
+
+  // Test streaming using the same container
+  expect(toolOutputs.length).toBe(1);
+  const containerId = toolOutputs[0].container_id as string;
+  const modelWithToolsReuse = model.bindTools([
+    { type: "code_interpreter", container: containerId },
+  ]);
+
+  const full = await concatStream(
+    modelWithToolsReuse.stream(
+      "Write and run code to answer the question: what is 3^3?"
+    )
+  );
+
+  expect(isAIMessageChunk(full)).toBe(true);
+  const streamToolOutputs = full.additional_kwargs.tool_outputs as Record<
+    string,
+    unknown
+  >[];
+  expect(streamToolOutputs).toBeTruthy();
+  expect(Array.isArray(streamToolOutputs)).toBe(true);
+  expect(
+    streamToolOutputs.some(
+      (output: Record<string, unknown>) =>
+        output.type === "code_interpreter_call"
+    )
+  ).toBe(true);
+});
+
+test("Test Remote MCP", async () => {
+  const model = new ChatOpenAI({
+    model: "o4-mini",
+    useResponsesApi: true,
+  }).bindTools([
+    {
+      type: "mcp",
+      server_label: "deepwiki",
+      server_url: "https://mcp.deepwiki.com/mcp",
+      require_approval: {
+        always: {
+          tool_names: ["read_wiki_structure"],
+        },
+      },
+    },
+  ]);
+
+  const response = await model.invoke(
+    "What transport protocols does the 2025-03-26 version of the MCP spec (modelcontextprotocol/modelcontextprotocol) support?"
+  );
+  assertResponse(response);
+  expect(response.additional_kwargs.tool_outputs).toBeDefined();
+
+  const approvals = [];
+  if (Array.isArray(response.additional_kwargs.tool_outputs)) {
+    for (const content of response.additional_kwargs.tool_outputs) {
+      if (content.type === "mcp_approval_request") {
+        approvals.push({
+          type: "mcp_approval_response",
+          approval_request_id: content.id,
+          approve: true,
+        });
+      }
+    }
+  }
+
+  const response2 = await model.invoke(
+    [new HumanMessage({ content: approvals })],
+    {
+      previous_response_id: response.response_metadata.id,
+    }
+  );
+  assertResponse(response2);
 });
 
 test("Test computer call", async () => {
