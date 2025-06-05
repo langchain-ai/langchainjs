@@ -1,5 +1,6 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
 
+import { z } from "zod";
 import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
   type BasePromptValueInterface,
@@ -19,11 +20,6 @@ import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 import { JSONSchema } from "../utils/json_schema.js";
-import {
-  InferInteropZodOutput,
-  InteropZodObject,
-  InteropZodType,
-} from "../utils/types/zod.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -259,7 +255,8 @@ export type BaseLanguageModelInput =
   | string
   | BaseMessageLike[];
 
-export type StructuredOutputType = InferInteropZodOutput<InteropZodObject>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
 
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
@@ -277,7 +274,7 @@ export type StructuredOutputMethodParams<
 > = {
   /** @deprecated Pass schema in as the first argument */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodType<RunOutput> | Record<string, any>;
+  schema: z.ZodType<RunOutput> | Record<string, any>;
   name?: string;
   method?: "functionCalling" | "jsonMode";
   includeRaw?: IncludeRaw;
@@ -522,7 +519,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -533,7 +530,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -545,7 +542,7 @@ export abstract class BaseLanguageModel<
    * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
    * @template {Record<string, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    *
-   * @param {InteropZodType<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    *   If a Zod schema is passed, the returned attributes will be validated, whereas with JSON schema they will not be.
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
@@ -557,7 +554,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

@@ -59,13 +59,6 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
-import {
-  getSchemaDescription,
-  InferInteropZodOutput,
-  interopParseAsync,
-  InteropZodType,
-  isSimpleStringZodSchema,
-} from "../utils/types/zod.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -1208,8 +1201,8 @@ export abstract class Runnable<
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
-    schema: InteropZodType<T>;
-  }): RunnableToolLike<InteropZodType<T | ToolCall>, RunOutput> {
+    schema: z.ZodType<T>;
+  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
@@ -3377,12 +3370,9 @@ export class RunnablePick<
 }
 
 export interface RunnableToolLikeArgs<
-  RunInput extends InteropZodType = InteropZodType,
+  RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
-> extends Omit<
-    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
-    "config"
-  > {
+> extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
   name: string;
 
   description?: string;
@@ -3393,9 +3383,9 @@ export interface RunnableToolLikeArgs<
 }
 
 export class RunnableToolLike<
-  RunInput extends InteropZodType = InteropZodType,
+  RunInput extends z.ZodType = z.ZodType,
   RunOutput = unknown
-> extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
+> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
   name: string;
 
   description?: string;
@@ -3404,15 +3394,12 @@ export class RunnableToolLike<
 
   constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
     const sequence = RunnableSequence.from([
-      RunnableLambda.from<
-        InferInteropZodOutput<RunInput> | ToolCall,
-        InferInteropZodOutput<RunInput>
-      >(async (input) => {
-        let toolInput: InferInteropZodOutput<RunInput>;
+      RunnableLambda.from(async (input) => {
+        let toolInput: z.TypeOf<RunInput>;
 
         if (_isToolCall(input)) {
           try {
-            toolInput = await interopParseAsync(this.schema, input.args);
+            toolInput = await this.schema.parseAsync(input.args);
           } catch (e) {
             throw new ToolInputParsingException(
               `Received tool input did not match expected schema`,
@@ -3452,36 +3439,34 @@ export class RunnableToolLike<
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
- * @param {InteropZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
- * @returns {RunnableToolLike<InteropZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+ * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+ * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
 export function convertRunnableToTool<RunInput, RunOutput>(
   runnable: Runnable<RunInput, RunOutput>,
   fields: {
     name?: string;
     description?: string;
-    schema: InteropZodType<RunInput>;
+    schema: z.ZodType<RunInput>;
   }
-): RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput> {
+): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
-  const description = fields.description ?? getSchemaDescription(fields.schema);
+  const description = fields.description ?? fields.schema?.description;
 
-  if (isSimpleStringZodSchema(fields.schema)) {
-    return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(
-      {
-        name,
-        description,
-        schema: z
-          .object({
-            input: z.string(),
-          })
-          .transform((input) => input.input) as InteropZodType,
-        bound: runnable,
-      }
-    );
+  if (fields.schema.constructor === z.ZodString) {
+    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+      name,
+      description,
+      schema: z
+        .object({
+          input: z.string(),
+        })
+        .transform((input) => input.input) as z.ZodType,
+      bound: runnable,
+    });
   }
 
-  return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>({
+  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
     name,
     description,
     schema: fields.schema,

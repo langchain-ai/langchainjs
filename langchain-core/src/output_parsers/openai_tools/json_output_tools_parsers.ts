@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
@@ -7,10 +8,6 @@ import {
   BaseCumulativeTransformOutputParserInput,
 } from "../transform.js";
 import { isAIMessage } from "../../messages/ai.js";
-import {
-  InteropZodType,
-  interopSafeParseAsync,
-} from "../../utils/types/zod.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -205,7 +202,7 @@ export type JsonOutputKeyToolsParserParams<
 > = {
   keyName: string;
   returnSingle?: boolean;
-  zodSchema?: InteropZodType<T>;
+  zodSchema?: z.ZodType<T>;
 } & JsonOutputToolsParserParams;
 
 /**
@@ -232,7 +229,7 @@ export class JsonOutputKeyToolsParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  zodSchema?: InteropZodType<T>;
+  zodSchema?: z.ZodType<T>;
 
   constructor(params: JsonOutputKeyToolsParserParams<T>) {
     super(params);
@@ -245,7 +242,7 @@ export class JsonOutputKeyToolsParser<
     if (this.zodSchema === undefined) {
       return result as T;
     }
-    const zodParsedResult = await interopSafeParseAsync(this.zodSchema, result);
+    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -254,7 +251,7 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error?.issues)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
         JSON.stringify(result, null, 2)
       );
     }

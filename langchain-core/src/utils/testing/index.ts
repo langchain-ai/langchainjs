@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { z } from "zod";
 import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
@@ -33,7 +34,6 @@ import {
 import { BaseRetriever } from "../../retrievers/index.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools/index.js";
-import { ToolInputSchemaOutputType } from "../../tools/types.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import {
   Embeddings,
@@ -50,7 +50,6 @@ import { toJsonSchema } from "../json_schema.js";
 
 import { VectorStore } from "../../vectorstores.js";
 import { cosine } from "../ml-distance/similarities.js";
-import { InteropZodObject, InteropZodType } from "../types/zod.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -414,7 +413,7 @@ export class FakeRetriever extends BaseRetriever {
 export interface ToolSpec {
   name: string;
   description?: string;
-  schema: InteropZodType | Record<string, unknown>; // Either a Zod schema *or* a plain JSON-Schema object
+  schema: z.ZodTypeAny | Record<string, unknown>; // Either a Zod schema *or* a plain JSON-Schema object
 }
 /**
  * Interface specific to the Fake Streaming Chat model.
@@ -607,7 +606,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -619,7 +618,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -631,7 +630,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     _config?: StructuredOutputMethodOptions<boolean>
@@ -719,7 +718,7 @@ export class FakeTracer extends BaseTracer {
 
 export interface FakeToolParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends ToolParams {
   name: string;
   description: string;
@@ -728,7 +727,7 @@ export interface FakeToolParams<
 
 export class FakeTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends StructuredTool<T> {
   name: string;
 
@@ -744,7 +743,7 @@ export class FakeTool<
   }
 
   protected async _call(
-    arg: ToolInputSchemaOutputType<T>,
+    arg: z.output<T>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
     return JSON.stringify(arg);

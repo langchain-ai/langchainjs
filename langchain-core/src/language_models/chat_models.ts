@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   AIMessage,
   type BaseMessage,
@@ -49,13 +51,8 @@ import {
 } from "../runnables/base.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
-import {
-  getSchemaDescription,
-  InteropZodType,
-  isInteropZodSchema,
-} from "../utils/types/zod.js";
+import { isZodSchema } from "../utils/types/zod.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
-import { toJsonSchema } from "../utils/json_schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -907,7 +904,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -918,7 +915,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -929,7 +926,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -953,11 +950,9 @@ export abstract class BaseChatModel<
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: Record<string, any> | InteropZodType<RunOutput> =
-      outputSchema;
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
-    const description =
-      getSchemaDescription(schema) ?? "A function available to call.";
+    const description = schema.description ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -968,14 +963,14 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isInteropZodSchema(schema)) {
+    if (isZodSchema(schema)) {
       tools = [
         {
           type: "function",
           function: {
             name: functionName,
             description,
-            parameters: toJsonSchema(schema),
+            parameters: zodToJsonSchema(schema),
           },
         },
       ];
