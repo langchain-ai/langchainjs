@@ -1195,8 +1195,8 @@ export abstract class Runnable<
    * @param fields
    * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
    * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
-   * @param {InteropZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
-   * @returns {RunnableToolLike<InteropZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+   * @param {z.ZodType<T>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+   * @returns {RunnableToolLike<z.ZodType<T>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
    */
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
