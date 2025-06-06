@@ -3,6 +3,20 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /**
+ * @see https://docs.together.ai/docs/serverless-models#embedding-models
+ */
+export type TogetherAIEmbeddingModelId =
+  | 'togethercomputer/m2-bert-80M-2k-retrieval'
+  | 'togethercomputer/m2-bert-80M-8k-retrieval'
+  | 'togethercomputer/m2-bert-80M-32k-retrieval'
+  | 'WhereIsAI/UAE-Large-V1'
+  | 'BAAI/bge-large-en-v1.5'
+  | 'BAAI/bge-base-en-v1.5'
+  | 'Alibaba-NLP/gte-modernbert-base'
+  | 'intfloat/multilingual-e5-large-instruct'
+  | (string & NonNullable<unknown>);
+
+/**
  * Interface for TogetherAIEmbeddingsParams parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the TogetherAIEmbeddings class.
  */
@@ -18,12 +32,12 @@ export interface TogetherAIEmbeddingsParams extends EmbeddingsParams {
    * Alias for `model`
    * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
    */
-  modelName?: string;
+  modelName?: TogetherAIEmbeddingModelId;
   /**
    * Model name to use
    * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
    */
-  model?: string;
+  model?: TogetherAIEmbeddingModelId;
 
   /**
    * Timeout to use when making requests to TogetherAI.
@@ -53,7 +67,7 @@ interface TogetherAIEmbeddingsResult {
     embedding: number[];
     index: number;
   }>;
-  model: string;
+  model: TogetherAIEmbeddingModelId;
   request_id: string;
 }
 

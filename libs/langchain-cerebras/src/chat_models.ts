@@ -43,10 +43,19 @@ import {
 } from "./utils.js";
 
 /**
+ * @see https://inference-docs.cerebras.ai/introduction
+ */
+export type CerebrasChatModelId =
+  | 'llama3.1-8b'
+  | 'llama3.1-70b'
+  | 'llama-3.3-70b'
+  | (string & NonNullable<unknown>);
+
+/**
  * Input to chat model class.
  */
 export interface ChatCerebrasInput extends BaseChatModelParams {
-  model: string;
+  model: CerebrasChatModelId;
   apiKey?: string;
   streaming?: boolean;
   maxTokens?: number;
@@ -443,7 +452,7 @@ export class ChatCerebras
 
   client: Cerebras;
 
-  model: string;
+  model: CerebrasChatModelId;
 
   maxCompletionTokens?: number;
 

@@ -49,11 +49,22 @@ import {
 export type PerplexityRole = "system" | "user" | "assistant";
 
 /**
+ * @see https://docs.perplexity.ai/models/model-cards
+ */
+export type PerplexityLanguageModelId =
+  | 'sonar-deep-research'
+  | 'sonar-reasoning-pro'
+  | 'sonar-reasoning'
+  | 'sonar-pro'
+  | 'sonar'
+  | (string & NonNullable<unknown>);
+
+/**
  * Interface defining the parameters for the Perplexity chat model.
  */
 export interface PerplexityChatInput extends BaseChatModelParams {
   /** Model name to use */
-  model: string;
+  model: PerplexityLanguageModelId;
 
   /** Maximum number of tokens to generate */
   maxTokens?: number;
@@ -119,7 +130,7 @@ export class ChatPerplexity
     return "ChatPerplexity";
   }
 
-  model: string;
+  model: PerplexityLanguageModelId;
 
   temperature?: number;
 
@@ -190,7 +201,7 @@ export class ChatPerplexity
    */
   invocationParams(options?: this["ParsedCallOptions"]) {
     return {
-      model: this.model as string,
+      model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
       stream: this.streaming,

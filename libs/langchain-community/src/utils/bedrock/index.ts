@@ -105,6 +105,46 @@ function formatMessagesForCohere(messages: BaseMessage[]): {
   };
 }
 
+/**
+ * Also defined in @langchain/aws/src/chat_models.ts
+ * @todo(@christian-bromann) Move to a shared location.
+ */
+export type BedrockChatModelId =
+    | 'amazon.titan-tg1-large'
+    | 'amazon.titan-text-express-v1'
+    | 'anthropic.claude-v2'
+    | 'anthropic.claude-v2:1'
+    | 'anthropic.claude-instant-v1'
+    | 'anthropic.claude-sonnet-4-20250514-v1:0'
+    | 'anthropic.claude-opus-4-20250514-v1:0'
+    | 'anthropic.claude-3-7-sonnet-20250219-v1:0'
+    | 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+    | 'anthropic.claude-3-5-sonnet-20241022-v2:0'
+    | 'anthropic.claude-3-5-haiku-20241022-v1:0'
+    | 'anthropic.claude-3-sonnet-20240229-v1:0'
+    | 'anthropic.claude-3-haiku-20240307-v1:0'
+    | 'anthropic.claude-3-opus-20240229-v1:0'
+    | 'cohere.command-text-v14'
+    | 'cohere.command-light-text-v14'
+    | 'cohere.command-r-v1:0'
+    | 'cohere.command-r-plus-v1:0'
+    | 'meta.llama3-70b-instruct-v1:0'
+    | 'meta.llama3-8b-instruct-v1:0'
+    | 'meta.llama3-1-405b-instruct-v1:0'
+    | 'meta.llama3-1-70b-instruct-v1:0'
+    | 'meta.llama3-1-8b-instruct-v1:0'
+    | 'meta.llama3-2-11b-instruct-v1:0'
+    | 'meta.llama3-2-1b-instruct-v1:0'
+    | 'meta.llama3-2-3b-instruct-v1:0'
+    | 'meta.llama3-2-90b-instruct-v1:0'
+    | 'mistral.mistral-7b-instruct-v0:2'
+    | 'mistral.mixtral-8x7b-instruct-v0:1'
+    | 'mistral.mistral-large-2402-v1:0'
+    | 'mistral.mistral-small-2402-v1:0'
+    | 'amazon.titan-text-express-v1'
+    | 'amazon.titan-text-lite-v1'
+    | (string & NonNullable<unknown>);
+
 /** Bedrock models.
     To authenticate, the AWS client uses the following methods to automatically load credentials:
     https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html
@@ -115,7 +155,7 @@ export interface BaseBedrockInput {
   /** Model to use.
       For example, "amazon.titan-tg1-large", this is equivalent to the modelId property in the list-foundation-models api.
   */
-  model: string;
+  model: BedrockChatModelId;
 
   /** Optional URL Encoded overide for URL model parameter in fetch. Necessary for invoking an Application Inference Profile.
       For example, "arn%3Aaws%3Abedrock%3Aus-east-1%3A1234567890%3Aapplication-inference-profile%2Fabcdefghi", will override this.model in final /invoke URL call.

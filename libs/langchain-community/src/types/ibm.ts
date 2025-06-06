@@ -26,6 +26,21 @@ export interface WatsonxChatBasicOptions {
   watsonxCallbacks?: RequestCallbacks;
 }
 
+/**
+ * @see https://www.ibm.com/docs/en/watsonx/saas?topic=models-supported-encoder#embed
+ */
+export type WatsonxEmbeddingModelId =
+  | 'granite-embedding-107m-multilingual'
+  | 'granite-embedding-278m-multilingual'
+  | 'slate-30m-english-rtrvr-v2'
+  | 'slate-30m-english-rtrvr'
+  | 'slate-125m-english-rtrvr-v2'
+  | 'slate-125m-english-rtrvr'
+  | 'all-minilm-l6-v2'
+  | 'all-minilm-l12-v2'
+  | 'multilingual-e5-large'
+  | (string & NonNullable<unknown>);
+
 export interface WatsonxParams extends WatsonxInit, WatsonxChatBasicOptions {
   model: string;
   spaceId?: string;

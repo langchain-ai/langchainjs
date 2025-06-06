@@ -181,6 +181,28 @@ interface TimingMetadata {
    */
   total_time?: number;
 }
+
+/**
+ * @see https://console.groq.com/docs/models
+ */
+export type GroqChatModelId =
+  // production models
+  | 'gemma2-9b-it'
+  | 'llama-3.3-70b-versatile'
+  | 'llama-3.1-8b-instant'
+  | 'llama-guard-3-8b'
+  | 'llama3-70b-8192'
+  | 'llama3-8b-8192'
+  | 'mixtral-8x7b-32768'
+  // preview models (selection)
+  | 'meta-llama/llama-4-scout-17b-16e-instruct'
+  | 'qwen-qwq-32b'
+  | 'mistral-saba-24b'
+  | 'qwen-2.5-32b'
+  | 'deepseek-r1-distill-qwen-32b'
+  | 'deepseek-r1-distill-llama-70b'
+  | (string & NonNullable<unknown>);
+
 export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * The temperature to use for sampling.
@@ -238,7 +260,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * The name of the model to use.
    */
-  model: string;
+  model: GroqChatModelId;
   /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
@@ -902,7 +924,7 @@ export class ChatGroq extends BaseChatModel<
 
   client: Groq;
 
-  model: string;
+  model: GroqChatModelId;
 
   temperature = 0.7;
 

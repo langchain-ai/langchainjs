@@ -8,6 +8,15 @@ import {
 } from "@langchain/core/messages";
 
 /**
+ * @see https://platform.openai.com/docs/api-reference/images/create
+ */
+export type OpenAIImageModelId =
+  | 'gpt-image-1'
+  | "dall-e-2"
+  | "dall-e-3"
+  | (string & NonNullable<unknown>);
+
+/**
  * An interface for the Dall-E API Wrapper.
  */
 export interface DallEAPIWrapperParams extends ToolParams {
@@ -25,14 +34,15 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * Alias for `model`
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
+   * @deprecated Use `model` instead.
    */
-  modelName?: string;
+  modelName?: OpenAIImageModelId;
   /**
    * The model to use.
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
    */
-  model?: string;
+  model?: OpenAIImageModelId;
   /**
    * The style of the generated images. Must be one of vivid or natural.
    * Vivid causes the model to lean towards generating hyper-real and dramatic images.

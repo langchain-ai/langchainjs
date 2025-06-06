@@ -117,6 +117,24 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
 }
 
 /**
+ * @see https://docs.anthropic.com/claude/docs/models-overview
+ */
+export type AnthropicMessagesModelId =
+  | 'claude-4-opus-20250514'
+  | 'claude-4-sonnet-20250514'
+  | 'claude-3-7-sonnet-20250219'
+  | 'claude-3-5-sonnet-latest'
+  | 'claude-3-5-sonnet-20241022'
+  | 'claude-3-5-sonnet-20240620'
+  | 'claude-3-5-haiku-latest'
+  | 'claude-3-5-haiku-20241022'
+  | 'claude-3-opus-latest'
+  | 'claude-3-opus-20240229'
+  | 'claude-3-sonnet-20240229'
+  | 'claude-3-haiku-20240307'
+  | (string & NonNullable<unknown>);
+
+/**
  * Input to AnthropicChat class.
  */
 export interface AnthropicInput {
@@ -170,9 +188,9 @@ export interface AnthropicInput {
   anthropicApiUrl?: string;
 
   /** @deprecated Use "model" instead */
-  modelName?: string;
+  modelName?: AnthropicMessagesModelId;
   /** Model name to use */
-  model?: string;
+  model?: AnthropicMessagesModelId;
 
   /** Overridable Anthropic ClientOptions */
   clientOptions?: ClientOptions;
