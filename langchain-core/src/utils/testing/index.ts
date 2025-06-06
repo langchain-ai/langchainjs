@@ -17,6 +17,7 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
   BaseChatModelParams,
+  BindToolsInput,
 } from "../../language_models/chat_models.js";
 import { BaseLLMParams, LLM } from "../../language_models/llms.js";
 import {
@@ -1065,5 +1066,133 @@ export class FakeVectorStore extends VectorStore {
   ): Promise<FakeVectorStore> {
     const instance = new this(embeddings, dbConfig);
     return instance;
+  }
+}
+
+/**
+ * Call options interface for FakeChatModelWithBindTools that extends
+ * BaseChatModelCallOptions to include tools support.
+ * This follows the same pattern as real chat models like ChatOpenAI, ChatAnthropic, etc.
+ */
+export interface FakeChatModelWithBindToolsCallOptions
+  extends BaseChatModelCallOptions {
+  /**
+   * Array of tools that have been bound to this chat model.
+   * Tools flow through the configuration system rather than being stored as instance state.
+   * Uses the standard BindToolsInput[] type that all real chat models use.
+   */
+  tools?: BindToolsInput[];
+}
+
+/**
+ * Custom binding class for FakeChatModelWithBindTools that preserves the bindTools method.
+ * This solves the key challenge: when you call withConfig() on a Runnable, it returns a
+ * RunnableBinding which doesn't have bindTools. By creating a custom binding that extends
+ * the original model's functionality, we can chain bindTools() and withConfig() in any order.
+ *
+ * This pattern is similar to how ConfigurableModel works in the universal chat models.
+ */
+export class FakeChatModelWithBindToolsBinding extends Runnable<
+  BaseLanguageModelInput,
+  AIMessageChunk,
+  FakeChatModelWithBindToolsCallOptions
+> {
+  lc_namespace = ["langchain_core", "utils", "testing"];
+
+  constructor(
+    private bound: FakeChatModelWithBindTools,
+    private config: Partial<FakeChatModelWithBindToolsCallOptions> = {}
+  ) {
+    super();
+  }
+
+  /**
+   * Preserve the bindTools method in the binding so it can be chained.
+   * This is the key to solving the composition problem.
+   */
+  bindTools(
+    tools: BindToolsInput[],
+    kwargs?: Partial<FakeChatModelWithBindToolsCallOptions>
+  ): FakeChatModelWithBindToolsBinding {
+    // Merge the new tools with existing config
+    const mergedConfig = {
+      ...this.config,
+      ...kwargs,
+      tools: [...(this.config.tools || []), ...tools],
+    };
+
+    return new FakeChatModelWithBindToolsBinding(this.bound, mergedConfig);
+  }
+
+  /**
+   * Preserve the withConfig method in the binding.
+   */
+  withConfig(
+    config: Partial<FakeChatModelWithBindToolsCallOptions>
+  ): FakeChatModelWithBindToolsBinding {
+    return new FakeChatModelWithBindToolsBinding(this.bound, {
+      ...this.config,
+      ...config,
+    });
+  }
+
+  /**
+   * Merge the bound config with any runtime options and invoke the underlying model.
+   * This is the core method that makes the binding work.
+   *
+   * The configuration merging is essential - it's what allows bound tools to flow
+   * through to the underlying model. The base Runnable class doesn't know about
+   * our custom config structure or how to merge tools arrays.
+   */
+  async invoke(
+    input: BaseLanguageModelInput,
+    options?: Partial<FakeChatModelWithBindToolsCallOptions>
+  ): Promise<AIMessageChunk> {
+    // This is the special logic for our binding: merging bound config with runtime options
+    const mergedOptions = {
+      ...this.config,
+      ...options,
+      // Merge tools arrays if both exist (this is specific to our binding)
+      tools: [...(this.config.tools || []), ...(options?.tools || [])],
+    };
+
+    // The underlying BaseChatModel.invoke() should already return AIMessageChunk
+    return this.bound.invoke(input, mergedOptions);
+  }
+
+  // Note: We don't need to implement _streamIterator or batch methods.
+  // The base Runnable class provides default implementations that work
+  // by calling invoke(), which is exactly what we want.
+}
+
+export class FakeChatModelWithBindTools extends FakeChatModel {
+  /**
+   * Override bindTools to return our custom binding class instead of using withConfig.
+   * This preserves the bindTools method for chaining while still flowing tools through config.
+   *
+   * @param tools - Array of tools to bind to this chat model
+   * @param kwargs - Additional configuration options to merge
+   * @returns A custom binding that preserves bindTools method
+   */
+  override bindTools(
+    tools: BindToolsInput[],
+    kwargs?: Partial<FakeChatModelWithBindToolsCallOptions>
+  ): FakeChatModelWithBindToolsBinding {
+    // Return a custom binding that preserves bindTools method
+    // No conversion needed since we use the standard BindToolsInput[] type
+    return new FakeChatModelWithBindToolsBinding(this, {
+      tools,
+      ...kwargs,
+    });
+  }
+
+  /**
+   * Override withConfig to return our custom binding class.
+   * This ensures that withConfig() also preserves the bindTools method.
+   */
+  override withConfig(
+    config: Partial<FakeChatModelWithBindToolsCallOptions>
+  ): FakeChatModelWithBindToolsBinding {
+    return new FakeChatModelWithBindToolsBinding(this, config);
   }
 }
