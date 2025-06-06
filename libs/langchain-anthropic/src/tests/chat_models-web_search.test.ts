@@ -14,7 +14,7 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
       type: "server_tool_use",
       id: "toolu_01ABC123",
       name: "web_search",
-      input: { query: "Claude Shannon birth date" }
+      input: { query: "Claude Shannon birth date" },
     },
     {
       type: "web_search_tool_result",
@@ -24,9 +24,10 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
           type: "web_search_result",
           title: "Claude Shannon - Wikipedia",
           url: "https://en.wikipedia.org/wiki/Claude_Shannon",
-          content: "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)..."
-        }
-      ]
+          content:
+            "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
+        },
+      ],
     },
     {
       type: "text",
@@ -36,13 +37,16 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
           type: "web_search_result_location",
           url: "https://en.wikipedia.org/wiki/Claude_Shannon",
           title: "Claude Shannon - Wikipedia",
-          cited_text: "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)..."
-        }
-      ]
-    }
+          cited_text:
+            "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
+        },
+      ],
+    },
   ];
 
-  const result = anthropicResponseToChatMessages(anthropicResponse, { id: "msg_01ABC123" });
+  const result = anthropicResponseToChatMessages(anthropicResponse, {
+    id: "msg_01ABC123",
+  });
 
   // What LangChain should produce
   expect(result[0].message).toEqual(
@@ -53,12 +57,12 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
           name: "web_search",
           args: { query: "Claude Shannon birth date" },
           id: "toolu_01ABC123",
-          type: "tool_call"
-        }
+          type: "tool_call",
+        },
       ],
       additional_kwargs: { id: "msg_01ABC123" },
       response_metadata: { id: "msg_01ABC123" },
-      id: "msg_01ABC123"
+      id: "msg_01ABC123",
     })
   );
 });
@@ -70,14 +74,14 @@ test("Web Search Tool - Only web_search server tools extracted", () => {
       type: "server_tool_use",
       id: "toolu_web",
       name: "web_search",
-      input: { query: "test" }
+      input: { query: "test" },
     },
     {
       type: "server_tool_use",
       id: "toolu_bash",
       name: "bash",
-      input: { command: "ls" }
-    }
+      input: { command: "ls" },
+    },
   ];
 
   const result = anthropicResponseToChatMessages(anthropicResponse, {});
@@ -91,12 +95,12 @@ test("Web Search Tool - Only web_search server tools extracted", () => {
           name: "web_search",
           args: { query: "test" },
           id: "toolu_web",
-          type: "tool_call"
-        }
+          type: "tool_call",
+        },
       ],
       additional_kwargs: {},
       response_metadata: {},
-      id: undefined
+      id: undefined,
     })
   );
 });
@@ -113,9 +117,9 @@ test("Web Search Tool - LangChain message to Anthropic format", () => {
             type: "web_search_result_location",
             url: "https://en.wikipedia.org/wiki/Claude_Shannon",
             title: "Claude Shannon - Wikipedia",
-            cited_text: "Claude Elwood Shannon (April 30, 1916..."
-          }
-        ]
+            cited_text: "Claude Elwood Shannon (April 30, 1916...",
+          },
+        ],
       },
       {
         type: "web_search_tool_result",
@@ -125,17 +129,18 @@ test("Web Search Tool - LangChain message to Anthropic format", () => {
             type: "web_search_result",
             title: "Claude Shannon - Wikipedia",
             url: "https://en.wikipedia.org/wiki/Claude_Shannon",
-            content: "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
-            encrypted_index: "Eo8BCioIAhgBIiQyYjQ0OWJmZi1lNm.."
-          }
-        ]
-      }
-    ]
+            content:
+              "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
+            encrypted_index: "Eo8BCioIAhgBIiQyYjQ0OWJmZi1lNm..",
+          },
+        ],
+      },
+    ],
   });
 
   const result = _convertMessagesToAnthropicPayload([
     new HumanMessage("Follow up question"),
-    langChainMessage
+    langChainMessage,
   ]);
 
   // What should be sent to Anthropic (preserving encrypted content for multi-turn)
@@ -150,9 +155,9 @@ test("Web Search Tool - LangChain message to Anthropic format", () => {
             type: "web_search_result_location",
             url: "https://en.wikipedia.org/wiki/Claude_Shannon",
             title: "Claude Shannon - Wikipedia",
-            cited_text: "Claude Elwood Shannon (April 30, 1916..."
-          }
-        ]
+            cited_text: "Claude Elwood Shannon (April 30, 1916...",
+          },
+        ],
       },
       {
         type: "web_search_tool_result",
@@ -162,11 +167,12 @@ test("Web Search Tool - LangChain message to Anthropic format", () => {
             type: "web_search_result",
             title: "Claude Shannon - Wikipedia",
             url: "https://en.wikipedia.org/wiki/Claude_Shannon",
-            content: "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
-            encrypted_index: "Eo8BCioIAhgBIiQyYjQ0OWJmZi1lNm.."
-          }
-        ]
-      }
-    ]
+            content:
+              "Claude Elwood Shannon (April 30, 1916 – February 24, 2001)...",
+            encrypted_index: "Eo8BCioIAhgBIiQyYjQ0OWJmZi1lNm..",
+          },
+        ],
+      },
+    ],
   });
 });

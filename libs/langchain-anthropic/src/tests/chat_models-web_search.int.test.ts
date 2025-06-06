@@ -15,22 +15,24 @@ const model = new ChatAnthropic({
 
 test("Web search single turn", async () => {
   const result = await model.invoke([
-    new HumanMessage("What is Claude Shannon's birth date?")
+    new HumanMessage("What is Claude Shannon's birth date?"),
   ]);
 
   expect(result).toBeInstanceOf(AIMessage);
-  expect(result.tool_calls?.find(tc => tc.name === "web_search")).toBeTruthy();
+  expect(
+    result.tool_calls?.find((tc) => tc.name === "web_search")
+  ).toBeTruthy();
 }, 30000);
 
 test("Web search multi-turn conversation", async () => {
   const firstResponse = await model.invoke([
-    new HumanMessage("What is Claude Shannon's birth date?")
+    new HumanMessage("What is Claude Shannon's birth date?"),
   ]);
 
   const secondResponse = await model.invoke([
     new HumanMessage("What is Claude Shannon's birth date?"),
     firstResponse,
-    new HumanMessage("What year did he die?")
+    new HumanMessage("What year did he die?"),
   ]);
 
   expect(firstResponse).toBeInstanceOf(AIMessage);
@@ -39,7 +41,7 @@ test("Web search multi-turn conversation", async () => {
 
 test("Web search with unusual query", async () => {
   const result = await model.invoke([
-    new HumanMessage("What is the population of Mars?")
+    new HumanMessage("What is the population of Mars?"),
   ]);
 
   expect(result).toBeInstanceOf(AIMessage);
