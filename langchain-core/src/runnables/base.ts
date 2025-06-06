@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
@@ -63,6 +63,7 @@ import {
   getSchemaDescription,
   InferInteropZodOutput,
   interopParseAsync,
+  InteropZodType,
   isSimpleStringZodSchema,
 } from "../utils/types/zod.js";
 
@@ -1207,8 +1208,8 @@ export abstract class Runnable<
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<T>;
-  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
+    schema: InteropZodType<T>;
+  }): RunnableToolLike<InteropZodType<T | ToolCall>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
@@ -3376,9 +3377,12 @@ export class RunnablePick<
 }
 
 export interface RunnableToolLikeArgs<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
+> extends Omit<
+    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
+    "config"
+  > {
   name: string;
 
   description?: string;
@@ -3389,9 +3393,9 @@ export interface RunnableToolLikeArgs<
 }
 
 export class RunnableToolLike<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
+> extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
   name: string;
 
   description?: string;
@@ -3448,32 +3452,34 @@ export class RunnableToolLike<
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
- * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
- * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+ * @param {InteropZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+ * @returns {RunnableToolLike<InteropZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
 export function convertRunnableToTool<RunInput, RunOutput>(
   runnable: Runnable<RunInput, RunOutput>,
   fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<RunInput>;
+    schema: InteropZodType<RunInput>;
   }
-): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
+): RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
   const description = fields.description ?? getSchemaDescription(fields.schema);
 
   if (isSimpleStringZodSchema(fields.schema)) {
-    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
-      name,
-      description,
-      schema: z
-        .object({ input: z.string() })
-        .transform((input) => input.input) as z.ZodType,
-      bound: runnable,
-    });
+    return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(
+      {
+        name,
+        description,
+        schema: z
+          .object({ input: z.string() })
+          .transform((input) => input.input) as InteropZodType,
+        bound: runnable,
+      }
+    );
   }
 
-  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+  return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>({
     name,
     description,
     schema: fields.schema,

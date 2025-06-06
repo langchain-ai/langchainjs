@@ -1,15 +1,22 @@
 import type * as z3 from "zod/v3";
-import * as z4 from "zod/v4/core";
+import type * as z4 from "zod/v4/core";
+import { parseAsync, parse, globalRegistry } from "zod/v4/core";
+
+export type ZodStringV3 = z3.ZodString;
+
+export type ZodStringV4 = z4.$ZodType<string, unknown>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
+
+export type ZodObjectV4 = z4.$ZodObject;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InteropZodObject = z3.ZodObject<any, any, any, any> | z4.$ZodObject;
-
-export type InteropZodString = z3.ZodString | z4.$ZodString;
+export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
@@ -73,7 +80,7 @@ export function isZodSchemaV3(
   const def = obj._def;
   return (
     typeof def === "object" &&
-    def !== null &&
+    def != null &&
     "typeName" in (def as Record<string, unknown>)
   );
 }
@@ -84,6 +91,11 @@ export function isZodSchema<
 >(
   schema: z3.ZodType<RunOutput> | Record<string, unknown>
 ): schema is z3.ZodType<RunOutput> {
+  if (isZodSchemaV4(schema)) {
+    console.warn(
+      "[WARNING] Attempting to use Zod 4 schema in a context where Zod 3 schema is expected. This may cause unexpected behavior."
+    );
+  }
   return isZodSchemaV3(schema);
 }
 
@@ -130,7 +142,7 @@ export async function interopSafeParseAsync<T>(
 ): Promise<InteropZodSafeParseResult<T>> {
   if (isZodSchemaV4(schema)) {
     try {
-      const data = await z4.parseAsync(schema, input);
+      const data = await parseAsync(schema, input);
       return {
         success: true,
         data,
@@ -163,7 +175,7 @@ export async function interopParseAsync<T>(
   input: unknown
 ): Promise<T> {
   if (isZodSchemaV4(schema)) {
-    return z4.parse(schema, input);
+    return parse(schema, input);
   }
   if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
     return schema.parse(input);
@@ -181,7 +193,7 @@ export function getSchemaDescription(
   schema: InteropZodType<unknown> | Record<string, unknown>
 ): string | undefined {
   if (isZodSchemaV4(schema)) {
-    return z4.globalRegistry.get(schema)?.description;
+    return globalRegistry.get(schema)?.description;
   }
   if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
     return schema.description as string | undefined;
