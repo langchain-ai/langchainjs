@@ -8503,7 +8503,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.96.0
+    openai: ^5.1.0
     prettier: ^2.8.3
     release-it: ^18.1.2
     rimraf: ^5.0.1
@@ -26467,7 +26467,7 @@ __metadata:
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
     langsmith: ^0.3.29
-    openai: ^4.41.1
+    openai: ^5.1.0
     openapi-types: ^12.1.3
     p-retry: 4
     peggy: ^3.0.2
@@ -29444,17 +29444,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.96.0":
-  version: 4.96.0
-  resolution: "openai@npm:4.96.0"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
+"openai@npm:*, openai@npm:^5.1.0":
+  version: 5.1.1
+  resolution: "openai@npm:5.1.1"
   peerDependencies:
     ws: ^8.18.0
     zod: ^3.23.8
@@ -29465,7 +29457,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
+  checksum: c9c14bd80231c8cd1a47bc9e62a8a149be83ed4ebedf925154724068d533a8fbe70922b5f43cafc70b44d5990bd397504032790b5f0f2f1b474a8291b463e062
   languageName: node
   linkType: hard
 
@@ -29485,6 +29477,31 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: bc572c9ac2a149722193d9f8e88a95fc2da021be9d18e36d5e840ce673dab78943f5b406e2a20d1044453fb259c7d1e10d2e2e34a92d94d73afc24832a183249
+  languageName: node
+  linkType: hard
+
+"openai@npm:^4.32.1":
+  version: 4.104.0
+  resolution: "openai@npm:4.104.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: 2bd3ba14a37a3421703d9108bdb61be38d2555fbefbfb491c890d3c47cef72f5c9fefada78f33923f86e5d2ada86bcb3a3c04662f16e85f735a2c1ecd0fa031e
   languageName: node
   linkType: hard
 
@@ -37384,10 +37401,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-streams-polyfill@npm:^3.0.3, web-streams-polyfill@npm:^3.2.1":
+"web-streams-polyfill@npm:^3.0.3":
   version: 3.2.1
   resolution: "web-streams-polyfill@npm:3.2.1"
   checksum: b119c78574b6d65935e35098c2afdcd752b84268e18746606af149e3c424e15621b6f1ff0b42b2676dc012fc4f0d313f964b41a4b5031e525faa03997457da02
+  languageName: node
+  linkType: hard
+
+"web-streams-polyfill@npm:^3.2.1":
+  version: 3.3.3
+  resolution: "web-streams-polyfill@npm:3.3.3"
+  checksum: 21ab5ea08a730a2ef8023736afe16713b4f2023ec1c7085c16c8e293ee17ed085dff63a0ad8722da30c99c4ccbd4ccd1b2e79c861829f7ef2963d7de7004c2cb
   languageName: node
   linkType: hard
 

@@ -53,7 +53,7 @@ export class OpenAIFiles extends Serializable {
     fileId: string;
     options?: OpenAIClient.RequestOptions;
   }) {
-    return this.oaiClient.files.del(fileId, options);
+    return this.oaiClient.files.delete(fileId, options);
   }
 
   /**
@@ -109,6 +109,6 @@ export class OpenAIFiles extends Serializable {
     fileId: string;
     options?: OpenAIClient.RequestOptions;
   }) {
-    return this.oaiClient.files.retrieveContent(fileId, options);
+    return this.oaiClient.files.retrieve(fileId, options);
   }
 }
