@@ -414,6 +414,7 @@ function _formatContent(content: MessageContent) {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
+          ...("citations" in contentPart && contentPart.citations ? { citations: contentPart.citations } : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -508,7 +509,8 @@ export function _convertMessagesToAnthropicPayload(
           content.find(
             (contentPart) =>
               (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta") &&
+                contentPart.type === "input_json_delta" ||
+                contentPart.type === "server_tool_use") &&
               contentPart.id === toolCall.id
           )
         );
