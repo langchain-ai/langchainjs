@@ -2,20 +2,27 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
+/**
+ * @see https://jina.ai/models
+ */
+export type JinaEmbeddingsModelId =
+  | 'jina-clip-v2'
+  | 'jina-colbert-v2'
+  | 'jina-clip-v1'
+  | 'jina-colbert-v1-en'
+  | 'jina-embeddings-v3'
+  | 'jina-embeddings-v2-base-es'
+  | 'jina-embeddings-v2-base-code'
+  | 'jina-embeddings-v2-base-de'
+  | 'jina-embeddings-v2-base-zh'
+  | 'jina-embeddings-v2-base-en'
+  | 'jina-embedding-b-en-v1'
+  | 'jina-embeddings-v3'
+  | (string & NonNullable<unknown>);
+
 export interface JinaEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  model:
-    | "jina-clip-v2"
-    | "jina-embeddings-v3"
-    | "jina-colbert-v2"
-    | "jina-clip-v1"
-    | "jina-colbert-v1-en"
-    | "jina-embeddings-v2-base-es"
-    | "jina-embeddings-v2-base-code"
-    | "jina-embeddings-v2-base-de"
-    | "jina-embeddings-v2-base-zh"
-    | "jina-embeddings-v2-base-en"
-    | string;
+  model: JinaEmbeddingsModelId;
 
   baseUrl?: string;
 
@@ -70,7 +77,7 @@ interface EmbeddingCreateParams {
 }
 
 interface EmbeddingResponse {
-  model: string;
+  model: JinaEmbeddingsModelId;
   object: string;
   usage: {
     total_tokens: number;
@@ -88,7 +95,7 @@ interface EmbeddingErrorResponse {
 }
 
 export class JinaEmbeddings extends Embeddings implements JinaEmbeddingsParams {
-  model: JinaEmbeddingsParams["model"] = "jina-clip-v2";
+  model: JinaEmbeddingsModelId = "jina-clip-v2";
 
   batchSize = 24;
 
