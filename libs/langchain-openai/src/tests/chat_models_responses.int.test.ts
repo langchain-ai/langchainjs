@@ -417,6 +417,86 @@ test("Test Remote MCP", async () => {
   assertResponse(response2);
 });
 
+describe("Test image generation", () => {
+  const expectedOutputKeys = [
+    "id",
+    "background",
+    "output_format",
+    "quality",
+    "result",
+    "revised_prompt",
+    "size",
+    "status",
+    "type",
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function assertImageGenerationToolOutput(tool_outputs: any) {
+    expect(tool_outputs).toBeDefined();
+    expect(Array.isArray(tool_outputs)).toBe(true);
+    expect(tool_outputs.length).toBe(1);
+    expect(tool_outputs[0].type).toBe("image_generation_call");
+    expectedOutputKeys.forEach((key) => {
+      expect(Object.keys(tool_outputs[0])).toContain(key);
+    });
+  }
+
+  test("with streaming", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4.1",
+      useResponsesApi: true,
+    }).bindTools([
+      {
+        type: "image_generation",
+        partial_images: 1,
+        quality: "low",
+        output_format: "jpeg",
+        output_compression: 100,
+        size: "1024x1024",
+      },
+    ]);
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream(
+      "Draw a random short word in green font."
+    )) {
+      expect(chunk).toBeInstanceOf(AIMessageChunk);
+      full = full?.concat(chunk) ?? chunk;
+    }
+    assertImageGenerationToolOutput(full?.additional_kwargs.tool_outputs);
+  });
+
+  test("multi-turn", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4.1",
+      useResponsesApi: true,
+    }).bindTools([
+      {
+        type: "image_generation",
+        quality: "low",
+        output_format: "jpeg",
+        output_compression: 100,
+        size: "1024x1024",
+      },
+    ]);
+
+    const response = await model.invoke(
+      "Draw a random short word in green font."
+    );
+    assertResponse(response);
+    assertImageGenerationToolOutput(response.additional_kwargs.tool_outputs);
+
+    const response2 = await model.invoke([
+      response,
+      new HumanMessage(
+        "Now, change the font to blue. Keep the word and everything else the same."
+      ),
+    ]);
+    assertResponse(response2);
+    assertImageGenerationToolOutput(response2.additional_kwargs.tool_outputs);
+  });
+});
+
 test("Test computer call", async () => {
   const fs = await import("node:fs/promises");
   const url = await import("node:url");

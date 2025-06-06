@@ -615,6 +615,7 @@ function _convertMessagesToOpenAIResponsesParams(
           "computer_call",
           "mcp_call",
           "code_interpreter_call",
+          "image_generation_call",
         ];
 
         if (toolOutputs != null) {
@@ -807,6 +808,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   const additional_kwargs: {
     [key: string]: unknown;
     reasoning?: Partial<ChatOpenAIReasoningSummary>;
+    tool_outputs?: unknown[];
   } = {};
   let id: string | undefined;
   if (chunk.type === "response.output_text.delta") {
@@ -852,6 +854,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
+      "image_generation_call",
     ].includes(chunk.item.type)
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
@@ -921,6 +924,10 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
         { text: chunk.delta, type: "summary_text", index: chunk.summary_index },
       ],
     };
+  } else if (chunk.type === "response.image_generation_call.partial_image") {
+    // noop/fixme: retaining partial images in a message chunk means that _all_
+    // partial images get kept in history, so we don't do anything here.
+    return null;
   } else {
     return null;
   }
@@ -997,6 +1004,35 @@ function isBuiltInToolChoice(
     "type" in tool_choice &&
     tool_choice.type !== "function"
   );
+}
+
+function _reduceChatOpenAIToolsForResponses(
+  tools: ChatOpenAIToolType[],
+  fields?: {
+    stream?: boolean;
+    strict?: boolean;
+  }
+) {
+  const reducedTools: ResponsesTool[] = [];
+  for (const tool of tools) {
+    if (isBuiltInTool(tool)) {
+      if (tool.type === "image_generation" && fields?.stream) {
+        // OpenAI sends a 400 error if partial_images is not set and we want to stream.
+        // We also set it to 1 since we don't support partial images yet.
+        tool.partial_images = 1;
+      }
+      reducedTools.push(tool);
+    } else if (isOpenAITool(tool)) {
+      reducedTools.push({
+        type: "function",
+        name: tool.function.name,
+        parameters: tool.function.parameters,
+        description: tool.function.description,
+        strict: fields?.strict ?? null,
+      });
+    }
+  }
+  return reducedTools;
 }
 
 function _convertChatOpenAIToolTypeToOpenAITool(
@@ -2077,23 +2113,10 @@ export class ChatOpenAI<
         truncation: options?.truncation,
         include: options?.include,
         tools: options?.tools?.length
-          ? options.tools
-              .map((tool) => {
-                if (isBuiltInTool(tool)) {
-                  return tool;
-                } else if (isOpenAITool(tool)) {
-                  return {
-                    type: "function",
-                    name: tool.function.name,
-                    parameters: tool.function.parameters,
-                    description: tool.function.description,
-                    strict,
-                  };
-                } else {
-                  return null;
-                }
-              })
-              .filter((tool): tool is ResponsesTool => tool !== null)
+          ? _reduceChatOpenAIToolsForResponses(options.tools, {
+              stream: this.streaming,
+              strict,
+            })
           : undefined,
         tool_choice: isBuiltInToolChoice(options?.tool_choice)
           ? options?.tool_choice
