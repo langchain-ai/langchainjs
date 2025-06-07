@@ -9,7 +9,7 @@ import { ChatAnthropicTools } from "../tool_calling.js";
 
 test.skip("Test ChatAnthropicTools", async () => {
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -21,7 +21,7 @@ test.skip("Test ChatAnthropicTools", async () => {
 
 test.skip("Test ChatAnthropicTools streaming", async () => {
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -36,7 +36,7 @@ test.skip("Test ChatAnthropicTools streaming", async () => {
 
 test.skip("Test ChatAnthropicTools with tools", async () => {
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
   }).withConfig({
@@ -75,7 +75,7 @@ test.skip("Test ChatAnthropicTools with tools", async () => {
 
 test.skip("Test ChatAnthropicTools with a forced function call", async () => {
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
   }).withConfig({
@@ -130,7 +130,7 @@ test.skip("ChatAnthropicTools with Zod schema", async () => {
     ),
   });
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
   }).withConfig({
@@ -177,7 +177,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
     hairColor: z.optional(z.string()).describe("The person's hair color"),
   });
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
   }).withConfig({
@@ -219,7 +219,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
 
 test.skip("Test ChatAnthropic withStructuredOutput", async () => {
   const runnable = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   }).withStructuredOutput(
     z.object({
@@ -239,7 +239,7 @@ test.skip("Test ChatAnthropic withStructuredOutput", async () => {
 
 test.skip("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
   const runnable = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   }).withStructuredOutput(
     z.object({
@@ -262,7 +262,7 @@ test.skip("Test ChatAnthropic withStructuredOutput on a single array item", asyn
 
 test.skip("Test ChatAnthropic withStructuredOutput on a single array item", async () => {
   const runnable = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   }).withStructuredOutput(
     z.object({
@@ -309,7 +309,7 @@ test.skip("Test ChatAnthropic withStructuredOutput on a single array item", asyn
 
 test.skip("Test ChatAnthropicTools", async () => {
   const chat = new ChatAnthropicTools({
-    modelName: "claude-3-sonnet-20240229",
+    model: "claude-3-sonnet-20240229",
     maxRetries: 0,
   });
   const structured = chat.withStructuredOutput(

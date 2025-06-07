@@ -496,7 +496,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.0-pro-001",
+      model: "gemini-1.0-pro-001",
     });
     const messages: BaseMessageLike[] = [
       new SystemMessage(
@@ -614,7 +614,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro",
+      model: "gemini-1.5-pro",
     });
     const messages: BaseMessageLike[] = [
       new SystemMessage(
@@ -835,7 +835,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-2.5-flex-preview-04-17",
+      model: "gemini-2.5-flex-preview-04-17",
       reasoningEffort: "low",
     });
     await model.invoke(
@@ -1760,7 +1760,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -1795,7 +1795,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -1825,7 +1825,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-2.0-flash",
+      model: "gemini-2.0-flash",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -1850,7 +1850,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchTool]);
@@ -1875,7 +1875,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-2.0-flash",
+      model: "gemini-2.0-flash",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchTool]);
@@ -1897,7 +1897,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-flash-002",
+      model: "gemini-1.5-flash-002",
       logprobs: true,
       topLogprobs: 5,
     });
@@ -1922,7 +1922,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-flash-002",
+      model: "gemini-1.5-flash-002",
       logprobs: false,
       topLogprobs: 5,
     });
@@ -1947,7 +1947,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-flash-002",
+      model: "gemini-1.5-flash-002",
     });
     const result = await model.invoke(
       "What are some names for a company that makes fancy socks?"
@@ -1970,7 +1970,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-flash-002",
+      model: "gemini-1.5-flash-002",
       logprobs: true,
       topLogprobs: 5,
     });
@@ -2059,7 +2059,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,
@@ -2085,7 +2085,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,
@@ -2131,7 +2131,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,
@@ -2170,7 +2170,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,
@@ -2210,7 +2210,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,
@@ -2254,7 +2254,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       thinking: { type: "enabled", budget_tokens: 2000 },
     };
     const model = new ChatGoogle({
-      modelName: "claude-3-7-sonnet@20250219",
+      model: "claude-3-7-sonnet@20250219",
       platformType: "gcp",
       authOptions,
       apiConfig,

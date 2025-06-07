@@ -53,7 +53,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro",
+  model: "gemini-pro",
   maxOutputTokens: 2048,
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
@@ -73,7 +73,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const vision = new ChatGoogleGenerativeAI({
-  modelName: "gemini-pro-vision",
+  model: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");
@@ -111,7 +111,7 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { TaskType } from "@google/generative-ai";
 
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  modelName: "embedding-001", // 768 dimensions
+  model: "embedding-001", // 768 dimensions
   taskType: TaskType.RETRIEVAL_DOCUMENT,
   title: "Document title",
 });

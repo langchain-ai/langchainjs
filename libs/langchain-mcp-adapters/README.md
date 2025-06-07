@@ -124,7 +124,7 @@ const tools = await client.getTools();
 
 // Create an OpenAI model
 const model = new ChatOpenAI({
-  modelName: "gpt-4o",
+  model: "gpt-4o",
   temperature: 0,
 });
 
@@ -172,7 +172,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { loadMcpTools } from "@langchain/mcp-adapters";
 
 // Initialize the ChatOpenAI model
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ model: "gpt-4" });
 
 // Automatically starts and connects to a MCP reference server
 const transport = new StdioClientTransport({

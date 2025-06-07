@@ -85,7 +85,7 @@ const Questions = z.object({
 });
 
 // Create an instance of the model and enforce the output structure
-const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 const structuredModel = model.withStructuredOutput(Questions);
 
 // Define the system prompt

@@ -31,7 +31,7 @@ const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test Azure ChatOpenAI call method", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
   });
   const message = new HumanMessage("Hello!");
@@ -43,7 +43,7 @@ test("Test Azure ChatOpenAI call method", async () => {
 
 test("Test Azure ChatOpenAI with SystemChatMessage", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
   });
   const system_message = new SystemMessage("You are to chat with a user.");
@@ -56,7 +56,7 @@ test("Test Azure ChatOpenAI with SystemChatMessage", async () => {
 
 test("Test Azure ChatOpenAI Generate", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -75,7 +75,7 @@ test("Test Azure ChatOpenAI Generate", async () => {
 
 test("Test Azure ChatOpenAI Generate throws when one of the calls fails", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -101,7 +101,7 @@ test("Test Azure ChatOpenAI tokenUsage", async () => {
     };
 
     const model = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       maxTokens: 10,
       callbackManager: CallbackManager.fromHandlers({
         async handleLLMEnd(output: LLMResult) {
@@ -138,7 +138,7 @@ test("Test Azure ChatOpenAI tokenUsage with a batch", async () => {
 
     const model = new AzureChatOpenAI({
       temperature: 0,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       callbackManager: CallbackManager.fromHandlers({
         async handleLLMEnd(output: LLMResult) {
           tokenUsage = output.llmOutput?.tokenUsage;
@@ -171,7 +171,7 @@ test("Test Azure ChatOpenAI in streaming mode", async () => {
     let streamedCompletion = "";
 
     const model = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxTokens: 10,
       callbacks: [
@@ -208,7 +208,7 @@ test("Test Azure ChatOpenAI in streaming mode with n > 1 and multiple prompts", 
     ];
 
     const model = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxTokens: 10,
       n: 2,
@@ -237,7 +237,7 @@ test("Test Azure ChatOpenAI in streaming mode with n > 1 and multiple prompts", 
 
 test("Test Azure ChatOpenAI prompt value", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -332,7 +332,7 @@ test("Test Azure ChatOpenAI with signal in call options", async () => {
 test("Test Azure ChatOpenAI with signal in call options and node adapter", async () => {
   const model = new AzureChatOpenAI({
     maxTokens: 5,
-    modelName: "gpt-3.5-turbo-instruct",
+    model: "gpt-3.5-turbo-instruct",
   });
   const controller = new AbortController();
   await expect(() => {
@@ -348,7 +348,7 @@ test("Test Azure ChatOpenAI with signal in call options and node adapter", async
 
 test("Test Azure ChatOpenAI with specific roles in ChatMessage", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
   });
   const system_message = new ChatMessage(
@@ -365,7 +365,7 @@ test("Test Azure ChatOpenAI with specific roles in ChatMessage", async () => {
 test("Test Azure ChatOpenAI stream method", async () => {
   const model = new AzureChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
@@ -380,7 +380,7 @@ test("Test Azure ChatOpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new AzureChatOpenAI({
       maxTokens: 100,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
@@ -399,7 +399,7 @@ test("Test Azure ChatOpenAI stream method with abort", async () => {
 test("Test Azure ChatOpenAI stream method with early break", async () => {
   const model = new AzureChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
@@ -420,7 +420,7 @@ test("Test Azure ChatOpenAI stream method, timeout error thrown from SDK", async
   await expect(async () => {
     const model = new AzureChatOpenAI({
       maxTokens: 50,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       timeout: 1,
       maxRetries: 0,
     });
@@ -444,7 +444,7 @@ test("Test Azure ChatOpenAI Function calling with streaming", async () => {
   try {
     let finalResult: BaseMessage | undefined;
     const modelForFunctionCalling = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       temperature: 0,
       callbacks: [
         {
@@ -512,7 +512,7 @@ test("Test Azure ChatOpenAI can cache generations", async () => {
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
     cache: memoryCache,
@@ -534,7 +534,7 @@ test("Test Azure ChatOpenAI can write and read cached generations", async () => 
   const updateSpy = jest.spyOn(memoryCache, "update");
 
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 100,
     n: 1,
     cache: memoryCache,
@@ -572,7 +572,7 @@ test("Test Azure ChatOpenAI should not reuse cache if function call args have ch
   const updateSpy = jest.spyOn(memoryCache, "update");
 
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 100,
     n: 1,
     cache: memoryCache,
@@ -692,7 +692,7 @@ test("Test Azure ChatOpenAI getNumTokensFromMessages gpt-3.5-turbo-0301 model fo
 
   const chat = new AzureChatOpenAI({
     azureOpenAIApiKey: "dummy",
-    modelName: "gpt-3.5-turbo-0301",
+    model: "gpt-3.5-turbo-0301",
   });
 
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
@@ -705,7 +705,7 @@ test("Test Azure ChatOpenAI getNumTokensFromMessages gpt-4-0314 model for sample
 
   const chat = new AzureChatOpenAI({
     azureOpenAIApiKey: "dummy",
-    modelName: "gpt-4-0314",
+    model: "gpt-4-0314",
   });
 
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
@@ -751,7 +751,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
     };
 
     const streamingModel = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -778,7 +778,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
     });
 
     const nonStreamingModel = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: false,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -848,7 +848,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
     const question = "What is the color of the night sky?";
 
     const streamingModel = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -872,7 +872,7 @@ test("Test Azure ChatOpenAI token usage reporting for streaming calls", async ()
     });
 
     const nonStreamingModel = new AzureChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: false,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -940,7 +940,7 @@ testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
   );
 
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 5,
     azureADTokenProvider,
   });
@@ -953,7 +953,7 @@ testFn("Test Azure ChatOpenAI with bearer token provider", async () => {
 
 test("Test Azure ChatOpenAI withStructuredOutput", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
   const message = new HumanMessage("Good!");
   const model = await chat.withStructuredOutput(

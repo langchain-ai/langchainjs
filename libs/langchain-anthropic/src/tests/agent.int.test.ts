@@ -15,7 +15,7 @@ test("createToolCallingAgent works", async () => {
   //     ["placeholder", "{agent_scratchpad}"],
   //   ]);
   //   const llm = new ChatAnthropic({
-  //     modelName: "claude-3-sonnet-20240229",
+  //     model: "claude-3-sonnet-20240229",
   //     temperature: 0,
   //   });
   //   const agent = await createToolCallingAgent({

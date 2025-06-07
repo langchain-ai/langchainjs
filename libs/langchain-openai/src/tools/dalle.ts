@@ -21,10 +21,7 @@ export interface DallEAPIWrapperParams extends ToolParams {
    */
   apiKey?: string;
   /**
-   * The model to use.
-   * Alias for `model`
-   * @params "dall-e-2" | "dall-e-3"
-   * @default "dall-e-3"
+   * @deprecated Use `model` instead.
    */
   modelName?: string;
   /**
