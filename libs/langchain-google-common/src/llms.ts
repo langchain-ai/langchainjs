@@ -86,6 +86,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   lc_serializable = true;
 
+  /** @deprecated Use `model` instead */
   modelName = "gemini-pro";
 
   model = "gemini-pro";

@@ -86,6 +86,7 @@ export class AzureOpenAI<
 
   logitBias?: Record<string, number>;
 
+  /** @deprecated Use `model` instead */
   modelName = "gpt-3.5-turbo-instruct";
 
   model = "gpt-3.5-turbo-instruct";
@@ -181,8 +182,8 @@ export class AzureOpenAI<
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.bestOf = fields?.bestOf ?? this.bestOf;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.streaming = fields?.streaming ?? false;
     this.batchSize = fields?.batchSize ?? this.batchSize;

@@ -10,7 +10,7 @@ jest.setTimeout(30000);
 test("Azion search", async () => {
   const embeddings = new OpenAIEmbeddings();
   const entityExtractor = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     temperature: 0,
   });
   const retrieverHybrid = new AzionRetriever(embeddings, {

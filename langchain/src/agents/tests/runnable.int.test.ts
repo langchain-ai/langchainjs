@@ -19,7 +19,7 @@ import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];
-  const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
@@ -70,7 +70,7 @@ test("Runnable variant", async () => {
 test("Runnable variant executor astream log", async () => {
   const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
-    modelName: "gpt-4",
+    model: "gpt-4",
     temperature: 0,
     streaming: true,
   });

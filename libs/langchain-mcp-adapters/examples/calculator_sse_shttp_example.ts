@@ -84,7 +84,7 @@ You have access to tools that can add, subtract, multiply, and divide numbers. U
 these tools to answer the user's questions.`;
 
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
       temperature: 0.7,
     }).bindTools(mcpTools);
 

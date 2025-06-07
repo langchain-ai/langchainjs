@@ -630,6 +630,7 @@ export class ChatAnthropicMessages<
 
   maxTokens = 2048;
 
+  /** @deprecated Use `model` instead. */
   modelName = "claude-2.1";
 
   model = "claude-2.1";
@@ -678,8 +679,8 @@ export class ChatAnthropicMessages<
     this.apiUrl = fields?.anthropicApiUrl;
 
     /** Keep modelName for backwards compatibility */
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 

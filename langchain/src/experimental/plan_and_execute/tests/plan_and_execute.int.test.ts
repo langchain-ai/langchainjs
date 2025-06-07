@@ -8,7 +8,7 @@ test.skip("Run agent on a simple input", async () => {
   const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     verbose: true,
   });
   const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
@@ -29,7 +29,7 @@ test.skip("Run agent", async () => {
   const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     verbose: true,
   });
   const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
@@ -51,7 +51,7 @@ test.skip("Run agent with a sequential math problem", async () => {
   const tools = [new Calculator()];
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     verbose: true,
   });
   const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({
@@ -71,7 +71,7 @@ test.skip("Run agent with a sequential math problem", async () => {
 test.skip("Should run agent with no tools", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     verbose: true,
   });
   const executor = await PlanAndExecuteAgentExecutor.fromLLMAndTools({

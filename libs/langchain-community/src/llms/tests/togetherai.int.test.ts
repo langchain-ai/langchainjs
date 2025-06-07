@@ -3,7 +3,7 @@ import { TogetherAI } from "../togetherai.js";
 
 test.skip("TogetherAI can make a request to an LLM", async () => {
   const model = new TogetherAI({
-    modelName: "togethercomputer/StripedHyena-Nous-7B",
+    model: "togethercomputer/StripedHyena-Nous-7B",
   });
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant."],
@@ -18,7 +18,7 @@ test.skip("TogetherAI can make a request to an LLM", async () => {
 
 test.skip("TogetherAI can stream responses", async () => {
   const model = new TogetherAI({
-    modelName: "togethercomputer/StripedHyena-Nous-7B",
+    model: "togethercomputer/StripedHyena-Nous-7B",
     streaming: true,
   });
   const prompt = ChatPromptTemplate.fromMessages([
