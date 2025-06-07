@@ -77,7 +77,7 @@ async function runExample() {
 
     // Create an OpenAI model and bind the tools
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4-turbo-preview",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4-turbo-preview",
       temperature: 0,
     }).bindTools(mcpTools);
 

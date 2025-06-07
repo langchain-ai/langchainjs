@@ -16,7 +16,7 @@ import { ChatMinimax } from "../minimax.js";
 
 test.skip("Test ChatMinimax", async () => {
   const chat = new ChatMinimax({
-    modelName: "abab5.5-chat",
+    model: "abab5.5-chat",
     botSetting: [
       {
         bot_name: "MM Assistant",
@@ -300,7 +300,7 @@ test.skip("Test ChatMinimax Function calling ", async () => {
 
 test.skip("Test ChatMinimax Glyph", async () => {
   const model = new ChatMinimax({
-    modelName: "abab5.5-chat",
+    model: "abab5.5-chat",
     botSetting: [
       {
         bot_name: "MM Assistant",
@@ -332,7 +332,7 @@ test.skip("Test ChatMinimax Glyph", async () => {
 });
 test.skip("Test ChatMinimax Plugins", async () => {
   const model = new ChatMinimax({
-    modelName: "abab5.5-chat",
+    model: "abab5.5-chat",
     botSetting: [
       {
         bot_name: "MM Assistant",

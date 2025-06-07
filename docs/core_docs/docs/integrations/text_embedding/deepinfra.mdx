@@ -35,7 +35,7 @@ import { DeepInfraEmbeddings } from "@langchain/community/embeddings/deepinfra";
 
 const embeddings = new DeepInfraEmbeddings({
   apiToken: "YOUR_API_TOKEN",
-  modelName: "sentence-transformers/clip-ViT-B-32", // Optional, defaults to "sentence-transformers/clip-ViT-B-32"
+  model: "sentence-transformers/clip-ViT-B-32", // Optional, defaults to "sentence-transformers/clip-ViT-B-32"
   batchSize: 1024, // Optional, defaults to 1024
 });
 ```
@@ -106,7 +106,7 @@ import { DeepInfraEmbeddings } from "@langchain/community/embeddings/deepinfra";
 
 const embeddings = new DeepInfraEmbeddings({
   apiToken: "YOUR_API_TOKEN",
-  modelName: "sentence-transformers/clip-ViT-B-32",
+  model: "sentence-transformers/clip-ViT-B-32",
   batchSize: 512,
 });
 
