@@ -289,7 +289,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     }
   });
 
-  test.only("withStructuredOutput - null", async () => {
+  test("withStructuredOutput - null", async () => {
     const schema = {
       type: "object",
       properties: {
@@ -835,6 +835,21 @@ describe.each(testGeminiModelNames)(
       expect(result).toHaveProperty("location");
     });
 
+    test("withStructuredOutput - null", async () => {
+      const schema = {
+        type: "object",
+        properties: {
+          greeterName: {
+            type: ["string", "null"],
+          },
+        },
+        required: ["greeterName"],
+      };
+      const model = newChatGoogle().withStructuredOutput(schema);
+      const result = await model.invoke("Hi, I'm kwkaiser");
+      expect(result).toHaveProperty("greeterName");
+    });
+
     // test("media - fileData", async () => {
     //   class MemStore extends InMemoryStore<MediaBlob> {
     //     get length() {
@@ -1268,7 +1283,7 @@ describe.each(testGeminiModelNames)(
     });
 
     // Vertex AI doesn't (yet?) support fps, but does support startOffset and endOffset
-    test.only("image_url video data", async () => {
+    test("image_url video data", async () => {
       const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
