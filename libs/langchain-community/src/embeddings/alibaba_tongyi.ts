@@ -2,9 +2,13 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
+type AlibabaTongyiEmbeddingsModelId =
+  | "text-embedding-v2"
+  | (string & NonNullable<unknown>);
+
 export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "text-embedding-v2";
+  model?: AlibabaTongyiEmbeddingsModelId;
 
   /**
    * Timeout to use when making requests to AlibabaTongyi.
@@ -35,7 +39,7 @@ export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
 }
 
 interface EmbeddingCreateParams {
-  model: AlibabaTongyiEmbeddingsParams["modelName"];
+  model: AlibabaTongyiEmbeddingsModelId;
   input: {
     texts: string[];
   };
@@ -65,7 +69,7 @@ export class AlibabaTongyiEmbeddings
   extends Embeddings
   implements AlibabaTongyiEmbeddingsParams
 {
-  modelName: AlibabaTongyiEmbeddingsParams["modelName"] = "text-embedding-v2";
+  model: AlibabaTongyiEmbeddingsModelId = "text-embedding-v2";
 
   batchSize = 24;
 
@@ -91,7 +95,8 @@ export class AlibabaTongyiEmbeddings
 
     this.apiKey = apiKey;
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
+
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
@@ -157,7 +162,7 @@ export class AlibabaTongyiEmbeddings
     texts: EmbeddingCreateParams["input"]["texts"]
   ): EmbeddingCreateParams {
     return {
-      model: this.modelName,
+      model: this.model,
       input: {
         texts,
       },

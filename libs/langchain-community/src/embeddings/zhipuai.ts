@@ -4,6 +4,8 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
 
+type ZhipuAIEmbeddingModelId = "embedding-2" | (string & NonNullable<unknown>);
+
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the ZhipuAIEmbeddingsParams class.
@@ -12,7 +14,8 @@ export interface ZhipuAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
    */
-  modelName?: "embedding-2";
+  model?: ZhipuAIEmbeddingModelId;
+
   /**
    * ZhipuAI API key to use
    */
@@ -46,7 +49,7 @@ export class ZhipuAIEmbeddings
   extends Embeddings
   implements ZhipuAIEmbeddingsParams
 {
-  modelName: ZhipuAIEmbeddingsParams["modelName"] = "embedding-2";
+  model: ZhipuAIEmbeddingModelId = "embedding-2";
 
   apiKey?: string;
 
@@ -57,7 +60,7 @@ export class ZhipuAIEmbeddings
   constructor(fields?: ZhipuAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.modelName = fields?.modelName ?? this.modelName;
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
 
@@ -78,7 +81,7 @@ export class ZhipuAIEmbeddings
   ): Promise<ZhipuAIEmbeddingsResult> {
     const text = this.stripNewLines ? input.replace(/\n/g, " ") : input;
 
-    const body = JSON.stringify({ input: text, model: this.modelName });
+    const body = JSON.stringify({ input: text, model: this.model });
     const headers = {
       Accept: "application/json",
       "Content-Type": "application/json",

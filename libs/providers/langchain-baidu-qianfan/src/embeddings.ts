@@ -3,9 +3,16 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embedding } from "@baiducloud/qianfan";
 
+export type BaiduQianfanEmbeddingsModelId =
+  | "Embedding-V1"
+  | "bge-large-zh"
+  | "bge-large-en"
+  | "tao-8k"
+  | (string & NonNullable<unknown>);
+
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "Embedding-V1" | "bge-large-zh" | "bge-large-en" | "tao-8k";
+  model?: BaiduQianfanEmbeddingsModelId;
 
   /**
    * Timeout to use when making requests to BaiduQianfan.
@@ -53,7 +60,7 @@ export class BaiduQianfanEmbeddings
   extends Embeddings
   implements BaiduQianfanEmbeddingsParams
 {
-  modelName: BaiduQianfanEmbeddingsParams["modelName"] = "Embedding-V1";
+  model: BaiduQianfanEmbeddingsModelId = "Embedding-V1";
 
   batchSize = 16;
 
@@ -113,9 +120,9 @@ export class BaiduQianfanEmbeddings
       throw new Error("Please provide AK/SK");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
 
-    if (this.modelName === "tao-8k") {
+    if (this.model === "tao-8k") {
       if (fieldsWithDefaults?.batchSize && fieldsWithDefaults.batchSize !== 1) {
         throw new Error(
           "tao-8k model supports only a batchSize of 1. Please adjust your batchSize accordingly"
@@ -201,7 +208,7 @@ export class BaiduQianfanEmbeddings
    */
   private async embeddingWithRetry(body: EmbeddingCreateParams) {
     const embeddingData: EmbeddingResponse | EmbeddingErrorResponse =
-      await this.embeddings.embedding(body, this.modelName);
+      await this.embeddings.embedding(body, this.model);
 
     if ("error_code" in embeddingData && embeddingData.error_code) {
       throw new Error(

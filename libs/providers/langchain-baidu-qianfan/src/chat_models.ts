@@ -74,14 +74,9 @@ interface ChatCompletionResponse {
 declare interface BaiduQianfanChatInput {
   /**
    * Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
-   * Alias for `model`
    * @default "ERNIE-Bot-turbo"
    */
-  modelName: string;
-  /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
-   * @default "ERNIE-Bot-turbo"
-   */
-  model: string;
+  model?: string;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;
@@ -218,8 +213,6 @@ export class ChatBaiduQianfan
 
   userId?: string;
 
-  modelName = "ERNIE-Bot-turbo";
-
   model = "ERNIE-Bot-turbo";
 
   temperature?: number | undefined;
@@ -242,11 +235,10 @@ export class ChatBaiduQianfan
   constructor(fields?: Partial<BaiduQianfanChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
 
     if (!this.model) {
-      throw new Error(`Please provide modelName`);
+      throw new Error(`Please provide a "model" parameter`);
     }
 
     this.qianfanAK = fields?.qianfanAK ?? getEnvironmentVariable("QIANFAN_AK");

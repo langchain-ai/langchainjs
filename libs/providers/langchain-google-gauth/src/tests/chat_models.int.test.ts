@@ -256,7 +256,7 @@ describe("GAuth Chat", () => {
       resolvers: [resolver],
     });
     const model = new ChatGoogle({
-      modelName: "gemini-1.5-flash",
+      model: "gemini-1.5-flash",
       apiConfig: {
         mediaManager,
       },

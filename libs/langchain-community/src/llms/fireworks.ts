@@ -66,7 +66,7 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     super({
       ...fields,
       openAIApiKey: fireworksApiKey,
-      modelName: fields?.modelName || "accounts/fireworks/models/llama-v2-13b",
+      model: fields?.model || "accounts/fireworks/models/llama-v2-13b",
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",
       },

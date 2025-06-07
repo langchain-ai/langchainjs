@@ -15,12 +15,6 @@ export interface TogetherAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Model name to use
-   * Alias for `model`
-   * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
-   */
-  modelName?: string;
-  /**
-   * Model name to use
    * @default {"togethercomputer/m2-bert-80M-8k-retrieval"}
    */
   model?: string;
@@ -75,8 +69,6 @@ export class TogetherAIEmbeddings
   extends Embeddings
   implements TogetherAIEmbeddingsParams
 {
-  modelName = "togethercomputer/m2-bert-80M-8k-retrieval";
-
   model = "togethercomputer/m2-bert-80M-8k-retrieval";
 
   apiKey: string;
@@ -99,8 +91,7 @@ export class TogetherAIEmbeddings
     }
 
     this.apiKey = apiKey;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
     this.timeout = fields?.timeout;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;

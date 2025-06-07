@@ -9,7 +9,7 @@ import {
 import { createStuffDocumentsChain } from "../combine_documents/stuff.js";
 
 test("Test StuffDocumentsChain", async () => {
-  const llm = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const llm = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const prompt = PromptTemplate.fromTemplate("Print {context}");
   const chain = await createStuffDocumentsChain({ llm, prompt });
   const docs = [
@@ -26,7 +26,7 @@ test("Test StuffDocumentsChain", async () => {
 test("Test MapReduceDocumentsChain with QA chain", async () => {
   const model = new OpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo-instruct",
+    model: "gpt-3.5-turbo-instruct",
   });
   const chain = loadQAMapReduceChain(model);
   const docs = [
@@ -45,7 +45,7 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
 test("Test RefineDocumentsChain with QA chain", async () => {
   const model = new OpenAI({
     temperature: 0,
-    modelName: "gpt-3.5-turbo-instruct",
+    model: "gpt-3.5-turbo-instruct",
   });
   const chain = loadQARefineChain(model);
   const docs = [

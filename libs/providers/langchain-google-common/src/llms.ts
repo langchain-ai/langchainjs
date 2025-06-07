@@ -86,8 +86,6 @@ export abstract class GoogleBaseLLM<AuthOptions>
 
   lc_serializable = true;
 
-  modelName = "gemini-pro";
-
   model = "gemini-pro";
 
   temperature = 0.7;

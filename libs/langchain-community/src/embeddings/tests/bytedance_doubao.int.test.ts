@@ -1,10 +1,10 @@
 import { test, expect } from "@jest/globals";
 import { ByteDanceDoubaoEmbeddings } from "../bytedance_doubao.js";
 
-const modelName = "ep-xxx-xxx";
+const model = "ep-xxx-xxx";
 test.skip("Test ByteDanceDoubaoEmbeddings.embedQuery", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    model: modelName,
+    model,
   });
   const res = await embeddings.embedQuery("Hello world");
   expect(typeof res[0]).toBe("number");
@@ -12,7 +12,7 @@ test.skip("Test ByteDanceDoubaoEmbeddings.embedQuery", async () => {
 
 test.skip("Test ByteDanceDoubaoEmbeddings.embedDocuments", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    model: modelName,
+    model,
   });
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);
   expect(res).toHaveLength(2);
@@ -22,7 +22,7 @@ test.skip("Test ByteDanceDoubaoEmbeddings.embedDocuments", async () => {
 
 test.skip("Test ByteDanceDoubaoEmbeddings concurrency", async () => {
   const embeddings = new ByteDanceDoubaoEmbeddings({
-    model: modelName,
+    model,
     batchSize: 1,
   });
   const res = await embeddings.embedDocuments([

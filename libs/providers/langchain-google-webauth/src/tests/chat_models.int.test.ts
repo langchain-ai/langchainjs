@@ -80,7 +80,7 @@ const apiKeyModelNames = [
   ["gemma-3n-e4b-it"],
 ];
 
-describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
+describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (model) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
@@ -90,7 +90,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     callbacks = [recorder, new GoogleRequestLogger()];
 
     return new ChatGoogle({
-      modelName,
+      model,
       apiVersion: "v1beta",
       callbacks,
       ...(fields ?? {}),
@@ -202,7 +202,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   test.skip("Few shotting with tool calls", async () => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
-    const res = await chat.invoke("What is the weather in SF");
+    await chat.invoke("What is the weather in SF");
 
     const res2 = await chat.invoke([
       new HumanMessage("What is the weather in SF?"),
@@ -446,60 +446,60 @@ const calculatorTool = tool((_) => "no-op", {
  */
 const testGeminiModelNames = [
   {
-    modelName: "gemini-1.5-pro-002",
+    model: "gemini-1.5-pro-002",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-1.5-pro-002", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-1.5-pro-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-1.5-flash-002",
+    model: "gemini-1.5-flash-002",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-001",
+    model: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-lite-001",
+    model: "gemini-2.0-flash-lite-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.0-flash-lite-001",
+    model: "gemini-2.0-flash-lite-001",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -518,8 +518,8 @@ const testGeminiModelDelay: Record<string, number> = {
 };
 
 describe.each(testGeminiModelNames)(
-  "Webauth ($platformType) Gemini Chat ($modelName)",
-  ({ modelName, platformType, apiVersion }) => {
+  "Webauth ($platformType) Gemini Chat ($model)",
+  ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -537,7 +537,7 @@ describe.each(testGeminiModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
@@ -548,7 +548,7 @@ describe.each(testGeminiModelNames)(
 
     beforeEach(async () => {
       warnSpy = jest.spyOn(global.console, "warn");
-      const delay = testGeminiModelDelay[modelName] ?? 0;
+      const delay = testGeminiModelDelay[model] ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -1370,20 +1370,20 @@ describe.each(testGeminiModelNames)(
 
 const testMultimodalModelNames = [
   {
-    modelName: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     platformType: "gcp",
     apiVersion: "v1",
   },
 ];
 
 describe.each(testMultimodalModelNames)(
-  "Webauth ($platformType) Gemini Multimodal ($modelName)",
-  ({ modelName, platformType, apiVersion }) => {
+  "Webauth ($platformType) Gemini Multimodal ($model)",
+  ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1398,7 +1398,7 @@ describe.each(testMultimodalModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
@@ -1423,7 +1423,7 @@ describe.each(testMultimodalModelNames)(
       let imageCount = 0;
       (content as MessageContentComplex[]).forEach((mc) => {
         if (mc?.type === "image_url") {
-          const fn = `/tmp/${platformType}-${modelName}-${imageCount}.png`;
+          const fn = `/tmp/${platformType}-${model}-${imageCount}.png`;
 
           imageCount += 1;
           const url = (mc as MessageContentImageUrl).image_url as string;
@@ -1441,27 +1441,27 @@ describe.each(testMultimodalModelNames)(
 
 const testTtsModelNames = [
   {
-    modelName: "gemini-2.5-flash-preview-tts",
+    model: "gemini-2.5-flash-preview-tts",
     platformType: "gai",
   },
   // GCP doesn't currently support this model
   // {
-  //   modelName: "gemini-2.5-flash-preview-tts",
+  //   model: "gemini-2.5-flash-preview-tts",
   //   platformType: "gcp",
   // },
   {
-    modelName: "gemini-2.5-pro-preview-tts",
+    model: "gemini-2.5-pro-preview-tts",
     platformType: "gai",
   },
   // {
-  //   modelName: "gemini-2.5-pro-preview-tts",
+  //   model: "gemini-2.5-pro-preview-tts",
   //   platformType: "gcp",
   // },
 ];
 
 describe.each(testTtsModelNames)(
-  "Webauth ($platformType) Gemini TTS ($modelName)",
-  ({ modelName, platformType }) => {
+  "Webauth ($platformType) Gemini TTS ($model)",
+  ({ model, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1481,7 +1481,7 @@ describe.each(testTtsModelNames)(
       const responseModalities = ["AUDIO"];
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         callbacks,
         apiKey,
@@ -1499,7 +1499,7 @@ describe.each(testTtsModelNames)(
     });
 
     function writeData(data: string) {
-      const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
+      const fn = `/tmp/tts-${model}-${platformType}-${testIndex}-${outputIndex}.pcm`;
 
       Fs.writeFileSync(fn, data, "base64");
     }
@@ -1609,36 +1609,36 @@ describe.each(testTtsModelNames)(
 
 const testReasoningModelNames = [
   {
-    modelName: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gcp",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gcp",
   },
 ];
 
 describe.each(testReasoningModelNames)(
-  "Webauth ($platformType) Reasoning($modelName)",
-  ({ modelName, platformType }) => {
+  "Webauth ($platformType) Reasoning($model)",
+  ({ model, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1656,7 +1656,7 @@ describe.each(testReasoningModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         callbacks,
         apiKey,
@@ -1666,7 +1666,7 @@ describe.each(testReasoningModelNames)(
 
     beforeEach(async () => {
       warnSpy = jest.spyOn(global.console, "warn");
-      const delay = testGeminiModelDelay[modelName] ?? 0;
+      const delay = testGeminiModelDelay[model] ?? 0;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }

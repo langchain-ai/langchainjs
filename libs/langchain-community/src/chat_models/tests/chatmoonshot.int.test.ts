@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatMoonshot } from "../moonshot.js";
 
 interface TestConfig {
-  modelName: string | undefined;
+  model: string | undefined;
   config: {
     description?: string;
     temperature?: number;
@@ -21,13 +21,13 @@ interface TestConfig {
 }
 
 const runTest = async ({
-  modelName,
+  model,
   config,
   system = "",
   message = "Hello!",
   shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatMoonshot ${modelName || "default model"} ${
+  const description = `Test ChatMoonshot ${model || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
@@ -45,7 +45,7 @@ const runTest = async ({
   }
   test.skip(description, async () => {
     const chat = new ChatMoonshot({
-      modelName,
+      model,
       ...config,
     });
 
@@ -71,22 +71,22 @@ const runTest = async ({
 };
 
 const testConfigs: TestConfig[] = [
-  { modelName: undefined, config: {} },
-  { modelName: "moonshot-v1-8k", config: {} },
+  { model: undefined, config: {} },
+  { model: "moonshot-v1-8k", config: {} },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: { description: "with temperature", temperature: 1 },
   },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: { description: "with topP", topP: 1 },
   },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: { description: "with repetitionPenalty" },
   },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -94,7 +94,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: {
       description: "illegal input should throw an error",
       temperature: 0,
@@ -102,7 +102,7 @@ const testConfigs: TestConfig[] = [
     shouldThrow: true,
   },
   {
-    modelName: "moonshot-v1-8k",
+    model: "moonshot-v1-8k",
     config: {
       description: "illegal input in streaming mode should throw an error",
       streaming: true,
@@ -110,9 +110,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "moonshot-v1-128k", config: {} },
+  { model: "moonshot-v1-128k", config: {} },
   {
-    modelName: "moonshot-v1-128k",
+    model: "moonshot-v1-128k",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -120,14 +120,14 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "moonshot-v1-128k",
+    model: "moonshot-v1-128k",
     config: {
       description: "with system message",
     },
     system: "你是一个说文言文的人",
   },
   {
-    modelName: "moonshot-v1-128k",
+    model: "moonshot-v1-128k",
     config: {},
   },
 ];

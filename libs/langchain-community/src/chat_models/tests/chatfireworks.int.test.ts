@@ -94,7 +94,7 @@ describe.skip("ChatFireworks", () => {
         "Get the weather of a specific location and return the temperature in Celsius."
       );
     const chat = new ChatFireworks({
-      modelName: "accounts/fireworks/models/firefunction-v1",
+      model: "accounts/fireworks/models/firefunction-v1",
       temperature: 0,
     }).bindTools([
       {

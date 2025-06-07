@@ -68,7 +68,7 @@ const modelName = "claude-3-haiku-20240307";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -78,7 +78,7 @@ test("Test ChatAnthropic", async () => {
 
 test("Test ChatAnthropic with a bad API key throws appropriate error", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     apiKey: "bad",
   });
@@ -95,7 +95,7 @@ test("Test ChatAnthropic with a bad API key throws appropriate error", async () 
 
 test("Test ChatAnthropic with unknown model throws appropriate error", async () => {
   const chat = new ChatAnthropic({
-    modelName: "badbad",
+    model: "badbad",
     maxRetries: 0,
   });
   let error;
@@ -111,7 +111,7 @@ test("Test ChatAnthropic with unknown model throws appropriate error", async () 
 
 test("Test ChatAnthropic Generate", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -130,7 +130,7 @@ test("Test ChatAnthropic Generate", async () => {
 
 test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     clientOptions: {
       defaultHeaders: {
@@ -154,7 +154,7 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
 
 test("Test ChatAnthropic Generate with a signal in call options", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
   });
   const controller = new AbortController();
@@ -176,7 +176,7 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
   const model = new ChatAnthropic({
     temperature: 0,
     maxRetries: 0,
-    modelName,
+    model: modelName,
   });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -192,7 +192,7 @@ test("Test ChatAnthropic in streaming mode", async () => {
   let streamedCompletion = "";
 
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
@@ -215,7 +215,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
   let streamedCompletion = "";
 
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     streaming: true,
     callbacks: CallbackManager.fromHandlers({
@@ -244,7 +244,7 @@ test("Test ChatAnthropic in streaming mode with a signal", async () => {
 
 test.skip("Test ChatAnthropic prompt value", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
   });
   const message = new HumanMessage("Hello!");
@@ -262,7 +262,7 @@ test.skip("Test ChatAnthropic prompt value", async () => {
 
 test.skip("ChatAnthropic, docs, prompt templates", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     temperature: 0,
   });
@@ -291,7 +291,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
 
 test.skip("ChatAnthropic, longer chain of messages", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     temperature: 0,
   });
@@ -317,7 +317,7 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
   // Pass the default URL through (should use this, and work as normal)
   const anthropicApiUrl = "https://api.anthropic.com";
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     anthropicApiUrl,
   });
@@ -332,7 +332,7 @@ test("Test ChatAnthropic stream method", async () => {
   const model = new ChatAnthropic({
     maxTokens: 50,
     maxRetries: 0,
-    modelName,
+    model: modelName,
   });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
@@ -347,7 +347,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
     const model = new ChatAnthropic({
       maxTokens: 500,
       maxRetries: 0,
-      modelName,
+      model: modelName,
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
@@ -367,7 +367,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
   const model = new ChatAnthropic({
     maxTokens: 50,
     maxRetries: 0,
-    modelName,
+    model: modelName,
   });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
@@ -386,7 +386,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
 
 test("Test ChatAnthropic headers passed through", async () => {
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     apiKey: "NOT_REAL",
     clientOptions: {
@@ -407,7 +407,7 @@ describe("ChatAnthropic image inputs", () => {
     "Test ChatAnthropic image_url, %s",
     async (invocationType: string) => {
       const chat = new ChatAnthropic({
-        modelName,
+        model: modelName,
         maxRetries: 0,
       });
 
@@ -488,7 +488,7 @@ describe("ChatAnthropic image inputs", () => {
     "Test ChatAnthropic Anthropic Image Block, %s",
     async (invocationType: string) => {
       const chat = new ChatAnthropic({
-        modelName,
+        model: modelName,
         maxRetries: 0,
       });
       const base64Res = invoke(chat, invocationType, [
@@ -533,7 +533,7 @@ describe("ChatAnthropic image inputs", () => {
 
 test("Stream tokens", async () => {
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
     temperature: 0,
     maxTokens: 10,
   });
@@ -560,14 +560,14 @@ test("Stream tokens", async () => {
 });
 
 test("id is supplied when invoking", async () => {
-  const model = new ChatAnthropic({ modelName });
+  const model = new ChatAnthropic({ model: modelName });
   const result = await model.invoke("Hello");
   expect(result.id).toBeDefined();
   expect(result.id).not.toEqual("");
 });
 
 test("id is supplied when streaming", async () => {
-  const model = new ChatAnthropic({ modelName });
+  const model = new ChatAnthropic({ model: modelName });
   let finalChunk: AIMessageChunk | undefined;
   for await (const chunk of await model.stream("Hello")) {
     finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
@@ -841,7 +841,7 @@ The current date is ${new Date().toISOString()}`;
 
 test("system prompt caching", async () => {
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
     clientOptions: {
       defaultHeaders: {
         "anthropic-beta": "prompt-caching-2024-07-31",
@@ -887,7 +887,7 @@ test("system prompt caching", async () => {
 // TODO: Add proper test with long tool content
 test.skip("tool caching", async () => {
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
     clientOptions: {
       defaultHeaders: {
         "anthropic-beta": "prompt-caching-2024-07-31",
@@ -934,7 +934,7 @@ test.skip("tool caching", async () => {
 test.skip("Test ChatAnthropic with custom client", async () => {
   const client = new AnthropicVertex();
   const chat = new ChatAnthropic({
-    modelName,
+    model: modelName,
     maxRetries: 0,
     createClient: () => client,
   });
@@ -946,7 +946,7 @@ test.skip("Test ChatAnthropic with custom client", async () => {
 
 test("human message caching", async () => {
   const model = new ChatAnthropic({
-    modelName,
+    model: modelName,
   });
 
   const messages = [
@@ -983,7 +983,7 @@ test("human message caching", async () => {
 
 test("Can accept PDF documents", async () => {
   const model = new ChatAnthropic({
-    modelName: pdfModelName,
+    model: pdfModelName,
   });
 
   const pdfPath =
@@ -1420,7 +1420,7 @@ test("Test redacted thinking blocks multiturn streaming", async () => {
 
 test("Can handle google function calling blocks in content", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-3-7-sonnet-latest",
+    model: "claude-3-7-sonnet-latest",
     maxRetries: 0,
   });
   const toolCallId = "tool_call_id";

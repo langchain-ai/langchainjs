@@ -189,8 +189,6 @@ export interface AnthropicInput {
   /** Anthropic API URL */
   anthropicApiUrl?: string;
 
-  /** @deprecated Use "model" instead */
-  modelName?: AnthropicMessagesModelId;
   /** Model name to use */
   model?: AnthropicMessagesModelId;
 
@@ -672,8 +670,6 @@ export class ChatAnthropicMessages<
 
   maxTokens = 2048;
 
-  modelName = "claude-2.1";
-
   model = "claude-2.1";
 
   invocationKwargs?: Kwargs;
@@ -721,9 +717,7 @@ export class ChatAnthropicMessages<
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
     this.apiUrl = fields?.anthropicApiUrl;
 
-    /** Keep modelName for backwards compatibility */
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 

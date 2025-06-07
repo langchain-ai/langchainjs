@@ -8,38 +8,38 @@ function onFailedAttempt(err: any): any {
 
 const testModels = [
   {
-    modelName: "text-embedding-005",
+    model: "text-embedding-005",
     location: "us-central1",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-embedding-005",
+    model: "text-embedding-005",
     location: "europe-west9",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-multilingual-embedding-002",
+    model: "text-multilingual-embedding-002",
     location: "us-central1",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "text-multilingual-embedding-002",
+    model: "text-multilingual-embedding-002",
     location: "europe-west9",
     defaultOutputDimensions: 768,
   },
   {
-    modelName: "gemini-embedding-001",
+    model: "gemini-embedding-001",
     location: "us-central1",
     defaultOutputDimensions: 3072,
   },
 ];
 
 describe.each(testModels)(
-  `Vertex Embeddings ($modelName) ($location)`,
-  ({ modelName, location, defaultOutputDimensions }) => {
+  `Vertex Embeddings ($model) ($location)`,
+  ({ model, location, defaultOutputDimensions }) => {
     test("embedQuery", async () => {
       const embeddings = new VertexAIEmbeddings({
-        model: modelName,
+        model,
         location,
       });
       const res = await embeddings.embedQuery("Hello world");
@@ -49,7 +49,7 @@ describe.each(testModels)(
 
     test("embedDocuments", async () => {
       const embeddings = new VertexAIEmbeddings({
-        model: modelName,
+        model,
         location,
         onFailedAttempt,
       });
@@ -73,7 +73,7 @@ describe.each(testModels)(
     test("dimensions", async () => {
       const testDimensions: number = 512;
       const embeddings = new VertexAIEmbeddings({
-        model: modelName,
+        model,
         location,
         onFailedAttempt,
         dimensions: testDimensions,

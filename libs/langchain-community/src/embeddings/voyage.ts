@@ -7,7 +7,8 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  * parameters specific to the VoyageEmbeddings class.
  */
 export interface VoyageEmbeddingsParams extends EmbeddingsParams {
-  modelName: string;
+  /** Model name to use */
+  model?: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -91,7 +92,7 @@ export class VoyageEmbeddings
   extends Embeddings
   implements VoyageEmbeddingsParams
 {
-  modelName = "voyage-01";
+  model = "voyage-01";
 
   batchSize = 8;
 
@@ -135,7 +136,7 @@ export class VoyageEmbeddings
       throw new Error("Voyage AI API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;
@@ -156,7 +157,7 @@ export class VoyageEmbeddings
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         input: batch,
         input_type: this.inputType,
         truncation: this.truncation,
@@ -188,7 +189,7 @@ export class VoyageEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const { data } = await this.embeddingWithRetry({
-      model: this.modelName,
+      model: this.model,
       input: text,
       input_type: this.inputType,
       truncation: this.truncation,

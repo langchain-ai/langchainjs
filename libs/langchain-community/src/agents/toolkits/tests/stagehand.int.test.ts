@@ -176,7 +176,7 @@ describe("StagehandToolkit Integration Tests", () => {
   //   const tools = [actTool, navigateTool];
 
   //   const model = new ChatOpenAI({
-  //     modelName: "gpt-4",
+  //     model: "gpt-4",
   //     temperature: 0,
   //   });
 

@@ -43,7 +43,7 @@ class WeatherTool extends StructuredTool {
 }
 
 const model = new ChatAnthropic({
-  modelName: "claude-3-haiku-20240307",
+  model: "claude-3-haiku-20240307",
   temperature: 0,
 });
 
@@ -730,7 +730,7 @@ test("converting messages doesn't drop tool input", async () => {
 
 test("structured output with thinking enabled", async () => {
   const llm = new ChatAnthropic({
-    modelName: "claude-3-7-sonnet-latest",
+    model: "claude-3-7-sonnet-latest",
     maxTokens: 5000,
     thinking: { type: "enabled", budget_tokens: 2000 },
   });
@@ -784,7 +784,7 @@ test("structured output with thinking enabled", async () => {
  */
 test("structured output with thinking force tool use", async () => {
   const llm = new ChatAnthropic({
-    modelName: "claude-3-7-sonnet-latest",
+    model: "claude-3-7-sonnet-latest",
     maxTokens: 5000,
     thinking: { type: "enabled", budget_tokens: 2000 },
   }).bindTools(

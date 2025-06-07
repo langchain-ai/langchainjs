@@ -12,14 +12,6 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
    *
-   * Alias for `model`
-   *
-   * Note: The format must follow the pattern - `{model}`
-   */
-  modelName?: string;
-  /**
-   * Model Name to use
-   *
    * Note: The format must follow the pattern - `{model}`
    */
   model?: string;
@@ -62,7 +54,7 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
  * ```typescript
  * const model = new GoogleGenerativeAIEmbeddings({
  *   apiKey: "<YOUR API KEY>",
- *   modelName: "embedding-001",
+ *   model: "embedding-001",
  * });
  *
  * // Embed a single query
@@ -82,8 +74,6 @@ export class GoogleGenerativeAIEmbeddings
 {
   apiKey?: string;
 
-  modelName = "embedding-001";
-
   model = "embedding-001";
 
   taskType?: TaskType;
@@ -98,15 +88,8 @@ export class GoogleGenerativeAIEmbeddings
 
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
-
-    this.modelName =
-      fields?.model?.replace(/^models\//, "") ??
-      fields?.modelName?.replace(/^models\//, "") ??
-      this.modelName;
-    this.model = this.modelName;
-
+    this.model = fields?.model?.replace(/^models\//, "") ?? this.model;
     this.taskType = fields?.taskType ?? this.taskType;
-
     this.title = fields?.title ?? this.title;
 
     if (this.title && this.taskType !== "RETRIEVAL_DOCUMENT") {

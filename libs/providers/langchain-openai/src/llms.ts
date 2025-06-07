@@ -44,7 +44,7 @@ interface TokenUsage {
  * @example
  * ```typescript
  * const model = new OpenAI({
- *   modelName: "gpt-4",
+ *   model: "gpt-4",
  *   temperature: 0.7,
  *   maxTokens: 1000,
  *   maxRetries: 5,
@@ -104,9 +104,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
 
   model = "gpt-3.5-turbo-instruct";
 
-  /** @deprecated Use "model" instead */
-  modelName: string;
-
   modelKwargs?: OpenAIInput["modelKwargs"];
 
   batchSize = 20;
@@ -149,7 +146,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = fields?.model ?? this.model;
     if (
       (this.model?.startsWith("gpt-3.5-turbo") ||
         this.model?.startsWith("gpt-4") ||
@@ -168,7 +165,6 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         ].join("\n")
       );
     }
-    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.timeout = fields?.timeout;
