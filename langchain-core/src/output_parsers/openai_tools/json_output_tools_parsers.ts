@@ -216,6 +216,11 @@ type JsonOutputKeyToolsParserParamsV4<
   T extends Record<string, any> = Record<string, any>
 > = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
 
+export type JsonOutputKeyToolsParserParamsInterop<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> = { zodSchema?: InteropZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+
 // Use Zod 3 for backwards compatibility
 export type JsonOutputKeyToolsParserParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -252,10 +257,13 @@ export class JsonOutputKeyToolsParser<
 
   constructor(params: JsonOutputKeyToolsParserParamsV4<T>);
 
+  constructor(params: JsonOutputKeyToolsParserParamsInterop<T>);
+
   constructor(
     params:
       | JsonOutputKeyToolsParserParamsV3<T>
       | JsonOutputKeyToolsParserParamsV4<T>
+      | JsonOutputKeyToolsParserParamsInterop<T>
   ) {
     super(params);
     this.keyName = params.keyName;

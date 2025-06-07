@@ -184,6 +184,61 @@ export async function interopParseAsync<T>(
 }
 
 /**
+ * Safely parses the input using the provided Zod schema (v3 or v4) and returns a result object
+ * indicating success or failure. This function is compatible with both Zod v3 and v4 schemas.
+ *
+ * @template T - The expected output type of the schema.
+ * @param {InteropZodType<T>} schema - The Zod schema (v3 or v4) to use for parsing.
+ * @param {unknown} input - The input value to parse.
+ * @returns {InteropZodSafeParseResult<T>} An object with either the parsed data (on success)
+ *   or the error (on failure).
+ * @throws {Error} If the schema is not a recognized Zod v3 or v4 schema.
+ */
+export function interopSafeParse<T>(
+  schema: InteropZodType<T>,
+  input: unknown
+): InteropZodSafeParseResult<T> {
+  if (isZodSchemaV4(schema)) {
+    try {
+      const data = parse(schema, input);
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error as z3.ZodError<T>,
+      };
+    }
+  }
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+    return schema.safeParse(input);
+  }
+  throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
+ * Parses the input using the provided Zod schema (v3 or v4) and returns the parsed value.
+ * Throws an error if parsing fails or if the schema is not a recognized Zod v3 or v4 schema.
+ *
+ * @template T - The expected output type of the schema.
+ * @param {InteropZodType<T>} schema - The Zod schema (v3 or v4) to use for parsing.
+ * @param {unknown} input - The input value to parse.
+ * @returns {T} The parsed value.
+ * @throws {Error} If parsing fails or the schema is not a recognized Zod v3 or v4 schema.
+ */
+export function interopParse<T>(schema: InteropZodType<T>, input: unknown): T {
+  if (isZodSchemaV4(schema)) {
+    return parse(schema, input);
+  }
+  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+    return schema.parse(input);
+  }
+  throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
  * Retrieves the description from a schema definition (v3, v4, or plain object), if available.
  *
  * @param {unknown} schema - The schema to extract the description from.
