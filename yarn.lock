@@ -7833,6 +7833,7 @@ __metadata:
     uuid: ^10.0.0
     web-streams-polyfill: ^4.0.0
     zod: ^3.25.32
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
