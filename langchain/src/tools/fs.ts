@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { StructuredTool, ToolParams } from "@langchain/core/tools";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { BaseFileStore } from "../stores/file/base.js";
 
 /**
@@ -34,7 +35,7 @@ export class ReadFileTool extends StructuredTool {
     this.store = store;
   }
 
-  async _call({ file_path }: z.infer<typeof this.schema>) {
+  async _call({ file_path }: InferInteropZodOutput<typeof this.schema>) {
     return await this.store.readFile(file_path);
   }
 }
@@ -72,7 +73,7 @@ export class WriteFileTool extends StructuredTool {
     this.store = store;
   }
 
-  async _call({ file_path, text }: z.infer<typeof this.schema>) {
+  async _call({ file_path, text }: InferInteropZodOutput<typeof this.schema>) {
     await this.store.writeFile(file_path, text);
     return "File written to successfully.";
   }

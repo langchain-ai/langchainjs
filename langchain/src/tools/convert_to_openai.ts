@@ -4,8 +4,8 @@ import {
   convertToOpenAIFunction,
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 
 export {
   convertToOpenAIFunction as formatToOpenAIFunction,
@@ -20,8 +20,8 @@ export function formatToOpenAIAssistantTool(
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: isZodSchema(tool.schema)
-        ? zodToJsonSchema(tool.schema)
+      parameters: isInteropZodSchema(tool.schema)
+        ? toJsonSchema(tool.schema)
         : tool.schema,
     },
   };

@@ -6,7 +6,7 @@ import {
   CloudPakForDataAuthenticator,
 } from "ibm-cloud-sdk-core";
 import {
-  JsonOutputKeyToolsParserParams,
+  JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -14,6 +14,10 @@ import { z } from "zod";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
+import {
+  InteropZodType,
+  interopSafeParseAsync,
+} from "@langchain/core/utils/types";
 import { WatsonxAuth, WatsonxInit } from "../types/ibm.js";
 
 export const authenticateAndSetInstance = ({
@@ -111,7 +115,7 @@ export function _convertToolCallIdToMistralCompatible(
 }
 
 interface WatsonxToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParams<T> {}
+  extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class WatsonxToolsOutputParser<
   T extends Record<string, any> = Record<string, any>
@@ -128,7 +132,7 @@ export class WatsonxToolsOutputParser<
 
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
   latestCorrect?: ToolCall;
 
@@ -160,7 +164,10 @@ export class WatsonxToolsOutputParser<
     if (this.zodSchema === undefined) {
       return parsedResult as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(parsedResult);
+    const zodParsedResult = await interopSafeParseAsync(
+      this.zodSchema,
+      parsedResult
+    );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -169,7 +176,7 @@ export class WatsonxToolsOutputParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }

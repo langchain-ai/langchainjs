@@ -1,5 +1,5 @@
 import { XMLBuilder } from "fast-xml-parser";
-import { JsonSchema7ObjectType } from "zod-to-json-schema";
+import { type JsonSchema7ObjectType } from "@langchain/core/utils/json_schema";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 

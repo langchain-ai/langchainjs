@@ -8,7 +8,7 @@ import type {
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import type { z } from "zod";
+import { InteropZodObject } from "@langchain/core/utils/types";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -273,7 +273,7 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
      * or a Zod object.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+    schema: Record<string, any> | InteropZodObject;
   };
 };
 

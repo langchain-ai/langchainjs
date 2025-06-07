@@ -1,5 +1,4 @@
-import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -33,7 +32,10 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import Groq from "groq-sdk";
 import type {
   ChatCompletion,
@@ -1327,7 +1329,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1338,7 +1340,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1349,7 +1351,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1360,7 +1362,8 @@ export class ChatGroq extends BaseChatModel<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1373,14 +1376,14 @@ export class ChatGroq extends BaseChatModel<
       llm = this.withConfig({
         response_format: { type: "json_object" },
       });
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
         llm = this.bindTools([
           {
             type: "function" as const,

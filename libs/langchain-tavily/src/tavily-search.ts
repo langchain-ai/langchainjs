@@ -1,6 +1,7 @@
+import { z } from "zod";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StructuredTool, ToolParams } from "@langchain/core/tools";
-import { z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { TavilySearchAPIWrapper, type TavilySearchResponse } from "./utils.js";
 
 export type SearchDepth = "basic" | "advanced";
@@ -354,7 +355,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
   }
 
   async _call(
-    input: z.infer<typeof inputSchema>,
+    input: InferInteropZodOutput<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<TavilySearchResponse | { error: string }> {
     try {

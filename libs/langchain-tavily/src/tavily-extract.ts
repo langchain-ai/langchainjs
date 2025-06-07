@@ -1,6 +1,7 @@
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/dist/utils/types/zod.js";
 import {
   TavilyExtractAPIWrapper,
   type TavilyExtractResponse,
@@ -159,7 +160,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
   }
 
   async _call(
-    input: z.infer<typeof inputSchema>,
+    input: InferInteropZodOutput<typeof inputSchema>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<TavilyExtractResponse | { error: string }> {
     try {

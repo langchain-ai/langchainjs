@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropicTools } from "../tool_calling.js";
@@ -140,7 +140,7 @@ test.skip("ChatAnthropicTools with Zod schema", async () => {
         function: {
           name: "information_extraction",
           description: "Extracts the relevant information from the passage.",
-          parameters: zodToJsonSchema(schema),
+          parameters: toJsonSchema(schema),
         },
       },
     ],
@@ -187,7 +187,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
         function: {
           name: "person",
           description: "A person mentioned in the passage.",
-          parameters: zodToJsonSchema(schema),
+          parameters: toJsonSchema(schema),
         },
       },
     ],
@@ -198,7 +198,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
       },
     },
   });
-  // console.log(zodToJsonSchema(schema));
+  // console.log(toJsonSchema(schema));
   const message = new HumanMessage(
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde."
   );

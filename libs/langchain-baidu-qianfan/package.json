@@ -33,8 +33,7 @@
   "dependencies": {
     "@baiducloud/qianfan": "^0.1.6",
     "@langchain/openai": "^0.5.5",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.5"
+    "zod": "^3.22.4"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"

@@ -1,8 +1,11 @@
-import { z } from "zod";
-import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { InteropZodObject } from "@langchain/core/utils/types";
+import {
+  type JsonSchema7ObjectType,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import {
   FunctionParameters,
   JsonKeyOutputFunctionsParser,
@@ -69,19 +72,19 @@ export function createExtractionChain(
 
 /**
  * Function that creates an extraction chain from a Zod schema. It
- * converts the Zod schema to a JSON schema using zod-to-json-schema
- * before creating the extraction chain.
+ * converts the Zod schema to a JSON schema using before creating
+ * the extraction chain.
  * @param schema The Zod schema which extracted data should match
  * @param llm Must be a ChatOpenAI or AnthropicFunctions model that supports function calling.
  * @returns A LLMChain instance configured to return data matching the schema.
  */
 export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: z.ZodObject<any, any, any, any>,
+  schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>
 ) {
   return createExtractionChain(
-    zodToJsonSchema(schema) as JsonSchema7ObjectType,
+    toJsonSchema(schema) as JsonSchema7ObjectType,
     llm
   );
 }
