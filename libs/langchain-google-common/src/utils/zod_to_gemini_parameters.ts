@@ -30,9 +30,7 @@ export function adjustObjectType(
   } else if (len === 1 && nullIndex === 0) {
     // This is nullable only without a type, which doesn't
     // make sense for Gemini
-    throw new Error(
-      "zod_to_gemini_parameters: Gemini cannot handle null type"
-    );
+    throw new Error("zod_to_gemini_parameters: Gemini cannot handle null type");
   } else if (len === 1) {
     // Although an array, it has only one value.
     // So set it to the string to match what Gemini expects.

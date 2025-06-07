@@ -1580,7 +1580,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func.name).toEqual("extract");
     expect(func.parameters?.properties?.greeterName?.type).toEqual("string");
     expect(func.parameters?.properties?.greeterName?.nullable).toEqual(true);
-  })
+  });
 
   test("4. Functions - results", async () => {
     const record: Record<string, any> = {};
