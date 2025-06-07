@@ -1551,6 +1551,37 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(parameters.required[0]).toBe("testName");
   });
 
+  test("4. Functions withStructuredOutput - null type request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+
+    const schema = {
+      type: "object",
+      properties: {
+        greeterName: {
+          type: ["string", "null"],
+        },
+      },
+      required: ["greeterName"],
+    };
+    const model = baseModel.withStructuredOutput(schema);
+    await model.invoke("Hi, I'm kwkaiser");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("extract");
+    expect(func.parameters?.properties?.greeterName?.type).toEqual("string");
+    expect(func.parameters?.properties?.greeterName?.nullable).toEqual(true);
+  });
+
   test("4. Functions - results", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
