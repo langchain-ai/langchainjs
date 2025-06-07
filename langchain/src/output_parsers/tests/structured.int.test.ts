@@ -166,7 +166,7 @@ test("StructuredOutputParser handles a longer and more complex schema", async ()
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new OpenAI({ temperature: 0.5, modelName: "gpt-3.5-turbo" });
+  const model = new OpenAI({ temperature: 0.5, model: "gpt-3.5-turbo" });
 
   const input = await prompt.format({
     inputText: "A man, living in Poland.",

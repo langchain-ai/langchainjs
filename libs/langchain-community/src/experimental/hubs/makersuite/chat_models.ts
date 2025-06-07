@@ -27,10 +27,7 @@ export type BaseMessageExamplePair = {
  */
 export interface GooglePaLMChatInput extends BaseChatModelParams {
   /**
-   * Model Name to use
-   *
-   * Note: The format must follow the pattern - `models/{model}`
-   * Alias for `model`
+   * @deprecated Use `model` instead
    */
   modelName?: string;
   /**
@@ -142,6 +139,7 @@ export class ChatGooglePaLM
     };
   }
 
+  /** @deprecated Use `model` instead */
   modelName = "models/chat-bison-001";
 
   model = "models/chat-bison-001";
@@ -161,8 +159,8 @@ export class ChatGooglePaLM
   constructor(fields?: GooglePaLMChatInput) {
     super(fields ?? {});
 
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {

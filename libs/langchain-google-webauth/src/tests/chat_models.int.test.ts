@@ -79,7 +79,7 @@ const apiKeyModelNames = [
   ["gemma-3n-e4b-it"],
 ];
 
-describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
+describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (model) => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
@@ -89,7 +89,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     callbacks = [recorder, new GoogleRequestLogger()];
 
     return new ChatGoogle({
-      modelName,
+      model,
       apiVersion: "v1beta",
       callbacks,
       ...(fields ?? {}),
@@ -508,30 +508,30 @@ const calculatorTool = tool((_) => "no-op", {
  */
 const testGeminiModelNames = [
   {
-    modelName: "gemini-1.5-pro-002",
+    model: "gemini-1.5-pro-002",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-1.5-pro-002", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-1.5-pro-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-1.5-flash-002",
+    model: "gemini-1.5-flash-002",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-1.5-flash-002", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-001",
+    model: "gemini-2.0-flash-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
-  { modelName: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
+  { model: "gemini-2.0-flash-001", platformType: "gcp", apiVersion: "v1" },
   {
-    modelName: "gemini-2.0-flash-lite-001",
+    model: "gemini-2.0-flash-lite-001",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.0-flash-lite-001",
+    model: "gemini-2.0-flash-lite-001",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -581,7 +581,7 @@ const testGeminiModelDelay: Record<string, number> = {
 
 describe.each(testGeminiModelNames)(
   "Webauth ($platformType) Gemini Chat ($modelName)",
-  ({ modelName, platformType, apiVersion }) => {
+  ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -599,7 +599,7 @@ describe.each(testGeminiModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
@@ -610,7 +610,7 @@ describe.each(testGeminiModelNames)(
 
     beforeEach(async () => {
       warnSpy = jest.spyOn(global.console, "warn");
-      const delay = testGeminiModelDelay[modelName] ?? 0;
+      const delay = testGeminiModelDelay[model] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
         // eslint-disable-next-line no-promise-executor-return
@@ -1478,12 +1478,12 @@ describe.each(testGeminiModelNames)(
 
 const testMultimodalModelNames = [
   {
-    modelName: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.0-flash-preview-image-generation",
+    model: "gemini-2.0-flash-preview-image-generation",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -1491,7 +1491,7 @@ const testMultimodalModelNames = [
 
 describe.each(testMultimodalModelNames)(
   "Webauth ($platformType) Gemini Multimodal ($modelName)",
-  ({ modelName, platformType, apiVersion }) => {
+  ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1506,7 +1506,7 @@ describe.each(testMultimodalModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         apiVersion,
         callbacks,
@@ -1531,7 +1531,7 @@ describe.each(testMultimodalModelNames)(
       let imageCount = 0;
       (content as MessageContentComplex[]).forEach((mc) => {
         if (mc?.type === "image_url") {
-          const fn = `/tmp/${platformType}-${modelName}-${imageCount}.png`;
+          const fn = `/tmp/${platformType}-${model}-${imageCount}.png`;
           console.log(`(Content saved to ${fn})`);
           imageCount += 1;
           const url = (mc as MessageContentImageUrl).image_url as string;
@@ -1754,7 +1754,7 @@ const testReasoningModelNames = [
 
 describe.each(testReasoningModelNames)(
   "Webauth ($platformType) Reasoning($modelName)",
-  ({ modelName, platformType }) => {
+  ({ model, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1772,7 +1772,7 @@ describe.each(testReasoningModelNames)(
           : undefined;
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         callbacks,
         apiKey,
@@ -1782,7 +1782,7 @@ describe.each(testReasoningModelNames)(
 
     beforeEach(async () => {
       warnSpy = jest.spyOn(global.console, "warn");
-      const delay = testGeminiModelDelay[modelName] ?? 0;
+      const delay = testGeminiModelDelay[model] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
         // eslint-disable-next-line no-promise-executor-return

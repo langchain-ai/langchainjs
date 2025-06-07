@@ -39,6 +39,7 @@ type ModelName =
   // ChatGLM-Turbo
   | "glm-3-turbo" // context size: 128k
   | "chatglm_turbo"; // context size: 32k
+
 interface ChatCompletionRequest {
   model: ModelName;
   messages?: ZhipuMessage[];
@@ -98,10 +99,9 @@ interface ChatCompletionResponse extends ZhipuAIError {
  */
 export interface ChatZhipuAIParams {
   /**
-   * @default "glm-3-turbo"
-   * Alias for `model`
+   * @deprecated Use `model` instead.
    */
-  modelName: ModelName;
+  modelName?: ModelName;
   /**
    * @default "glm-3-turbo"
    */
@@ -214,6 +214,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   requestId?: string;
 
+  /** @deprecated Use `model` instead. */
   modelName: ChatCompletionRequest["model"];
 
   model: ChatCompletionRequest["model"];
@@ -246,8 +247,8 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.modelName = fields?.model ?? fields.modelName ?? "glm-3-turbo";
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields.modelName ?? "glm-3-turbo";
+    this.modelName = this.model;
     this.doSample = fields.doSample;
   }
 

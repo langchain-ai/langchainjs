@@ -12,7 +12,7 @@ import { AgentActionOutputParser } from "../types.js";
  * const runnableAgent = RunnableSequence.from([
  *   ...rest of runnable
  *   prompt,
- *   new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).withConfig({
+ *   new ChatAnthropic({ model: "claude-2", temperature: 0 }).withConfig({
  *     stop: ["</tool_input>", "</final_answer>"],
  *   }),
  *   new XMLAgentOutputParser(),

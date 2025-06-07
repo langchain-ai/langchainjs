@@ -263,9 +263,9 @@ export class MakerSuitePrompt {
    * temperature, etc) set as they were in MakerSuite.
    */
   toModel(): BaseLanguageModel {
-    const modelName = this._modelName();
+    const model = this._modelName();
     const modelSettings = {
-      modelName,
+      model,
       ...this.promptData?.runSettings,
     };
     if (this.promptType === "chat") {
