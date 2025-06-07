@@ -6927,7 +6927,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.1.6
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
@@ -6968,7 +6967,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
@@ -7074,7 +7072,6 @@ __metadata:
     rimraf: ^5.0.1
     typescript: ~5.1.6
     zod: ^3.22.3
-    zod-to-json-schema: 3.20.3
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -7111,7 +7108,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -7149,7 +7145,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@langchain/core": ">=0.3.0 <0.4.0"
   languageName: unknown
@@ -7223,7 +7218,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     zod: ^3.23.8
-    zod-to-json-schema: ^3.23.1
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -7420,7 +7414,6 @@ __metadata:
     word-extractor: ^1.0.4
     youtubei.js: ^12.2.0
     zod: ^3.22.3
-    zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
@@ -7840,7 +7833,6 @@ __metadata:
     uuid: ^10.0.0
     web-streams-polyfill: ^4.0.0
     zod: ^3.25.32
-    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -7980,7 +7972,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.55 <0.4.0"
   languageName: unknown
@@ -8053,7 +8044,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^11.1.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.55 <0.4.0"
   languageName: unknown
@@ -8198,7 +8188,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -8331,7 +8320,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     zod: ^3.23.8
-    zod-to-json-schema: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.7 <0.4.0"
   languageName: unknown
@@ -8475,7 +8463,6 @@ __metadata:
     typescript: <5.2.0
     uuid: ^10.0.0
     zod: ^3.24.1
-    zod-to-json-schema: ^3.24.1
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -8510,7 +8497,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.1.6
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@langchain/core": ">=0.3.48 <0.4.0"
   languageName: unknown
@@ -8699,7 +8685,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ^5.4.5
     zod: ^3.22.4
-    zod-to-json-schema: ^3.23.0
   languageName: unknown
   linkType: soft
 
@@ -8837,7 +8822,6 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     zod: ^3.24.2
-    zod-to-json-schema: ^3.23.1
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -26471,7 +26455,6 @@ __metadata:
     wikipedia: ^2.1.2
     yaml: ^2.2.1
     zod: ^3.22.4
-    zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@langchain/anthropic": "*"
     "@langchain/aws": "*"
@@ -38336,16 +38319,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod-to-json-schema@npm:3.20.3":
-  version: 3.20.3
-  resolution: "zod-to-json-schema@npm:3.20.3"
-  peerDependencies:
-    zod: ^3.20.0
-  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
-  languageName: node
-  linkType: hard
-
-"zod-to-json-schema@npm:^3.22.3, zod-to-json-schema@npm:^3.22.4, zod-to-json-schema@npm:^3.22.5, zod-to-json-schema@npm:^3.23.0, zod-to-json-schema@npm:^3.23.1, zod-to-json-schema@npm:^3.23.3, zod-to-json-schema@npm:^3.24.1":
+"zod-to-json-schema@npm:^3.22.3, zod-to-json-schema@npm:^3.23.0, zod-to-json-schema@npm:^3.23.3, zod-to-json-schema@npm:^3.24.1":
   version: 3.24.1
   resolution: "zod-to-json-schema@npm:3.24.1"
   peerDependencies:

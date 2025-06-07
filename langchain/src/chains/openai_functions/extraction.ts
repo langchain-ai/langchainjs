@@ -72,8 +72,8 @@ export function createExtractionChain(
 
 /**
  * Function that creates an extraction chain from a Zod schema. It
- * converts the Zod schema to a JSON schema using zod-to-json-schema
- * before creating the extraction chain.
+ * converts the Zod schema to a JSON schema using before creating
+ * the extraction chain.
  * @param schema The Zod schema which extracted data should match
  * @param llm Must be a ChatOpenAI or AnthropicFunctions model that supports function calling.
  * @returns A LLMChain instance configured to return data matching the schema.

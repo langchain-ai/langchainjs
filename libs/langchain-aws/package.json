@@ -36,8 +36,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.755.0",
     "@aws-sdk/client-kendra": "^3.750.0",
     "@aws-sdk/credential-provider-node": "^3.750.0",
-    "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.22.5"
+    "zod": "^3.23.8"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.48 <0.4.0"
