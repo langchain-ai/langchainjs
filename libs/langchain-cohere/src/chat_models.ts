@@ -37,7 +37,9 @@ import * as uuid from "uuid";
 import { Runnable } from "@langchain/core/runnables";
 import { isZodSchema } from "@langchain/core/utils/types";
 import { zodToJsonSchema } from "zod-to-json-schema";
+
 import { CohereClientOptions, getCohereClient } from "./client.js";
+import type { CohereChatModelId } from "./types.js";
 
 type ChatCohereToolType = BindToolsInput | Cohere.Tool;
 
@@ -54,7 +56,7 @@ export interface BaseChatCohereInput extends BaseChatModelParams {
    * The name of the model to use.
    * @default {"command"}
    */
-  model?: string;
+  model?: CohereChatModelId;
   /**
    * What sampling temperature to use, between 0.0 and 2.0.
    * Higher values like 0.8 will make the output more random,
