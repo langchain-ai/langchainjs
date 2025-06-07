@@ -7,7 +7,7 @@ import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    model: "claude-3-haiku-20240307",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -55,7 +55,7 @@ test("withStructuredOutput with output validation", async () => {
 
 test("withStructuredOutput with proper output", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    model: "claude-3-haiku-20240307",
     temperature: 0,
     anthropicApiKey: "testing",
   });

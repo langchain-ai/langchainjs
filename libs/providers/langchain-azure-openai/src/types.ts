@@ -189,12 +189,8 @@ export interface AzureOpenAIEmbeddingsParams extends EmbeddingsParams {
    * or rate-limiting purposes.
    */
   user?: string;
-  /**
-   * The model name to provide as part of this embeddings request.
-   * Not applicable to Azure OpenAI, where deployment information should be included in the Azure
-   * resource URI that's connected to.
-   * Alias for `model`
-   */
+
+  /** @deprecated Use `model` instead */
   modelName?: string;
   /**
    * The model name to provide as part of this embeddings request.

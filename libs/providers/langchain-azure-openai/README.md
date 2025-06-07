@@ -127,7 +127,7 @@ This library is provides compatibility with the OpenAI API. You can use an API k
 import { AzureOpenAI, OpenAIKeyCredential } from "@langchain/azure-openai";
 
 const model = new AzureOpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   credentials: new OpenAIKeyCredential("<your_openai_api_key>"),
 });
 ```

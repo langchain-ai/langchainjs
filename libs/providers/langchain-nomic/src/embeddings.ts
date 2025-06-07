@@ -20,9 +20,7 @@ export interface NomicEmbeddingsParams extends EmbeddingsParams {
    */
   apiKey?: string;
   /**
-   * The name of the model to use.
-   * Alias for `model`
-   * @default {"nomic-embed-text-v1"}
+   * @deprecated Use `model` instead
    */
   modelName?: string;
   /**
@@ -69,6 +67,7 @@ export class NomicEmbeddings
   extends Embeddings
   implements NomicEmbeddingsParams
 {
+  /** @deprecated Use `model` instead */
   modelName = "nomic-embed-text-v1";
 
   model = "nomic-embed-text-v1";
@@ -96,8 +95,8 @@ export class NomicEmbeddings
       throw new Error("NOMIC_API_KEY is required.");
     }
     this.client = new AtlasUser({ apiKey });
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
     this.taskType = fields?.taskType ?? this.taskType;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;

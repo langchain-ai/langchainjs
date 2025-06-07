@@ -65,7 +65,7 @@ describe("Google APIKey LLM", () => {
 
   test("invoke image", async () => {
     const model = new VertexAI({
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {

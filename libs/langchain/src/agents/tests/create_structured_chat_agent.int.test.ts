@@ -29,8 +29,6 @@ test("createStructuredChatAgent works", async () => {
     input,
   });
 
-  // console.log(result);
-
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
   // Length greater than 10 because any less than that would warrant

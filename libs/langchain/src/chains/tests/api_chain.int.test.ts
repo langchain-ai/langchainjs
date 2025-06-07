@@ -30,7 +30,7 @@ const testApiData = {
 };
 
 test("Test APIChain", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const apiRequestChain = new LLMChain({
     prompt: API_URL_PROMPT_TEMPLATE,
     llm: model,
@@ -57,7 +57,7 @@ test("Test APIChain", async () => {
 
 test("Test APIChain fromLLMAndApiDocs", async () => {
   // This test doesn't work as well with earlier models
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = APIChain.fromLLMAndAPIDocs(model, OPEN_METEO_DOCS);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var

@@ -17,7 +17,7 @@ describe("StagehandToolkit Integration Tests", () => {
       debugDom: true,
       enableCaching: false,
     });
-    await stagehand.init({ modelName: "gpt-4o-mini" });
+    await stagehand.init({ model: "gpt-4o-mini" });
     toolkit = await StagehandToolkit.fromStagehand(stagehand);
   });
 
@@ -176,7 +176,7 @@ describe("StagehandToolkit Integration Tests", () => {
   //   const tools = [actTool, navigateTool];
 
   //   const model = new ChatOpenAI({
-  //     modelName: "gpt-4",
+  //     model: "gpt-4",
   //     temperature: 0,
   //   });
 

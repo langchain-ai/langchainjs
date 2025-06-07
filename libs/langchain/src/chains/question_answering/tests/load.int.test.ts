@@ -8,7 +8,7 @@ import {
 } from "../load.js";
 
 test("Test loadQAStuffChain", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadQAStuffChain(model);
   const docs = [
     new Document({ pageContent: "foo" }),
@@ -22,7 +22,7 @@ test("Test loadQAStuffChain", async () => {
 });
 
 test("Test loadQAMapReduceChain", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadQAMapReduceChain(model);
   const docs = [
     new Document({ pageContent: "foo" }),
@@ -36,7 +36,7 @@ test("Test loadQAMapReduceChain", async () => {
 });
 
 test("Test loadQARefineChain", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadQARefineChain(model);
   const docs = [
     new Document({ pageContent: "Harrison went to Harvard." }),

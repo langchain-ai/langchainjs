@@ -151,10 +151,12 @@ export function copyAIModelParamsInto(
   target: GoogleAIModelParams
 ): GoogleAIModelRequestParams {
   const ret: GoogleAIModelRequestParams = target || {};
-  const model = options?.model ?? params?.model ?? target.model;
-  ret.modelName =
-    model ?? options?.modelName ?? params?.modelName ?? target.modelName;
+  const model = (
+    options?.model ?? params?.model ?? target.model ??
+    options?.modelName ?? params?.modelName ?? target.modelName
+  );
   ret.model = model;
+  ret.modelName = model;
   ret.temperature =
     options?.temperature ?? params?.temperature ?? target.temperature;
   ret.maxOutputTokens =
@@ -168,9 +170,9 @@ export function copyAIModelParamsInto(
     options?.thinkingBudget ??
     params?.thinkingBudget ??
     target?.thinkingBudget ??
-    reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
-    reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
-    reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
+    reasoningEffortToReasoningTokens(ret.model, params?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.model, target?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.model, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
   ret.seed = options?.seed ?? params?.seed ?? target.seed;
@@ -230,23 +232,23 @@ export function copyAIModelParamsInto(
 }
 
 export function modelToFamily(
-  modelName: string | undefined
+  model: string | undefined
 ): VertexModelFamily {
-  if (!modelName) {
+  if (!model) {
     return null;
-  } else if (isModelGemini(modelName)) {
+  } else if (isModelGemini(model)) {
     return "gemini";
-  } else if (isModelGemma(modelName)) {
+  } else if (isModelGemma(model)) {
     return "gemma";
-  } else if (isModelClaude(modelName)) {
+  } else if (isModelClaude(model)) {
     return "claude";
   } else {
     return null;
   }
 }
 
-export function modelToPublisher(modelName: string | undefined): string {
-  const family = modelToFamily(modelName);
+export function modelToPublisher(model: string | undefined): string {
+  const family = modelToFamily(model);
   switch (family) {
     case "gemini":
     case "gemma":
@@ -265,7 +267,7 @@ export function validateModelParams(
   params: GoogleAIModelParams | undefined
 ): void {
   const testParams: GoogleAIModelParams = params ?? {};
-  const model = testParams.model ?? testParams.modelName;
+  const model = testParams.model ?? testParams.model;
   switch (modelToFamily(model)) {
     case "gemini":
     case "gemma": // TODO: Are we sure?

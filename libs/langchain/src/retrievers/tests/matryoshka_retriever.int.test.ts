@@ -9,11 +9,11 @@ import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 test("MatryoshkaRetriever can retrieve", async () => {
   const smallEmbeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-small",
+    model: "text-embedding-3-small",
     dimensions: 512, // Min num for small
   });
   const largeEmbeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-large",
+    model: "text-embedding-3-large",
     dimensions: 3072, // Max num for large
   });
 
@@ -116,11 +116,11 @@ test("AddDocunents adds large embeddings metadata field", async () => {
   });
 
   const smallEmbeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-small",
+    model: "text-embedding-3-small",
     dimensions: 512, // Min num for small
   });
   const largeEmbeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-large",
+    model: "text-embedding-3-large",
     dimensions: 3072, // Max num for large
   });
 

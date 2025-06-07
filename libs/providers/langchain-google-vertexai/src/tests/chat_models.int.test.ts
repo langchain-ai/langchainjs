@@ -100,7 +100,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("invoke", async () => {
     const model = new ChatVertexAI({
       callbacks,
-      modelName,
+      model: modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
 
@@ -123,7 +123,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     // Global endpoint is not supported for Gemini 1.5
     const model = new ChatVertexAI({
       callbacks,
-      modelName,
+      model: modelName,
       location: "global",
     });
     const res = await model.invoke("What is 1 + 1?");
@@ -145,7 +145,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test(`generate`, async () => {
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
     });
     const messages: BaseMessage[] = [
       new SystemMessage(
@@ -170,7 +170,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("stream", async () => {
     const model = new ChatVertexAI({
       callbacks,
-      modelName,
+      model: modelName,
     });
     const input: BaseLanguageModelInput = new ChatPromptValue([
       new SystemMessage(
@@ -217,7 +217,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({ modelName }).bindTools(tools);
+    const model = new ChatVertexAI({ model: modelName }).bindTools(tools);
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -261,7 +261,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({ modelName }).bindTools(tools);
+    const model = new ChatVertexAI({ model: modelName }).bindTools(tools);
     const toolResult = {
       testPassed: true,
     };
@@ -306,7 +306,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       },
     };
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
     }).withStructuredOutput(tool);
     const result = await model.invoke("What is the weather in Paris?");
     expect(result).toHaveProperty("location");
@@ -342,7 +342,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       resolvers: [resolver],
     });
     const model = new ChatGoogle({
-      modelName,
+      model: modelName,
       apiConfig: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mediaManager: mediaManager as any,
@@ -387,7 +387,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("Stream token count usage_metadata", async () => {
     const model = new ChatVertexAI({
       temperature: 0,
-      modelName,
+      model: modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -415,7 +415,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatVertexAI({
       temperature: 0,
       streamUsage: false,
-      modelName,
+      model: modelName,
     });
     let res: AIMessageChunk | null = null;
     for await (const chunk of await model.stream(
@@ -434,7 +434,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("Invoke token count usage_metadata", async () => {
     const model = new ChatVertexAI({
       temperature: 0,
-      modelName,
+      model: modelName,
     });
     const res = await model.invoke("Why is the sky blue? Be concise.");
     // console.log(res);
@@ -452,7 +452,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   test("Streaming true constructor param will stream", async () => {
     const modelWithStreaming = new ChatVertexAI({
       streaming: true,
-      modelName,
+      model: modelName,
     });
 
     let totalTokenCount = 0;
@@ -476,7 +476,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test("Can force a model to invoke a tool", async () => {
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
     });
     const modelWithTools = model.bindTools([calculatorTool, weatherTool], {
       tool_choice: "calculator",
@@ -495,7 +495,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test(`stream tools`, async () => {
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
     });
 
     const weatherTool = tool(
@@ -587,7 +587,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       },
     };
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -602,7 +602,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       googleSearch: {},
     };
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchTool]);
@@ -622,7 +622,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       },
     };
     const model = new ChatVertexAI({
-      modelName,
+      model: modelName,
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -671,7 +671,7 @@ describe("Express Gemini Chat", () => {
   test("invoke", async () => {
     const model = new ChatVertexAI({
       callbacks,
-      modelName,
+      model: modelName,
     });
     const res = await model.invoke("What is 1 + 1?");
 
@@ -716,7 +716,7 @@ describe.each(testAnthropicModelNames)(
 
     test("invoke", async () => {
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
       });
       const res = await model.invoke("What is 1 + 1?");
@@ -742,7 +742,7 @@ describe.each(testAnthropicModelNames)(
     test("system", async () => {
       const consoleWarn = jest.spyOn(console, "warn");
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
       });
 
@@ -760,7 +760,7 @@ describe.each(testAnthropicModelNames)(
 
     test("stream", async () => {
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
       });
       const stream = await model.stream("How are you today? Be verbose.");
@@ -774,7 +774,7 @@ describe.each(testAnthropicModelNames)(
 
     test("tool invocation", async () => {
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
       });
       const modelWithTools = model.bindTools([weatherTool]);
@@ -796,7 +796,7 @@ describe.each(testAnthropicModelNames)(
 
     test("stream tools", async () => {
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
       });
 
@@ -849,7 +849,7 @@ describe.each(testAnthropicThinkingModelNames)(
         thinking: { type: "enabled", budget_tokens: 2000 },
       };
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
         maxOutputTokens: 5000,
         apiConfig,
@@ -899,7 +899,7 @@ describe.each(testAnthropicThinkingModelNames)(
         thinking: { type: "enabled", budget_tokens: 2000 },
       };
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
         maxOutputTokens: 5000,
         apiConfig,
@@ -945,7 +945,7 @@ describe.each(testAnthropicThinkingModelNames)(
         thinking: { type: "enabled", budget_tokens: 2000 },
       };
       const model = new ChatVertexAI({
-        modelName,
+        model: modelName,
         callbacks,
         maxOutputTokens: 5000,
         apiConfig,

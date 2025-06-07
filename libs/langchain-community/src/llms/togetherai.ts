@@ -54,8 +54,7 @@ export interface TogetherAIInputs extends BaseLLMParams {
    */
   apiKey?: string;
   /**
-   * The name of the model to query.
-   * Alias for `model`
+   * @deprecated Use `model` instead
    */
   modelName?: string;
   /**
@@ -140,6 +139,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   topK = 50;
 
+  /** @deprecated Use `model` instead */
   modelName: string;
 
   model: string;
@@ -178,8 +178,8 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
     this.topP = inputs?.topP ?? this.topP;
-    this.modelName = inputs.model ?? inputs.modelName ?? "";
-    this.model = this.modelName;
+    this.model = inputs.model ?? inputs.modelName ?? "";
+    this.modelName = this.model;
     this.streaming = inputs.streaming ?? this.streaming;
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;

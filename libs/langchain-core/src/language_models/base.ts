@@ -29,32 +29,32 @@ import {
 
 // https://www.npmjs.com/package/js-tiktoken
 
-export const getModelNameForTiktoken = (modelName: string): TiktokenModel => {
-  if (modelName.startsWith("gpt-3.5-turbo-16k")) {
+export const getModelNameForTiktoken = (model: string): TiktokenModel => {
+  if (model.startsWith("gpt-3.5-turbo-16k")) {
     return "gpt-3.5-turbo-16k";
   }
 
-  if (modelName.startsWith("gpt-3.5-turbo-")) {
+  if (model.startsWith("gpt-3.5-turbo-")) {
     return "gpt-3.5-turbo";
   }
 
-  if (modelName.startsWith("gpt-4-32k")) {
+  if (model.startsWith("gpt-4-32k")) {
     return "gpt-4-32k";
   }
 
-  if (modelName.startsWith("gpt-4-")) {
+  if (model.startsWith("gpt-4-")) {
     return "gpt-4";
   }
 
-  if (modelName.startsWith("gpt-4o")) {
+  if (model.startsWith("gpt-4o")) {
     return "gpt-4o";
   }
 
-  return modelName as TiktokenModel;
+  return model as TiktokenModel;
 };
 
-export const getEmbeddingContextSize = (modelName?: string): number => {
-  switch (modelName) {
+export const getEmbeddingContextSize = (model?: string): number => {
+  switch (model) {
     case "text-embedding-ada-002":
       return 8191;
     default:
@@ -62,8 +62,8 @@ export const getEmbeddingContextSize = (modelName?: string): number => {
   }
 };
 
-export const getModelContextSize = (modelName: string): number => {
-  switch (getModelNameForTiktoken(modelName)) {
+export const getModelContextSize = (model: string): number => {
+  switch (getModelNameForTiktoken(model)) {
     case "gpt-3.5-turbo-16k":
       return 16384;
     case "gpt-3.5-turbo":

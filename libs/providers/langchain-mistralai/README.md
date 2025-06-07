@@ -53,7 +53,7 @@ import { ChatMistralAI } from "@langchain/mistralai";
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  modelName: "mistral-small",
+  model: "mistral-small",
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
@@ -65,7 +65,7 @@ import { ChatMistralAI } from "@langchain/mistralai";
 
 const model = new ChatMistralAI({
   apiKey: process.env.MISTRAL_API_KEY,
-  modelName: "mistral-small",
+  model: "mistral-small",
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```

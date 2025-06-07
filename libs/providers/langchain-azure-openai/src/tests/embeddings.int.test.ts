@@ -82,7 +82,7 @@ test("Test OpenAIEmbeddings.embedQuery with TokenCredentials", async () => {
 
 test("Test OpenAIEmbeddings.embedQuery with key credentials ", async () => {
   const embeddings = new AzureOpenAIEmbeddings({
-    modelName: "text-embedding-ada-002",
+    model: "text-embedding-ada-002",
     azureOpenAIApiKey: getEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? "",
     azureOpenAIEndpoint:
       getEnvironmentVariable("AZURE_OPENAI_API_ENDPOINT") ?? "",

@@ -20,6 +20,7 @@ export class AzureOpenAIEmbeddings
   extends Embeddings
   implements AzureOpenAIEmbeddingsParams, AzureOpenAIInput
 {
+  /** @deprecated Use `model` instead */
   modelName = "text-embedding-ada-002";
 
   model = "text-embedding-ada-002";
@@ -95,9 +96,9 @@ export class AzureOpenAIEmbeddings
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.modelName =
+    this.model =
       fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.modelName = this.model;
 
     this.batchSize =
       fieldsWithDefaults?.batchSize ?? (this.apiKey ? 1 : this.batchSize);

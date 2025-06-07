@@ -1065,6 +1065,6 @@ export function validateClaudeParams(_params: GoogleAIModelParams): void {
   // FIXME - validate the parameters
 }
 
-export function isModelClaude(modelName: string): boolean {
-  return modelName.toLowerCase().startsWith("claude");
+export function isModelClaude(model: string): boolean {
+  return model.toLowerCase().startsWith("claude");
 }

@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatZhipuAI } from "../zhipuai.js";
 
 interface TestConfig {
-  modelName: string | undefined;
+  model: string | undefined;
   config: {
     description?: string;
     temperature?: number;
@@ -22,7 +22,7 @@ interface TestConfig {
 
 test.skip("Test chat.stream work fine", async () => {
   const chat = new ChatZhipuAI({
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
   });
   const stream = await chat.stream(
     `Translate "I love programming" into Chinese.`
@@ -36,13 +36,13 @@ test.skip("Test chat.stream work fine", async () => {
 });
 
 const runTest = async ({
-  modelName,
+  model,
   config,
   system = "",
   message = "Hello!",
   shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatZhipuAI ${modelName || "default model"} ${
+  const description = `Test ChatZhipuAI ${model || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
@@ -60,7 +60,7 @@ const runTest = async ({
   }
   test.skip(description, async () => {
     const chat = new ChatZhipuAI({
-      modelName,
+      model,
       ...config,
     });
 
@@ -86,19 +86,19 @@ const runTest = async ({
 };
 
 const testConfigs: TestConfig[] = [
-  { modelName: undefined, config: {} },
-  { modelName: "glm-3-turbo", config: {} },
+  { model: undefined, config: {} },
+  { model: "glm-3-turbo", config: {} },
   {
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
     config: { description: "with temperature", temperature: 1 },
   },
-  { modelName: "glm-3-turbo", config: { description: "with topP", topP: 1 } },
+  { model: "glm-3-turbo", config: { description: "with topP", topP: 1 } },
   {
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
     config: { description: "with repetitionPenalty" },
   },
   {
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -106,7 +106,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
     config: {
       description: "illegal input should throw an error",
       temperature: 0,
@@ -114,7 +114,7 @@ const testConfigs: TestConfig[] = [
     shouldThrow: true,
   },
   {
-    modelName: "glm-3-turbo",
+    model: "glm-3-turbo",
     config: {
       description: "illegal input in streaming mode should throw an error",
       streaming: true,
@@ -122,9 +122,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "glm-4", config: {} },
+  { model: "glm-4", config: {} },
   {
-    modelName: "glm-4",
+    model: "glm-4",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -132,14 +132,14 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "glm-4",
+    model: "glm-4",
     config: {
       description: "with system message",
     },
     system: "你是一个说文言文的人",
   },
   {
-    modelName: "glm-4",
+    model: "glm-4",
     config: {},
   },
 ];

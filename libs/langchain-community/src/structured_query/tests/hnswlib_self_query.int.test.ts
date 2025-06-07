@@ -76,7 +76,7 @@ test("HNSWLib Store Self Query Retriever Test", async () => {
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     temperature: 0.01,
   });
   const documentContents = "Brief summary of a movie";
@@ -171,7 +171,7 @@ test("HNSWLib shouldn't throw an error if a filter can't be generated, but shoul
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     temperature: 0.01,
   });
   const documentContents = "Brief summary of a movie";

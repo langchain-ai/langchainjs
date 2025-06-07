@@ -193,7 +193,7 @@ async function _initChatModelHelper(
 /**
  * Attempts to infer the model provider based on the given model name.
  *
- * @param {string} modelName - The name of the model to infer the provider for.
+ * @param {string} model - The name of the model to infer the provider for.
  * @returns {string | undefined} The inferred model provider name, or undefined if unable to infer.
  *
  * @example
@@ -201,24 +201,24 @@ async function _initChatModelHelper(
  * _inferModelProvider("claude-2"); // returns "anthropic"
  * _inferModelProvider("unknown-model"); // returns undefined
  */
-export function _inferModelProvider(modelName: string): string | undefined {
+export function _inferModelProvider(model: string): string | undefined {
   if (
-    modelName.startsWith("gpt-3") ||
-    modelName.startsWith("gpt-4") ||
-    modelName.startsWith("o1") ||
-    modelName.startsWith("o3") ||
-    modelName.startsWith("o4")
+    model.startsWith("gpt-3") ||
+    model.startsWith("gpt-4") ||
+    model.startsWith("o1") ||
+    model.startsWith("o3") ||
+    model.startsWith("o4")
   ) {
     return "openai";
-  } else if (modelName.startsWith("claude")) {
+  } else if (model.startsWith("claude")) {
     return "anthropic";
-  } else if (modelName.startsWith("command")) {
+  } else if (model.startsWith("command")) {
     return "cohere";
-  } else if (modelName.startsWith("accounts/fireworks")) {
+  } else if (model.startsWith("accounts/fireworks")) {
     return "fireworks";
-  } else if (modelName.startsWith("gemini")) {
+  } else if (model.startsWith("gemini")) {
     return "google-vertexai";
-  } else if (modelName.startsWith("amazon.")) {
+  } else if (model.startsWith("amazon.")) {
     return "bedrock";
   } else {
     return undefined;

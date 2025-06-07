@@ -8,7 +8,7 @@
 test.skip("Model is compatible with OpenAI tools agent and Agent Executor", async () => {
   // const llm = new ChatGroq({
   //   temperature: 0,
-  //   modelName: "mixtral-8x7b-32768",
+  //   model: "mixtral-8x7b-32768",
   // });
   // const prompt = ChatPromptTemplate.fromMessages([
   //   [

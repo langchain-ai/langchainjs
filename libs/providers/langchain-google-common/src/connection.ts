@@ -255,6 +255,7 @@ export abstract class GoogleAIConnection<
 {
   model: string;
 
+  /** @deprecated Use `model` instead */
   modelName: string;
 
   client: GoogleAbstractedClient;
@@ -271,8 +272,8 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
 
     this._apiName = fields?.apiName;
     this.apiConfig = {

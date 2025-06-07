@@ -10,11 +10,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  */
 export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
   /**
-   * Model Name to use
-   *
-   * Alias for `model`
-   *
-   * Note: The format must follow the pattern - `{model}`
+   * @deprecated Use `model` instead
    */
   modelName?: string;
   /**
@@ -62,7 +58,7 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
  * ```typescript
  * const model = new GoogleGenerativeAIEmbeddings({
  *   apiKey: "<YOUR API KEY>",
- *   modelName: "embedding-001",
+ *   model: "embedding-001",
  * });
  *
  * // Embed a single query
@@ -82,6 +78,7 @@ export class GoogleGenerativeAIEmbeddings
 {
   apiKey?: string;
 
+  /** @deprecated Use `model` instead */
   modelName = "embedding-001";
 
   model = "embedding-001";
@@ -99,11 +96,12 @@ export class GoogleGenerativeAIEmbeddings
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.modelName =
+    const model =
       fields?.model?.replace(/^models\//, "") ??
       fields?.modelName?.replace(/^models\//, "") ??
-      this.modelName;
-    this.model = this.modelName;
+      this.model;
+    this.model = model;
+    this.modelName = model;
 
     this.taskType = fields?.taskType ?? this.taskType;
 

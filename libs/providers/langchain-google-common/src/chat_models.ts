@@ -94,13 +94,13 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     //   AI Studio: gemini-1.5-pro-latest
     if (this.modelFamily === "palm") {
       return false;
-    } else if (this.modelName === "gemini-1.0-pro-001") {
+    } else if (this.model === "gemini-1.0-pro-001") {
       return false;
-    } else if (this.modelName.startsWith("gemini-pro-vision")) {
+    } else if (this.model.startsWith("gemini-pro-vision")) {
       return false;
-    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
+    } else if (this.model.startsWith("gemini-1.0-pro-vision")) {
       return false;
-    } else if (this.modelName === "gemini-pro" && this.platform === "gai") {
+    } else if (this.model === "gemini-pro" && this.platform === "gai") {
       // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
       return false;
     } else if (this.modelFamily === "gemma") {
@@ -115,9 +115,9 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
     GoogleSearchToolSetting,
     boolean
   > {
-    if (this.modelName.startsWith("gemini-1.0")) {
+    if (this.model.startsWith("gemini-1.0")) {
       return "googleSearchRetrieval";
-    } else if (this.modelName.startsWith("gemini-1.5")) {
+    } else if (this.model.startsWith("gemini-1.5")) {
       return "googleSearchRetrieval";
     } else {
       return "googleSearch";
@@ -192,6 +192,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   // Set based on modelName
   model: string;
 
+  /** @deprecated Use `model` instead */
   modelName = "gemini-pro";
 
   temperature: number;

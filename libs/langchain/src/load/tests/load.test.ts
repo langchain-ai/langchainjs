@@ -137,7 +137,7 @@ test("serialize + deserialize llm", async () => {
   process.env.OPENAI_API_KEY = "openai-key";
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
   });
   llm.temperature = 0.7;
   const lc_argumentsBefore = llm.lc_kwargs;
@@ -163,7 +163,7 @@ test("serialize + deserialize llm", async () => {
 test("serialize + deserialize llm chain string prompt", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
     verbose: true,
     callbacks: [
@@ -291,7 +291,7 @@ test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
 test("serialize + deserialize llm chain few shot prompt w/ examples", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
     callbacks: [new ConsoleCallbackHandler()],
   });
@@ -317,7 +317,7 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
 test("serialize + deserialize llm chain few shot prompt w/ selector", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
   });
   const examplePrompt = PromptTemplate.fromTemplate("An example about {yo}");
@@ -346,7 +346,7 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
 test("serialize + deserialize llmchain with list output parser", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
     callbacks: [new ConsoleCallbackHandler()],
   });
@@ -370,7 +370,7 @@ test("serialize + deserialize llmchain with list output parser", async () => {
 test("serialize + deserialize llmchain with regex output parser", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
     callbacks: [new ConsoleCallbackHandler()],
   });
@@ -404,7 +404,7 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
 test("serialize + deserialize llmchain with struct output parser throws", async () => {
   const llm = new OpenAI({
     temperature: 0.5,
-    modelName: "davinci",
+    model: "davinci",
     openAIApiKey: "openai-key",
     callbacks: [new ConsoleCallbackHandler({})],
   });

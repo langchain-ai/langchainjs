@@ -71,7 +71,7 @@ test("Test OpenAI embeddings with an invalid org throws", async () => {
 
 test("Test OpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
   const embeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-small",
+    model: "text-embedding-3-small",
     dimensions: 127,
   });
   const res = await embeddings.embedQuery("Hello world");
@@ -81,7 +81,7 @@ test("Test OpenAIEmbeddings.embedQuery with v3 and dimensions", async () => {
 
 test("Test OpenAIEmbeddings.embedDocuments with v3 and dimensions", async () => {
   const embeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-3-small",
+    model: "text-embedding-3-small",
     dimensions: 127,
   });
   const res = await embeddings.embedDocuments(["Hello world", "Bye bye"]);

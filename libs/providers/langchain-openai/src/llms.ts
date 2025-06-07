@@ -44,7 +44,7 @@ interface TokenUsage {
  * @example
  * ```typescript
  * const model = new OpenAI({
- *   modelName: "gpt-4",
+ *   model: "gpt-4",
  *   temperature: 0.7,
  *   maxTokens: 1000,
  *   maxRetries: 5,

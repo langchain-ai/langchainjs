@@ -120,10 +120,7 @@ export interface ChatMistralAIInput
    */
   apiKey?: string;
   /**
-   * The name of the model to use.
-   * Alias for `model`
    * @deprecated Use `model` instead.
-   * @default {"mistral-small-latest"}
    */
   modelName?: string;
   /**

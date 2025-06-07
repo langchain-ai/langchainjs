@@ -4,7 +4,7 @@ import { Document } from "@langchain/core/documents";
 import { loadSummarizationChain } from "../load.js";
 
 test("Test loadSummzationChain stuff", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadSummarizationChain(model, { type: "stuff" });
   const docs = [
     new Document({ pageContent: "foo" }),
@@ -18,7 +18,7 @@ test("Test loadSummzationChain stuff", async () => {
 });
 
 test("Test loadSummarizationChain map_reduce", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadSummarizationChain(model, { type: "map_reduce" });
   const docs = [
     new Document({ pageContent: "foo" }),
@@ -32,7 +32,7 @@ test("Test loadSummarizationChain map_reduce", async () => {
 });
 
 test("Test loadSummarizationChain refine", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const chain = loadSummarizationChain(model, { type: "refine" });
   const docs = [
     new Document({ pageContent: "foo" }),

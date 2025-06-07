@@ -75,7 +75,7 @@ test("Qdrant Vector Store Self Query Retriever Test", async () => {
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     temperature: 0,
   });
   const documentContents = "Brief summary of a movie";
@@ -210,7 +210,7 @@ test("Qdrant Vector Store Self Query Retriever Test With Default Filter Or Merge
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const documentContents = "Brief summary of a movie";
   const client = new QdrantClient({ url: "http://127.0.0.1:6333" });
@@ -357,7 +357,7 @@ test("Qdrant Vector Store Self Query Retriever Test With Default Filter And Merg
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const documentContents = "Brief summary of a movie";
   const client = new QdrantClient({ url: "http://127.0.0.1:6333" });

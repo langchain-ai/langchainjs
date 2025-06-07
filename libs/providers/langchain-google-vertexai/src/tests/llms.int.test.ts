@@ -54,7 +54,7 @@ describe("GAuth LLM", () => {
 
   test("predictMessage image", async () => {
     const model = new VertexAI({
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -79,7 +79,7 @@ describe("GAuth LLM", () => {
 
   test("invoke image", async () => {
     const model = new VertexAI({
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -170,7 +170,7 @@ describe("GAuth LLM gai", () => {
   test("predictMessage image", async () => {
     const model = new VertexAI({
       platformType: "gai",
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
@@ -196,7 +196,7 @@ describe("GAuth LLM gai", () => {
   test("invoke image", async () => {
     const model = new VertexAI({
       platformType: "gai",
-      modelName: "gemini-pro-vision",
+      model: "gemini-pro-vision",
     });
     const message: MessageContentComplex[] = [
       {
