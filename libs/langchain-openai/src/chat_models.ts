@@ -1017,7 +1017,7 @@ function isReasoningModel(model?: string) {
 
 // TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
-  IncludeRaw extends boolean,
+  IncludeRaw extends boolean
 > extends StructuredOutputMethodOptions<IncludeRaw> {
   /**
    * strict: If `true` and `method` = "function_calling", model output is
@@ -2660,8 +2660,9 @@ export class ChatOpenAI<
         functions,
         function_call
       );
-      const completionTokenUsage =
-        await this.getNumTokensFromGenerations(generations);
+      const completionTokenUsage = await this.getNumTokensFromGenerations(
+        generations
+      );
 
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;
@@ -3079,7 +3080,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3090,7 +3091,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3101,7 +3102,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3114,7 +3115,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
+    RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3296,7 +3297,7 @@ export class ChatOpenAI<
 
 function isZodSchema<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>,
+  RunOutput extends Record<string, any> = Record<string, any>
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   input: z.ZodType<RunOutput> | Record<string, any>
