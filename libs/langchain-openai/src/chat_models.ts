@@ -1017,7 +1017,7 @@ function isReasoningModel(model?: string) {
 
 // TODO: Use the base structured output options param in next breaking release.
 export interface ChatOpenAIStructuredOutputMethodOptions<
-  IncludeRaw extends boolean
+  IncludeRaw extends boolean,
 > extends StructuredOutputMethodOptions<IncludeRaw> {
   /**
    * strict: If `true` and `method` = "function_calling", model output is
@@ -1151,6 +1151,12 @@ export interface ChatOpenAICallOptions
    * If set, the Responses API will be used to fulfill the request.
    */
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: "auto" | "default" | "flex";
 }
 
 export interface ChatOpenAIFields
@@ -1704,7 +1710,7 @@ export interface ChatOpenAIFields
  * <br />
  */
 export class ChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
@@ -1725,6 +1731,7 @@ export class ChatOpenAI<
       "response_format",
       "seed",
       "reasoning_effort",
+      "service_tier",
     ];
   }
 
@@ -1876,6 +1883,12 @@ export class ChatOpenAI<
    */
   zdrEnabled?: boolean | undefined;
 
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: "auto" | "default" | "flex";
+
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
 
@@ -1935,6 +1948,10 @@ export class ChatOpenAI<
     // Else leave undefined so it's not passed to OpenAI.
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
+
+    if (fields?.service_tier !== undefined) {
+      this.service_tier = fields.service_tier;
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
@@ -2176,6 +2193,12 @@ export class ChatOpenAI<
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
+    }
+    if (this.service_tier !== undefined) {
+      params.service_tier = this.service_tier;
+    }
+    if (options?.service_tier !== undefined) {
+      params.service_tier = options.service_tier;
     }
     const reasoning = this.getReasoningParams(options);
     if (reasoning !== undefined && reasoning.effort !== undefined) {
@@ -2637,9 +2660,8 @@ export class ChatOpenAI<
         functions,
         function_call
       );
-      const completionTokenUsage = await this.getNumTokensFromGenerations(
-        generations
-      );
+      const completionTokenUsage =
+        await this.getNumTokensFromGenerations(generations);
 
       usageMetadata.input_tokens = promptTokenUsage;
       usageMetadata.output_tokens = completionTokenUsage;
@@ -3057,7 +3079,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3068,7 +3090,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3079,7 +3101,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3092,7 +3114,7 @@ export class ChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | z.ZodType<RunOutput>
@@ -3274,7 +3296,7 @@ export class ChatOpenAI<
 
 function isZodSchema<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  RunOutput extends Record<string, any> = Record<string, any>,
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   input: z.ZodType<RunOutput> | Record<string, any>
