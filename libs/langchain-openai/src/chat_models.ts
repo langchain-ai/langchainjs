@@ -1710,7 +1710,7 @@ export interface ChatOpenAIFields
  * <br />
  */
 export class ChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements Partial<OpenAIChatInput>
