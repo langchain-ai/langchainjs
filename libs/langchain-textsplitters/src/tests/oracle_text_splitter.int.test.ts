@@ -1,5 +1,6 @@
+/* eslint-disable no-process-env */
+/* eslint-disable import/no-extraneous-dependencies */
 import { expect, test } from "@jest/globals";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import oracledb from "oracledb";
 import { OracleTextSplitter } from "../oracle_text_splitter.js";
 
@@ -9,9 +10,9 @@ test("Test splitting by character count.", async () => {
   const pref = { by: "chars", max: 500 };
 
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   const splitter = new OracleTextSplitter(connection, pref);
   const output = await splitter.splitText(text);
@@ -26,9 +27,9 @@ test("Test splitting by words.", async () => {
   const pref = { by: "words", max: 100 };
 
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   const splitter = new OracleTextSplitter(connection, pref);
   const output = await splitter.splitText(text);

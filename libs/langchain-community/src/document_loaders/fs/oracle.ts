@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document } from "@langchain/core/documents";
 import fs from "node:fs";
 import path from "node:path";

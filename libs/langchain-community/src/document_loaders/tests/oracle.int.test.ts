@@ -1,7 +1,7 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import oracledb from "oracledb";
 import { OracleDocLoader } from "../fs/oracle.js";
 
@@ -12,9 +12,9 @@ test("Test loading PDF from file", async () => {
   );
   const pref = { file: filePath };
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   const loader = new OracleDocLoader(connection, pref);
   const docs = await loader.load();
@@ -30,12 +30,12 @@ test("Test loading PDF from file", async () => {
 
 test("Test loading from directory", async () => {
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   const pref = {
-    dir: getEnvironmentVariable("DEMO_DIRECTORY"),
+    dir: process.env.DEMO_DIRECTORY,
   };
   const loader = new OracleDocLoader(connection, pref);
   const docs = await loader.load();
@@ -46,14 +46,14 @@ test("Test loading from directory", async () => {
 
 test("Test loading from table", async () => {
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   const pref = {
-    owner: getEnvironmentVariable("DEMO_OWNER"),
-    tablename: getEnvironmentVariable("DEMO_TABLE"),
-    colname: getEnvironmentVariable("DEMO_COLUMN"),
+    owner: process.env.DEMO_OWNER,
+    tablename: process.env.DEMO_TABLE,
+    colname: process.env.DEMO_COLUMN,
   };
   const loader = new OracleDocLoader(connection, pref);
   const docs = await loader.load();

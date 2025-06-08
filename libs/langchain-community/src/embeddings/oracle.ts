@@ -1,3 +1,5 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import oracledb from "oracledb";
 
