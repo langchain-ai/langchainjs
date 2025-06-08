@@ -1199,6 +1199,12 @@ export interface ChatOpenAICallOptions
    * If set, the Responses API will be used to fulfill the request.
    */
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: "auto" | "default" | "flex";
 }
 
 export interface ChatOpenAIFields
@@ -1773,6 +1779,7 @@ export class ChatOpenAI<
       "response_format",
       "seed",
       "reasoning_effort",
+      "service_tier",
     ];
   }
 
@@ -1924,6 +1931,12 @@ export class ChatOpenAI<
    */
   zdrEnabled?: boolean | undefined;
 
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: "auto" | "default" | "flex";
+
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
 
@@ -1983,6 +1996,10 @@ export class ChatOpenAI<
     // Else leave undefined so it's not passed to OpenAI.
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
+
+    if (fields?.service_tier !== undefined) {
+      this.service_tier = fields.service_tier;
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
@@ -2211,6 +2228,12 @@ export class ChatOpenAI<
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
+    }
+    if (this.service_tier !== undefined) {
+      params.service_tier = this.service_tier;
+    }
+    if (options?.service_tier !== undefined) {
+      params.service_tier = options.service_tier;
     }
     const reasoning = this.getReasoningParams(options);
     if (reasoning !== undefined && reasoning.effort !== undefined) {
@@ -3311,6 +3334,17 @@ export class ChatOpenAI<
       { raw: BaseMessage; parsed: RunOutput }
     >([{ raw: llm }, parsedWithFallback]);
   }
+}
+
+function isZodSchema<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>
+>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  input: z.ZodType<RunOutput> | Record<string, any>
+): input is z.ZodType<RunOutput> {
+  // Check for a characteristic method of Zod schemas
+  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(
