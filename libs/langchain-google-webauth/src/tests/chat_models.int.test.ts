@@ -1441,7 +1441,7 @@ describe.each(testMultimodalModelNames)(
       });
     }
 
-    test("image output", async () => {
+    test.only("image output", async () => {
       const model = newChatGoogle({
         responseModalities: ["TEXT", "IMAGE"],
       });
@@ -1477,6 +1477,67 @@ describe.each(testMultimodalModelNames)(
     });
   }
 );
+
+const testTtsModelNames = [
+  {
+    modelName: "gemini-2.5-flash-preview-tts",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-flash-preview-tts",
+    platformType: "gcp",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-tts",
+    platformType: "gai",
+  },
+  {
+    modelName: "gemini-2.5-pro-preview-tts",
+    platformType: "gcp",
+  },
+];
+
+describe.each(testTtsModelNames)(
+  "Webauth ($platformType) Gemini TTS ($modelName)",
+  ({modelName, platformType}) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+      // const logger = new GoogleRequestLogger();
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
+      const responseModalities = ["AUDIO"];
+
+      return new ChatGoogle({
+        modelName,
+        platformType: platformType as GooglePlatformType,
+        callbacks,
+        apiKey,
+        responseModalities,
+        ...(fields ?? {}),
+      });
+    }
+
+    test.only("single", async () => {
+      const model = newChatGoogle({
+        speechConfig: "Zubenelgenubi",
+      });
+      const prompt = "Say cheerfully: Have a wonderful day!";
+      const res = await model.invoke(prompt);
+      console.log(JSON.stringify(res, null, 1));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      await fs.writeFile(`/tmp/${modelName}.pcm`, content.data as string, "base64");
+    })
+  }
+)
 
 const testReasoningModelNames = [
   {

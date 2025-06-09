@@ -136,6 +136,70 @@ export interface GoogleThinkingConfig {
   includeThoughts?: boolean;
 }
 
+export type GooglePrebuiltVoiceName = string;
+
+export interface GooglePrebuiltVoiceConfig {
+  voiceName: GooglePrebuiltVoiceName;
+}
+
+export interface GoogleVoiceConfig {
+  prebuiltVoiceConfig: GooglePrebuiltVoiceConfig;
+}
+
+export interface GoogleSpeakerVoiceConfig {
+  speaker: string;
+  voiceConfig: GoogleVoiceConfig;
+}
+
+export interface GoogleMultiSpeakerVoiceConfig {
+  speakerVoiceConfigs: GoogleSpeakerVoiceConfig[];
+}
+
+export interface GoogleSpeechConfigSingle {
+  voiceConfig: GoogleVoiceConfig;
+  languageCode?: string;
+}
+
+export interface GoogleSpeechConfigMulti {
+  multiSpeakerVoiceConfig: GoogleMultiSpeakerVoiceConfig;
+  languageCode?: string;
+}
+
+export type GoogleSpeechConfig = GoogleSpeechConfigSingle | GoogleSpeechConfigMulti;
+
+/**
+ * A simplified version of the GoogleSpeakerVoiceConfig
+ */
+export interface GoogleSpeechSpeakerName {
+  speaker: string;
+  name: GooglePrebuiltVoiceName;
+}
+
+export type GoogleSpeechVoice = GooglePrebuiltVoiceName | GoogleSpeechSpeakerName | GoogleSpeechSpeakerName[];
+
+export interface GoogleSpeechVoiceLanguage {
+  voice: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+export interface GoogleSpeechVoicesLanguage {
+  voices: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+/**
+ * A simplified way to represent the voice (or voices) and language code.
+ * "voice" and "voices" are semantically the same, we're not enforcing
+ * that one is an array and one isn't.
+ */
+export type GoogleSpeechSimplifiedLanguage = GoogleSpeechVoiceLanguage | GoogleSpeechVoicesLanguage;
+
+/**
+ * A simplified way to represent the voices.
+ * It can either be the voice (or voices), or the voice or voices with language configuration
+ */
+export type GoogleSpeechConfigSimplified = GoogleSpeechVoice | GoogleSpeechSimplifiedLanguage;
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -269,6 +333,14 @@ export interface GoogleAIModelParams {
    * The modalities of the response.
    */
   responseModalities?: GoogleAIModelModality[];
+
+  /**
+   * Speech generation configuration.
+   * You can use either Google's definition of the speech configuration,
+   * or a simplified version we've defined (which can be as simple
+   * as the name of a pre-defined voice).
+   */
+  speechConfig?: GoogleSpeechConfig | GoogleSpeechConfigSimplified;
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -607,6 +679,7 @@ export interface GeminiGenerationConfig {
   logprobs?: number;
   responseModalities?: GoogleAIModelModality[];
   thinkingConfig?: GoogleThinkingConfig;
+  speechConfig?: GoogleSpeechConfig;
 }
 
 export interface GeminiRequest {

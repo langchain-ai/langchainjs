@@ -66,6 +66,7 @@ import {
   GeminiSearchToolAttributes,
 } from "../types.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
+import {normalizeSpeechConfig} from "./common.js";
 
 export interface FunctionCall {
   name: string;
@@ -720,13 +721,36 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function inlineDataPartToMessageContent(
+  function inlineDataPartToMessageContentImage(
     part: GeminiPartInlineData
   ): MessageContentImageUrl {
     return {
       type: "image_url",
       image_url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
     };
+  }
+
+  function inlineDataPartToMessageContentMedia(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    return {
+      type: "media",
+      mineType: part.inlineData.mimeType,
+      data: part.inlineData.data,
+    };
+  }
+
+  function inlineDataPartToMessageContent(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): MessageContentImageUrl | Record<string, any> {
+    const mimeType = part?.inlineData?.mimeType ?? "";
+    if (mimeType.startsWith('image')) {
+      return inlineDataPartToMessageContentImage(part);
+    } else {
+      return inlineDataPartToMessageContentMedia(part);
+    }
   }
 
   function fileDataPartToMessageContent(
@@ -740,7 +764,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function partsToMessageContent(parts: GeminiPart[]): MessageContent {
     return parts
-      .map((part) => {
+      .map((part: GeminiPart): MessageContentComplex | null => {
         if (part === undefined || part === null) {
           return null;
         } else if (part.thought) {
@@ -1496,6 +1520,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
       responseModalities: parameters.responseModalities,
+      speechConfig: normalizeSpeechConfig(parameters.speechConfig),
     };
 
     // Add the logprobs if explicitly set
