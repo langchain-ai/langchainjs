@@ -34,7 +34,7 @@ interface ImportConstantsPluginOptions {
     optionalEntrypoints?: string[];
 
     /**
-     * List of entrypoints that are deprecated and should be excluded
+     * List of entrypoints that are deprecated and node-only
      */
     deprecatedNodeOnly?: string[];
 }
@@ -72,7 +72,17 @@ export function importConstantsPlugin(options: ImportConstantsPluginOptions): Pl
         name: 'import-constants',
 
         buildStart() {
-            if (!opts.enabled) return;
+            // @ts-expect-error - outputOptions is available in rolldown plugin context but not typed
+            const outputOptions = this.outputOptions as OutputOptions;
+
+            /**
+             * only run plugin if:
+             * - enabled is true
+             * - outputOptions.format is es so we only run during ESM build
+             */
+            if (!opts.enabled || outputOptions.format !== 'es') {
+                return;
+            }
 
             try {
                 // Generate import constants

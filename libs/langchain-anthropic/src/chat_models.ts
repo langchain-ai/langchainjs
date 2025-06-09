@@ -910,7 +910,7 @@ export class ChatAnthropicMessages<
     > &
       Kwargs,
     requestOptions: AnthropicRequestOptions
-  ) {
+  ): Promise<ChatResult> {
     const response = await this.completionWithRetry(
       {
         ...params,

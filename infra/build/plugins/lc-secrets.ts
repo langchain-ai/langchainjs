@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { resolve } from 'node:path';
 
 import ts from 'typescript';
-import type { Plugin } from 'rolldown';
+import type { Plugin, PluginContext, OutputOptions } from 'rolldown';
 
 interface SecretPluginOptions {
   /**
@@ -89,17 +89,25 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
   return {
     name: 'lc-secrets',
     
-    buildStart() {
-      if (!opts.enabled) return;
+    buildStart(this: PluginContext) {
+      // @ts-expect-error - outputOptions is available in rolldown plugin context but not typed
+      const outputOptions = this.outputOptions as OutputOptions;
+
+      /**
+       * only run plugin if:
+       * - enabled is true
+       * - outputOptions.format is es so we only run during ESM build
+       */
+      if (!opts.enabled || outputOptions.format !== 'es') {
+        return
+      };
       
-      secrets = [];
       packagePath = opts.packagePath ?? process.cwd();
+      secrets = [];
       
       // Scan for secrets at build start
       try {
         secrets = scanForSecrets(packagePath, opts.excludePatterns);
-        console.log('secrets', secrets);
-        
         if (secrets.length > 0) {
           console.log(`🔑 Found ${secrets.length} secrets in package`);
           
@@ -113,6 +121,14 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
               throw new Error('Secret validation failed');
             }
           }
+
+          // Generate secret map file once
+          try {
+            generateSecretMap(packagePath, secrets, opts.outputPath);
+            console.log(`📝 Generated secret map: ${opts.outputPath}`);
+          } catch (error) {
+            console.error('❌ Failed to generate secret map:', error);
+          }
         }
       } catch (error) {
         if (opts.strict) {
@@ -120,18 +136,6 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
         } else {
           console.warn('⚠️ Secret scanning failed:', error);
         }
-      }
-    },
-    
-    generateBundle() {
-      if (!opts.enabled) return;
-      
-      // Generate secret map file
-      try {
-        generateSecretMap(packagePath, secrets, opts.outputPath);
-        console.log(`📝 Generated secret map: ${opts.outputPath}`);
-      } catch (error) {
-        console.error('❌ Failed to generate secret map:', error);
       }
     },
   };
