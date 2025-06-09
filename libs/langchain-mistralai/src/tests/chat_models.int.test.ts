@@ -69,9 +69,7 @@ test("Can call tools using structured tools", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
-    tools: [new Calculator()],
-  });
+  }).bindTools([new Calculator()]);
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -112,9 +110,7 @@ test("Can call tools using raw tools", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
-    tools,
-  });
+  }).bindTools(tools);
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -150,9 +146,7 @@ test("Can call .stream with tool calling", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
-    tools: [new Calculator()],
-  });
+  }).bindTools([new Calculator()]);
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -182,7 +176,7 @@ test("Can call .stream with tool calling", async () => {
 test("Can use json mode response format", async () => {
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
+  }).withConfig({
     response_format: {
       type: "json_object",
     },
@@ -209,7 +203,7 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
 test("Can call .stream with json mode", async () => {
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
+  }).withConfig({
     response_format: {
       type: "json_object",
     },
@@ -268,9 +262,7 @@ test("Can stream and concat responses for a complex tool", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bind({
-    tools: [new PersonTraits()],
-  });
+  }).bindTools([new PersonTraits()]);
 
   const prompt = ChatPromptTemplate.fromMessages([
     "system",
@@ -306,28 +298,26 @@ test("Few shotting with tool calls", async () => {
   const chat = new ChatMistralAI({
     model: "mistral-large-latest",
     temperature: 0,
-  }).bind({
-    tools: [
-      {
-        type: "function",
-        function: {
-          name: "get_current_weather",
-          description: "Get the current weather in a given location",
-          parameters: {
-            type: "object",
-            properties: {
-              location: {
-                type: "string",
-                description: "The city and state, e.g. San Francisco, CA",
-              },
-              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+  }).bindTools([
+    {
+      type: "function",
+      function: {
+        name: "get_current_weather",
+        description: "Get the current weather in a given location",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "The city and state, e.g. San Francisco, CA",
             },
-            required: ["location"],
+            unit: { type: "string", enum: ["celsius", "fahrenheit"] },
           },
+          required: ["location"],
         },
       },
-    ],
-  });
+    },
+  ]);
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -598,7 +588,7 @@ describe("withStructuredOutput", () => {
 describe("ChatMistralAI aborting", () => {
   test("ChatMistralAI can abort request via .stream", async () => {
     const controller = new AbortController();
-    const model = new ChatMistralAI().bind({
+    const model = new ChatMistralAI().withConfig({
       signal: controller.signal,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -634,7 +624,7 @@ describe("ChatMistralAI aborting", () => {
   });
 
   test("ChatMistralAI can timeout requests via .stream", async () => {
-    const model = new ChatMistralAI().bind({
+    const model = new ChatMistralAI().withConfig({
       timeout: 1000,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -671,7 +661,7 @@ describe("ChatMistralAI aborting", () => {
 
   test("ChatMistralAI can abort request via .invoke", async () => {
     const controller = new AbortController();
-    const model = new ChatMistralAI().bind({
+    const model = new ChatMistralAI().withConfig({
       signal: controller.signal,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -703,7 +693,7 @@ describe("ChatMistralAI aborting", () => {
   });
 
   test("ChatMistralAI can timeout requests via .invoke", async () => {
-    const model = new ChatMistralAI().bind({
+    const model = new ChatMistralAI().withConfig({
       timeout: 1000,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -793,12 +783,10 @@ describe("codestral-latest", () => {
       }
     }
 
-    const model = new ChatMistralAI({
-      model: "codestral-latest",
-    }).bind({
-      tools: [new CodeSandbox()],
-      tool_choice: "any",
-    });
+    const model = new ChatMistralAI({ model: "codestral-latest" }).bindTools(
+      [new CodeSandbox()],
+      { tool_choice: "any" }
+    );
 
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You are an excellent python engineer."],

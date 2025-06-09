@@ -77,7 +77,7 @@ export class ReActSingleInputOutputParser extends AgentActionOutputParser {
 
       const action = actionMatch[1];
       const actionInput = actionMatch[2];
-      const toolInput = actionInput.trim().replace(/"/g, "");
+      const toolInput = actionInput.trim().replace(/^"|"$/g, "");
 
       return {
         tool: action,

@@ -7,9 +7,15 @@ import {
   type MessageType,
   _mergeObj,
   _mergeStatus,
+  type MessageContentComplex,
 } from "./base.js";
+import type { DataContentBlock } from "./content_blocks.js";
 
-export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
+export interface ToolMessageFields extends BaseMessageFields {
+  content: string | (MessageContentComplex | DataContentBlock)[];
+}
+
+export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
    *
@@ -35,7 +41,7 @@ export interface ToolMessageFieldsWithToolCallId extends BaseMessageFields {
  * a string and wrapped in a ToolMessage.
  */
 export interface DirectToolOutput {
-  readonly lc_direct_tool_output: boolean;
+  readonly lc_direct_tool_output: true;
 }
 
 export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
@@ -51,6 +57,8 @@ export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
  * Represents a tool message in a conversation.
  */
 export class ToolMessage extends BaseMessage implements DirectToolOutput {
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
+
   static lc_name() {
     return "ToolMessage";
   }
@@ -60,7 +68,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     return { tool_call_id: "tool_call_id" };
   }
 
-  lc_direct_tool_output = true;
+  lc_direct_tool_output = true as const;
 
   /**
    * Status of the tool invocation.
@@ -83,7 +91,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
   constructor(fields: ToolMessageFieldsWithToolCallId);
 
   constructor(
-    fields: string | BaseMessageFields,
+    fields: string | ToolMessageFields,
     tool_call_id: string,
     name?: string
   );
@@ -125,6 +133,8 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
  * with other tool message chunks.
  */
 export class ToolMessageChunk extends BaseMessageChunk {
+  declare content: string | (MessageContentComplex | DataContentBlock)[];
+
   tool_call_id: string;
 
   /**

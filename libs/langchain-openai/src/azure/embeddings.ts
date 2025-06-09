@@ -121,7 +121,11 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
       try {
         const res = await this.client.embeddings.create(
           request,
-          requestOptions
+          // This unknown cast is required because OpenAI types seem to be incorrect here
+          // without it, we can't pass arbitrary keys via the `query` field in the options,
+          // which means we can't specify the `api-version` as required by Azure OpenAI.
+          // See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+          requestOptions as unknown as OpenAICoreRequestOptions<OpenAIClient.EmbeddingCreateParams>
         );
         return res;
       } catch (e) {

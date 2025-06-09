@@ -105,6 +105,7 @@ export class LangChainTracer
       dotted_order: run.dotted_order,
       parent_run_id: run.parent_run_id,
       extra: run.extra,
+      session_name: this.projectName,
     };
     await this.client.updateRun(run.id, runUpdate);
   }
@@ -191,7 +192,15 @@ export class LangChainTracer
 
   static getTraceableRunTree(): RunTree | undefined {
     try {
-      return getCurrentRunTree();
+      return (
+        // The type cast here provides forward compatibility. Old versions of LangSmith will just
+        // ignore the permitAbsentRunTree arg.
+        (
+          getCurrentRunTree as (
+            permitAbsentRunTree: boolean
+          ) => ReturnType<typeof getCurrentRunTree> | undefined
+        )(true)
+      );
     } catch {
       return undefined;
     }

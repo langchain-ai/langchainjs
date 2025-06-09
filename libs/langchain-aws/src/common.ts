@@ -2,11 +2,22 @@ import type {
   MessageContentComplex,
   BaseMessage,
   UsageMetadata,
+  SystemMessage,
+  HumanMessage,
+  DataContentBlock,
+  StandardContentBlockConverter,
+  StandardTextBlock,
+  StandardImageBlock,
+  StandardFileBlock,
 } from "@langchain/core/messages";
 import {
   AIMessage,
   AIMessageChunk,
   ToolMessage,
+  parseBase64DataUrl,
+  parseMimeType,
+  convertToProviderContentBlock,
+  isDataContentBlock,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import { isOpenAITool } from "@langchain/core/language_models/base";
@@ -23,11 +34,14 @@ import type {
   ReasoningContentBlock,
   ReasoningContentBlockDelta,
   ReasoningTextBlock,
+  DocumentFormat,
+  ToolResultContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   ChatBedrockConverseToolType,
   BedrockToolChoice,
@@ -36,6 +50,179 @@ import {
   MessageContentReasoningBlockReasoningTextPartial,
   MessageContentReasoningBlockRedacted,
 } from "./types.js";
+
+const standardContentBlockConverter: StandardContentBlockConverter<{
+  text: ContentBlock.TextMember;
+  image: ContentBlock.ImageMember;
+  file: ContentBlock.DocumentMember;
+}> = {
+  providerName: "ChatBedrockConverse",
+
+  fromStandardTextBlock(block: StandardTextBlock): ContentBlock.TextMember {
+    return {
+      text: block.text,
+    };
+  },
+
+  fromStandardImageBlock(block: StandardImageBlock): ContentBlock.ImageMember {
+    let format: ImageFormat | undefined;
+
+    if (block.source_type === "url") {
+      const parsedData = parseBase64DataUrl({
+        dataUrl: block.url,
+        asTypedArray: true,
+      });
+      if (parsedData) {
+        const parsedMimeType = parseMimeType(parsedData.mime_type);
+        format = parsedMimeType.type as ImageFormat;
+        return {
+          image: {
+            format,
+            source: {
+              bytes: parsedData.data,
+            },
+          },
+        };
+      } else {
+        throw new Error(
+          "Only base64 data URLs are supported for image blocks with source type 'url' with ChatBedrockConverse."
+        );
+      }
+    } else if (block.source_type === "base64") {
+      if (block.mime_type) {
+        const parsedMimeType = parseMimeType(block.mime_type);
+        format = parsedMimeType.subtype as ImageFormat;
+      }
+
+      if (format && !["gif", "jpeg", "png", "webp"].includes(format)) {
+        throw new Error(
+          `Unsupported image mime type: "${block.mime_type}" ChatBedrockConverse only supports "image/gif", "image/jpeg", "image/png", and "image/webp" formats.`
+        );
+      }
+      return {
+        image: {
+          format,
+          source: {
+            bytes: Uint8Array.from(atob(block.data), (c) => c.charCodeAt(0)),
+          },
+        },
+      };
+    } else if (block.source_type === "id") {
+      throw new Error(
+        "Image source type 'id' not supported with ChatBedrockConverse."
+      );
+    } else {
+      throw new Error(
+        `Unsupported image source type: "${
+          (block as { source_type: string }).source_type
+        }" with ChatBedrockConverse.`
+      );
+    }
+  },
+
+  fromStandardFileBlock(block: StandardFileBlock): ContentBlock.DocumentMember {
+    const mimeTypeToDocumentFormat = {
+      "text/csv": "csv",
+      "application/msword": "doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        "docx",
+      "text/html": "html",
+      "text/markdown": "md",
+      "application/pdf": "pdf",
+      "text/plain": "txt",
+      "application/vnd.ms-excel": "xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        "xlsx",
+    };
+    const name: string | undefined = (block.metadata?.name ??
+      block.metadata?.filename ??
+      block.metadata?.title) as string | undefined;
+
+    if (block.source_type === "text") {
+      return {
+        document: {
+          name,
+          format: "txt",
+          source: {
+            bytes: new TextEncoder().encode(block.text),
+          },
+        },
+      };
+    }
+
+    if (block.source_type === "url") {
+      const parsedData = parseBase64DataUrl({
+        dataUrl: block.url,
+        asTypedArray: true,
+      });
+
+      if (parsedData) {
+        const parsedMimeType = parseMimeType(
+          parsedData.mime_type ?? block.mime_type
+        );
+        const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
+        const format = mimeTypeToDocumentFormat[
+          mimeType as keyof typeof mimeTypeToDocumentFormat
+        ] as DocumentFormat | undefined;
+        return {
+          document: {
+            name,
+            format,
+            source: {
+              bytes: parsedData.data,
+            },
+          },
+        };
+      }
+      throw new Error(
+        "Only base64 data URLs are supported for file blocks with source type 'url' with ChatBedrockConverse."
+      );
+    }
+
+    if (block.source_type === "base64") {
+      let format: DocumentFormat | undefined;
+
+      if (block.mime_type) {
+        const parsedMimeType = parseMimeType(block.mime_type);
+        const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
+        format = mimeTypeToDocumentFormat[
+          mimeType as keyof typeof mimeTypeToDocumentFormat
+        ] as DocumentFormat | undefined;
+        if (format === undefined) {
+          throw new Error(
+            `Unsupported file mime type: "${
+              block.mime_type
+            }" ChatBedrockConverse only supports ${Object.keys(
+              mimeTypeToDocumentFormat
+            ).join(", ")} formats.`
+          );
+        }
+      }
+
+      return {
+        document: {
+          name,
+          format,
+          source: {
+            bytes: Uint8Array.from(atob(block.data), (c) => c.charCodeAt(0)),
+          },
+        },
+      };
+    }
+
+    if (block.source_type === "id") {
+      throw new Error(
+        "File source type 'id' not supported with ChatBedrockConverse."
+      );
+    }
+
+    throw new Error(
+      `Unsupported file source type: "${
+        (block as { source_type: string }).source_type
+      }" with ChatBedrockConverse.`
+    );
+  },
+};
 
 export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   // Extract the format from the base64 string
@@ -68,170 +255,238 @@ export function extractImageInfo(base64: string): ContentBlock.ImageMember {
   };
 }
 
+function convertLangChainContentBlockToConverseContentBlock<
+  BlockT extends MessageContentComplex | DataContentBlock | string
+>({
+  block,
+  onUnknown,
+}: {
+  block: BlockT;
+  onUnknown?: "returnUnmodified";
+}): ContentBlock | BlockT;
+
+function convertLangChainContentBlockToConverseContentBlock<
+  BlockT extends MessageContentComplex | DataContentBlock | string
+>({
+  block,
+  onUnknown = "throw",
+}: {
+  block: BlockT;
+  onUnknown?: "throw";
+}): ContentBlock;
+
+function convertLangChainContentBlockToConverseContentBlock<
+  BlockT extends MessageContentComplex | DataContentBlock | string
+>({
+  block,
+  onUnknown = "throw",
+}: {
+  block: BlockT;
+  onUnknown?: "throw" | "returnUnmodified";
+}): ContentBlock | BlockT {
+  if (typeof block === "string") {
+    return { text: block };
+  }
+
+  if (isDataContentBlock(block)) {
+    return convertToProviderContentBlock(block, standardContentBlockConverter);
+  }
+
+  if (block.type === "text") {
+    return { text: block.text };
+  }
+
+  if (block.type === "image_url") {
+    return extractImageInfo(
+      typeof block.image_url === "string"
+        ? block.image_url
+        : block.image_url.url
+    );
+  }
+
+  if (block.type === "document" && block.document !== undefined) {
+    return {
+      document: block.document,
+    };
+  }
+
+  if (block.type === "image" && block.image !== undefined) {
+    return {
+      image: block.image,
+    };
+  }
+
+  if (onUnknown === "throw") {
+    throw new Error(`Unsupported content block type: ${block.type}`);
+  } else {
+    return block;
+  }
+}
+
+function convertSystemMessageToConverseMessage(
+  msg: SystemMessage
+): BedrockSystemContentBlock {
+  if (typeof msg.content === "string") {
+    return { text: msg.content };
+  } else if (msg.content.length === 1 && msg.content[0].type === "text") {
+    return { text: msg.content[0].text };
+  }
+  throw new Error(
+    "System message content must be either a string, or a content array containing a single text object."
+  );
+}
+
+function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
+  const assistantMsg: BedrockMessage = {
+    role: "assistant",
+    content: [],
+  };
+
+  if (typeof msg.content === "string" && msg.content !== "") {
+    assistantMsg.content?.push({
+      text: msg.content,
+    });
+  } else if (Array.isArray(msg.content)) {
+    const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
+    const contentBlocks: ContentBlock[] = concatenatedBlocks.map((block) => {
+      if (block.type === "text" && block.text !== "") {
+        return {
+          text: block.text,
+        };
+      } else if (block.type === "reasoning_content") {
+        return {
+          reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
+            block as MessageContentReasoningBlock
+          ),
+        };
+      } else {
+        const blockValues = Object.fromEntries(
+          Object.entries(block).filter(([key]) => key !== "type")
+        );
+        throw new Error(
+          `Unsupported content block type: ${
+            block.type
+          } with content of ${JSON.stringify(blockValues, null, 2)}`
+        );
+      }
+    });
+
+    assistantMsg.content = [
+      ...(assistantMsg.content ? assistantMsg.content : []),
+      ...contentBlocks,
+    ];
+  }
+
+  // Important: this must be placed after any reasoning content blocks, else claude models will return an error.
+  if (msg.tool_calls && msg.tool_calls.length) {
+    assistantMsg.content = [
+      ...(assistantMsg.content ? assistantMsg.content : []),
+      ...msg.tool_calls.map((tc) => ({
+        toolUse: {
+          toolUseId: tc.id,
+          name: tc.name,
+          input: tc.args,
+        },
+      })),
+    ];
+  }
+
+  return assistantMsg;
+}
+
+function convertHumanMessageToConverseMessage(
+  msg: HumanMessage
+): BedrockMessage {
+  if (msg.content === "") {
+    throw new Error(
+      `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+    );
+  }
+
+  const content: ContentBlock[] = Array.isArray(msg.content)
+    ? msg.content.map((c) =>
+        convertLangChainContentBlockToConverseContentBlock({
+          block: c,
+          onUnknown: "throw",
+        })
+      )
+    : [
+        convertLangChainContentBlockToConverseContentBlock({
+          block: msg.content,
+          onUnknown: "throw",
+        }),
+      ];
+
+  return {
+    role: "user" as const,
+    content,
+  };
+}
+
+function convertToolMessageToConverseMessage(msg: ToolMessage): BedrockMessage {
+  const castMsg = msg as ToolMessage;
+  if (typeof castMsg.content === "string") {
+    return {
+      // Tool use messages are always from the user
+      role: "user" as const,
+      content: [
+        {
+          toolResult: {
+            toolUseId: castMsg.tool_call_id,
+            content: [
+              {
+                text: castMsg.content,
+              },
+            ],
+          },
+        },
+      ],
+    };
+  } else {
+    return {
+      // Tool use messages are always from the user
+      role: "user" as const,
+      content: [
+        {
+          toolResult: {
+            toolUseId: castMsg.tool_call_id,
+            content: (
+              msg.content as (MessageContentComplex | DataContentBlock)[]
+            ).map((c) => {
+              const converted =
+                convertLangChainContentBlockToConverseContentBlock({
+                  block: c,
+                  onUnknown: "returnUnmodified",
+                });
+              if (converted !== c) {
+                return converted as ToolResultContentBlock;
+              }
+              return { json: c } as ToolResultContentBlock.JsonMember;
+            }),
+          },
+        },
+      ],
+    };
+  }
+}
+
 export function convertToConverseMessages(messages: BaseMessage[]): {
   converseMessages: BedrockMessage[];
   converseSystem: BedrockSystemContentBlock[];
 } {
   const converseSystem: BedrockSystemContentBlock[] = messages
     .filter((msg) => msg._getType() === "system")
-    .map((msg) => {
-      if (typeof msg.content === "string") {
-        return { text: msg.content };
-      } else if (msg.content.length === 1 && msg.content[0].type === "text") {
-        return { text: msg.content[0].text };
-      }
-      throw new Error(
-        "System message content must be either a string, or a content array containing a single text object."
-      );
-    });
+    .map((msg) => convertSystemMessageToConverseMessage(msg));
+
   const converseMessages: BedrockMessage[] = messages
     .filter((msg) => msg._getType() !== "system")
     .map((msg) => {
       if (msg._getType() === "ai") {
-        const castMsg = msg as AIMessage;
-        const assistantMsg: BedrockMessage = {
-          role: "assistant",
-          content: [],
-        };
-
-        if (typeof castMsg.content === "string" && castMsg.content !== "") {
-          assistantMsg.content?.push({
-            text: castMsg.content,
-          });
-        } else if (Array.isArray(castMsg.content)) {
-          const concatenatedBlocks = concatenateLangchainReasoningBlocks(
-            castMsg.content
-          );
-          const contentBlocks: ContentBlock[] = concatenatedBlocks.map(
-            (block) => {
-              if (block.type === "text" && block.text !== "") {
-                return {
-                  text: block.text,
-                };
-              } else if (block.type === "reasoning_content") {
-                return {
-                  reasoningContent:
-                    langchainReasoningBlockToBedrockReasoningBlock(
-                      block as MessageContentReasoningBlock
-                    ),
-                };
-              } else {
-                const blockValues = Object.fromEntries(
-                  Object.entries(block).filter(([key]) => key !== "type")
-                );
-                throw new Error(
-                  `Unsupported content block type: ${
-                    block.type
-                  } with content of ${JSON.stringify(blockValues, null, 2)}`
-                );
-              }
-            }
-          );
-
-          assistantMsg.content = [
-            ...(assistantMsg.content ? assistantMsg.content : []),
-            ...contentBlocks,
-          ];
-        }
-
-        // Important: this must be placed after any reasoning content blocks, else claude models will return an error.
-        if (castMsg.tool_calls && castMsg.tool_calls.length) {
-          assistantMsg.content = [
-            ...(assistantMsg.content ? assistantMsg.content : []),
-            ...castMsg.tool_calls.map((tc) => ({
-              toolUse: {
-                toolUseId: tc.id,
-                name: tc.name,
-                input: tc.args,
-              },
-            })),
-          ];
-        }
-
-        return assistantMsg;
+        return convertAIMessageToConverseMessage(msg as AIMessage);
       } else if (msg._getType() === "human" || msg._getType() === "generic") {
-        if (typeof msg.content === "string" && msg.content !== "") {
-          return {
-            role: "user" as const,
-            content: [
-              {
-                text: msg.content,
-              },
-            ],
-          };
-        } else if (Array.isArray(msg.content)) {
-          const contentBlocks: ContentBlock[] = msg.content.flatMap((block) => {
-            if (block.type === "image_url") {
-              const base64: string =
-                typeof block.image_url === "string"
-                  ? block.image_url
-                  : block.image_url.url;
-              return extractImageInfo(base64);
-            } else if (block.type === "text") {
-              return {
-                text: block.text,
-              };
-            } else if (
-              block.type === "document" &&
-              block.document !== undefined
-            ) {
-              return {
-                document: block.document,
-              };
-            } else if (block.type === "image" && block.image !== undefined) {
-              return {
-                image: block.image,
-              };
-            } else {
-              throw new Error(`Unsupported content block type: ${block.type}`);
-            }
-          });
-          return {
-            role: "user" as const,
-            content: contentBlocks,
-          };
-        } else {
-          throw new Error(
-            `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
-          );
-        }
+        return convertHumanMessageToConverseMessage(msg as HumanMessage);
       } else if (msg._getType() === "tool") {
-        const castMsg = msg as ToolMessage;
-        if (typeof castMsg.content === "string") {
-          return {
-            // Tool use messages are always from the user
-            role: "user" as const,
-            content: [
-              {
-                toolResult: {
-                  toolUseId: castMsg.tool_call_id,
-                  content: [
-                    {
-                      text: castMsg.content,
-                    },
-                  ],
-                },
-              },
-            ],
-          };
-        } else {
-          return {
-            // Tool use messages are always from the user
-            role: "user" as const,
-            content: [
-              {
-                toolResult: {
-                  toolUseId: castMsg.tool_call_id,
-                  content: [
-                    {
-                      json: castMsg.content,
-                    },
-                  ],
-                },
-              },
-            ],
-          };
-        }
+        return convertToolMessageToConverseMessage(msg as ToolMessage);
       } else {
         throw new Error(`Unsupported message type: ${msg._getType()}`);
       }
@@ -288,7 +543,9 @@ export function convertToConverseTools(
         name: tool.name,
         description: tool.description,
         inputSchema: {
-          json: zodToJsonSchema(tool.schema) as __DocumentType,
+          json: (isZodSchema(tool.schema)
+            ? zodToJsonSchema(tool.schema)
+            : tool.schema) as __DocumentType,
         },
       },
     }));

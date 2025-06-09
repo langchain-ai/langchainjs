@@ -1,4 +1,5 @@
 import type { OpenAI as OpenAIClient } from "openai";
+import type { RequestOptions as _OpenAICoreRequestOptions } from "openai/core";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -100,23 +101,8 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-// TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
-export type OpenAICoreRequestOptions<
-  Req extends object = Record<string, unknown>
-> = {
-  path?: string;
-  query?: Req | undefined;
-  body?: Req | undefined;
-  headers?: Record<string, string | null | undefined> | undefined;
-
-  maxRetries?: number;
-  stream?: boolean | undefined;
-  timeout?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  httpAgent?: any;
-  signal?: AbortSignal | undefined | null;
-  idempotencyKey?: string;
-};
+export type OpenAICoreRequestOptions<Req = Record<string, unknown>> =
+  _OpenAICoreRequestOptions<Req>;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -188,8 +174,26 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   /**
    * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
    * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   *
+   * @deprecated Use the {@link reasoning} object instead.
    */
   reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
+  /**
+   * Options for reasoning models.
+   *
+   * Note that some options, like reasoning summaries, are only available when using the responses
+   * API. This option is ignored when not using a reasoning model.
+   */
+  reasoning?: OpenAIClient.Reasoning;
+
+  /**
+   * Should be set to `true` in tenancies with Zero Data Retention
+   * @see https://platform.openai.com/docs/guides/your-data
+   *
+   * @default false
+   */
+  zdrEnabled?: boolean;
 }
 
 export declare interface AzureOpenAIInput {
@@ -271,6 +275,23 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     schema: Record<string, any> | z.ZodObject<any, any, any, any>;
   };
+};
+
+/**
+ * The summary of a model's reasoning step.
+ */
+export type ChatOpenAIReasoningSummary = Omit<
+  OpenAIClient.Responses.ResponseReasoningItem,
+  "summary"
+> & {
+  /**
+   * The summary of the reasoning step. The index field will be populated if the response was
+   * streamed. This allows LangChain to recompose the reasoning summary output correctly when the
+   * AIMessage is used as an input for future generation requests.
+   */
+  summary: Array<
+    OpenAIClient.Responses.ResponseReasoningItem.Summary & { index?: number }
+  >;
 };
 
 export type ChatOpenAIResponseFormat =

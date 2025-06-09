@@ -25,6 +25,8 @@ const client = new Client({
   autoBatchTracing: false,
 });
 
+const decoder = new TextDecoder();
+
 beforeEach(() => {
   fetchMock = jest.spyOn(global, "fetch").mockImplementation(() =>
     Promise.resolve({
@@ -74,10 +76,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
@@ -223,10 +233,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
@@ -370,10 +388,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
@@ -502,10 +528,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
@@ -649,10 +683,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
@@ -803,10 +845,18 @@ test.each(["true", "false"])(
     });
 
     expect(relevantCalls.length).toEqual(4);
-    const firstCallParams = JSON.parse((relevantCalls[0][1] as any).body);
-    const secondCallParams = JSON.parse((relevantCalls[1][1] as any).body);
-    const thirdCallParams = JSON.parse((relevantCalls[2][1] as any).body);
-    const fourthCallParams = JSON.parse((relevantCalls[3][1] as any).body);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",

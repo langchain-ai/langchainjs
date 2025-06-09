@@ -17,7 +17,6 @@ test("invoke", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await chat.invoke([message]);
-  // console.log({ res });
   expect(res.content.length).toBeGreaterThan(10);
 });
 
@@ -27,7 +26,7 @@ test("invoke with stop sequence", async () => {
     model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
-  const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
+  const res = await chat.withConfig({ stop: ["5", "five"] }).invoke([message]);
   // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
@@ -92,8 +91,8 @@ test("invoke with bound tools", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -113,8 +112,10 @@ test("invoke with bound tools", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .invoke([message]);
   // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
@@ -132,8 +133,8 @@ test("stream with bound tools, yielding a single chunk", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -153,8 +154,10 @@ test("stream with bound tools, yielding a single chunk", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .stream([message]);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -167,8 +170,8 @@ test("Few shotting with tool calls", async () => {
   const chat = new ChatGroq({
     model: "llama-3.3-70b-versatile",
     temperature: 0,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -188,8 +191,10 @@ test("Few shotting with tool calls", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -251,4 +256,28 @@ test("Groq can stream tool calls", async () => {
   expect(finalMessage.tool_calls?.[0].name).toBe("get_current_weather");
   expect(finalMessage.tool_calls?.[0].args).toHaveProperty("location");
   expect(finalMessage.tool_calls?.[0].id).toBeDefined();
+});
+
+test("response metadata includes groq metadata", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const res = await model.invoke([message]);
+  // console.dir(res, { depth: Infinity });
+  expect(res.response_metadata.x_groq?.id).toBeDefined();
+});
+
+test("response metadata includes groq metadata when streaming", async () => {
+  const model = new ChatGroq({
+    model: "llama-3.3-70b-versatile",
+  });
+  const message = new HumanMessage("What color is the sky?");
+  const stream = await model.stream([message]);
+  let finalRes: AIMessageChunk | undefined;
+  for await (const chunk of stream) {
+    finalRes = !finalRes ? chunk : concat(finalRes, chunk);
+  }
+  // console.dir(finalRes, { depth: Infinity });
+  expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
 });

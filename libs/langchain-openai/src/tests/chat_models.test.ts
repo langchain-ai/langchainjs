@@ -76,7 +76,7 @@ describe("strict tool calling", () => {
     }
   });
 
-  it("Can accept strict as a call arg via .bind", async () => {
+  it("Can accept strict as a call arg via .withConfig", async () => {
     const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
@@ -98,7 +98,7 @@ describe("strict tool calling", () => {
       maxRetries: 0,
     });
 
-    const modelWithTools = model.bind({
+    const modelWithTools = model.withConfig({
       tools: [weatherTool],
       strict: true,
     });

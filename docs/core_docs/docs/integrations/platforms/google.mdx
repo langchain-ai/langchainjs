@@ -212,7 +212,61 @@ PaLM models are no longer supported.
 > referred to as vector similarity-matching or an approximate nearest neighbor (ANN) service.
 
 ```typescript
-import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
+import { MatchingEngine } from "@langchain/community/vectorstores/googlevertexai";
+```
+
+### Postgres Vector Store
+
+The [PostgresVectorStore](/docs/integrations/vectorstores/google_cloudsql_pg) module from the
+[`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) package provides a way to use the CloudSQL for PostgresSQL to store
+vector embeddings using the class.
+
+```bash
+$ yarn add @langchain/google-cloud-sql-pg
+```
+
+Set your environment variables:
+
+```bash
+PROJECT_ID="your-project-id"
+REGION="your-project-region"
+INSTANCE_NAME="your-instance"
+DB_NAME="your-database-name"
+DB_USER="your-database-user"
+PASSWORD="your-database-password"
+```
+
+Create a DB connection through the PostgresEngine class:
+
+```typescript
+const engine: PostgresEngine = await PostgresEngine.fromInstance(
+  process.env.PROJECT_ID ?? "",
+  process.env.REGION ?? "",
+  process.env.INSTANCE_NAME ?? "",
+  process.env.DB_NAME ?? "",
+  peArgs
+);
+```
+
+Initialize the vector store table:
+
+```typescript
+await engine.initVectorstoreTable(
+  "my_vector_store_table",
+  768,
+  vectorStoreArgs
+);
+```
+
+Create a vector store instance:
+
+```typescript
+const vectorStore = await PostgresVectorStore.initialize(
+  engine,
+  embeddingService,
+  "my_vector_store_table",
+  pvectorArgs
+);
 ```
 
 ## Tools
@@ -225,7 +279,7 @@ import { MatchingEngine } from "langchain/vectorstores/googlevertexai";
 There exists a `GoogleCustomSearch` utility which wraps this API. To import this utility:
 
 ```typescript
-import { GoogleCustomSearch } from "langchain/tools";
+import { GoogleCustomSearch } from "@langchain/community/tools/google_custom_search";
 ```
 
 We can easily load this wrapper as a Tool (to use with an Agent). We can do this with:
@@ -233,4 +287,67 @@ We can easily load this wrapper as a Tool (to use with an Agent). We can do this
 ```typescript
 const tools = [new GoogleCustomSearch({})];
 // Pass this variable into your agent.
+```
+
+## Chat history
+
+### Postgres Chat Message History
+
+The [PostgresChatMessageHistory](/docs/integrations/memory/google_cloudsql_pg) from
+the [`@langchain/google-cloud-sql-pg`](https://www.npmjs.com/package/@langchain/google-cloud-sql-pg) package provides a way to use the CloudSQL for PostgresSQL to store messages and provide conversation history.
+
+```bash
+$ yarn add @langchain/google-cloud-sql-pg
+```
+
+_Note:_ See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+how to install the package and initialize a DB connection.
+
+Initialize the chat history table:
+
+```typescript
+await engine.initChatHistoryTable("chat_message_table");
+```
+
+Create a chat message history instance:
+
+```typescript
+const historyInstance = await PostgresChatMessageHistory.initialize(
+  engine,
+  "test",
+  "chat_message_table"
+);
+```
+
+## Document Loaders
+
+### Postgres Loader
+
+The [PostgresLoader](/docs/integrations/memory/google_cloudsql_pg) from
+`@langchain/google-cloud-sql-pg` provides a way to use the CloudSQL for PostgresSQL to load data as LangChain `Document`s.
+
+_Note:_ See the [Postgres Vector Store](#Postgres Vector Store) section on this page to learn
+how to install the package and initialize a DB connection.
+
+Create a loader instance:
+
+```typescript
+const documentLoaderArgs: PostgresLoaderOptions = {
+  tableName: "test_table_custom",
+  contentColumns: ["fruit_name", "variety"],
+  metadataColumns: [
+    "fruit_id",
+    "quantity_in_stock",
+    "price_per_unit",
+    "organic",
+  ],
+  format: "text",
+};
+
+const documentLoaderInstance = await PostgresLoader.initialize(
+  PEInstance,
+  documentLoaderArgs
+);
+
+const documents = await documentLoaderInstance.load();
 ```

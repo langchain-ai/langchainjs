@@ -24,10 +24,6 @@ const weatherTool = tool(
 );
 
 const modelWithTools = model.bindTools([weatherTool]);
-// Optionally, you can bind tools via the `.bind` method:
-// const modelWithTools = model.bind({
-//   tools: [weatherTool]
-// });
 
 const res = await modelWithTools.invoke("What's the weather in New York?");
 console.log(res);

@@ -32,7 +32,7 @@ test("Streaming JSON patch", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const parser = new JsonOutputFunctionsParser({ diff: true });
   const chain = prompt.pipe(model).pipe(parser);
@@ -61,7 +61,7 @@ test("Streaming JSON patch with an event stream output parser", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const jsonParser = new JsonOutputFunctionsParser({ diff: true });
   const parser = new HttpResponseOutputParser({
@@ -92,7 +92,7 @@ test("Streaming aggregated JSON", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const parser = new JsonOutputFunctionsParser();
   const chain = prompt.pipe(model).pipe(parser);

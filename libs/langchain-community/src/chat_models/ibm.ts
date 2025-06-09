@@ -550,7 +550,7 @@ export class ChatWatsonx<
     tools: ChatWatsonxToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: _convertToolToWatsonxTool(tools),
       ...kwargs,
     } as CallOptions);
@@ -865,7 +865,7 @@ export class ChatWatsonx<
       const options = {
         responseFormat: { type: "json_object" },
       } as Partial<CallOptions>;
-      llm = this.bind(options);
+      llm = this.withConfig(options);
 
       if (isZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
@@ -875,8 +875,8 @@ export class ChatWatsonx<
     } else {
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: {
@@ -886,14 +886,16 @@ export class ChatWatsonx<
               },
             },
           ],
-          // Ideally that would be set to required but this is not supported yet
-          tool_choice: {
-            type: "function",
-            function: {
-              name: functionName,
+          {
+            // Ideally that would be set to required but this is not supported yet
+            tool_choice: {
+              type: "function",
+              function: {
+                name: functionName,
+              },
             },
-          },
-        } as Partial<CallOptions>);
+          } as Partial<CallOptions>
+        );
         outputParser = new WatsonxToolsOutputParser({
           returnSingle: true,
           keyName: functionName,
@@ -915,21 +917,23 @@ export class ChatWatsonx<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: openAIFunctionDefinition,
             },
           ],
-          // Ideally that would be set to required but this is not supported yet
-          tool_choice: {
-            type: "function",
-            function: {
-              name: functionName,
+          {
+            // Ideally that would be set to required but this is not supported yet
+            tool_choice: {
+              type: "function",
+              function: {
+                name: functionName,
+              },
             },
-          },
-        } as Partial<CallOptions>);
+          } as Partial<CallOptions>
+        );
         outputParser = new WatsonxToolsOutputParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,

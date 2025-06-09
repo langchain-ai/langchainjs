@@ -55,7 +55,7 @@ import type {
   GeminiAPIConfig,
   GoogleAIModelModality,
 } from "./types.js";
-import { zodToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -190,9 +190,13 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   maxOutputTokens: number;
 
+  maxReasoningTokens: number;
+
   topP: number;
 
   topK: number;
+
+  seed: number;
 
   presencePenalty: number;
 
@@ -298,7 +302,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions
   > {
-    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+    return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
   // Replace
@@ -467,7 +471,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
     if (isZodSchema(schema)) {
-      const jsonSchema = zodToGeminiParameters(schema);
+      const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
           functionDeclarations: [
@@ -511,10 +515,7 @@ export abstract class ChatGoogleBase<AuthOptions>
         keyName: functionName,
       });
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: functionName,
-    });
+    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({

@@ -415,7 +415,7 @@ test.skip("withStructuredOutput", async () => {
   expect(response.city.toLowerCase()).toBe("san francisco");
 });
 
-test.skip(".bind tools", async () => {
+test(".withConfig tools", async () => {
   const weatherTool = z
     .object({
       city: z.string().describe("The city to get the weather for"),
@@ -424,14 +424,14 @@ test.skip(".bind tools", async () => {
     .describe("Get the weather for a city");
   const model = new BedrockChatWeb({
     region: process.env.BEDROCK_AWS_REGION,
-    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
     maxRetries: 0,
     credentials: {
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         name: "weather_tool",
@@ -441,14 +441,16 @@ test.skip(".bind tools", async () => {
     ],
   });
   const response = await modelWithTools.invoke(
-    "Whats the weather like in san francisco?"
+    "Whats the weather like in san francisco? Always explain your reasoning as you call a proper tool."
   );
-  // console.log(response);
   if (!response.tool_calls?.[0]) {
     throw new Error("No tool calls found in response");
   }
   const { tool_calls } = response;
   expect(tool_calls[0].name.toLowerCase()).toBe("weather_tool");
+  expect(Array.isArray(response.content)).toBe(true);
+  expect((response.content[0] as any).type).toBe("text");
+  expect((response.content[0] as any).text.length).toBeGreaterThan(0);
 });
 
 test.skip(".bindTools with openai tool format", async () => {
@@ -467,7 +469,7 @@ test.skip(".bindTools with openai tool format", async () => {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         type: "function",
@@ -506,7 +508,7 @@ test("Streaming tool calls with Anthropic", async () => {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
     },
   });
-  const modelWithTools = model.bind({
+  const modelWithTools = model.withConfig({
     tools: [
       {
         name: "weather_tool",

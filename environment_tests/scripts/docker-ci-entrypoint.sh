@@ -10,6 +10,11 @@ shopt -s extglob
 # avoid copying build artifacts from the host
 cp -r ../package/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) .
 
+# make sure the .eslintrc makes it over
+if [ -f ../package/.eslintrc.json ]; then
+  cp ../package/.eslintrc.json .
+fi
+
 mkdir -p ./libs/langchain-core/
 mkdir -p ./libs/langchain-openai/
 mkdir -p ./libs/langchain-anthropic/

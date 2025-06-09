@@ -1,11 +1,11 @@
-import { StructuredTool } from "@langchain/core/tools";
+import { StructuredTool, ToolInterface } from "@langchain/core/tools";
 
 /**
  * Type alias for StructuredTool. It is part of the tools module in
  * LangChain, which includes a variety of tools used for different
  * purposes.
  */
-export type ObjectTool = StructuredTool;
+export type ObjectTool = StructuredTool | ToolInterface;
 
 export const FINISH_NAME = "finish";
 

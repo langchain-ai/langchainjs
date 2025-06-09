@@ -3,7 +3,9 @@ import { Tool, type ToolParams } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
- * Options for the TavilySearchResults tool.
+ * Options for the TavilySearchResults tool. (Deprecated)
+ *
+ * @deprecated Please use the `TavilySearch` tool from the `@langchain/tavily` package, instead.
  */
 export type TavilySearchAPIRetrieverFields = ToolParams & {
   /**
@@ -96,7 +98,9 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
 };
 
 /**
- * Tavily search API tool integration.
+ * Tavily search API tool integration. (Deprecated)
+ *
+ * @deprecated Please use the `TavilySearch` tool from the `@langchain/tavily` package, instead.
  *
  * Setup:
  * Install `@langchain/community`. You'll also need an API key set as `TAVILY_API_KEY`.
@@ -229,7 +233,6 @@ export class TavilySearchResults extends Tool {
     const body: Record<string, unknown> = {
       query: input,
       max_results: this.maxResults,
-      api_key: this.apiKey,
       include_images: this.includeImages,
       include_image_descriptions: this.includeImageDescriptions,
       include_answer: this.includeAnswer,
@@ -245,6 +248,7 @@ export class TavilySearchResults extends Tool {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({ ...body, ...this.kwargs }),
     });

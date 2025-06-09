@@ -1,4 +1,3 @@
-import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
   isOpenAITool,
@@ -17,6 +16,8 @@ import {
 } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
+import { JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
+import { isZodSchema } from "@langchain/core/utils/types";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import {
@@ -146,12 +147,14 @@ export class StructuredChatAgent extends Agent {
    */
   static createToolSchemasString(tools: StructuredToolInterface[]) {
     return tools
-      .map(
-        (tool) =>
-          `${tool.name}: ${tool.description}, args: ${JSON.stringify(
-            (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
-          )}`
-      )
+      .map((tool) => {
+        const jsonSchema = (
+          isZodSchema(tool.schema) ? zodToJsonSchema(tool.schema) : tool.schema
+        ) as { properties?: Record<string, JsonSchema7Type> } | undefined;
+        return `${tool.name}: ${tool.description}, args: ${JSON.stringify(
+          jsonSchema?.properties
+        )}`;
+      })
       .join("\n");
   }
 
@@ -342,7 +345,7 @@ export async function createStructuredChatAgent({
     tool_names: toolNames.join(", "),
   });
   // TODO: Add .bind to core runnable interface.
-  const llmWithStop = (llm as BaseLanguageModel).bind({
+  const llmWithStop = (llm as BaseLanguageModel).withConfig({
     stop: ["Observation"],
   });
   const agent = AgentRunnableSequence.fromRunnables(

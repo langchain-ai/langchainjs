@@ -15,7 +15,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
-import { StructuredTool } from "@langchain/core/tools";
+import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod";
 import {
   CodeExecutionTool,
@@ -271,9 +271,7 @@ const prompt = new HumanMessage(
 test("ChatGoogleGenerativeAI can bind and invoke langchain tools", async () => {
   const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
 
-  const modelWithTools = model.bind({
-    tools: [new FakeBrowserTool()],
-  });
+  const modelWithTools = model.bindTools([new FakeBrowserTool()]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
   expect(toolCalls).toBeDefined();
@@ -290,9 +288,7 @@ test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
     model: "gemini-1.5-pro",
   });
 
-  const modelWithTools = model.bind({
-    tools: [new FakeBrowserTool()],
-  });
+  const modelWithTools = model.bindTools([new FakeBrowserTool()]);
   let finalChunk: AIMessageChunk | undefined;
   for await (const chunk of await modelWithTools.stream([prompt])) {
     if (!finalChunk) {
@@ -311,6 +307,7 @@ test("ChatGoogleGenerativeAI can bind and stream langchain tools", async () => {
   }
   expect(toolCalls.length).toBe(1);
   expect(toolCalls[0].name).toBe("fake_browser_tool");
+  expect(toolCalls[0].id).toBeDefined();
   expect("url" in toolCalls[0].args).toBe(true);
 });
 
@@ -322,9 +319,7 @@ test("ChatGoogleGenerativeAI can handle streaming tool messages.", async () => {
 
   const browserTool = new FakeBrowserTool();
 
-  const modelWithTools = model.bind({
-    tools: [browserTool],
-  });
+  const modelWithTools = model.bindTools([browserTool]);
   let finalChunk: AIMessageChunk | undefined;
   const fullPrompt = [
     new SystemMessage(
@@ -368,9 +363,7 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
 
   const browserTool = new FakeBrowserTool();
 
-  const modelWithTools = model.bind({
-    tools: [browserTool],
-  });
+  const modelWithTools = model.bindTools([browserTool]);
   const fullPrompt = [
     new SystemMessage(
       "You are a helpful assistant. If the chat history contains the tool results, you should use that and not call the tool again."
@@ -399,9 +392,7 @@ test("ChatGoogleGenerativeAI can handle invoking tool messages.", async () => {
 test("ChatGoogleGenerativeAI can bind and invoke genai tools", async () => {
   const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
 
-  const modelWithTools = model.bind({
-    tools: [googleGenAITool],
-  });
+  const modelWithTools = model.bindTools([googleGenAITool]);
   const res = await modelWithTools.invoke([prompt]);
   const toolCalls = res.tool_calls;
   expect(toolCalls).toBeDefined();
@@ -764,3 +755,100 @@ test("pass pdf to request", async () => {
 
   expect(response.content.length).toBeGreaterThan(10);
 });
+
+test("calling tool with no args should work", async () => {
+  const llm = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    maxRetries: 0,
+  });
+  const sfWeatherTool = tool(
+    async () => "The weather is 80 degrees and sunny",
+    {
+      name: "sf_weather",
+      description: "Gets the weather in SF",
+      schema: z.object({}),
+    }
+  );
+  const llmWithTools = llm.bindTools([sfWeatherTool]);
+  const result = await llmWithTools.invoke([
+    {
+      role: "user",
+      content: "What is the current weather in SF?",
+    },
+  ]);
+  const nextMessage = await sfWeatherTool.invoke(result.tool_calls![0]);
+  delete nextMessage.name; // Should work even if name is not present
+  const finalResult = await llmWithTools.invoke([
+    {
+      role: "user",
+      content: "What is the current weather in SF?",
+    },
+    result,
+    nextMessage,
+  ]);
+  expect(finalResult.content).toContain("80");
+});
+
+// test("calling tool with no args in agent should work", async () => {
+//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
+//   const llm = new ChatGoogleGenerativeAI({
+//     model: "gemini-2.0-flash",
+//     maxRetries: 0,
+//   });
+//   const sfWeatherTool = tool(
+//     async ({}) => {
+//       return "The weather is 80 degrees and sunny";
+//     },
+//     {
+//       name: "sf_weather",
+//       description: "Get the weather in SF",
+//       schema: z.object({}),
+//     }
+//   );
+//   const agent = createReactAgent({
+//     llm,
+//     tools: [sfWeatherTool],
+//   });
+//   const result = await agent.invoke({
+//     messages: [
+//       {
+//         role: "user",
+//         content: "What is the weather in SF?",
+//       },
+//     ],
+//   });
+//   expect(result.messages.at(-1)?.content).toContain("80");
+// });
+
+// test("calling tool with no args in agent should work", async () => {
+//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
+//   const llm = new ChatGoogleGenerativeAI({
+//     model: "gemini-2.0-flash",
+//     maxRetries: 0,
+//     streaming: true,
+//   });
+//   const sfWeatherTool = tool(
+//     async ({ location }) => {
+//       return `The weather in ${location} is 80 degrees and sunny`;
+//     },
+//     {
+//       name: "weather",
+//       description: "Get the weather in location",
+//       schema: z.object({ location: z.string() }),
+//     }
+//   );
+//   const agent = createReactAgent({
+//     llm,
+//     tools: [sfWeatherTool],
+//   });
+//   const result = await agent.invoke({
+//     messages: [
+//       {
+//         role: "user",
+//         content:
+//           "What is the weather in Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch?",
+//       },
+//     ],
+//   });
+//   expect(result.messages.at(-1)?.content).toContain("80");
+// });

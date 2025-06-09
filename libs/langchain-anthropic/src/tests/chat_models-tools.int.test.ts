@@ -15,6 +15,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 const zodSchema = z
   .object({
@@ -202,9 +203,7 @@ test("Can bind & invoke StructuredTools", async () => {
 });
 
 test("Can bind & invoke AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
-  });
+  const modelWithTools = model.bindTools([anthropicTool]);
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
@@ -231,8 +230,7 @@ test("Can bind & invoke AnthropicTools", async () => {
 });
 
 test("Can bind & stream AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -302,8 +300,7 @@ test("stream events with no tool calls has string message content", async () => 
 });
 
 test("stream events with tool calls has raw message content", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -687,6 +684,31 @@ test("Can call and use two tool calls at once", async () => {
   expect(result2.content.length).toBeGreaterThan(5);
 });
 
+test("converting messages doesn't drop tool input", async () => {
+  const tool = {
+    name: "generate_random_joke",
+    description: "Generate a random joke.",
+    schema: z.object({
+      prompt: z.string().describe("The prompt to generate the joke for."),
+    }),
+  };
+  const largeModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+    temperature: 0,
+  }).bindTools([tool]);
+
+  const inputMessage = new HumanMessage(
+    "Generate three (3) random jokes. Please use the generate_random_joke tool, and call it three times in your response to me. Ensure you call the tool three times before responding to me. This is very important."
+  );
+
+  const result = await largeModel.invoke([inputMessage]);
+  expect(result.tool_calls).toHaveLength(3);
+
+  const converted = _convertMessagesToAnthropicPayload([result]);
+  // @ts-expect-error We're forcing this type in the conversion function.
+  expect(converted.messages[0].content[1].input.prompt).toBeDefined();
+});
+
 test("structured output with thinking enabled", async () => {
   const llm = new ChatAnthropic({
     modelName: "claude-3-7-sonnet-latest",
@@ -769,3 +791,60 @@ test("structured output with thinking force tool use", async () => {
     llm.invoke("Generate a username for Sally with green hair")
   ).rejects.toThrow();
 });
+
+test("calling tool with no args should work", async () => {
+  const llm = new ChatAnthropic({
+    model: "claude-3-7-sonnet-latest",
+  });
+  const sfWeatherTool = tool(
+    async () => "The weather is 80 degrees and sunny",
+    {
+      name: "sf_weather",
+      description: "Get the weather in SF location",
+      schema: z.object({}),
+    }
+  );
+  const llmWithTools = llm.bindTools([sfWeatherTool]);
+  const result = await llmWithTools.invoke("What is the weather in SF?");
+  const nextMessage = await sfWeatherTool.invoke(result.tool_calls![0]);
+  const finalResult = await llmWithTools.invoke([
+    {
+      role: "user",
+      content: "What is the weather in SF?",
+    },
+    result,
+    nextMessage,
+  ]);
+  expect(finalResult.content).toContain("80");
+});
+
+// test.skip("calling tool with no args in agent should work", async () => {
+//   const { createReactAgent } = await import("@langchain/langgraph/prebuilt");
+//   const llm = new ChatAnthropic({
+//     model: "claude-3-7-sonnet-latest",
+//   });
+//   const sfWeatherTool = tool(
+//     async ({}) => {
+//       return "The weather is 80 degrees and sunny";
+//     },
+//     {
+//       name: "sf_weather",
+//       description: "Get the weather in SF location",
+//       schema: z.object({}),
+//     }
+//   );
+//   const agent = createReactAgent({
+//     llm,
+//     tools: [sfWeatherTool],
+//   });
+//   const result = await agent.invoke({
+//     messages: [
+//       {
+//         role: "user",
+//         content: "What is the weather in SF?",
+//       },
+//     ],
+//   });
+//   console.log(result);
+//   expect(result.messages.at(-1)?.content).toContain("80");
+// });

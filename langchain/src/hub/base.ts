@@ -100,11 +100,13 @@ export function generateModelImportMap(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
     let importMapKey;
-    if (modelLcName === "ChatAnthropic") {
+    if (modelLcName === "ChatOpenAI") {
+      importMapKey = "chat_models__openai";
+    } else if (modelLcName === "ChatAnthropic") {
       importMapKey = "chat_models__anthropic";
     } else if (modelLcName === "ChatAzureOpenAI") {
       importMapKey = "chat_models__openai";
-    } else if (modelLcName === "ChatGoogleVertexAI") {
+    } else if (modelLcName === "ChatVertexAI") {
       importMapKey = "chat_models__vertexai";
     } else if (modelLcName === "ChatGoogleGenerativeAI") {
       importMapKey = "chat_models__google_genai";
@@ -117,7 +119,7 @@ export function generateModelImportMap(
     } else if (modelLcName === "ChatGroq") {
       importMapKey = "chat_models__groq";
     } else {
-      throw new Error("Received unsupport model class when pulling prompt.");
+      throw new Error("Received unsupported model class when pulling prompt.");
     }
     modelImportMap[importMapKey] = {
       ...modelImportMap[importMapKey],

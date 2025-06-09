@@ -1,6 +1,6 @@
 {
   "name": "@langchain/weaviate",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Weaviate integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -10,7 +10,7 @@
   "types": "./index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git@github.com:langchain-ai/langchainjs.git"
+    "url": "git+ssh://git@github.com/langchain-ai/langchainjs.git"
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-weaviate/",
   "scripts": {
@@ -33,7 +33,7 @@
   "license": "MIT",
   "dependencies": {
     "uuid": "^10.0.0",
-    "weaviate-ts-client": "^2.0.0"
+    "weaviate-client": "^3.5.2"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.2.21 <0.4.0"
@@ -61,7 +61,7 @@
     "jest-environment-node": "^29.6.4",
     "langchain": "workspace:*",
     "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
+    "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0"
@@ -87,5 +87,9 @@
     "index.js",
     "index.d.ts",
     "index.d.cts"
-  ]
+  ],
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/langchain-ai/langchainjs/issues"
+  }
 }

@@ -772,9 +772,8 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
           },
         },
       ],
-    }).bind({
+    }).bindTools([extractionFunctionSchema], {
       seed: 42,
-      functions: [extractionFunctionSchema],
       function_call: { name: "extractor" },
     });
 
@@ -796,8 +795,8 @@ test("Test Azure ChatOpenAI token usage reporting for streaming function calls",
           },
         },
       ],
-    }).bind({
-      functions: [extractionFunctionSchema],
+    }).bindTools([extractionFunctionSchema], {
+      seed: 42,
       function_call: { name: "extractor" },
     });
 

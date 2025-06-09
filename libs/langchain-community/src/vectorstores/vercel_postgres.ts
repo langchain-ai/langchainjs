@@ -318,9 +318,8 @@ export class VercelPostgres extends VectorStore {
    */
   async ensureTableInDatabase(): Promise<void> {
     await this.client.query(`CREATE EXTENSION IF NOT EXISTS vector;`);
-    await this.client.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
     await this.client.query(`CREATE TABLE IF NOT EXISTS "${this.tableName}" (
-      "${this.idColumnName}" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+      "${this.idColumnName}" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
       "${this.contentColumnName}" text,
       "${this.metadataColumnName}" jsonb,
       "${this.vectorColumnName}" vector

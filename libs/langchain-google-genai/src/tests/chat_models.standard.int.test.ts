@@ -27,6 +27,12 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
         maxRetries: 1,
         model: "gemini-2.0-flash",
       },
+      supportsStandardContentType: {
+        text: true,
+        audio: ["base64", "url", "dataUrl"],
+        image: ["base64", "url", "dataUrl"],
+        file: ["base64", "url", "dataUrl"],
+      },
     });
   }
 

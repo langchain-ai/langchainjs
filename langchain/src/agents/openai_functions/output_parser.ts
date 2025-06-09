@@ -25,9 +25,7 @@ export type FunctionsAgentAction = AgentAction & {
  * const modelWithFunctions = new ChatOpenAI({
  *   modelName: "gpt-4",
  *   temperature: 0,
- * }).bind({
- *   functions: tools.map((tool) => convertToOpenAIFunction(tool)),
- * });
+ * }).bindTools(tools);
  *
  * const runnableAgent = RunnableSequence.from([
  *   {

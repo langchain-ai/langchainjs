@@ -28,6 +28,32 @@ import {
   RecordStringAny,
 } from "../base.js";
 
+// Placeholder data for content block tests
+const TEST_IMAGE_URL =
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png";
+
+const TEST_IMAGE_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="; // 1x1 black PNG
+
+const TEST_IMAGE_DATA_URL = `data:image/png;base64,${TEST_IMAGE_BASE64}`;
+
+// TODO: need to find a short mp3 or wav file to use as a test
+// const TEST_AUDIO_URL = "https://www.w3schools.com/html/horse.ogg";
+
+const TEST_AUDIO_BASE64 =
+  "UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; // Short silent WAV
+const TEST_AUDIO_DATA_URL = `data:audio/wav;base64,${TEST_AUDIO_BASE64}`;
+
+const TEST_FILE_TEXT_BASE64 = "SGVsbG8sIFdvcmxkIQ=="; // "Hello, World!"
+
+const TEST_FILE_URL =
+  "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+
+const TEST_FILE_TEXT_DATA_URL = `data:text/plain;base64,${TEST_FILE_TEXT_BASE64}`;
+
+// TODO: Find generic way to support file uploads so we can test file IDs
+// const TEST_FILE_ID = "file-123";
+
 const adderSchema = /* #__PURE__ */ z
   .object({
     a: z.number().int().describe("The first integer to add."),
@@ -1952,6 +1978,238 @@ Extraction path: {extractionPath}`,
       console.error("testStreamTools failed", e.message);
     }
 
+    try {
+      await this.testStandardTextContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardTextContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardImageContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardImageContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardAudioContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardAudioContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardFileContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardFileContentBlocks failed", e.message);
+    }
+
     return allTestsPassed;
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard text content blocks.
+   */
+  async testStandardTextContentBlocks(callOptions?: any) {
+    const support = this.supportsStandardContentType?.text;
+    if (!support) {
+      this.skipTestMessage(
+        "testStandardTextContentBlocks",
+        this.Cls.name,
+        "text not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    if (support) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            source_type: "text",
+            text: "Hello from a text content block!",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard image content blocks.
+   */
+  async testStandardImageContentBlocks(callOptions?: any) {
+    // Cast support to (string[]) to allow 'id' check without TS error
+    const support = (this.supportsStandardContentType?.image ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardImageContentBlocks",
+        this.Cls.name,
+        "image not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    // URL
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "url",
+            url: TEST_IMAGE_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    // dataUrl/base64
+    if (support.includes("base64")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "base64",
+            data: TEST_IMAGE_BASE64,
+            mime_type: "image/png",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "url",
+            url: TEST_IMAGE_DATA_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard audio content blocks.
+   */
+  async testStandardAudioContentBlocks(callOptions?: any) {
+    const support = (this.supportsStandardContentType?.audio ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardAudioContentBlocks",
+        this.Cls.name,
+        "audio not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    // base64
+    if (support.includes("base64")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "base64",
+            data: TEST_AUDIO_BASE64,
+            mime_type: "audio/wav",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    // dataUrl
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "url",
+            url: TEST_AUDIO_DATA_URL,
+            mime_type: "audio/wav",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard file content blocks.
+   */
+  async testStandardFileContentBlocks(callOptions?: any) {
+    const support = (this.supportsStandardContentType?.file ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardFileContentBlocks",
+        this.Cls.name,
+        "file not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "url",
+            url: TEST_FILE_TEXT_DATA_URL,
+            mime_type: "text/plain",
+            metadata: { filename: "hello.txt" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "url",
+            url: TEST_FILE_URL,
+            mime_type: "application/pdf",
+            metadata: { filename: "dummy.pdf" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    if (support.includes("text")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "text",
+            text: "Hello, World! (file as text block)",
+            metadata: { filename: "hello.txt" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
   }
 }

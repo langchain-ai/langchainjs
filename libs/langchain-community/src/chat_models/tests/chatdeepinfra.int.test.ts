@@ -33,18 +33,16 @@ describe("ChatDeepInfra", () => {
       .describe(
         "Get the weather of a specific location and return the temperature in Celsius."
       );
-    const deepInfraChat = new ChatDeepInfra().bind({
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "get_current_weather",
-            description: "Get the current weather in a given location",
-            parameters: zodToJsonSchema(zodSchema),
-          },
+    const deepInfraChat = new ChatDeepInfra().bindTools([
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: zodToJsonSchema(zodSchema),
         },
-      ],
-    });
+      },
+    ]);
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     const res = await deepInfraChat.invoke(

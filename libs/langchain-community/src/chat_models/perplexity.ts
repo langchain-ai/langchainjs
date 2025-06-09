@@ -131,9 +131,13 @@ export class ChatPerplexity
 
   topP?: number;
 
+  searchDomainFilter?: any[];
+
   returnImages?: boolean;
 
   returnRelatedQuestions?: boolean;
+
+  searchRecencyFilter?: string;
 
   topK?: number;
 
@@ -160,6 +164,10 @@ export class ChatPerplexity
     this.topK = fields?.topK ?? this.topK;
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
+    this.searchDomainFilter =
+      fields?.searchDomainFilter ?? this.searchDomainFilter;
+    this.searchRecencyFilter =
+      fields?.searchRecencyFilter ?? this.searchRecencyFilter;
 
     if (!this.apiKey) {
       throw new Error("Perplexity API key not found");
@@ -191,6 +199,8 @@ export class ChatPerplexity
       presence_penalty: this.presencePenalty,
       frequency_penalty: this.frequencyPenalty,
       response_format: options?.response_format,
+      search_domain_filter: this.searchDomainFilter,
+      search_recency_filter: this.searchRecencyFilter,
     };
   }
 
@@ -401,7 +411,7 @@ export class ChatPerplexity
         `Perplexity only supports "jsonSchema" as a structured output method.`
       );
     }
-    const llm: Runnable<BaseLanguageModelInput> = this.bind({
+    const llm: Runnable<BaseLanguageModelInput> = this.withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {

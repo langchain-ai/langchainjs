@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
@@ -9,8 +8,9 @@ import type {
   BaseLanguageModelInput,
   FunctionDefinition,
 } from "@langchain/core/language_models/base";
-import type { InputValues } from "@langchain/core/utils/types";
+import { isZodSchema, type InputValues } from "@langchain/core/utils/types";
 import type { BaseMessage } from "@langchain/core/messages";
+import { zodToJsonSchema, type JsonSchema7Type } from "zod-to-json-schema";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 
 /**
@@ -118,14 +118,8 @@ export function createOpenAIFnRunnable<
     };
   }
 
-  const llmWithKwargs = (llm as Runnable).bind(llmKwargs);
+  const llmWithKwargs = (llm as Runnable).withConfig(llmKwargs);
   return prompt.pipe(llmWithKwargs).pipe(outputParser);
-}
-
-function isZodSchema(
-  schema: z.AnyZodObject | JsonSchema7Type
-): schema is z.AnyZodObject {
-  return typeof (schema as z.AnyZodObject).safeParse === "function";
 }
 
 /**

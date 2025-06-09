@@ -27,7 +27,7 @@ test("invoke with stop sequence", async () => {
     maxRetries: 2,
   });
   const message = new HumanMessage("Count to ten.");
-  const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
+  const res = await chat.withConfig({ stop: ["5", "five"] }).invoke([message]);
   // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
@@ -106,8 +106,8 @@ test("invoke with bound tools", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -127,8 +127,10 @@ test("invoke with bound tools", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .invoke([message]);
   expect(typeof res.tool_calls?.[0].args).toEqual("object");
 });
@@ -140,8 +142,8 @@ test("stream with bound tools, yielding a single chunk", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -161,8 +163,10 @@ test("stream with bound tools, yielding a single chunk", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .stream([message]);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -175,8 +179,8 @@ test("Few shotting with tool calls", async () => {
   const chat = new ChatCerebras({
     model: "llama3.1-8b",
     temperature: 0,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -196,8 +200,10 @@ test("Few shotting with tool calls", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({

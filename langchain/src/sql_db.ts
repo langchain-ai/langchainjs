@@ -57,7 +57,7 @@ export class SqlDatabase
     this.appDataSource = fields.appDataSource;
     this.appDataSourceOptions = fields.appDataSource.options;
     if (fields?.includesTables && fields?.ignoreTables) {
-      throw new Error("Cannot specify both include_tables and ignoreTables");
+      throw new Error("Cannot specify both includeTables and ignoreTables");
     }
     this.includesTables = fields?.includesTables ?? [];
     this.ignoreTables = fields?.ignoreTables ?? [];

@@ -1,5 +1,10 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
-
+import type {
+  ChatCompletionContentPartText,
+  ChatCompletionContentPartImage,
+  ChatCompletionContentPartInputAudio,
+  ChatCompletionContentPart,
+} from "openai/resources/chat/completions";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
@@ -19,6 +24,11 @@ import {
   type MessageContent,
   type InvalidToolCall,
   type MessageContentImageUrl,
+  StandardContentBlockConverter,
+  parseBase64DataUrl,
+  parseMimeType,
+  convertToProviderContentBlock,
+  isDataContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -66,11 +76,12 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
-import type {
-  OpenAICallOptions,
-  OpenAIChatInput,
-  OpenAICoreRequestOptions,
-  ChatOpenAIResponseFormat,
+import {
+  type OpenAICallOptions,
+  type OpenAIChatInput,
+  type OpenAICoreRequestOptions,
+  type ChatOpenAIResponseFormat,
+  ChatOpenAIReasoningSummary,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
@@ -148,6 +159,177 @@ export function messageToOpenAIRole(message: BaseMessage): OpenAIRoleEnum {
   }
 }
 
+const completionsApiContentBlockConverter: StandardContentBlockConverter<{
+  text: ChatCompletionContentPartText;
+  image: ChatCompletionContentPartImage;
+  audio: ChatCompletionContentPartInputAudio;
+  file: ChatCompletionContentPart.File;
+}> = {
+  providerName: "ChatOpenAI",
+
+  fromStandardTextBlock(block): ChatCompletionContentPartText {
+    return { type: "text", text: block.text };
+  },
+
+  fromStandardImageBlock(block): ChatCompletionContentPartImage {
+    if (block.source_type === "url") {
+      return {
+        type: "image_url",
+        image_url: {
+          url: block.url,
+          ...(block.metadata?.detail
+            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      const url = `data:${block.mime_type ?? ""};base64,${block.data}`;
+      return {
+        type: "image_url",
+        image_url: {
+          url,
+          ...(block.metadata?.detail
+            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
+            : {}),
+        },
+      };
+    }
+
+    throw new Error(
+      `Image content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+
+  fromStandardAudioBlock(block): ChatCompletionContentPartInputAudio {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({ dataUrl: block.url });
+      if (!data) {
+        throw new Error(
+          `URL audio blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+        );
+      }
+
+      const rawMimeType = data.mime_type || block.mime_type || "";
+      let mimeType: { type: string; subtype: string };
+
+      try {
+        mimeType = parseMimeType(rawMimeType);
+      } catch {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      if (
+        mimeType.type !== "audio" ||
+        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
+      ) {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      return {
+        type: "input_audio",
+        input_audio: {
+          format: mimeType.subtype,
+          data: data.data,
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      let mimeType: { type: string; subtype: string };
+
+      try {
+        mimeType = parseMimeType(block.mime_type ?? "");
+      } catch {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      if (
+        mimeType.type !== "audio" ||
+        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
+      ) {
+        throw new Error(
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+        );
+      }
+
+      return {
+        type: "input_audio",
+        input_audio: {
+          format: mimeType.subtype,
+          data: block.data,
+        },
+      };
+    }
+
+    throw new Error(
+      `Audio content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+
+  fromStandardFileBlock(block): ChatCompletionContentPart.File {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({ dataUrl: block.url });
+      if (!data) {
+        throw new Error(
+          `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+        );
+      }
+
+      return {
+        type: "file",
+        file: {
+          file_data: block.url, // formatted as base64 data URL
+          ...(block.metadata?.filename || block.metadata?.name
+            ? {
+                filename: (block.metadata?.filename ||
+                  block.metadata?.name) as string,
+              }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "base64") {
+      return {
+        type: "file",
+        file: {
+          file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
+          ...(block.metadata?.filename ||
+          block.metadata?.name ||
+          block.metadata?.title
+            ? {
+                filename: (block.metadata?.filename ||
+                  block.metadata?.name ||
+                  block.metadata?.title) as string,
+              }
+            : {}),
+        },
+      };
+    }
+
+    if (block.source_type === "id") {
+      return {
+        type: "file",
+        file: {
+          file_id: block.id,
+        },
+      };
+    }
+
+    throw new Error(
+      `File content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+    );
+  },
+};
+
 // Used in LangSmith, export is important here
 export function _convertMessagesToOpenAIParams(
   messages: BaseMessage[],
@@ -159,10 +341,23 @@ export function _convertMessagesToOpenAIParams(
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
     }
+
+    const content =
+      typeof message.content === "string"
+        ? message.content
+        : message.content.map((m) => {
+            if (isDataContentBlock(m)) {
+              return convertToProviderContentBlock(
+                m,
+                completionsApiContentBlockConverter
+              );
+            }
+            return m;
+          });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role,
-      content: message.content,
+      content,
     };
     if (message.name != null) {
       completionParam.name = message.name;
@@ -205,11 +400,49 @@ export function _convertMessagesToOpenAIParams(
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
+function _convertReasoningSummaryToOpenAIResponsesParams(
+  reasoning: ChatOpenAIReasoningSummary
+): OpenAIClient.Responses.ResponseReasoningItem {
+  // combine summary parts that have the the same index and then remove the indexes
+  const summary = (
+    reasoning.summary.length > 1
+      ? reasoning.summary.reduce(
+          (acc, curr) => {
+            const last = acc.at(-1);
+
+            if (last!.index === curr.index) {
+              last!.text += curr.text;
+            } else {
+              acc.push(curr);
+            }
+            return acc;
+          },
+          [{ ...reasoning.summary[0] }]
+        )
+      : reasoning.summary
+  ).map((s) =>
+    Object.fromEntries(Object.entries(s).filter(([k]) => k !== "index"))
+  ) as OpenAIClient.Responses.ResponseReasoningItem.Summary[];
+
+  return {
+    ...reasoning,
+    summary,
+  } as OpenAIClient.Responses.ResponseReasoningItem;
+}
+
 function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
-  model?: string
+  model?: string,
+  zdrEnabled?: boolean
 ): ResponsesInputItem[] {
-  return messages.flatMap(
+  const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
+  const lastAIMessageId = lastAIMessage?.response_metadata?.id;
+  const newMessages =
+    lastAIMessageId && lastAIMessageId.startsWith("resp_") && !zdrEnabled
+      ? messages.slice(messages.indexOf(lastAIMessage) + 1)
+      : messages;
+
+  return newMessages.flatMap(
     (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
@@ -266,7 +499,7 @@ function _convertMessagesToOpenAIResponsesParams(
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
-          id: toolMessage.id,
+          id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output:
             typeof toolMessage.content !== "string"
               ? JSON.stringify(toolMessage.content)
@@ -275,10 +508,23 @@ function _convertMessagesToOpenAIResponsesParams(
       }
 
       if (role === "assistant") {
+        // if we have the original response items, just reuse them
+        if (
+          !zdrEnabled &&
+          lcMsg.response_metadata.output != null &&
+          Array.isArray(lcMsg.response_metadata.output) &&
+          lcMsg.response_metadata.output.length > 0 &&
+          lcMsg.response_metadata.output.every((item) => "type" in item)
+        ) {
+          return lcMsg.response_metadata.output;
+        }
+
+        // otherwise, try to reconstruct the response from what we have
+
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (lcMsg.additional_kwargs.reasoning != null) {
+        if (!zdrEnabled && lcMsg.additional_kwargs.reasoning != null) {
           type FindType<T, TType extends string> = T extends { type: TType }
             ? T
             : never;
@@ -291,7 +537,11 @@ function _convertMessagesToOpenAIResponsesParams(
             item.type === "reasoning";
 
           if (isReasoningItem(lcMsg.additional_kwargs.reasoning)) {
-            input.push(lcMsg.additional_kwargs.reasoning);
+            const reasoningItem =
+              _convertReasoningSummaryToOpenAIResponsesParams(
+                lcMsg.additional_kwargs.reasoning
+              );
+            input.push(reasoningItem);
           }
         }
 
@@ -310,6 +560,7 @@ function _convertMessagesToOpenAIResponsesParams(
         input.push({
           type: "message",
           role: "assistant",
+          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
           content:
             typeof content === "string"
               ? content
@@ -346,8 +597,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                // @ts-expect-error Might come from a non-Responses API message
-                id: functionCallIds?.[toolCall.id!],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               })
             )
           );
@@ -358,8 +608,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                // @ts-expect-error Might come from a non-Responses API message
-                id: functionCallIds?.[toolCall.id],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
                 arguments: toolCall.function.arguments,
               })
             )
@@ -372,20 +621,14 @@ function _convertMessagesToOpenAIResponsesParams(
           ? lcMsg.response_metadata.output
           : lcMsg.additional_kwargs.tool_outputs;
 
+        let computerCalls: Array<ResponsesInputItem> = [];
+
         if (toolOutputs != null) {
           const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
-          const reasoningCalls = castToolOutputs?.filter(
-            (item) => item.type === "reasoning"
-          );
 
-          const computerCalls = castToolOutputs?.filter(
+          computerCalls = castToolOutputs?.filter(
             (item) => item.type === "computer_call"
           );
-
-          // NOTE: Reasoning outputs must be passed to the model BEFORE computer calls.
-          if (reasoningCalls.length > 0 && computerCalls.length > 0) {
-            input.push(...reasoningCalls);
-          }
 
           if (computerCalls.length > 0) input.push(...computerCalls);
         }
@@ -393,44 +636,52 @@ function _convertMessagesToOpenAIResponsesParams(
         return input;
       }
 
-      if (role === "user") {
-        return {
-          type: "message",
-          role: "user",
-          content:
-            typeof lcMsg.content === "string"
-              ? lcMsg.content
-              : lcMsg.content.flatMap((item) => {
-                  if (item.type === "text") {
-                    return { type: "input_text", text: item.text };
-                  }
+      const content =
+        typeof lcMsg.content === "string"
+          ? lcMsg.content
+          : lcMsg.content.flatMap((item) => {
+              if (isDataContentBlock(item)) {
+                return convertToProviderContentBlock(
+                  item,
+                  completionsApiContentBlockConverter
+                );
+              }
 
-                  if (item.type === "image_url") {
-                    const image_url =
-                      typeof item.image_url === "string"
-                        ? item.image_url
-                        : item.image_url.url;
-                    const detail =
-                      typeof item.image_url === "string"
-                        ? "auto"
-                        : item.image_url.detail;
+              if (item.type === "text") {
+                return { type: "input_text", text: item.text };
+              }
 
-                    return { type: "input_image", image_url, detail };
-                  }
+              if (item.type === "image_url") {
+                const image_url =
+                  typeof item.image_url === "string"
+                    ? item.image_url
+                    : item.image_url.url;
+                const detail =
+                  typeof item.image_url === "string"
+                    ? "auto"
+                    : item.image_url.detail;
 
-                  if (
-                    item.type === "input_text" ||
-                    item.type === "input_image" ||
-                    item.type === "input_file"
-                  ) {
-                    return item;
-                  }
+                return { type: "input_image", image_url, detail };
+              }
 
-                  return [];
-                }),
-        };
+              if (
+                item.type === "input_text" ||
+                item.type === "input_image" ||
+                item.type === "input_file"
+              ) {
+                return item;
+              }
+
+              return [];
+            });
+
+      if (role === "user" || role === "system" || role === "developer") {
+        return { type: "message", role, content };
       }
 
+      console.warn(
+        `Unsupported role found when converting to OpenAI Responses API: ${role}`
+      );
       return [];
     }
   );
@@ -446,6 +697,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     throw error;
   }
 
+  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -466,7 +718,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
   const additional_kwargs: {
     [key: string]: unknown;
     refusal?: string;
-    reasoning?: unknown;
+    reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
@@ -474,6 +726,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
 
   for (const item of response.output) {
     if (item.type === "message") {
+      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
@@ -517,7 +770,9 @@ function _convertOpenAIResponsesMessageToBaseMessage(
       }
 
       additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] ??= {};
-      additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      if (item.id) {
+        additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
+      }
     } else if (item.type === "reasoning") {
       additional_kwargs.reasoning = item;
     } else {
@@ -527,7 +782,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
   }
 
   return new AIMessage({
-    id: response.id,
+    id: messageId,
     content,
     tool_calls,
     invalid_tool_calls,
@@ -545,7 +800,10 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   let usage_metadata: UsageMetadata | undefined;
   const tool_call_chunks: ToolCallChunk[] = [];
   const response_metadata: Record<string, unknown> = {};
-  const additional_kwargs: Record<string, unknown> = {};
+  const additional_kwargs: {
+    [key: string]: unknown;
+    reasoning?: Partial<ChatOpenAIReasoningSummary>;
+  } = {};
   let id: string | undefined;
   if (chunk.type === "response.output_text.delta") {
     content.push({
@@ -573,7 +831,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
       type: "tool_call_chunk",
       name: chunk.item.name,
       args: chunk.item.arguments,
-      id: chunk.item.id,
+      id: chunk.item.call_id,
       index: chunk.output_index,
     });
 
@@ -620,6 +878,39 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     };
   } else if (chunk.type === "response.refusal.done") {
     additional_kwargs.refusal = chunk.refusal;
+  } else if (
+    chunk.type === "response.output_item.added" &&
+    "item" in chunk &&
+    chunk.item.type === "reasoning"
+  ) {
+    const summary: ChatOpenAIReasoningSummary["summary"] | undefined = chunk
+      .item.summary
+      ? chunk.item.summary.map((s, index) => ({
+          ...s,
+          index,
+        }))
+      : undefined;
+
+    additional_kwargs.reasoning = {
+      // We only capture ID in the first chunk or else the concatenated result of all chunks will
+      // have an ID field that is repeated once per chunk. There is special handling for the `type`
+      // field that prevents this, however.
+      id: chunk.item.id,
+      type: chunk.item.type,
+      ...(summary ? { summary } : {}),
+    };
+  } else if (chunk.type === "response.reasoning_summary_part.added") {
+    additional_kwargs.reasoning = {
+      type: "reasoning",
+      summary: [{ ...chunk.part, index: chunk.summary_index }],
+    };
+  } else if (chunk.type === "response.reasoning_summary_text.delta") {
+    additional_kwargs.reasoning = {
+      type: "reasoning",
+      summary: [
+        { text: chunk.delta, type: "summary_text", index: chunk.summary_index },
+      ],
+    };
   } else {
     return null;
   }
@@ -655,10 +946,7 @@ type ResponsesToolChoice = Exclude<
   undefined
 >;
 
-type ResponsesInputItem = Exclude<
-  ResponsesCreateParams["input"],
-  string | undefined
->[number];
+type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
 
 type ResponsesCreateInvoke = ExcludeController<
   Awaited<ReturnType<ResponsesCreate>>
@@ -724,7 +1012,7 @@ function _convertChatOpenAIToolTypeToOpenAITool(
 }
 
 function isReasoningModel(model?: string) {
-  return model?.startsWith("o1") || model?.startsWith("o3");
+  return model && /^o\d/.test(model);
 }
 
 // TODO: Use the base structured output options param in next breaking release.
@@ -817,28 +1105,50 @@ export interface ChatOpenAICallOptions
   /**
    * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
    * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   *
+   * @deprecated Use {@link reasoning} object instead.
    */
   reasoning_effort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 
   /**
+   * Options for reasoning models.
+   *
+   * Note that some options, like reasoning summaries, are only available when using the responses
+   * API. If these options are set, the responses API will be used to fulfill the request.
+   *
+   * These options will be ignored when not using a reasoning model.
+   */
+  reasoning?: OpenAIClient.Reasoning;
+
+  /**
    * Configuration options for a text response from the model. Can be plain text or
    * structured JSON data.
+   *
+   * If set, the Responses API will be used to fulfill the request.
    */
   text?: ResponsesCreateParams["text"];
 
   /**
    * The truncation strategy to use for the model response.
+   *
+   * If set, the Responses API will be used to fulfill the request.
    */
   truncation?: ResponsesCreateParams["truncation"];
 
   /**
    * Specify additional output data to include in the model response.
+   *
+   * If set, the Responses API will be used to fulfill the request.
    */
   include?: ResponsesCreateParams["include"];
 
   /**
-   * The unique ID of the previous response to the model. Use this to create
-   * multi-turn conversations.
+   * The unique ID of the previous response to the model. Use this to create multi-turn
+   * conversations. Will be set automatically if {@link ChatOpenAI.zdrEnabled} is `false`, provided
+   * that AIMessages included in the request have a `response_metadata.id` property. Ignored unless
+   * {@link ChatOpenAI.useResponsesApi} is `true`.
+   *
+   * If set, the Responses API will be used to fulfill the request.
    */
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
 }
@@ -847,6 +1157,11 @@ export interface ChatOpenAIFields
   extends Partial<OpenAIChatInput>,
     BaseChatModelParams {
   configuration?: ClientOptions;
+
+  /**
+   * Whether to use the responses API for all requests. If `false` the responses API will be used
+   * only when required in order to fulfill the request.
+   */
   useResponsesApi?: boolean;
 }
 
@@ -868,11 +1183,11 @@ export interface ChatOpenAIFields
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -1130,7 +1445,7 @@ export interface ChatOpenAIFields
  * <summary><strong>JSON Object Response Format</strong></summary>
  *
  * ```typescript
- * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlm = llm.withConfig({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
@@ -1322,7 +1637,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1359,7 +1674,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1467,6 +1782,9 @@ export class ChatOpenAI<
       "tags",
       "metadata",
       "disableStreaming",
+      "useResponsesApi",
+      "zdrEnabled",
+      "reasoning",
     ];
   }
 
@@ -1529,9 +1847,34 @@ export class ChatOpenAI<
 
   modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
 
+  /**
+   * @deprecated Use {@link reasoning} object instead.
+   */
   reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 
+  /**
+   * Options for reasoning models.
+   */
+  reasoning?: OpenAIClient.Reasoning;
+
+  /**
+   * Whether to use the responses API for all requests. If `false` the responses API will be used
+   * only when required in order to fulfill the request.
+   */
   useResponsesApi = false;
+
+  /**
+   * Must be set to `true` in tenancies with Zero Data Retention. Setting to `true` will disable
+   * output storage in the Responses API, but this DOES NOT enable Zero Data Retention in your
+   * OpenAI organization or project. This must be configured directly with OpenAI.
+   *
+   * See:
+   * https://help.openai.com/en/articles/10503543-data-residency-for-the-openai-api
+   * https://platform.openai.com/docs/api-reference/responses/create#responses-create-store
+   *
+   * @default false
+   */
+  zdrEnabled?: boolean | undefined;
 
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
@@ -1565,16 +1908,21 @@ export class ChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
-    this.reasoningEffort = fields?.reasoningEffort;
+    this.reasoningEffort = fields?.reasoningEffort ?? fields?.reasoning?.effort;
+    this.reasoning =
+      fields?.reasoning ??
+      (fields?.reasoningEffort
+        ? { effort: fields.reasoningEffort }
+        : undefined);
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.useResponsesApi = fields?.useResponsesApi ?? this.useResponsesApi;
-
-    if (this.model === "o1") {
-      this.disableStreaming = true;
-    }
+    this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
 
     this.streaming = fields?.streaming ?? false;
+    if (this.disableStreaming) this.streaming = false;
+
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    if (this.disableStreaming) this.streamUsage = false;
 
     this.clientConfig = {
       apiKey: this.apiKey,
@@ -1588,6 +1936,8 @@ export class ChatOpenAI<
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
     }
+
+    this.zdrEnabled = fields?.zdrEnabled ?? false;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1612,7 +1962,7 @@ export class ChatOpenAI<
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) =>
         isBuiltInTool(tool)
           ? tool
@@ -1648,6 +1998,44 @@ export class ChatOpenAI<
       | ResponseFormatJSONObject
       | ResponseFormatJSONSchema
       | undefined;
+  }
+
+  private getReasoningParams(
+    options?: this["ParsedCallOptions"]
+  ): OpenAIClient.Reasoning | undefined {
+    if (!isReasoningModel(this.model)) {
+      return;
+    }
+
+    let reasoning: OpenAIClient.Reasoning | undefined;
+
+    // apply reasoning options in reverse order of priority without else blocks so that highest priority overrides lowest priority
+    if (this.reasoningEffort !== undefined) {
+      reasoning = { effort: this.reasoningEffort };
+    }
+
+    if (this.reasoning !== undefined) {
+      reasoning = {
+        ...reasoning,
+        ...this.reasoning,
+      };
+    }
+
+    if (options?.reasoning_effort !== undefined) {
+      reasoning = {
+        ...reasoning,
+        effort: options.reasoning_effort,
+      };
+    }
+
+    if (options?.reasoning !== undefined) {
+      reasoning = {
+        ...reasoning,
+        ...options.reasoning,
+      };
+    }
+
+    return reasoning;
   }
 
   /**
@@ -1729,12 +2117,14 @@ export class ChatOpenAI<
         })(),
         parallel_tool_calls: options?.parallel_tool_calls,
         max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+        ...(this.zdrEnabled ? { store: false } : {}),
         ...this.modelKwargs,
       };
 
-      const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
-      if (reasoningEffort !== undefined) {
-        params.reasoning = { effort: reasoningEffort };
+      const reasoning = this.getReasoningParams(options);
+
+      if (reasoning !== undefined) {
+        params.reasoning = reasoning;
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1787,9 +2177,9 @@ export class ChatOpenAI<
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
     }
-    const reasoningEffort = options?.reasoning_effort ?? this.reasoningEffort;
-    if (reasoningEffort !== undefined) {
-      params.reasoning_effort = reasoningEffort;
+    const reasoning = this.getReasoningParams(options);
+    if (reasoning !== undefined && reasoning.effort !== undefined) {
+      params.reasoning_effort = reasoning.effort;
     }
     if (isReasoningModel(params.model)) {
       params.max_completion_tokens =
@@ -1962,11 +2352,22 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponseApi(options)) {
+      const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
+      const lastAIMessageId = lastAIMessage?.response_metadata?.id;
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
-          input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
+          input: _convertMessagesToOpenAIResponsesParams(
+            messages,
+            this.model,
+            this.zdrEnabled
+          ),
           stream: true,
+          ...(lastAIMessageId &&
+          lastAIMessageId.startsWith("resp_") &&
+          !this.zdrEnabled
+            ? { previous_response_id: lastAIMessageId }
+            : {}),
         },
         options
       );
@@ -2129,9 +2530,23 @@ export class ChatOpenAI<
       };
     }
 
-    const input = _convertMessagesToOpenAIResponsesParams(messages, this.model);
+    const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
+    const lastAIMessageId = lastAIMessage?.response_metadata?.id;
+    const input = _convertMessagesToOpenAIResponsesParams(
+      messages,
+      this.model,
+      this.zdrEnabled
+    );
     const data = await this.responseApiWithRetry(
-      { input, ...invocationParams },
+      {
+        input,
+        ...invocationParams,
+        ...(lastAIMessageId &&
+        lastAIMessageId.startsWith("resp_") &&
+        !this.zdrEnabled
+          ? { previous_response_id: lastAIMessageId }
+          : {}),
+      },
       { signal: options?.signal, ...options?.options }
     );
 
@@ -2155,13 +2570,24 @@ export class ChatOpenAI<
     };
   }
 
+  /**
+   * Determines whether the responses API should be used for the given request.
+   *
+   * @internal
+   *
+   * @param options The parsed call options for the request.
+   * @returns `true` if the responses API should be used, either because it is explicitly enabled,
+   * or because the request requires it.
+   */
   protected _useResponseApi(options: this["ParsedCallOptions"] | undefined) {
     const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
     const hasResponsesOnlyKwargs =
       options?.previous_response_id != null ||
       options?.text != null ||
       options?.truncation != null ||
-      options?.include != null;
+      options?.include != null ||
+      options?.reasoning?.summary != null ||
+      this.reasoning?.summary != null;
 
     return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
   }
@@ -2719,7 +3145,7 @@ export class ChatOpenAI<
     }
 
     if (method === "jsonMode") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: { type: "json_object" },
       } as Partial<CallOptions>);
       if (isZodSchema(schema)) {
@@ -2728,7 +3154,7 @@ export class ChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else if (method === "jsonSchema") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: {
           type: "json_schema",
           json_schema: {
@@ -2757,7 +3183,7 @@ export class ChatOpenAI<
       // Is function calling
       if (isZodSchema(schema)) {
         const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,
@@ -2799,7 +3225,7 @@ export class ChatOpenAI<
             parameters: schema,
           };
         }
-        llm = this.bind({
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,

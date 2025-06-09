@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {
@@ -125,6 +131,11 @@ export type GoogleAIResponseMimeType = "text/plain" | "application/json";
 
 export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
+export interface GoogleThinkingConfig {
+  thinkingBudget?: number;
+  includeThoughts?: boolean;
+}
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -139,8 +150,25 @@ export interface GoogleAIModelParams {
 
   /**
    * Maximum number of tokens to generate in the completion.
+   * This may include reasoning tokens (for backwards compatibility).
    */
   maxOutputTokens?: number;
+
+  /**
+   * The maximum number of the output tokens that will be used
+   * for the "thinking" or "reasoning" stages.
+   */
+  maxReasoningTokens?: number;
+
+  /**
+   * An alias for "maxReasoningTokens"
+   */
+  thinkingBudget?: number;
+
+  /**
+   * An OpenAI compatible parameter that will map to "maxReasoningTokens"
+   */
+  reasoningEffort?: "low" | "medium" | "high";
 
   /**
    * Top-p changes how the model selects tokens for output.
@@ -163,6 +191,11 @@ export interface GoogleAIModelParams {
    * among the 3 most probable tokens (using temperature).
    */
   topK?: number;
+
+  /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
 
   /**
    * Presence penalty applied to the next token's logprobs
@@ -311,18 +344,32 @@ export interface GoogleRawResponse extends GoogleResponse {
   data: Blob;
 }
 
-export interface GeminiPartText {
+export interface GeminiPartBase {
+  thought?: boolean; // Output only
+}
+
+export interface GeminiVideoMetadata {
+  fps?: number; // Double in range (0.0, 24.0]
+  startOffset?: string;
+  endOffset?: string;
+}
+
+export interface GeminiPartBaseFile extends GeminiPartBase {
+  videoMetadata?: GeminiVideoMetadata;
+}
+
+export interface GeminiPartText extends GeminiPartBase {
   text: string;
 }
 
-export interface GeminiPartInlineData {
+export interface GeminiPartInlineData extends GeminiPartBaseFile {
   inlineData: {
     mimeType: string;
     data: string;
   };
 }
 
-export interface GeminiPartFileData {
+export interface GeminiPartFileData extends GeminiPartBaseFile {
   fileData: {
     mimeType: string;
     fileUri: string;
@@ -330,7 +377,7 @@ export interface GeminiPartFileData {
 }
 
 // AI Studio only?
-export interface GeminiPartFunctionCall {
+export interface GeminiPartFunctionCall extends GeminiPartBase {
   functionCall: {
     name: string;
     args?: object;
@@ -338,7 +385,7 @@ export interface GeminiPartFunctionCall {
 }
 
 // AI Studio Only?
-export interface GeminiPartFunctionResponse {
+export interface GeminiPartFunctionResponse extends GeminiPartBase {
   functionResponse: {
     name: string;
     response: object;
@@ -427,6 +474,25 @@ export interface GeminiRetrievalMetadata {
   googleSearchDynamicRetrievalScore: number;
 }
 
+export type GeminiUrlRetrievalStatus =
+  | "URL_RETRIEVAL_STATUS_SUCCESS"
+  | "URL_RETRIEVAL_STATUS_ERROR";
+
+export interface GeminiUrlRetrievalContext {
+  retrievedUrl: string;
+  urlRetrievalStatus: GeminiUrlRetrievalStatus;
+}
+
+export interface GeminiUrlRetrievalMetadata {
+  urlRetrievalContexts: GeminiUrlRetrievalContext[];
+}
+
+export type GeminiUrlMetadata = GeminiUrlRetrievalContext;
+
+export interface GeminiUrlContextMetadata {
+  urlMetadata: GeminiUrlMetadata[];
+}
+
 export interface GeminiLogprobsResult {
   topCandidates: GeminiLogprobsTopCandidate[];
   chosenCandidates: GeminiLogprobsResultCandidate[];
@@ -458,6 +524,7 @@ export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
   googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
   googleSearch?: GoogleSearch; // Gemini-2.0
+  urlContext?: UrlContext;
   retrieval?: VertexAIRetrieval;
 }
 
@@ -478,6 +545,7 @@ export const GeminiSearchToolAttributes = [
 export const GeminiToolAttributes = [
   "functionDeclaration",
   "retrieval",
+  "urlContext",
   ...GeminiSearchToolAttributes,
 ];
 
@@ -489,6 +557,8 @@ export interface GoogleSearchRetrieval {
 }
 
 export interface GoogleSearch {}
+
+export interface UrlContext {}
 
 export interface VertexAIRetrieval {
   vertexAiSearch: {
@@ -529,12 +599,14 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
   responseLogprobs?: boolean;
   logprobs?: number;
   responseModalities?: GoogleAIModelModality[];
+  thinkingConfig?: GoogleThinkingConfig;
 }
 
 export interface GeminiRequest {
@@ -563,6 +635,8 @@ export interface GeminiResponseCandidate {
   safetyRatings: GeminiSafetyRating[];
   citationMetadata?: GeminiCitationMetadata;
   groundingMetadata?: GeminiGroundingMetadata;
+  urlRetrievalMetadata?: GeminiUrlRetrievalMetadata;
+  urlContextMetadata?: GeminiUrlContextMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
   finishMessage?: string;
@@ -573,10 +647,39 @@ interface GeminiResponsePromptFeedback {
   safetyRatings: GeminiSafetyRating[];
 }
 
+export type ModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface ModalityTokenCount {
+  modality: ModalityEnum;
+  tokenCount: number;
+}
+
+export interface GenerateContentResponseUsageMetadata {
+  promptTokenCount: number;
+  toolUsePromptTokenCount: number;
+  cachedContentTokenCount: number;
+  thoughtsTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+
+  promptTokensDetails: ModalityTokenCount[];
+  toolUsePromptTokensDetails: ModalityTokenCount[];
+  cacheTokensDetails: ModalityTokenCount[];
+  candidatesTokensDetails: ModalityTokenCount[];
+
+  [key: string]: unknown;
+}
+
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
-  usageMetadata: Record<string, unknown>;
+  usageMetadata: GenerateContentResponseUsageMetadata;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
@@ -609,6 +712,7 @@ export interface GoogleAISafetyParams {
 export type GeminiJsonSchema = Record<string, unknown> & {
   properties?: Record<string, GeminiJsonSchema>;
   type: GeminiFunctionSchemaType;
+  nullable?: boolean;
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {

@@ -1,5 +1,5 @@
-import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
-
+import { isZodSchema } from "@langchain/core/utils/types";
+import { zodToJsonSchema, type JsonSchema7Type } from "zod-to-json-schema";
 import { ObjectTool, FINISH_NAME } from "./schema.js";
 
 /**
@@ -54,9 +54,10 @@ export class PromptGenerator {
 
   _generate_command_string(tool: ObjectTool): string {
     let output = `"${tool.name}": ${tool.description}`;
-    output += `, args json schema: ${JSON.stringify(
-      (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
-    )}`;
+    const jsonSchema = (
+      isZodSchema(tool.schema) ? zodToJsonSchema(tool.schema) : tool.schema
+    ) as { properties?: Record<string, JsonSchema7Type> } | undefined;
+    output += `, args json schema: ${JSON.stringify(jsonSchema?.properties)}`;
     return output;
   }
 

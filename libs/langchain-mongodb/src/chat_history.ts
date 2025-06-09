@@ -1,7 +1,12 @@
-import { Collection, Document as MongoDBDocument } from "mongodb";
+import {
+  Collection,
+  Document as MongoDBDocument,
+  type PushOperator,
+} from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,
+  StoredMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
@@ -50,7 +55,9 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
     await this.collection.updateOne(
       { [this.idKey]: this.sessionId },
       {
-        $push: { messages: { $each: messages } },
+        $push: { messages: { $each: messages } } as PushOperator<{
+          messages: StoredMessage[];
+        }>,
       },
       { upsert: true }
     );

@@ -36,7 +36,7 @@ import {
   isStructuredTool,
 } from "@langchain/core/utils/function_calling";
 import { zodToJsonSchema } from "zod-to-json-schema";
-
+import { isZodSchema } from "@langchain/core/utils/types";
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
@@ -143,7 +143,9 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
     return tools.map((tc) => ({
       name: tc.name,
       description: tc.description,
-      input_schema: zodToJsonSchema(tc.schema),
+      input_schema: isZodSchema(tc.schema)
+        ? zodToJsonSchema(tc.schema)
+        : tc.schema,
     }));
   }
   if (tools.every(isOpenAITool)) {
@@ -194,11 +196,11 @@ export interface BedrockChatFields
  * ## [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -516,7 +518,7 @@ export class BedrockChat
 
   endpointHost?: string;
 
-  /** @deprecated Use as a call option using .bind() instead. */
+  /** @deprecated Use as a call option using .withConfig() instead. */
   stopSequences?: string[];
 
   modelKwargs?: Record<string, unknown>;
@@ -1034,7 +1036,7 @@ export class BedrockChat
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    return this.bind({
+    return this.withConfig({
       tools: formatTools(tools),
     });
   }
