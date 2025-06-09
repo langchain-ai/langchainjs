@@ -2,6 +2,8 @@
   "name": "@langchain/anthropic",
   "version": "0.3.22",
   "description": "Anthropic integrations for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
@@ -15,6 +17,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/anthropic",
+    "build:new": "yarn workspace @langchain/infra-build compile $npm_package_name",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
@@ -32,8 +35,6 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
-  "author": "LangChain",
-  "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
     "fast-xml-parser": "^4.4.1"
@@ -85,34 +86,30 @@
   ],
   "exports": {
     ".": {
-      "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "input": "./src/index.ts"
     },
     "./experimental": {
-      "types": {
-        "import": "./experimental.d.ts",
-        "require": "./experimental.d.cts",
-        "default": "./experimental.d.ts"
+      "import": {
+        "types": "./dist/experimental/index.d.ts",
+        "default": "./dist/experimental/index.js"
       },
-      "import": "./experimental.js",
-      "require": "./experimental.cjs"
+      "require": {
+        "types": "./dist/experimental/index.d.cts",
+        "default": "./dist/experimental/index.cjs"
+      },
+      "input": "./src/experimental/index.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "experimental.cjs",
-    "experimental.js",
-    "experimental.d.ts",
-    "experimental.d.cts"
+    "dist/"
   ]
 }
