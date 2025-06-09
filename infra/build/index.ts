@@ -7,6 +7,7 @@ import { builtinModules } from 'node:module'
 import { build } from 'tsdown'
 
 import type { PackageJson } from 'type-fest'
+import { lcSecretsPlugin } from './plugins/lc-secrets.js'
 
 const __dirname = fileURLToPath(import.meta.url)
 const execAsync = promisify(exec)
@@ -83,6 +84,16 @@ await Promise.all(packages.map(async ({ pkg, path }) => {
         unused: false, // { root: path },
         attw: true,
         publint: true,
+        plugins: [
+            lcSecretsPlugin({
+                // Enable/disable based on environment
+                enabled: process.env.SKIP_SECRET_SCANNING !== 'true',
+                // Use lenient validation in development
+                strict: process.env.NODE_ENV === 'production',
+                // package path for the secret map
+                packagePath: path,
+            })
+        ],
         inputOptions: {
             cwd: path,
         }
