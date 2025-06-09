@@ -24,6 +24,7 @@ import {
   EventStreamCallbackHandlerInput,
   StreamEvent,
   StreamEventData,
+  StreamEventV2,
   isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
@@ -770,7 +771,8 @@ export abstract class Runnable<
    * chains. Metadata fields have been omitted from the table for brevity.
    * Chain definitions have been included after the table.
    *
-   * **ATTENTION** This reference table is for the V2 version of the schema.
+   * **ATTENTION** This reference table is for the V2 version of the schema (the current default if no
+   * "version" option is passed).
    *
    * ```md
    * +----------------------+-----------------------------+------------------------------------------+
@@ -845,9 +847,7 @@ export abstract class Runnable<
    *  return "Done";
    * });
    *
-   * const eventStream = await slowThing.streamEvents("hello world", {
-   *   version: "v2",
-   * });
+   * const eventStream = await slowThing.streamEvents("hello world");
    *
    * for await (const event of eventStream) {
    *  if (event.event === "on_custom_event") {
@@ -858,14 +858,8 @@ export abstract class Runnable<
    */
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version?: "v1" | "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
@@ -874,22 +868,48 @@ export abstract class Runnable<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
-      encoding?: "text/event-stream" | undefined;
+      version?: "v2";
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent | Uint8Array> {
+  ): IterableReadableStream<StreamEventV2>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array> {
     let stream;
-    if (options.version === "v1") {
+    const { version, encoding } = options;
+    if (version === "v1") {
       stream = this._streamEventsV1(input, options, streamOptions);
-    } else if (options.version === "v2") {
+    } else if (version === "v2" || version === undefined) {
       stream = this._streamEventsV2(input, options, streamOptions);
     } else {
       throw new Error(
         `Only versions "v1" and "v2" of the schema are currently supported.`
       );
     }
-    if (options.encoding === "text/event-stream") {
+    if (encoding === "text/event-stream") {
       return convertToHttpEventStream(stream);
     } else {
       return IterableReadableStream.fromAsyncGenerator(stream);
@@ -898,9 +918,9 @@ export abstract class Runnable<
 
   private async *_streamEventsV2(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    options: Partial<CallOptions>,
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): AsyncGenerator<StreamEvent> {
+  ): AsyncGenerator<StreamEventV2> {
     const eventStreamer = new EventStreamCallbackHandler({
       ...streamOptions,
       autoClose: false,
@@ -1000,7 +1020,7 @@ export abstract class Runnable<
 
   private async *_streamEventsV1(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    options: Partial<CallOptions>,
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): AsyncGenerator<StreamEvent> {
     let runLog;
@@ -1439,29 +1459,49 @@ export class RunnableBinding<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version?: "v1" | "v2";
       encoding: "text/event-stream";
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<Uint8Array>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
-      encoding?: "text/event-stream" | undefined;
+      version?: "v2";
     },
-    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent | Uint8Array> {
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEventV2 | StreamEvent | Uint8Array> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
+
     const generator = async function* () {
       yield* outerThis.bound.streamEvents(
         input,

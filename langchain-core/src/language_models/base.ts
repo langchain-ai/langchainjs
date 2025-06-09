@@ -7,11 +7,8 @@ import {
   StringPromptValue,
   ChatPromptValue,
 } from "../prompt_values.js";
-import {
-  type BaseMessage,
-  type BaseMessageLike,
-  type MessageContent,
-} from "../messages/base.js";
+import { type BaseMessage, type MessageContent } from "../messages/base.js";
+import type { BaseLanguageModelInput } from "./types.js";
 import { coerceMessageLikeToMessage } from "../messages/utils.js";
 import { type LLMResult } from "../outputs.js";
 import { CallbackManager, Callbacks } from "../callbacks/manager.js";
@@ -250,10 +247,7 @@ export interface BaseFunctionCallOptions extends BaseLanguageModelCallOptions {
   functions?: FunctionDefinition[];
 }
 
-export type BaseLanguageModelInput =
-  | BasePromptValueInterface
-  | string
-  | BaseMessageLike[];
+export type { BaseLanguageModelInput };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;

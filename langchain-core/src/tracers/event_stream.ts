@@ -8,6 +8,160 @@ import { IterableReadableStream } from "../utils/stream.js";
 import { AIMessageChunk } from "../messages/ai.js";
 import { ChatGeneration, Generation, GenerationChunk } from "../outputs.js";
 import { BaseMessage } from "../messages/base.js";
+import { BaseLanguageModelInput } from "../language_models/types.js";
+
+export interface BaseStreamEventV2 {
+  /**
+   * Event names are of the format: on_[runnable_type]_(start|stream|end).
+   *
+   * Runnable types are one of:
+   * - llm - used by non chat models
+   * - chat_model - used by chat models
+   * - prompt --  e.g., ChatPromptTemplate
+   * - tool -- LangChain tools
+   * - chain - most Runnables are of this type
+   *
+   * Further, the events are categorized as one of:
+   * - start - when the runnable starts
+   * - stream - when the runnable is streaming
+   * - end - when the runnable ends
+   *
+   * start, stream and end are associated with slightly different `data` payload.
+   *
+   * Please see the documentation for `StreamEventData` for more details.
+   */
+  event: string;
+  /** The name of the runnable that generated the event. */
+  name: string;
+  /**
+   * An randomly generated ID to keep track of the execution of the given runnable.
+   *
+   * Each child runnable that gets invoked as part of the execution of a parent runnable
+   * is assigned its own unique ID.
+   */
+  run_id: string;
+  /**
+   * Tags associated with the runnable that generated this event.
+   * Tags are always inherited from parent runnables.
+   */
+  tags?: string[];
+  /** Metadata associated with the runnable that generated this event. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata: Record<string, any>;
+  /**
+   * Event data.
+   *
+   * The contents of the event data depend on the event type.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: StreamEventData;
+}
+
+export interface OnLLMStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_llm_start";
+
+  data: Omit<StreamEventData, "input"> & {
+    input: BaseLanguageModelInput;
+  };
+}
+
+export interface OnLLMStreamStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_llm_stream";
+
+  data: Omit<StreamEventData, "chunk"> & {
+    chunk: GenerationChunk;
+  };
+}
+
+export interface OnLLMEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_llm_end";
+
+  data: Omit<StreamEventData, "output"> & {
+    output: Generation;
+  };
+}
+
+export interface OnChatModelStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chat_model_start";
+
+  data: Omit<StreamEventData, "input"> & {
+    input: BaseLanguageModelInput;
+  };
+}
+
+export interface OnChatModelStreamStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chat_model_stream";
+
+  data: Omit<StreamEventData, "chunk"> & {
+    chunk: AIMessageChunk;
+  };
+}
+
+export interface OnChatModelEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chat_model_end";
+
+  data: Omit<StreamEventData, "output"> & {
+    output: AIMessageChunk;
+  };
+}
+
+export interface OnPromptStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_prompt_start";
+}
+
+export interface OnPromptEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_prompt_end";
+}
+
+export interface OnToolStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_tool_start";
+}
+
+export interface OnToolEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_tool_end";
+}
+
+export interface OnRetrieverStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_retriever_start";
+}
+
+export interface OnRetrieverEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_retriever_end";
+}
+
+export interface OnChainStartStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chain_start";
+}
+
+export interface OnChainStreamStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chain_stream";
+}
+
+export interface OnChainEndStreamEventV2 extends BaseStreamEventV2 {
+  event: "on_chain_end";
+}
+
+export interface OnCustomEventV2 extends BaseStreamEventV2 {
+  event: "on_custom_event";
+}
+
+export type StreamEventV2 =
+  | OnLLMStartStreamEventV2
+  | OnLLMStreamStreamEventV2
+  | OnLLMEndStreamEventV2
+  | OnChatModelStartStreamEventV2
+  | OnChatModelStreamStreamEventV2
+  | OnChatModelEndStreamEventV2
+  | OnPromptStartStreamEventV2
+  | OnPromptEndStreamEventV2
+  | OnToolStartStreamEventV2
+  | OnToolEndStreamEventV2
+  | OnChainStartStreamEventV2
+  | OnChainStreamStreamEventV2
+  | OnChainEndStreamEventV2
+  | OnRetrieverStartStreamEventV2
+  | OnRetrieverEndStreamEventV2
+  | OnCustomEventV2;
 
 /**
  * Data associated with a StreamEvent.
@@ -172,7 +326,7 @@ export class EventStreamCallbackHandler
 
   public writer: WritableStreamDefaultWriter;
 
-  public receiveStream: IterableReadableStream<StreamEvent>;
+  public receiveStream: IterableReadableStream<StreamEventV2>;
 
   name = "event_stream_tracer";
 

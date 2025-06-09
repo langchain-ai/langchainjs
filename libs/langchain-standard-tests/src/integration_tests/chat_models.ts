@@ -21,7 +21,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { concat } from "@langchain/core/utils/stream";
-import { StreamEvent } from "@langchain/core/tracers/log_stream";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
@@ -275,9 +274,9 @@ export abstract class ChatModelIntegrationTests<
     const stream = chatModel.streamEvents("Hello", {
       ...callOptions,
       version: "v2",
-    } as Partial<CallOptions> & { version: "v2" | "v1" });
+    } as Partial<CallOptions> & { version: "v2" });
 
-    const events: StreamEvent[] = [];
+    const events = [];
     for await (const chunk of stream) {
       events.push(chunk);
     }
