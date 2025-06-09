@@ -494,6 +494,7 @@ export class ChatWatsonx<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     } = fields;
@@ -505,6 +506,7 @@ export class ChatWatsonx<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });

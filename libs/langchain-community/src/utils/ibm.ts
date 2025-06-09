@@ -23,6 +23,7 @@ export const authenticateAndSetInstance = ({
   watsonxAIUsername,
   watsonxAIPassword,
   watsonxAIUrl,
+  disableSSL,
   version,
   serviceUrl,
 }: WatsonxAuth & Omit<WatsonxInit, "authenticator">): WatsonXAI | undefined => {
@@ -44,8 +45,8 @@ export const authenticateAndSetInstance = ({
     });
   } else if (watsonxAIAuthType === "cp4d" && watsonxAIUrl) {
     // cp4d auth requires username with either Password of ApiKey but not both.
-    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)){
-      const watsonxCPDAuthUrl = watsonxAIUrl.concat('/icp4d-api/v1/authorize');
+    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
+      const watsonxCPDAuthUrl = watsonxAIUrl.concat("/icp4d-api/v1/authorize");
       return WatsonXAI.newInstance({
         version,
         serviceUrl,
@@ -54,8 +55,10 @@ export const authenticateAndSetInstance = ({
           password: watsonxAIPassword,
           url: watsonxCPDAuthUrl,
           apikey: watsonxAIApikey,
+          disableSslVerification: disableSSL,
         }),
-      });}
+      });
+    }
   } else
     return WatsonXAI.newInstance({
       version,
