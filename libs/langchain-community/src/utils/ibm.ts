@@ -50,6 +50,7 @@ export const authenticateAndSetInstance = ({
       return WatsonXAI.newInstance({
         version,
         serviceUrl,
+        disableSslVerification: disableSSL,
         authenticator: new CloudPakForDataAuthenticator({
           username: watsonxAIUsername,
           password: watsonxAIPassword,
