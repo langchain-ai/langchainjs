@@ -3,12 +3,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
-import {
-  Bucket,
-  Cluster,
-  Collection,
-  Scope,
-} from "couchbase";
+import { Bucket, Cluster, Collection, Scope } from "couchbase";
 import { Document } from "@langchain/core/documents";
 import { v4 as uuid } from "uuid";
 
@@ -336,20 +331,11 @@ export class CouchbaseQueryVectorStore extends VectorStore {
     const { ids } = options;
     const deletePromises = ids.map((id) =>
       this._collection.remove(id).catch((e: any) => {
-        console.error("error received while deleting document", e);
         throw new Error(`Delete failed with error: ${e}`);
       })
     );
 
-    try {
-      await Promise.all(deletePromises);
-    } catch (e) {
-      console.error(
-        "An error occurred with Promise.all at deleting all documents",
-        e
-      );
-      throw e;
-    }
+    await Promise.all(deletePromises);
   }
 
   /**
@@ -427,7 +413,6 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         docsWithScore.push([doc, distance]);
       }
     } catch (err) {
-      console.log("error received");
       throw new Error(`Query failed with error: ${err}`);
     }
     return docsWithScore;
@@ -532,33 +517,24 @@ export class CouchbaseQueryVectorStore extends VectorStore {
         .upsert(currentDocumentKey, document[currentDocumentKey])
         .then(() => currentDocumentKey)
         .catch((e: any) => {
-          console.error("error received while upserting document", e);
           throw new Error(`Upsert failed with error: ${e}`);
         });
     });
 
-    try {
-      // Upsert all documents asynchronously
-      const docIds = await Promise.all(upsertDocumentsPromises);
-      const successfulDocIds: string[] = [];
-      for (const id of docIds) {
-        if (id) {
-          successfulDocIds.push(id);
-        }
+    // Upsert all documents asynchronously
+    const docIds = await Promise.all(upsertDocumentsPromises);
+    const successfulDocIds: string[] = [];
+    for (const id of docIds) {
+      if (id) {
+        successfulDocIds.push(id);
       }
-      return successfulDocIds;
-    } catch (e) {
-      console.error(
-        "An error occurred with Promise.all at upserting all documents",
-        e
-      );
-      throw e;
     }
+    return successfulDocIds;
   }
 
   /**
    * Create a new vector index for the Query vector store.
-   * 
+   *
    * @param options - Configuration options for creating the index
    * @param options.indexType - Type of the index (BHIVE or COMPOSITE) to create
    * @param options.indexDescription - Description of the index like "IVF,SQ8"
@@ -570,7 +546,7 @@ export class CouchbaseQueryVectorStore extends VectorStore {
    * @param options.whereClause - Optional where clause to filter the documents to index
    * @param options.indexScanNprobes - Number of probes to use for the index
    * @param options.indexTrainlist - Number of training samples to use for the index
-   * 
+   *
    * @throws {Error} If index creation fails or invalid parameters are provided
    */
   async createIndex(options: CreateIndexOptions): Promise<void> {
@@ -589,7 +565,9 @@ export class CouchbaseQueryVectorStore extends VectorStore {
 
     if (!Object.values(IndexType).includes(indexType)) {
       throw new Error(
-        `Invalid index type. Got ${indexType}. Expected one of: ${Object.values(IndexType).join(", ")}`
+        `Invalid index type. Got ${indexType}. Expected one of: ${Object.values(
+          IndexType
+        ).join(", ")}`
       );
     }
 
@@ -613,8 +591,8 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       } catch (e) {
         throw new Error(
           "Vector dimension is required for creating Query index. " +
-          "Unable to determine the dimension from the embedding object. " +
-          `Error: ${e}`
+            "Unable to determine the dimension from the embedding object. " +
+            `Error: ${e}`
         );
       }
     }
@@ -651,28 +629,39 @@ export class CouchbaseQueryVectorStore extends VectorStore {
     if (indexType === IndexType.BHIVE) {
       finalIndexName = indexName || "langchain_bhive_query_index";
       // BHIVE: Specialized vector index with INCLUDE clause for additional fields
-      indexQuery = `CREATE VECTOR INDEX \`${finalIndexName}\` ON \`${this.bucketName}\`.\`${this.scopeName}\`.\`${this.collectionName}\` ` +
-        `(\`${vectorFieldName}\` VECTOR) INCLUDE (${includeFields.map(f => `\`${f}\``).join(", ")}) ` +
+      indexQuery =
+        `CREATE VECTOR INDEX \`${finalIndexName}\` ON \`${this.bucketName}\`.\`${this.scopeName}\`.\`${this.collectionName}\` ` +
+        `(\`${vectorFieldName}\` VECTOR) INCLUDE (${includeFields
+          .map((f) => `\`${f}\``)
+          .join(", ")}) ` +
         `${whereClauseStr} USING GSI ${withClause}`;
     } else if (indexType === IndexType.COMPOSITE) {
       finalIndexName = indexName || "langchain_composite_query_index";
       // COMPOSITE: General GSI index that includes vector field alongside other fields with VECTOR keyword
-      indexQuery = `CREATE INDEX \`${finalIndexName}\` ON \`${this.bucketName}\`.\`${this.scopeName}\`.\`${this.collectionName}\` ` +
-        `(${includeFields.map(f => `\`${f}\``).join(", ")}, \`${vectorFieldName}\` VECTOR) ` +
+      indexQuery =
+        `CREATE INDEX \`${finalIndexName}\` ON \`${this.bucketName}\`.\`${this.scopeName}\`.\`${this.collectionName}\` ` +
+        `(${includeFields
+          .map((f) => `\`${f}\``)
+          .join(", ")}, \`${vectorFieldName}\` VECTOR) ` +
         `${whereClauseStr} USING GSI ${withClause}`;
     } else {
       throw new Error(`Unsupported index type: ${indexType}`);
     }
 
-    console.log(indexQuery);
-
     try {
       await this.cluster.query(indexQuery);
-      console.log(`Successfully created ${indexType} index: ${finalIndexName}`);
     } catch (e) {
-      console.log(e);
-      if (e && typeof e === 'object' && 'cause' in e && e.cause && typeof e.cause === 'object' && 'first_error_message' in e.cause) {        console.log("YO!");
-        throw new Error(`Index creation failed with error: ${e.cause.first_error_message}`);
+      if (
+        e &&
+        typeof e === "object" &&
+        "cause" in e &&
+        e.cause &&
+        typeof e.cause === "object" &&
+        "first_error_message" in e.cause
+      ) {
+        throw new Error(
+          `Index creation failed with error: ${e.cause.first_error_message}`
+        );
       }
       throw new Error(`Index creation failed with error: ${e}`);
     }
@@ -729,4 +718,4 @@ export class CouchbaseQueryVectorStore extends VectorStore {
     await instance.addDocuments(docs);
     return instance;
   }
-} 
+}
