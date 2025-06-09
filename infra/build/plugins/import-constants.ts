@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { Plugin } from 'rolldown';
+import type { Plugin, PluginContext, OutputOptions } from 'rolldown';
 import type { PackageJson } from 'type-fest';
 
 interface ImportConstantsPluginOptions {
@@ -71,7 +71,7 @@ export function importConstantsPlugin(options: ImportConstantsPluginOptions): Pl
     return {
         name: 'import-constants',
 
-        buildStart() {
+        buildStart(this: PluginContext) {
             // @ts-expect-error - outputOptions is available in rolldown plugin context but not typed
             const outputOptions = this.outputOptions as OutputOptions;
 
