@@ -1,13 +1,14 @@
-export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
-  BaseMemory,
   getInputValue,
   getOutputValue,
-  getBufferString,
+  BaseMemory,
   type InputValues,
   type OutputValues,
-  type MemoryVariables,
-} from "./base.js";
+  type MemoryVariables
+} from '@langchain/core/memory';
+export { getBufferString } from '@langchain/core/messages';
+
+export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   ConversationSummaryMemory,
   type ConversationSummaryMemoryInput,

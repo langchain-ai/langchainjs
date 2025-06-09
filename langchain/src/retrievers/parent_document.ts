@@ -5,11 +5,11 @@ import {
   type VectorStoreRetrieverInterface,
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import type { BaseDocumentCompressor } from "./document_compressors/index.js";
 import {
   TextSplitter,
   TextSplitterChunkHeaderOptions,
-} from "../text_splitter.js";
+} from "@langchain/textsplitters";
+import type { BaseDocumentCompressor } from "./document_compressors/index.js";
 import {
   MultiVectorRetriever,
   type MultiVectorRetrieverInput,

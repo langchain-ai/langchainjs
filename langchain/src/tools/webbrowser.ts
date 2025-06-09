@@ -14,7 +14,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
-} from "../text_splitter.js";
+} from "@langchain/textsplitters";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
 import fetchAdapter from "../util/axios-fetch-adapter.js";
 import { formatDocumentsAsString } from "../util/document.js";

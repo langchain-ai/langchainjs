@@ -1,5 +1,8 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { IdentifierType } from "./types.js";
+import type {
+  ExpressionNode, Identifier
+} from "../../types/expression-parser.js";
 
 /**
  * Handles identifiers in the LangChain Expression Language. Extends the

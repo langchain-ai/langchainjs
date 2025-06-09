@@ -1,4 +1,9 @@
-export { ListOutputParser, CommaSeparatedListOutputParser } from "./list.js";
+export {
+  ListOutputParser,
+  CustomListOutputParser,
+  CommaSeparatedListOutputParser,
+} from "@langchain/core/output_parsers";
+
 export { RegexParser } from "./regex.js";
 export {
   StructuredOutputParser,
@@ -10,7 +15,7 @@ export {
 export { OutputFixingParser } from "./fix.js";
 export { CombiningOutputParser } from "./combining.js";
 export { RouterOutputParser, type RouterOutputParserInput } from "./router.js";
-export { CustomListOutputParser } from "./list.js";
+
 export {
   type FunctionParameters,
   OutputFunctionsParser,

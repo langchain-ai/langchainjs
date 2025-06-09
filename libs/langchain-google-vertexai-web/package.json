@@ -2,12 +2,12 @@
   "name": "@langchain/google-vertexai-web",
   "version": "0.2.16",
   "description": "LangChain.js support for Google Vertex AI Web",
+  "author": "LangChain",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -21,7 +21,6 @@
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -29,18 +28,12 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
-  "author": "LangChain",
-  "license": "MIT",
   "dependencies": {
     "@langchain/google-webauth": "^0.2.16"
   },
-  "peerDependencies": {
-    "@langchain/core": ">=0.3.58 <0.4.0"
-  },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/core": "workspace:*",
-    "@langchain/google-common": "^0.2.16",
+    "@langchain/google-common": "^0.2.10",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
@@ -68,49 +61,45 @@
   "publishConfig": {
     "access": "public"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "input": "./src/index.ts"
     },
     "./utils": {
-      "types": {
-        "import": "./utils.d.ts",
-        "require": "./utils.d.cts",
-        "default": "./utils.d.ts"
+      "import": {
+        "types": "./dist/utils.d.ts",
+        "default": "./dist/utils.js"
       },
-      "import": "./utils.js",
-      "require": "./utils.cjs"
+      "require": {
+        "types": "./dist/utils.d.cts",
+        "default": "./dist/utils.cjs"
+      },
+      "input": "./src/utils.ts"
     },
     "./types": {
-      "types": {
-        "import": "./types.d.ts",
-        "require": "./types.d.cts",
-        "default": "./types.d.ts"
+      "import": {
+        "types": "./dist/types.d.ts",
+        "default": "./dist/types.js"
       },
-      "import": "./types.js",
-      "require": "./types.cjs"
+      "require": {
+        "types": "./dist/types.d.cts",
+        "default": "./dist/types.cjs"
+      },
+      "input": "./src/types.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "utils.cjs",
-    "utils.js",
-    "utils.d.ts",
-    "utils.d.cts",
-    "types.cjs",
-    "types.js",
-    "types.d.ts",
-    "types.d.cts"
+    "dist/"
   ]
 }

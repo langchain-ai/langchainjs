@@ -4,7 +4,7 @@ import {
   ListKeyOptions,
   RecordManagerInterface,
   UpdateOptions,
-} from "./base.js";
+} from "@langchain/core/indexing";
 
 interface TimeRow {
   epoch: number;

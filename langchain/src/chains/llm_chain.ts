@@ -255,7 +255,7 @@ export class LLMChain<
     return "llm" as const;
   }
 
-  static async deserialize(data: SerializedLLMChain) {
+  static async deserialize(data: SerializedLLMChain): Promise<LLMChain> {
     const { llm, prompt } = data;
     if (!llm) {
       throw new Error("LLMChain must have llm");

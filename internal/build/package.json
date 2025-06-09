@@ -1,0 +1,18 @@
+{
+  "name": "@langchain/build",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "NODE_OPTIONS=\"--max-old-space-size=8192\" tsx cli.ts"
+  },
+  "dependencies": {
+    "@arethetypeswrong/core": "^0.18.2",
+    "@typescript/native-preview": "^7.0.0-dev.20250730.1",
+    "publint": "^0.3.12",
+    "tsdown": "^0.13.0",
+    "tsx": "^4.20.3",
+    "type-fest": "^4.41.0",
+    "unplugin-unused": "^0.5.1"
+  }
+}

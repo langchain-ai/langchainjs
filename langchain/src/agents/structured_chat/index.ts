@@ -324,7 +324,7 @@ export async function createStructuredChatAgent({
   tools,
   prompt,
   streamRunnable,
-}: CreateStructuredChatAgentParams) {
+}: CreateStructuredChatAgentParams): Promise<AgentRunnableSequence> {
   const missingVariables = ["tools", "tool_names", "agent_scratchpad"].filter(
     (v) => !prompt.inputVariables.includes(v)
   );

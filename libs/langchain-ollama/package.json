@@ -2,12 +2,12 @@
   "name": "@langchain/ollama",
   "version": "0.2.3",
   "description": "Ollama integration for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -21,7 +21,6 @@
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -29,8 +28,6 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
-  "author": "LangChain",
-  "license": "MIT",
   "dependencies": {
     "ollama": "^0.5.12",
     "uuid": "^10.0.0"
@@ -68,23 +65,23 @@
   "publishConfig": {
     "access": "public"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "input": "./src/index.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "dist/"
   ]
 }

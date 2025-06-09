@@ -1,10 +1,13 @@
-export { Tool, type ToolParams, StructuredTool } from "./base.js";
 export {
   DynamicTool,
-  type DynamicToolInput,
   DynamicStructuredTool,
+  type DynamicToolInput,
   type DynamicStructuredToolInput,
-} from "./dynamic.js";
+  type Tool,
+  type ToolParams,
+  type StructuredTool
+} from '@langchain/core/tools'
+
 export { ChainTool, type ChainToolInput } from "./chain.js";
 export {
   JsonSpec,
@@ -17,6 +20,6 @@ export { RequestsGetTool, RequestsPostTool } from "./requests.js";
 export { VectorStoreQATool } from "./vectorstore.js";
 export { ReadFileTool, WriteFileTool } from "./fs.js";
 export {
-  formatToOpenAIFunction,
-  formatToOpenAITool,
-} from "./convert_to_openai.js";
+  convertToOpenAIFunction as formatToOpenAIFunction,
+  convertToOpenAITool as formatToOpenAITool,
+} from "@langchain/core/utils/function_calling";

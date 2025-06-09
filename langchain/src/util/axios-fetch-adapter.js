@@ -17,7 +17,7 @@ import {
   getLines,
   getBytes,
   getMessages,
-} from "./event-source-parse.js";
+} from "@langchain/core/utils/event_source_parse";
 
 function tryJsonStringify(data) {
   try {

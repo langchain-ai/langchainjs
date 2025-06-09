@@ -12,7 +12,6 @@ import {
   CassandraClientArgs,
   Column,
   Filter,
-  Index,
   WhereClause,
   CassandraTableArgs,
   CassandraTable,
@@ -22,7 +21,7 @@ import {
  * @deprecated
  * Import from "../utils/cassandra.js" instead.
  */
-export { Column, Filter, Index, WhereClause };
+export type { Column, Filter, Index, WhereClause } from "../utils/cassandra.js";
 
 export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
 
