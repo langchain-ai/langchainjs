@@ -9,6 +9,7 @@ import { build } from 'tsdown'
 import type { PackageJson } from 'type-fest'
 import { lcSecretsPlugin } from './plugins/lc-secrets.js'
 import { importConstantsPlugin } from './plugins/import-constants.js'
+import { importMapPlugin } from './plugins/import-map.js'
 
 const __dirname = fileURLToPath(import.meta.url)
 const execAsync = promisify(exec)
@@ -100,6 +101,14 @@ await Promise.all(packages.map(async ({ pkg, path }) => {
                 // package path for reading package.json
                 packagePath: path,
                 // package info for reading package.json
+                packageInfo: pkg
+            }),
+            importMapPlugin({
+                // Enable/disable based on environment
+                enabled: process.env.SKIP_IMPORT_MAP !== 'true',
+                // package path for the import map
+                packagePath: path,
+                // package info for reading entrypoints
                 packageInfo: pkg
             })
         ],
