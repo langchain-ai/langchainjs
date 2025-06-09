@@ -1303,6 +1303,7 @@ export class ChatGroq extends BaseChatModel<
         }
         // extract all fields from the response object except
         // choices to be included as response metadata
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { choices: _choices, ...metadata } = data;
 
         const generation: ChatGeneration = {

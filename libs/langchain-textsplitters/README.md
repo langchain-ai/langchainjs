@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/textsplitters
+yarn build --filter @langchain/textsplitters
 ```
 
 ### Run tests
@@ -50,4 +50,4 @@ yarn lint && yarn format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `entrypoints` field in the `config` variable located inside `langchain.config.js` and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.

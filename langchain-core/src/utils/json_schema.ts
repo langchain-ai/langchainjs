@@ -1,5 +1,8 @@
 import { toJSONSchema } from "zod/v4/core";
-import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
+import {
+  type JsonSchema7Type as JSONSchema,
+  zodToJsonSchema,
+} from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import {
   isZodSchemaV3,
@@ -10,8 +13,6 @@ import {
   ZodObjectV4,
   interopZodTransformInputSchema,
 } from "./types/zod.js";
-
-export type JSONSchema = JsonSchema7Type;
 
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
 
@@ -134,6 +135,7 @@ export function validatesOnlyStrings(schema: unknown): boolean {
 
 export {
   type JsonSchema7Type,
+  type JsonSchema7Type as JSONSchema,
   type JsonSchema7ArrayType,
   type JsonSchema7ObjectType,
   type JsonSchema7StringType,

@@ -9,14 +9,15 @@ import {
   InferInteropZodOutput,
   InputValues,
 } from "@langchain/core/utils/types";
-import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
   Comparators,
   Operator,
   Operators,
   StructuredQuery,
-} from "./ir.js";
+} from "@langchain/core/structured_query";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   DEFAULT_EXAMPLES,
   DEFAULT_PREFIX,
@@ -196,7 +197,7 @@ export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
 
 export function loadQueryConstructorRunnable(
   opts: QueryConstructorRunnableOptions
-) {
+): Runnable<any, StructuredQuery, RunnableConfig<Record<string, any>>> {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,

@@ -805,21 +805,24 @@ describe("codestral-latest", () => {
   });
 
   test("Can call tools using codestral-latest structured tools", async () => {
+    const codeSandboxSchema = z.object({
+      code: z
+        .string()
+        .describe(
+          "The Python code to execute. Must only contain valid Python code."
+        ),
+    });
+    type CodeSandboxSchema = z.infer<typeof codeSandboxSchema>;
+
     class CodeSandbox extends StructuredTool {
       name = "code_sandbox";
 
       description =
         "A tool which can run Python code in an isolated environment";
 
-      schema = z.object({
-        code: z
-          .string()
-          .describe(
-            "The Python code to execute. Must only contain valid Python code."
-          ),
-      });
+      schema = codeSandboxSchema;
 
-      async _call(input: z.infer<typeof this.schema>) {
+      async _call(input: CodeSandboxSchema) {
         return JSON.stringify(input, null, 2);
       }
     }

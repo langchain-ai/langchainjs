@@ -3,16 +3,19 @@ import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
+const createDraftSchema = z.object({
+  message: z.string(),
+  to: z.array(z.string()),
+  subject: z.string(),
+  cc: z.array(z.string()).optional(),
+  bcc: z.array(z.string()).optional(),
+});
+export type CreateDraftSchema = z.infer<typeof createDraftSchema>;
+
 export class GmailCreateDraft extends GmailBaseTool {
   name = "create_gmail_draft";
 
-  schema = z.object({
-    message: z.string(),
-    to: z.array(z.string()),
-    subject: z.string(),
-    cc: z.array(z.string()).optional(),
-    bcc: z.array(z.string()).optional(),
-  });
+  schema = createDraftSchema;
 
   description = CREATE_DRAFT_DESCRIPTION;
 
@@ -47,7 +50,7 @@ export class GmailCreateDraft extends GmailBaseTool {
     return draftMessage;
   }
 
-  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<CreateDraftSchema>) {
     const { message, to, subject, cc, bcc } = arg;
     const create_message = this.prepareDraftMessage(
       message,
@@ -67,11 +70,3 @@ export class GmailCreateDraft extends GmailBaseTool {
     return `Draft created. Draft Id: ${response.data.id}`;
   }
 }
-
-export type CreateDraftSchema = {
-  message: string;
-  to: string[];
-  subject: string;
-  cc?: string[];
-  bcc?: string[];
-};

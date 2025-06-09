@@ -2,26 +2,24 @@
   "name": "@langchain/anthropic",
   "version": "0.3.25",
   "description": "Anthropic integrations for LangChain.js",
+  "author": "LangChain",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=18"
   },
-  "main": "./index.js",
-  "types": "./index.d.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic/",
   "scripts": {
-    "build": "yarn turbo:command build:internal --filter=@langchain/anthropic",
-    "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
+    "build": "yarn workspace @langchain/build build @langchain/anthropic",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "prepack": "yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
     "test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config jest.config.cjs --testTimeout 100000",
@@ -32,8 +30,6 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
-  "author": "LangChain",
-  "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
     "fast-xml-parser": "^4.4.1"
@@ -45,7 +41,6 @@
     "@anthropic-ai/vertex-sdk": "^0.11.5",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
@@ -83,36 +78,34 @@
     "embeddings",
     "vectorstores"
   ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "input": "./src/index.ts"
     },
     "./experimental": {
-      "types": {
-        "import": "./experimental.d.ts",
-        "require": "./experimental.d.cts",
-        "default": "./experimental.d.ts"
+      "import": {
+        "types": "./dist/experimental/index.d.ts",
+        "default": "./dist/experimental/index.js"
       },
-      "import": "./experimental.js",
-      "require": "./experimental.cjs"
+      "require": {
+        "types": "./dist/experimental/index.d.cts",
+        "default": "./dist/experimental/index.cjs"
+      },
+      "input": "./src/experimental/index.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts",
-    "experimental.cjs",
-    "experimental.js",
-    "experimental.d.ts",
-    "experimental.d.cts"
+    "dist/"
   ]
 }

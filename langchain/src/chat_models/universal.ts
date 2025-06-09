@@ -34,27 +34,6 @@ import { ChatResult } from "@langchain/core/outputs";
 interface EventStreamCallbackHandlerInput
   extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
 
-const _SUPPORTED_PROVIDERS = [
-  "openai",
-  "anthropic",
-  "azure_openai",
-  "cohere",
-  "google-vertexai",
-  "google-vertexai-web",
-  "google-genai",
-  "ollama",
-  "together",
-  "fireworks",
-  "mistralai",
-  "groq",
-  "bedrock",
-  "cerebras",
-  "deepseek",
-  "xai",
-] as const;
-
-export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
-
 export interface ConfigurableChatModelCallOptions
   extends BaseChatModelCallOptions {
   tools?: (
@@ -63,6 +42,123 @@ export interface ConfigurableChatModelCallOptions
     | ToolDefinition
     | RunnableToolLike
   )[];
+}
+
+// Configuration map for model providers
+export const MODEL_PROVIDER_CONFIG = {
+  openai: {
+    package: "@langchain/openai",
+    className: "ChatOpenAI",
+  },
+  anthropic: {
+    package: "@langchain/anthropic",
+    className: "ChatAnthropic",
+  },
+  azure_openai: {
+    package: "@langchain/openai",
+    className: "AzureChatOpenAI",
+  },
+  cohere: {
+    package: "@langchain/cohere",
+    className: "ChatCohere",
+  },
+  "google-vertexai": {
+    package: "@langchain/google-vertexai",
+    className: "ChatVertexAI",
+  },
+  "google-vertexai-web": {
+    package: "@langchain/google-vertexai-web",
+    className: "ChatVertexAI",
+  },
+  "google-genai": {
+    package: "@langchain/google-genai",
+    className: "ChatGoogleGenerativeAI",
+  },
+  ollama: {
+    package: "@langchain/ollama",
+    className: "ChatOllama",
+  },
+  mistralai: {
+    package: "@langchain/mistralai",
+    className: "ChatMistralAI",
+  },
+  groq: {
+    package: "@langchain/groq",
+    className: "ChatGroq",
+  },
+  cerebras: {
+    package: "@langchain/cerebras",
+    className: "ChatCerebras",
+  },
+  bedrock: {
+    package: "@langchain/aws",
+    className: "ChatBedrockConverse",
+  },
+  deepseek: {
+    package: "@langchain/deepseek",
+    className: "ChatDeepSeek",
+  },
+  xai: {
+    package: "@langchain/xai",
+    className: "ChatXAI",
+  },
+  fireworks: {
+    package: "@langchain/community/chat_models/fireworks",
+    className: "ChatFireworks",
+    hasCircularDependency: true,
+  },
+  together: {
+    package: "@langchain/community/chat_models/togetherai",
+    className: "ChatTogetherAI",
+    hasCircularDependency: true,
+  },
+} as const;
+
+const SUPPORTED_PROVIDERS = Object.keys(
+  MODEL_PROVIDER_CONFIG
+) as (keyof typeof MODEL_PROVIDER_CONFIG)[];
+export type ChatModelProvider = keyof typeof MODEL_PROVIDER_CONFIG;
+type ModelProviderConfig = {
+  package: string;
+  className: string;
+  hasCircularDependency?: boolean;
+};
+
+/**
+ * Helper function to get a chat model class by its class name
+ * @param className The class name (e.g., "ChatOpenAI", "ChatAnthropic")
+ * @returns The imported model class or undefined if not found
+ */
+export async function getChatModelByClassName(className: string) {
+  // Find the provider config that matches the class name
+  const providerEntry = Object.entries(MODEL_PROVIDER_CONFIG).find(
+    ([, config]) => config.className === className
+  );
+
+  if (!providerEntry) {
+    return undefined;
+  }
+
+  const [, config] = providerEntry;
+  try {
+    const module = await import(config.package);
+    return module[config.className];
+  } catch (e: unknown) {
+    const err = e as Error;
+    if (
+      "code" in err &&
+      err.code?.toString().includes("ERR_MODULE_NOT_FOUND")
+    ) {
+      const attemptedPackage = err.message
+        .split("Error: Cannot find package '")[1]
+        .split("'")[0];
+      throw new Error(
+        `Unable to import ${attemptedPackage}. Please install with ` +
+          `\`npm install ${attemptedPackage}\` or \`yarn add ${attemptedPackage}\``
+      );
+    }
+    throw e;
+  }
 }
 
 async function _initChatModelHelper(
@@ -77,115 +173,21 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
+
+  const config = MODEL_PROVIDER_CONFIG[
+    modelProviderCopy as keyof typeof MODEL_PROVIDER_CONFIG
+  ] as ModelProviderConfig;
+  if (!config) {
+    const supported = SUPPORTED_PROVIDERS.join(", ");
+    throw new Error(
+      `Unsupported { modelProvider: ${modelProviderCopy} }.\n\nSupported model providers are: ${supported}`
+    );
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
-
-  try {
-    switch (modelProviderCopy) {
-      case "openai": {
-        const { ChatOpenAI } = await import("@langchain/openai");
-        return new ChatOpenAI({ model, ...passedParams });
-      }
-      case "anthropic": {
-        const { ChatAnthropic } = await import("@langchain/anthropic");
-        return new ChatAnthropic({ model, ...passedParams });
-      }
-      case "azure_openai": {
-        const { AzureChatOpenAI } = await import("@langchain/openai");
-        return new AzureChatOpenAI({ model, ...passedParams });
-      }
-      case "cohere": {
-        const { ChatCohere } = await import("@langchain/cohere");
-        return new ChatCohere({ model, ...passedParams });
-      }
-      case "google-vertexai": {
-        const { ChatVertexAI } = await import("@langchain/google-vertexai");
-        return new ChatVertexAI({ model, ...passedParams });
-      }
-      case "google-vertexai-web": {
-        const { ChatVertexAI } = await import("@langchain/google-vertexai-web");
-        return new ChatVertexAI({ model, ...passedParams });
-      }
-      case "google-genai": {
-        const { ChatGoogleGenerativeAI } = await import(
-          "@langchain/google-genai"
-        );
-        return new ChatGoogleGenerativeAI({ model, ...passedParams });
-      }
-      case "ollama": {
-        const { ChatOllama } = await import("@langchain/ollama");
-        return new ChatOllama({ model, ...passedParams });
-      }
-      case "mistralai": {
-        const { ChatMistralAI } = await import("@langchain/mistralai");
-        return new ChatMistralAI({ model, ...passedParams });
-      }
-      case "groq": {
-        const { ChatGroq } = await import("@langchain/groq");
-        return new ChatGroq({ model, ...passedParams });
-      }
-      case "cerebras": {
-        const { ChatCerebras } = await import("@langchain/cerebras");
-        return new ChatCerebras({ model, ...passedParams });
-      }
-      case "bedrock": {
-        const { ChatBedrockConverse } = await import("@langchain/aws");
-        return new ChatBedrockConverse({ model, ...passedParams });
-      }
-      case "deepseek": {
-        const { ChatDeepSeek } = await import("@langchain/deepseek");
-        return new ChatDeepSeek({ model, ...passedParams });
-      }
-      case "xai": {
-        const { ChatXAI } = await import("@langchain/xai");
-        return new ChatXAI({ model, ...passedParams });
-      }
-      case "fireworks": {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Can not install as a proper dependency due to circular dependency
-        const { ChatFireworks } = await import(
-          // We can not 'expect-error' because if you explicitly build `@langchain/community`
-          // this import will be able to be resolved, thus there will be no error. However
-          // this will never be the case in CI.
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore - Can not install as a proper dependency due to circular dependency
-          "@langchain/community/chat_models/fireworks"
-        );
-        return new ChatFireworks({ model, ...passedParams });
-      }
-      case "together": {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Can not install as a proper dependency due to circular dependency
-        const { ChatTogetherAI } = await import(
-          // We can not 'expect-error' because if you explicitly build `@langchain/community`
-          // this import will be able to be resolved, thus there will be no error. However
-          // this will never be the case in CI.
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore - Can not install as a proper dependency due to circular dependency
-          "@langchain/community/chat_models/togetherai"
-        );
-        return new ChatTogetherAI({ model, ...passedParams });
-      }
-      default: {
-        const supported = _SUPPORTED_PROVIDERS.join(", ");
-        throw new Error(
-          `Unsupported { modelProvider: ${modelProviderCopy} }.\n\nSupported model providers are: ${supported}`
-        );
-      }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    if ("code" in e && e.code.includes("ERR_MODULE_NOT_FOUND")) {
-      const attemptedPackage = new Error(e).message
-        .split("Error: Cannot find package '")[1]
-        .split("'")[0];
-      throw new Error(
-        `Unable to import ${attemptedPackage}. Please install with ` +
-          `\`npm install ${attemptedPackage}\` or \`yarn add ${attemptedPackage}\``
-      );
-    }
-    throw e;
-  }
+  const ProviderClass = await getChatModelByClassName(config.className);
+  return new ProviderClass({ model, ...passedParams });
 }
 
 /**
@@ -833,9 +835,7 @@ export async function initChatModel<
   };
   if (modelProvider === undefined && model?.includes(":")) {
     const modelComponents = model.split(":", 2);
-    if (
-      _SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)
-    ) {
+    if (SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)) {
       // eslint-disable-next-line no-param-reassign
       [modelProvider, model] = modelComponents;
     }

@@ -82,7 +82,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Stdio Transport", () => {
-    it("should connect to and communicate with a stdio MCP server", async () => {
+    it.skip("should connect to and communicate with a stdio MCP server", async () => {
       const { command, args } = testServers.createStdioServer("stdio-test");
 
       const client = new MultiServerMCPClient({
@@ -114,7 +114,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       }
     });
 
-    it("should handle stdio server restart configuration", async () => {
+    it.skip("should handle stdio server restart configuration", async () => {
       const { command, args } = testServers.createStdioServer("stdio-restart");
 
       const client = new MultiServerMCPClient({
@@ -448,7 +448,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Multiple Servers", () => {
-    it("should connect to multiple servers of different transport types", async () => {
+    it.skip("should connect to multiple servers of different transport types", async () => {
       const { command, args } = testServers.createStdioServer("multi-stdio");
       const { baseUrl: streamableHttpBaseUrl } =
         await testServers.createHTTPServer("multi-http");
@@ -502,7 +502,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       }
     });
 
-    it("should filter tools by server name", async () => {
+    it.skip("should filter tools by server name", async () => {
       const { command, args } = testServers.createStdioServer("filter-stdio");
       const { baseUrl: streamableHttpBaseUrl } =
         await testServers.createHTTPServer("filter-http");

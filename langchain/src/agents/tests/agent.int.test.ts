@@ -6,7 +6,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { AIMessage } from "@langchain/core/messages";
 import { AgentStep } from "@langchain/core/agents";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
+import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
 import { AgentExecutor, ZeroShotAgent } from "../index.js";
 import { SerpAPI } from "../../util/testing/tools/serpapi.js";
 import { Calculator } from "../../util/testing/tools/calculator.js";

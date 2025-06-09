@@ -61,6 +61,10 @@ type RunActionResult = {
   };
 };
 
+type ConneryActionSchema = z.ZodObject<
+  Record<string, z.ZodString | z.ZodOptional<z.ZodString>>
+>;
+
 /**
  * A LangChain Tool object wrapping a Connery action.
  * ConneryAction is a structured tool that can be used only in the agents supporting structured tools.
@@ -71,7 +75,7 @@ export class ConneryAction extends StructuredTool {
 
   description: string;
 
-  schema: z.ZodObject<Record<string, z.ZodString | z.ZodOptional<z.ZodString>>>;
+  schema: ConneryActionSchema;
 
   /**
    * Creates a ConneryAction instance based on the provided Connery Action.
@@ -95,7 +99,7 @@ export class ConneryAction extends StructuredTool {
    * @returns A promise that resolves to a JSON string containing the output of the action.
    */
   protected _call(
-    arg: InferInteropZodOutput<typeof this.schema>
+    arg: InferInteropZodOutput<ConneryActionSchema>
   ): Promise<string> {
     return this._service.runAction(this._action.id, arg);
   }

@@ -27,16 +27,14 @@ export WEAVIATE_API_KEY=
 ```
 
 ```typescript
-import weaviate, { ApiKey } from 'weaviate-client';
+import weaviate, { ApiKey } from "weaviate-client";
 import { WeaviateStore } from "@langchain/weaviate";
 
 // Weaviate SDK has a TypeScript issue so we must do this.
 const client = (weaviate as any).client({
   scheme: process.env.WEAVIATE_SCHEME || "https",
   host: process.env.WEAVIATE_HOST || "localhost",
-  apiKey: new ApiKey(
-    process.env.WEAVIATE_API_KEY || "default"
-  ),
+  apiKey: new ApiKey(process.env.WEAVIATE_API_KEY || "default"),
 });
 
 // Create a store and fill it with some texts + metadata
@@ -72,7 +70,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/weaviate
+yarn build --filter @langchain/weaviate
 ```
 
 ### Run tests
@@ -95,4 +93,4 @@ yarn lint && yarn format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `entrypoints` field in the `config` variable located inside `langchain.config.js` and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.

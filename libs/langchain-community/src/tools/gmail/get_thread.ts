@@ -3,12 +3,15 @@ import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { GET_THREAD_DESCRIPTION } from "./descriptions.js";
 
+const getThreadSchema = z.object({
+  threadId: z.string(),
+});
+export type GetThreadSchema = z.infer<typeof getThreadSchema>;
+
 export class GmailGetThread extends GmailBaseTool {
   name = "gmail_get_thread";
 
-  schema = z.object({
-    threadId: z.string(),
-  });
+  schema = getThreadSchema;
 
   description = GET_THREAD_DESCRIPTION;
 
@@ -16,7 +19,7 @@ export class GmailGetThread extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<GetThreadSchema>) {
     const { threadId } = arg;
 
     const gmail = await this.getGmailClient();
@@ -98,7 +101,3 @@ export class GmailGetThread extends GmailBaseTool {
     )}`;
   }
 }
-
-export type GetThreadSchema = {
-  threadId: string;
-};

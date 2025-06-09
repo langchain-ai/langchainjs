@@ -1,5 +1,6 @@
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { InteropZodObject } from "@langchain/core/utils/types";
 import {
@@ -58,7 +59,7 @@ export function createTaggingChain(
   schema: FunctionParameters,
   llm: BaseChatModel<BaseFunctionCallOptions>,
   options: TaggingChainOptions = {}
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   const { prompt = PromptTemplate.fromTemplate(TAGGING_TEMPLATE), ...rest } =
     options;
   const functions = getTaggingFunctions(schema);
@@ -91,7 +92,7 @@ export function createTaggingChainFromZod(
   schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>,
   options?: TaggingChainOptions
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   return createTaggingChain(
     toJsonSchema(schema) as JsonSchema7ObjectType,
     llm,

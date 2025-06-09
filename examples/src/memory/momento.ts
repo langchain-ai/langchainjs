@@ -23,6 +23,7 @@ const cacheName = "langchain";
 
 const memory = new BufferMemory({
   chatHistory: await MomentoChatMessageHistory.fromProps({
+    // @ts-expect-error(@christian-bromann): outdated example needs to be updated
     client,
     cacheName,
     sessionId,

@@ -4,10 +4,6 @@ import {
   OpenAI as OpenAIClient,
 } from "openai";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import {
-  convertToOpenAIFunction,
-  convertToOpenAITool,
-} from "@langchain/core/utils/function_calling";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import {
   InteropZodType,
@@ -21,33 +17,45 @@ import { ResponseFormatJSONSchema } from "openai/resources";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { addLangChainErrorFields } from "./errors.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function wrapOpenAIClientError(e: any) {
+export function wrapOpenAIClientError(e: unknown) {
+  if (!e || typeof e !== "object") {
+    return e;
+  }
+
   let error;
-  if (e.constructor.name === APIConnectionTimeoutError.name) {
+  if (
+    e.constructor.name === APIConnectionTimeoutError.name &&
+    "message" in e &&
+    typeof e.message === "string"
+  ) {
     error = new Error(e.message);
     error.name = "TimeoutError";
-  } else if (e.constructor.name === APIUserAbortError.name) {
+  } else if (
+    e.constructor.name === APIUserAbortError.name &&
+    "message" in e &&
+    typeof e.message === "string"
+  ) {
     error = new Error(e.message);
     error.name = "AbortError";
-  } else if (e.status === 400 && e.message.includes("tool_calls")) {
+  } else if (
+    "status" in e &&
+    e.status === 400 &&
+    "message" in e &&
+    typeof e.message === "string" &&
+    e.message.includes("tool_calls")
+  ) {
     error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
-  } else if (e.status === 401) {
+  } else if ("status" in e && e.status === 401) {
     error = addLangChainErrorFields(e, "MODEL_AUTHENTICATION");
-  } else if (e.status === 429) {
+  } else if ("status" in e && e.status === 429) {
     error = addLangChainErrorFields(e, "MODEL_RATE_LIMIT");
-  } else if (e.status === 404) {
+  } else if ("status" in e && e.status === 404) {
     error = addLangChainErrorFields(e, "MODEL_NOT_FOUND");
   } else {
     error = e;
   }
   return error;
 }
-
-export {
-  convertToOpenAIFunction as formatToOpenAIFunction,
-  convertToOpenAITool as formatToOpenAITool,
-};
 
 export function formatToOpenAIAssistantTool(
   tool: StructuredToolInterface

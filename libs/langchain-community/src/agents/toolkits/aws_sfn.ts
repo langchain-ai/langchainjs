@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { ToolInterface } from "@langchain/core/tools";
+import { Toolkit, ToolInterface } from "@langchain/core/tools";
 import { renderTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "langchain/chains";
 import {
@@ -13,7 +13,6 @@ import {
   DescribeExecutionAWSSfnTool,
   SendTaskSuccessAWSSfnTool,
 } from "../../tools/aws_sfn.js";
-import { Toolkit } from "./base.js";
 
 /**
  * Interface for the arguments required to create an AWS Step Functions

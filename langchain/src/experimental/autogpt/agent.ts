@@ -11,13 +11,13 @@ import {
   getEmbeddingContextSize,
   getModelContextSize,
 } from "@langchain/core/language_models/base";
+import { TokenTextSplitter } from "@langchain/textsplitters";
 import { LLMChain } from "../../chains/llm_chain.js";
 
 import { AutoGPTOutputParser } from "./output_parser.js";
 import { AutoGPTPrompt } from "./prompt.js";
 // import { HumanInputRun } from "./tools/human/tool"; // TODO
 import { ObjectTool, FINISH_NAME } from "./schema.js";
-import { TokenTextSplitter } from "../../text_splitter.js";
 
 /**
  * Interface for the input parameters of the AutoGPT class.

@@ -1,7 +1,7 @@
 import { extname, resolve } from "node:path";
 import { stat } from "node:fs/promises";
 import { Document } from "@langchain/core/documents";
-import { BaseDocumentLoader } from "../base.js";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import { type LoadersMapping, UnknownHandling } from "./directory.js";
 
 /**

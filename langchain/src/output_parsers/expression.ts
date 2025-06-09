@@ -3,6 +3,10 @@ import { MasterHandler } from "./expression_type_handlers/factory.js";
 import { ParsedType } from "./expression_type_handlers/types.js";
 import { ASTParser } from "./expression_type_handlers/base.js";
 
+export type ParseFunction = Awaited<
+  ReturnType<typeof ASTParser.importASTParser>
+>;
+
 /**
  * We need to be able to handle the following cases:
  * ExpressionStatement
