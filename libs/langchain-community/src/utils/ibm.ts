@@ -44,17 +44,18 @@ export const authenticateAndSetInstance = ({
     });
   } else if (watsonxAIAuthType === "cp4d" && watsonxAIUrl) {
     // cp4d auth requires username with either Password of ApiKey but not both.
-    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey))
+    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)){
+      const watsonxCPDAuthUrl = watsonxAIUrl.concat('/icp4d-api/v1/authorize');
       return WatsonXAI.newInstance({
         version,
         serviceUrl,
         authenticator: new CloudPakForDataAuthenticator({
           username: watsonxAIUsername,
           password: watsonxAIPassword,
-          url: watsonxAIUrl,
+          url: watsonxCPDAuthUrl,
           apikey: watsonxAIApikey,
         }),
-      });
+      });}
   } else
     return WatsonXAI.newInstance({
       version,
