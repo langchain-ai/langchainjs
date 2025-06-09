@@ -1,6 +1,15 @@
 import type * as z3 from "zod/v3";
 import type * as z4 from "zod/v4/core";
-import { parseAsync, parse, globalRegistry } from "zod/v4/core";
+import {
+  parse,
+  parseAsync,
+  globalRegistry,
+  util,
+  clone,
+  _unknown,
+  $ZodUnknown,
+  $ZodOptional,
+} from "zod/v4/core";
 
 export type ZodStringV3 = z3.ZodString;
 
@@ -17,6 +26,14 @@ export type InteropZodType<Output = any, Input = Output> =
   | z4.$ZodType<Output, Input>;
 
 export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
+
+export type InteropZodObjectShape<
+  T extends InteropZodObject = InteropZodObject
+> = T extends z3.ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : T extends z4.$ZodObject<infer Shape>
+  ? { [K in keyof Shape]: Shape[K] }
+  : never;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
@@ -365,4 +382,171 @@ export function isSimpleStringZodSchema(
   }
 
   return false;
+}
+
+/**
+ * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
+ *
+ * @param obj The value to check.
+ * @returns {boolean} True if the value is a Zod v3 or v4 object schema, false otherwise.
+ */
+export function isInteropZodObject(obj: unknown): obj is InteropZodObject {
+  if (isZodSchemaV3(obj)) {
+    // Zod v3 object schemas have _def.typeName === "ZodObject"
+    if (
+      typeof obj === "object" &&
+      obj !== null &&
+      "_def" in obj &&
+      typeof obj._def === "object" &&
+      obj._def !== null &&
+      "typeName" in obj._def &&
+      obj._def.typeName === "ZodObject"
+    ) {
+      return true;
+    }
+  }
+  if (isZodSchemaV4(obj)) {
+    // Zod v4 object schemas have _zod.def.type === "object"
+    if (
+      typeof obj === "object" &&
+      obj !== null &&
+      "_zod" in obj &&
+      typeof obj._zod === "object" &&
+      obj._zod !== null &&
+      "def" in obj._zod &&
+      typeof obj._zod.def === "object" &&
+      obj._zod.def !== null &&
+      "type" in obj._zod.def &&
+      obj._zod.def.type === "object"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Retrieves the shape (fields) of a Zod object schema, supporting both Zod v3 and v4.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @returns {InteropZodObjectShape<T>} The shape of the object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function getInteropZodObjectShape<T extends InteropZodObject>(
+  schema: T
+): InteropZodObjectShape<T> {
+  if (isZodSchemaV3(schema)) {
+    return schema.shape;
+  }
+  if (isZodSchemaV4(schema)) {
+    return schema._zod.def.shape as InteropZodObjectShape<T>;
+  }
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+/**
+ * Extends a Zod object schema with additional fields, supporting both Zod v3 and v4.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @param {InteropZodObjectShape} extension - The fields to add to the schema.
+ * @returns {InteropZodObject} The extended Zod object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function extendInteropZodObject<T extends InteropZodObject>(
+  schema: T,
+  extension: InteropZodObjectShape
+): InteropZodObject {
+  if (isZodSchemaV3(schema)) {
+    // z3: .extend exists and works as expected
+    return schema.extend(extension as z3.ZodRawShape);
+  }
+  if (isZodSchemaV4(schema)) {
+    // z4: .extend exists and works as expected
+    return util.extend(schema, extension);
+  }
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+/**
+ * Returns a partial version of a Zod object schema, making all fields optional.
+ * Supports both Zod v3 and v4.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @returns {InteropZodObject} The partial Zod object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function interopZodObjectPartial<T extends InteropZodObject>(
+  schema: T
+): InteropZodObject {
+  if (isZodSchemaV3(schema)) {
+    // z3: .partial() exists and works as expected
+    return schema.partial();
+  }
+  if (isZodSchemaV4(schema)) {
+    // z4: util.partial exists and works as expected
+    return util.partial($ZodOptional, schema, undefined);
+  }
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+export function interopZodObjectPassthrough<T extends InteropZodObject>(
+  schema: T
+): InteropZodObject {
+  if (isInteropZodObject(schema)) {
+    if (isZodSchemaV3(schema)) {
+      return schema.passthrough();
+    }
+    if (isZodSchemaV4(schema)) {
+      // Type reassign since ZodObjectV4 assumes that generics should be washed
+      const objectSchema: z4.$ZodObject<z4.$ZodShape> = schema;
+      return clone(objectSchema, {
+        ...objectSchema._zod.def,
+        catchall: _unknown($ZodUnknown),
+      });
+    }
+  }
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+/**
+ * Returns a getter function for the default value of a Zod schema, if one is defined.
+ * Supports both Zod v3 and v4 schemas. If the schema has a default value,
+ * the returned function will return that value when called. If no default is defined,
+ * returns undefined.
+ *
+ * @template T - The type of the Zod schema.
+ * @param {T} schema - The Zod schema instance (either v3 or v4).
+ * @returns {(() => InferInteropZodOutput<T>) | undefined} A function that returns the default value, or undefined if no default is set.
+ */
+export function getInteropZodDefaultGetter<T extends InteropZodType>(
+  schema: T
+): (() => InferInteropZodOutput<T>) | undefined {
+  if (isZodSchemaV3(schema)) {
+    try {
+      const defaultValue = schema.parse(undefined);
+      return () => defaultValue as InferInteropZodOutput<T>;
+    } catch {
+      return undefined;
+    }
+  }
+  if (isZodSchemaV4(schema)) {
+    try {
+      const defaultValue = parse(schema, undefined);
+      return () => defaultValue as InferInteropZodOutput<T>;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
 }
