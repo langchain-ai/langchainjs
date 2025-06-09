@@ -1,0 +1,17 @@
+{
+  "name": "@langchain/infra-build",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "compile": "tsx index.ts"
+  },
+  "dependencies": {
+    "@arethetypeswrong/core": "^0.18.1",
+    "publint": "^0.3.12",
+    "tsdown": "^0.12.7",
+    "tsx": "^4.19.4",
+    "type-fest": "^4.41.0",
+    "unplugin-unused": "^0.5.0"
+  }
+}
