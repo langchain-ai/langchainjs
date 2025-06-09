@@ -1,11 +1,16 @@
 import type { z } from "zod";
 import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
+import {
+  deepCompareStrict as deepCompareStrictImport,
+  Validator as ValidatorImport
+} from "@cfworker/json-schema";
+
 import { isZodSchema } from "./types/is_zod_schema.js";
 
+export const deepCompareStrict = deepCompareStrictImport;
+export const Validator = ValidatorImport;
 export type JSONSchema = JsonSchema7Type;
-
-export { deepCompareStrict, Validator } from "@cfworker/json-schema";
 
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
