@@ -53,11 +53,14 @@ export async function runExample(client?: MultiServerMCPClient) {
     client =
       client ??
       new MultiServerMCPClient({
-        calculator: {
-          url: `http://localhost:3000/${
-            transportType === "sse" ? "sse" : "mcp"
-          }`,
+        mcpServers: {
+          calculator: {
+            url: `http://localhost:3000/${
+              transportType === "sse" ? "sse" : "mcp"
+            }`,
+          },
         },
+        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");

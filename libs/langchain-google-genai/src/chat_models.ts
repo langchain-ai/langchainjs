@@ -871,7 +871,7 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    // may not have generations in output if there was a refusal for safety reasons
+    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
     if (generationResult.generations?.length > 0) {
       await runManager?.handleLLMNewToken(
         generationResult.generations[0]?.text ?? ""
