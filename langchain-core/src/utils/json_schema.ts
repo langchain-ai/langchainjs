@@ -1,11 +1,10 @@
 import { toJSONSchema } from "zod/v4/core";
-import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
+import { type JsonSchema7Type as JSONSchema, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import { isZodSchemaV3, isZodSchemaV4, InteropZodType } from "./types/zod.js";
 
-export type JSONSchema = JsonSchema7Type;
-
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
+export { JsonSchema7Type as JSONSchema } from "zod-to-json-schema";
 
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
