@@ -5,6 +5,7 @@ export * from "./llms.js";
 export * from "./azure/llms.js";
 export * from "./azure/embeddings.js";
 export * from "./embeddings.js";
+export * from "./transcribe/index.js";
 export * from "./types.js";
 export * from "./utils/openai.js";
 export * from "./utils/azure.js";
