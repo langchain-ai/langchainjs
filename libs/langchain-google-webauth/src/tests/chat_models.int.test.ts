@@ -1483,18 +1483,19 @@ const testTtsModelNames = [
     modelName: "gemini-2.5-flash-preview-tts",
     platformType: "gai",
   },
-  {
-    modelName: "gemini-2.5-flash-preview-tts",
-    platformType: "gcp",
-  },
+  // GCP doesn't currently support this model
+  // {
+  //   modelName: "gemini-2.5-flash-preview-tts",
+  //   platformType: "gcp",
+  // },
   {
     modelName: "gemini-2.5-pro-preview-tts",
     platformType: "gai",
   },
-  {
-    modelName: "gemini-2.5-pro-preview-tts",
-    platformType: "gcp",
-  },
+  // {
+  //   modelName: "gemini-2.5-pro-preview-tts",
+  //   platformType: "gcp",
+  // },
 ];
 
 describe.each(testTtsModelNames)(
@@ -1502,6 +1503,9 @@ describe.each(testTtsModelNames)(
   ({modelName, platformType}) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
+
+    let testIndex = 0;
+    let outputIndex = 0;
 
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
       // const logger = new GoogleRequestLogger();
@@ -1525,6 +1529,19 @@ describe.each(testTtsModelNames)(
       });
     }
 
+    beforeEach(() => {
+      outputIndex = 0;
+    })
+
+    afterEach(() => {
+      testIndex += 1;
+    })
+
+    function writeData(data: string) {
+      const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
+      Fs.writeFileSync(fn, data, "base64");
+    }
+
     test.only("single", async () => {
       const model = newChatGoogle({
         speechConfig: "Zubenelgenubi",
@@ -1534,8 +1551,61 @@ describe.each(testTtsModelNames)(
       console.log(JSON.stringify(res, null, 1));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const content = res?.content?.[0] as Record<string, any>;
-      await fs.writeFile(`/tmp/${modelName}.pcm`, content.data as string, "base64");
-    })
+      writeData(content.data as string);
+    });
+
+    test.only("multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ]
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+      `;
+      const res = await model.invoke(prompt);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      writeData(content.data as string);
+    });
+
+    test.only("multiple, with instructions", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ]
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane.
+        Pay attention to instructions about how each each person speaks,
+        and other sounds they may make.  
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Perks up] But the week should improve!
+      `;
+      const res = await model.invoke(prompt);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      writeData(content.data as string);
+    });
+
   }
 )
 
