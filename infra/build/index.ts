@@ -65,6 +65,14 @@ const packages = await findWorkspacePackages()
 await Promise.all(packages.map(async ({ pkg, path }) => {
     const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
     const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
+    
+    /**
+     * if there are no entrypoints, skip the package
+     */
+    if (entry.length === 0) {
+        return
+    }
+
     const pkgExternals = [
         ...external,
         ...Object.keys(pkg.dependencies || {}),

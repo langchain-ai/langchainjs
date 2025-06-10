@@ -136,12 +136,12 @@
     },
     "./callbacks/dispatch": {
       "require": {
-        "types": "./dist/callbacks/dispatch.d.cts",
-        "default": "./dist/callbacks/dispatch.cjs"
+        "types": "./dist/callbacks/dispatch/index.d.cts",
+        "default": "./dist/callbacks/dispatch/index.cjs"
       },
       "import": {
-        "types": "./dist/callbacks/dispatch.d.ts",
-        "default": "./dist/callbacks/dispatch.js"
+        "types": "./dist/callbacks/dispatch/index.d.ts",
+        "default": "./dist/callbacks/dispatch/index.js"
       },
       "input": "./src/callbacks/dispatch/index.ts"
     },
@@ -202,12 +202,12 @@
     },
     "./documents": {
       "require": {
-        "types": "./dist/documents.d.cts",
-        "default": "./dist/documents.cjs"
+        "types": "./dist/documents/index.d.cts",
+        "default": "./dist/documents/index.cjs"
       },
       "import": {
-        "types": "./dist/documents.d.ts",
-        "default": "./dist/documents.js"
+        "types": "./dist/documents/index.d.ts",
+        "default": "./dist/documents/index.js"
       },
       "input": "./src/documents/index.ts"
     },
@@ -246,23 +246,23 @@
     },
     "./example_selectors": {
       "require": {
-        "types": "./dist/example_selectors.d.cts",
-        "default": "./dist/example_selectors.cjs"
+        "types": "./dist/example_selectors/index.d.cts",
+        "default": "./dist/example_selectors/index.cjs"
       },
       "import": {
-        "types": "./dist/example_selectors.d.ts",
-        "default": "./dist/example_selectors.js"
+        "types": "./dist/example_selectors/index.d.ts",
+        "default": "./dist/example_selectors/index.js"
       },
       "input": "./src/example_selectors/index.ts"
     },
     "./indexing": {
       "require": {
-        "types": "./dist/indexing.d.cts",
-        "default": "./dist/indexing.cjs"
+        "types": "./dist/indexing/index.d.cts",
+        "default": "./dist/indexing/index.cjs"
       },
       "import": {
-        "types": "./dist/indexing.d.ts",
-        "default": "./dist/indexing.js"
+        "types": "./dist/indexing/index.d.ts",
+        "default": "./dist/indexing/index.js"
       },
       "input": "./src/indexing/index.ts"
     },
@@ -301,12 +301,12 @@
     },
     "./load": {
       "require": {
-        "types": "./dist/load.d.cts",
-        "default": "./dist/load.cjs"
+        "types": "./dist/load/index.d.cts",
+        "default": "./dist/load/index.cjs"
       },
       "import": {
-        "types": "./dist/load.d.ts",
-        "default": "./dist/load.js"
+        "types": "./dist/load/index.d.ts",
+        "default": "./dist/load/index.js"
       },
       "input": "./src/load/index.ts"
     },
@@ -334,12 +334,12 @@
     },
     "./messages": {
       "require": {
-        "types": "./dist/messages.d.cts",
-        "default": "./dist/messages.cjs"
+        "types": "./dist/messages/index.d.cts",
+        "default": "./dist/messages/index.cjs"
       },
       "import": {
-        "types": "./dist/messages.d.ts",
-        "default": "./dist/messages.js"
+        "types": "./dist/messages/index.d.ts",
+        "default": "./dist/messages/index.js"
       },
       "input": "./src/messages/index.ts"
     },
@@ -356,34 +356,34 @@
     },
     "./output_parsers": {
       "require": {
-        "types": "./dist/output_parsers.d.cts",
-        "default": "./dist/output_parsers.cjs"
+        "types": "./dist/output_parsers/index.d.cts",
+        "default": "./dist/output_parsers/index.cjs"
       },
       "import": {
-        "types": "./dist/output_parsers.d.ts",
-        "default": "./dist/output_parsers.js"
+        "types": "./dist/output_parsers/index.d.ts",
+        "default": "./dist/output_parsers/index.js"
       },
       "input": "./src/output_parsers/index.ts"
     },
     "./output_parsers/openai_tools": {
       "require": {
-        "types": "./dist/output_parsers/openai_tools.d.cts",
-        "default": "./dist/output_parsers/openai_tools.cjs"
+        "types": "./dist/output_parsers/openai_tools/index.d.cts",
+        "default": "./dist/output_parsers/openai_tools/index.cjs"
       },
       "import": {
-        "types": "./dist/output_parsers/openai_tools.d.ts",
-        "default": "./dist/output_parsers/openai_tools.js"
+        "types": "./dist/output_parsers/openai_tools/index.d.ts",
+        "default": "./dist/output_parsers/openai_tools/index.js"
       },
       "input": "./src/output_parsers/openai_tools/index.ts"
     },
     "./output_parsers/openai_functions": {
       "require": {
-        "types": "./dist/output_parsers/openai_functions.d.cts",
-        "default": "./dist/output_parsers/openai_functions.cjs"
+        "types": "./dist/output_parsers/openai_functions/index.d.cts",
+        "default": "./dist/output_parsers/openai_functions/index.cjs"
       },
       "import": {
-        "types": "./dist/output_parsers/openai_functions.d.ts",
-        "default": "./dist/output_parsers/openai_functions.js"
+        "types": "./dist/output_parsers/openai_functions/index.d.ts",
+        "default": "./dist/output_parsers/openai_functions/index.js"
       },
       "input": "./src/output_parsers/openai_functions/index.ts"
     },
@@ -400,12 +400,12 @@
     },
     "./prompts": {
       "require": {
-        "types": "./dist/prompts.d.cts",
-        "default": "./dist/prompts.cjs"
+        "types": "./dist/prompts/index.d.cts",
+        "default": "./dist/prompts/index.cjs"
       },
       "import": {
-        "types": "./dist/prompts.d.ts",
-        "default": "./dist/prompts.js"
+        "types": "./dist/prompts/index.d.ts",
+        "default": "./dist/prompts/index.js"
       },
       "input": "./src/prompts/index.ts"
     },
@@ -422,12 +422,12 @@
     },
     "./runnables": {
       "require": {
-        "types": "./dist/runnables.d.cts",
-        "default": "./dist/runnables.cjs"
+        "types": "./dist/runnables/index.d.cts",
+        "default": "./dist/runnables/index.cjs"
       },
       "import": {
-        "types": "./dist/runnables.d.ts",
-        "default": "./dist/runnables.js"
+        "types": "./dist/runnables/index.d.ts",
+        "default": "./dist/runnables/index.js"
       },
       "input": "./src/runnables/index.ts"
     },
@@ -455,12 +455,12 @@
     },
     "./retrievers": {
       "require": {
-        "types": "./dist/retrievers.d.cts",
-        "default": "./dist/retrievers.cjs"
+        "types": "./dist/retrievers/index.d.cts",
+        "default": "./dist/retrievers/index.cjs"
       },
       "import": {
-        "types": "./dist/retrievers.d.ts",
-        "default": "./dist/retrievers.js"
+        "types": "./dist/retrievers/index.d.ts",
+        "default": "./dist/retrievers/index.js"
       },
       "input": "./src/retrievers/index.ts"
     },
@@ -477,12 +477,12 @@
     },
     "./singletons": {
       "require": {
-        "types": "./dist/singletons.d.cts",
-        "default": "./dist/singletons.cjs"
+        "types": "./dist/singletons/index.d.cts",
+        "default": "./dist/singletons/index.cjs"
       },
       "import": {
-        "types": "./dist/singletons.d.ts",
-        "default": "./dist/singletons.js"
+        "types": "./dist/singletons/index.d.ts",
+        "default": "./dist/singletons/index.js"
       },
       "input": "./src/singletons/index.ts"
     },
@@ -499,23 +499,23 @@
     },
     "./structured_query": {
       "require": {
-        "types": "./dist/structured_query.d.cts",
-        "default": "./dist/structured_query.cjs"
+        "types": "./dist/structured_query/index.d.cts",
+        "default": "./dist/structured_query/index.cjs"
       },
       "import": {
-        "types": "./dist/structured_query.d.ts",
-        "default": "./dist/structured_query.js"
+        "types": "./dist/structured_query/index.d.ts",
+        "default": "./dist/structured_query/index.js"
       },
       "input": "./src/structured_query/index.ts"
     },
     "./tools": {
       "require": {
-        "types": "./dist/tools.d.cts",
-        "default": "./dist/tools.cjs"
+        "types": "./dist/tools/index.d.cts",
+        "default": "./dist/tools/index.cjs"
       },
       "import": {
-        "types": "./dist/tools.d.ts",
-        "default": "./dist/tools.js"
+        "types": "./dist/tools/index.d.ts",
+        "default": "./dist/tools/index.js"
       },
       "input": "./src/tools/index.ts"
     },
@@ -719,12 +719,12 @@
     },
     "./utils/testing": {
       "require": {
-        "types": "./dist/utils/testing.d.cts",
-        "default": "./dist/utils/testing.cjs"
+        "types": "./dist/utils/testing/index.d.cts",
+        "default": "./dist/utils/testing/index.cjs"
       },
       "import": {
-        "types": "./dist/utils/testing.d.ts",
-        "default": "./dist/utils/testing.js"
+        "types": "./dist/utils/testing/index.d.ts",
+        "default": "./dist/utils/testing/index.js"
       },
       "input": "./src/utils/testing/index.ts"
     },
@@ -741,12 +741,12 @@
     },
     "./utils/types": {
       "require": {
-        "types": "./dist/utils/types.d.cts",
-        "default": "./dist/utils/types.cjs"
+        "types": "./dist/utils/types/index.d.cts",
+        "default": "./dist/utils/types/index.cjs"
       },
       "import": {
-        "types": "./dist/utils/types.d.ts",
-        "default": "./dist/utils/types.js"
+        "types": "./dist/utils/types/index.d.ts",
+        "default": "./dist/utils/types/index.js"
       },
       "input": "./src/utils/types/index.ts"
     },
