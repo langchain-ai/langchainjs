@@ -32,8 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": "^0.5.5",
-    "zod": "^3.24.1"
+    "@langchain/openai": "^0.5.5"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.0 <0.4.0"

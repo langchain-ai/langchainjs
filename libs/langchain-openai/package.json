@@ -37,8 +37,7 @@
   "dependencies": {
     "js-tiktoken": "^1.0.12",
     "openai": "^4.96.0",
-    "zod": "^3.25.32",
-    "zod-to-json-schema": "^3.22.3"
+    "zod": "3.25.32"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.48 <0.4.0"
@@ -55,7 +54,7 @@
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",

@@ -62,7 +62,7 @@
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "<5.2.0",
-    "zod": "^3.23.8"
+    "zod": "^3.25.32"
   },
   "publishConfig": {
     "access": "public"

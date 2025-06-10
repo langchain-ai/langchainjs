@@ -111,8 +111,8 @@
     "uuid": "^10.0.0",
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.3"
+    "zod": "^3.25.32",
+    "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
