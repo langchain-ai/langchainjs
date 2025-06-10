@@ -7818,7 +7818,7 @@ __metadata:
     tsdown: ^0.12.7
     tsx: ^4.19.4
     type-fest: ^4.41.0
-    unplugin-unused: ^0.5.0
+    unplugin-unused: ^0.5.1
   languageName: unknown
   linkType: soft
 
@@ -37273,7 +37273,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin-unused@npm:^0.5.0":
+"unplugin-unused@npm:^0.5.1":
   version: 0.5.1
   resolution: "unplugin-unused@npm:0.5.1"
   dependencies:
