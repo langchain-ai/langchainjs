@@ -4,6 +4,8 @@ import { promisify } from 'node:util'
 
 import type { PackageJson } from 'type-fest'
 
+import type { CompilePackageOptions } from './types.js'
+
 const execAsync = promisify(exec)
 
 export interface WorkspacePackage {
@@ -12,11 +14,14 @@ export interface WorkspacePackage {
 }
 
 /**
- * Find all packages in the workspace that match the package query.
+ * Find all packages in the workspace that match the package query and are not excluded.
  * 
- * @returns A list of package names that match the query.
+ * @param rootDir - The root directory of the workspace
+ * @param packageQuery - Optional query to filter packages
+ * @param exclude - Optional array of package names or patterns to exclude
+ * @returns A list of packages that match the query and are not excluded.
  */
-export async function findWorkspacePackages(rootDir: string, packageQuery?: string) {
+export async function findWorkspacePackages(rootDir: string, opts: CompilePackageOptions) {
     const result = await execAsync('yarn workspaces list --json')
     const workspaces = (await Promise.all(result.stdout.split('\n').map(async (line) => {
         try {
@@ -27,16 +32,19 @@ export async function findWorkspacePackages(rootDir: string, packageQuery?: stri
             const pkg = await import(resolve(rootDir, workspace.location, 'package.json'))
 
             /**
-             * we don't want to compile private packages
+             * skip package if it matches any exclude pattern
              */
-            if (pkg.private) {
-                return
+            if (opts.exclude && opts.exclude.length > 0) {
+                const isExcluded = opts.exclude.some(excludePattern => pkg.name === excludePattern)
+                if (isExcluded) {
+                    return null
+                }
             }
 
             /**
              * compile package if no query is provided or the package name matches the query
              */
-            if (!packageQuery || pkg.name === packageQuery) {
+            if (!opts.packageQuery || pkg.name === opts.packageQuery || pkg.name.includes(opts.packageQuery)) {
                 return {
                     pkg,
                     path: resolve(rootDir, workspace.location),
