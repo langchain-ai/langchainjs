@@ -8480,7 +8480,7 @@ __metadata:
     tsdown: ^0.12.7
     tsx: ^4.19.4
     type-fest: ^4.41.0
-    unplugin-unused: ^0.5.0
+    unplugin-unused: ^0.5.1
   languageName: unknown
   linkType: soft
 
@@ -37603,15 +37603,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin-unused@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "unplugin-unused@npm:0.5.0"
+"unplugin-unused@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "unplugin-unused@npm:0.5.1"
   dependencies:
     js-tokens: ^9.0.1
     picocolors: ^1.1.1
     pkg-types: ^2.1.0
-    unplugin: ^2.3.2
-  checksum: 78ea856b16a2fd6bcd25a5339ab6d794dd72525cb7bc4b0431d044bb9f4564824b9e117162d0c6b5907450483e187bdef47f79ccda1bef43daf105179ba3f069
+    unplugin: ^2.3.5
+  checksum: 06e5fb91046cedf1de1882ef92acb459191b144b1281937a1ddd278b300efa40627d1c926dc69e34c6d31684bb050224022b0e7eaf134c8202d31646dcb3e3d2
   languageName: node
   linkType: hard
 
@@ -37627,7 +37627,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unplugin@npm:^2.3.2":
+"unplugin@npm:^2.3.5":
   version: 2.3.5
   resolution: "unplugin@npm:2.3.5"
   dependencies:

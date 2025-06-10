@@ -22,7 +22,6 @@
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
@@ -114,12 +113,12 @@
     },
     "./caches": {
       "require": {
-        "types": "./dist/caches.d.cts",
-        "default": "./dist/caches.cjs"
+        "types": "./dist/caches/base.d.cts",
+        "default": "./dist/caches/base.cjs"
       },
       "import": {
-        "types": "./dist/caches.d.ts",
-        "default": "./dist/caches.js"
+        "types": "./dist/caches/base.d.ts",
+        "default": "./dist/caches/base.js"
       },
       "input": "./src/caches/base.ts"
     },
@@ -466,12 +465,12 @@
     },
     "./retrievers/document_compressors": {
       "require": {
-        "types": "./dist/retrievers/document_compressors.d.cts",
-        "default": "./dist/retrievers/document_compressors.cjs"
+        "types": "./dist/retrievers/document_compressors/base.d.cts",
+        "default": "./dist/retrievers/document_compressors/base.cjs"
       },
       "import": {
-        "types": "./dist/retrievers/document_compressors.d.ts",
-        "default": "./dist/retrievers/document_compressors.js"
+        "types": "./dist/retrievers/document_compressors/base.d.ts",
+        "default": "./dist/retrievers/document_compressors/base.js"
       },
       "input": "./src/retrievers/document_compressors/base.ts"
     },
