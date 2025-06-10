@@ -9,22 +9,25 @@ import { lcSecretsPlugin } from './plugins/lc-secrets.js'
 import { importConstantsPlugin } from './plugins/import-constants.js'
 import { importMapPlugin } from './plugins/import-map.js'
 import { findWorkspacePackages } from './utils.js'
+import type { CompilePackageOptions } from './types.js'
 
 const __dirname = fileURLToPath(import.meta.url)
 const root = resolve(__dirname, '..', '..', '..')
 
-interface CompilePackageOptions {
-    packageQuery?: string
-    watch?: boolean
-}
-
 export async function compilePackages(opts: CompilePackageOptions) {
-    const packages = await findWorkspacePackages(root, opts.packageQuery)
+    const packages = await findWorkspacePackages(root, opts)
     const watch = opts.watch ?? false
 
     await Promise.all(packages.map(async ({ pkg, path }) => {
         const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
         const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
+
+        /**
+         * generate type declarations if not disabled
+         */
+        const dts = !opts.noEmit ? {
+            parallel: true,
+        } : false
         
         /**
          * if there are no entrypoints, skip the package
@@ -47,7 +50,12 @@ export async function compilePackages(opts: CompilePackageOptions) {
             //     profile: 'node16',
             //     level: 'error'
             // },
-            publint: !watch ? {
+            /**
+             * skip publint if:
+             * - watch is enabled, to avoid running publint on every change
+             * - noEmit is enabled, as not emitting types fails this check
+             */
+            publint: !watch && !opts.noEmit ? {
                 pkgDir: path,
                 level: 'error',
                 strict: true,
@@ -84,12 +92,11 @@ export async function compilePackages(opts: CompilePackageOptions) {
             })
         ] : []
 
+        console.log(11, dts)
         await build({
             entry,
             cwd: path,
-            dts: {
-                parallel: true,
-            },
+            dts,
             platform: 'node',
             target: 'es2020',
             outDir: './dist',
