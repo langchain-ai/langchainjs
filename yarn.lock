@@ -8509,7 +8509,7 @@ __metadata:
     rimraf: ^5.0.1
     ts-jest: ^29.1.0
     typescript: ~5.1.6
-    zod: ^3.22.4
+    zod: ^3.25.32
     zod-to-json-schema: ^3.22.3
   peerDependencies:
     "@langchain/core": ">=0.3.48 <0.4.0"
