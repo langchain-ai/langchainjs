@@ -1,100 +1,63 @@
 import { resolve, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { exec } from 'node:child_process'
-import { promisify } from 'node:util'
-import { builtinModules } from 'node:module'
 
 import { build } from 'tsdown'
-
 import type { PackageJson } from 'type-fest'
+import type { Options as UnusedOptions } from 'unplugin-unused'
+
 import { lcSecretsPlugin } from './plugins/lc-secrets.js'
 import { importConstantsPlugin } from './plugins/import-constants.js'
 import { importMapPlugin } from './plugins/import-map.js'
+import { findWorkspacePackages } from './utils.js'
 
 const __dirname = fileURLToPath(import.meta.url)
-const execAsync = promisify(exec)
-
 const root = resolve(__dirname, '..', '..', '..')
-const external = [...builtinModules, ...builtinModules.map(m => `node:${m}`)]
-const packageQuery = process.argv[2]
 
-interface WorkspacePackage {
-    pkg: PackageJson
-    path: string
+interface CompilePackageOptions {
+    packageQuery?: string
+    watch?: boolean
 }
 
-/**
- * Find all packages in the workspace that match the package query.
- * 
- * @returns A list of package names that match the query.
- */
-async function findWorkspacePackages() {
-    const result = await execAsync('yarn workspaces list --json')
-    const workspaces = (await Promise.all(result.stdout.split('\n').map(async (line) => {
-        try {
-            const workspace = JSON.parse(line)
-            if (workspace.location === '.') {
-                return null
-            }
-            const pkg = await import(resolve(root, workspace.location, 'package.json'))
+export async function compilePackages(opts: CompilePackageOptions) {
+    const packages = await findWorkspacePackages(root, opts.packageQuery)
+    const watch = opts.watch ?? false
 
-            /**
-             * we don't want to compile private packages
-             */
-            if (pkg.private) {
-                return
-            }
-
-            /**
-             * compile package if no query is provided or the package name matches the query
-             */
-            if (!packageQuery || pkg.name === packageQuery || pkg.name.includes(packageQuery)) {
-                return {
-                    pkg,
-                    path: resolve(root, workspace.location),
-                }
-            }
-        } catch {
-            /* ignore */
-        }
-    }))).filter(Boolean) as WorkspacePackage[]
-    return workspaces
-}
-
-const packages = await findWorkspacePackages()
-await Promise.all(packages.map(async ({ pkg, path }) => {
-    const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
-    const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
-    
-    /**
-     * if there are no entrypoints, skip the package
-     */
-    if (entry.length === 0) {
-        return
-    }
-
-    const pkgExternals = [
-        ...external,
-        ...Object.keys(pkg.dependencies || {}),
-        ...Object.keys(pkg.peerDependencies || {}),
-    ]
-    await build({
-        entry,
-        external: pkgExternals,
-        cwd: path,
-        dts: true,
-        platform: 'node',
-        target: 'es2020',
-        outDir: './dist',
-        format: ['esm', 'cjs'],
+    await Promise.all(packages.map(async ({ pkg, path }) => {
+        const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
+        const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
+        
         /**
-         * enable unused plugin once
-         * https://github.com/unplugin/unplugin-unused/pull/47 is merged
+         * if there are no entrypoints, skip the package
          */
-        unused: false, // { root: path },
-        attw: true,
-        publint: true,
-        plugins: [
+        if (entry.length === 0) {
+            return
+        }
+
+        /**
+         * build checks to run, automatically disabled if watch is enabled
+         */
+        const buildChecks = {
+            unused: !watch ? {
+                root: path,
+                level: 'error'
+            } as UnusedOptions : false,
+            attw: false,
+            // Todo(@christian-bromann): enable once https://github.com/rolldown/tsdown/pull/313 lands
+            // {
+            //     profile: 'node16',
+            //     level: 'error'
+            // },
+            publint: !watch ? {
+                pkgDir: path,
+                level: 'error',
+                strict: true,
+            } : false,
+        }
+
+        /**
+         * plugins to run, automatically disabled if watch is enabled
+         */
+        const plugins = !watch ? [
             lcSecretsPlugin({
                 // Enable/disable based on environment
                 enabled: process.env.SKIP_SECRET_SCANNING !== 'true',
@@ -119,9 +82,33 @@ await Promise.all(packages.map(async ({ pkg, path }) => {
                 // package info for reading entrypoints
                 packageInfo: pkg
             })
-        ],
-        inputOptions: {
+        ] : []
+
+        await build({
+            entry,
             cwd: path,
-        }
-    })
-}))  
+            dts: true,
+            platform: 'node',
+            target: 'es2020',
+            outDir: './dist',
+            format: ['esm', 'cjs'],
+            watch,
+            ignoreWatch: [
+                `${path}/.turbo`,
+                `${path}/dist`,
+                `${path}/node_modules`,
+                /**
+                 * ignore files that are generated by the plugins
+                 */
+                `${path}/src/load/import_constants.ts`,
+                `${path}/src/load/import_map.ts`,
+                `${path}/src/load/import_type.ts`
+            ],
+            inputOptions: {
+                cwd: path,
+            },
+            plugins,
+            ...buildChecks,
+        })
+    }))  
+}
