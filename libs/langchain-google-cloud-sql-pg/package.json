@@ -84,10 +84,6 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "dist/"
   ]
 }
