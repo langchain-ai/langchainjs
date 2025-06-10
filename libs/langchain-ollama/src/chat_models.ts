@@ -91,7 +91,7 @@ export interface ChatOllamaInput
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Headers | Record<string, string>;
   /**
    * Whether or not to check the model exists on the local machine before
    * invoking it. If set to `true`, the model will be pulled if it does not
