@@ -35,7 +35,7 @@ const cliConfig = {
         noEmit: {
             type: 'boolean' as const,
             short: 'd',
-            default: true,
+            default: false,
             description: 'Skip emitting type declarations'
         }
     },
