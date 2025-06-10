@@ -87,7 +87,9 @@ export async function compilePackages(opts: CompilePackageOptions) {
         await build({
             entry,
             cwd: path,
-            dts: true,
+            dts: {
+                parallel: true,
+            },
             platform: 'node',
             target: 'es2020',
             outDir: './dist',
