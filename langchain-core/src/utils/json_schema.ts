@@ -4,7 +4,6 @@ import { dereference, type Schema } from "@cfworker/json-schema";
 import { isZodSchemaV3, isZodSchemaV4, InteropZodType } from "./types/zod.js";
 
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
-export { JsonSchema7Type as JSONSchema } from "zod-to-json-schema";
 
 /**
  * Converts a Zod schema or JSON schema to a JSON schema.
@@ -116,6 +115,7 @@ export function validatesOnlyStrings(schema: unknown): boolean {
 
 export {
   type JsonSchema7Type,
+  type JsonSchema7Type as JSONSchema,
   type JsonSchema7ArrayType,
   type JsonSchema7ObjectType,
   type JsonSchema7StringType,

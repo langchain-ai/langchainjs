@@ -15,7 +15,6 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=@langchain/core",
-    "build:new": "yarn workspace @langchain/infra-build compile $npm_package_name",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
