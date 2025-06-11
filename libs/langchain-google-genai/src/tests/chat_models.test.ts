@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
   HumanMessage,
@@ -137,13 +137,13 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     questions: z.array(questionSchema).describe("Array of question objects"),
   });
 
-  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
     arrSchemaKeys.find((key) => key === "additionalProperties")
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    zodToJsonSchema(questionSchema)
+    toJsonSchema(questionSchema)
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
@@ -163,7 +163,7 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    zodToJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema)
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(

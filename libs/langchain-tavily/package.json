@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "peerDependencies": {
-    "@langchain/core": ">=0.3.39 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -82,6 +82,6 @@
     "index.d.cts"
   ],
   "dependencies": {
-    "zod": "^3.24.2"
+    "zod": "^3.25.32"
   }
 }

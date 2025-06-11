@@ -1,5 +1,8 @@
-import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
+import {
+  type InferInteropZodOutput,
+  type InteropZodType,
+} from "@langchain/core/utils/types";
 import { JsonMarkdownStructuredOutputParser } from "./structured.js";
 
 /**
@@ -18,7 +21,7 @@ export type RouterOutputParserInput = {
  * RouterOutputParserInput object as parameters.
  */
 export class RouterOutputParser<
-  Y extends z.ZodTypeAny
+  Y extends InteropZodType
 > extends JsonMarkdownStructuredOutputParser<Y> {
   defaultDestination = "DEFAULT";
 
@@ -37,7 +40,7 @@ export class RouterOutputParser<
    * @param text The text to be parsed.
    * @returns The parsed text as a Promise.
    */
-  async parse(text: string): Promise<z.infer<Y>> {
+  async parse(text: string): Promise<InferInteropZodOutput<Y>> {
     try {
       const parsedText = await super.parse(text);
       if (

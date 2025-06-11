@@ -32,11 +32,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "uuid": "^10.0.0",
-    "zod-to-json-schema": "^3.22.4"
+    "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.55 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

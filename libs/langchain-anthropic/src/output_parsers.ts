@@ -1,15 +1,18 @@
-import { z } from "zod";
 import {
   BaseLLMOutputParser,
   OutputParserException,
 } from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
+import { JsonOutputKeyToolsParserParamsInterop } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { ToolCall } from "@langchain/core/messages/tool";
+import {
+  interopSafeParseAsync,
+  InteropZodType,
+} from "@langchain/core/utils/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParams<T> {}
+  extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,7 +32,7 @@ export class AnthropicToolsOutputParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
   constructor(params: AnthropicToolsOutputParserParams<T>) {
     super(params);
@@ -60,7 +63,10 @@ export class AnthropicToolsOutputParser<
     if (this.zodSchema === undefined) {
       return parsedResult as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(parsedResult);
+    const zodParsedResult = await interopSafeParseAsync(
+      this.zodSchema,
+      parsedResult
+    );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -69,7 +75,7 @@ export class AnthropicToolsOutputParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
         JSON.stringify(parsedResult, null, 2)
       );
     }

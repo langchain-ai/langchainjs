@@ -36,12 +36,10 @@
   "license": "MIT",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "fast-xml-parser": "^4.4.1",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.4"
+    "fast-xml-parser": "^4.4.1"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.4.1",
@@ -65,7 +63,8 @@
     "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "zod": "^3.25.32"
   },
   "publishConfig": {
     "access": "public"
