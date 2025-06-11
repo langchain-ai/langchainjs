@@ -7,8 +7,8 @@ import { Document } from "@langchain/core/documents";
 import { VectorStore } from "@langchain/core/vectorstores";
 import {
   BaseTranslator,
-  BasicTranslator,
-  FunctionalTranslator,
+  BasicTranslator as BasicTranslatorOriginal,
+  FunctionalTranslator as FunctionalTranslatorOriginal,
   StructuredQuery,
 } from "@langchain/core/structured_query";
 import { CallbackManagerForRetrieverRun } from "@langchain/core/callbacks/manager";
@@ -17,7 +17,10 @@ import {
   QueryConstructorRunnableOptions,
 } from "../../chains/query_constructor/index.js";
 
-export { BaseTranslator, BasicTranslator, FunctionalTranslator };
+export { type BaseTranslator };
+
+export const BasicTranslator = BasicTranslatorOriginal;
+export const FunctionalTranslator = FunctionalTranslatorOriginal;
 
 /**
  * Interface for the arguments required to create a SelfQueryRetriever

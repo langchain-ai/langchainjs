@@ -1,1 +1,1 @@
-export { BaseToolkit as Toolkit } from "@langchain/core/tools";
+export { type BaseToolkit as Toolkit } from "@langchain/core/tools";

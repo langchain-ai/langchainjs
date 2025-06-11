@@ -1,9 +1,12 @@
+import {
+  getInputValue as getInputValueOriginal,
+  getOutputValue as getOutputValueOriginal,
+  getBufferString as getBufferStringOriginal,
+} from './base.js'
+
 export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   BaseMemory,
-  getInputValue,
-  getOutputValue,
-  getBufferString,
   type InputValues,
   type OutputValues,
   type MemoryVariables,
@@ -35,3 +38,7 @@ export {
   ConversationTokenBufferMemory,
   type ConversationTokenBufferMemoryInput,
 } from "./buffer_token_memory.js";
+
+export const getInputValue = getInputValueOriginal;
+export const getOutputValue = getOutputValueOriginal;
+export const getBufferString = getBufferStringOriginal;
