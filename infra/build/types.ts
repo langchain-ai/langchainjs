@@ -26,4 +26,9 @@ export interface CompilePackageOptions {
      * @default false
      */
     skipUnused?: boolean
+    /**
+     * Whether to skip cleaning the build directory
+     * @default false
+     */
+    skipClean?: boolean
 }

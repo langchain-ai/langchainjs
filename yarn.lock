@@ -6865,7 +6865,6 @@ __metadata:
     "@getmetal/metal-sdk": ^4.0.0
     "@getzep/zep-cloud": ^1.0.6
     "@getzep/zep-js": ^0.9.0
-    "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@google-ai/generativelanguage": ^2.5.0
     "@google-cloud/storage": ^7.15.2
@@ -6904,7 +6903,6 @@ __metadata:
     "@swc/jest": ^0.2.29
     "@tensorflow-models/universal-sentence-encoder": ^1.3.3
     "@tensorflow/tfjs-backend-cpu": ^3
-    "@tensorflow/tfjs-converter": ^3.6.0
     "@tensorflow/tfjs-core": ^3.6.0
     "@testcontainers/mariadb": ^10.16.0
     "@tsconfig/recommended": ^1.0.2
@@ -7022,7 +7020,6 @@ __metadata:
     uuid: ^10.0.0
     voy-search: 0.6.2
     weaviate-client: ^3.5.2
-    web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
     youtubei.js: ^12.2.0
     zod: ^3.25.32
@@ -7049,7 +7046,6 @@ __metadata:
     "@getmetal/metal-sdk": "*"
     "@getzep/zep-cloud": ^1.0.6
     "@getzep/zep-js": ^0.9.0
-    "@gomomento/sdk": ^1.51.1
     "@gomomento/sdk-core": ^1.51.1
     "@google-ai/generativelanguage": "*"
     "@google-cloud/storage": ^6.10.1 || ^7.7.0
@@ -7080,7 +7076,6 @@ __metadata:
     "@spider-cloud/spider-client": ^0.0.21
     "@supabase/supabase-js": ^2.45.0
     "@tensorflow-models/universal-sentence-encoder": "*"
-    "@tensorflow/tfjs-converter": "*"
     "@tensorflow/tfjs-core": "*"
     "@upstash/ratelimit": ^1.1.3 || ^2.0.3
     "@upstash/redis": ^1.20.6
@@ -7131,6 +7126,7 @@ __metadata:
     mongodb: ">=5.2.0"
     mysql2: ^3.9.8
     neo4j-driver: "*"
+    node-llama-cpp: ">=3.0.0"
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
     openai: "*"
@@ -7151,7 +7147,6 @@ __metadata:
     usearch: ^1.1.1
     voy-search: 0.6.2
     weaviate-client: ^3.5.2
-    web-auth-library: ^1.0.3
     word-extractor: "*"
     ws: ^8.14.2
     youtubei.js: "*"
@@ -7199,8 +7194,6 @@ __metadata:
     "@getzep/zep-cloud":
       optional: true
     "@getzep/zep-js":
-      optional: true
-    "@gomomento/sdk":
       optional: true
     "@gomomento/sdk-core":
       optional: true
@@ -7257,8 +7250,6 @@ __metadata:
     "@supabase/supabase-js":
       optional: true
     "@tensorflow-models/universal-sentence-encoder":
-      optional: true
-    "@tensorflow/tfjs-converter":
       optional: true
     "@tensorflow/tfjs-core":
       optional: true
@@ -7358,6 +7349,8 @@ __metadata:
       optional: true
     neo4j-driver:
       optional: true
+    node-llama-cpp:
+      optional: true
     notion-to-md:
       optional: true
     officeparser:
@@ -7395,8 +7388,6 @@ __metadata:
     voy-search:
       optional: true
     weaviate-client:
-      optional: true
-    web-auth-library:
       optional: true
     word-extractor:
       optional: true
@@ -9768,17 +9759,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@oxc-project/runtime@npm:=0.72.2":
-  version: 0.72.2
-  resolution: "@oxc-project/runtime@npm:0.72.2"
-  checksum: e761527ca87986709c828a50734ec4f8b25b8e7539857c0cc049c7a939d33f6c73a38d52a412d6e2ef14575061940409537d4beadce819ad49173ae05699a7e4
+"@oxc-project/runtime@npm:=0.72.3":
+  version: 0.72.3
+  resolution: "@oxc-project/runtime@npm:0.72.3"
+  checksum: 3ed713602ed7369e026a14c3686e42de3c7825307c4bd8f489016358a29b0269ec4d1259a1bf0056dbb88571f5edf8ca521606764c56818c4e9a08963dcbac08
   languageName: node
   linkType: hard
 
-"@oxc-project/types@npm:=0.72.2":
-  version: 0.72.2
-  resolution: "@oxc-project/types@npm:0.72.2"
-  checksum: 34ced21a1d4acbd7a372e7e66ad7bcb87b561427666c0fbe0c937516b347ad584f685e4ed3480da124083ee099020fdaaecf0ce33e50442030690c69d6086764
+"@oxc-project/types@npm:=0.72.3":
+  version: 0.72.3
+  resolution: "@oxc-project/types@npm:0.72.3"
+  checksum: 689bce006918788a0e9560d1b7ad3e69e026ebe233b2975189a97b944c99721f9306802b754d3e3a1f5821d4c86d18fd4d5618b5d675ade2a3c24edb229916d1
   languageName: node
   linkType: hard
 
@@ -10206,96 +10197,96 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rolldown/binding-darwin-arm64@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-darwin-arm64@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-darwin-arm64@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-darwin-arm64@npm:1.0.0-beta.15"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@rolldown/binding-darwin-x64@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-darwin-x64@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-darwin-x64@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-darwin-x64@npm:1.0.0-beta.15"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@rolldown/binding-freebsd-x64@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-freebsd-x64@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-freebsd-x64@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-freebsd-x64@npm:1.0.0-beta.15"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"@rolldown/binding-linux-arm-gnueabihf@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-linux-arm-gnueabihf@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-linux-arm-gnueabihf@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-linux-arm-gnueabihf@npm:1.0.0-beta.15"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@rolldown/binding-linux-arm64-gnu@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-linux-arm64-gnu@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-linux-arm64-gnu@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-linux-arm64-gnu@npm:1.0.0-beta.15"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@rolldown/binding-linux-arm64-musl@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-linux-arm64-musl@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-linux-arm64-musl@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-linux-arm64-musl@npm:1.0.0-beta.15"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@rolldown/binding-linux-x64-gnu@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-linux-x64-gnu@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-linux-x64-gnu@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-linux-x64-gnu@npm:1.0.0-beta.15"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@rolldown/binding-linux-x64-musl@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-linux-x64-musl@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-linux-x64-musl@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-linux-x64-musl@npm:1.0.0-beta.15"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@rolldown/binding-wasm32-wasi@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-wasm32-wasi@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-wasm32-wasi@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-wasm32-wasi@npm:1.0.0-beta.15"
   dependencies:
     "@napi-rs/wasm-runtime": ^0.2.10
   conditions: cpu=wasm32
   languageName: node
   linkType: hard
 
-"@rolldown/binding-win32-arm64-msvc@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-win32-arm64-msvc@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-win32-arm64-msvc@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-win32-arm64-msvc@npm:1.0.0-beta.15"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@rolldown/binding-win32-ia32-msvc@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-win32-ia32-msvc@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-win32-ia32-msvc@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-win32-ia32-msvc@npm:1.0.0-beta.15"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@rolldown/binding-win32-x64-msvc@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/binding-win32-x64-msvc@npm:1.0.0-beta.11-commit.f051675"
+"@rolldown/binding-win32-x64-msvc@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/binding-win32-x64-msvc@npm:1.0.0-beta.15"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@rolldown/pluginutils@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "@rolldown/pluginutils@npm:1.0.0-beta.11-commit.f051675"
-  checksum: b9ddade88cba133c64d9c860336e128147ac5f5e3b1c87527092878b996a4ca1e98c670c44a9c1d6ce2599723891836727c9b5920bf8b5f8cedda4262118dbe3
+"@rolldown/pluginutils@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "@rolldown/pluginutils@npm:1.0.0-beta.15"
+  checksum: e54328a7b2cc828c1c6d3881eb33553d2ea5fa9743a1476c4c9e50636afa76e05f7c080a235b8912ae3fb886957fae420cdd4b236fc23095ec2b91fe6043967d
   languageName: node
   linkType: hard
 
@@ -11978,15 +11969,6 @@ __metadata:
   peerDependencies:
     "@tensorflow/tfjs-core": 4.22.0
   checksum: afa375b7d752e145fee025270f2c848504987cf8e54f787736bfde968853428c0c8e4539205beee4c59443459c0a4cd150021aa613b48f40547987a94c7d7e04
-  languageName: node
-  linkType: hard
-
-"@tensorflow/tfjs-converter@npm:^3.6.0":
-  version: 3.21.0
-  resolution: "@tensorflow/tfjs-converter@npm:3.21.0"
-  peerDependencies:
-    "@tensorflow/tfjs-core": 3.21.0
-  checksum: b31e010f53ba860fa852376ad50ed9ef66ecd940e59620c47e127c1a1dc9b0c0fd748e5c691e7066c117d97f4bd4cd47201c02c92ad5f10f26e5541426cabb4a
   languageName: node
   linkType: hard
 
@@ -33187,7 +33169,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rolldown-plugin-dts@npm:^0.13.8":
+"rolldown-plugin-dts@npm:^0.13.11":
   version: 0.13.11
   resolution: "rolldown-plugin-dts@npm:0.13.11"
   dependencies:
@@ -33215,25 +33197,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rolldown@npm:1.0.0-beta.11-commit.f051675":
-  version: 1.0.0-beta.11-commit.f051675
-  resolution: "rolldown@npm:1.0.0-beta.11-commit.f051675"
+"rolldown@npm:1.0.0-beta.15":
+  version: 1.0.0-beta.15
+  resolution: "rolldown@npm:1.0.0-beta.15"
   dependencies:
-    "@oxc-project/runtime": =0.72.2
-    "@oxc-project/types": =0.72.2
-    "@rolldown/binding-darwin-arm64": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-darwin-x64": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-freebsd-x64": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-linux-arm-gnueabihf": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-linux-arm64-gnu": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-linux-arm64-musl": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-linux-x64-gnu": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-linux-x64-musl": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-wasm32-wasi": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-win32-arm64-msvc": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-win32-ia32-msvc": 1.0.0-beta.11-commit.f051675
-    "@rolldown/binding-win32-x64-msvc": 1.0.0-beta.11-commit.f051675
-    "@rolldown/pluginutils": 1.0.0-beta.11-commit.f051675
+    "@oxc-project/runtime": =0.72.3
+    "@oxc-project/types": =0.72.3
+    "@rolldown/binding-darwin-arm64": 1.0.0-beta.15
+    "@rolldown/binding-darwin-x64": 1.0.0-beta.15
+    "@rolldown/binding-freebsd-x64": 1.0.0-beta.15
+    "@rolldown/binding-linux-arm-gnueabihf": 1.0.0-beta.15
+    "@rolldown/binding-linux-arm64-gnu": 1.0.0-beta.15
+    "@rolldown/binding-linux-arm64-musl": 1.0.0-beta.15
+    "@rolldown/binding-linux-x64-gnu": 1.0.0-beta.15
+    "@rolldown/binding-linux-x64-musl": 1.0.0-beta.15
+    "@rolldown/binding-wasm32-wasi": 1.0.0-beta.15
+    "@rolldown/binding-win32-arm64-msvc": 1.0.0-beta.15
+    "@rolldown/binding-win32-ia32-msvc": 1.0.0-beta.15
+    "@rolldown/binding-win32-x64-msvc": 1.0.0-beta.15
+    "@rolldown/pluginutils": 1.0.0-beta.15
     ansis: ^4.0.0
   dependenciesMeta:
     "@rolldown/binding-darwin-arm64":
@@ -33262,7 +33244,7 @@ __metadata:
       optional: true
   bin:
     rolldown: bin/cli.mjs
-  checksum: 2580b43148f4c8f01408cad6860ab8d1a112f32c60a5996a66b34deca7ddcb55ea84ea1dbeaba8aa5e62f258fb49e89c9dddd29dabe031e3f8ffe70e8423172c
+  checksum: 2f5e415e3842f319af8735a10e4526abc5afa2f22895e150adce84be8c7e228494223f15b18a8f374d87d8e8ca9cd27bc602978b66135ae7a804537034b46771
   languageName: node
   linkType: hard
 
@@ -36125,8 +36107,8 @@ __metadata:
   linkType: hard
 
 "tsdown@npm:^0.12.7":
-  version: 0.12.7
-  resolution: "tsdown@npm:0.12.7"
+  version: 0.12.8
+  resolution: "tsdown@npm:0.12.8"
   dependencies:
     ansis: ^4.1.0
     cac: ^6.7.14
@@ -36135,8 +36117,8 @@ __metadata:
     diff: ^8.0.2
     empathic: ^1.1.0
     hookable: ^5.5.3
-    rolldown: 1.0.0-beta.11-commit.f051675
-    rolldown-plugin-dts: ^0.13.8
+    rolldown: 1.0.0-beta.15
+    rolldown-plugin-dts: ^0.13.11
     semver: ^7.7.2
     tinyexec: ^1.0.1
     tinyglobby: ^0.2.14
@@ -36160,7 +36142,7 @@ __metadata:
       optional: true
   bin:
     tsdown: dist/run.mjs
-  checksum: ea589feb00446353503349f16c5331908da4e3fd4111e44c73d6c48ba2ee0bdd15a872af5259c4dbd26aed1d27eb73f6eb174578d8e7f3618893ac1b4a29734e
+  checksum: 9116b53ed5bb88de4d434ebadef37db398193f81dc126dfb45a8e642bbd4fbbebdd1c105f728265f9e698cab7b81e780c134eaec92c415d3287b833ba9b5c092
   languageName: node
   linkType: hard
 

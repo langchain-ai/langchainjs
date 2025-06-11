@@ -34,15 +34,18 @@ const cliConfig = {
         },
         noEmit: {
             type: 'boolean' as const,
-            short: 'd',
             default: false,
             description: 'Skip emitting type declarations'
         },
         skipUnused: {
             type: 'boolean' as const,
-            short: 's',
             default: false,
             description: 'Skip unused dependency check on packages'
+        },
+        skipClean: {
+            type: 'boolean' as const,
+            default: false,
+            description: 'Skip cleaning the build directory'
         }
     },
     /**
@@ -76,7 +79,7 @@ function generateHelp(config: typeof cliConfig): string {
     lines.push('Options:')
 
     Object.entries(config.options).forEach(([key, option]) => {
-        const shortFlag = option.short ? `-${option.short}, ` : '    '
+        const shortFlag = 'short' in option &&  option.short ? `-${option.short}, ` : '    '
         const longFlag = `--${key}`
         const padding = ' '.repeat(Math.max(0, 15 - longFlag.length))
         lines.push(`  ${shortFlag}${longFlag}${padding}${option.description}${option.default ? ` (default: ${option.default})` : ''}`)
@@ -117,6 +120,7 @@ async function main() {
     const watch = values.watch
     const noEmit = values.noEmit
     const skipUnused = values.skipUnused
+    const skipClean = values.skipClean
     const exclude = Array.isArray(values.exclude) ? values.exclude : (values.exclude ? [values.exclude] : [])
 
     try {
@@ -131,6 +135,7 @@ async function main() {
                 exclude,
                 noEmit,
                 skipUnused,
+                skipClean,
             })
         } else if (packageQueries.length === 1) {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching "${packageQueries[0]}"...`)
@@ -144,6 +149,7 @@ async function main() {
                 exclude,
                 noEmit,
                 skipUnused,
+                skipClean,
             })
         } else {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching: ${packageQueries.map(q => `"${q}"`).join(', ')}...`)
@@ -160,6 +166,7 @@ async function main() {
                     exclude,
                     noEmit,
                     skipUnused,
+                    skipClean,
                 })
             }))
         }
