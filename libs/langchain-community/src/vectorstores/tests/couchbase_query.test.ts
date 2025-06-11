@@ -20,12 +20,6 @@ import {
   IndexType,
 } from "../couchbase_query.js";
 
-// Helper function to delay execution
-const delay = (ms: number) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
 describe.skip("CouchbaseQueryVectorStore", () => {
   // Configuration
   const config = {
@@ -85,8 +79,6 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         throw err;
       }
     }
-
-    await delay(5000);
   });
 
   beforeEach(async () => {
@@ -178,11 +170,6 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       const batch = documents.slice(i, i + batchSize);
       const ids = await indexTestStore.addDocuments(batch);
       allIds.push(...ids);
-
-      // Small delay between batches to avoid overwhelming the system
-      if (i + batchSize < documents.length) {
-        await delay(100);
-      }
     }
     return allIds;
   };
@@ -359,9 +346,6 @@ describe.skip("CouchbaseQueryVectorStore", () => {
 
       // Add documents in batches for better performance
       bulkDocumentIds = await addDocumentsInBatches(bulkDocuments, 100);
-
-      // Wait a bit for documents to be indexed
-      await delay(10000);
     });
 
     afterAll(async () => {
@@ -409,6 +393,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         fields: ["text", "metadata"],
         whereClause: "metadata.source = 'bulk_test'",
         indexScanNprobes: 10,
+        indexTrainlist: 1024,
       };
 
       // Test that createIndex doesn't throw an error
@@ -416,8 +401,14 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         indexTestStore.createIndex(createBhiveIndexOptions)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some(
+          (index) => index.name === createBhiveIndexOptions.indexName
+        )
+      ).toBe(true);
     });
 
     test("should create COMPOSITE vector index", async () => {
@@ -430,6 +421,7 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         fields: ["text", "metadata.category"],
         whereClause: "metadata.source = 'bulk_test'",
         indexScanNprobes: 3,
+        indexTrainlist: 1024,
       };
 
       // Test that createIndex doesn't throw an error
@@ -437,8 +429,14 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         indexTestStore.createIndex(createCompositeIndexOptions)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some(
+          (index) => index.name === createCompositeIndexOptions.indexName
+        )
+      ).toBe(true);
     });
 
     test("should create index with minimal options", async () => {
@@ -454,8 +452,12 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         indexTestStore.createIndex(minimalOptions)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some((index) => index.name === minimalOptions.indexName)
+      ).toBe(true);
     });
 
     test("should auto-detect vector dimension from embeddings", async () => {
@@ -471,8 +473,14 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         indexTestStore.createIndex(optionsWithoutDimension)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some(
+          (index) => index.name === optionsWithoutDimension.indexName
+        )
+      ).toBe(true);
     });
 
     test("should handle index creation errors gracefully", async () => {
@@ -486,6 +494,13 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       await expect(
         indexTestStore.createIndex(invalidOptions)
       ).rejects.toThrow();
+
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some((index) => index.name === invalidOptions.indexName)
+      ).toBe(false);
     });
 
     test("should create both BHIVE and COMPOSITE indexes sequentially", async () => {
@@ -509,13 +524,23 @@ describe.skip("CouchbaseQueryVectorStore", () => {
       await expect(
         indexTestStore.createIndex(createBhiveIndexOptions)
       ).resolves.not.toThrow();
-      await delay(3000);
       await expect(
         indexTestStore.createIndex(createCompositeIndexOptions)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some(
+          (index) => index.name === createBhiveIndexOptions.indexName
+        )
+      ).toBe(true);
+      expect(
+        indexes.some(
+          (index) => index.name === createCompositeIndexOptions.indexName
+        )
+      ).toBe(true);
     });
 
     test("should use default distance strategy when not specified", async () => {
@@ -531,8 +556,12 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         indexTestStore.createIndex(optionsWithoutDistance)
       ).resolves.not.toThrow();
 
-      // Wait a bit for index creation to process
-      await delay(2000);
+      const indexes = await cluster
+        .queryIndexes()
+        .getAllIndexes(config.indexTestBucketName);
+      expect(
+        indexes.some((index) => index.name === optionsWithoutDistance.indexName)
+      ).toBe(true);
     });
 
     test("should handle different distance strategies", async () => {
@@ -541,6 +570,8 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         DistanceStrategy.L2,
         DistanceStrategy.EUCLIDEAN,
         DistanceStrategy.COSINE,
+        DistanceStrategy.L2_SQUARED,
+        DistanceStrategy.EUCLIDEAN_SQUARED,
       ];
 
       for (let i = 0; i < distanceStrategies.length; i += 1) {
@@ -555,8 +586,13 @@ describe.skip("CouchbaseQueryVectorStore", () => {
         await expect(
           indexTestStore.createIndex(options)
         ).resolves.not.toThrow();
-        await delay(1000);
+        const indexes = await cluster
+          .queryIndexes()
+          .getAllIndexes(config.indexTestBucketName);
+        expect(indexes.some((index) => index.name === options.indexName)).toBe(
+          true
+        );
       }
-    });
+    }, 60000);
   });
 });
