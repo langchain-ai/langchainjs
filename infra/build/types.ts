@@ -17,8 +17,13 @@ export interface CompilePackageOptions {
      */
     exclude?: string[]
     /**
-     * Whether to emit declarations
-     * @default true
+     * Whether to skip emitting type declarations
+     * @default false
      */
     noEmit?: boolean
+    /**
+     * Whether to skip unused dependency check on packages
+     * @default false
+     */
+    skipUnused?: boolean
 }

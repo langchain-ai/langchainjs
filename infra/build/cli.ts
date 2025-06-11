@@ -29,7 +29,7 @@ const cliConfig = {
             /**
              * WIP: currently failing
              */
-            default: ['langchain', '@langchain/community'],
+            default: ['@langchain/community'],
             description: 'Exclude packages from the build (can be specified multiple times)'
         },
         noEmit: {
@@ -37,6 +37,12 @@ const cliConfig = {
             short: 'd',
             default: false,
             description: 'Skip emitting type declarations'
+        },
+        skipUnused: {
+            type: 'boolean' as const,
+            short: 's',
+            default: false,
+            description: 'Skip unused dependency check on packages'
         }
     },
     /**
@@ -110,6 +116,7 @@ async function main() {
     const packageQueries = positionals
     const watch = values.watch
     const noEmit = values.noEmit
+    const skipUnused = values.skipUnused
     const exclude = Array.isArray(values.exclude) ? values.exclude : (values.exclude ? [values.exclude] : [])
 
     try {
@@ -123,6 +130,7 @@ async function main() {
                 watch,
                 exclude,
                 noEmit,
+                skipUnused,
             })
         } else if (packageQueries.length === 1) {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching "${packageQueries[0]}"...`)
@@ -135,6 +143,7 @@ async function main() {
                 watch,
                 exclude,
                 noEmit,
+                skipUnused,
             })
         } else {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching: ${packageQueries.map(q => `"${q}"`).join(', ')}...`)
@@ -150,6 +159,7 @@ async function main() {
                     watch,
                     exclude,
                     noEmit,
+                    skipUnused,
                 })
             }))
         }
