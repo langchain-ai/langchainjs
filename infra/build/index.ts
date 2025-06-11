@@ -13,117 +13,133 @@ import type { CompilePackageOptions } from './types.js'
 
 const __dirname = fileURLToPath(import.meta.url)
 const root = resolve(__dirname, '..', '..', '..')
+const coreProject = '@langchain/core'
 
 export async function compilePackages(opts: CompilePackageOptions) {
     const packages = await findWorkspacePackages(root, opts)
-    const watch = opts.watch ?? false
-
     if (packages.length === 0) {
         const query = opts.packageQuery ? `matching "${opts.packageQuery}"` : 'with no package query'
         throw new Error(`No packages found ${query}!`)
     }
 
-    await Promise.all(packages.map(async ({ pkg, path }) => {
-        const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
-        const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
-        const clean = !opts.skipClean
+    /**
+     * if the core project is in the list, build it first
+     * this is to ensure that the core project is built before the other projects
+     * that depend on it
+     */
+    const coreProjectIndex = packages.findIndex(({ pkg }) => pkg.name === coreProject)
+    if (coreProjectIndex !== -1 && packages.length > 1) {
+        const coreProjectPackage = packages[coreProjectIndex]
+        packages.splice(coreProjectIndex, 1)
+        await buildProject(coreProjectPackage.path, coreProjectPackage.pkg, opts)
+    }
 
-        /**
-         * generate type declarations if not disabled
-         */
-        const dts = !opts.noEmit ? {
-            parallel: true,
-        } : false
-        
-        /**
-         * if there are no entrypoints, skip the package
-         */
-        if (entry.length === 0) {
-            return
-        }
+    await Promise.all(packages.map(({ pkg, path }) => buildProject(path, pkg, opts)))  
+}
 
-        /**
-         * build checks to run, automatically disabled if watch is enabled
-         */
-        const buildChecks = {
-            unused: !watch && !opts.skipUnused ? {
-                root: path,
-                level: 'error'
-            } as UnusedOptions : false,
-            attw: false,
-            // Todo(@christian-bromann): enable once https://github.com/rolldown/tsdown/pull/313 lands
-            // {
-            //     profile: 'node16',
-            //     level: 'error'
-            // },
-            /**
-             * skip publint if:
-             * - watch is enabled, to avoid running publint on every change
-             * - noEmit is enabled, as not emitting types fails this check
-             */
-            publint: !watch && !opts.noEmit ? {
-                pkgDir: path,
-                level: 'error',
-                strict: true,
-            } : false,
-        }
+async function buildProject(path: string, pkg: PackageJson, opts: CompilePackageOptions) {
+    const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
+    const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
+    const clean = !opts.skipClean
+    const watch = opts.watch ?? false
+    const sourcemap = !opts.skipSourcemap
 
-        /**
-         * plugins to run, automatically disabled if watch is enabled
-         */
-        const plugins = !watch ? [
-            lcSecretsPlugin({
-                // Enable/disable based on environment
-                enabled: process.env.SKIP_SECRET_SCANNING !== 'true',
-                // Use lenient validation in development
-                strict: process.env.NODE_ENV === 'production',
-                // package path for the secret map
-                packagePath: path,
-            }),
-            importConstantsPlugin({
-                // Enable/disable based on environment
-                enabled: process.env.SKIP_IMPORT_CONSTANTS !== 'true',
-                // package path for reading package.json
-                packagePath: path,
-                // package info for reading package.json
-                packageInfo: pkg
-            }),
-            importMapPlugin({
-                // Enable/disable based on environment
-                enabled: process.env.SKIP_IMPORT_MAP !== 'true',
-                // package path for the import map
-                packagePath: path,
-                // package info for reading entrypoints
-                packageInfo: pkg
-            })
-        ] : []
+    /**
+     * generate type declarations if not disabled
+     */
+    const dts = !opts.noEmit ? {
+        parallel: true,
+    } : false
 
-        await build({
-            entry,
-            clean,
-            cwd: path,
-            dts,
-            platform: 'node',
-            target: 'es2020',
-            outDir: './dist',
-            format: ['esm', 'cjs'],
-            watch,
-            ignoreWatch: [
-                `${path}/.turbo`,
-                `${path}/dist`,
-                `${path}/node_modules`,
-                /**
-                 * ignore files that are generated by the plugins
-                 */
-                `${path}/src/load/import_constants.ts`,
-                `${path}/src/load/import_map.ts`,
-                `${path}/src/load/import_type.ts`
-            ],
-            inputOptions: {
-                cwd: path,
-            },
-            plugins,
-            ...buildChecks,
+    /**
+     * if there are no entrypoints, skip the package
+     */
+    if (entry.length === 0) {
+        return
+    }
+
+    /**
+     * build checks to run, automatically disabled if watch is enabled
+     */
+    const buildChecks = {
+        unused: !watch && !opts.skipUnused ? {
+            root: path,
+            level: 'error'
+        } as UnusedOptions : false,
+        attw: false,
+        // Todo(@christian-bromann): enable once https://github.com/rolldown/tsdown/pull/313 lands
+        // {
+        //     profile: 'node16',
+        //     level: 'error'
+        // },
+        /**
+         * skip publint if:
+         * - watch is enabled, to avoid running publint on every change
+         * - noEmit is enabled, as not emitting types fails this check
+         */
+        publint: !watch && !opts.noEmit ? {
+            pkgDir: path,
+            level: 'error',
+            strict: true,
+        } : false,
+    }
+
+    /**
+     * plugins to run, automatically disabled if watch is enabled
+     */
+    const plugins = !watch ? [
+        lcSecretsPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_SECRET_SCANNING !== 'true',
+            // Use lenient validation in development
+            strict: process.env.NODE_ENV === 'production',
+            // package path for the secret map
+            packagePath: path,
+        }),
+        importConstantsPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_IMPORT_CONSTANTS !== 'true',
+            // package path for reading package.json
+            packagePath: path,
+            // package info for reading package.json
+            packageInfo: pkg
+        }),
+        importMapPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_IMPORT_MAP !== 'true',
+            // package path for the import map
+            packagePath: path,
+            // package info for reading entrypoints
+            packageInfo: pkg
         })
-    }))  
+    ] : []
+
+    await build({
+        entry,
+        clean,
+        cwd: path,
+        dts,
+        sourcemap,
+        platform: 'node',
+        target: 'es2020',
+        outDir: './dist',
+        format: ['esm', 'cjs'],
+        watch,
+        ignoreWatch: [
+            `${path}/.turbo`,
+            `${path}/dist`,
+            `${path}/node_modules`,
+            /**
+             * ignore files that are generated by the plugins
+             */
+            `${path}/src/load/import_constants.ts`,
+            `${path}/src/load/import_map.ts`,
+            `${path}/src/load/import_type.ts`
+        ],
+        inputOptions: {
+            cwd: path,
+        },
+        plugins,
+        ...buildChecks,
+    })
 }
