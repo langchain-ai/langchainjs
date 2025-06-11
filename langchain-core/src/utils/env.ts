@@ -22,9 +22,7 @@ export const isWebWorker = () =>
 
 export const isJsDom = () =>
   (typeof window !== "undefined" && window.name === "nodejs") ||
-  (typeof navigator !== "undefined" &&
-    (navigator.userAgent.includes("Node.js") ||
-      navigator.userAgent.includes("jsdom")));
+  (typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom"));
 
 // Supabase Edge Function provides a `Deno` global object
 // without `version` property
