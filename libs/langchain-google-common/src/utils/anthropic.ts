@@ -206,7 +206,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return newAIMessageChunk(ret);
   }
 
-  function messageToUsageMetadata(message: AnthropicResponseMessage): UsageMetadata {
+  function messageToUsageMetadata(
+    message: AnthropicResponseMessage
+  ): UsageMetadata {
     const usage = message?.usage;
     const inputTokens = usage?.input_tokens ?? 0;
     const outputTokens = usage?.output_tokens ?? 0;
@@ -216,15 +218,15 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       total_tokens: inputTokens + outputTokens,
       input_token_details: {
         cache_read: usage?.cache_read_input_tokens ?? 0,
-        cache_creation: usage?.cache_creation_input_tokens ?? 0
-      }
+        cache_creation: usage?.cache_creation_input_tokens ?? 0,
+      },
     };
     return usageMetadata;
   }
 
   function messageToGenerationInfo(message: AnthropicResponseMessage) {
     const usageMetadata = messageToUsageMetadata(message);
-    
+
     return {
       usage_metadata: usageMetadata,
       finish_reason: message.stop_reason,
