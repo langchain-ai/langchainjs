@@ -1,19 +1,23 @@
 # LangChain Build System
 
-A modern build system for LangChain JavaScript/TypeScript packages that provides fast compilation, type checking, and automated secret management for monorepo workspaces.
+A modern build system for LangChain JavaScript/TypeScript packages that provides fast compilation, type checking, automated secret management, and advanced code generation for monorepo workspaces.
 
 ## Overview
 
-This build system is designed to handle the complex requirements of LangChain's multi-package monorepo. It automatically discovers packages in the workspace, compiles them with optimal settings, and includes specialized tooling for LangChain's security patterns.
+This build system is designed to handle the complex requirements of LangChain's multi-package monorepo. It automatically discovers packages in the workspace, compiles them with optimal settings, and includes specialized tooling for LangChain's security patterns and dynamic loading capabilities.
 
 ### Key Features
 
-- 🚀 **Fast Compilation**: Uses [tsdown](https://github.com/privatenumber/tsdown) for high-performance TypeScript bundling
+- 🚀 **Fast Compilation**: Uses [tsdown](https://github.com/privatenumber/tsdown) for high-performance TypeScript bundling with Rolldown
 - 📦 **Monorepo Aware**: Automatically discovers and builds all non-private packages in yarn workspaces
 - 🔍 **Secret Management**: Built-in scanning and validation of LangChain's `lc_secrets` patterns
 - 📝 **Type Generation**: Generates both ESM and CommonJS outputs with TypeScript declarations
-- ✅ **Quality Checks**: Integrated type checking with [arethetypeswrong](https://github.com/arethetypeswrong/arethetypeswrong) and [publint](https://github.com/bluwy/publint)
-- 🎯 **Selective Building**: Build all packages or target specific ones
+- ✅ **Quality Checks**: Integrated type checking with [arethetypeswrong](https://github.com/arethetypeswrong/arethetypeswrong), [publint](https://github.com/bluwy/publint), and unused dependency detection
+- 🗺️ **Import Maps**: Automatic generation of import maps for convenient bulk imports
+- 📋 **Import Constants**: Dynamic detection and export of optional dependency entrypoints
+- 🎯 **Selective Building**: Build all packages or target specific ones with flexible filtering
+- 👀 **Watch Mode**: Real-time compilation with file watching capabilities
+- 🛠️ **Rich CLI**: Full-featured command-line interface with comprehensive options
 
 ## Architecture
 
@@ -22,9 +26,14 @@ The build system consists of:
 ```
 infra/build/
 ├── index.ts              # Main build orchestrator
+├── cli.ts                # Command-line interface
+├── types.ts              # TypeScript type definitions
+├── utils.ts              # Utility functions
 ├── plugins/
 │   ├── README.md         # Plugin documentation
-│   └── lc-secrets.ts     # LangChain secrets scanning plugin
+│   ├── lc-secrets.ts     # LangChain secrets scanning plugin
+│   ├── import-map.ts     # Import map generation plugin
+│   └── import-constants.ts # Import constants generation plugin
 ├── package.json          # Build system dependencies
 └── README.md             # This documentation
 ```
@@ -34,51 +43,36 @@ infra/build/
 - **[tsdown](https://github.com/privatenumber/tsdown)** - Fast TypeScript bundler with Rolldown
 - **[TypeScript Compiler API](https://github.com/microsoft/TypeScript)** - For source code analysis and type checking
 - **[yarn workspaces](https://yarnpkg.com/features/workspaces)** - For monorepo package discovery
+- **[unplugin-unused](https://github.com/unplugin/unplugin-unused)** - For unused dependency detection
 - **Node.js built-ins** - File system operations and process management
 
 ## Usage
 
-### Basic Commands
+### CLI Commands
 
 ```bash
+# Get help
+yarn build:new --help
+
 # Build all packages in the workspace
-npx turbo build:new
+yarn build:new
 
-# Build specific package by name
-npx turbo build:new --filter langchain-core
-
-# Build packages matching a pattern
-npx turbo build:new --filter "*openai*"
-
-# Build multiple specific packages
-npx turbo build:new --filter langchain-core --filter langchain-openai
-```
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NODE_ENV` | Environment mode (`development`/`production`) | `development` |
-| `SKIP_SECRET_SCANNING` | Disable secret scanning entirely | `false` |
-
-### Examples
-
-```bash
-# Development build (lenient secret validation)
-NODE_ENV=development npx turbo build:new
-
-# Production build (strict secret validation)
-NODE_ENV=production npx turbo build:new
-
-# Build without secret scanning
-SKIP_SECRET_SCANNING=true npx turbo build:new
+# Build with watch mode for development
+yarn build:new --watch
 
 # Build specific packages
-npx turbo build:new --filter langchain-openai
-npx turbo build:new --filter "*community*"
+yarn build:new @langchain/core
+yarn build:new @langchain/core langchain @langchain/openai
 
-# Build packages in parallel with custom concurrency
-npx turbo build:new --concurrency 4
+# Exclude packages from build
+yarn build:new --exclude @langchain/community
+yarn build:new -e @langchain/aws -e @langchain/openai
+
+# Skip various build steps
+yarn build:new --no-emit          # Skip type declarations
+yarn build:new --skip-unused      # Skip unused dependency check
+yarn build:new --skip-clean       # Skip cleaning build directory
+yarn build:new --skip-sourcemap   # Skip sourcemap generation
 ```
 
 ## Development
@@ -115,18 +109,3 @@ Each package must have a properly configured `exports` field that includes an `i
 ```
 
 **Important**: The `input` property is required for the build system to understand which TypeScript source file should be compiled for each export. Without this property, the entrypoint will be ignored during build.
-
-### Turbo Configuration
-
-The build system integrates with Turbo for optimal caching and parallelization. Ensure your `turbo.json` includes:
-
-```json
-{
-  "tasks": {
-    "build:new": {
-      "dependsOn": ["^build:new"],
-      "outputs": ["dist/**"]
-    }
-  }
-}
-```
