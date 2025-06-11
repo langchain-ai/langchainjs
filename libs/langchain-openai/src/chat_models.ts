@@ -330,6 +330,103 @@ const completionsApiContentBlockConverter: StandardContentBlockConverter<{
   },
 };
 
+async function _preprocessMessagesForFileUrls(
+  messages: BaseMessage[]
+): Promise<BaseMessage[]> {
+  const processedMessages: BaseMessage[] = [];
+  
+  for (const message of messages) {
+    if (typeof message.content === "string") {
+      processedMessages.push(message);
+      continue;
+    }
+    
+    let hasFileUrls = false;
+    const processedContent: MessageContent = [];
+    
+    for (const contentItem of message.content) {
+      if (isDataContentBlock(contentItem) && contentItem.type === "file" && contentItem.source_type === "id") {
+        const fileBlock = contentItem as any;
+        const isUrl = /^https?:\/\//.test(fileBlock.id);
+        
+        if (isUrl) {
+          hasFileUrls = true;
+          try {
+            const response = await fetch(fileBlock.id);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch file from URL: ${response.status} ${response.statusText}`);
+            }
+            
+            const arrayBuffer = await response.arrayBuffer();
+            
+            const base64Data = Buffer.from(arrayBuffer).toString("base64");
+            
+            let mimeType = fileBlock.mime_type;
+            if (!mimeType) {
+              const contentType = response.headers.get("content-type");
+              if (contentType) {
+                mimeType = contentType.split(";")[0]; // Remove any charset info
+              }
+            }
+            
+            let filename = fileBlock.metadata?.filename || fileBlock.metadata?.name || fileBlock.metadata?.title;
+            if (!filename) {
+              const urlParts = new URL(fileBlock.id).pathname.split("/");
+              filename = urlParts[urlParts.length - 1] || "file";
+            }
+            
+            processedContent.push({
+              type: "file",
+              source_type: "base64",
+              data: base64Data,
+              mime_type: mimeType || "application/octet-stream",
+              metadata: {
+                ...fileBlock.metadata,
+                filename: filename as string,
+                originalUrl: fileBlock.id
+              }
+            });
+          } catch (error) {
+            throw new Error(
+              `Failed to fetch and convert file from URL ${fileBlock.id}: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+          }
+        } else {
+          processedContent.push(contentItem);
+        }
+      } else {
+        processedContent.push(contentItem);
+      }
+    }
+    
+    if (hasFileUrls) {
+      const baseFields: BaseMessageFields = {
+        content: processedContent,
+        additional_kwargs: message.additional_kwargs,
+        response_metadata: message.response_metadata,
+        name: message.name,
+        id: message.id,
+      };
+      
+      const extraFields: Record<string, any> = {};
+      if ('tool_calls' in message) extraFields.tool_calls = (message as any).tool_calls;
+      if ('invalid_tool_calls' in message) extraFields.invalid_tool_calls = (message as any).invalid_tool_calls;
+      if ('tool_call_id' in message) extraFields.tool_call_id = (message as any).tool_call_id;
+      if ('usage_metadata' in message) extraFields.usage_metadata = (message as any).usage_metadata;
+      
+      const MessageClass = message.constructor as new (fields: any) => BaseMessage;
+      processedMessages.push(new MessageClass({
+        ...baseFields,
+        ...extraFields,
+      }));
+    } else {
+      processedMessages.push(message);
+    }
+  }
+  
+  return processedMessages;
+}
+
 // Used in LangSmith, export is important here
 export function _convertMessagesToOpenAIParams(
   messages: BaseMessage[],
@@ -2269,6 +2366,25 @@ export class ChatOpenAI<
     } else {
       additional_kwargs = {};
     }
+
+    // Check for reasoning content in delta
+    for (const reasoningKeyword of [
+      "reasoning_content",
+      "reasoning",
+      "reasoning_block",
+      "thinking_content",
+      "think",
+      "thinking",
+      "thinking_block",
+      "think_content",
+    ]) {
+      const reasoningContent = delta[reasoningKeyword];
+      if (reasoningContent !== undefined) {
+        additional_kwargs.reasoning_content = reasoningContent;
+        break;
+      }
+    }
+
     if (this.__includeRawResponse) {
       additional_kwargs.__raw_response = rawResponse;
     }
@@ -2351,14 +2467,16 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const processedMessages = await _preprocessMessagesForFileUrls(messages);
+    
     if (this._useResponseApi(options)) {
-      const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
+      const lastAIMessage = processedMessages.filter((m) => isAIMessage(m)).pop();
       const lastAIMessageId = lastAIMessage?.response_metadata?.id;
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
           input: _convertMessagesToOpenAIResponsesParams(
-            messages,
+            processedMessages,
             this.model,
             this.zdrEnabled
           ),
@@ -2382,7 +2500,7 @@ export class ChatOpenAI<
     }
 
     const messagesMapped: OpenAICompletionParam[] =
-      _convertMessagesToOpenAIParams(messages, this.model);
+      _convertMessagesToOpenAIParams(processedMessages, this.model);
 
     const params = {
       ...this.invocationParams(options, {
@@ -2598,17 +2716,20 @@ export class ChatOpenAI<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    // Preprocess messages to handle file URLs
+    const processedMessages = await _preprocessMessagesForFileUrls(messages);
+    
     if (this._useResponseApi(options)) {
-      return this._responseApiGenerate(messages, options, runManager);
+      return this._responseApiGenerate(processedMessages, options, runManager);
     }
 
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAICompletionParam[] =
-      _convertMessagesToOpenAIParams(messages, this.model);
+      _convertMessagesToOpenAIParams(processedMessages, this.model);
 
     if (params.stream) {
-      const stream = this._streamResponseChunks(messages, options, runManager);
+      const stream = this._streamResponseChunks(processedMessages, options, runManager);
       const finalChunks: Record<number, ChatGenerationChunk> = {};
       for await (const chunk of stream) {
         chunk.message.response_metadata = {
@@ -2633,7 +2754,7 @@ export class ChatOpenAI<
       // fallback to estimation.
 
       const promptTokenUsage = await this.getEstimatedTokenCountFromPrompt(
-        messages,
+        processedMessages,
         functions,
         function_call
       );
@@ -3270,17 +3391,6 @@ export class ChatOpenAI<
       { raw: BaseMessage; parsed: RunOutput }
     >([{ raw: llm }, parsedWithFallback]);
   }
-}
-
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(
