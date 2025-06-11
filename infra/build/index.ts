@@ -125,6 +125,7 @@ async function buildProject(path: string, pkg: PackageJson, opts: CompilePackage
         outDir: './dist',
         format: ['esm', 'cjs'],
         watch,
+        tsconfig: resolve(path, 'tsconfig.json'),
         ignoreWatch: [
             `${path}/.turbo`,
             `${path}/dist`,
