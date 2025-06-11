@@ -26,6 +26,7 @@ export async function compilePackages(opts: CompilePackageOptions) {
     await Promise.all(packages.map(async ({ pkg, path }) => {
         const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
         const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
+        const clean = !opts.skipClean
 
         /**
          * generate type declarations if not disabled
@@ -99,6 +100,7 @@ export async function compilePackages(opts: CompilePackageOptions) {
 
         await build({
             entry,
+            clean,
             cwd: path,
             dts,
             platform: 'node',
