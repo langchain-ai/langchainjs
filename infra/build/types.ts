@@ -5,7 +5,7 @@ export interface CompilePackageOptions {
     /**
      * The package query to use for compiling packages
      */
-    packageQuery?: string
+    packageQuery?: string[]
     /**
      * Whether to watch for changes and automatically recompile
      * @default false

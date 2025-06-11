@@ -22,18 +22,6 @@ export async function compilePackages(opts: CompilePackageOptions) {
         throw new Error(`No packages found ${query}!`)
     }
 
-    /**
-     * if the core project is in the list, build it first
-     * this is to ensure that the core project is built before the other projects
-     * that depend on it
-     */
-    const coreProjectIndex = packages.findIndex(({ pkg }) => pkg.name === coreProject)
-    if (coreProjectIndex !== -1 && packages.length > 1) {
-        const coreProjectPackage = packages[coreProjectIndex]
-        packages.splice(coreProjectIndex, 1)
-        await buildProject(coreProjectPackage.path, coreProjectPackage.pkg, opts)
-    }
-
     await Promise.all(packages.map(({ pkg, path }) => buildProject(path, pkg, opts)))  
 }
 

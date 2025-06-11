@@ -122,7 +122,7 @@ async function main() {
         process.exit(0)
     }
 
-    const packageQueries = positionals
+    const packageQuery = positionals
     const watch = values.watch
     const noEmit = values.noEmit
     const skipUnused = values.skipUnused
@@ -131,6 +131,7 @@ async function main() {
     const exclude = Array.isArray(values.exclude) ? values.exclude : (values.exclude ? [values.exclude] : [])
 
     const opts: CompilePackageOptions = {
+        packageQuery,
         watch,
         exclude,
         noEmit,
@@ -140,38 +141,14 @@ async function main() {
     }
 
     try {
-        if (packageQueries.length === 0) {
-            console.log(`${watch ? 'Watching' : 'Compiling'} all packages...`)
-            if (exclude.length > 0) {
-                console.log(`Excluding: ${exclude.join(', ')}`)
-            }
-
-            await compilePackages(opts)
-        } else if (packageQueries.length === 1) {
-            console.log(`${watch ? 'Watching' : 'Compiling'} packages matching "${packageQueries[0]}"...`)
-            if (exclude.length > 0) {
-                console.log(`Excluding: ${exclude.join(', ')}`)
-            }
-
-            await compilePackages({
-                packageQuery: packageQueries[0],
-                ...opts,
-            })
-        } else {
-            console.log(`${watch ? 'Watching' : 'Compiling'} packages matching: ${packageQueries.map(q => `"${q}"`).join(', ')}...`)
-            if (exclude.length > 0) {
-                console.log(`Excluding: ${exclude.join(', ')}`)
-            }
-
-            // Process multiple package queries by running compilation for each query
-            await Promise.all(packageQueries.map(async (packageQuery) => {
-                console.log(`  Processing packages matching "${packageQuery}"...`)
-                await compilePackages({
-                    packageQuery,
-                    ...opts,
-                })
-            }))
+        const packageLabel = packageQuery.length > 0
+            ? `packages matching: ${packageQuery.map(q => `"${q}"`).join(', ')}`
+            : 'all packages'
+        console.log(`${watch ? 'Watching' : 'Compiling'} ${packageLabel}...`)
+        if (exclude.length > 0) {
+            console.log(`Excluding: ${exclude.map(q => `"${q}"`).join(', ')}`)
         }
+        await compilePackages(opts)
 
         if (!watch) {
             console.log('✅ Compilation completed successfully!')

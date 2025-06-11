@@ -44,7 +44,7 @@ export async function findWorkspacePackages(rootDir: string, opts: CompilePackag
             /**
              * compile package if no query is provided or the package name matches the query
              */
-            if (!opts.packageQuery || pkg.name === opts.packageQuery) {
+            if (!opts.packageQuery || opts.packageQuery.length === 0 || opts.packageQuery.includes(pkg.name)) {
                 return {
                     pkg,
                     path: resolve(rootDir, workspace.location),
