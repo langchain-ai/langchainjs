@@ -75,11 +75,6 @@ export interface SecretMap {
 | `outputPath` | string | `"load/import_type.ts"` | Output file path relative to src/ |
 | `excludePatterns` | string[] | `[".test.ts", "test.ts", ".spec.ts", "spec.ts"]` | File patterns to exclude |
 
-#### Environment Variables
-
-- `SKIP_SECRET_SCANNING=true` - Disable plugin completely
-- `NODE_ENV=production` - Enable strict validation
-
 ---
 
 ### 📋 import-constants Plugin
@@ -130,10 +125,6 @@ export const optionalImportEntrypoints: string[] = [
 | `outputPath` | string | Output file path (default: `"load/import_constants.ts"`) |
 | `optionalEntrypoints` | string[] | List of entrypoints requiring optional dependencies |
 | `deprecatedNodeOnly` | string[] | Entrypoints to exclude (deprecated) |
-
-#### Environment Variables
-
-- `SKIP_IMPORT_CONSTANTS=true` - Disable plugin completely
 
 ---
 
@@ -233,7 +224,3 @@ interface ExtraImportMapEntry {
 // const custom__tools = { ModuleA, ModuleB };
 // export { custom__tools };
 ```
-
-#### Environment Variables
-
-- `SKIP_IMPORT_MAP=true` - Disable plugin completely
