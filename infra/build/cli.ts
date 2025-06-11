@@ -51,7 +51,7 @@ const cliConfig = {
         skipSourcemap: {
             type: 'boolean' as const,
             default: false,
-            description: 'Skip generating sourcemaps'
+            description: 'Skip generating sourcemaps (e.g. `.map` and `.d.ts.map` files)'
         }
     },
     /**
