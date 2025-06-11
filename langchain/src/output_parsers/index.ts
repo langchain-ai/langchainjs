@@ -1,12 +1,8 @@
-import {
-  ListOutputParser as ListOutputParserOriginal,
-  CustomListOutputParser as CustomListOutputParserOriginal,
-  CommaSeparatedListOutputParser as CommaSeparatedListOutputParserOriginal,
-} from "./list.js";
-
-export const ListOutputParser = ListOutputParserOriginal;
-export const CommaSeparatedListOutputParser = CommaSeparatedListOutputParserOriginal;
-export const CustomListOutputParser = CustomListOutputParserOriginal;
+export {
+  ListOutputParser,
+  CustomListOutputParser,
+  CommaSeparatedListOutputParser,
+} from "@langchain/core/output_parsers";
 
 export { RegexParser } from "./regex.js";
 export {

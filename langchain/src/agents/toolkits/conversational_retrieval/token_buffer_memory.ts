@@ -6,7 +6,7 @@ import {
   getInputValue,
   getOutputValue,
 } from "@langchain/core/memory";
-import { getBufferString } from "@langchain/core/messages";
+import { type BaseMessage, getBufferString } from "@langchain/core/messages";
 import {
   BaseChatMemory,
   BaseChatMemoryInput,
@@ -69,7 +69,7 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
    * Retrieves the messages from the chat history.
    * @returns Promise that resolves with the messages from the chat history.
    */
-  async getMessages() {
+  async getMessages(): Promise<BaseMessage[]> {
     return this.chatHistory.getMessages();
   }
 

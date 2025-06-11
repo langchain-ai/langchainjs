@@ -27117,6 +27117,7 @@ __metadata:
     "@langchain/xai": "*"
     axios: "*"
     cheerio: "*"
+    handlebars: ^4.7.8
     peggy: ^3.0.2
     typeorm: "*"
   peerDependenciesMeta:
@@ -27147,6 +27148,8 @@ __metadata:
     axios:
       optional: true
     cheerio:
+      optional: true
+    handlebars:
       optional: true
     peggy:
       optional: true

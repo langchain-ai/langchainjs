@@ -122,6 +122,7 @@ async function buildProject(path: string, pkg: PackageJson, opts: CompilePackage
         cwd: path,
         dts,
         sourcemap,
+        unbundle: true,
         platform: 'node',
         target: 'es2020',
         outDir: './dist',
