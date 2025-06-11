@@ -1,16 +1,14 @@
-import {
-  getInputValue as getInputValueOriginal,
-  getOutputValue as getOutputValueOriginal,
-  getBufferString as getBufferStringOriginal,
-} from './base.js'
-
-export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
+  getInputValue,
+  getOutputValue,
   BaseMemory,
   type InputValues,
   type OutputValues,
-  type MemoryVariables,
-} from "./base.js";
+  type MemoryVariables
+} from '@langchain/core/memory';
+export { getBufferString } from '@langchain/core/messages';
+
+export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   ConversationSummaryMemory,
   type ConversationSummaryMemoryInput,
@@ -38,7 +36,3 @@ export {
   ConversationTokenBufferMemory,
   type ConversationTokenBufferMemoryInput,
 } from "./buffer_token_memory.js";
-
-export const getInputValue = getInputValueOriginal;
-export const getOutputValue = getOutputValueOriginal;
-export const getBufferString = getBufferStringOriginal;

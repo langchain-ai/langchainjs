@@ -57,7 +57,7 @@ Passage:
 export function createExtractionChain(
   schema: FunctionParameters,
   llm: BaseChatModel<BaseFunctionCallOptions>
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
   const outputParser = new JsonKeyOutputFunctionsParser({ attrName: "info" });
@@ -82,7 +82,7 @@ export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   return createExtractionChain(
     toJsonSchema(schema) as JsonSchema7ObjectType,
     llm
