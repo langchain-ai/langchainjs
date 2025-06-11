@@ -1249,7 +1249,7 @@ describe.each(testGeminiModelNames)(
     });
 
     // Vertex AI doesn't (yet?) support fps, but does support startOffset and endOffset
-    test.only("image_url video data", async () => {
+    test("image_url video data", async () => {
       const model = newChatGoogle({});
 
       const dataPath = "src/tests/data/rainbow.mp4";
@@ -1441,7 +1441,7 @@ describe.each(testMultimodalModelNames)(
       });
     }
 
-    test.only("image output", async () => {
+    test("image output", async () => {
       const model = newChatGoogle({
         responseModalities: ["TEXT", "IMAGE"],
       });
@@ -1539,10 +1539,11 @@ describe.each(testTtsModelNames)(
 
     function writeData(data: string) {
       const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
+      console.log(`writing to ${fn}`);
       Fs.writeFileSync(fn, data, "base64");
     }
 
-    test.only("single", async () => {
+    test("single", async () => {
       const model = newChatGoogle({
         speechConfig: "Zubenelgenubi",
       });
@@ -1554,7 +1555,7 @@ describe.each(testTtsModelNames)(
       writeData(content.data as string);
     });
 
-    test.only("multiple", async () => {
+    test("multiple", async () => {
       const model = newChatGoogle({
         speechConfig: [
           {
@@ -1578,7 +1579,7 @@ describe.each(testTtsModelNames)(
       writeData(content.data as string);
     });
 
-    test.only("multiple, with instructions", async () => {
+    test("multiple, with instructions", async () => {
       const model = newChatGoogle({
         speechConfig: [
           {
@@ -1606,6 +1607,41 @@ describe.each(testTtsModelNames)(
       writeData(content.data as string);
     });
 
+    test("stream multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ]
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: I think things are absolutely wonderful.
+        Jane: Do you, now? Are you sure about that? Are you absolutely sure?
+        Joe: Well, let's consider. (1) You and I are having this conversation,
+          which is pretty remarkable. (2) I think I feel fine. Don't I?
+        Jane: Well, I guess we should see about the outcome of this test, then.
+        Joe: Wait, this is a test?
+      `;
+      const res = await model.stream(prompt);
+      for await (const chunk of res) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const content = chunk?.content?.[0] ?? "";
+        if (typeof content !== "string" && "type" in content && content.type === "media") {
+          writeData(content.data as string);
+        } else {
+          console.log("content:", content);
+        }
+      }
+    }, 60000);
   }
 )
 
