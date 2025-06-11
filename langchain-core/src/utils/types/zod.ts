@@ -461,11 +461,9 @@ export function extendInteropZodObject<T extends InteropZodObject>(
   extension: InteropZodObjectShape
 ): InteropZodObject {
   if (isZodSchemaV3(schema)) {
-    // z3: .extend exists and works as expected
     return schema.extend(extension as z3.ZodRawShape);
   }
   if (isZodSchemaV4(schema)) {
-    // z4: .extend exists and works as expected
     return util.extend(schema, extension);
   }
   throw new Error(

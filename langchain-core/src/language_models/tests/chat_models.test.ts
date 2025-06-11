@@ -1,8 +1,9 @@
 /* eslint-disable no-promise-executor-return */
 
 import { test, expect } from "@jest/globals";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { z as z4 } from "zod/v4";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
@@ -250,6 +251,24 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
   console.log(response.nested.somethingelse);
   // No error
   console.log(response.parsed);
+});
+
+test("Test ChatModel withStructuredOutput new syntax using zod v4", async () => {
+  const model = new FakeListChatModel({
+    responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
+  }).withStructuredOutput(
+    z4.object({
+      test: z4.boolean(),
+      nested: z4.object({
+        somethingelse: z4.string(),
+      }),
+    })
+  );
+  const response = await model.invoke("Hello there!");
+  expect(response).toEqual({
+    test: true,
+    nested: { somethingelse: "somevalue" },
+  });
 });
 
 test("Test ChatModel can cache complex messages", async () => {
