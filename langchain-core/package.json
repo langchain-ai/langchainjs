@@ -44,7 +44,7 @@
     "p-retry": "4",
     "uuid": "^10.0.0",
     "zod": "^3.25.32",
-    "zod-to-json-schema": "^3.24.5"
+    "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

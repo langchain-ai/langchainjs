@@ -6928,7 +6928,7 @@ __metadata:
     typescript: ~5.1.6
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -6968,7 +6968,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7071,6 +7071,8 @@ __metadata:
     release-it: ^18.1.2
     rimraf: ^5.0.1
     typescript: ~5.1.6
+    zod: ^3.22.3
+    zod-to-json-schema: 3.20.3
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -7106,6 +7108,8 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.5
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -7144,7 +7148,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7217,7 +7221,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7411,7 +7415,7 @@ __metadata:
     web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
     youtubei.js: ^12.2.0
-    zod: ^3.22.3
+    zod: ^3.25.32
   peerDependencies:
     "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
@@ -7444,7 +7448,7 @@ __metadata:
     "@huggingface/transformers": ^3.2.3
     "@ibm-cloud/watsonx-ai": "*"
     "@lancedb/lancedb": ^0.12.0
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
     "@mendable/firecrawl-js": ^1.4.3
@@ -7831,7 +7835,7 @@ __metadata:
     uuid: ^10.0.0
     web-streams-polyfill: ^4.0.0
     zod: ^3.25.32
-    zod-to-json-schema: ^3.24.5
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -7865,7 +7869,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
   peerDependencies:
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7971,7 +7975,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.3.55 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8004,6 +8008,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
+    zod: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.55 <0.4.0"
   languageName: unknown
@@ -8042,7 +8047,7 @@ __metadata:
     uuid: ^11.1.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.55 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8076,7 +8081,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    zod: ^3.25.32
+    zod: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.55 <0.4.0"
   languageName: unknown
@@ -8112,7 +8117,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: <5.2.0
-    zod: ^3.25.32
+    zod: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.55 <0.4.0"
   languageName: unknown
@@ -8147,7 +8152,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: <5.2.0
     web-auth-library: ^1.0.3
-    zod: ^3.25.32
+    zod: ^3.23.8
   peerDependencies:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
@@ -8186,7 +8191,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.22.4
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8318,7 +8323,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.7 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8461,7 +8466,7 @@ __metadata:
     uuid: ^10.0.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8495,7 +8500,7 @@ __metadata:
     typescript: ~5.1.6
     zod: 3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8714,7 +8719,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.39 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -8820,7 +8825,7 @@ __metadata:
     typescript: <5.2.0
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -21540,8 +21545,8 @@ __metadata:
     uuid: ^10.0.0
     voy-search: 0.6.2
     weaviate-client: ^3.5.2
-    zod: ^3.25.32
-    zod-to-json-schema: ^3.24.5
+    zod: ^3.22.4
+    zod-to-json-schema: ^3.22.3
   languageName: unknown
   linkType: soft
 
@@ -26626,7 +26631,7 @@ __metadata:
     "@langchain/aws": "*"
     "@langchain/cerebras": "*"
     "@langchain/cohere": "*"
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
     "@langchain/deepseek": "*"
     "@langchain/google-genai": "*"
     "@langchain/google-vertexai": "*"
@@ -38532,21 +38537,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"zod-to-json-schema@npm:3.20.3":
+  version: 3.20.3
+  resolution: "zod-to-json-schema@npm:3.20.3"
+  peerDependencies:
+    zod: ^3.20.0
+  checksum: 1addf7e6f7d69398404dc90f5c9b76ea44e3f6deeb2fc7c72983a00e15b7340661d7e894b0a4eee3a07334dcdcc79d7064e44de46b4acc37d38ab2f3f7217ec8
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:^3.22.3, zod-to-json-schema@npm:^3.22.5":
+  version: 3.24.5
+  resolution: "zod-to-json-schema@npm:3.24.5"
+  peerDependencies:
+    zod: ^3.24.1
+  checksum: dc4e5e4c06e9a5494e4b1d8c8363ac907f9d488f36c8e4923e1e5ac4f91f737722f99200cd92a409551e7456d960734d4cabd37935234ca95e290572468ffc08
+  languageName: node
+  linkType: hard
+
 "zod-to-json-schema@npm:^3.23.0, zod-to-json-schema@npm:^3.23.3, zod-to-json-schema@npm:^3.24.1":
   version: 3.24.1
   resolution: "zod-to-json-schema@npm:3.24.1"
   peerDependencies:
     zod: ^3.24.1
   checksum: 7195563f611bc21ea7f44129b8e32780125a9bd98b2e6b8709ac98bd2645729fecd87b8aeeaa8789617ee3f38e6585bab23dd613e2a35c31c6c157908f7a1681
-  languageName: node
-  linkType: hard
-
-"zod-to-json-schema@npm:^3.24.5":
-  version: 3.24.5
-  resolution: "zod-to-json-schema@npm:3.24.5"
-  peerDependencies:
-    zod: ^3.24.1
-  checksum: dc4e5e4c06e9a5494e4b1d8c8363ac907f9d488f36c8e4923e1e5ac4f91f737722f99200cd92a409551e7456d960734d4cabd37935234ca95e290572468ffc08
   languageName: node
   linkType: hard
 

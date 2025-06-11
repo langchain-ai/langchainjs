@@ -35,7 +35,7 @@
     "@langchain/openai": "^0.5.5"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.0 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

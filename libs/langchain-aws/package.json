@@ -38,7 +38,7 @@
     "@aws-sdk/credential-provider-node": "^3.750.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.734.0",

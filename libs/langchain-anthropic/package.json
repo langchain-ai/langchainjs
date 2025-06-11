@@ -39,7 +39,7 @@
     "fast-xml-parser": "^4.4.1"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@anthropic-ai/vertex-sdk": "^0.4.1",

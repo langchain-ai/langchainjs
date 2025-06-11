@@ -471,7 +471,7 @@
     "@langchain/aws": "*",
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
-    "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/core": ">=0.3.58 <0.4.0",
     "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
