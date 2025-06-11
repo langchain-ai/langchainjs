@@ -608,7 +608,7 @@ export class CouchbaseQueryVectorStore extends VectorStore {
       indexParams.scan_nprobes = indexScanNprobes;
     }
     if (indexTrainlist) {
-      indexParams.trainlist = indexTrainlist;
+      indexParams.train_list = indexTrainlist;
     }
 
     // Add the text field to the fields if empty or if it is not present
