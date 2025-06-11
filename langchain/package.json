@@ -18,7 +18,6 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
     "build": "yarn turbo:command build:internal --filter=langchain",
-    "build:new": "yarn workspace @langchain/infra-build compile $npm_package_name",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking --gen-maps",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
