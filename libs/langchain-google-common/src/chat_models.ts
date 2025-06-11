@@ -33,7 +33,8 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIAPI,
   GoogleAIAPIParams,
-  GoogleSearchToolSetting, GoogleSpeechConfig,
+  GoogleSearchToolSetting,
+  GoogleSpeechConfig,
 } from "./types.js";
 import {
   convertToGeminiTools,

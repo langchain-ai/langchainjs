@@ -9,10 +9,12 @@ import {
   GoogleAIBaseLanguageModelCallOptions,
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
-  GoogleAIToolType, GoogleSpeakerVoiceConfig,
+  GoogleAIToolType,
+  GoogleSpeakerVoiceConfig,
   GoogleSpeechConfig,
   GoogleSpeechConfigSimplified,
-  GoogleSpeechSimplifiedLanguage, GoogleSpeechSpeakerName,
+  GoogleSpeechSimplifiedLanguage,
+  GoogleSpeechSpeakerName,
   GoogleSpeechVoice,
   GoogleSpeechVoiceLanguage,
   VertexModelFamily,
@@ -146,22 +148,23 @@ function reasoningEffortToReasoningTokens(
 export function normalizeSpeechConfig(
   config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
 ): GoogleSpeechConfig | undefined {
-
   function isSpeechConfig(
     config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
   ): config is GoogleSpeechConfig {
-    return typeof config === "object" &&
-      (Object.hasOwn(config, "voiceConfig") || Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+    return (
+      typeof config === "object" &&
+      (Object.hasOwn(config, "voiceConfig") ||
+        Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+    );
   }
 
   function hasLanguage(
     config: GoogleSpeechConfigSimplified
   ): config is GoogleSpeechSimplifiedLanguage {
-    return typeof config === "object" &&
-      Object.hasOwn(config, "languageCode")
+    return typeof config === "object" && Object.hasOwn(config, "languageCode");
   }
 
-  function hasVoice (
+  function hasVoice(
     config: GoogleSpeechSimplifiedLanguage
   ): config is GoogleSpeechVoiceLanguage {
     return Object.hasOwn(config, "voice");
@@ -194,9 +197,9 @@ export function normalizeSpeechConfig(
       voiceConfig: {
         prebuiltVoiceConfig: {
           voiceName: voice,
-        }
-      }
-    }
+        },
+      },
+    };
   } else {
     // This is multi-speaker, so we have speaker/name pairs
     // If we have just one (why?), turn it into an array for the moment
@@ -204,20 +207,21 @@ export function normalizeSpeechConfig(
       ? voice
       : [voice];
     // Go through all the speaker/name pairs and turn this into the voice config array
-    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] =
-      voices.map( (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
-          speaker: v.speaker,
-          voiceConfig: {
-            prebuiltVoiceConfig: {
-              voiceName: v.name,
-            }
-          }
-        }));
+    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
+      (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
+        speaker: v.speaker,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: v.name,
+          },
+        },
+      })
+    );
     // Create the multi-speaker voice configuration
     ret = {
       multiSpeakerVoiceConfig: {
-        speakerVoiceConfigs
-      }
+        speakerVoiceConfigs,
+      },
     };
   }
 
@@ -285,9 +289,7 @@ export function copyAIModelParamsInto(
     params?.responseModalities ??
     target?.responseModalities;
   ret.speechConfig = normalizeSpeechConfig(
-    options?.speechConfig ??
-    params?.speechConfig ??
-    target?.speechConfig
+    options?.speechConfig ?? params?.speechConfig ?? target?.speechConfig
   );
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
   const toolChoice = processToolChoice(

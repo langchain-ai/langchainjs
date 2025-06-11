@@ -165,7 +165,9 @@ export interface GoogleSpeechConfigMulti {
   languageCode?: string;
 }
 
-export type GoogleSpeechConfig = GoogleSpeechConfigSingle | GoogleSpeechConfigMulti;
+export type GoogleSpeechConfig =
+  | GoogleSpeechConfigSingle
+  | GoogleSpeechConfigMulti;
 
 /**
  * A simplified version of the GoogleSpeakerVoiceConfig
@@ -175,7 +177,10 @@ export interface GoogleSpeechSpeakerName {
   name: GooglePrebuiltVoiceName;
 }
 
-export type GoogleSpeechVoice = GooglePrebuiltVoiceName | GoogleSpeechSpeakerName | GoogleSpeechSpeakerName[];
+export type GoogleSpeechVoice =
+  | GooglePrebuiltVoiceName
+  | GoogleSpeechSpeakerName
+  | GoogleSpeechSpeakerName[];
 
 export interface GoogleSpeechVoiceLanguage {
   voice: GoogleSpeechVoice;
@@ -192,13 +197,17 @@ export interface GoogleSpeechVoicesLanguage {
  * "voice" and "voices" are semantically the same, we're not enforcing
  * that one is an array and one isn't.
  */
-export type GoogleSpeechSimplifiedLanguage = GoogleSpeechVoiceLanguage | GoogleSpeechVoicesLanguage;
+export type GoogleSpeechSimplifiedLanguage =
+  | GoogleSpeechVoiceLanguage
+  | GoogleSpeechVoicesLanguage;
 
 /**
  * A simplified way to represent the voices.
  * It can either be the voice (or voices), or the voice or voices with language configuration
  */
-export type GoogleSpeechConfigSimplified = GoogleSpeechVoice | GoogleSpeechSimplifiedLanguage;
+export type GoogleSpeechConfigSimplified =
+  | GoogleSpeechVoice
+  | GoogleSpeechSimplifiedLanguage;
 
 export interface GoogleAIModelParams {
   /** Model to use */

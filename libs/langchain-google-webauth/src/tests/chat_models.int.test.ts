@@ -1500,7 +1500,7 @@ const testTtsModelNames = [
 
 describe.each(testTtsModelNames)(
   "Webauth ($platformType) Gemini TTS ($modelName)",
-  ({modelName, platformType}) => {
+  ({ modelName, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1531,11 +1531,11 @@ describe.each(testTtsModelNames)(
 
     beforeEach(() => {
       outputIndex = 0;
-    })
+    });
 
     afterEach(() => {
       testIndex += 1;
-    })
+    });
 
     function writeData(data: string) {
       const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
@@ -1566,7 +1566,7 @@ describe.each(testTtsModelNames)(
             speaker: "Jane",
             name: "Puck",
           },
-        ]
+        ],
       });
       const prompt = `
         TTS the following conversation between Joe and Jane:
@@ -1590,7 +1590,7 @@ describe.each(testTtsModelNames)(
             speaker: "Jane",
             name: "Puck",
           },
-        ]
+        ],
       });
       const prompt = `
         TTS the following conversation between Joe and Jane.
@@ -1618,7 +1618,7 @@ describe.each(testTtsModelNames)(
             speaker: "Jane",
             name: "Puck",
           },
-        ]
+        ],
       });
       const prompt = `
         TTS the following conversation between Joe and Jane:
@@ -1635,7 +1635,11 @@ describe.each(testTtsModelNames)(
       for await (const chunk of res) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const content = chunk?.content?.[0] ?? "";
-        if (typeof content !== "string" && "type" in content && content.type === "media") {
+        if (
+          typeof content !== "string" &&
+          "type" in content &&
+          content.type === "media"
+        ) {
           writeData(content.data as string);
         } else {
           console.log("content:", content);
@@ -1643,7 +1647,7 @@ describe.each(testTtsModelNames)(
       }
     }, 60000);
   }
-)
+);
 
 const testReasoningModelNames = [
   {

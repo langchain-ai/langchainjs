@@ -66,7 +66,7 @@ import {
   GeminiSearchToolAttributes,
 } from "../types.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
-import {normalizeSpeechConfig} from "./common.js";
+import { normalizeSpeechConfig } from "./common.js";
 
 export interface FunctionCall {
   name: string;
@@ -746,7 +746,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): MessageContentImageUrl | Record<string, any> {
     const mimeType = part?.inlineData?.mimeType ?? "";
-    if (mimeType.startsWith('image')) {
+    if (mimeType.startsWith("image")) {
       return inlineDataPartToMessageContentImage(part);
     } else {
       return inlineDataPartToMessageContentMedia(part);
