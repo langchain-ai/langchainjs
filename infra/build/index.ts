@@ -18,6 +18,11 @@ export async function compilePackages(opts: CompilePackageOptions) {
     const packages = await findWorkspacePackages(root, opts)
     const watch = opts.watch ?? false
 
+    if (packages.length === 0) {
+        const query = opts.packageQuery ? `matching "${opts.packageQuery}"` : 'with no package query'
+        throw new Error(`No packages found ${query}!`)
+    }
+
     await Promise.all(packages.map(async ({ pkg, path }) => {
         const input = Object.entries(pkg.exports || {}).filter(([exp]) => !extname(exp)) as [string, PackageJson.ExportConditions][]
         const entry = input.map(([, { input }]) => input).filter(Boolean) as string[]
@@ -40,7 +45,7 @@ export async function compilePackages(opts: CompilePackageOptions) {
          * build checks to run, automatically disabled if watch is enabled
          */
         const buildChecks = {
-            unused: !watch ? {
+            unused: !watch && !opts.skipUnused ? {
                 root: path,
                 level: 'error'
             } as UnusedOptions : false,
@@ -92,7 +97,6 @@ export async function compilePackages(opts: CompilePackageOptions) {
             })
         ] : []
 
-        console.log(11, dts)
         await build({
             entry,
             cwd: path,
