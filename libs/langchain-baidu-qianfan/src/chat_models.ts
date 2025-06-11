@@ -68,6 +68,12 @@ interface ChatCompletionResponse {
   usage: TokenUsage;
 }
 
+export type BaiduQianfanChatModelId =
+  | 'ERNIE-Bot-turbo'
+  | 'ERNIE-Lite-8K'
+  | 'ERNIE-Bot-4'
+  | (string & NonNullable<unknown>);
+
 /**
  * Interface defining the input to the ChatBaiduQianfan class.
  */
@@ -81,7 +87,7 @@ declare interface BaiduQianfanChatInput {
   /** Model name to use. Available options are: ERNIE-Bot, ERNIE-Lite-8K, ERNIE-Bot-4
    * @default "ERNIE-Bot-turbo"
    */
-  model: string;
+  model: BaiduQianfanChatModelId;
 
   /** Whether to stream the results or not. Defaults to false. */
   streaming?: boolean;

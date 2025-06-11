@@ -3,13 +3,14 @@ import { CohereClient } from "cohere-ai";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { CohereClientOptions, getCohereClient } from "./client.js";
+import type { CohereEmbeddingModelId } from "./types.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the CohereEmbeddings class.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
-  model?: string;
+  model?: CohereEmbeddingModelId;
 
   /**
    * The maximum number of documents to embed in a single request. This is

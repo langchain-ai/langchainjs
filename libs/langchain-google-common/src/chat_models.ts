@@ -54,6 +54,7 @@ import type {
   GoogleAIToolType,
   GeminiAPIConfig,
   GoogleAIModelModality,
+  GoogleGenerativeAIModelId,
 } from "./types.js";
 import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
 
@@ -182,7 +183,7 @@ export abstract class ChatGoogleBase<AuthOptions>
   lc_serializable = true;
 
   // Set based on modelName
-  model: string;
+  model: GoogleGenerativeAIModelId;
 
   modelName = "gemini-pro";
 
