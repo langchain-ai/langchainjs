@@ -49,6 +49,8 @@ async function buildProject(path: string, pkg: PackageJson, opts: CompilePackage
      */
     const dts = !opts.noEmit ? {
         parallel: true,
+        cwd: path,
+        sourcemap
     } : false
 
     /**
