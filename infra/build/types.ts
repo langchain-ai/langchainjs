@@ -31,4 +31,9 @@ export interface CompilePackageOptions {
      * @default false
      */
     skipClean?: boolean
+    /**
+     * Whether to skip generating sourcemaps
+     * @default false
+     */
+    skipSourcemap?: boolean
 }

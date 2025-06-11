@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util'
 import { compilePackages } from './index.js'
+import type { CompilePackageOptions } from './types.js'
 
 /**
  * CLI configuration with descriptions for auto-generated help
  */
-const cliName = 'yarn workspace @langchain/infra-build start'
+const cliName = 'yarn workspace @langchain/infra-build build'
 const cliConfig = {
     name: cliName,
     description: 'CLI program for compiling or watching packages in the repository',
@@ -46,6 +47,11 @@ const cliConfig = {
             type: 'boolean' as const,
             default: false,
             description: 'Skip cleaning the build directory'
+        },
+        skipSourcemap: {
+            type: 'boolean' as const,
+            default: false,
+            description: 'Skip generating sourcemaps'
         }
     },
     /**
@@ -121,7 +127,17 @@ async function main() {
     const noEmit = values.noEmit
     const skipUnused = values.skipUnused
     const skipClean = values.skipClean
+    const skipSourcemap = values.skipSourcemap
     const exclude = Array.isArray(values.exclude) ? values.exclude : (values.exclude ? [values.exclude] : [])
+
+    const opts: CompilePackageOptions = {
+        watch,
+        exclude,
+        noEmit,
+        skipUnused,
+        skipClean,
+        skipSourcemap,
+    }
 
     try {
         if (packageQueries.length === 0) {
@@ -130,13 +146,7 @@ async function main() {
                 console.log(`Excluding: ${exclude.join(', ')}`)
             }
 
-            await compilePackages({
-                watch,
-                exclude,
-                noEmit,
-                skipUnused,
-                skipClean,
-            })
+            await compilePackages(opts)
         } else if (packageQueries.length === 1) {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching "${packageQueries[0]}"...`)
             if (exclude.length > 0) {
@@ -145,11 +155,7 @@ async function main() {
 
             await compilePackages({
                 packageQuery: packageQueries[0],
-                watch,
-                exclude,
-                noEmit,
-                skipUnused,
-                skipClean,
+                ...opts,
             })
         } else {
             console.log(`${watch ? 'Watching' : 'Compiling'} packages matching: ${packageQueries.map(q => `"${q}"`).join(', ')}...`)
@@ -162,11 +168,7 @@ async function main() {
                 console.log(`  Processing packages matching "${packageQuery}"...`)
                 await compilePackages({
                     packageQuery,
-                    watch,
-                    exclude,
-                    noEmit,
-                    skipUnused,
-                    skipClean,
+                    ...opts,
                 })
             }))
         }
