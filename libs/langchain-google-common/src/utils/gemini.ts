@@ -736,7 +736,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   ): Record<string, any> {
     return {
       type: "media",
-      mineType: part.inlineData.mimeType,
+      mimeType: part.inlineData.mimeType,
       data: part.inlineData.data,
     };
   }
