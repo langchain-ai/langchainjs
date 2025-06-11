@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
 
-import { Validator } from "@langchain/core/utils/json_schema";
+import type { Validator } from "@cfworker/json-schema";
+
 import { ChatOpenAI } from "@langchain/openai";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {

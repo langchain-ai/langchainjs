@@ -7,10 +7,13 @@ import {
 import { isZodSchema } from "@langchain/core/utils/types";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-export {
-  convertToOpenAIFunction as formatToOpenAIFunction,
-  convertToOpenAITool as formatToOpenAITool,
-};
+export function formatToOpenAIFunction(tool: StructuredToolInterface, fields?: { strict?: boolean } | number) {
+  return convertToOpenAIFunction(tool, fields);
+}
+
+export function formatToOpenAITool(tool: StructuredToolInterface, fields?: { strict?: boolean } | number) {
+  return convertToOpenAITool(tool, fields);
+}
 
 export function formatToOpenAIAssistantTool(
   tool: StructuredToolInterface

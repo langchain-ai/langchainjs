@@ -6,6 +6,7 @@ import {
   FewShotPromptTemplate,
 } from "@langchain/core/prompts";
 import { InputValues } from "@langchain/core/utils/types";
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { QueryTransformer, TraverseType } from "./parser.js";
 import {
   Comparator,
@@ -193,7 +194,7 @@ export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
 
 export function loadQueryConstructorRunnable(
   opts: QueryConstructorRunnableOptions
-) {
+): Runnable<any, StructuredQuery, RunnableConfig<Record<string, any>>> {
   const prompt = _getPrompt(
     opts.documentContents,
     opts.attributeInfo,

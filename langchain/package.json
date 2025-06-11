@@ -26,7 +26,6 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "precommit": "lint-staged",
     "clean": "rm -rf .turbo dist/",
-    "prepack": "yarn build",
     "release": "release-it --only-version --config .release-it.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
@@ -264,14 +263,14 @@
     },
     "./agents/toolkits/sql": {
       "import": {
-        "types": "./dist/agents/toolkits/sql.d.ts",
-        "default": "./dist/agents/toolkits/sql.js"
+        "types": "./dist/agents/toolkits/sql/index.d.ts",
+        "default": "./dist/agents/toolkits/sql/index.js"
       },
       "require": {
-        "types": "./dist/agents/toolkits/sql.d.cts",
-        "default": "./dist/agents/toolkits/sql.cjs"
+        "types": "./dist/agents/toolkits/sql/index.d.cts",
+        "default": "./dist/agents/toolkits/sql/index.cjs"
       },
-      "input": "./src/agents/toolkits/sql.ts"
+      "input": "./src/agents/toolkits/sql/index.ts"
     },
     "./agents/format_scratchpad": {
       "import": {
@@ -612,7 +611,7 @@
         "types": "./dist/memory/index.d.cts",
         "default": "./dist/memory/index.cjs"
       },
-      "input": "./src/memory.ts"
+      "input": "./src/memory/index.ts"
     },
     "./memory/chat_memory": {
       "import": {
@@ -726,14 +725,14 @@
     },
     "./callbacks": {
       "import": {
-        "types": "./dist/callbacks.d.ts",
-        "default": "./dist/callbacks.js"
+        "types": "./dist/callbacks/index.d.ts",
+        "default": "./dist/callbacks/index.js"
       },
       "require": {
-        "types": "./dist/callbacks.d.cts",
-        "default": "./dist/callbacks.cjs"
+        "types": "./dist/callbacks/index.d.cts",
+        "default": "./dist/callbacks/index.cjs"
       },
-      "input": "./src/callbacks.ts"
+      "input": "./src/callbacks/index.ts"
     },
     "./output_parsers": {
       "import": {

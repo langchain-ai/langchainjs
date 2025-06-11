@@ -1,4 +1,13 @@
-export { ListOutputParser, CommaSeparatedListOutputParser } from "./list.js";
+import {
+  ListOutputParser as ListOutputParserOriginal,
+  CustomListOutputParser as CustomListOutputParserOriginal,
+  CommaSeparatedListOutputParser as CommaSeparatedListOutputParserOriginal,
+} from "./list.js";
+
+export const ListOutputParser = ListOutputParserOriginal;
+export const CommaSeparatedListOutputParser = CommaSeparatedListOutputParserOriginal;
+export const CustomListOutputParser = CustomListOutputParserOriginal;
+
 export { RegexParser } from "./regex.js";
 export {
   StructuredOutputParser,
@@ -10,7 +19,7 @@ export {
 export { OutputFixingParser } from "./fix.js";
 export { CombiningOutputParser } from "./combining.js";
 export { RouterOutputParser, type RouterOutputParserInput } from "./router.js";
-export { CustomListOutputParser } from "./list.js";
+
 export {
   type FunctionParameters,
   OutputFunctionsParser,

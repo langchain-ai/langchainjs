@@ -97,7 +97,7 @@ export function createToolCallingAgent({
   tools,
   prompt,
   streamRunnable,
-}: CreateToolCallingAgentParams) {
+}: CreateToolCallingAgentParams): AgentRunnableSequence {
   if (!prompt.inputVariables.includes("agent_scratchpad")) {
     throw new Error(
       [
