@@ -87,41 +87,13 @@ export class LangChainTracer
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
-    try {
-      const runTree = this.convertToRunTree(run.id);
-      await runTree?.postRun();
-    } catch (error) {
-      console.error(`Error in onRunCreate for run ${run.id}:`, error);
-      // Fallback to original behavior if RunTree approach fails
-      const persistedRun: RunCreate2 = await this._convertToCreate(
-        run,
-        this.exampleId
-      );
-      await this.client.createRun(persistedRun);
-    }
+    const runTree = this.convertToRunTree(run.id);
+    await runTree?.postRun();
   }
 
   async onRunUpdate(run: Run): Promise<void> {
-    try {
-      const runTree = this.convertToRunTree(run.id);
-      await runTree?.patchRun();
-    } catch (error) {
-      console.error(`Error in onRunUpdate for run ${run.id}:`, error);
-      // Fallback to original behavior if RunTree approach fails
-      const runUpdate: RunUpdate = {
-        end_time: run.end_time,
-        error: run.error,
-        outputs: run.outputs,
-        events: run.events,
-        inputs: run.inputs,
-        trace_id: run.trace_id,
-        dotted_order: run.dotted_order,
-        parent_run_id: run.parent_run_id,
-        extra: run.extra,
-        session_name: this.projectName,
-      };
-      await this.client.updateRun(run.id, runUpdate);
-    }
+    const runTree = this.convertToRunTree(run.id);
+    await runTree?.patchRun();
   }
 
   getRun(id: string): Run | undefined {

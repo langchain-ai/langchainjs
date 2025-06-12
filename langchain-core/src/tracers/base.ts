@@ -144,8 +144,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     } else {
       await this.persistRun(run);
     }
-    this.runMap.delete(run.id);
     await this.onRunUpdate?.(run);
+    this.runMap.delete(run.id);
   }
 
   protected _getExecutionOrder(parentRunId: string | undefined): number {
