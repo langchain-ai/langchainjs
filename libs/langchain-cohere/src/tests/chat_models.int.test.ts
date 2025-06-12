@@ -159,7 +159,7 @@ test("Test model tool calling", async () => {
       search_query: z
         .string()
         .describe("The search query to surf the internet for"),
-    }) as any /* eslint-disable-line  @typescript-eslint/no-explicit-any */,
+    }),
     func: async ({ search_query }) => `${search_query}`,
   });
 

@@ -8,7 +8,7 @@ import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
 import { TavilySearchResults } from "../../tools/tavily_search.js";
@@ -436,7 +436,7 @@ test(".withConfig tools", async () => {
       {
         name: "weather_tool",
         description: weatherTool.description,
-        input_schema: zodToJsonSchema(weatherTool),
+        input_schema: toJsonSchema(weatherTool),
       },
     ],
   });
@@ -476,7 +476,7 @@ test.skip(".bindTools with openai tool format", async () => {
         function: {
           name: "weather_tool",
           description: weatherTool.description,
-          parameters: zodToJsonSchema(weatherTool),
+          parameters: toJsonSchema(weatherTool),
         },
       },
     ],
@@ -513,7 +513,7 @@ test("Streaming tool calls with Anthropic", async () => {
       {
         name: "weather_tool",
         description: weatherTool.description,
-        input_schema: zodToJsonSchema(weatherTool),
+        input_schema: toJsonSchema(weatherTool),
       },
     ],
   });
@@ -556,9 +556,13 @@ test("withStructuredOutput result should be compatible with OpenAI typing", asyn
     if (Math.random() > 0.5) {
       return new ChatOpenAI();
     }
-
     return new BedrockChatWeb();
   };
 
+  // @ts-expect-error TS throws an error here because BedrockChatWeb doesn't provide any
+  // `withStructuredOutput` overrides (meaning it's a direct subclass of BaseChatModel,
+  // which has extra overrides for backwards compatibility for zod v3 & v4). The two
+  // share an overload with `InteropZodType` so this should be treated as a non-issue.
+  // (this will be fixed when we introduce breaking changes for schema interop)
   _prepareClient().withStructuredOutput(testSchema);
 });

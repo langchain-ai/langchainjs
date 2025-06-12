@@ -16,8 +16,11 @@ import {
 } from "@langchain/core/prompts";
 import { AgentStep } from "@langchain/core/agents";
 import { isStructuredTool } from "@langchain/core/utils/function_calling";
-import { JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import {
+  type JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { Optional } from "../../types/type-utils.js";
 import {
@@ -149,7 +152,9 @@ export class StructuredChatAgent extends Agent {
     return tools
       .map((tool) => {
         const jsonSchema = (
-          isZodSchema(tool.schema) ? zodToJsonSchema(tool.schema) : tool.schema
+          isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
+            : tool.schema
         ) as { properties?: Record<string, JsonSchema7Type> } | undefined;
         return `${tool.name}: ${tool.description}, args: ${JSON.stringify(
           jsonSchema?.properties
