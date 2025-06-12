@@ -18,7 +18,6 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 
   - Connect to multiple MCP servers simultaneously
   - Auto-organize tools by server or access them as a flattened collection
-  - Convenient configuration via JSON file
 
 - 🧩 **Agent Integration**
 
@@ -37,87 +36,9 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 npm install @langchain/mcp-adapters
 ```
 
-### Optional Dependencies
+# Example: Connect to one or more servers via `MultiServerMCPClient`
 
-For SSE connections with custom headers in Node.js (does not apply to Streamable HTTP):
-
-```bash
-npm install eventsource
-```
-
-For enhanced SSE header support (does not apply to Streamable HTTP):
-
-```bash
-npm install extended-eventsource
-```
-
-# Example: Manage the MCP Client yourself
-
-This example shows how you can manage your own MCP client and use it to get tools that you can pass to a LangGraph prebuilt ReAcT agent.
-
-```bash
-npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
-
-export OPENAI_API_KEY=<your_api_key>
-```
-
-## Client
-
-```ts
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { loadMcpTools } from "@langchain/mcp-adapters";
-
-// Initialize the ChatOpenAI model
-const model = new ChatOpenAI({ modelName: "gpt-4" });
-
-// Automatically starts and connects to a MCP reference server
-const transport = new StdioClientTransport({
-  command: "npx",
-  args: ["-y", "@modelcontextprotocol/server-math"],
-});
-
-// Initialize the client
-const client = new Client({
-  name: "math-client",
-  version: "1.0.0",
-});
-
-try {
-  // Connect to the transport
-  await client.connect(transport);
-
-  // Get tools with custom configuration
-  const tools = await loadMcpTools("math", client, {
-    // Whether to throw errors if a tool fails to load (optional, default: true)
-    throwOnLoadError: true,
-    // Whether to prefix tool names with the server name (optional, default: false)
-    prefixToolNameWithServerName: false,
-    // Optional additional prefix for tool names (optional, default: "")
-    additionalToolNamePrefix: "",
-  });
-
-  // Create and run the agent
-  const agent = createReactAgent({ llm: model, tools });
-  const agentResponse = await agent.invoke({
-    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
-  });
-  console.log(agentResponse);
-} catch (e) {
-  console.error(e);
-} finally {
-  // Clean up connection
-  await client.close();
-}
-```
-
-# Example: Connect to one or more servers via config
-
-The library also allows you to connect to multiple MCP servers and load tools from them:
-
-## Client
+The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
 
 ```ts
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
@@ -133,6 +54,9 @@ const client = new MultiServerMCPClient({
   prefixToolNameWithServerName: true,
   // Optional additional prefix for tool names (optional, default: "mcp")
   additionalToolNamePrefix: "mcp",
+  
+  // Use standardized content block format in tool outputs
+  useStandardContentBlocks: true,
 
   // Server configuration
   mcpServers: {
@@ -163,6 +87,24 @@ const client = new MultiServerMCPClient({
         Authorization: "Bearer token123",
       }
       automaticSSEFallback: false
+    },
+
+    // OAuth 2.0 authentication (recommended for secure servers)
+    "oauth-protected-server": {
+      url: "https://protected.example.com/mcp",
+      authProvider: new MyOAuthProvider({
+        // Your OAuth provider implementation
+        redirectUrl: "https://myapp.com/oauth/callback",
+        clientMetadata: {
+          redirect_uris: ["https://myapp.com/oauth/callback"],
+          client_name: "My MCP Client",
+          scope: "mcp:read mcp:write"
+        }
+      }),
+      // Can still include custom headers for non-auth purposes
+      headers: {
+        "User-Agent": "My-MCP-Client/1.0"
+      }
     },
 
     // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
@@ -209,57 +151,309 @@ try {
 await client.close();
 ```
 
+# Example: Manage the MCP Client yourself
+
+This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
+
+The example below requires some prerequisites:
+
+```bash
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
+
+export OPENAI_API_KEY=<your_api_key>
+```
+
+
+```ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { loadMcpTools } from "@langchain/mcp-adapters";
+
+// Initialize the ChatOpenAI model
+const model = new ChatOpenAI({ modelName: "gpt-4" });
+
+// Automatically starts and connects to a MCP reference server
+const transport = new StdioClientTransport({
+  command: "npx",
+  args: ["-y", "@modelcontextprotocol/server-math"],
+});
+
+// Initialize the client
+const client = new Client({
+  name: "math-client",
+  version: "1.0.0",
+});
+
+try {
+  // Connect to the transport
+  await client.connect(transport);
+
+  // Get tools with custom configuration
+  const tools = await loadMcpTools("math", client, {
+    // Whether to throw errors if a tool fails to load (optional, default: true)
+    throwOnLoadError: true,
+    // Whether to prefix tool names with the server name (optional, default: false)
+    prefixToolNameWithServerName: false,
+    // Optional additional prefix for tool names (optional, default: "mcp")
+    additionalToolNamePrefix: "mcp",
+    // Use standardized content block format in tool outputs
+    useStandardContentBlocks: true,
+  });
+
+  // Create and run the agent
+  const agent = createReactAgent({ llm: model, tools });
+  const agentResponse = await agent.invoke({
+    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
+  });
+  console.log(agentResponse);
+} catch (e) {
+  console.error(e);
+} finally {
+  // Clean up connection
+  await client.close();
+}
+```
+
+
 For more detailed examples, see the [examples](./examples) directory.
 
 ## Tool Configuration Options
 
+> [!TIP]
+> The `useStandardContentBlocks` defaults to `false` for backward compatibility, however we recommend setting it to `true` for new applications, as this will likely become the default in a future release.
+
 When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
 
-| Option                         | Type    | Default | Description                                                                          |
-| ------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------ |
-| `throwOnLoadError`             | boolean | `true`  | Whether to throw an error if a tool fails to load                                    |
-| `prefixToolNameWithServerName` | boolean | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
-| `additionalToolNamePrefix`     | string  | `mcp`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+| Option                         | Type    | Default | Description                                                                           |
+| ------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------- |
+| `throwOnLoadError`             | `boolean` | `true`  | Whether to throw an error if a tool fails to load                                     |
+| `prefixToolNameWithServerName` | `boolean` | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`)  |
+| `additionalToolNamePrefix`     | `string`  | `"mcp"`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)         |
+| `useStandardContentBlocks`     | `boolean` | `false` | See [Tool Output Mapping](#tool-output-mapping); set true for new applications        |
+| `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping) |
 
-## Response Handling
+## Tool Output Mapping
 
-MCP tools return results in the `content_and_artifact` format which can include:
+> [!TIP]
+> This section is important if you are working with multimodal tools, tools that produce embedded resources, or tools that produce large outputs that you may not want to be included in LLM input context. If you are writing a new application that only works with tools that produce simple text or JSON output, we recommend setting `useStandardContentBlocks` to `true` and leaving `outputHandling` undefined (will use defaults).
 
-- **Text content**: Plain text responses
-- **Image content**: Base64-encoded images with MIME type
-- **Embedded resources**: Files, structured data, or other resources
+MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why we introduced the `useStandardContentBlocks` and `outputHandling` configuration options.
 
-Example for handling different content types:
+The `useStandardContentBlocks` field determines how individual MCP content blocks are transformed into a structure recognized by LangChain ChatModel providers (e.g. `ChatOpenAI`, `ChatAnthropic`, etc). The `outputHandling` field allows you to specify whether a given type of content should be sent to the LLM, or set aside for some other part of your application to use in some future processing step (e.g. to use a dataframe from a database query in a code execution environment).
 
-```ts
-const tool = tools.find((t) => t.name === "mcp__math__calculate");
-const result = await tool.invoke({ expression: "(3 + 5) * 12" });
+### Standardizing the Format of Tool Outputs
 
-// Result format: [content, artifacts]
-// - content: string | MessageContentComplex[]
-// - artifacts: EmbeddedResource[]
+In `@langchain/core` version 0.3.48 we created a new set of content block types that offer a standardized structure for multimodal inputs. As you might guess from the name, the `useStandardContentBlocks` setting determines whether `@langchain/mcp-adapters` converts tool outputs to this format. For backward compatibility with older versions of `@langchain/mcp-adapters`, it also determines whether tool message artifacts are converted. See the conversion rules below for more info.
 
-const [textContent, artifacts] = result;
+> [!IMPORTANT]
+> `ToolMessage.content` and `ToolMessage.artifact` will always be arrays of content block objects as described by the rules below, except in one special case. When the `outputHandling` option routes `text` output to the `ToolMessage.content` field and the only content block produced by a tool call is a `text` block, `ToolMessage.content` will be a `string` containing the text content produced by the tool.
 
-// Handle text content
-if (typeof textContent === "string") {
-  console.log("Result:", textContent);
-} else {
-  // Handle complex content (text + images)
-  textContent.forEach((item) => {
-    if (item.type === "text") {
-      console.log("Text:", item.text);
-    } else if (item.type === "image_url") {
-      console.log("Image URL:", item.image_url.url);
-    }
-  });
-}
+**When `useStandardContentBlocks` is `true` (recommended for new applications):**
 
-// Handle artifacts if needed
-if (artifacts.length > 0) {
-  console.log("Received artifacts:", artifacts);
+- **Text**: Returned as [`StandardTextBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardTextBlock.html) objects.
+- **Images**: Returned as base64 [`StandardImageBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardImageBlock.html) objects.
+- **Audio**: Returned as base64 [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
+- **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
+
+
+**When `useStandardContentBlocks` is `false` (default for backward compatibility):**
+
+- Tool outputs routed to `ToolMessage.artifact` (controlled by the `outputHandling` option):
+  - **Embedded Resources**: Embedded resources containing only a URI are fetched eagerly from the server and the results of the fetch operation are stored in the artifact array without transformation. Otherwise embedded resources are stored in the `artifact` array in their original MCP content block structure without modification.
+  - **All other content types**: Stored in the `artifact` array in their original MCP content block structure without modification.
+- Tool outputs routed to the `ToolMessage.content` array (controlled by the `outputHandling` option):
+  - **Text**: Returned as [`MessageContentText`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentText.html) objects, unless it is the only content block in the output, in which case it's assigned directly to `ToolMessage.content` as a `string`.
+  - **Images**: Returned as [`MessageContentImageUrl`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentImageUrl.html) objects with base64 data URLs (`data:image/png;base64,<data>`)
+  - **Audio**: Returned as [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
+  - **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
+  
+### Determining Which Tool Outputs will be Visible to the LLM
+
+The `outputHandling` option allows you to determine which tool output types are assigned to `ToolMessage.content`, and which are assigned to `ToolMessage.artifact`. Data in [`ToolMessage.content`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#content) is used as input context when the LLM is invoked, while [`ToolMessage.artifact`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#artifact) is not.
+
+**By default** `@langchain/mcp-adapters` maps MCP `resource` content blocks to `ToolMessage.artifact`, and maps all other MCP content block types to `ToolMessage.content`. The value of [`useStandardContentBlocks`](#standardizing-the-format-of-tool-outputs) determines how the structure of each content block is transformed during this process.
+
+> [!TIP]
+> Examples where `ToolMessage.artifact` can be useful include cases when you need to send multimodal tool outputs via `HumanMessage` or `SystemMessage` because the LLM provider API doesn't accept multimodal tool outputs, or cases where one tool might produce a large output to be indirectly manipulated by some other tool (e.g. a query tool that loads dataframes into a Python code execution environment).
+
+The `outputHandling` option can be assigned to `"content"`, `"artifact"`, or an object that maps MCP content block types to either `content` or `artifact`.
+
+When working with `MultiServerMCPClient`, the `outputHandling` field can be assigned to the top-level config object and/or to individual server entries in `mcpServers`. Entries in `mcpServers` override those in the top-level config, and entries in the top-level config override the defaults.
+
+For example, consider the following configuration:
+
+```typescript
+const clientConfig = {
+  useStandardContentBlocks: true,
+  outputHandling: {
+    image: "artifact",
+    audio: "artifact",
+  },
+  mcpServers: {
+    camera-server: {
+      url: "...",
+      outputHandling: {
+        image: content
+      },
+    },
+    microphone: {
+      url: "...",
+      outputHandling: {
+        audio: content
+      },
+    },
+  },
 }
 ```
+
+When calling tools from the `camera` MCP server, the following `outputHandling` config will be used:
+
+```typescript
+{
+  text: "content", // default
+  image: "content", // default and top-level config overridden by "camera" server config
+  audio: "artifact", // default overridden by top-level config
+  resource: "artifact", // default
+}
+```
+
+Similarly, when calling tools on the `microphone` MCP server, the following `outputHandling` config will be used:
+
+```typescript
+{
+  text: "content", // default
+  image: "artifact", // default overridden by top-level config
+  audio: "content", // default and top-level config overridden by "microphone" server config
+  resource: "artifact", // default
+}
+```
+
+## Tool Timeout Configuration
+
+MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
+
+```typescript
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    'data-processor': {
+      command: 'python',
+      args: ['data_server.py']
+    },
+  },
+  useStandardContentBlocks: true,
+});
+
+const tools = await client.getTools();
+const slowTool = tools.find(t => t.name.includes('process_large_dataset'));
+
+// You can use withConfig to set tool-specific timeouts before handing
+// the tool off to a LangGraph ToolNode or some other part of your
+// application
+const slowToolWithTimeout = slowTool.withConfig({ timeout: 300000 }); // 5 min timeout
+
+// This invocation will respect the 5 minute timeout
+const result = await slowToolWithTimeout.invoke(
+  { dataset: 'huge_file.csv' },
+);
+
+// or you can invoke directly without withConfig
+const directResult = await slowTool.invoke(
+  { dataset: 'huge_file.csv' },
+  { timeout: 300000 }
+);
+
+// Quick timeout for fast operations
+const quickResult = await fastTool.invoke(
+  { query: 'simple_lookup' },
+  { timeout: 5000 } // 5 seconds
+);
+
+// Default timeout (60 seconds from MCP SDK) when no config provided
+const normalResult = await tool.invoke({ input: 'normal_processing' });
+```
+
+Timeouts can be configured using the following `RunnableConfig` fields:
+
+| Parameter | Type | Default | Description |
+| --------- | ---- | ------- | ----------- |
+| `timeout` | number | 60000 | Timeout in milliseconds for the tool call |
+| `signal`  | AbortSignal | undefined | An AbortSignal that, when asserted, will cancel the tool call |
+
+## OAuth 2.0 Authentication
+
+For secure MCP servers that require OAuth 2.0 authentication, you can use the `authProvider` option instead of manually managing headers. This provides automatic token refresh, error handling, and standards-compliant OAuth flows.
+
+New in v0.4.6.
+
+### Basic OAuth Setup
+
+```ts
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+
+class MyOAuthProvider implements OAuthClientProvider {
+  constructor(private config: {
+    redirectUrl: string;
+    clientMetadata: OAuthClientMetadata;
+  }) {}
+
+  get redirectUrl() { return this.config.redirectUrl; }
+  get clientMetadata() { return this.config.clientMetadata; }
+
+  // Implement token storage (localStorage, database, etc.)
+  tokens(): OAuthTokens | undefined {
+    const stored = localStorage.getItem("mcp_tokens");
+    return stored ? JSON.parse(stored) : undefined;
+  }
+
+  async saveTokens(tokens: OAuthTokens): Promise<void> {
+    localStorage.setItem("mcp_tokens", JSON.stringify(tokens));
+  }
+
+  // Implement other required methods...
+  // See MCP SDK documentation for complete examples
+}
+
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "secure-server": {
+      url: "https://secure-mcp-server.example.com/mcp",
+      authProvider: new MyOAuthProvider({
+        redirectUrl: "https://myapp.com/oauth/callback",
+        clientMetadata: {
+          redirect_uris: ["https://myapp.com/oauth/callback"],
+          client_name: "My MCP Client",
+          scope: "mcp:read mcp:write"
+        }
+      })
+    },
+  },
+  useStandardContentBlocks: true,
+});
+```
+
+### OAuth Features
+
+The `authProvider` automatically handles:
+
+- ✅ **Token Refresh**: Automatically refreshes expired access tokens using refresh tokens
+- ✅ **401 Error Recovery**: Automatically retries requests after successful authentication  
+- ✅ **PKCE Security**: Uses Proof Key for Code Exchange for enhanced security
+- ✅ **Standards Compliance**: Follows OAuth 2.0 and RFC 6750 specifications
+- ✅ **Transport Compatibility**: Works with both StreamableHTTP and SSE transports
+
+### OAuth vs Manual Headers
+
+| Aspect | OAuth Provider | Manual Headers |
+|--------|----------------|----------------|
+| **Token Refresh** | ✅ Automatic | ❌ Manual implementation required |
+| **401 Handling** | ✅ Automatic retry | ❌ Manual error handling required |
+| **Security** | ✅ PKCE, secure flows | ⚠️ Depends on implementation |
+| **Standards** | ✅ RFC 6750 compliant | ⚠️ Requires manual compliance |
+| **Complexity** | ✅ Simple configuration | ❌ Complex implementation |
+
+**Recommendation**: Use `authProvider` for production OAuth servers, and `headers` only for simple token-based auth or debugging.
 
 ## Reconnection Strategies
 
@@ -287,7 +481,6 @@ Both transport types support automatic reconnection:
   transport: "sse",
   url: "https://example.com/mcp-server",
   headers: { "Authorization": "Bearer token123" },
-  useNodeEventSource: true,
   reconnect: {
     enabled: true,      // Enable automatic reconnection
     maxAttempts: 5,     // Maximum reconnection attempts
@@ -309,11 +502,14 @@ Example error handling:
 ```ts
 try {
   const client = new MultiServerMCPClient({
-    math: {
-      transport: "stdio",
-      command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-math"],
+    mcpServers: {
+      math: {
+        transport: "stdio",
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-math"],
+      },
     },
+    useStandardContentBlocks: true,
   });
 
   const tools = await client.getTools();
@@ -362,32 +558,6 @@ Example Zod error for an invalid SSE URL:
   "name": "ZodError"
 }
 ```
-
-## Browser Environments
-
-When using in browsers:
-
-- EventSource API doesn't support custom headers for SSE
-- Consider using a proxy or pass authentication via query parameters to avoid leaking credentials to client
-- May require CORS configuration on the server side
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Connection Failures**:
-
-   - Verify the MCP server is running
-   - Check command paths and network connectivity
-
-2. **Tool Execution Errors**:
-
-   - Examine server logs for error messages
-   - Ensure input parameters match the expected schema
-
-3. **Headers Not Applied**:
-   - Install the recommended `extended-eventsource` package
-   - Set `useNodeEventSource: true` in SSE connections
 
 ### Debug Logging
 
