@@ -1,4 +1,4 @@
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import fs from "fs";
 import { z } from "zod";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
@@ -83,7 +83,7 @@ test("Pass custom structured output parsers", async () => {
   const responseOpenAIFunction = {
     name: "response",
     description: "Return the response to the user",
-    parameters: zodToJsonSchema(responseSchema),
+    parameters: toJsonSchema(responseSchema),
   };
   /** Convert retriever into a tool */
   const retrieverTool = createRetrieverTool(retriever, {

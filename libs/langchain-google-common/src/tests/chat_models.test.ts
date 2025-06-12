@@ -15,7 +15,7 @@ import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
 import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import {
   authOptions,
@@ -2423,13 +2423,13 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     questions: z.array(questionSchema).describe("Array of question objects"),
   });
 
-  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
     arrSchemaKeys.find((key) => key === "additionalProperties")
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    zodToJsonSchema(questionSchema)
+    toJsonSchema(questionSchema)
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
@@ -2449,7 +2449,7 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    zodToJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema)
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(

@@ -2,6 +2,7 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { InteropZodType } from "@langchain/core/utils/types";
 import {
   ChatOpenAI,
   ChatOpenAICallOptions,
@@ -9,7 +10,6 @@ import {
   ChatOpenAIStructuredOutputMethodOptions,
   OpenAIClient,
 } from "@langchain/openai";
-import { z } from "zod";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -479,7 +479,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -490,7 +490,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -501,7 +501,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -514,7 +514,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>

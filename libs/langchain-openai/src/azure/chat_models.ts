@@ -7,7 +7,7 @@ import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
-import { z } from "zod";
+import { InteropZodType } from "@langchain/core/utils/types";
 import {
   ChatOpenAI,
   ChatOpenAIStructuredOutputMethodOptions,
@@ -669,7 +669,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -680,7 +680,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -691,7 +691,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -704,7 +704,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
