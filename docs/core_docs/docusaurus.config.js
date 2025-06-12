@@ -143,7 +143,7 @@ const config = {
     ({
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://jobs.ashbyhq.com/langchain/05efa205-8560-43fd-bfcc-3f7697561cfb?utm_source=https%3A%2F%2Fjs.langchain.com%2F&utm_campaign=langchainjs_docs" target="_blank">Join our team!</a></strong>',
+          '<strong class="announcement-bar-text">LangChain Availability Impacted: Please follow our <a href="https://status.smith.langchain.com/">status page</a> for more information.</strong>',
         backgroundColor: "#d0c9fe",
       },
       prism: {
