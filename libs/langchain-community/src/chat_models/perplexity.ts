@@ -27,14 +27,16 @@ import {
   Runnable,
   RunnablePassthrough,
 } from "@langchain/core/runnables";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   TokenUsage,
 } from "@langchain/core/language_models/base";
-import { z } from "zod";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   JsonOutputParser,
   StructuredOutputParser,
@@ -358,7 +360,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -369,7 +371,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -380,7 +382,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -397,9 +399,9 @@ export class ChatPerplexity
       throw new Error(`"strict" mode is not supported for this model.`);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
-    if (isZodSchema(schema)) {
-      schema = zodToJsonSchema(schema);
+    let schema: InteropZodType<RunOutput> | Record<string, any> = outputSchema;
+    if (isInteropZodSchema(schema)) {
+      schema = toJsonSchema(schema);
     }
     const name = config?.name;
     const description =
@@ -424,7 +426,7 @@ export class ChatPerplexity
 
     let outputParser: BaseLLMOutputParser;
 
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       outputParser = StructuredOutputParser.fromZodSchema(schema);
     } else {
       outputParser = new JsonOutputParser();

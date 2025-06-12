@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage } from "@langchain/core/messages";
 import { ChatXAI } from "../chat_models.js";
@@ -85,7 +85,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
     number2: z.number(),
   });
   const modelWithStructuredOutput = model.withStructuredOutput(
-    zodToJsonSchema(calculatorSchema),
+    toJsonSchema(calculatorSchema),
     {
       name: "calculator",
     }
@@ -116,7 +116,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
   });
   const modelWithStructuredOutput = model.withStructuredOutput({
     name: "calculator",
-    parameters: zodToJsonSchema(calculatorSchema),
+    parameters: toJsonSchema(calculatorSchema),
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
@@ -143,7 +143,7 @@ test("withStructuredOutput JSON schema JSON mode", async () => {
     number2: z.number(),
   });
   const modelWithStructuredOutput = model.withStructuredOutput(
-    zodToJsonSchema(calculatorSchema),
+    toJsonSchema(calculatorSchema),
     {
       name: "calculator",
       method: "jsonMode",

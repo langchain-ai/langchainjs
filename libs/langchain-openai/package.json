@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "0.5.11",
+  "version": "0.5.13",
   "description": "OpenAI integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -37,11 +37,10 @@
   "dependencies": {
     "js-tiktoken": "^1.0.12",
     "openai": "^4.96.0",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.3"
+    "zod": "3.25.32"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.48 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
@@ -55,7 +54,7 @@
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jest": "^27.6.0",
     "eslint-plugin-no-instanceof": "^1.0.1",
     "eslint-plugin-prettier": "^4.2.1",

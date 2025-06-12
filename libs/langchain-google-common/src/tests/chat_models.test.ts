@@ -15,7 +15,7 @@ import { CallbackHandlerMethods } from "@langchain/core/callbacks/base";
 import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import {
   authOptions,
@@ -1084,6 +1084,115 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(parts[1]).toHaveProperty("fileData");
     expect(parts[1].fileData).toHaveProperty("mimeType");
     expect(parts[1].fileData).toHaveProperty("fileUri");
+    expect(parts[1]).not.toHaveProperty("videoMetadata");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - media - no manager - videoMetadata", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "media",
+        fileUri: "mock://example.com/blue-box.png",
+        mimeType: "image/png",
+        videoMetadata: {
+          fps: 12,
+        },
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    console.log(JSON.stringify(record.opts, null, 1));
+
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData).toHaveProperty("mimeType");
+    expect(parts[1].fileData).toHaveProperty("fileUri");
+    expect(parts[1]).toHaveProperty("videoMetadata");
+    expect(parts[1].videoMetadata).toHaveProperty("fps");
+    expect(parts[1].videoMetadata.fps).toEqual(12);
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - image_url - videoMetadata", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const message: MessageContentComplex[] = [
+      {
+        type: "text",
+        text: "What is in this image?",
+      },
+      {
+        type: "image_url",
+        image_url: "mock://example.com/blue-box.png",
+        mimeType: "image/png",
+        videoMetadata: {
+          fps: 12,
+        },
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    console.log(JSON.stringify(record.opts, null, 1));
+
+    expect(record.opts).toHaveProperty("data");
+    expect(record.opts.data).toHaveProperty("contents");
+    expect(record.opts.data.contents).toHaveLength(1);
+    expect(record.opts.data.contents[0]).toHaveProperty("parts");
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData).toHaveProperty("mimeType");
+    expect(parts[1].fileData).toHaveProperty("fileUri");
+    expect(parts[1]).toHaveProperty("videoMetadata");
+    expect(parts[1].videoMetadata).toHaveProperty("fps");
+    expect(parts[1].videoMetadata.fps).toEqual(12);
 
     expect(result.content).toBe("A blue square.");
   });
@@ -2224,13 +2333,13 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     questions: z.array(questionSchema).describe("Array of question objects"),
   });
 
-  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
     arrSchemaKeys.find((key) => key === "additionalProperties")
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    zodToJsonSchema(questionSchema)
+    toJsonSchema(questionSchema)
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
@@ -2250,7 +2359,7 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    zodToJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema)
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(

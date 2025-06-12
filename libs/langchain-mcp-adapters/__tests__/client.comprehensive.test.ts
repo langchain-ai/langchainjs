@@ -1,10 +1,8 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
 import { ZodError } from "zod";
 import type {
-  ClientConfig,
   Connection,
-  StdioConnection,
-} from "../src/client.js";
+} from "../src/types.js";
 
 import "./mocks.js";
 
@@ -85,12 +83,11 @@ describe("MultiServerMCPClient", () => {
       await client.initializeConnections();
       expect(SSEClientTransport).toHaveBeenCalledWith(
         new URL(config["test-server"].url),
-        {
-          eventSourceInit: {},
+        expect.objectContaining({
           requestInit: {
             headers: config["test-server"].headers,
           },
-        }
+        })
       );
       expect(Client).toHaveBeenCalled();
     });

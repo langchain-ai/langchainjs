@@ -48,15 +48,18 @@ export async function runExample(client?: MultiServerMCPClient) {
     client =
       client ??
       new MultiServerMCPClient({
-        filesystem: {
-          transport: "stdio",
-          command: "npx",
-          args: [
-            "-y",
-            "@modelcontextprotocol/server-filesystem",
-            "./examples/filesystem_test", // This directory needs to exist
-          ],
+        mcpServers: {
+          filesystem: {
+            transport: "stdio" as const,
+            command: "npx",
+            args: [
+              "-y",
+              "@modelcontextprotocol/server-filesystem",
+              "./examples/filesystem_test", // This directory needs to exist
+            ],
+          },
         },
+        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");
