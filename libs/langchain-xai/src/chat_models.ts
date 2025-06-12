@@ -9,6 +9,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { InteropZodType } from "@langchain/core/utils/types";
 import {
   type OpenAICoreRequestOptions,
   type OpenAIClient,
@@ -16,7 +17,6 @@ import {
   OpenAIToolChoice,
   ChatOpenAIStructuredOutputMethodOptions,
 } from "@langchain/openai";
-import { z } from "zod";
 
 type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
 
@@ -548,7 +548,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -559,7 +559,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -570,7 +570,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -583,7 +583,7 @@ export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>

@@ -5,8 +5,8 @@ import { z } from "zod";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { JsonOutputToolsParser } from "../openai_tools.js";
 
 const schema = z.object({
@@ -27,7 +27,7 @@ test("Extraction", async () => {
       function: {
         name: "joke",
         description: "A joke",
-        parameters: isZodSchema(schema) ? zodToJsonSchema(schema) : schema,
+        parameters: isInteropZodSchema(schema) ? toJsonSchema(schema) : schema,
       },
     },
   ]);
