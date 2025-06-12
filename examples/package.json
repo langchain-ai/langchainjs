@@ -102,6 +102,7 @@
     "mongodb": "^6.3.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",
+    "postchain-client": "^1.21.1",
     "prisma": "^4.11.0",
     "readline": "^1.3.0",
     "redis": "^4.6.13",
