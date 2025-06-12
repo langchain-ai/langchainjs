@@ -653,6 +653,18 @@ export class PGVectorStore extends VectorStore {
           parameters.push(..._value.in);
           paramCount += _value.in.length;
         }
+        if (Array.isArray(_value.notIn)) {
+          const placeholders = _value.notIn
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->>'${key}' NOT IN (${placeholders})`
+          );
+          parameters.push(..._value.notIn);
+          paramCount += _value.notIn.length;
+        }
         if (Array.isArray(_value.arrayContains)) {
           const placeholders = _value.arrayContains
             .map(
