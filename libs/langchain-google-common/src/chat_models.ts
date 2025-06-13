@@ -228,6 +228,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   streaming = false;
 
+  labels?: Record<string, string>;
+
   protected connection: ChatConnection<AuthOptions>;
 
   protected streamedConnection: ChatConnection<AuthOptions>;
