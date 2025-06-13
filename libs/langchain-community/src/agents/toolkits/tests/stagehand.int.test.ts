@@ -17,7 +17,7 @@ describe("StagehandToolkit Integration Tests", () => {
       debugDom: true,
       enableCaching: false,
     });
-    await stagehand.init({ model: "gpt-4o-mini" });
+    await stagehand.init({ modelName: "gpt-4o-mini" });
     toolkit = await StagehandToolkit.fromStagehand(stagehand);
   });
 
