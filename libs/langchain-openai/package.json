@@ -36,7 +36,7 @@
   "license": "MIT",
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^4.96.0",
+    "openai": "^5.3.0",
     "zod": "3.25.32"
   },
   "peerDependencies": {
