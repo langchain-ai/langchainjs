@@ -8,6 +8,7 @@ import type {
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { normalizeHeaders } from "../utils/headers.js";
 
 export class AzureOpenAI extends OpenAI {
   azureOpenAIApiVersion?: string;
@@ -94,7 +95,9 @@ export class AzureOpenAI extends OpenAI {
     }
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -122,10 +125,11 @@ export class AzureOpenAI extends OpenAI {
         delete params.baseURL;
       }
 
+      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": params.defaultHeaders?.["User-Agent"]
-          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+        "User-Agent": defaultHeaders["User-Agent"]
+          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
           : `langchainjs-azure-openai-v2`,
       };
 
