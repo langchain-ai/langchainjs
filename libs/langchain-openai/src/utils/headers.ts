@@ -10,12 +10,21 @@ export type HeadersLike =
 
 const iife = <T>(fn: () => T) => fn();
 
+export function isHeaders(headers: unknown): headers is Headers {
+  return (
+    typeof Headers !== "undefined" &&
+    headers !== null &&
+    typeof headers === "object" &&
+    Object.prototype.toString.call(headers) === "[object Headers]"
+  );
+}
+
 export function normalizeHeaders(
   headers: HeadersLike
 ): Record<string, HeaderValue | readonly HeaderValue[]> {
   const output = iife(() => {
     // If headers is a Headers instance
-    if (headers instanceof Headers) {
+    if (isHeaders(headers)) {
       return headers;
     }
     // If headers is an array of [key, value] pairs
@@ -27,7 +36,7 @@ export function normalizeHeaders(
       typeof headers === "object" &&
       headers !== null &&
       "values" in headers &&
-      headers.values instanceof Headers
+      isHeaders(headers.values)
     ) {
       return headers.values;
     }
