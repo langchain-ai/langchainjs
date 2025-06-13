@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "0.2.10",
+  "version": "0.2.12",
   "description": "Google auth based authentication support for Google services",
   "type": "module",
   "engines": {
