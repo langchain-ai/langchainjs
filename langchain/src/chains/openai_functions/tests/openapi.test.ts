@@ -2,12 +2,12 @@ import { test, expect } from "@jest/globals";
 
 import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import {
-  JsonSchema7StringType,
-  JsonSchema7NumberType,
-  JsonSchema7ObjectType,
-  JsonSchema7ArrayType,
-  JsonSchema7Type,
-} from "zod-to-json-schema";
+  type JsonSchema7StringType,
+  type JsonSchema7NumberType,
+  type JsonSchema7ObjectType,
+  type JsonSchema7ArrayType,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
 import { OpenAPISpec } from "../../../util/openapi.js";
 import { convertOpenAPISchemaToJSONSchema } from "../openapi.js";
 

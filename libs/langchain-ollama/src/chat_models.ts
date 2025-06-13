@@ -35,9 +35,11 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -759,7 +761,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -770,7 +772,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -781,7 +783,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -800,7 +802,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -814,9 +816,9 @@ export class ChatOllama
         }
       > {
     if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isZodSchema(outputSchema);
+      const outputSchemaIsZod = isInteropZodSchema(outputSchema);
       const jsonSchema = outputSchemaIsZod
-        ? zodToJsonSchema(outputSchema)
+        ? toJsonSchema(outputSchema)
         : outputSchema;
       const llm = this.bindTools([
         {

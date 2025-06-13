@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";
 
@@ -15,7 +16,7 @@ export class GmailGetMessage extends GmailBaseTool {
     super(fields);
   }
 
-  async _call(arg: z.output<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
     const { messageId } = arg;
 
     const gmail = await this.getGmailClient();
