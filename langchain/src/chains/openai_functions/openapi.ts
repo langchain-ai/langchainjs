@@ -488,7 +488,7 @@ export async function createOpenAPIChain(
     );
   }
   const {
-    llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
+    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }),
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"
