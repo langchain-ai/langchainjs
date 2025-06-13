@@ -31,6 +31,7 @@ import {
   GoogleAISafetyCategory,
   GoogleAISafetyHandler,
   GoogleAISafetyThreshold,
+  GoogleSpeakerVoiceConfig,
 } from "../types.js";
 import { GoogleAbstractedClient } from "../auth.js";
 import { GoogleAISafetyError } from "../utils/safety.js";
@@ -1551,6 +1552,37 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(parameters.required[0]).toBe("testName");
   });
 
+  test("4. Functions withStructuredOutput - null type request", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+
+    const schema = {
+      type: "object",
+      properties: {
+        greeterName: {
+          type: ["string", "null"],
+        },
+      },
+      required: ["greeterName"],
+    };
+    const model = baseModel.withStructuredOutput(schema);
+    await model.invoke("Hi, I'm kwkaiser");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toEqual("extract");
+    expect(func.parameters?.properties?.greeterName?.type).toEqual("string");
+    expect(func.parameters?.properties?.greeterName?.nullable).toEqual(true);
+  });
+
   test("4. Functions - results", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -1990,6 +2022,95 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(first).toHaveProperty("top_logprobs");
     expect(Array.isArray(first.top_logprobs)).toBeTruthy();
     expect(first.top_logprobs).toHaveLength(5);
+  });
+
+  test("8. tts simple single", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-8-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.5-pro-preview-tts",
+      speechConfig: "Zubenelgenubi",
+      responseModalities: ["AUDIO"],
+    });
+    const result = await model.invoke("Say cheerfully: Have a wonderful day!");
+
+    expect(result).toBeDefined();
+
+    const data = record?.opts?.data;
+    console.log(JSON.stringify(data, null, 1));
+    expect(data?.generationConfig?.responseModalities).toEqual(["AUDIO"]);
+    expect(data?.generationConfig).toHaveProperty("speechConfig");
+    expect(
+      data?.generationConfig?.speechConfig?.voiceConfig?.prebuiltVoiceConfig
+        ?.voiceName
+    ).toEqual("Zubenelgenubi");
+
+    const content = result?.content?.[0] as Record<string, unknown>;
+    expect(typeof content).toEqual("object");
+    expect(content.type).toEqual("media");
+    expect(content).toHaveProperty("data");
+    expect(content).toHaveProperty("mimeType");
+    expect(content.mimeType).toMatch(/^audio/);
+  });
+
+  test("8. tts simple multiple", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-8-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.5-pro-preview-tts",
+      speechConfig: [
+        {
+          speaker: "Joe",
+          name: "Kore",
+        },
+        {
+          speaker: "Jane",
+          name: "Puck",
+        },
+      ],
+      responseModalities: ["AUDIO"],
+    });
+    const result = await model.invoke("Say cheerfully: Have a wonderful day!");
+
+    expect(result).toBeDefined();
+
+    const data = record?.opts?.data;
+    console.log(JSON.stringify(data, null, 1));
+    expect(data?.generationConfig?.responseModalities).toEqual(["AUDIO"]);
+    expect(data?.generationConfig).toHaveProperty("speechConfig");
+    expect(
+      data?.generationConfig?.speechConfig?.multiSpeakerVoiceConfig
+    ).toHaveProperty("speakerVoiceConfigs");
+    const speakers: GoogleSpeakerVoiceConfig[] =
+      data?.generationConfig?.speechConfig?.multiSpeakerVoiceConfig
+        ?.speakerVoiceConfigs;
+    expect(Array.isArray(speakers)).toEqual(true);
+    expect(speakers).toHaveLength(2);
+    expect(speakers[0].speaker).toEqual("Joe");
+    expect(speakers[0].voiceConfig.prebuiltVoiceConfig.voiceName).toEqual(
+      "Kore"
+    );
+
+    const content = result?.content?.[0] as Record<string, unknown>;
+    expect(typeof content).toEqual("object");
+    expect(content.type).toEqual("media");
+    expect(content).toHaveProperty("data");
+    expect(content).toHaveProperty("mimeType");
+    expect(content.mimeType).toMatch(/^audio/);
   });
 });
 

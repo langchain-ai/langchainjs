@@ -14,6 +14,42 @@ import {
   GeminiJsonSchemaDirty,
 } from "../types.js";
 
+/* eslint-disable no-param-reassign */
+export function adjustObjectType(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  if (!Array.isArray(obj.type)) {
+    return obj;
+  }
+
+  const len = obj.type.length;
+  const nullIndex = obj.type.indexOf("null");
+  if (len === 2 && nullIndex >= 0) {
+    // There are only two values set for the type, and one of them is "null".
+    // Set the type to the other one and set nullable to true.
+    const typeIndex = nullIndex === 0 ? 1 : 0;
+    obj.type = obj.type[typeIndex];
+    obj.nullable = true;
+  } else if (len === 1 && nullIndex === 0) {
+    // This is nullable only without a type, which doesn't
+    // make sense for Gemini
+    throw new Error("zod_to_gemini_parameters: Gemini cannot handle null type");
+  } else if (len === 1) {
+    // Although an array, it has only one value.
+    // So set it to the string to match what Gemini expects.
+    obj.type = obj?.type[0];
+  } else {
+    // Anything else could be a union type, so reject it.
+    throw new Error(
+      "zod_to_gemini_parameters: Gemini cannot handle union types"
+    );
+  }
+  return obj;
+}
+/* eslint-enable no-param-reassign */
+
 export function removeAdditionalProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
@@ -25,32 +61,7 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
-    if (Array.isArray(obj.type)) {
-      const len = obj.type.length;
-      const nullIndex = obj.type.indexOf("null");
-      if (len === 2 && nullIndex >= 0) {
-        // There are only two values set for the type, and one of them is "null".
-        // Set the type to the other one and set nullable to true.
-        const typeIndex = nullIndex === 0 ? 1 : 0;
-        newObj.type = obj.type[typeIndex];
-        newObj.nullable = true;
-      } else if (len === 1 && nullIndex === 0) {
-        // This is nullable only without a type, which doesn't
-        // make sense for Gemini
-        throw new Error(
-          "zod_to_gemini_parameters: Gemini cannot handle null type"
-        );
-      } else if (len === 1) {
-        // Although an array, it has only one value.
-        // So set it to the string to match what Gemini expects.
-        newObj.type = obj?.type[0];
-      } else {
-        // Anything else could be a union type, so reject it.
-        throw new Error(
-          "zod_to_gemini_parameters: Gemini cannot handle union types"
-        );
-      }
-    }
+    adjustObjectType(newObj);
 
     for (const key in newObj) {
       if (key in newObj) {
