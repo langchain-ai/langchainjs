@@ -7,7 +7,7 @@ import { OpenAI } from "@langchain/openai";
 
 // Create an instance of your favorite LLM
 const openai = new OpenAI({
-  modelName: "gpt-3.5-turbo",
+  model: "gpt-3.5-turbo",
   openAIApiKey: process.env.OPENAI_API_KEY,
 });
 

@@ -14,7 +14,7 @@ test("tagging chain", async () => {
       },
       required: ["tone"],
     },
-    new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 })
+    new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 })
   );
 
   const result = await chain.run(

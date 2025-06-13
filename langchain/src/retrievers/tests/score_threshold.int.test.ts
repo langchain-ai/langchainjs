@@ -20,7 +20,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store recursi
   );
 
   const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     temperature: 0,
   });
 
@@ -83,7 +83,7 @@ test("ConversationalRetrievalQAChain.fromLLM should use its vector store to get 
   );
 
   const model = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     temperature: 0,
   });
 

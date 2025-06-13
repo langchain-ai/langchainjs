@@ -213,8 +213,7 @@ export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
   /**
-   * Model to use
-   * Alias for `model`
+   * @deprecated Use `model` instead
    */
   modelName?: string;
 

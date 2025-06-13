@@ -12,7 +12,7 @@ test("createStructuredChatAgent works", async () => {
     "hwchase17/structured-chat-agent"
   );
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 0,
   });
   const agent = await createStructuredChatAgent({
@@ -28,8 +28,6 @@ test("createStructuredChatAgent works", async () => {
   const result = await agentExecutor.invoke({
     input,
   });
-
-  // console.log(result);
 
   expect(result.input).toBe(input);
   expect(typeof result.output).toBe("string");
