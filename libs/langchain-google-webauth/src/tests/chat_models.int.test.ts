@@ -1512,6 +1512,177 @@ describe.each(testMultimodalModelNames)(
   }
 );
 
+const testTtsModelNames = [
+  {
+    modelName: "gemini-2.5-flash-preview-tts",
+    platformType: "gai",
+  },
+  // GCP doesn't currently support this model
+  // {
+  //   modelName: "gemini-2.5-flash-preview-tts",
+  //   platformType: "gcp",
+  // },
+  {
+    modelName: "gemini-2.5-pro-preview-tts",
+    platformType: "gai",
+  },
+  // {
+  //   modelName: "gemini-2.5-pro-preview-tts",
+  //   platformType: "gcp",
+  // },
+];
+
+describe.each(testTtsModelNames)(
+  "Webauth ($platformType) Gemini TTS ($modelName)",
+  ({ modelName, platformType }) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    let testIndex = 0;
+    let outputIndex = 0;
+
+    function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
+      // const logger = new GoogleRequestLogger();
+      recorder = new GoogleRequestRecorder();
+      callbacks = [recorder, new GoogleRequestLogger()];
+
+      const apiKey =
+        platformType === "gai"
+          ? getEnvironmentVariable("TEST_API_KEY")
+          : undefined;
+
+      const responseModalities = ["AUDIO"];
+
+      return new ChatGoogle({
+        modelName,
+        platformType: platformType as GooglePlatformType,
+        callbacks,
+        apiKey,
+        responseModalities,
+        ...(fields ?? {}),
+      });
+    }
+
+    beforeEach(() => {
+      outputIndex = 0;
+    });
+
+    afterEach(() => {
+      testIndex += 1;
+    });
+
+    function writeData(data: string) {
+      const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
+      console.log(`writing to ${fn}`);
+      Fs.writeFileSync(fn, data, "base64");
+    }
+
+    test("single", async () => {
+      const model = newChatGoogle({
+        speechConfig: "Zubenelgenubi",
+      });
+      const prompt = "Say cheerfully: Have a wonderful day!";
+      const res = await model.invoke(prompt);
+      console.log(JSON.stringify(res, null, 1));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      writeData(content.data as string);
+    });
+
+    test("multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+      `;
+      const res = await model.invoke(prompt);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      writeData(content.data as string);
+    });
+
+    test("multiple, with instructions", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane.
+        Pay attention to instructions about how each each person speaks,
+        and other sounds they may make.  
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Perks up] But the week should improve!
+      `;
+      const res = await model.invoke(prompt);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const content = res?.content?.[0] as Record<string, any>;
+      writeData(content.data as string);
+    });
+
+    test("stream multiple", async () => {
+      const model = newChatGoogle({
+        speechConfig: [
+          {
+            speaker: "Joe",
+            name: "Kore",
+          },
+          {
+            speaker: "Jane",
+            name: "Puck",
+          },
+        ],
+      });
+      const prompt = `
+        TTS the following conversation between Joe and Jane:
+        Joe: Hows it going today, Jane?
+        Jane: Not too bad, how about you?
+        Joe: I think things are absolutely wonderful.
+        Jane: Do you, now? Are you sure about that? Are you absolutely sure?
+        Joe: Well, let's consider. (1) You and I are having this conversation,
+          which is pretty remarkable. (2) I think I feel fine. Don't I?
+        Jane: Well, I guess we should see about the outcome of this test, then.
+        Joe: Wait, this is a test?
+      `;
+      const res = await model.stream(prompt);
+      for await (const chunk of res) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const content = chunk?.content?.[0] ?? "";
+        if (
+          typeof content !== "string" &&
+          "type" in content &&
+          content.type === "media"
+        ) {
+          writeData(content.data as string);
+        } else {
+          console.log("content:", content);
+        }
+      }
+    }, 60000);
+  }
+);
+
 const testReasoningModelNames = [
   {
     modelName: "gemini-2.5-flash-preview-05-20",

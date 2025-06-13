@@ -37,6 +37,7 @@ import {
   GoogleAIAPI,
   GoogleAIAPIParams,
   GoogleSearchToolSetting,
+  GoogleSpeechConfig,
   GeminiJsonSchema,
 } from "./types.js";
 import {
@@ -223,6 +224,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   convertSystemMessageToHumanContent: boolean | undefined;
 
   safetyHandler: GoogleAISafetyHandler;
+
+  speechConfig: GoogleSpeechConfig;
 
   streamUsage = true;
 
