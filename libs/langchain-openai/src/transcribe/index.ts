@@ -8,14 +8,17 @@ import { wrapOpenAIClientError } from "../utils/openai.js";
 import { prepareAudioFile } from './utils.js'
 import { DEFAULT_MODEL, DEFAULT_RESPONSE_FORMAT } from './constants.js'
 import type {
-  TranscriptionConfig, TranscriptionResponse, TimestampGranularity,
-  WhisperResponseFormat, GPTResponseFormat, AudioInput
+  TranscriberInit, TranscribeModel, TimestampGranularity,
+  ModelResponseFormat, TranscriptionRequest, TranscriptionResponseMap,
 } from './types.js'
 
 /**
  * Class for transcribing audio using the OpenAI Whisper API.
  */
-export class OpenAITranscriptions<C extends TranscriptionConfig> {
+export class OpenAITranscriptions<
+  TModel extends TranscribeModel,
+  TInitFormat extends ModelResponseFormat<TModel> = ModelResponseFormat<TModel>
+> {
   lc_serializable = true;
 
   model: string;
@@ -24,7 +27,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
 
   prompt?: string;
 
-  response_format: string;
+  response_format: TInitFormat;
 
   temperature: number;
 
@@ -44,7 +47,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
 
   protected clientConfig: ClientOptions;
 
-  constructor(config: C) {
+  constructor(config: TranscriberInit<TModel, TInitFormat>) {
     const fieldsWithDefaults = { maxConcurrency: 2, ...config };
 
     this.caller = new AsyncCaller(fieldsWithDefaults ?? {});
@@ -61,7 +64,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
     this.model = fieldsWithDefaults?.model ?? DEFAULT_MODEL;
     this.language = fieldsWithDefaults?.language;
     this.prompt = fieldsWithDefaults?.prompt;
-    this.response_format = fieldsWithDefaults?.response_format ?? DEFAULT_RESPONSE_FORMAT;
+    this.response_format = fieldsWithDefaults?.response_format as TInitFormat ?? DEFAULT_RESPONSE_FORMAT;
     this.temperature = fieldsWithDefaults?.temperature ?? 0;
     this.timestamp_granularities = fieldsWithDefaults?.timestamp_granularities;
     this.timeout = fieldsWithDefaults?.timeout;
@@ -123,18 +126,11 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
    * @throws {Error} When audio format cannot be detected and no filename is provided
    * @throws {Error} When the audio type is unsupported
    */
-  async transcribe(
-    request: {
-      audio: AudioInput;
-      filename?: string;
-      options?: {
-        language?: string;
-        prompt?: string;
-        temperature?: number;
-        timestamp_granularities?: TimestampGranularity[];
-      };
-    }
-  ): Promise<TranscriptionResponse<C>> {
+  async transcribe<
+    TCallFormat extends ModelResponseFormat<TModel> = TInitFormat
+  >(
+    request: TranscriptionRequest<TModel, TCallFormat>
+  ): Promise<TranscriptionResponseMap[TCallFormat]> {
     const { audio, filename, options: requestOptions } = request;
 
     // Merge instance options with request-specific options
@@ -142,7 +138,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
       model: this.model,
       language: requestOptions?.language ?? this.language,
       prompt: requestOptions?.prompt ?? this.prompt,
-      response_format: this.response_format, // Always use instance format
+      response_format: requestOptions?.response_format ?? this.response_format, // Always use instance format
       temperature: requestOptions?.temperature ?? this.temperature,
       timestamp_granularities: requestOptions?.timestamp_granularities ?? this.timestamp_granularities,
     };
@@ -152,7 +148,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
       file: await prepareAudioFile(audio, filename),
       ...(mergedOptions.language && { language: mergedOptions.language }),
       ...(mergedOptions.prompt && { prompt: mergedOptions.prompt }),
-      ...(mergedOptions.response_format && { response_format: mergedOptions.response_format as WhisperResponseFormat | GPTResponseFormat }),
+      ...(mergedOptions.response_format && { response_format: mergedOptions.response_format }),
       ...(mergedOptions.temperature !== undefined && { temperature: mergedOptions.temperature }),
       ...(mergedOptions.timestamp_granularities && { timestamp_granularities: mergedOptions.timestamp_granularities }),
     };
@@ -161,11 +157,11 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
 
     // Handle different response formats
     if (typeof transcriptionResponse === "string") {
-      return { text: transcriptionResponse } as TranscriptionResponse<C>;
+      return { text: transcriptionResponse } as unknown as TranscriptionResponseMap[TCallFormat]
     }
 
     // For verbose_json format, the response includes additional metadata
-    return transcriptionResponse as TranscriptionResponse<C>;
+    return transcriptionResponse as TranscriptionResponseMap[TCallFormat];
   }
 
   /**

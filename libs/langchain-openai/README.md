@@ -83,6 +83,134 @@ const embeddings = new OpenAIEmbeddings({
 const res = await embeddings.embedQuery("Hello world");
 ```
 
+## Transcription
+
+This package includes support for OpenAI's Whisper API for audio transcription through the `OpenAITranscriptions` class.
+
+### Basic Usage
+
+```typescript
+import { OpenAITranscriptions } from "@langchain/openai";
+import fs from "fs";
+
+// Initialize the transcription model
+const transcriber = new OpenAITranscriptions({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Read your audio file
+const audioBuffer = fs.readFileSync("path/to/your/audio.mp3");
+
+// Transcribe the audio
+const result = await transcriber.transcribe({
+  audio: audioBuffer,
+  filename: "audio.mp3"
+});
+
+console.log("Transcription:", result.text);
+```
+
+### Advanced Configuration
+
+```typescript
+const transcriber = new OpenAITranscriptions({
+  model: "whisper-1",           // Model to use (default: "whisper-1")
+  language: "en",               // Input language (improves accuracy)
+  temperature: 0,               // Sampling temperature (0-1)
+  response_format: "verbose_json", // Output format
+  timeout: 60000,               // Request timeout in ms
+});
+```
+
+### Supported Response Formats
+
+The transcriber supports multiple response formats:
+
+- `"text"` (default): Plain text transcription
+- `"json"`: JSON with just the text
+- `"verbose_json"`: Detailed JSON with timestamps and metadata
+- `"srt"`: SubRip subtitle format
+- `"vtt"`: WebVTT subtitle format
+
+### Supported Audio Formats
+
+The transcriber supports various audio formats including:
+- MP3
+- MP4
+- MPEG
+- MPGA
+- M4A
+- WAV
+- WEBM
+
+### Using Context Prompts
+
+You can provide context to improve transcription accuracy:
+
+```typescript
+const result = await transcriber.transcribe({
+  audio: audioBuffer,
+  filename: "lecture.mp3",
+  options: {
+    prompt: "This is a lecture about quantum physics and machine learning.",
+    language: "en",
+    temperature: 0
+  }
+});
+```
+
+### Type-Safe Usage
+
+The transcriber includes TypeScript support for type-safe responses:
+
+```typescript
+// Basic transcription - only has 'text' property
+const basicResult = await transcriber.transcribe({
+  audio: audioBuffer,
+  options: { response_format: "text" }
+});
+console.log(basicResult.text); // ✅ Available
+
+// Verbose transcription - has all metadata
+const verboseResult = await transcriber.transcribe<"verbose_json">({
+  audio: audioBuffer,
+  filename: "detailed_audio.mp3",
+  options: {
+    response_format: "verbose_json",
+    timestamp_granularities: ["word", "segment"]
+  }
+});
+
+// TypeScript knows these fields exist
+console.log("Text:", verboseResult.text);
+console.log("Language:", verboseResult.language);
+console.log("Duration:", verboseResult.duration);
+console.log("Words with timestamps:", verboseResult.words);
+console.log("Segments:", verboseResult.segments);
+```
+
+### Error Handling
+
+The transcriber includes automatic retry logic and proper error handling:
+
+```typescript
+try {
+  const result = await transcriber.transcribe({
+    audio: audioBuffer,
+    filename: "audio.mp3"
+  });
+  console.log("Success:", result.text);
+} catch (error) {
+  if (error.status === 413) {
+    console.error("File too large");
+  } else if (error.status === 429) {
+    console.error("Rate limit exceeded");
+  } else {
+    console.error("Transcription failed:", error.message);
+  }
+}
+```
+
 ## Development
 
 To develop the OpenAI package, you'll need to follow these instructions:

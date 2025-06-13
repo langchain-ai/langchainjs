@@ -3,27 +3,24 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { OpenAITranscriptions } from "./index.js";
 
 // Mock the toFile function
-vi.mock("openai", () => {
-  console.log('mocking openai');
-  return {
-    OpenAI: class {
-      config: any;
+vi.mock("openai", () => ({
+  OpenAI: class {
+    config: any;
 
-      audio: any;
+    audio: any;
 
-      constructor(config: any) {
-        this.config = config;
-        this.audio = {
-          transcriptions: {
-            create: vi.fn().mockResolvedValue({
-              text: "test",
-            } as never),
-          }
+    constructor(config: any) {
+      this.config = config;
+      this.audio = {
+        transcriptions: {
+          create: vi.fn().mockResolvedValue({
+            text: "test",
+          } as never),
         }
       }
-    },
-  }
-});
+    }
+  },
+}));
 
 // Integration tests for OpenAI Transcriptions
 describe("OpenAITranscriptions", () => {

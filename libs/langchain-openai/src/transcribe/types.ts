@@ -1,90 +1,91 @@
 import { type ClientOptions } from "openai";
-import { AsyncCallerParams } from "@langchain/core/utils/async_caller";
 
 import { WHISPER_RESPONSE_FORMATS, GPT_RESPONSE_FORMATS, DEFAULT_TIMESTAMP_GRANULARITIES } from "./constants.js";
-
-// Helper type for literal union (preserves literals while allowing extensions)
-type LiteralUnion<T extends U, U = string> = T | (U & Record<string, never>);
-type VoiceToTextModelIds = LiteralUnion<"whisper-1" | "gpt-4o-mini-transcribe" | "gpt-4o-transcribe">;
 
 export type WhisperResponseFormat = (typeof WHISPER_RESPONSE_FORMATS)[number];
 export type GPTResponseFormat = (typeof GPT_RESPONSE_FORMATS)[number];
 export type TimestampGranularity = (typeof DEFAULT_TIMESTAMP_GRANULARITIES)[number];
+export type TranscribeModel = "whisper-1" | "gpt-4o-mini-transcribe" | "gpt-4o-transcribe";
 
-/**
- * Configuration for OpenAI Transcriptions with model-specific response format constraints
- */
-export type TranscriptionConfig<M extends VoiceToTextModelIds = VoiceToTextModelIds> = {
-    model?: M;
+export type ModelResponseFormat<TModel extends TranscribeModel> =
+    TModel extends "whisper-1" ? WhisperResponseFormat : GPTResponseFormat;
+
+export interface TranscriberBaseOptions {
+    temperature?: number;
+    prompt?: string;
+    language?: string;
+}
+
+export interface TranscriberInit<
+    TModel extends TranscribeModel,
+    TFormat extends ModelResponseFormat<TModel> = ModelResponseFormat<TModel>
+> extends TranscriberBaseOptions {
+    model?: TModel;
     language?: string;
     prompt?: string;
-    response_format?: M extends "whisper-1"
-        ? LiteralUnion<WhisperResponseFormat>
-        : M extends "gpt-4o-mini-transcribe" | "gpt-4o-transcribe"
-            ? LiteralUnion<GPTResponseFormat>
-            : LiteralUnion<WhisperResponseFormat>; // Default for unknown models
+    response_format?: TFormat;
     temperature?: number;
-    timestamp_granularities?: M extends "whisper-1" ? TimestampGranularity[] : never;
+    timestamp_granularities?: TFormat extends "whisper-1" ? TimestampGranularity[] : never;
     timeout?: number;
     verbose?: boolean;
     openAIApiKey?: string;
     apiKey?: string;
     configuration?: ClientOptions;
-} & AsyncCallerParams;
+}
 
-/**
- * Base response from transcription API
- */
+export interface TranscriptionRequest<
+    TModel extends TranscribeModel,
+    TFormat extends ModelResponseFormat<TModel> = ModelResponseFormat<TModel>
+> {
+    audio: Uint8Array | File;
+    filename?: string;
+    options?: {
+        response_format?: TFormat;
+        temperature?: number;
+        prompt?: string;
+        language?: string;
+        timestamp_granularities?: Array<"word" | "segment">;
+    };
+}
+
 export interface BaseTranscriptionResponse {
-    /**
-     * The transcribed text
-     */
-    text: string;
+  text: string;
 }
 
-/**
- * Extended response with metadata (verbose_json format)
- */
 export interface VerboseTranscriptionResponse extends BaseTranscriptionResponse {
-    /**
-     * Additional metadata (only available with verbose_json format)
-     */
-    task?: string;
-    language?: string;
-    duration?: number;
-    words?: Array<{
-        word: string;
-        start: number;
-        end: number;
-    }>;
-    segments?: Array<{
-        id: number;
-        seek: number;
-        start: number;
-        end: number;
-        text: string;
-        tokens: number[];
-        temperature: number;
-        avg_logprob: number;
-        compression_ratio: number;
-        no_speech_prob: number;
-    }>;
+  /**
+   * Additional metadata (only available with verbose_json format)
+   */
+  task?: string;
+  language?: string;
+  duration?: number;
+  words?: Array<{
+    word: string;
+    start: number;
+    end: number;
+  }>;
+  segments: {
+    id: number;
+    seek: number;
+    start: number;
+    end: number;
+    text: string;
+    tokens: number[];
+    temperature: number;
+    avg_logprob: number;
+    compression_ratio: number;
+    no_speech_prob: number;
+  }[];
 }
 
-/**
- * Smart response type that infers based on model and response format
- */
-export type TranscriptionResponse<C extends TranscriptionConfig> =
-  C["model"] extends "whisper-1"
-    ? C["response_format"] extends "verbose_json"
-      ? VerboseTranscriptionResponse
-      : BaseTranscriptionResponse
-    : C["model"] extends "gpt-4o-mini-transcribe" | "gpt-4o-transcribe"
-    ? C["response_format"] extends "verbose_json"
-      ? BaseTranscriptionResponse // GPT models don't support verbose_json
-      : BaseTranscriptionResponse
-    : C["response_format"] extends "verbose_json"
-    ? VerboseTranscriptionResponse
-    : BaseTranscriptionResponse;
+export type TranscriptionResponseMap = {
+  text: BaseTranscriptionResponse;
+  json: BaseTranscriptionResponse;
+  verbose_json: VerboseTranscriptionResponse;
+  srt: BaseTranscriptionResponse;
+  vtt: BaseTranscriptionResponse;
+  verbose_srt: BaseTranscriptionResponse;
+  verbose_vtt: BaseTranscriptionResponse;
+};
 
 export type AudioInput = Buffer | File | Uint8Array | Blob | Promise<Buffer | File | Uint8Array | Blob>;

@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect, afterAll, vi } from "vitest";
+import { test, expect, afterAll } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";

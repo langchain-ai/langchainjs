@@ -23,7 +23,7 @@
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "prepack": "yarn build",
-    "test": "vitest run --exclude=\"src/**/*.int.test.ts\" --testTimeout 30000",
+    "test": "vitest run --exclude=\"src/**/*.int.test.ts\" --typecheck --testTimeout 30000",
     "test:watch": "vitest --exclude=\"src/**/*.int.test.ts\"",
     "test:single": "vitest run --testTimeout 100000",
     "test:int": "vitest run --include=\"src/**/*.int.test.ts\" --testTimeout 100000",
