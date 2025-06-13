@@ -1,6 +1,11 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isModelGemini, isModelGemma, validateGeminiParams } from "./gemini.js";
+import {
+  isModelGemini,
+  isModelGemma,
+  normalizeSpeechConfig,
+  validateGeminiParams,
+} from "./gemini.js";
 import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -10,13 +15,6 @@ import {
   GoogleAIModelParams,
   GoogleAIModelRequestParams,
   GoogleAIToolType,
-  GoogleSpeakerVoiceConfig,
-  GoogleSpeechConfig,
-  GoogleSpeechConfigSimplified,
-  GoogleSpeechSimplifiedLanguage,
-  GoogleSpeechSpeakerName,
-  GoogleSpeechVoice,
-  GoogleSpeechVoiceLanguage,
   VertexModelFamily,
 } from "../types.js";
 import {
@@ -143,93 +141,6 @@ function reasoningEffortToReasoningTokens(
     default:
       return undefined;
   }
-}
-
-export function normalizeSpeechConfig(
-  config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
-): GoogleSpeechConfig | undefined {
-  function isSpeechConfig(
-    config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
-  ): config is GoogleSpeechConfig {
-    return (
-      typeof config === "object" &&
-      (Object.hasOwn(config, "voiceConfig") ||
-        Object.hasOwn(config, "multiSpeakerVoiceConfig"))
-    );
-  }
-
-  function hasLanguage(
-    config: GoogleSpeechConfigSimplified
-  ): config is GoogleSpeechSimplifiedLanguage {
-    return typeof config === "object" && Object.hasOwn(config, "languageCode");
-  }
-
-  function hasVoice(
-    config: GoogleSpeechSimplifiedLanguage
-  ): config is GoogleSpeechVoiceLanguage {
-    return Object.hasOwn(config, "voice");
-  }
-
-  if (typeof config === "undefined") {
-    return undefined;
-  }
-
-  // If this is already a GoogleSpeechConfig, just return it
-  if (isSpeechConfig(config)) {
-    return config;
-  }
-
-  let languageCode: string | undefined;
-  let voice: GoogleSpeechVoice;
-  if (hasLanguage(config)) {
-    languageCode = config.languageCode;
-    voice = hasVoice(config) ? config.voice : config.voices;
-  } else {
-    languageCode = undefined;
-    voice = config;
-  }
-
-  let ret: GoogleSpeechConfig;
-
-  if (typeof voice === "string") {
-    // They just provided the prebuilt voice configuration name. Use it.
-    ret = {
-      voiceConfig: {
-        prebuiltVoiceConfig: {
-          voiceName: voice,
-        },
-      },
-    };
-  } else {
-    // This is multi-speaker, so we have speaker/name pairs
-    // If we have just one (why?), turn it into an array for the moment
-    const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
-      ? voice
-      : [voice];
-    // Go through all the speaker/name pairs and turn this into the voice config array
-    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
-      (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
-        speaker: v.speaker,
-        voiceConfig: {
-          prebuiltVoiceConfig: {
-            voiceName: v.name,
-          },
-        },
-      })
-    );
-    // Create the multi-speaker voice configuration
-    ret = {
-      multiSpeakerVoiceConfig: {
-        speakerVoiceConfigs,
-      },
-    };
-  }
-
-  if (languageCode) {
-    ret.languageCode = languageCode;
-  }
-
-  return ret;
 }
 
 export function copyAIModelParamsInto(

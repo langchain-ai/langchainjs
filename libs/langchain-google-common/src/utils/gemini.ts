@@ -31,7 +31,7 @@ import {
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import type {
+import {
   GoogleLLMResponse,
   GoogleAIModelParams,
   GeminiPartText,
@@ -52,10 +52,13 @@ import type {
   GeminiLogprobsTopCandidate,
   ModalityTokenCount,
   GeminiUrlContextMetadata,
-} from "../types.js";
-import { GoogleAISafetyError } from "./safety.js";
-import { MediaBlob } from "../experimental/utils/media_core.js";
-import {
+  GoogleSpeechConfig,
+  GoogleSpeechConfigSimplified,
+  GoogleSpeechSimplifiedLanguage,
+  GoogleSpeechVoiceLanguage,
+  GoogleSpeechVoice,
+  GoogleSpeechSpeakerName,
+  GoogleSpeakerVoiceConfig,
   GeminiFunctionDeclaration,
   GeminiGenerationConfig,
   GeminiRequest,
@@ -65,8 +68,9 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
+import { GoogleAISafetyError } from "./safety.js";
+import { MediaBlob } from "../experimental/utils/media_core.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
-import { normalizeSpeechConfig } from "./common.js";
 
 export interface FunctionCall {
   name: string;
@@ -223,6 +227,93 @@ const extractMimeType = (
   }
   return null;
 };
+
+export function normalizeSpeechConfig(
+  config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
+): GoogleSpeechConfig | undefined {
+  function isSpeechConfig(
+    config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechConfig {
+    return (
+      typeof config === "object" &&
+      (Object.hasOwn(config, "voiceConfig") ||
+        Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+    );
+  }
+
+  function hasLanguage(
+    config: GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechSimplifiedLanguage {
+    return typeof config === "object" && Object.hasOwn(config, "languageCode");
+  }
+
+  function hasVoice(
+    config: GoogleSpeechSimplifiedLanguage
+  ): config is GoogleSpeechVoiceLanguage {
+    return Object.hasOwn(config, "voice");
+  }
+
+  if (typeof config === "undefined") {
+    return undefined;
+  }
+
+  // If this is already a GoogleSpeechConfig, just return it
+  if (isSpeechConfig(config)) {
+    return config;
+  }
+
+  let languageCode: string | undefined;
+  let voice: GoogleSpeechVoice;
+  if (hasLanguage(config)) {
+    languageCode = config.languageCode;
+    voice = hasVoice(config) ? config.voice : config.voices;
+  } else {
+    languageCode = undefined;
+    voice = config;
+  }
+
+  let ret: GoogleSpeechConfig;
+
+  if (typeof voice === "string") {
+    // They just provided the prebuilt voice configuration name. Use it.
+    ret = {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: voice,
+        },
+      },
+    };
+  } else {
+    // This is multi-speaker, so we have speaker/name pairs
+    // If we have just one (why?), turn it into an array for the moment
+    const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
+      ? voice
+      : [voice];
+    // Go through all the speaker/name pairs and turn this into the voice config array
+    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
+      (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
+        speaker: v.speaker,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: v.name,
+          },
+        },
+      })
+    );
+    // Create the multi-speaker voice configuration
+    ret = {
+      multiSpeakerVoiceConfig: {
+        speakerVoiceConfigs,
+      },
+    };
+  }
+
+  if (languageCode) {
+    ret.languageCode = languageCode;
+  }
+
+  return ret;
+}
 
 export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function messageContentText(
