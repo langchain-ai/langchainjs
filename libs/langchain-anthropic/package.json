@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@anthropic-ai/sdk": "^0.52.0",
     "fast-xml-parser": "^4.4.1"
   },
   "peerDependencies": {

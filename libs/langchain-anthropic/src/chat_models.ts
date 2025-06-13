@@ -37,6 +37,7 @@ import {
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
 import {
+  AnthropicBuiltInToolUnion,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -100,6 +101,19 @@ function _thinkingInParams(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
+}
+
+function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
+  const builtinTools = ["web_search"];
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "type" in tool &&
+    "name" in tool &&
+    typeof tool.type === "string" &&
+    typeof tool.name === "string" &&
+    builtinTools.includes(tool.name)
+  );
 }
 
 /**
@@ -722,11 +736,14 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): Anthropic.Messages.Tool[] | undefined {
+  ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
     return tools.map((tool) => {
+      if (isBuiltinTool(tool)) {
+        return tool;
+      }
       if (isAnthropicTool(tool)) {
         return tool;
       }
