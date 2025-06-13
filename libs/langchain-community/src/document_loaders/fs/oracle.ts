@@ -51,7 +51,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
    * number of each page.
    * @returns A promise that resolves to an array of `Document` instances.
    */
-  async load() {
+  async load(): Promise<Document[]> {
     const docs = [];
 
     if ("file" in this.pref) {
@@ -85,7 +85,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
   }
 
   // load from file
-  private async _loadFromFile(filename): Promise<[Document, string]> {
+  private async _loadFromFile(filename: string): Promise<Document | null> {
     let doc = null;
 
     // don't specify an encoding to use binary
@@ -108,15 +108,19 @@ export class OracleDocLoader extends BaseDocumentLoader {
     );
     const resultSet = result.resultSet;
     try {
-      for await (const row of resultSet) {
-        const [plain_text, metadata] = await this._extract(row);
-        doc = new Document({
-          pageContent: <string>plain_text,
-          metadata: <Record<string, any>>metadata,
-        });
+      if (resultSet) {
+        for await (const row of resultSet) {
+          const [plain_text, metadata] = await this._extract(row);
+          doc = new Document({
+            pageContent: <string>plain_text,
+            metadata: <Record<string, any>>metadata,
+          });
+        }
       }
     } finally {
-      await resultSet.close();
+      if (resultSet) {
+        await resultSet.close();
+      }
     }
 
     return doc;
@@ -124,10 +128,10 @@ export class OracleDocLoader extends BaseDocumentLoader {
 
   // load from table
   private async _loadFromTable(
-    owner,
-    table,
-    col
-  ): Promise<[Document[], string, string, string]> {
+    owner: string,
+    table: string,
+    col: string
+  ): Promise<Document[]> {
     const docs = [];
 
     // Check if names are invalid
@@ -161,17 +165,21 @@ export class OracleDocLoader extends BaseDocumentLoader {
 
     const resultSet = result.resultSet;
     try {
-      for await (const row of resultSet) {
-        const [plain_text, metadata] = await this._extract(row);
-        docs.push(
-          new Document({
-            pageContent: <string>plain_text,
-            metadata: <Record<string, any>>metadata,
-          })
-        );
+      if (resultSet) {
+        for await (const row of resultSet) {
+          const [plain_text, metadata] = await this._extract(row);
+          docs.push(
+            new Document({
+              pageContent: <string>plain_text,
+              metadata: <Record<string, any>>metadata,
+            })
+          );
+        }
       }
     } finally {
-      await resultSet.close();
+      if (resultSet) {
+        await resultSet.close();
+      }
     }
 
     return docs;
