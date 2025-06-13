@@ -439,18 +439,18 @@ function _convertReasoningSummaryToOpenAIResponsesParams(
 
 function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
-  model?: string,
-  zdrEnabled?: boolean
+  model?: string
 ): ResponsesInputItem[] {
-  const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-  const lastAIMessageId = lastAIMessage?.response_metadata?.id;
-  const newMessages =
-    lastAIMessageId && lastAIMessageId.startsWith("resp_") && !zdrEnabled
-      ? messages.slice(messages.indexOf(lastAIMessage) + 1)
-      : messages;
-
-  return newMessages.flatMap(
+  return messages.flatMap(
     (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
+      const additional_kwargs = lcMsg.additional_kwargs as
+        | BaseMessageFields["additional_kwargs"] & {
+            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+            type?: string;
+            refusal?: string;
+          };
+
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
 
@@ -462,7 +462,7 @@ function _convertMessagesToOpenAIResponsesParams(
         const toolMessage = lcMsg as ToolMessage;
 
         // Handle computer call output
-        if (toolMessage.additional_kwargs?.type === "computer_call_output") {
+        if (additional_kwargs?.type === "computer_call_output") {
           const output = (() => {
             if (typeof toolMessage.content === "string") {
               return {
@@ -517,7 +517,6 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         // if we have the original response items, just reuse them
         if (
-          !zdrEnabled &&
           lcMsg.response_metadata.output != null &&
           Array.isArray(lcMsg.response_metadata.output) &&
           lcMsg.response_metadata.output.length > 0 &&
@@ -531,43 +530,29 @@ function _convertMessagesToOpenAIResponsesParams(
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (!zdrEnabled && lcMsg.additional_kwargs.reasoning != null) {
-          type FindType<T, TType extends string> = T extends { type: TType }
-            ? T
-            : never;
-          type ReasoningItem = FindType<ResponsesInputItem, "reasoning">;
-
-          const isReasoningItem = (item: unknown): item is ReasoningItem =>
-            typeof item === "object" &&
-            item != null &&
-            "type" in item &&
-            item.type === "reasoning";
-
-          if (isReasoningItem(lcMsg.additional_kwargs.reasoning)) {
-            const reasoningItem =
-              _convertReasoningSummaryToOpenAIResponsesParams(
-                lcMsg.additional_kwargs.reasoning
-              );
-            input.push(reasoningItem);
-          }
+        if (additional_kwargs?.reasoning) {
+          const reasoningItem = _convertReasoningSummaryToOpenAIResponsesParams(
+            additional_kwargs.reasoning
+          );
+          input.push(reasoningItem);
         }
 
         // ai content
         let { content } = lcMsg;
-        if (lcMsg.additional_kwargs.refusal != null) {
+        if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
           content = [
             ...content,
-            { type: "refusal", refusal: lcMsg.additional_kwargs.refusal },
+            { type: "refusal", refusal: additional_kwargs.refusal },
           ];
         }
 
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
+          ...(lcMsg.id ? { id: lcMsg.id } : {}),
           content:
             typeof content === "string"
               ? content
@@ -589,12 +574,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 }),
         });
 
-        // function tool calls and computer use tool calls
-        const functionCallIds =
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
-            | Record<string, string>
-            | undefined;
+        const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
 
         if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
@@ -604,18 +584,18 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
+                id: functionCallIds?.[toolCall.id!],
               })
             )
           );
-        } else if (lcMsg.additional_kwargs.tool_calls != null) {
+        } else if (additional_kwargs?.tool_calls) {
           input.push(
-            ...lcMsg.additional_kwargs.tool_calls.map(
+            ...additional_kwargs.tool_calls.map(
               (toolCall): ResponsesInputItem => ({
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
+                id: functionCallIds?.[toolCall.id],
                 arguments: toolCall.function.arguments,
               })
             )
@@ -626,7 +606,7 @@ function _convertMessagesToOpenAIResponsesParams(
           lcMsg.response_metadata.output as Array<ResponsesInputItem>
         )?.length
           ? lcMsg.response_metadata.output
-          : lcMsg.additional_kwargs.tool_outputs;
+          : additional_kwargs.tool_outputs;
 
         let computerCalls: Array<ResponsesInputItem> = [];
 
@@ -818,7 +798,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
       text: chunk.delta,
       index: chunk.content_index,
     });
-  } else if (chunk.type === "response.output_text.annotation.added") {
+  } else if (chunk.type === "response.output_text_annotation.added") {
     content.push({
       type: "text",
       text: "",
@@ -2359,22 +2339,11 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponseApi(options)) {
-      const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-      const lastAIMessageId = lastAIMessage?.response_metadata?.id;
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
-          input: _convertMessagesToOpenAIResponsesParams(
-            messages,
-            this.model,
-            this.zdrEnabled
-          ),
+          input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
           stream: true,
-          ...(lastAIMessageId &&
-          lastAIMessageId.startsWith("resp_") &&
-          !this.zdrEnabled
-            ? { previous_response_id: lastAIMessageId }
-            : {}),
         },
         options
       );
@@ -2537,22 +2506,11 @@ export class ChatOpenAI<
       };
     }
 
-    const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-    const lastAIMessageId = lastAIMessage?.response_metadata?.id;
-    const input = _convertMessagesToOpenAIResponsesParams(
-      messages,
-      this.model,
-      this.zdrEnabled
-    );
+    const input = _convertMessagesToOpenAIResponsesParams(messages, this.model);
     const data = await this.responseApiWithRetry(
       {
         input,
         ...invocationParams,
-        ...(lastAIMessageId &&
-        lastAIMessageId.startsWith("resp_") &&
-        !this.zdrEnabled
-          ? { previous_response_id: lastAIMessageId }
-          : {}),
       },
       { signal: options?.signal, ...options?.options }
     );
@@ -2992,11 +2950,11 @@ export class ChatOpenAI<
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
     // Avoid relying importing a beta type with no official entrypoint
-  ): Promise<ReturnType<OpenAIClient["beta"]["chat"]["completions"]["parse"]>> {
+  ): Promise<ReturnType<OpenAIClient["chat"]["completions"]["parse"]>> {
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
-        const res = await this.client.beta.chat.completions.parse(
+        const res = await this.client.chat.completions.parse(
           request,
           requestOptions
         );
@@ -3008,7 +2966,9 @@ export class ChatOpenAI<
     });
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,

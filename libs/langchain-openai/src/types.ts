@@ -1,5 +1,4 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import type { RequestOptions as _OpenAICoreRequestOptions } from "openai/core";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -101,8 +100,7 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-export type OpenAICoreRequestOptions<Req = Record<string, unknown>> =
-  _OpenAICoreRequestOptions<Req>;
+export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**

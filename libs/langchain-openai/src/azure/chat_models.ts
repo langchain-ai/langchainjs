@@ -18,6 +18,7 @@ import {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { normalizeHeaders } from "../utils/headers.js";
 
 export type { AzureOpenAIInput };
 
@@ -541,7 +542,9 @@ export class AzureChatOpenAI extends ChatOpenAI {
     return params;
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -575,12 +578,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
         env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
       }
 
-      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
+      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
-          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
-        }`,
+        "User-Agent": defaultHeaders["User-Agent"]
+          ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
+          : `langchainjs-azure-openai/2.0.0 (${env})`,
       };
 
       this.client = new AzureOpenAIClient({
