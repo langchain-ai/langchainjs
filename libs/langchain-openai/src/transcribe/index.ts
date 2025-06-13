@@ -9,7 +9,7 @@ import { prepareAudioFile } from './utils.js'
 import { DEFAULT_MODEL, DEFAULT_RESPONSE_FORMAT } from './constants.js'
 import type {
   TranscriptionConfig, TranscriptionResponse, TimestampGranularity,
-  WhisperResponseFormat, GPTResponseFormat
+  WhisperResponseFormat, GPTResponseFormat, AudioInput
 } from './types.js'
 
 /**
@@ -125,7 +125,7 @@ export class OpenAITranscriptions<C extends TranscriptionConfig> {
    */
   async transcribe(
     request: {
-      audio: Buffer | File | Uint8Array;
+      audio: AudioInput;
       filename?: string;
       options?: {
         language?: string;

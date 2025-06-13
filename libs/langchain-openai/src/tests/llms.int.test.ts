@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { CallbackManager } from "@langchain/core/callbacks/manager";

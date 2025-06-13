@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
+import { test, it, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { ChatOpenAI } from "../chat_models.js";
 
 describe("strict tool calling", () => {
@@ -35,7 +35,7 @@ describe("strict tool calling", () => {
   });
 
   it("Can accept strict as a call arg via .bindTools", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push([url, options]);
@@ -77,7 +77,7 @@ describe("strict tool calling", () => {
   });
 
   it("Can accept strict as a call arg via .withConfig", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push([url, options]);
@@ -122,7 +122,7 @@ describe("strict tool calling", () => {
   });
 
   it("Strict is false if supportsStrictToolCalling is false", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push([url, options]);
@@ -166,7 +166,7 @@ describe("strict tool calling", () => {
   });
 
   it("Strict is set to true if passed in .withStructuredOutput", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push([url, options]);
@@ -215,7 +215,7 @@ describe("strict tool calling", () => {
   });
 
   it("Strict is NOT passed to OpenAI if NOT passed in .withStructuredOutput", async () => {
-    const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+    const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
       mockFetch.mock.calls.push([url, options]);

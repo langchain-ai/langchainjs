@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, jest, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -569,8 +569,8 @@ test("Function calling with streaming", async () => {
 
 test("ChatOpenAI can cache generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
     maxTokens: 10,
@@ -596,8 +596,8 @@ test("ChatOpenAI can cache generations", async () => {
 
 test("ChatOpenAI can write and read cached generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -605,7 +605,7 @@ test("ChatOpenAI can write and read cached generations", async () => {
     n: 1,
     cache: memoryCache,
   });
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [
@@ -634,8 +634,8 @@ test("ChatOpenAI can write and read cached generations", async () => {
 
 test("ChatOpenAI should not reuse cache if function call args have changed", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo",
@@ -644,7 +644,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
     cache: memoryCache,
   });
 
-  const generateUncachedSpy = jest.spyOn(chat, "_generateUncached");
+  const generateUncachedSpy = vi.spyOn(chat, "_generateUncached");
 
   const messages = [
     [

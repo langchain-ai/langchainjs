@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 /* eslint-disable no-process-env */
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 

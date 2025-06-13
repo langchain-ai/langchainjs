@@ -1,8 +1,15 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { ChatModelUnitTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
+
+/**
+ * Mock the @jest/globals module to use the vitest test and expect functions.
+ * This is necessary because the @langchain/standard-tests package uses the
+ * @jest/globals module to run the tests.
+ */
+vi.mock('@jest/globals', () => ({ test, expect }));
 
 class ChatOpenAIStandardUnitTests extends ChatModelUnitTests<
   ChatOpenAICallOptions,

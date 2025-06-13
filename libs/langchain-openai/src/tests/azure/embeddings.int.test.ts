@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { AzureOpenAIEmbeddings as OpenAIEmbeddings } from "../../azure/embeddings.js";
 
 test("Test AzureOpenAIEmbeddings.embedQuery", async () => {

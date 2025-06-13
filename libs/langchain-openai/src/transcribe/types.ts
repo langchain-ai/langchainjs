@@ -86,3 +86,5 @@ export type TranscriptionResponse<C extends TranscriptionConfig> =
     : C["response_format"] extends "verbose_json"
     ? VerboseTranscriptionResponse
     : BaseTranscriptionResponse;
+
+export type AudioInput = Buffer | File | Uint8Array | Blob | Promise<Buffer | File | Uint8Array | Blob>;

@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test, vi } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";

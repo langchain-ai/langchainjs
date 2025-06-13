@@ -1,6 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
@@ -251,8 +251,8 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
 
 test("ChatOpenAI in JSON mode can cache generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     temperature: 1,
