@@ -178,6 +178,21 @@ describe("PGVectorStore", () => {
     const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
 
     expect(result3.length).toEqual(3);
+
+    const result4 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        notIn: [100, 300],
+      },
+    });
+
+    expect(result4.length).toEqual(1);
+    expect(result4).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 200 },
+      },
+    ]);
   });
 
   test("PGvector supports arrayContains (?|) in metadata filter ", async () => {
