@@ -417,12 +417,23 @@ export abstract class BaseLanguageModel<
   private _encoding?: Tiktoken;
 
   async getNumTokens(content: MessageContent) {
-    // TODO: Figure out correct value.
-    if (typeof content !== "string") {
-      return 0;
+    // Extract text content from MessageContent
+    let textContent: string;
+    if (typeof content === "string") {
+      textContent = content;
+    } else {
+      // Content is an array of MessageContentComplex
+      textContent = content
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item.type === "text" && "text" in item) return item.text;
+          return "";
+        })
+        .join("");
     }
+
     // fallback to approximate calculation if tiktoken is not available
-    let numTokens = Math.ceil(content.length / 4);
+    let numTokens = Math.ceil(textContent.length / 4);
 
     if (!this._encoding) {
       try {
@@ -441,7 +452,7 @@ export abstract class BaseLanguageModel<
 
     if (this._encoding) {
       try {
-        numTokens = this._encoding.encode(content).length;
+        numTokens = this._encoding.encode(textContent).length;
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
