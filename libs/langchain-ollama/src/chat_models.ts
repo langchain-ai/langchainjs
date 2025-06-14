@@ -696,10 +696,6 @@ export class ChatOllama
     };
   }
 
-  /**
-   * Implement to support streaming.
-   * Should yield chunks iteratively.
-   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -722,29 +718,6 @@ export class ChatOllama
       output_tokens: 0,
       total_tokens: 0,
     };
-
-    if (params.tools && params.tools.length > 0) {
-      const toolResult = await this.client.chat({
-        ...params,
-        messages: ollamaMessages,
-        stream: false, // Ollama currently does not support streaming with tools
-      });
-
-      const { message: responseMessage, ...rest } = toolResult;
-      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
-      usageMetadata.output_tokens += rest.eval_count ?? 0;
-      usageMetadata.total_tokens =
-        usageMetadata.input_tokens + usageMetadata.output_tokens;
-
-      yield new ChatGenerationChunk({
-        text: responseMessage.content,
-        message: convertOllamaMessagesToLangChain(responseMessage, {
-          responseMetadata: rest,
-          usageMetadata,
-        }),
-      });
-      return runManager?.handleLLMNewToken(responseMessage.content);
-    }
 
     const stream = await this.client.chat({
       ...params,
