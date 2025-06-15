@@ -25,7 +25,7 @@ test("invoke with stop sequence", async () => {
     maxRetries: 0,
   });
   const message = new HumanMessage("Count to ten.");
-  const res = await chat.withConfig({ stop: ["5", "five"] }).invoke([message]);
+  const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
   // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
@@ -68,31 +68,33 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatXAI({
     maxRetries: 0,
-    model: "grok-2-1212",
+    model: "grok-beta",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
-    .bindTools([
-      {
-        type: "function",
-        function: {
-          name: "get_current_weather",
-          description: "Get the current weather in a given location",
-          parameters: {
-            type: "object",
-            properties: {
-              location: {
-                type: "string",
-                description: "The city and state, e.g. San Francisco, CA",
+    .bind({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
               },
-              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+              required: ["location"],
             },
-            required: ["location"],
           },
         },
-      },
-    ])
-    .withConfig({ tool_choice: "auto" })
+      ],
+      tool_choice: "auto",
+    })
     .invoke([message]);
   // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
@@ -109,27 +111,29 @@ test("stream with bound tools, yielding a single chunk", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
-    .bindTools([
-      {
-        type: "function",
-        function: {
-          name: "get_current_weather",
-          description: "Get the current weather in a given location",
-          parameters: {
-            type: "object",
-            properties: {
-              location: {
-                type: "string",
-                description: "The city and state, e.g. San Francisco, CA",
+    .bind({
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
               },
-              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+              required: ["location"],
             },
-            required: ["location"],
           },
         },
-      },
-    ])
-    .withConfig({ tool_choice: "auto" })
+      ],
+      tool_choice: "auto",
+    })
     .stream([message]);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -140,10 +144,10 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatXAI({
-    model: "grok-2-1212",
+    model: "grok-beta",
     temperature: 0,
-  })
-    .bindTools([
+  }).bind({
+    tools: [
       {
         type: "function",
         function: {
@@ -162,8 +166,9 @@ test("Few shotting with tool calls", async () => {
           },
         },
       },
-    ])
-    .withConfig({ tool_choice: "auto" });
+    ],
+    tool_choice: "auto",
+  });
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -189,9 +194,9 @@ test("Few shotting with tool calls", async () => {
   expect(res.content).toContain("24");
 });
 
-test("xAI can stream tool calls", async () => {
+test("Groq can stream tool calls", async () => {
   const model = new ChatXAI({
-    model: "grok-2-1212",
+    model: "grok-beta",
     temperature: 0,
   });
 

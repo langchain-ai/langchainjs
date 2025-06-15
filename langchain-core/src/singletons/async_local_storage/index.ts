@@ -78,9 +78,6 @@ class AsyncLocalStorageProvider {
       previousValue !== undefined &&
       previousValue[_CONTEXT_VARIABLES_KEY] !== undefined
     ) {
-      if (runTree === undefined) {
-        runTree = {};
-      }
       (runTree as any)[_CONTEXT_VARIABLES_KEY] =
         previousValue[_CONTEXT_VARIABLES_KEY];
     }

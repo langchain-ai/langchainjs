@@ -35,13 +35,13 @@ export class GoogleCalendarCreateTool extends GoogleCalendarBase {
   }
 
   async _call(query: string, runManager?: CallbackManagerForToolRun) {
-    const calendar = await this.getCalendarClient();
+    const auth = await this.getAuth();
     const model = this.getModel();
 
     return runCreateEvent(
       query,
       {
-        calendar,
+        auth,
         model,
         calendarId: this.calendarId,
       },

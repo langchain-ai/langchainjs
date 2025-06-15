@@ -1,3 +1,4 @@
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { v4 as uuidv4, validate as isUuid } from "uuid";
 import type {
   RunnableInterface,
@@ -7,7 +8,6 @@ import type {
 } from "./types.js";
 import { isRunnableInterface } from "./utils.js";
 import { drawMermaid, drawMermaidPng } from "./graph_mermaid.js";
-import { toJsonSchema } from "../utils/json_schema.js";
 
 export { Node, Edge };
 
@@ -45,7 +45,7 @@ function nodeDataJson(node: Node) {
   } else {
     return {
       type: "schema",
-      data: { ...toJsonSchema(node.data.schema), title: node.data.name },
+      data: { ...zodToJsonSchema(node.data.schema), title: node.data.name },
     };
   }
 }

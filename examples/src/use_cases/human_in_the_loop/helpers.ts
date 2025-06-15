@@ -40,7 +40,9 @@ const tools = [new CountEmails(), new SendEmail()];
 export const model = new ChatOpenAI({
   model: "gpt-3.5-turbo",
   temperature: 0,
-}).bindTools(tools);
+}).bind({
+  tools,
+});
 
 const callTool = (toolInvocation: Record<string, any>): Runnable => {
   const toolMap: Record<string, StructuredTool> = tools.reduce((acc, tool) => {

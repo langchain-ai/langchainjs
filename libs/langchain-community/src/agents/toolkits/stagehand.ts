@@ -1,11 +1,11 @@
 import {
   Tool,
   BaseToolkit as Toolkit,
+  ToolInterface,
   StructuredTool,
-  StructuredToolInterface,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
+import { AnyZodObject, z } from "zod";
 
 //  Documentation is here:
 //  https://js.langchain.com/docs/integrations/tools/stagehand
@@ -101,7 +101,7 @@ export class StagehandExtractTool extends StructuredTool {
 
   async _call(input: {
     instruction: string;
-    schema: z.AnyZodObject;
+    schema: AnyZodObject;
   }): Promise<string> {
     const stagehand = await this.getStagehand();
     const { instruction, schema } = input;
@@ -152,7 +152,7 @@ export class StagehandObserveTool extends StagehandToolBase {
 }
 
 export class StagehandToolkit extends Toolkit {
-  tools: StructuredToolInterface[];
+  tools: ToolInterface[];
 
   stagehand?: Stagehand;
 
@@ -162,7 +162,7 @@ export class StagehandToolkit extends Toolkit {
     this.tools = this.initializeTools();
   }
 
-  private initializeTools(): StructuredToolInterface[] {
+  private initializeTools(): ToolInterface[] {
     return [
       new StagehandNavigateTool(this.stagehand),
       new StagehandActTool(this.stagehand),

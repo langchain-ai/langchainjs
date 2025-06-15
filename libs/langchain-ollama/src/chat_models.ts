@@ -3,10 +3,7 @@ import {
   UsageMetadata,
   type BaseMessage,
 } from "@langchain/core/messages";
-import {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   type BaseChatModelParams,
@@ -24,22 +21,9 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import {
-  InteropZodType,
-  isInteropZodSchema,
-} from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -52,8 +36,6 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
    */
   stop?: string[];
   tools?: BindToolsInput[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
 }
 
 export interface PullModelOptions {
@@ -91,7 +73,7 @@ export interface ChatOllamaInput
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers | Record<string, string>;
+  headers?: Headers;
   /**
    * Whether or not to check the model exists on the local machine before
    * invoking it. If set to `true`, the model will be pulled if it does not
@@ -100,8 +82,7 @@ export interface ChatOllamaInput
    */
   checkOrPullModel?: boolean;
   streaming?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
+  format?: string;
 }
 
 /**
@@ -119,12 +100,13 @@ export interface ChatOllamaInput
  * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_ollama.ChatOllamaCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.withConfig`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.withConfig({
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
  *   stop: ["\n"],
+ *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -471,8 +453,7 @@ export class ChatOllama
 
   streaming?: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  format?: string | Record<string, any>;
+  format?: string;
 
   keepAlive?: string | number;
 
@@ -567,7 +548,7 @@ export class ChatOllama
     tools: BindToolsInput[],
     kwargs?: Partial<this["ParsedCallOptions"]>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
-    return this.withConfig({
+    return this.bind({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
@@ -594,7 +575,7 @@ export class ChatOllama
 
     return {
       model: this.model,
-      format: options?.format ?? this.format,
+      format: this.format,
       keep_alive: this.keepAlive,
       options: {
         numa: this.numa,
@@ -781,118 +762,5 @@ export class ChatOllama
         usage_metadata: usageMetadata,
       }),
     });
-  }
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      >;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      > {
-    if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isInteropZodSchema(outputSchema);
-      const jsonSchema = outputSchemaIsZod
-        ? toJsonSchema(outputSchema)
-        : outputSchema;
-      const llm = this.bindTools([
-        {
-          type: "function" as const,
-          function: {
-            name: "extract",
-            description: jsonSchema.description,
-            parameters: jsonSchema,
-          },
-        },
-      ]).withConfig({
-        format: "json",
-      });
-      const outputParser = outputSchemaIsZod
-        ? StructuredOutputParser.fromZodSchema(outputSchema)
-        : new JsonOutputParser<RunOutput>();
-
-      if (!config?.includeRaw) {
-        return llm.pipe(outputParser) as Runnable<
-          BaseLanguageModelInput,
-          RunOutput
-        >;
-      }
-
-      const parserAssign = RunnablePassthrough.assign({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-      });
-      const parserNone = RunnablePassthrough.assign({
-        parsed: () => null,
-      });
-      const parsedWithFallback = parserAssign.withFallbacks({
-        fallbacks: [parserNone],
-      });
-      return RunnableSequence.from<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >([
-        {
-          raw: llm,
-        },
-        parsedWithFallback,
-      ]);
-    } else {
-      // TODO: Fix this type in core
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
-    }
   }
 }

@@ -21,15 +21,9 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       supportsParallelToolCalls: true,
       invokeResponseType: AIMessageChunk,
       constructorArgs: {
-        model: "gemini-2.0-flash",
+        model: "gemini-1.5-pro",
         authOptions: {
           credentials: JSON.parse(process.env.GOOGLE_VERTEX_AI_WEB_CREDENTIALS),
-        },
-        supportsStandardContentType: {
-          text: true,
-          audio: ["base64", "url", "dataUrl"],
-          image: ["base64", "url", "dataUrl"],
-          file: ["base64", "url", "dataUrl"],
         },
       },
     });

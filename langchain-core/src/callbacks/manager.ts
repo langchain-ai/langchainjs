@@ -303,13 +303,7 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMError(
-    err: Error | unknown,
-    _runId?: string,
-    _parentRunId?: string,
-    _tags?: string[],
-    extraParams?: Record<string, unknown>
-  ): Promise<void> {
+  async handleLLMError(err: Error | unknown): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -319,8 +313,7 @@ export class CallbackManagerForLLMRun
                 err,
                 this.runId,
                 this._parentRunId,
-                this.tags,
-                extraParams
+                this.tags
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -339,13 +332,7 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleLLMEnd(
-    output: LLMResult,
-    _runId?: string,
-    _parentRunId?: string,
-    _tags?: string[],
-    extraParams?: Record<string, unknown>
-  ): Promise<void> {
+  async handleLLMEnd(output: LLMResult): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
@@ -355,8 +342,7 @@ export class CallbackManagerForLLMRun
                 output,
                 this.runId,
                 this._parentRunId,
-                this.tags,
-                extraParams
+                this.tags
               );
             } catch (err) {
               const logFunction = handler.raiseError
@@ -1209,7 +1195,6 @@ export class CallbackManager
       } else {
         callbackManager = inheritableHandlers;
       }
-
       callbackManager = callbackManager.copy(
         Array.isArray(localHandlers)
           ? localHandlers.map(ensureHandler)

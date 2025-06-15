@@ -27,17 +27,10 @@ const extractionFunctionSchema = {
 
 const model = new ChatOpenAI({
   model: "gpt-4",
-})
-  .bindTools([
-    {
-      name: "extractor",
-      description: "Extracts fields from the input.",
-      schema: extractionFunctionSchema,
-    },
-  ])
-  .withConfig({
-    function_call: { name: "extractor" },
-  });
+}).bind({
+  functions: [extractionFunctionSchema],
+  function_call: { name: "extractor" },
+});
 
 const result = await model.invoke([new HumanMessage("What a beautiful day!")]);
 

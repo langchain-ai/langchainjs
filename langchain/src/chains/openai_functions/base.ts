@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
+
 import type { BaseOutputParser } from "@langchain/core/output_parsers";
 import type { BasePromptTemplate } from "@langchain/core/prompts";
 import type { Runnable, RunnableInterface } from "@langchain/core/runnables";
@@ -6,16 +9,8 @@ import type {
   BaseLanguageModelInput,
   FunctionDefinition,
 } from "@langchain/core/language_models/base";
-import {
-  isInteropZodSchema,
-  type InputValues,
-  InteropZodObject,
-} from "@langchain/core/utils/types";
+import type { InputValues } from "@langchain/core/utils/types";
 import type { BaseMessage } from "@langchain/core/messages";
-import {
-  toJsonSchema,
-  type JsonSchema7Type,
-} from "@langchain/core/utils/json_schema";
 import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 
 /**
@@ -123,8 +118,14 @@ export function createOpenAIFnRunnable<
     };
   }
 
-  const llmWithKwargs = (llm as Runnable).withConfig(llmKwargs);
+  const llmWithKwargs = (llm as Runnable).bind(llmKwargs);
   return prompt.pipe(llmWithKwargs).pipe(outputParser);
+}
+
+function isZodSchema(
+  schema: z.AnyZodObject | JsonSchema7Type
+): schema is z.AnyZodObject {
+  return typeof (schema as z.AnyZodObject).safeParse === "function";
 }
 
 /**
@@ -138,7 +139,7 @@ export type CreateStructuredOutputRunnableConfig<
   /**
    * Schema to output. Must be either valid JSONSchema or a Zod schema.
    */
-  outputSchema: InteropZodObject | JsonSchema7Type;
+  outputSchema: z.AnyZodObject | JsonSchema7Type;
   /**
    * Language model to use, assumed to support the OpenAI function-calling API.
    */
@@ -219,8 +220,8 @@ export function createStructuredOutputRunnable<
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>
 ): Runnable<RunInput, RunOutput> {
   const { outputSchema, llm, prompt, outputParser } = config;
-  const jsonSchema = isInteropZodSchema(outputSchema)
-    ? toJsonSchema(outputSchema)
+  const jsonSchema = isZodSchema(outputSchema)
+    ? zodToJsonSchema(outputSchema)
     : outputSchema;
   const oaiFunction: FunctionDefinition = {
     name: "outputFormatter",

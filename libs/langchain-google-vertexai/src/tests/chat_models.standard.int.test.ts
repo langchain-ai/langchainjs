@@ -22,13 +22,7 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
       supportsParallelToolCalls: true,
       invokeResponseType: AIMessageChunk,
       constructorArgs: {
-        model: "gemini-2.0-flash",
-      },
-      supportsStandardContentType: {
-        text: true,
-        audio: ["base64", "url", "dataUrl"],
-        image: ["base64", "url", "dataUrl"],
-        file: ["base64", "url", "dataUrl"],
+        model: "gemini-1.5-pro",
       },
     });
   }

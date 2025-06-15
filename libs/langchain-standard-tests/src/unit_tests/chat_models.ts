@@ -5,7 +5,6 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { z } from "zod";
-import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseChatModelsTests,
@@ -27,7 +26,7 @@ class PersonTool extends StructuredTool {
 
   schema = person;
 
-  async _call(input: InferInteropZodOutput<typeof person>) {
+  async _call(input: z.infer<typeof person>) {
     return JSON.stringify(input);
   }
 }

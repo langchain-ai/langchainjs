@@ -1,3 +1,4 @@
+import { JsonSchema7ObjectType } from "zod-to-json-schema";
 import { Optional } from "../../types/type-utils.js";
 import { Generation, ChatGeneration } from "../../outputs.js";
 import { BaseLLMOutputParser } from "../base.js";
@@ -6,7 +7,6 @@ import {
   BaseCumulativeTransformOutputParser,
   BaseCumulativeTransformOutputParserInput,
 } from "../transform.js";
-import { JsonSchema7ObjectType } from "../../utils/json_schema.js";
 import {
   compare,
   type Operation as JSONPatchOperation,

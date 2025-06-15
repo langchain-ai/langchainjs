@@ -155,21 +155,21 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
     try {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore Experimental browser-only global
-      aiInstance = LanguageModel;
+      aiInstance = ai;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
         `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`
       );
     }
-    const availability = await aiInstance.availability();
-    if (availability === "no") {
+    const { available } = await aiInstance.languageModel.capabilities();
+    if (available === "no") {
       throw new Error("The AI model is not available.");
-    } else if (availability === "after-download") {
+    } else if (available === "after-download") {
       throw new Error("The AI model is not yet downloaded.");
     }
 
-    const session = await aiInstance.create({
+    const session = await aiInstance.languageModel.create({
       systemPrompt: this.systemPrompt,
       topK: this.topK,
       temperature: this.temperature,
@@ -194,7 +194,7 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
 
       let previousContent = "";
       for await (const chunk of iterableStream) {
-        const newContent = chunk;
+        const newContent = chunk.slice(previousContent.length);
         previousContent += newContent;
         yield new GenerationChunk({
           text: newContent,

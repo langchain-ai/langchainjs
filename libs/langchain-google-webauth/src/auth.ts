@@ -15,7 +15,6 @@ export type WebGoogleAuthOptions = {
   credentials: string | Credentials;
   scope?: string | string[];
   accessToken?: string;
-  responseModality?: string;
 };
 
 export class WebGoogleAuth extends GoogleAbstractedFetchClient {

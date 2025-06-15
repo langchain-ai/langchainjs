@@ -10,6 +10,7 @@ import {
   BaseMessage,
   FunctionMessage,
 } from "@langchain/core/messages";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
@@ -27,7 +28,9 @@ test("Runnable variant", async () => {
     new MessagesPlaceholder("agent_scratchpad"),
   ]);
 
-  const modelWithTools = model.bindTools(tools);
+  const modelWithTools = model.bind({
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
+  });
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
     steps.flatMap(({ action, observation }) => {
@@ -81,7 +84,9 @@ test("Runnable variant executor astream log", async () => {
     new MessagesPlaceholder("agent_scratchpad"),
   ]);
 
-  const modelWithTools = model.bindTools(tools);
+  const modelWithTools = model.bind({
+    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
+  });
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
     steps.flatMap(({ action, observation }) => {

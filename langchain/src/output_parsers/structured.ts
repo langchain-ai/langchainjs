@@ -1,23 +1,18 @@
 import { z } from "zod";
 import {
-  toJsonSchema,
-  type JsonSchema7Type,
-  type JsonSchema7ArrayType,
-  type JsonSchema7ObjectType,
-  type JsonSchema7StringType,
-  type JsonSchema7NumberType,
-  type JsonSchema7NullableType,
-} from "@langchain/core/utils/json_schema";
+  zodToJsonSchema,
+  JsonSchema7Type,
+  JsonSchema7ArrayType,
+  JsonSchema7ObjectType,
+  JsonSchema7StringType,
+  JsonSchema7NumberType,
+  JsonSchema7NullableType,
+} from "zod-to-json-schema";
 import {
   BaseOutputParser,
   FormatInstructionsOptions,
   OutputParserException,
 } from "@langchain/core/output_parsers";
-import {
-  interopParseAsync,
-  type InferInteropZodOutput,
-  type InteropZodType,
-} from "@langchain/core/utils/types";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -29,8 +24,8 @@ export interface JsonMarkdownFormatInstructionsOptions
 }
 
 export class StructuredOutputParser<
-  T extends InteropZodType
-> extends BaseOutputParser<InferInteropZodOutput<T>> {
+  T extends z.ZodTypeAny
+> extends BaseOutputParser<z.infer<T>> {
   static lc_name() {
     return "StructuredOutputParser";
   }
@@ -50,7 +45,7 @@ export class StructuredOutputParser<
    * @param schema The Zod schema which the output should match
    * @returns A new instance of StructuredOutputParser.
    */
-  static fromZodSchema<T extends InteropZodType>(schema: T) {
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this(schema);
   }
 
@@ -94,7 +89,7 @@ Your output will be parsed and type-checked according to the provided schema ins
 
 Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
 \`\`\`json
-${JSON.stringify(toJsonSchema(this.schema))}
+${JSON.stringify(zodToJsonSchema(this.schema))}
 \`\`\`
 `;
   }
@@ -104,15 +99,15 @@ ${JSON.stringify(toJsonSchema(this.schema))}
    * @param text The text to parse
    * @returns The parsed output.
    */
-  async parse(text: string): Promise<InferInteropZodOutput<T>> {
+  async parse(text: string): Promise<z.infer<T>> {
     try {
       const json = text.includes("```")
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
-      return await interopParseAsync(this.schema, JSON.parse(json));
+      return await this.schema.parseAsync(JSON.parse(json));
     } catch (e) {
       try {
-        return await interopParseAsync(this.schema, JSON.parse(text.trim()));
+        return await this.schema.parseAsync(JSON.parse(text.trim()));
       } catch (e2) {
         throw new OutputParserException(
           `Failed to parse. Text: "${text}". Error: ${e2}`,
@@ -128,7 +123,7 @@ ${JSON.stringify(toJsonSchema(this.schema))}
  * formatted as a markdown code snippet.
  */
 export class JsonMarkdownStructuredOutputParser<
-  T extends InteropZodType
+  T extends z.ZodTypeAny
 > extends StructuredOutputParser<T> {
   static lc_name() {
     return "JsonMarkdownStructuredOutputParser";
@@ -143,7 +138,7 @@ export class JsonMarkdownStructuredOutputParser<
     }
 
     return `Return a markdown code snippet with a JSON object formatted to look like:\n\`\`\`json\n${this._schemaToInstruction(
-      toJsonSchema(this.schema)
+      zodToJsonSchema(this.schema)
     )
       .replaceAll("{", "{".repeat(interpolationDepth))
       .replaceAll("}", "}".repeat(interpolationDepth))}\n\`\`\``;
@@ -216,7 +211,7 @@ export class JsonMarkdownStructuredOutputParser<
     throw new Error("unsupported schema type");
   }
 
-  static fromZodSchema<T extends InteropZodType>(schema: T) {
+  static fromZodSchema<T extends z.ZodTypeAny>(schema: T) {
     return new this<T>(schema);
   }
 
@@ -237,7 +232,7 @@ export class JsonMarkdownStructuredOutputParser<
 }
 
 export interface AsymmetricStructuredOutputParserFields<
-  T extends InteropZodType
+  T extends z.ZodTypeAny
 > {
   inputSchema: T;
 }
@@ -247,7 +242,7 @@ export interface AsymmetricStructuredOutputParserFields<
  * output schemas.
  */
 export abstract class AsymmetricStructuredOutputParser<
-  T extends InteropZodType,
+  T extends z.ZodTypeAny,
   Y = unknown
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
@@ -265,7 +260,7 @@ export abstract class AsymmetricStructuredOutputParser<
    * @param input The parsed input
    * @returns The processed output.
    */
-  abstract outputProcessor(input: InferInteropZodOutput<T>): Promise<Y>;
+  abstract outputProcessor(input: z.infer<T>): Promise<Y>;
 
   async parse(text: string): Promise<Y> {
     let parsedInput;

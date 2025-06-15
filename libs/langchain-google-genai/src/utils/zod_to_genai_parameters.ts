@@ -1,17 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import type { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
   type SchemaType as FunctionDeclarationSchemaType,
 } from "@google/generative-ai";
-import {
-  InteropZodType,
-  isInteropZodSchema,
-} from "@langchain/core/utils/types";
-import {
-  type JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
 
 export interface GenerativeAIJsonSchema extends Record<string, unknown> {
   properties?: Record<string, GenerativeAIJsonSchema>;
@@ -36,9 +30,6 @@ export function removeAdditionalProperties(
     if ("$schema" in newObj) {
       delete newObj.$schema;
     }
-    if ("strict" in newObj) {
-      delete newObj.strict;
-    }
 
     for (const key in newObj) {
       if (key in newObj) {
@@ -56,17 +47,13 @@ export function removeAdditionalProperties(
   return obj as GenerativeAIJsonSchema;
 }
 
-export function schemaToGenerativeAIParameters<
+export function zodToGenerativeAIParameters(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  schema: InteropZodType<RunOutput> | JsonSchema7Type
+  zodObj: z.ZodType<any>
 ): GenerativeAIFunctionDeclarationSchema {
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  const jsonSchema = removeAdditionalProperties(
-    isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
-  );
+  const jsonSchema = removeAdditionalProperties(zodToJsonSchema(zodObj));
   const { $schema, ...rest } = jsonSchema;
 
   return rest as GenerativeAIFunctionDeclarationSchema;

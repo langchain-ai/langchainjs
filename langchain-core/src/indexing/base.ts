@@ -348,12 +348,9 @@ export async function index(args: IndexArgs): Promise<IndexingResult> {
         before: indexStartDt,
         groupIds: sourceIds,
       });
-
-      if (uidsToDelete.length > 0) {
-        await vectorStore.delete({ ids: uidsToDelete });
-        await recordManager.deleteKeys(uidsToDelete);
-        numDeleted += uidsToDelete.length;
-      }
+      await vectorStore.delete({ ids: uidsToDelete });
+      await recordManager.deleteKeys(uidsToDelete);
+      numDeleted += uidsToDelete.length;
     }
   }
 

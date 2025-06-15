@@ -7,7 +7,7 @@ test("Test ChatOpenAI JSON mode", async () => {
   const chat = new AzureChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },
@@ -24,7 +24,7 @@ test("Test ChatOpenAI seed", async () => {
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
-  }).withConfig({
+  }).bind({
     seed: 123454930394983,
   });
   const message = new HumanMessage("Say something random!");
@@ -38,7 +38,7 @@ test("Test ChatOpenAI tool calling", async () => {
   const chat = new AzureChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).withConfig({
+  }).bind({
     tools: [
       {
         type: "function",
@@ -85,7 +85,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   const chat = new AzureChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).withConfig({
+  }).bind({
     tools: [
       {
         type: "function",
@@ -138,7 +138,7 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
   const chat = new AzureChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 256,
-  }).withConfig({
+  }).bind({
     tools: [
       {
         type: "function",
@@ -188,7 +188,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
     modelName: "gpt-3.5-turbo-1106",
     temperature: 1,
     cache: memoryCache,
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },

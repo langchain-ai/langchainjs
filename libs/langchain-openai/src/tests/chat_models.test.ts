@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 import { ChatOpenAI } from "../chat_models.js";
 
@@ -10,7 +10,7 @@ describe("strict tool calling", () => {
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: toJsonSchema(
+      parameters: zodToJsonSchema(
         z.object({
           location: z.string().describe("The location to get the weather for"),
         })
@@ -76,7 +76,7 @@ describe("strict tool calling", () => {
     }
   });
 
-  it("Can accept strict as a call arg via .withConfig", async () => {
+  it("Can accept strict as a call arg via .bind", async () => {
     const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
@@ -98,7 +98,7 @@ describe("strict tool calling", () => {
       maxRetries: 0,
     });
 
-    const modelWithTools = model.withConfig({
+    const modelWithTools = model.bind({
       tools: [weatherTool],
       strict: true,
     });
@@ -194,7 +194,6 @@ describe("strict tool calling", () => {
       }),
       {
         strict: true,
-        method: "functionCalling",
       }
     );
 
@@ -239,8 +238,7 @@ describe("strict tool calling", () => {
     const modelWithTools = model.withStructuredOutput(
       z.object({
         location: z.string().describe("The location to get the weather for"),
-      }),
-      { method: "functionCalling" }
+      })
     );
 
     // This will fail since we're not returning a valid response in our mocked fetch function.
@@ -258,16 +256,4 @@ describe("strict tool calling", () => {
       throw new Error("Body not found in request.");
     }
   });
-});
-
-test("Test OpenAI serialization doesn't pass along extra params", async () => {
-  const chat = new ChatOpenAI({
-    apiKey: "test-key",
-    model: "o3-mini",
-    somethingUnexpected: true,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
-  expect(JSON.stringify(chat)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
-  );
 });

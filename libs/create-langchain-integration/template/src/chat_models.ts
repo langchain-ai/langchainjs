@@ -114,7 +114,7 @@ export class ChatIntegration
   //   tools: BindToolsInput[],
   //   kwargs?: Partial<this["ParsedCallOptions"]>
   // ): Runnable<BaseLanguageModelInput, AIMessageChunk, BaseLanguageModelCallOptions> {
-  //   return this.withConfig({
+  //   return this.bind({
   //     tools: tools.map((tool) => convertToIntegrationFormat(tool)),
   //     ...kwargs,
   //   });

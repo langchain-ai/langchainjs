@@ -1,34 +1,38 @@
-import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
 import { HumanMessage } from "@langchain/core/messages";
 
-const model = new ChatAnthropic({
+const model = new ChatAnthropicTools({
   temperature: 0.1,
   model: "claude-3-sonnet-20240229",
-})
-  .bindTools([
+}).bind({
+  tools: [
     {
-      name: "get_current_weather",
-      description: "Get the current weather in a given location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
+      type: "function",
+      function: {
+        name: "get_current_weather",
+        description: "Get the current weather in a given location",
+        parameters: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "The city and state, e.g. San Francisco, CA",
+            },
+            unit: { type: "string", enum: ["celsius", "fahrenheit"] },
           },
-          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+          required: ["location"],
         },
-        required: ["location"],
       },
     },
-  ])
-  .withConfig({
-    // You can set the `tool_choice` arg to force the model to use a function
-    tool_choice: {
-      type: "tool",
+  ],
+  // You can set the `function_call` arg to force the model to use a function
+  tool_choice: {
+    type: "function",
+    function: {
       name: "get_current_weather",
     },
-  });
+  },
+});
 
 const response = await model.invoke([
   new HumanMessage({

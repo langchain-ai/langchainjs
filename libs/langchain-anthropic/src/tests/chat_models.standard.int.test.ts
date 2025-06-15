@@ -22,11 +22,6 @@ class ChatAnthropicStandardIntegrationTests extends ChatModelIntegrationTests<
       constructorArgs: {
         model: "claude-3-haiku-20240307",
       },
-      supportsStandardContentType: {
-        text: true,
-        image: ["base64", "url", "dataUrl"],
-        file: ["base64", "url", "dataUrl"],
-      },
     });
   }
 

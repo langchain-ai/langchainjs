@@ -2,24 +2,19 @@
 import { test, expect } from "@jest/globals";
 import { ChatXAI } from "../chat_models.js";
 
-beforeEach(() => {
-  process.env.XAI_API_KEY = "foo";
-});
-
 test("Serialization", () => {
-  delete process.env.XAI_API_KEY;
   const model = new ChatXAI({
-    model: "grok-2-1212",
-    apiKey: "bar",
+    apiKey: "foo",
   });
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-2-1212"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"api_key":{"lc":1,"type":"secret","id":["XAI_API_KEY"]}}}`
   );
 });
 
 test("Serialization with no params", () => {
+  process.env.GROQ_API_KEY = "foo";
   const model = new ChatXAI();
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-beta"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"api_key":{"lc":1,"type":"secret","id":["XAI_API_KEY"]}}}`
   );
 });

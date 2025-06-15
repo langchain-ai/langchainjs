@@ -95,7 +95,8 @@ export async function createReactAgent({
     tools: renderTextDescription(tools),
     tool_names: toolNames.join(", "),
   });
-  const llmWithStop = (llm as BaseLanguageModel).withConfig({
+  // TODO: Add .bind to core runnable interface.
+  const llmWithStop = (llm as BaseLanguageModel).bind({
     stop: ["\nObservation:"],
   });
   const agent = AgentRunnableSequence.fromRunnables(

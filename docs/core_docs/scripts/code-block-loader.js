@@ -31,7 +31,7 @@ const SYMBOL_EDGE_CASE_MAP = {
     originalSource: "@langchain/core/messages/tool",
     originalSymbolName: null,
   },
-  schemaToGeminiParameters: {
+  zodToGeminiParameters: {
     sources: ["@langchain/google-vertexai/utils"],
     originalSource: "@langchain/google-common",
     originalSymbolName: null,

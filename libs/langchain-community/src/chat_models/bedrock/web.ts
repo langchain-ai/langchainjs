@@ -35,8 +35,8 @@ import {
   isLangChainTool,
   isStructuredTool,
 } from "@langchain/core/utils/function_calling";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { zodToJsonSchema } from "zod-to-json-schema";
+
 import type { SerializedFields } from "../../load/map_keys.js";
 import {
   BaseBedrockInput,
@@ -72,7 +72,6 @@ const ALLOWED_MODEL_PROVIDERS = [
   "cohere",
   "meta",
   "mistral",
-  "deepseek",
 ];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;
@@ -143,9 +142,7 @@ function formatTools(tools: BedrockChatCallOptions["tools"]): AnthropicTool[] {
     return tools.map((tc) => ({
       name: tc.name,
       description: tc.description,
-      input_schema: isInteropZodSchema(tc.schema)
-        ? toJsonSchema(tc.schema)
-        : tc.schema,
+      input_schema: zodToJsonSchema(tc.schema),
     }));
   }
   if (tools.every(isOpenAITool)) {
@@ -196,11 +193,11 @@ export interface BedrockChatFields
  * ## [Runtime args](/interfaces/langchain_community_chat_models_bedrock_web.BedrockChatCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.withConfig`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.withConfig({
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -518,7 +515,7 @@ export class BedrockChat
 
   endpointHost?: string;
 
-  /** @deprecated Use as a call option using .withConfig() instead. */
+  /** @deprecated Use as a call option using .bind() instead. */
   stopSequences?: string[];
 
   modelKwargs?: Record<string, unknown>;
@@ -638,10 +635,6 @@ export class BedrockChat
     this.guardrailIdentifier =
       fields?.guardrailIdentifier ?? this.guardrailIdentifier;
     this.guardrailConfig = fields?.guardrailConfig;
-    // Permit Application Inference Profile override in fetch URL (expects to be url-encoded)
-    if (fields?.applicationInferenceProfile) {
-      this.model = fields?.applicationInferenceProfile;
-    }
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
@@ -923,40 +916,20 @@ export class BedrockChat
             }
             if (isChatGenerationChunk(chunk)) {
               yield chunk;
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(
-                chunk.text,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                {
-                  chunk,
-                }
-              );
-            } else {
-              // eslint-disable-next-line no-void
-              void runManager?.handleLLMNewToken(chunk.text);
             }
+            // eslint-disable-next-line no-void
+            void runManager?.handleLLMNewToken(chunk.text);
           } else {
             const text = BedrockLLMInputOutputAdapter.prepareOutput(
               provider,
               chunkResult
             );
-            const chunk = new ChatGenerationChunk({
+            yield new ChatGenerationChunk({
               text,
               message: new AIMessageChunk({ content: text }),
             });
-            yield chunk;
             // eslint-disable-next-line no-void
-            void runManager?.handleLLMNewToken(
-              text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              { chunk }
-            );
+            void runManager?.handleLLMNewToken(text);
           }
         }
       }
@@ -1036,7 +1009,7 @@ export class BedrockChat
         "Currently, tool calling through Bedrock is only supported for Anthropic models."
       );
     }
-    return this.withConfig({
+    return this.bind({
       tools: formatTools(tools),
     });
   }

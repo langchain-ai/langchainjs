@@ -19,7 +19,7 @@ const model = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).withConfig({
+}).bind({
   functions: [
     {
       name: "get_weather",

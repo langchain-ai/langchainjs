@@ -151,7 +151,7 @@ export class CloudflareVectorizeStore extends VectorStore {
     k: number
   ): Promise<[Document, number][]> {
     const results = await this.index.query(query, {
-      returnValues: true,
+      returnVectors: true,
       topK: k,
     });
 
@@ -159,7 +159,8 @@ export class CloudflareVectorizeStore extends VectorStore {
 
     if (results.matches) {
       for (const res of results.matches) {
-        const { [this.textKey]: pageContent, ...metadata } = res.metadata ?? {};
+        const { [this.textKey]: pageContent, ...metadata } =
+          res.vector?.metadata ?? {};
         result.push([
           new Document({ metadata, pageContent: pageContent as string }),
           res.score,

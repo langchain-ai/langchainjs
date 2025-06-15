@@ -10,7 +10,6 @@ import {
   ModelParams,
   RequestOptions,
   type CachedContent,
-  Schema,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -36,19 +35,10 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import {
-  InferInteropZodOutput,
-  InteropZodType,
-  isInteropZodSchema,
-} from "@langchain/core/utils/types";
-import {
-  BaseLLMOutputParser,
-  JsonOutputParser,
-} from "@langchain/core/output_parsers";
-import {
-  schemaToGenerativeAIParameters,
-  removeAdditionalProperties,
-} from "./utils/zod_to_genai_parameters.js";
+import type { z } from "zod";
+import { isZodSchema } from "@langchain/core/utils/types";
+import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
+import { zodToGenerativeAIParameters } from "./utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
@@ -83,11 +73,6 @@ export interface GoogleGenerativeAIChatCallOptions
    * @default true
    */
   streamUsage?: boolean;
-
-  /**
-   * JSON schema to be returned by the model.
-   */
-  responseSchema?: Schema;
 }
 
 /**
@@ -97,16 +82,26 @@ export interface GoogleGenerativeAIChatInput
   extends BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
+   * @deprecated Use "model" instead.
+   *
+   * Model Name to use
+   *
+   * Alias for `model`
+   *
+   * Note: The format must follow the pattern - `{model}`
+   */
+  modelName?: string;
+  /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `{model}`
    */
-  model: string;
+  model?: string;
 
   /**
    * Controls the randomness of the output.
    *
-   * Values can range from [0.0,2.0], inclusive. A value closer to 2.0
+   * Values can range from [0.0,1.0], inclusive. A value closer to 1.0
    * will produce responses that are more varied and creative, while
    * a value closer to 0.0 will typically result in less surprising
    * responses from the model.
@@ -138,7 +133,7 @@ export interface GoogleGenerativeAIChatInput
    * Top-k changes how the model selects tokens for output.
    *
    * A top-k of 1 means the selected token is the most probable among
-   * all tokens in the model's vocabulary (also called greedy decoding),
+   * all tokens in the model’s vocabulary (also called greedy decoding),
    * while a top-k of 3 means that the next token is selected from
    * among the 3 most probable tokens (using temperature).
    *
@@ -215,12 +210,13 @@ export interface GoogleGenerativeAIChatInput
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_google_genai.GoogleGenerativeAIChatCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.withConfig`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.withConfig({
+ * // When calling `.bind`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.bind({
  *   stop: ["\n"],
+ *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -532,47 +528,6 @@ export interface GoogleGenerativeAIChatInput
  * </details>
  *
  * <br />
- *
- * <details>
- * <summary><strong>Document Messages</strong></summary>
- *
- * This example will show you how to pass documents such as PDFs to Google
- * Generative AI through messages.
- *
- * ```typescript
- * const pdfPath = "/Users/my_user/Downloads/invoice.pdf";
- * const pdfBase64 = await fs.readFile(pdfPath, "base64");
- *
- * const response = await llm.invoke([
- *   ["system", "Use the provided documents to answer the question"],
- *   [
- *     "user",
- *     [
- *       {
- *         type: "application/pdf", // If the `type` field includes a single slash (`/`), it will be treated as inline data.
- *         data: pdfBase64,
- *       },
- *       {
- *         type: "text",
- *         text: "Summarize the contents of this PDF",
- *       },
- *     ],
- *   ],
- * ]);
- *
- * console.log(response.content);
- * ```
- *
- * ```txt
- * This is a billing invoice from Twitter Developers for X API Basic Access. The transaction date is January 7, 2025,
- * and the amount is $194.34, which has been paid. The subscription period is from January 7, 2025 21:02 to February 7, 2025 00:00 (UTC).
- * The tax is $0.00, with a tax rate of 0%. The total amount is $194.34. The payment was made using a Visa card ending in 7022,
- * expiring in 12/2026. The billing address is Brace Sproul, 1234 Main Street, San Francisco, CA, US 94103. The company being billed is
- * X Corp, located at 865 FM 1209 Building 2, Bastrop, TX, US 78602. Terms and conditions apply.
- * ```
- * </details>
- *
- * <br />
  */
 export class ChatGoogleGenerativeAI
   extends BaseChatModel<GoogleGenerativeAIChatCallOptions, AIMessageChunk>
@@ -598,7 +553,9 @@ export class ChatGoogleGenerativeAI
     };
   }
 
-  model: string;
+  modelName = "gemini-pro";
+
+  model = "gemini-pro";
 
   temperature?: number; // default value chosen based on model
 
@@ -616,8 +573,6 @@ export class ChatGoogleGenerativeAI
 
   streaming = false;
 
-  json?: boolean;
-
   streamUsage = true;
 
   convertSystemMessageToHumanContent: boolean | undefined;
@@ -632,23 +587,27 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  constructor(fields: GoogleGenerativeAIChatInput) {
-    super(fields);
+  constructor(fields?: GoogleGenerativeAIChatInput) {
+    super(fields ?? {});
 
-    this.model = fields.model.replace(/^models\//, "");
+    this.modelName =
+      fields?.model?.replace(/^models\//, "") ??
+      fields?.modelName?.replace(/^models\//, "") ??
+      this.model;
+    this.model = this.modelName;
 
-    this.maxOutputTokens = fields.maxOutputTokens ?? this.maxOutputTokens;
+    this.maxOutputTokens = fields?.maxOutputTokens ?? this.maxOutputTokens;
 
     if (this.maxOutputTokens && this.maxOutputTokens < 0) {
       throw new Error("`maxOutputTokens` must be a positive integer");
     }
 
-    this.temperature = fields.temperature ?? this.temperature;
-    if (this.temperature && (this.temperature < 0 || this.temperature > 2)) {
-      throw new Error("`temperature` must be in the range of [0.0,2.0]");
+    this.temperature = fields?.temperature ?? this.temperature;
+    if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {
+      throw new Error("`temperature` must be in the range of [0.0,1.0]");
     }
 
-    this.topP = fields.topP ?? this.topP;
+    this.topP = fields?.topP ?? this.topP;
     if (this.topP && this.topP < 0) {
       throw new Error("`topP` must be a positive integer");
     }
@@ -657,14 +616,14 @@ export class ChatGoogleGenerativeAI
       throw new Error("`topP` must be below 1.");
     }
 
-    this.topK = fields.topK ?? this.topK;
+    this.topK = fields?.topK ?? this.topK;
     if (this.topK && this.topK < 0) {
       throw new Error("`topK` must be a positive integer");
     }
 
-    this.stopSequences = fields.stopSequences ?? this.stopSequences;
+    this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
-    this.apiKey = fields.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    this.apiKey = fields?.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
@@ -674,7 +633,7 @@ export class ChatGoogleGenerativeAI
       );
     }
 
-    this.safetySettings = fields.safetySettings ?? this.safetySettings;
+    this.safetySettings = fields?.safetySettings ?? this.safetySettings;
     if (this.safetySettings && this.safetySettings.length > 0) {
       const safetySettingsSet = new Set(
         this.safetySettings.map((s) => s.category)
@@ -686,28 +645,28 @@ export class ChatGoogleGenerativeAI
       }
     }
 
-    this.streaming = fields.streaming ?? this.streaming;
-    this.json = fields.json;
+    this.streaming = fields?.streaming ?? this.streaming;
 
     this.client = new GenerativeAI(this.apiKey).getGenerativeModel(
       {
         model: this.model,
         safetySettings: this.safetySettings as SafetySetting[],
         generationConfig: {
+          candidateCount: 1,
           stopSequences: this.stopSequences,
           maxOutputTokens: this.maxOutputTokens,
           temperature: this.temperature,
           topP: this.topP,
           topK: this.topK,
-          ...(this.json ? { responseMimeType: "application/json" } : {}),
+          ...(fields?.json ? { responseMimeType: "application/json" } : {}),
         },
       },
       {
-        apiVersion: fields.apiVersion,
-        baseUrl: fields.baseUrl,
+        apiVersion: fields?.apiVersion,
+        baseUrl: fields?.baseUrl,
       }
     );
-    this.streamUsage = fields.streamUsage ?? this.streamUsage;
+    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
   }
 
   useCachedContent(
@@ -735,13 +694,13 @@ export class ChatGoogleGenerativeAI
     // This works on models from April 2024 and later
     //   Vertex AI: gemini-1.5-pro and gemini-1.0-002 and later
     //   AI Studio: gemini-1.5-pro-latest
-    if (this.model === "gemini-1.0-pro-001") {
+    if (this.modelName === "gemini-1.0-pro-001") {
       return false;
-    } else if (this.model.startsWith("gemini-pro-vision")) {
+    } else if (this.modelName.startsWith("gemini-pro-vision")) {
       return false;
-    } else if (this.model.startsWith("gemini-1.0-pro-vision")) {
+    } else if (this.modelName.startsWith("gemini-1.0-pro-vision")) {
       return false;
-    } else if (this.model === "gemini-pro") {
+    } else if (this.modelName === "gemini-pro") {
       // on AI Studio gemini-pro is still pointing at gemini-1.0-pro-001
       return false;
     }
@@ -775,10 +734,7 @@ export class ChatGoogleGenerativeAI
     AIMessageChunk,
     GoogleGenerativeAIChatCallOptions
   > {
-    return this.withConfig({
-      tools: convertToolsToGenAI(tools)?.tools,
-      ...kwargs,
-    });
+    return this.bind({ tools: convertToolsToGenAI(tools)?.tools, ...kwargs });
   }
 
   invocationParams(
@@ -790,16 +746,6 @@ export class ChatGoogleGenerativeAI
           allowedFunctionNames: options.allowedFunctionNames,
         })
       : undefined;
-
-    if (options?.responseSchema) {
-      this.client.generationConfig.responseSchema = options.responseSchema;
-      this.client.generationConfig.responseMimeType = "application/json";
-    } else {
-      this.client.generationConfig.responseSchema = undefined;
-      this.client.generationConfig.responseMimeType = this.json
-        ? "application/json"
-        : undefined;
-    }
 
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
@@ -874,12 +820,9 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
-    if (generationResult.generations?.length > 0) {
-      await runManager?.handleLLMNewToken(
-        generationResult.generations[0]?.text ?? ""
-      );
-    }
+    await runManager?.handleLLMNewToken(
+      generationResult.generations[0].text ?? ""
+    );
     return generationResult;
   }
 
@@ -921,21 +864,21 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number | undefined;
-          candidatesTokenCount: number | undefined;
-          totalTokenCount: number | undefined;
+          promptTokenCount: number;
+          candidatesTokenCount: number;
+          totalTokenCount: number;
         };
         if (!usageMetadata) {
           usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
-            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
+            input_tokens: genAIUsageMetadata.promptTokenCount,
+            output_tokens: genAIUsageMetadata.candidatesTokenCount,
+            total_tokens: genAIUsageMetadata.totalTokenCount,
           };
         } else {
           // Under the hood, LangChain combines the prompt tokens. Google returns the updated
           // total each time, so we need to find the difference between the tokens.
           const outputTokenDiff =
-            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
+            genAIUsageMetadata.candidatesTokenCount -
             usageMetadata.output_tokens;
           usageMetadata = {
             input_tokens: 0,
@@ -985,7 +928,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -996,7 +939,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1007,7 +950,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1018,84 +961,70 @@ export class ChatGoogleGenerativeAI
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
       throw new Error(
-        `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`
+        `ChatGoogleGenerativeAI only supports "functionCalling" as a method.`
       );
     }
 
-    let llm;
+    let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
-    if (method === "functionCalling") {
-      let functionName = name ?? "extract";
-      let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
-      if (isInteropZodSchema(schema)) {
-        const jsonSchema = schemaToGenerativeAIParameters(schema);
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description:
-                  jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
-              },
-            ],
-          },
-        ];
-        outputParser = new GoogleGenerativeAIToolsOutputParser<
-          InferInteropZodOutput<typeof schema>
-        >({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
-      } else {
-        let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
-          geminiFunctionDefinition.parameters = removeAdditionalProperties(
-            schema.parameters
-          ) as GenerativeAIFunctionDeclarationSchema;
-          functionName = schema.name;
-        } else {
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters: removeAdditionalProperties(
-              schema
-            ) as GenerativeAIFunctionDeclarationSchema,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
-        outputParser = new GoogleGenerativeAIToolsOutputParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
-      }
-      llm = this.bindTools(tools).withConfig({
-        allowedFunctionNames: [functionName],
+    let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
+    if (isZodSchema(schema)) {
+      const jsonSchema = zodToGenerativeAIParameters(schema);
+      tools = [
+        {
+          functionDeclarations: [
+            {
+              name: functionName,
+              description:
+                jsonSchema.description ?? "A function available to call.",
+              parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
+            },
+          ],
+        },
+      ];
+      outputParser = new GoogleGenerativeAIToolsOutputParser<
+        z.infer<typeof schema>
+      >({
+        returnSingle: true,
+        keyName: functionName,
+        zodSchema: schema,
       });
     } else {
-      const jsonSchema = schemaToGenerativeAIParameters(schema);
-      llm = this.withConfig({
-        responseSchema: jsonSchema as Schema,
+      let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
+      if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
+        functionName = schema.name;
+      } else {
+        geminiFunctionDefinition = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema as GenerativeAIFunctionDeclarationSchema,
+        };
+      }
+      tools = [
+        {
+          functionDeclarations: [geminiFunctionDefinition],
+        },
+      ];
+      outputParser = new GoogleGenerativeAIToolsOutputParser<RunOutput>({
+        returnSingle: true,
+        keyName: functionName,
       });
-      outputParser = new JsonOutputParser();
     }
+    const llm = this.bind({
+      tools,
+      tool_choice: functionName,
+    });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({

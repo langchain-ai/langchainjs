@@ -1,8 +1,5 @@
-import { isInteropZodSchema } from "@langchain/core/utils/types";
-import {
-  type JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
+
 import { ObjectTool, FINISH_NAME } from "./schema.js";
 
 /**
@@ -57,10 +54,9 @@ export class PromptGenerator {
 
   _generate_command_string(tool: ObjectTool): string {
     let output = `"${tool.name}": ${tool.description}`;
-    const jsonSchema = (
-      isInteropZodSchema(tool.schema) ? toJsonSchema(tool.schema) : tool.schema
-    ) as { properties?: Record<string, JsonSchema7Type> } | undefined;
-    output += `, args json schema: ${JSON.stringify(jsonSchema?.properties)}`;
+    output += `, args json schema: ${JSON.stringify(
+      (zodToJsonSchema(tool.schema) as JsonSchema7ObjectType).properties
+    )}`;
     return output;
   }
 

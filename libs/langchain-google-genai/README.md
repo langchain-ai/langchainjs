@@ -50,10 +50,9 @@ Then initialize
 
 ```typescript
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatGoogleGenerativeAI({
-  model: "gemini-pro",
+  modelName: "gemini-pro",
   maxOutputTokens: 2048,
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
@@ -73,7 +72,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const vision = new ChatGoogleGenerativeAI({
-  model: "gemini-pro-vision",
+  modelName: "gemini-pro-vision",
   maxOutputTokens: 2048,
 });
 const image = fs.readFileSync("./hotdog.jpg").toString("base64");

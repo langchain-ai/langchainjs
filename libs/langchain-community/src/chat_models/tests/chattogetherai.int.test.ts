@@ -92,7 +92,7 @@ describe("ChatTogetherAI", () => {
       },
       required: ["orderedArray"],
     };
-    const chat = new ChatTogetherAI().withConfig({
+    const chat = new ChatTogetherAI().bind({
       response_format: {
         type: "json_object",
         schema: responseSchema,
@@ -130,7 +130,10 @@ describe("ChatTogetherAI", () => {
       }
     }
     const tool = formatToOpenAITool(new CalculatorTool());
-    const chat = new ChatTogetherAI().bindTools([tool], { tool_choice: tool });
+    const chat = new ChatTogetherAI().bind({
+      tools: [tool],
+      tool_choice: tool,
+    });
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You are a helpful assistant."],
       ["human", "What is 1273926 times 27251?"],

@@ -1,9 +1,10 @@
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import fs from "fs";
 import { z } from "zod";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { AIMessage } from "@langchain/core/messages";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { RunnableSequence } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
@@ -83,7 +84,7 @@ test("Pass custom structured output parsers", async () => {
   const responseOpenAIFunction = {
     name: "response",
     description: "Return the response to the user",
-    parameters: toJsonSchema(responseSchema),
+    parameters: zodToJsonSchema(responseSchema),
   };
   /** Convert retriever into a tool */
   const retrieverTool = createRetrieverTool(retriever, {
@@ -92,7 +93,9 @@ test("Pass custom structured output parsers", async () => {
       "Query a retriever to get information about state of the union address",
   });
   /** Bind both retriever and response functions to LLM */
-  const llmWithTools = llm.bindTools([retrieverTool, responseOpenAIFunction]);
+  const llmWithTools = llm.bind({
+    functions: [convertToOpenAIFunction(retrieverTool), responseOpenAIFunction],
+  });
   /** Create the runnable */
   const runnableAgent = RunnableSequence.from([
     {

@@ -1,6 +1,5 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
-import { CohereClient } from "cohere-ai";
 
 /**
  * Interface for the input parameters specific to the Cohere model.
@@ -92,25 +91,41 @@ export class Cohere extends LLM implements CohereInput {
     prompt: string,
     options: this["ParsedCallOptions"]
   ): Promise<string> {
-    const client = new CohereClient({ token: this.apiKey });
+    const { cohere } = await Cohere.imports();
+
+    cohere.init(this.apiKey);
 
     // Hit the `generate` endpoint on the `large` model
     const generateResponse = await this.caller.callWithOptions(
       { signal: options.signal },
-      client.generate.bind(client),
+      cohere.generate.bind(cohere),
       {
         prompt,
         model: this.model,
-        maxTokens: this.maxTokens,
+        max_tokens: this.maxTokens,
         temperature: this.temperature,
-        endSequences: options.stop,
+        end_sequences: options.stop,
       }
     );
     try {
-      return generateResponse.generations[0].text;
+      return generateResponse.body.generations[0].text;
     } catch {
       console.log(generateResponse);
       throw new Error("Could not parse response.");
+    }
+  }
+
+  /** @ignore */
+  static async imports(): Promise<{
+    cohere: typeof import("cohere-ai");
+  }> {
+    try {
+      const { default: cohere } = await import("cohere-ai");
+      return { cohere };
+    } catch (e) {
+      throw new Error(
+        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
+      );
     }
   }
 }

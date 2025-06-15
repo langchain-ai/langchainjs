@@ -17,7 +17,7 @@ test.skip("Test OllamaFunctions with functions", async () => {
   const chat = new OllamaFunctions({
     model: "mistral",
     temperature: 0.1,
-  }).withConfig({
+  }).bind({
     functions: [
       {
         name: "get_current_weather",
@@ -50,7 +50,7 @@ test.skip("Test OllamaFunctions with a forced function call", async () => {
   const chat = new OllamaFunctions({
     model: "mistral",
     temperature: 0.1,
-  }).withConfig({
+  }).bind({
     functions: [
       {
         name: "extract_data",

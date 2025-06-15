@@ -13,13 +13,10 @@ class ChatGoogleGenerativeAIStandardUnitTests extends ChatModelUnitTests<
 > {
   constructor() {
     super({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Cls: ChatGoogleGenerativeAI as any,
+      Cls: ChatGoogleGenerativeAI,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      constructorArgs: {
-        model: "gemini-2.0-flash",
-      },
+      constructorArgs: {},
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
     // which we call after instantiating the model will work.

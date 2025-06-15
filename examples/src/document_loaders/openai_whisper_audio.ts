@@ -2,11 +2,7 @@ import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/ope
 
 const filePath = "./src/document_loaders/example_data/test.mp3";
 
-const loader = new OpenAIWhisperAudio(filePath, {
-  transcriptionCreateParams: {
-    language: "en",
-  },
-});
+const loader = new OpenAIWhisperAudio(filePath);
 
 const docs = await loader.load();
 

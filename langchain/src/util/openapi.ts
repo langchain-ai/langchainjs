@@ -190,15 +190,15 @@ export class OpenAPISpec {
   ) {
     let { operationId } = operation;
     if (operationId === undefined) {
-      const updatedPath = path.replaceAll(/[^a-zA-Z0-9]/g, "_");
+      const updatedPath = path.replaceAll(/[^a-zA-Z0-9]/, "_");
       operationId = `${
         updatedPath.startsWith("/") ? updatedPath.slice(1) : updatedPath
       }_${method}`;
     }
     return operationId
-      .replaceAll(/-/g, "_")
-      .replaceAll(/\./g, "_")
-      .replaceAll(/\//g, "_");
+      .replaceAll("-", "_")
+      .replaceAll(".", "_")
+      .replaceAll("/", "_");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

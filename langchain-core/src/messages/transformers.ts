@@ -7,7 +7,6 @@ import {
   MessageType,
   BaseMessageChunk,
   BaseMessageFields,
-  isBaseMessageChunk,
 } from "./base.js";
 import {
   ChatMessage,
@@ -57,16 +56,16 @@ const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const instantiatedMsgClass = new (t as any)({});
         if (
-          !("getType" in instantiatedMsgClass) ||
-          typeof instantiatedMsgClass.getType !== "function"
+          !("_getType" in instantiatedMsgClass) ||
+          typeof instantiatedMsgClass._getType !== "function"
         ) {
           throw new Error("Invalid type provided.");
         }
-        return instantiatedMsgClass.getType();
+        return instantiatedMsgClass._getType();
       })
     ),
   ];
-  const msgType = msg.getType();
+  const msgType = msg._getType();
   return typesAsStrings.some((t) => t === msgType);
 };
 
@@ -280,8 +279,8 @@ function _mergeMessageRuns(messages: BaseMessage[]): BaseMessage[] {
     if (!last) {
       merged.push(curr);
     } else if (
-      curr.getType() === "tool" ||
-      !(curr.getType() === last.getType())
+      curr._getType() === "tool" ||
+      !(curr._getType() === last._getType())
     ) {
       merged.push(last, curr);
     } else {
@@ -768,7 +767,7 @@ async function _firstMaxTokens(
             ([k]) => k !== "type" && !k.startsWith("lc_")
           )
         ) as BaseMessageFields;
-        const updatedMessage = _switchTypeToMessage(excluded.getType(), {
+        const updatedMessage = _switchTypeToMessage(excluded._getType(), {
           ...fields,
           content: partialContent,
         });
@@ -863,18 +862,7 @@ async function _lastMaxTokens(
   } = options;
 
   // Create a copy of messages to avoid mutation
-  let messagesCopy = messages.map((message) => {
-    const fields = Object.fromEntries(
-      Object.entries(message).filter(
-        ([k]) => k !== "type" && !k.startsWith("lc_")
-      )
-    ) as BaseMessageFields;
-    return _switchTypeToMessage(
-      message.getType(),
-      fields,
-      isBaseMessageChunk(message)
-    );
-  });
+  let messagesCopy = [...messages];
 
   if (endOn) {
     const endOnArr = Array.isArray(endOn) ? endOn : [endOn];
@@ -887,7 +875,7 @@ async function _lastMaxTokens(
   }
 
   const swappedSystem =
-    includeSystem && messagesCopy[0]?.getType() === "system";
+    includeSystem && messagesCopy[0]?._getType() === "system";
   let reversed_ = swappedSystem
     ? messagesCopy.slice(0, 1).concat(messagesCopy.slice(1).reverse())
     : messagesCopy.reverse();
@@ -955,11 +943,6 @@ function _switchTypeToMessage(
   fields: BaseMessageFields,
   returnChunk: true
 ): BaseMessageChunk;
-function _switchTypeToMessage(
-  messageType: MessageType,
-  fields: BaseMessageFields,
-  returnChunk?: boolean
-): BaseMessageChunk | BaseMessage;
 function _switchTypeToMessage(
   messageType: MessageType,
   fields: BaseMessageFields,
@@ -1075,7 +1058,7 @@ function _switchTypeToMessage(
 }
 
 function _chunkToMsg(chunk: BaseMessageChunk): BaseMessage {
-  const chunkType = chunk.getType();
+  const chunkType = chunk._getType();
   let msg: BaseMessage | undefined;
   const fields = Object.fromEntries(
     Object.entries(chunk).filter(

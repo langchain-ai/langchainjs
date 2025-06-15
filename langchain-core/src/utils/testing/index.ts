@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { z } from "zod";
 import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
@@ -33,7 +34,6 @@ import {
 import { BaseRetriever } from "../../retrievers/index.js";
 import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { StructuredTool, ToolParams } from "../../tools/index.js";
-import { ToolInputSchemaOutputType } from "../../tools/types.js";
 import { BaseTracer, Run } from "../../tracers/base.js";
 import {
   Embeddings,
@@ -45,12 +45,8 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "../../language_models/base.js";
-
-import { toJsonSchema } from "../json_schema.js";
-
 import { VectorStore } from "../../vectorstores.js";
 import { cosine } from "../ml-distance/similarities.js";
-import { InteropZodObject, InteropZodType } from "../types/zod.js";
 
 /**
  * Parser for comma-separated values. It splits the input text by commas
@@ -216,94 +212,28 @@ export class FakeChatModel extends BaseChatModel {
   }
 }
 
-export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModelCallOptions> {
-  sleep: number = 50;
+export class FakeStreamingChatModel extends BaseChatModel {
+  sleep?: number = 50;
 
-  responses: BaseMessage[] = [];
-
-  chunks: AIMessageChunk[] = [];
-
-  toolStyle: "openai" | "anthropic" | "bedrock" | "google" = "openai";
+  responses?: BaseMessage[];
 
   thrownErrorString?: string;
 
-  private tools: (StructuredTool | ToolSpec)[] = [];
-
-  constructor({
-    sleep = 50,
-    responses = [],
-    chunks = [],
-    toolStyle = "openai",
-    thrownErrorString,
-    ...rest
-  }: FakeStreamingChatModelFields & BaseLLMParams) {
-    super(rest);
-    this.sleep = sleep;
-    this.responses = responses;
-    this.chunks = chunks;
-    this.toolStyle = toolStyle;
-    this.thrownErrorString = thrownErrorString;
+  constructor(
+    fields: {
+      sleep?: number;
+      responses?: BaseMessage[];
+      thrownErrorString?: string;
+    } & BaseLLMParams
+  ) {
+    super(fields);
+    this.sleep = fields.sleep ?? this.sleep;
+    this.responses = fields.responses;
+    this.thrownErrorString = fields.thrownErrorString;
   }
 
   _llmType() {
     return "fake";
-  }
-
-  bindTools(tools: (StructuredTool | ToolSpec)[]) {
-    const merged = [...this.tools, ...tools];
-
-    const toolDicts = merged.map((t) => {
-      switch (this.toolStyle) {
-        case "openai":
-          return {
-            type: "function",
-            function: {
-              name: t.name,
-              description: t.description,
-              parameters: toJsonSchema(t.schema),
-            },
-          };
-        case "anthropic":
-          return {
-            name: t.name,
-            description: t.description,
-            input_schema: toJsonSchema(t.schema),
-          };
-        case "bedrock":
-          return {
-            toolSpec: {
-              name: t.name,
-              description: t.description,
-              inputSchema: toJsonSchema(t.schema),
-            },
-          };
-        case "google":
-          return {
-            name: t.name,
-            description: t.description,
-            parameters: toJsonSchema(t.schema),
-          };
-        default:
-          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
-      }
-    });
-
-    const wrapped =
-      this.toolStyle === "google"
-        ? [{ functionDeclarations: toolDicts }]
-        : toolDicts;
-
-    /* creating a *new* instance – mirrors LangChain .bind semantics for type-safety and avoiding noise */
-    const next = new FakeStreamingChatModel({
-      sleep: this.sleep,
-      responses: this.responses,
-      chunks: this.chunks,
-      toolStyle: this.toolStyle,
-      thrownErrorString: this.thrownErrorString,
-    });
-    next.tools = merged;
-
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
   }
 
   async _generate(
@@ -315,15 +245,13 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
       throw new Error(this.thrownErrorString);
     }
 
-    const content = this.responses?.[0]?.content ?? messages[0].content ?? "";
-
+    const content = this.responses?.[0].content ?? messages[0].content;
     const generation: ChatResult = {
       generations: [
         {
           text: "",
           message: new AIMessage({
             content,
-            tool_calls: this.chunks?.[0]?.tool_calls,
           }),
         },
       ],
@@ -333,59 +261,32 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
   }
 
   async *_streamResponseChunks(
-    _messages: BaseMessage[],
+    messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this.thrownErrorString) {
       throw new Error(this.thrownErrorString);
     }
-    if (this.chunks?.length) {
-      for (const msgChunk of this.chunks) {
-        const cg = new ChatGenerationChunk({
+    const content = this.responses?.[0].content ?? messages[0].content;
+    if (typeof content !== "string") {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: "",
           message: new AIMessageChunk({
-            content: msgChunk.content,
-            tool_calls: msgChunk.tool_calls,
-            additional_kwargs: msgChunk.additional_kwargs ?? {},
+            content,
           }),
-          text: msgChunk.content?.toString() ?? "",
         });
-
-        yield cg;
-        await runManager?.handleLLMNewToken(
-          msgChunk.content as string,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          { chunk: cg }
-        );
       }
-      return;
-    }
-
-    const fallback =
-      this.responses?.[0] ??
-      new AIMessage(
-        typeof _messages[0].content === "string" ? _messages[0].content : ""
-      );
-    const text = typeof fallback.content === "string" ? fallback.content : "";
-
-    for (const ch of text) {
-      await new Promise((r) => setTimeout(r, this.sleep));
-      const cg = new ChatGenerationChunk({
-        message: new AIMessageChunk({ content: ch }),
-        text: ch,
-      });
-      yield cg;
-      await runManager?.handleLLMNewToken(
-        ch,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk: cg }
-      );
+    } else {
+      for (const _ of this.responses ?? messages) {
+        yield new ChatGenerationChunk({
+          text: content,
+          message: new AIMessageChunk({
+            content,
+          }),
+        });
+      }
     }
   }
 }
@@ -409,36 +310,6 @@ export class FakeRetriever extends BaseRetriever {
   ): Promise<Document<Record<string, any>>[]> {
     return this.output;
   }
-}
-/** Minimal shape actually needed by `bindTools` */
-export interface ToolSpec {
-  name: string;
-  description?: string;
-  schema: InteropZodType | Record<string, unknown>; // Either a Zod schema *or* a plain JSON-Schema object
-}
-/**
- * Interface specific to the Fake Streaming Chat model.
- */
-export interface FakeStreamingChatModelCallOptions
-  extends BaseChatModelCallOptions {}
-/**
- * Interface for the Constructor-field specific to the Fake Streaming Chat model (all optional because we fill in defaults).
- */
-export interface FakeStreamingChatModelFields extends BaseChatModelParams {
-  /** Milliseconds to pause between fallback char-by-char chunks */
-  sleep?: number;
-
-  /** Full AI messages to fall back to when no `chunks` supplied */
-  responses?: BaseMessage[];
-
-  /** Exact chunks to emit (can include tool-call deltas) */
-  chunks?: AIMessageChunk[];
-
-  /** How tool specs are formatted in `bindTools` */
-  toolStyle?: "openai" | "anthropic" | "bedrock" | "google";
-
-  /** Throw this error instead of streaming (useful in tests) */
-  thrownErrorString?: string;
 }
 
 /**
@@ -607,7 +478,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -619,7 +490,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -631,7 +502,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>
-      | InteropZodType<RunOutput>
+      | z.ZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     _config?: StructuredOutputMethodOptions<boolean>
@@ -643,13 +514,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       > {
     return RunnableLambda.from(async (input) => {
       const message = await this.invoke(input);
-      if (message.tool_calls?.[0]?.args) {
-        return message.tool_calls[0].args as RunOutput;
-      }
-      if (typeof message.content === "string") {
-        return JSON.parse(message.content);
-      }
-      throw new Error("No structured output found");
+      return JSON.parse(message.content as string);
     }) as Runnable;
   }
 }
@@ -719,7 +584,7 @@ export class FakeTracer extends BaseTracer {
 
 export interface FakeToolParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends ToolParams {
   name: string;
   description: string;
@@ -728,7 +593,7 @@ export interface FakeToolParams<
 
 export class FakeTool<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
+  T extends z.ZodObject<any, any, any, any> = z.ZodObject<any, any, any, any>
 > extends StructuredTool<T> {
   name: string;
 
@@ -744,7 +609,7 @@ export class FakeTool<
   }
 
   protected async _call(
-    arg: ToolInputSchemaOutputType<T>,
+    arg: z.output<T>,
     _runManager?: CallbackManagerForToolRun
   ): Promise<string> {
     return JSON.stringify(arg);

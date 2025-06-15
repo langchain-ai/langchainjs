@@ -37,7 +37,9 @@ const model = new ChatMistralAI({
 });
 
 // Bind the tool to the model
-const modelWithTool = model.bindTools([new CalculatorTool()]);
+const modelWithTool = model.bind({
+  tools: [new CalculatorTool()],
+});
 
 const prompt = ChatPromptTemplate.fromMessages([
   [

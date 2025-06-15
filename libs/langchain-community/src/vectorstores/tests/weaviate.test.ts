@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 
-import { flattenObjectForWeaviate } from "@langchain/weaviate";
+import { flattenObjectForWeaviate } from "../weaviate.js";
 
 test("flattenObjectForWeaviate", () => {
   expect(

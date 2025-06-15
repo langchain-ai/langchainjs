@@ -1,13 +1,13 @@
 import { test, expect } from "@jest/globals";
 import { z } from "zod";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { AIMessage } from "@langchain/core/messages";
 
 import { FunctionCallStructuredOutputParser } from "../structured_output.js";
 
 test("structured output parser", async () => {
   const parser = new FunctionCallStructuredOutputParser(
-    toJsonSchema(
+    zodToJsonSchema(
       z.object({
         name: z.string().describe("Human name"),
         surname: z.string().describe("Human surname"),

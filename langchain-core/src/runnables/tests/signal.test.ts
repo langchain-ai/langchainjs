@@ -39,7 +39,7 @@ const TEST_CASES = {
   },
   fallbacks: {
     runnable: chatModel
-      .withConfig({ thrownErrorString: "expected" })
+      .bind({ thrownErrorString: "expected" })
       .withFallbacks({ fallbacks: [chatModel] }),
     input: "testing",
     skipStream: true,

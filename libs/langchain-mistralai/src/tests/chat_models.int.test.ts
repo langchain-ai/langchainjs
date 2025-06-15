@@ -11,7 +11,7 @@ import {
 } from "@langchain/core/messages";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMistralAI } from "../chat_models.js";
 import { _mistralContentChunkToMessageContentComplex } from "../utils.js";
 
@@ -69,7 +69,9 @@ test("Can call tools using structured tools", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bindTools([new Calculator()]);
+  }).bind({
+    tools: [new Calculator()],
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -85,47 +87,6 @@ test("Can call tools using structured tools", async () => {
   // console.log(response.additional_kwargs.tool_calls?.[0]);
   expect(response.tool_calls?.[0].name).toBe("calculator");
   expect(response.tool_calls?.[0].args?.calculator).toBeDefined();
-});
-
-test("Can handle Tools with non-Zod JSON schema", async () => {
-  // Mock DynamicStructuredTool with plain JSON schema (not Zod)
-  const mockDynamicTool = {
-    lc_serializable: false,
-    lc_runnable: true,
-    name: "add_numbers",
-    description: "Add two numbers together",
-    schema: {
-      type: "object",
-      properties: {
-        a: { type: "number", description: "First number" },
-        b: { type: "number", description: "Second number" },
-      },
-      required: ["a", "b"],
-    },
-    func: async (args: { a: number; b: number }) =>
-      `The sum is ${args.a + args.b}`,
-  };
-
-  const model = new ChatMistralAI({
-    model: "mistral-large-latest",
-  }).bindTools([mockDynamicTool]);
-
-  const prompt = ChatPromptTemplate.fromMessages([
-    [
-      "system",
-      "You are a helpful assistant that uses tools to perform calculations",
-    ],
-    ["human", "What is 15 + 27?"],
-  ]);
-
-  const chain = prompt.pipe(model);
-  const response = await chain.invoke({});
-
-  // Verify the tool call was made correctly
-  expect(response.tool_calls?.length).toEqual(1);
-  expect(response.tool_calls?.[0].name).toBe("add_numbers");
-  expect(response.tool_calls?.[0].args?.a).toBeDefined();
-  expect(response.tool_calls?.[0].args?.b).toBeDefined();
 });
 
 test("Can call tools using raw tools", async () => {
@@ -151,7 +112,9 @@ test("Can call tools using raw tools", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bindTools(tools);
+  }).bind({
+    tools,
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -187,7 +150,9 @@ test("Can call .stream with tool calling", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bindTools([new Calculator()]);
+  }).bind({
+    tools: [new Calculator()],
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "you are very bad at math and always must use a calculator"],
@@ -217,7 +182,7 @@ test("Can call .stream with tool calling", async () => {
 test("Can use json mode response format", async () => {
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },
@@ -244,7 +209,7 @@ To use a calculator respond with valid JSON containing a single key: 'calculator
 test("Can call .stream with json mode", async () => {
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },
@@ -303,7 +268,9 @@ test("Can stream and concat responses for a complex tool", async () => {
 
   const model = new ChatMistralAI({
     model: "mistral-large-latest",
-  }).bindTools([new PersonTraits()]);
+  }).bind({
+    tools: [new PersonTraits()],
+  });
 
   const prompt = ChatPromptTemplate.fromMessages([
     "system",
@@ -339,26 +306,28 @@ test("Few shotting with tool calls", async () => {
   const chat = new ChatMistralAI({
     model: "mistral-large-latest",
     temperature: 0,
-  }).bindTools([
-    {
-      type: "function",
-      function: {
-        name: "get_current_weather",
-        description: "Get the current weather in a given location",
-        parameters: {
-          type: "object",
-          properties: {
-            location: {
-              type: "string",
-              description: "The city and state, e.g. San Francisco, CA",
+  }).bind({
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a given location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The city and state, e.g. San Francisco, CA",
+              },
+              unit: { type: "string", enum: ["celsius", "fahrenheit"] },
             },
-            unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+            required: ["location"],
           },
-          required: ["location"],
         },
       },
-    },
-  ]);
+    ],
+  });
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -476,7 +445,7 @@ describe("withStructuredOutput", () => {
       .describe("A calculator schema");
 
     const modelWithStructuredOutput = model.withStructuredOutput(
-      toJsonSchema(calculatorSchema),
+      zodToJsonSchema(calculatorSchema),
       {
         name: "calculator",
       }
@@ -514,7 +483,7 @@ describe("withStructuredOutput", () => {
 
     const modelWithStructuredOutput = model.withStructuredOutput({
       name: "calculator",
-      parameters: toJsonSchema(calculatorSchema),
+      parameters: zodToJsonSchema(calculatorSchema),
     });
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -543,7 +512,7 @@ describe("withStructuredOutput", () => {
       number2: z.number(),
     });
     const modelWithStructuredOutput = model.withStructuredOutput(
-      toJsonSchema(calculatorSchema),
+      zodToJsonSchema(calculatorSchema),
       {
         name: "calculator",
         method: "jsonMode",
@@ -629,7 +598,7 @@ describe("withStructuredOutput", () => {
 describe("ChatMistralAI aborting", () => {
   test("ChatMistralAI can abort request via .stream", async () => {
     const controller = new AbortController();
-    const model = new ChatMistralAI().withConfig({
+    const model = new ChatMistralAI().bind({
       signal: controller.signal,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -665,7 +634,7 @@ describe("ChatMistralAI aborting", () => {
   });
 
   test("ChatMistralAI can timeout requests via .stream", async () => {
-    const model = new ChatMistralAI().withConfig({
+    const model = new ChatMistralAI().bind({
       timeout: 1000,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -702,7 +671,7 @@ describe("ChatMistralAI aborting", () => {
 
   test("ChatMistralAI can abort request via .invoke", async () => {
     const controller = new AbortController();
-    const model = new ChatMistralAI().withConfig({
+    const model = new ChatMistralAI().bind({
       signal: controller.signal,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -734,7 +703,7 @@ describe("ChatMistralAI aborting", () => {
   });
 
   test("ChatMistralAI can timeout requests via .invoke", async () => {
-    const model = new ChatMistralAI().withConfig({
+    const model = new ChatMistralAI().bind({
       timeout: 1000,
     });
     const prompt = ChatPromptTemplate.fromMessages([
@@ -824,10 +793,12 @@ describe("codestral-latest", () => {
       }
     }
 
-    const model = new ChatMistralAI({ model: "codestral-latest" }).bindTools(
-      [new CodeSandbox()],
-      { tool_choice: "any" }
-    );
+    const model = new ChatMistralAI({
+      model: "codestral-latest",
+    }).bind({
+      tools: [new CodeSandbox()],
+      tool_choice: "any",
+    });
 
     const prompt = ChatPromptTemplate.fromMessages([
       ["system", "You are an excellent python engineer."],

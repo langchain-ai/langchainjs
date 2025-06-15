@@ -10,7 +10,7 @@ test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },
@@ -27,7 +27,7 @@ test("Test ChatOpenAI seed", async () => {
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
-  }).withConfig({
+  }).bind({
     seed: 123454930394983,
   });
   const message = new HumanMessage("Say something random!");
@@ -60,8 +60,8 @@ test("Test ChatOpenAI tool calling", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).bindTools(
-    [
+  }).bind({
+    tools: [
       {
         type: "function",
         function: {
@@ -81,10 +81,8 @@ test("Test ChatOpenAI tool calling", async () => {
         },
       },
     ],
-    {
-      tool_choice: "auto",
-    }
-  );
+    tool_choice: "auto",
+  });
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -113,15 +111,6 @@ test("Test ChatOpenAI streaming logprobs", async () => {
   expect(res.response_metadata.logprobs.content.length).toBeGreaterThan(0);
 });
 
-test("Test ChatOpenAI with search preview model", async () => {
-  const model = new ChatOpenAI({
-    maxTokens: 50,
-    modelName: "gpt-4o-search-preview",
-  });
-  const res = await model.invoke("Print hello world.");
-  expect(res.content).toBeDefined();
-});
-
 test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   function getCurrentWeather(location: string) {
     if (location.toLowerCase().includes("tokyo")) {
@@ -139,8 +128,8 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).bindTools(
-    [
+  }).bind({
+    tools: [
       {
         type: "function",
         function: {
@@ -160,10 +149,8 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         },
       },
     ],
-    {
-      tool_choice: "auto",
-    }
-  );
+    tool_choice: "auto",
+  });
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -205,8 +192,8 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     maxTokens: 256,
-  }).bindTools(
-    [
+  }).bind({
+    tools: [
       {
         type: "function",
         function: {
@@ -226,10 +213,8 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
         },
       },
     ],
-    {
-      tool_choice: "auto",
-    }
-  );
+    tool_choice: "auto",
+  });
   const stream = await chat.stream([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -257,7 +242,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
     modelName: "gpt-3.5-turbo-1106",
     temperature: 1,
     cache: memoryCache,
-  }).withConfig({
+  }).bind({
     response_format: {
       type: "json_object",
     },
@@ -284,8 +269,8 @@ test("Few shotting with tool calls", async () => {
   const chat = new ChatOpenAI({
     modelName: "gpt-3.5-turbo-1106",
     temperature: 1,
-  }).bindTools(
-    [
+  }).bind({
+    tools: [
       {
         type: "function",
         function: {
@@ -305,10 +290,8 @@ test("Few shotting with tool calls", async () => {
         },
       },
     ],
-    {
-      tool_choice: "auto",
-    }
-  );
+    tool_choice: "auto",
+  });
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({

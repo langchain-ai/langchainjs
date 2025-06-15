@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { ChatOllama } from "@langchain/ollama";
+import { OllamaFunctions } from "@langchain/community/experimental/chat_models/ollama_functions";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
@@ -23,20 +24,24 @@ const schema = z.object({
   ),
 });
 
-const model = new ChatOllama({
+const model = new OllamaFunctions({
   temperature: 0.1,
   model: "mistral",
-})
-  .bindTools([
+}).bind({
+  functions: [
     {
       name: "information_extraction",
       description: "Extracts the relevant information from the passage.",
-      schema,
+      parameters: {
+        type: "object",
+        properties: zodToJsonSchema(schema),
+      },
     },
-  ])
-  .withConfig({
-    tool_choice: "information_extraction",
-  });
+  ],
+  function_call: {
+    name: "information_extraction",
+  },
+});
 
 // Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
 const chain = prompt.pipe(model).pipe(new JsonOutputFunctionsParser());

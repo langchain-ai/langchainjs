@@ -1,19 +1,16 @@
+import type { z } from "zod";
 import {
   BaseLLMOutputParser,
   OutputParserException,
 } from "@langchain/core/output_parsers";
+import { JsonOutputKeyToolsParserParams } from "@langchain/core/output_parsers/openai_tools";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { ToolCall } from "@langchain/core/messages/tool";
-import {
-  InteropZodType,
-  interopSafeParseAsync,
-} from "@langchain/core/utils/types";
-import { JsonOutputKeyToolsParserParamsInterop } from "@langchain/core/output_parsers/openai_tools";
 
 interface GoogleGenerativeAIToolsOutputParserParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any>
-> extends JsonOutputKeyToolsParserParamsInterop<T> {}
+> extends JsonOutputKeyToolsParserParams<T> {}
 
 export class GoogleGenerativeAIToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,7 +30,7 @@ export class GoogleGenerativeAIToolsOutputParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  zodSchema?: InteropZodType<T>;
+  zodSchema?: z.ZodType<T>;
 
   constructor(params: GoogleGenerativeAIToolsOutputParserParams<T>) {
     super(params);
@@ -46,7 +43,7 @@ export class GoogleGenerativeAIToolsOutputParser<
     if (this.zodSchema === undefined) {
       return result as T;
     }
-    const zodParsedResult = await interopSafeParseAsync(this.zodSchema, result);
+    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -55,7 +52,7 @@ export class GoogleGenerativeAIToolsOutputParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
         JSON.stringify(result, null, 2)
       );
     }

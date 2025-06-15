@@ -3,14 +3,12 @@ import {
   APIUserAbortError,
   OpenAI as OpenAIClient,
 } from "openai";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import {
   convertToOpenAIFunction,
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
-import { ToolDefinition } from "@langchain/core/language_models/base";
-import { isInteropZodSchema } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { addLangChainErrorFields } from "./errors.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,17 +39,13 @@ export {
   convertToOpenAITool as formatToOpenAITool,
 };
 
-export function formatToOpenAIAssistantTool(
-  tool: StructuredToolInterface
-): ToolDefinition {
+export function formatToOpenAIAssistantTool(tool: StructuredToolInterface) {
   return {
     type: "function",
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: isInteropZodSchema(tool.schema)
-        ? toJsonSchema(tool.schema)
-        : tool.schema,
+      parameters: zodToJsonSchema(tool.schema),
     },
   };
 }

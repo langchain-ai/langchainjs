@@ -12,7 +12,7 @@ import { AgentActionOutputParser } from "../types.js";
  * const runnableAgent = RunnableSequence.from([
  *   ...rest of runnable
  *   prompt,
- *   new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).withConfig({
+ *   new ChatAnthropic({ modelName: "claude-2", temperature: 0 }).bind({
  *     stop: ["</tool_input>", "</final_answer>"],
  *   }),
  *   new XMLAgentOutputParser(),
@@ -38,18 +38,12 @@ export class XMLAgentOutputParser extends AgentActionOutputParser {
    */
   async parse(text: string): Promise<AgentAction | AgentFinish> {
     if (text.includes("</tool>")) {
-      const _toolMatch = text.match(/<tool>([^<]*)<\/tool>/);
-      const _tool = _toolMatch ? _toolMatch[1] : "";
-      const _toolInputMatch = text.match(
-        /<tool_input>([^<]*?)(?:<\/tool_input>|$)/
-      );
-      const _toolInput = _toolInputMatch ? _toolInputMatch[1] : "";
+      const [tool, toolInput] = text.split("</tool>");
+      const _tool = tool.split("<tool>")[1];
+      const _toolInput = toolInput.split("<tool_input>")[1];
       return { tool: _tool, toolInput: _toolInput, log: text };
     } else if (text.includes("<final_answer>")) {
-      const answerMatch = text.match(
-        /<final_answer>([^<]*?)(?:<\/final_answer>|$)/
-      );
-      const answer = answerMatch ? answerMatch[1] : "";
+      const [, answer] = text.split("<final_answer>");
       return { returnValues: { output: answer }, log: text };
     } else {
       throw new OutputParserException(`Could not parse LLM output: ${text}`);

@@ -21,41 +21,17 @@ export type AIMessageFields = BaseMessageFields & {
   usage_metadata?: UsageMetadata;
 };
 
-export type ModalitiesTokenDetails = {
-  /**
-   * Text tokens.
-   * Does not need to be reported, but some models will do so.
-   */
-  text?: number;
-
-  /**
-   * Image (non-video) tokens.
-   */
-  image?: number;
-
-  /**
-   * Audio tokens.
-   */
-  audio?: number;
-
-  /**
-   * Video tokens.
-   */
-  video?: number;
-
-  /**
-   * Document tokens.
-   * e.g. PDF
-   */
-  document?: number;
-};
-
 /**
  * Breakdown of input token counts.
  *
  * Does not *need* to sum to full input token count. Does *not* need to have all keys.
  */
-export type InputTokenDetails = ModalitiesTokenDetails & {
+export type InputTokenDetails = {
+  /**
+   * Audio input tokens.
+   */
+  audio?: number;
+
   /**
    * Input tokens that were cached and there was a cache hit.
    *
@@ -77,7 +53,12 @@ export type InputTokenDetails = ModalitiesTokenDetails & {
  *
  * Does *not* need to sum to full output token count. Does *not* need to have all keys.
  */
-export type OutputTokenDetails = ModalitiesTokenDetails & {
+export type OutputTokenDetails = {
+  /**
+   * Audio output tokens
+   */
+  audio?: number;
+
   /**
    * Reasoning output tokens.
    *

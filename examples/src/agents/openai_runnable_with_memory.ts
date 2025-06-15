@@ -3,6 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
 import { BufferMemory } from "langchain/memory";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -30,7 +31,9 @@ const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
  * Here we're using the `convertToOpenAIFunction` util function
  * to format our tools into the proper schema for OpenAI functions.
  */
-const modelWithFunctions = model.bindTools(tools);
+const modelWithFunctions = model.bind({
+  functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
+});
 
 const memory = new BufferMemory({
   memoryKey: "history", // The object key to store the memory under

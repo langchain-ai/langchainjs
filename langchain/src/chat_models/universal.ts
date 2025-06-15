@@ -42,15 +42,13 @@ const _SUPPORTED_PROVIDERS = [
   "google-vertexai",
   "google-vertexai-web",
   "google-genai",
+  "google-genai",
   "ollama",
   "together",
   "fireworks",
   "mistralai",
   "groq",
   "bedrock",
-  "cerebras",
-  "deepseek",
-  "xai",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -77,7 +75,6 @@ async function _initChatModelHelper(
       `Unable to infer model provider for { model: ${model} }, please specify modelProvider directly.`
     );
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
 
   try {
@@ -132,17 +129,7 @@ async function _initChatModelHelper(
         const { ChatBedrockConverse } = await import("@langchain/aws");
         return new ChatBedrockConverse({ model, ...passedParams });
       }
-      case "deepseek": {
-        const { ChatDeepSeek } = await import("@langchain/deepseek");
-        return new ChatDeepSeek({ model, ...passedParams });
-      }
-      case "xai": {
-        const { ChatXAI } = await import("@langchain/xai");
-        return new ChatXAI({ model, ...passedParams });
-      }
       case "fireworks": {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Can not install as a proper dependency due to circular dependency
         const { ChatFireworks } = await import(
           // We can not 'expect-error' because if you explicitly build `@langchain/community`
           // this import will be able to be resolved, thus there will be no error. However
@@ -154,8 +141,6 @@ async function _initChatModelHelper(
         return new ChatFireworks({ model, ...passedParams });
       }
       case "together": {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Can not install as a proper dependency due to circular dependency
         const { ChatTogetherAI } = await import(
           // We can not 'expect-error' because if you explicitly build `@langchain/community`
           // this import will be able to be resolved, thus there will be no error. However
@@ -203,9 +188,7 @@ export function _inferModelProvider(modelName: string): string | undefined {
   if (
     modelName.startsWith("gpt-3") ||
     modelName.startsWith("gpt-4") ||
-    modelName.startsWith("o1") ||
-    modelName.startsWith("o3") ||
-    modelName.startsWith("o4")
+    modelName.startsWith("o1")
   ) {
     return "openai";
   } else if (modelName.startsWith("claude")) {
@@ -242,12 +225,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
   queuedMethodOperations?: Record<string, any>;
 }
 
-/**
- * Internal class used to create chat models.
- *
- * @internal
- */
-export class ConfigurableModel<
+class _ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
   CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
@@ -343,9 +321,9 @@ export class ConfigurableModel<
     tools: BindToolsInput[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
-  ): ConfigurableModel<RunInput, CallOptions> {
+  ): _ConfigurableModel<RunInput, CallOptions> {
     this._queuedMethodOperations.bindTools = [tools, params];
-    return new ConfigurableModel<RunInput, CallOptions>({
+    return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
@@ -359,7 +337,7 @@ export class ConfigurableModel<
     ...args
   ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
     this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
-    return new ConfigurableModel<RunInput, CallOptions>({
+    return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
@@ -420,7 +398,7 @@ export class ConfigurableModel<
       )
     );
 
-    const newConfigurableModel = new ConfigurableModel<RunInput, CallOptions>({
+    const newConfigurableModel = new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: { ...this._defaultConfig, ...modelParams },
       configurableFields: Array.isArray(this._configurableFields)
         ? [...this._configurableFields]
@@ -573,7 +551,7 @@ export async function initChatModel<
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<ConfigurableModel<RunInput, CallOptions>>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
@@ -586,7 +564,7 @@ export async function initChatModel<
     configurableFields?: never;
     configPrefix?: string;
   }
-): Promise<ConfigurableModel<RunInput, CallOptions>>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
@@ -599,7 +577,7 @@ export async function initChatModel<
     configurableFields?: ConfigurableFields;
     configPrefix?: string;
   }
-): Promise<ConfigurableModel<RunInput, CallOptions>>;
+): Promise<_ConfigurableModel<RunInput, CallOptions>>;
 
 // ################################# FOR CONTRIBUTORS #################################
 //
@@ -616,7 +594,6 @@ export async function initChatModel<
  * @template {extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions} CallOptions - Call options for the model.
  *
  * @param {string | ChatModelProvider} [model] - The name of the model, e.g. "gpt-4", "claude-3-opus-20240229".
- *   Can be prefixed with the model provider, e.g. "openai:gpt-4", "anthropic:claude-3-opus-20240229".
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
  *   - openai (@langchain/openai)
@@ -633,15 +610,13 @@ export async function initChatModel<
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
  *   - cerebras (@langchain/cerebras)
- *   - deepseek (@langchain/deepseek)
- *   - xai (@langchain/xai)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
  *   - "any": All fields are configurable. (See Security Note in description)
  *   - string[]: Specified fields are configurable.
  * @param {string} [fields.configPrefix] - Prefix for configurable fields at runtime.
  * @param {Record<string, any>} [fields.params] - Additional keyword args to pass to the ChatModel constructor.
- * @returns {Promise<ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
+ * @returns {Promise<_ConfigurableModel<RunInput, CallOptions>>} A class which extends BaseChatModel.
  * @throws {Error} If modelProvider cannot be inferred or isn't supported.
  * @throws {Error} If the model provider integration package is not installed.
  *
@@ -649,12 +624,14 @@ export async function initChatModel<
  * ```typescript
  * import { initChatModel } from "langchain/chat_models/universal";
  *
- * const gpt4 = await initChatModel("openai:gpt-4", {
+ * const gpt4 = await initChatModel("gpt-4", {
+ *   modelProvider: "openai",
  *   temperature: 0.25,
  * });
  * const gpt4Result = await gpt4.invoke("what's your name");
  *
- * const claude = await initChatModel("anthropic:claude-3-opus-20240229", {
+ * const claude = await initChatModel("claude-3-opus-20240229", {
+ *   modelProvider: "anthropic",
  *   temperature: 0.25,
  * });
  * const claudeResult = await claude.invoke("what's your name");
@@ -768,10 +745,9 @@ export async function initChatModel<
  *   temperature: 0,
  * });
  *
- * const configurableModelWithTools = configurableModel.bindTools([
- *   getWeatherTool,
- *   getPopulationTool,
- * ]);
+ * const configurableModelWithTools = configurableModel.bind({
+ *   tools: [getWeatherTool, getPopulationTool],
+ * });
  *
  * const configurableToolResult = await configurableModelWithTools.invoke(
  *   "Which city is hotter today and which is bigger: LA or NY?",
@@ -825,21 +801,11 @@ export async function initChatModel<
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
-): Promise<ConfigurableModel<RunInput, CallOptions>> {
-  // eslint-disable-next-line prefer-const
-  let { configurableFields, configPrefix, modelProvider, ...params } = {
+): Promise<_ConfigurableModel<RunInput, CallOptions>> {
+  const { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
   };
-  if (modelProvider === undefined && model?.includes(":")) {
-    const modelComponents = model.split(":", 2);
-    if (
-      _SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)
-    ) {
-      // eslint-disable-next-line no-param-reassign
-      [modelProvider, model] = modelComponents;
-    }
-  }
   let configurableFieldsCopy = Array.isArray(configurableFields)
     ? [...configurableFields]
     : configurableFields;
@@ -859,7 +825,7 @@ export async function initChatModel<
   const paramsCopy: Record<string, any> = { ...params };
 
   if (configurableFieldsCopy === undefined) {
-    return new ConfigurableModel<RunInput, CallOptions>({
+    return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: {
         ...paramsCopy,
         model,
@@ -874,7 +840,7 @@ export async function initChatModel<
     if (modelProvider) {
       paramsCopy.modelProvider = modelProvider;
     }
-    return new ConfigurableModel<RunInput, CallOptions>({
+    return new _ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: paramsCopy,
       configPrefix,
       configurableFields: configurableFieldsCopy,

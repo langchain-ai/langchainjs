@@ -1,11 +1,11 @@
-import { Ollama } from "@langchain/ollama";
+import { Ollama } from "@langchain/community/llms/ollama";
 import * as fs from "node:fs/promises";
 
 const imageData = await fs.readFile("./hotdog.jpg");
 const model = new Ollama({
   model: "llava",
   baseUrl: "http://127.0.0.1:11434",
-}).withConfig({
+}).bind({
   images: [imageData.toString("base64")],
 });
 const res = await model.invoke("What's in this image?");

@@ -134,7 +134,7 @@ test("Test LLMChain with ChatOpenAI", async () => {
 
 test("Test passing a runnable to an LLMChain", async () => {
   const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
-  const runnableModel = model.withConfig({
+  const runnableModel = model.bind({
     response_format: {
       type: "json_object",
     },

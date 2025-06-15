@@ -1,12 +1,12 @@
-import type { Anthropic } from "@anthropic-ai/sdk";
+import type { MessageCreateParams } from "@anthropic-ai/sdk/resources/index.mjs";
 import { AnthropicToolChoice } from "../types.js";
 
 export function handleToolChoice(
   toolChoice?: AnthropicToolChoice
 ):
-  | Anthropic.Messages.ToolChoiceAuto
-  | Anthropic.Messages.ToolChoiceAny
-  | Anthropic.Messages.ToolChoiceTool
+  | MessageCreateParams.ToolChoiceAuto
+  | MessageCreateParams.ToolChoiceAny
+  | MessageCreateParams.ToolChoiceTool
   | undefined {
   if (!toolChoice) {
     return undefined;

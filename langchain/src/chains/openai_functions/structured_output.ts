@@ -1,8 +1,7 @@
-import {
-  type JsonSchema7Type,
-  Validator,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { z } from "zod";
+import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
+
+import { Validator } from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
@@ -12,11 +11,6 @@ import {
 import { ChatGeneration } from "@langchain/core/outputs";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
-import {
-  InferInteropZodOutput,
-  interopSafeParseAsync,
-  InteropZodObject,
-} from "@langchain/core/utils/types";
 import { LLMChain, type LLMChainInput } from "../llm_chain.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 
@@ -27,7 +21,7 @@ import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js"
  * output.
  */
 export type StructuredOutputChainInput<
-  T extends InteropZodObject = InteropZodObject
+  T extends z.AnyZodObject = z.AnyZodObject
 > = Omit<LLMChainInput, "outputParser" | "llm"> & {
   outputSchema?: JsonSchema7Type;
   prompt: BasePromptTemplate;
@@ -36,7 +30,7 @@ export type StructuredOutputChainInput<
 };
 
 export type FunctionCallStructuredOutputParserFields<
-  T extends InteropZodObject = InteropZodObject
+  T extends z.AnyZodObject = z.AnyZodObject
 > = {
   jsonSchema?: JsonSchema7Type;
   zodSchema?: T;
@@ -56,8 +50,8 @@ function isJsonSchema7Type(
  * functionality for parsing the structured output based on a JSON schema.
  */
 export class FunctionCallStructuredOutputParser<
-  T extends InteropZodObject
-> extends BaseLLMOutputParser<InferInteropZodOutput<T>> {
+  T extends z.AnyZodObject
+> extends BaseLLMOutputParser<z.infer<T>> {
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   protected functionOutputParser = new OutputFunctionsParser();
@@ -88,10 +82,7 @@ export class FunctionCallStructuredOutputParser<
     }
     super(fields);
     if (fields.jsonSchema !== undefined) {
-      this.jsonSchemaValidator = new Validator(
-        fields.jsonSchema as Record<string, unknown>,
-        "7"
-      );
+      this.jsonSchemaValidator = new Validator(fields.jsonSchema, "7");
     }
     if (fields.zodSchema !== undefined) {
       this.zodSchema = fields.zodSchema;
@@ -119,16 +110,13 @@ export class FunctionCallStructuredOutputParser<
       return value;
     });
     if (this.zodSchema) {
-      const zodParsedResult = await interopSafeParseAsync(
-        this.zodSchema,
-        parsedResult
-      );
+      const zodParsedResult = this.zodSchema.safeParse(parsedResult);
       if (zodParsedResult.success) {
         return zodParsedResult.data;
       } else {
         throw new OutputParserException(
           `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-            zodParsedResult.error.issues
+            zodParsedResult.error.errors
           )}`,
           initialResult
         );
@@ -161,7 +149,7 @@ export class FunctionCallStructuredOutputParser<
  * @returns OpenAPIChain
  */
 export function createStructuredOutputChain<
-  T extends InteropZodObject = InteropZodObject
+  T extends z.AnyZodObject = z.AnyZodObject
 >(input: StructuredOutputChainInput<T>) {
   const {
     outputSchema,
@@ -200,13 +188,13 @@ export function createStructuredOutputChain<
 }
 
 /** @deprecated Use {@link https://api.js.langchain.com/functions/langchain.chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
-export function createStructuredOutputChainFromZod<T extends InteropZodObject>(
+export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">
 ) {
   return createStructuredOutputChain<T>({
     ...input,
-    outputSchema: toJsonSchema(zodSchema),
+    outputSchema: zodToJsonSchema(zodSchema),
     zodSchema,
   });
 }

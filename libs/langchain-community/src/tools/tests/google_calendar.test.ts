@@ -50,32 +50,6 @@ describe("GoogleCalendarCreateTool", () => {
     expect(instance.name).toBe("google_calendar_create");
   });
 
-  it("should be setup with accessToken", async () => {
-    const params = {
-      credentials: {
-        accessToken: "accessToken",
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarCreateTool(params);
-    expect(instance.name).toBe("google_calendar_create");
-  });
-
-  it("should be setup with accessToken function", async () => {
-    const params = {
-      credentials: {
-        accessToken: () => Promise.resolve("accessToken"),
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarCreateTool(params);
-    expect(instance.name).toBe("google_calendar_create");
-  });
-
   it("should throw an error if missing credentials", async () => {
     const params = {
       credentials: {},
@@ -104,19 +78,6 @@ describe("GoogleCalendarViewTool", () => {
       credentials: {
         clientEmail: "test@email.com",
         privateKey: "privateKey",
-        calendarId: "calendarId",
-      },
-      model: new FakeLLM({}),
-    };
-
-    const instance = new GoogleCalendarViewTool(params);
-    expect(instance.name).toBe("google_calendar_view");
-  });
-
-  it("should be setup with accessToken", async () => {
-    const params = {
-      credentials: {
-        accessToken: "accessToken",
         calendarId: "calendarId",
       },
       model: new FakeLLM({}),

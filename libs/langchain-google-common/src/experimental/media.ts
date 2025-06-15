@@ -579,9 +579,7 @@ export class AIStudioFileUploadConnection<
   AIStudioFileSaveResponse,
   AuthOptions
 > {
-  get computedApiVersion(): string {
-    return "v1beta";
-  }
+  apiVersion = "v1beta";
 
   async buildUrl(): Promise<string> {
     return `https://generativelanguage.googleapis.com/upload/${this.apiVersion}/files`;
@@ -607,6 +605,8 @@ export class AIStudioFileDownloadConnection<
 
   name: string;
 
+  apiVersion = "v1beta";
+
   constructor(
     fields: AIStudioFileDownloadConnectionParams<AuthOptions>,
     caller: AsyncCaller,
@@ -615,10 +615,6 @@ export class AIStudioFileDownloadConnection<
     super(fields, caller, client);
     this.method = fields.method;
     this.name = fields.name;
-  }
-
-  get computedApiVersion(): string {
-    return "v1beta";
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {

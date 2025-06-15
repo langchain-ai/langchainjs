@@ -1,11 +1,8 @@
+import { z } from "zod";
+import { zodToJsonSchema, JsonSchema7ObjectType } from "zod-to-json-schema";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { InteropZodObject } from "@langchain/core/utils/types";
-import {
-  type JsonSchema7ObjectType,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
 import {
   FunctionParameters,
   JsonOutputFunctionsParser,
@@ -88,12 +85,12 @@ export function createTaggingChain(
  */
 export function createTaggingChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodObject,
+  schema: z.ZodObject<any, any, any, any>,
   llm: BaseChatModel<BaseFunctionCallOptions>,
   options?: TaggingChainOptions
 ) {
   return createTaggingChain(
-    toJsonSchema(schema) as JsonSchema7ObjectType,
+    zodToJsonSchema(schema) as JsonSchema7ObjectType,
     llm,
     options
   );

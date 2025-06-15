@@ -58,7 +58,7 @@ const sqlQueryChain = RunnableSequence.from([
     question: (input: { question: string }) => input.question,
   },
   prompt,
-  llm.withConfig({ stop: ["\nSQLResult:"] }),
+  llm.bind({ stop: ["\nSQLResult:"] }),
   new StringOutputParser(),
 ]);
 

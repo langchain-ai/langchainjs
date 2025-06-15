@@ -1,6 +1,6 @@
 import { ChatVertexAI } from "@langchain/google-vertexai";
 import { type GeminiTool } from "@langchain/google-vertexai/types";
-import { schemaToGeminiParameters } from "@langchain/google-vertexai/utils";
+import { zodToGeminiParameters } from "@langchain/google-vertexai/utils";
 import { z } from "zod";
 // Or, if using the web entrypoint:
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
@@ -18,7 +18,7 @@ const geminiCalculatorTool: GeminiTool = {
     {
       name: "calculator",
       description: "A simple calculator tool",
-      parameters: schemaToGeminiParameters(calculatorSchema),
+      parameters: zodToGeminiParameters(calculatorSchema),
     },
   ],
 };
@@ -26,7 +26,9 @@ const geminiCalculatorTool: GeminiTool = {
 const model = new ChatVertexAI({
   temperature: 0.7,
   model: "gemini-1.5-flash-001",
-}).bindTools([geminiCalculatorTool]);
+}).bind({
+  tools: [geminiCalculatorTool],
+});
 
 const response = await model.invoke("What is 1628253239 times 81623836?");
 console.log(JSON.stringify(response.additional_kwargs, null, 2));

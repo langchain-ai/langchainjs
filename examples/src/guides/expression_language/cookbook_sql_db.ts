@@ -34,7 +34,7 @@ const sqlQueryGeneratorChain = RunnableSequence.from([
     schema: async () => db.getTableInfo(),
   }),
   prompt,
-  model.withConfig({ stop: ["\nSQLResult:"] }),
+  model.bind({ stop: ["\nSQLResult:"] }),
   new StringOutputParser(),
 ]);
 

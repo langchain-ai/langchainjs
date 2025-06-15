@@ -13,7 +13,7 @@ const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
   underlyingEmbeddings,
   inMemoryStore,
   {
-    namespace: underlyingEmbeddings.model,
+    namespace: underlyingEmbeddings.modelName,
   }
 );
 

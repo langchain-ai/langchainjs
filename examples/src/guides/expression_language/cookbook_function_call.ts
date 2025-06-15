@@ -27,7 +27,8 @@ const functionSchema = [
 ];
 
 const chain = prompt.pipe(
-  model.bindTools(functionSchema).withConfig({
+  model.bind({
+    functions: functionSchema,
     function_call: { name: "joke" },
   })
 );

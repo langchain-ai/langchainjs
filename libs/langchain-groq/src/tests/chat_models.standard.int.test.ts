@@ -2,16 +2,11 @@
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
-import {
-  ChatGroq,
-  ChatGroqCallOptions,
-  ChatGroqInput,
-} from "../chat_models.js";
+import { ChatGroq, ChatGroqCallOptions } from "../chat_models.js";
 
 class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatGroqCallOptions,
-  AIMessageChunk,
-  ChatGroqInput
+  AIMessageChunk
 > {
   constructor() {
     if (!process.env.GROQ_API_KEY) {
@@ -24,7 +19,7 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-70b-versatile",
         maxRetries: 1,
       },
     });
