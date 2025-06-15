@@ -689,9 +689,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
 
-    const signatures: string[] = message?.additional_kwargs?.signatures as string[] ?? [];
+    const signatures: string[] =
+      (message?.additional_kwargs?.signatures as string[]) ?? [];
     if (signatures.length === parts.length) {
-      for (let co = 0; co<signatures.length; co+=1) {
+      for (let co = 0; co < signatures.length; co += 1) {
         const signature = signatures[co];
         if (signature && signature.length > 0) {
           parts[co].thoughtSignature = signature;
@@ -1466,7 +1467,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function partsToSignatures(parts: GeminiPart[]): string[] {
-    return parts.map((part: GeminiPart) => part.thoughtSignature ?? "")
+    return parts.map((part: GeminiPart) => part.thoughtSignature ?? "");
   }
 
   function partsToBaseMessageChunkFields(

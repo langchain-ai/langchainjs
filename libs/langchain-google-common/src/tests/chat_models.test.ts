@@ -1836,7 +1836,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     console.log(JSON.stringify(contents, null, 1));
     const modelPart = contents?.[1]?.parts?.[0];
     expect(modelPart).toHaveProperty("thoughtSignature");
-    expect(modelPart.thoughtSignature).toEqual("decafe42")
+    expect(modelPart.thoughtSignature).toEqual("decafe42");
   });
 
   test("6. GoogleSearchRetrievalTool result", async () => {
