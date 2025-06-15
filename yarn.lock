@@ -11990,6 +11990,7 @@ __metadata:
     eslint-plugin-prettier: ^4.2.1
     expr-eval: ^2.0.2
     faiss-node: ^0.5.1
+    falkordb: ^6.2.5
     fast-xml-parser: ^4.5.1
     firebase-admin: ^11.9.0 || ^12.0.0
     flat: ^5.0.2
@@ -12133,6 +12134,7 @@ __metadata:
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
     faiss-node: ^0.5.1
+    falkordb: "*"
     fast-xml-parser: "*"
     firebase-admin: ^11.9.0 || ^12.0.0
     google-auth-library: "*"
@@ -12335,6 +12337,8 @@ __metadata:
     epub2:
       optional: true
     faiss-node:
+      optional: true
+    falkordb:
       optional: true
     fast-xml-parser:
       optional: true
@@ -14805,6 +14809,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/client@npm:1.6.0, @redis/client@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "@redis/client@npm:1.6.0"
+  dependencies:
+    cluster-key-slot: 1.1.2
+    generic-pool: 3.9.0
+    yallist: 4.0.0
+  checksum: c01c89a793541dc6908a97f375fec3ac28bed7f92b1c20351a3073ce75c0263998a30c3316cbb76e6a4403059d9982d40aec0bc8f1b3cab43615edaaf05980da
+  languageName: node
+  linkType: hard
+
 "@redis/graph@npm:1.1.0":
   version: 1.1.0
   resolution: "@redis/graph@npm:1.1.0"
@@ -14841,6 +14856,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/json@npm:1.0.7":
+  version: 1.0.7
+  resolution: "@redis/json@npm:1.0.7"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: a84d51c06a2af9a42eff5a6db795e7c0f7ada27d958f5d762b6f9778f413399dbe6a0c2ab00dd7ccc5fdab5f2940afbab4a56c2b1c284a2326d0f79965d5bba1
+  languageName: node
+  linkType: hard
+
 "@redis/search@npm:1.1.2":
   version: 1.1.2
   resolution: "@redis/search@npm:1.1.2"
@@ -14859,6 +14883,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@redis/search@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@redis/search@npm:1.2.0"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 256ddf8b30f216b605e571c9085e0efd5e3b43229b57db8ba0eea3376540ada437b68509c3bb0354e3c784f5fa1b825593cc602ebbfc5cbfa9e46d5c7be67eb6
+  languageName: node
+  linkType: hard
+
 "@redis/time-series@npm:1.0.4":
   version: 1.0.4
   resolution: "@redis/time-series@npm:1.0.4"
@@ -14874,6 +14907,15 @@ __metadata:
   peerDependencies:
     "@redis/client": ^1.0.0
   checksum: 6bbdb0b793dcbd13518aa60a09a980f953554e4c745bfacc1611baa8098f360e0378e8ee6b7faf600a67f1de83f4b68bbec6f95a0740faee6164c14be3a30752
+  languageName: node
+  linkType: hard
+
+"@redis/time-series@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@redis/time-series@npm:1.1.0"
+  peerDependencies:
+    "@redis/client": ^1.0.0
+  checksum: 785f024e1c83866708beb254f765e561ccd6e6caad61b697223b3355ee92ca1e99a4d312c4ce03a3d6a29a223f38a2ec844c80b47990fa3bd9ddc56a30c1376f
   languageName: node
   linkType: hard
 
@@ -28176,6 +28218,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"falkordb@npm:^6.2.5":
+  version: 6.2.7
+  resolution: "falkordb@npm:6.2.7"
+  dependencies:
+    "@redis/client": ^1.6.0
+    cluster-key-slot: 1.1.2
+    generic-pool: ^3.9.0
+    lodash: ^4.17.21
+    redis: ^4.7.0
+  checksum: 2b6712bbcf4e309a19905841b6d8a7c90ba6f3fc8e6d22a41f025a3d7bb633240a4fd03f134cd79d77c984f22d88d873d170c5ab3514b255dab49060259fbd22
+  languageName: node
+  linkType: hard
+
 "fast-deep-equal@npm:3.1.3, fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3
   resolution: "fast-deep-equal@npm:3.1.3"
@@ -39093,6 +39148,20 @@ __metadata:
     "@redis/search": 1.1.2
     "@redis/time-series": 1.0.4
   checksum: fb2e667d91406105c229964ddaf120a8eaae02c1f583f384f68962e166542199300fd75af9572285af988870636b8e75b04562e6d9c250ab95e43c3d87a1cb72
+  languageName: node
+  linkType: hard
+
+"redis@npm:^4.7.0":
+  version: 4.7.0
+  resolution: "redis@npm:4.7.0"
+  dependencies:
+    "@redis/bloom": 1.2.0
+    "@redis/client": 1.6.0
+    "@redis/graph": 1.1.1
+    "@redis/json": 1.0.7
+    "@redis/search": 1.2.0
+    "@redis/time-series": 1.1.0
+  checksum: 625172dd913118241288c33f351cda42630819bc82a1dc31f22e1d3e0a4267075ecb851aecfaf106a0c73ff287a434a3df3d2a8ce46713acf68d34d66efc39ec
   languageName: node
   linkType: hard
 

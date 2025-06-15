@@ -730,6 +730,10 @@ graphs/memgraph_graph.cjs
 graphs/memgraph_graph.js
 graphs/memgraph_graph.d.ts
 graphs/memgraph_graph.d.cts
+graphs/falkordb.cjs
+graphs/falkordb.js
+graphs/falkordb.d.ts
+graphs/falkordb.d.cts
 document_compressors/ibm.cjs
 document_compressors/ibm.js
 document_compressors/ibm.d.ts
