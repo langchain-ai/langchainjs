@@ -9,7 +9,8 @@
               "args": {
                 "testName": "cobalt"
               }
-            }
+            },
+            "thoughtSignature": "decafe42"
           }
         ],
         "role": "model"

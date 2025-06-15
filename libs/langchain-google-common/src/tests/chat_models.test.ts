@@ -1773,6 +1773,72 @@ describe("Mock ChatGoogle - Gemini", () => {
     // console.log(JSON.stringify(record?.opts?.data, null, 1));
   });
 
+  test("4-5. Functions - conversation with signature", async () => {
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Run a test on the cobalt project."),
+    ];
+
+    const tools: GeminiTool[] = [
+      {
+        functionDeclarations: [
+          {
+            name: "test",
+            description:
+              "Run a test with a specific name and get if it passed or failed",
+            parameters: {
+              type: "object",
+              properties: {
+                testName: {
+                  type: "string",
+                  description: "The name of the test that should be run.",
+                },
+              },
+              required: ["testName"],
+            },
+          },
+        ],
+      },
+    ];
+    const toolResult = {
+      testPassed: true,
+    };
+
+    const record1: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions1: MockClientAuthInfo = {
+      record: record1,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+    const model1 = new ChatGoogle({
+      authOptions: authOptions1,
+    }).bindTools(tools);
+    const res1 = await model1.invoke(messages);
+    console.log(res1);
+
+    messages.push(res1);
+    messages.push(new ToolMessage(JSON.stringify(toolResult), "test"));
+
+    const record2: Record<string, any> = {};
+    const authOptions2: MockClientAuthInfo = {
+      record: record2,
+      projectId,
+      resultFile: "chat-5-mock.json",
+    };
+    const model2 = new ChatGoogle({
+      authOptions: authOptions2,
+    }).bindTools(tools);
+    const res2 = await model2.invoke(messages);
+    console.log(res2);
+
+    // Make sure the request that came back has been correctly re-formatted
+    const contents = record2?.opts?.data?.contents;
+    console.log(JSON.stringify(contents, null, 1));
+    const modelPart = contents?.[1]?.parts?.[0];
+    expect(modelPart).toHaveProperty("thoughtSignature");
+    expect(modelPart.thoughtSignature).toEqual("decafe42")
+  });
+
   test("6. GoogleSearchRetrievalTool result", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
