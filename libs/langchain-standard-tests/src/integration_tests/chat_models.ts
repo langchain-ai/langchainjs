@@ -28,6 +28,7 @@ import {
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
+import { TestCallbackHandler } from "../utils.js";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -898,6 +899,13 @@ export abstract class ChatModelIntegrationTests<
       );
     }
 
+    // Setup and bind a callback handler to test the output params
+    const handler = new TestCallbackHandler();
+    const callOptionsWithHandler = {
+      ...callOptions,
+      callbacks: [handler],
+    };
+
     // Create a new model instance with structured output capability
     const modelWithTools = model.withStructuredOutput(adderSchema, {
       name: "math_addition",
@@ -908,7 +916,7 @@ export abstract class ChatModelIntegrationTests<
       {
         toolName: "math_addition",
       },
-      callOptions
+      callOptionsWithHandler
     );
 
     // Verify that the 'a' field is present and is a number
@@ -918,6 +926,17 @@ export abstract class ChatModelIntegrationTests<
     // Verify that the 'b' field is present and is a number
     expect(result.b).toBeDefined();
     expect(typeof result.b).toBe("number");
+
+    // Verify that details to describe the structured output
+    // is emitted in tracing
+    expect(handler.extraParams).toEqual(
+      expect.objectContaining({
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: toJsonSchema(adderSchema),
+        },
+      })
+    );
   }
 
   /**
@@ -955,6 +974,13 @@ export abstract class ChatModelIntegrationTests<
       );
     }
 
+    // Setup and bind a callback handler to test the output params
+    const handler = new TestCallbackHandler();
+    const callOptionsWithHandler = {
+      ...callOptions,
+      callbacks: [handler],
+    };
+
     // Create a new model instance with structured output capability, including raw output
     const modelWithTools = model.withStructuredOutput(adderSchema, {
       includeRaw: true,
@@ -966,7 +992,7 @@ export abstract class ChatModelIntegrationTests<
       {
         toolName: "math_addition",
       },
-      callOptions
+      callOptionsWithHandler
     );
 
     // Verify that the raw output is of the expected type
@@ -979,6 +1005,17 @@ export abstract class ChatModelIntegrationTests<
     // Verify that the parsed 'b' field is present and is a number
     expect(result.parsed.b).toBeDefined();
     expect(typeof result.parsed.b).toBe("number");
+
+    // Verify that details to describe the structured output
+    // is emitted in tracing
+    expect(handler.extraParams).toEqual(
+      expect.objectContaining({
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: toJsonSchema(adderSchema),
+        },
+      })
+    );
   }
 
   /**
