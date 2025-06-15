@@ -427,6 +427,7 @@ export interface GoogleRawResponse extends GoogleResponse {
 
 export interface GeminiPartBase {
   thought?: boolean; // Output only
+  thoughtSignature?: string;
 }
 
 export interface GeminiVideoMetadata {

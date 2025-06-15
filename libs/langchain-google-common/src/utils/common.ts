@@ -133,9 +133,11 @@ function reasoningEffortToReasoningTokens(
   const maxEffort = 24 * 1024; // Max for Gemini 2.5 Flash
   switch (effort) {
     case "low":
-      return maxEffort / 3;
+      // Defined as 1k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 1024;
     case "medium":
-      return (2 * maxEffort) / 3;
+      // Defined as 8k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 8 * 1024;
     case "high":
       return maxEffort;
     default:
