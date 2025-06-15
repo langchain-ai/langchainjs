@@ -208,7 +208,26 @@ export interface BaseLanguageModelParams
   cache?: BaseCache | boolean;
 }
 
-export interface BaseLanguageModelCallOptions extends RunnableConfig {
+export interface BaseLanguageModelTracingCallOptions {
+  /**
+   * Describes the format of structured outputs.
+   * This should be provided if an output is considered to be structured
+   */
+  ls_structured_output_format?: {
+    /**
+     * An object containing the method used for structured output (e.g., "jsonMode").
+     */
+    kwargs: { method: string };
+    /**
+     * The JSON schema describing the expected output structure.
+     */
+    schema?: JSONSchema;
+  };
+}
+
+export interface BaseLanguageModelCallOptions
+  extends RunnableConfig,
+    BaseLanguageModelTracingCallOptions {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
