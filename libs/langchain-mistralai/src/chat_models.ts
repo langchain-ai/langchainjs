@@ -71,7 +71,10 @@ import {
   RunnableSequence,
   RunnableBinding,
 } from "@langchain/core/runnables";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import {
@@ -1358,14 +1361,20 @@ export class ChatMistralAI<
     let outputParser: BaseLLMOutputParser<RunOutput>;
 
     if (method === "jsonMode") {
-      llm = this.withConfig({
-        response_format: { type: "json_object" },
-      } as Partial<CallOptions>);
+      let outputSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputSchema,
+        },
+      } as Partial<CallOptions>);
     } else {
       let functionName = name ?? "extract";
       // Is function calling
@@ -1382,6 +1391,10 @@ export class ChatMistralAI<
           },
         ]).withConfig({
           tool_choice: "any",
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
+          },
         } as Partial<CallOptions>);
         outputParser = new JsonOutputKeyToolsParser({
           returnSingle: true,

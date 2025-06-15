@@ -1171,6 +1171,10 @@ export class ChatAnthropicMessages<
 
       llm = this.withConfig({
         tools,
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1187,6 +1191,10 @@ export class ChatAnthropicMessages<
         tool_choice: {
           type: "tool",
           name: functionName,
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
     }

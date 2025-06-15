@@ -82,7 +82,10 @@ import {
   isZodSchemaV3,
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -3112,14 +3115,20 @@ export class ChatOpenAI<
     }
 
     if (method === "jsonMode") {
-      llm = this.withConfig({
-        response_format: { type: "json_object" },
-      } as Partial<CallOptions>);
+      let outputFormatSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputFormatSchema,
+        },
+      } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
       llm = this.withConfig({
         response_format: {
@@ -3130,6 +3139,10 @@ export class ChatOpenAI<
             schema,
             strict: config?.strict,
           },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -3166,6 +3179,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -3204,6 +3221,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: toJsonSchema(schema),
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
