@@ -40,8 +40,8 @@ import type {
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   ChatBedrockConverseToolType,
   BedrockToolChoice,
@@ -543,8 +543,8 @@ export function convertToConverseTools(
         name: tool.name,
         description: tool.description,
         inputSchema: {
-          json: (isZodSchema(tool.schema)
-            ? zodToJsonSchema(tool.schema)
+          json: (isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
             : tool.schema) as __DocumentType,
         },
       },

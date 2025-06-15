@@ -458,7 +458,9 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    * @param options Optional configuration for the API call.
    * @returns The response from the OpenAI API.
    */
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,

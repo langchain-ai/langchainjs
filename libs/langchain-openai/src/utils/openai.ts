@@ -9,8 +9,8 @@ import {
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
 import { ToolDefinition } from "@langchain/core/language_models/base";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { addLangChainErrorFields } from "./errors.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,8 +49,8 @@ export function formatToOpenAIAssistantTool(
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: isZodSchema(tool.schema)
-        ? zodToJsonSchema(tool.schema)
+      parameters: isInteropZodSchema(tool.schema)
+        ? toJsonSchema(tool.schema)
         : tool.schema,
     },
   };

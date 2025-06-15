@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect } from "@jest/globals";
+import { describe, test, expect } from "@jest/globals";
 import { z } from "zod";
+import { z as z4 } from "zod/v4";
 import { JsonOutputKeyToolsParser } from "../json_output_tools_parsers.js";
 import { OutputParserException } from "../../base.js";
 import { AIMessage, AIMessageChunk } from "../../../messages/ai.js";
 import { RunnableLambda } from "../../../runnables/base.js";
+import { InteropZodType } from "../../../utils/types/zod.js";
 
 test("JSONOutputKeyToolsParser invoke", async () => {
   const outputParser = new JsonOutputKeyToolsParser({
@@ -31,16 +33,52 @@ test("JSONOutputKeyToolsParser invoke", async () => {
   expect(result).toEqual({ testKey: 9 });
 });
 
-test("JSONOutputKeyToolsParser with a passed schema throws", async () => {
-  const outputParser = new JsonOutputKeyToolsParser({
-    keyName: "testing",
-    returnSingle: true,
-    zodSchema: z.object({
-      testKey: z.string(),
-    }),
+describe("JSONOutputKeyToolsParser with a passed schema throws", () => {
+  const assertThrows = async (schema: InteropZodType) => {
+    const outputParser = new JsonOutputKeyToolsParser({
+      keyName: "testing",
+      returnSingle: true,
+      zodSchema: schema,
+    });
+    try {
+      await outputParser.invoke(
+        new AIMessage({
+          content: "",
+          additional_kwargs: {
+            tool_calls: [
+              {
+                id: "test",
+                type: "function",
+                function: {
+                  name: "testing",
+                  arguments: JSON.stringify({ testKey: 9 }),
+                },
+              },
+            ],
+          },
+        })
+      );
+      expect(false).toBe(true);
+    } catch (e) {
+      expect(e).toBeInstanceOf(OutputParserException);
+    }
+  };
+  test("zod v3", async () => {
+    await assertThrows(z.object({ testKey: z.string() }));
   });
-  try {
-    await outputParser.invoke(
+  test("zod v4", async () => {
+    await assertThrows(z4.object({ testKey: z4.string() }));
+  });
+});
+
+describe("JSONOutputKeyToolsParser can validate a proper input", () => {
+  const assertValid = async (schema: InteropZodType) => {
+    const outputParser = new JsonOutputKeyToolsParser({
+      keyName: "testing",
+      returnSingle: true,
+      zodSchema: schema,
+    });
+    const result = await outputParser.invoke(
       new AIMessage({
         content: "",
         additional_kwargs: {
@@ -50,44 +88,21 @@ test("JSONOutputKeyToolsParser with a passed schema throws", async () => {
               type: "function",
               function: {
                 name: "testing",
-                arguments: JSON.stringify({ testKey: 9 }),
+                arguments: JSON.stringify({ testKey: "testval" }),
               },
             },
           ],
         },
       })
     );
-  } catch (e) {
-    expect(e).toBeInstanceOf(OutputParserException);
-  }
-});
-
-test("JSONOutputKeyToolsParser can validate a proper input", async () => {
-  const outputParser = new JsonOutputKeyToolsParser({
-    keyName: "testing",
-    returnSingle: true,
-    zodSchema: z.object({
-      testKey: z.string(),
-    }),
+    expect(result).toEqual({ testKey: "testval" });
+  };
+  test("zod v3", async () => {
+    await assertValid(z.object({ testKey: z.string() }));
   });
-  const result = await outputParser.invoke(
-    new AIMessage({
-      content: "",
-      additional_kwargs: {
-        tool_calls: [
-          {
-            id: "test",
-            type: "function",
-            function: {
-              name: "testing",
-              arguments: JSON.stringify({ testKey: "testval" }),
-            },
-          },
-        ],
-      },
-    })
-  );
-  expect(result).toEqual({ testKey: "testval" });
+  test("zod v4", async () => {
+    await assertValid(z4.object({ testKey: z4.string() }));
+  });
 });
 
 test("JSONOutputKeyToolsParser invoke with a top-level tool call", async () => {

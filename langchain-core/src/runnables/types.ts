@@ -1,7 +1,7 @@
-import type { z } from "zod";
 import type { SerializableInterface } from "../load/serializable.js";
 import type { BaseCallbackConfig } from "../callbacks/manager.js";
 import type { IterableReadableStreamInterface } from "../types/_internal.js";
+import { InteropZodType } from "../utils/types/zod.js";
 
 export type RunnableBatchOptions = {
   /** @deprecated Pass in via the standard runnable config object instead */
@@ -11,7 +11,7 @@ export type RunnableBatchOptions = {
 
 export type RunnableIOSchema = {
   name?: string;
-  schema: z.ZodType;
+  schema: InteropZodType;
 };
 
 /**
