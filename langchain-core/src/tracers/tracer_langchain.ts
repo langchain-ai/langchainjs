@@ -8,7 +8,10 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
+import {
+  getEnvironmentVariable,
+  getRuntimeEnvironmentSync,
+} from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
@@ -68,22 +71,6 @@ export class LangChainTracer
     }
   }
 
-  private async _convertToCreate(
-    run: Run,
-    example_id: string | undefined = undefined
-  ): Promise<RunCreate> {
-    return {
-      ...run,
-      extra: {
-        ...run.extra,
-        runtime: await getRuntimeEnvironment(),
-      },
-      child_runs: undefined,
-      session_name: this.projectName,
-      reference_example_id: run.parent_run_id ? undefined : example_id,
-    };
-  }
-
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
@@ -140,6 +127,10 @@ export class LangChainTracer
       // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
       const runTree = new RunTree({
         ...run,
+        extra: {
+          ...run.extra,
+          runtime: getRuntimeEnvironmentSync(),
+        },
         child_runs: [],
         parent_run: undefined,
 

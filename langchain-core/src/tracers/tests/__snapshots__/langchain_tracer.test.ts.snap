@@ -2,15 +2,16 @@
 
 exports[`LangChainTracer payload snapshots for run create and update 1`] = `
 {
-  "child_execution_order": 1,
-  "child_runs": undefined,
+  "attachments": undefined,
+  "child_runs": [],
   "dotted_order": Any<String>,
+  "end_time": undefined,
+  "error": undefined,
   "events": ArrayContaining [
     ObjectContaining {
       "time": Any<String>,
     },
   ],
-  "execution_order": 1,
   "extra": {
     "metadata": {},
     "runtime": {
@@ -23,6 +24,7 @@ exports[`LangChainTracer payload snapshots for run create and update 1`] = `
     "input": "test input",
   },
   "name": "RunnableLambda",
+  "outputs": undefined,
   "parent_run_id": undefined,
   "reference_example_id": undefined,
   "run_type": "chain",
@@ -44,15 +46,16 @@ exports[`LangChainTracer payload snapshots for run create and update 1`] = `
 
 exports[`LangChainTracer payload snapshots for run create and update 2`] = `
 {
-  "child_execution_order": 2,
-  "child_runs": undefined,
+  "attachments": undefined,
+  "child_runs": [],
   "dotted_order": Any<String>,
+  "end_time": undefined,
+  "error": undefined,
   "events": ArrayContaining [
     ObjectContaining {
       "time": Any<String>,
     },
   ],
-  "execution_order": 2,
   "extra": {
     "metadata": {},
     "runtime": {
@@ -65,6 +68,7 @@ exports[`LangChainTracer payload snapshots for run create and update 2`] = `
     "input": "test input",
   },
   "name": "RunnableLambda",
+  "outputs": undefined,
   "parent_run_id": Any<String>,
   "reference_example_id": undefined,
   "run_type": "chain",
@@ -86,6 +90,7 @@ exports[`LangChainTracer payload snapshots for run create and update 2`] = `
 
 exports[`LangChainTracer payload snapshots for run create and update 3`] = `
 {
+  "attachments": undefined,
   "dotted_order": Any<String>,
   "end_time": Any<Number>,
   "error": undefined,
@@ -96,6 +101,10 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
   ],
   "extra": {
     "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
   },
   "inputs": {
     "input": "test input",
@@ -104,13 +113,16 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
     "output": "processed: test input",
   },
   "parent_run_id": Any<String>,
+  "reference_example_id": undefined,
   "session_name": undefined,
+  "tags": [],
   "trace_id": Any<String>,
 }
 `;
 
 exports[`LangChainTracer payload snapshots for run create and update 4`] = `
 {
+  "attachments": undefined,
   "dotted_order": Any<String>,
   "end_time": Any<Number>,
   "error": undefined,
@@ -121,6 +133,10 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
   ],
   "extra": {
     "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
   },
   "inputs": {
     "input": "test input",
@@ -129,7 +145,9 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
     "output": "parent: processed: test input",
   },
   "parent_run_id": undefined,
+  "reference_example_id": undefined,
   "session_name": undefined,
+  "tags": [],
   "trace_id": Any<String>,
 }
 `;
