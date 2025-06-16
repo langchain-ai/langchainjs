@@ -50,7 +50,7 @@ export class ZhipuAIEmbeddings
   extends Embeddings
   implements ZhipuAIEmbeddingsParams
 {
-  modelName: ZhipuAIEmbeddingsParams["modelName"] = "embedding-2";
+  modelName: ZhipuAIEmbeddingsModelId = "embedding-2";
 
   apiKey?: string;
 
