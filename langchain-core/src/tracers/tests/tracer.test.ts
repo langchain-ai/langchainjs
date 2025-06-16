@@ -1,14 +1,22 @@
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
+import { Client } from "langsmith";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
 import { Run } from "../base.js";
 import { HumanMessage } from "../../messages/index.js";
 import { FakeTracer } from "../../utils/testing/index.js";
+import { setDefaultLangChainClientSingleton } from "../../singletons/tracer.js";
+import { RunnableLambda } from "../../runnables/index.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
+
+afterEach(() => {
+  setDefaultLangChainClientSingleton(new Client());
+});
 
 const serialized: Serialized = {
   lc: 1,
@@ -409,4 +417,30 @@ test("Test nested runs", async () => {
   await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
   expect(tracer.runs.length).toBe(2);
+});
+
+test.only("Test tracer payload snapshots for run create and update", async () => {
+  const client = new Client();
+  (client as any).multipartIngestRuns = jest.fn(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return Promise.resolve();
+  });
+  setDefaultLangChainClientSingleton(client);
+  const parentRunnable = RunnableLambda.from(async (input: string) => {
+    const childRunnable = RunnableLambda.from(async (childInput: string) => {
+      return `processed: ${childInput}`;
+    });
+
+    const result = await childRunnable.invoke(input);
+    return `parent: ${result}`;
+  });
+  await parentRunnable.invoke("test input");
+
+  const beforeAwaitTime = new Date();
+  await awaitAllCallbacks();
+  const afterAwaitTime = new Date();
+  expect(afterAwaitTime.getTime() - beforeAwaitTime.getTime()).toBeGreaterThan(
+    500
+  );
+  expect((client as any).multipartIngestRuns).toHaveBeenCalled();
 });
