@@ -979,11 +979,13 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   });
   const child = traceable(
     async (input: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return `child: ${input.split("").reverse().join("")}`;
     },
     { name: "child", tracingEnabled: true, client }
   );
   const parent = RunnableLambda.from(async (input: string) => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const childResult = await child(input);
     return `parent: ${input}; ${childResult}`;
   });
@@ -1031,14 +1033,14 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   expect(firstCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[1][1].method).toEqual("POST");
   expect(secondCallParams).toMatchObject({
-    session_name: "replica1",
-    name: "child",
+    session_name: "replica2",
+    name: "RunnableLambda",
   });
   expect(secondCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[2][1].method).toEqual("POST");
   expect(thirdCallParams).toMatchObject({
-    session_name: "replica2",
-    name: "RunnableLambda",
+    session_name: "replica1",
+    name: "child",
   });
   expect(thirdCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[3][1].method).toEqual("POST");
@@ -1056,7 +1058,7 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   expect(relevantCalls[5][1].method).toEqual("PATCH");
   expect(sixthCallParams).toMatchObject({
     session_name: "replica2",
-    parent_run_id: thirdCallParams.id,
+    parent_run_id: secondCallParams.id,
   });
   expect(sixthCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[6][1].method).toEqual("PATCH");
