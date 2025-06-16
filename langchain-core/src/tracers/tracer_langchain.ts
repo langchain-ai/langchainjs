@@ -8,7 +8,10 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
+import {
+  getEnvironmentVariable,
+  getRuntimeEnvironmentSync,
+} from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
@@ -37,6 +40,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
   client?: LangSmithTracingClientInterface;
+  replicas?: RunTree["replicas"];
 }
 
 export class LangChainTracer
@@ -51,14 +55,17 @@ export class LangChainTracer
 
   client: LangSmithTracingClientInterface;
 
+  replicas?: RunTree["replicas"];
+
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client } = fields;
+    const { exampleId, projectName, client, replicas } = fields;
 
     this.projectName =
       projectName ??
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
+    this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
 
@@ -68,46 +75,16 @@ export class LangChainTracer
     }
   }
 
-  private async _convertToCreate(
-    run: Run,
-    example_id: string | undefined = undefined
-  ): Promise<RunCreate> {
-    return {
-      ...run,
-      extra: {
-        ...run.extra,
-        runtime: await getRuntimeEnvironment(),
-      },
-      child_runs: undefined,
-      session_name: this.projectName,
-      reference_example_id: run.parent_run_id ? undefined : example_id,
-    };
-  }
-
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
-    const persistedRun: RunCreate2 = await this._convertToCreate(
-      run,
-      this.exampleId
-    );
-    await this.client.createRun(persistedRun);
+    const runTree = this.convertToRunTree(run.id);
+    await runTree?.postRun();
   }
 
   async onRunUpdate(run: Run): Promise<void> {
-    const runUpdate: RunUpdate = {
-      end_time: run.end_time,
-      error: run.error,
-      outputs: run.outputs,
-      events: run.events,
-      inputs: run.inputs,
-      trace_id: run.trace_id,
-      dotted_order: run.dotted_order,
-      parent_run_id: run.parent_run_id,
-      extra: run.extra,
-      session_name: this.projectName,
-    };
-    await this.client.updateRun(run.id, runUpdate);
+    const runTree = this.convertToRunTree(run.id);
+    await runTree?.patchRun();
   }
 
   getRun(id: string): Run | undefined {
@@ -140,6 +117,7 @@ export class LangChainTracer
     }
 
     this.client = runTree.client ?? this.client;
+    this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
   }
@@ -154,12 +132,17 @@ export class LangChainTracer
       // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
       const runTree = new RunTree({
         ...run,
+        extra: {
+          ...run.extra,
+          runtime: getRuntimeEnvironmentSync(),
+        },
         child_runs: [],
         parent_run: undefined,
 
         // inherited properties
         client: this.client as Client,
         project_name: this.projectName,
+        replicas: this.replicas,
         reference_example_id: this.exampleId,
         tracingEnabled: true,
       });
