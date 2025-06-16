@@ -217,7 +217,7 @@ export async function createXmlAgent({
     tools: renderTextDescription(tools),
   });
   // TODO: Add .bind to core runnable interface.
-  const llmWithStop = (llm as BaseLanguageModel).bind({
+  const llmWithStop = (llm as BaseLanguageModel).withConfig({
     stop: ["</tool_input>", "</final_answer>"],
   });
   const agent = AgentRunnableSequence.fromRunnables(

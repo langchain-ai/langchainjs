@@ -138,7 +138,7 @@ function convertMessagesToDeepInfraParams(
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       );
-      completionParam.content = null;
+      completionParam.content = "";
     } else {
       if (message.additional_kwargs.tool_calls != null) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
@@ -326,7 +326,7 @@ export class ChatDeepInfra
     tools: BindToolsInput[],
     kwargs?: Partial<DeepInfraCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, DeepInfraCallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     } as DeepInfraCallOptions);

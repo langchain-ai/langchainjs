@@ -100,6 +100,8 @@ class UpstashRatelimitHandler extends BaseCallbackHandler {
       options.llmOutputTotalTokenField ?? "totalTokens";
     this.llmOutputPromptTokenField =
       options.llmOutputPromptTokenField ?? "promptTokens";
+
+    this.awaitHandlers = true;
   }
 
   /**

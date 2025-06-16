@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseTool, GmailBaseToolParams } from "./base.js";
 import { CREATE_DRAFT_DESCRIPTION } from "./descriptions.js";
 
@@ -46,7 +47,7 @@ export class GmailCreateDraft extends GmailBaseTool {
     return draftMessage;
   }
 
-  async _call(arg: z.output<typeof this.schema>) {
+  async _call(arg: InferInteropZodOutput<typeof this.schema>) {
     const { message, to, subject, cc, bcc } = arg;
     const create_message = this.prepareDraftMessage(
       message,
@@ -56,7 +57,9 @@ export class GmailCreateDraft extends GmailBaseTool {
       bcc
     );
 
-    const response = await this.gmail.users.drafts.create({
+    const gmail = await this.getGmailClient();
+
+    const response = await gmail.users.drafts.create({
       userId: "me",
       requestBody: create_message,
     });

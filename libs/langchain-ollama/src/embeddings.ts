@@ -7,7 +7,7 @@ import { OllamaCamelCaseOptions } from "./types.js";
  * Interface for OllamaEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the OllamaEmbeddings class.
  */
-interface OllamaEmbeddingsParams extends EmbeddingsParams {
+export interface OllamaEmbeddingsParams extends EmbeddingsParams {
   /**
    * The Ollama model to use for embeddings.
    * @default "mxbai-embed-large"

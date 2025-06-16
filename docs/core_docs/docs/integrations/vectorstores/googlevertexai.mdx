@@ -147,7 +147,7 @@ set for the document. So if we just wanted to limit the results to those
 with a red color, we can do:
 
 ```typescript
-import { Restriction } from `langchain/vectorstores/googlevertexai`;
+import { Restriction } from `@langchain/community/vectorstores/googlevertexai`;
 
 const redFilter: Restriction[] = [
   {
@@ -180,7 +180,7 @@ const results = await engine.similaritySearch("this", 4, filter);
 Deleting documents are done using ID.
 
 ```typescript
-import { IdDocument } from `langchain/vectorstores/googlevertexai`;
+import { IdDocument } from `@langchain/community/vectorstores/googlevertexai`;
 
 const oldResults: IdDocument[] = await engine.similaritySearch("this", 10);
 const oldIds = oldResults.map( doc => doc.id! );

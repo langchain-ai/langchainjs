@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import type { ZodType as ZodTypeV3 } from "zod/v3";
+import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 import {
   AIMessage,
   type BaseMessage,
@@ -9,6 +9,11 @@ import {
   coerceMessageLikeToMessage,
   AIMessageChunk,
   isAIMessageChunk,
+  isBaseMessage,
+  isAIMessage,
+  convertToOpenAIImageBlock,
+  isURLContentBlock,
+  isBase64ContentBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -46,8 +51,13 @@ import {
 } from "../runnables/base.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
-import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+} from "../utils/types/zod.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import { toJsonSchema } from "../utils/json_schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -126,6 +136,34 @@ export function createChatMessageChunkEncoderStream() {
       );
     },
   });
+}
+
+function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
+  const messagesToTrace: BaseMessage[] = [];
+  for (const message of messages) {
+    let messageToTrace = message;
+    if (Array.isArray(message.content)) {
+      for (let idx = 0; idx < message.content.length; idx++) {
+        const block = message.content[idx];
+        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
+          if (messageToTrace === message) {
+            // Also shallow-copy content
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messageToTrace = new (message.constructor as any)({
+              ...messageToTrace,
+              content: [
+                ...message.content.slice(0, idx),
+                convertToOpenAIImageBlock(block),
+                ...message.content.slice(idx + 1),
+              ],
+            });
+          }
+        }
+      }
+    }
+    messagesToTrace.push(messageToTrace);
+  }
+  return messagesToTrace;
 }
 
 export type LangSmithParams = {
@@ -263,7 +301,7 @@ export abstract class BaseChatModel<
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        [messages],
+        [_formatForTracing(messages)],
         runnableConfig.runId,
         undefined,
         extra,
@@ -343,41 +381,50 @@ export abstract class BaseChatModel<
   async _generateUncached(
     messages: BaseMessageLike[][],
     parsedOptions: this["ParsedCallOptions"],
-    handledOptions: RunnableConfig
+    handledOptions: RunnableConfig,
+    startedRunManagers?: CallbackManagerForLLMRun[]
   ): Promise<LLMResult> {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
 
-    const inheritableMetadata = {
-      ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
-    };
-    // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
-      handledOptions.callbacks,
-      this.callbacks,
-      handledOptions.tags,
-      this.tags,
-      inheritableMetadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const extra = {
-      options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
-      batch_size: 1,
-    };
-    const runManagers = await callbackManager_?.handleChatModelStart(
-      this.toJSON(),
-      baseMessages,
-      handledOptions.runId,
-      undefined,
-      extra,
-      undefined,
-      undefined,
-      handledOptions.runName
-    );
+    let runManagers: CallbackManagerForLLMRun[] | undefined;
+    if (
+      startedRunManagers !== undefined &&
+      startedRunManagers.length === baseMessages.length
+    ) {
+      runManagers = startedRunManagers;
+    } else {
+      const inheritableMetadata = {
+        ...handledOptions.metadata,
+        ...this.getLsParams(parsedOptions),
+      };
+      // create callback manager and start run
+      const callbackManager_ = await CallbackManager.configure(
+        handledOptions.callbacks,
+        this.callbacks,
+        handledOptions.tags,
+        this.tags,
+        inheritableMetadata,
+        this.metadata,
+        { verbose: this.verbose }
+      );
+      const extra = {
+        options: parsedOptions,
+        invocation_params: this?.invocationParams(parsedOptions),
+        batch_size: 1,
+      };
+      runManagers = await callbackManager_?.handleChatModelStart(
+        this.toJSON(),
+        baseMessages.map(_formatForTracing),
+        handledOptions.runId,
+        undefined,
+        extra,
+        undefined,
+        undefined,
+        handledOptions.runName
+      );
+    }
     const generations: ChatGeneration[][] = [];
     const llmOutputs: LLMResult["llmOutput"][] = [];
     // Even if stream is not explicitly called, check if model is implicitly
@@ -388,6 +435,7 @@ export abstract class BaseChatModel<
     );
     if (
       hasStreamingHandler &&
+      !this.disableStreaming &&
       baseMessages.length === 1 &&
       this._streamResponseChunks !==
         BaseChatModel.prototype._streamResponseChunks
@@ -511,7 +559,12 @@ export abstract class BaseChatModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parsedOptions: any;
     handledOptions: RunnableConfig;
-  }): Promise<LLMResult & { missingPromptIndices: number[] }> {
+  }): Promise<
+    LLMResult & {
+      missingPromptIndices: number[];
+      startedRunManagers?: CallbackManagerForLLMRun[];
+    }
+  > {
     const baseMessages = messages.map((messageList) =>
       messageList.map(coerceMessageLikeToMessage)
     );
@@ -534,11 +587,10 @@ export abstract class BaseChatModel<
       options: parsedOptions,
       invocation_params: this?.invocationParams(parsedOptions),
       batch_size: 1,
-      cached: true,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      baseMessages,
+      baseMessages.map(_formatForTracing),
       handledOptions.runId,
       undefined,
       extra,
@@ -580,16 +632,51 @@ export abstract class BaseChatModel<
       cachedResults.map(async ({ result: promiseResult, runManager }, i) => {
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
-          generations[i] = result;
+          generations[i] = result.map((result) => {
+            if (
+              "message" in result &&
+              isBaseMessage(result.message) &&
+              isAIMessage(result.message)
+            ) {
+              // eslint-disable-next-line no-param-reassign
+              result.message.usage_metadata = {
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+              };
+            }
+            // eslint-disable-next-line no-param-reassign
+            result.generationInfo = {
+              ...result.generationInfo,
+              tokenUsage: {},
+            };
+            return result;
+          });
           if (result.length) {
             await runManager?.handleLLMNewToken(result[0].text);
           }
-          return runManager?.handleLLMEnd({
-            generations: [result],
-          });
+          return runManager?.handleLLMEnd(
+            {
+              generations: [result],
+            },
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
         } else {
           // status === "rejected"
-          await runManager?.handleLLMError(promiseResult.reason);
+          await runManager?.handleLLMError(
+            promiseResult.reason,
+            undefined,
+            undefined,
+            undefined,
+            {
+              cached: true,
+            }
+          );
           return Promise.reject(promiseResult.reason);
         }
       })
@@ -598,6 +685,7 @@ export abstract class BaseChatModel<
     const output = {
       generations,
       missingPromptIndices,
+      startedRunManagers: runManagers,
     };
 
     // This defines RUN_KEY as a non-enumerable property on the output object
@@ -650,20 +738,24 @@ export abstract class BaseChatModel<
       callOptions as CallOptions
     );
 
-    const { generations, missingPromptIndices } = await this._generateCached({
-      messages: baseMessages,
-      cache,
-      llmStringKey,
-      parsedOptions: callOptions,
-      handledOptions: runnableConfig,
-    });
+    const { generations, missingPromptIndices, startedRunManagers } =
+      await this._generateCached({
+        messages: baseMessages,
+        cache,
+        llmStringKey,
+        parsedOptions: callOptions,
+        handledOptions: runnableConfig,
+      });
 
     let llmOutput = {};
     if (missingPromptIndices.length > 0) {
       const results = await this._generateUncached(
         missingPromptIndices.map((i) => baseMessages[i]),
         callOptions,
-        runnableConfig
+        runnableConfig,
+        startedRunManagers !== undefined
+          ? missingPromptIndices.map((i) => startedRunManagers?.[i])
+          : undefined
       );
       await Promise.all(
         results.generations.map(async (generation, index) => {
@@ -817,7 +909,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -828,7 +920,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -839,7 +931,29 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -863,9 +977,11 @@ export abstract class BaseChatModel<
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: Record<string, any> | InteropZodType<RunOutput> =
+      outputSchema;
     const name = config?.name;
-    const description = schema.description ?? "A function available to call.";
+    const description =
+      getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -876,14 +992,14 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",
           function: {
             name: functionName,
             description,
-            parameters: zodToJsonSchema(schema),
+            parameters: toJsonSchema(schema),
           },
         },
       ];

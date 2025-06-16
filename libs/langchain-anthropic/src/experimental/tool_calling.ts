@@ -35,8 +35,14 @@ import {
 } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import type { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import { JsonSchema7ObjectType, zodToJsonSchema } from "zod-to-json-schema";
-import { z } from "zod";
+import {
+  type JsonSchema7ObjectType,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import { ChatAnthropic, type AnthropicInput } from "../chat_models.js";
 import {
   DEFAULT_TOOL_SYSTEM_PROMPT,
@@ -308,7 +314,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, false>
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false> & { force?: boolean }
@@ -320,7 +326,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, true>
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true> & { force?: boolean }
@@ -332,7 +338,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
   >(
     outputSchema:
       | StructuredOutputMethodParams<RunOutput, boolean>
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean> & { force?: boolean }
@@ -343,7 +349,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
     let method;
     let includeRaw;
@@ -367,8 +373,8 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
-      const jsonSchema = zodToJsonSchema(schema);
+    if (isInteropZodSchema(schema)) {
+      const jsonSchema = toJsonSchema(schema);
       tools = [
         {
           type: "function" as const,
@@ -411,7 +417,7 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
         keyName: functionName,
       });
     }
-    const llm = this.bind({
+    const llm = this.withConfig({
       tools,
       tool_choice: force
         ? {
@@ -451,17 +457,6 @@ export class ChatAnthropicTools extends BaseChatModel<ChatAnthropicToolsCallOpti
       runName: "StructuredOutputRunnable",
     });
   }
-}
-
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(

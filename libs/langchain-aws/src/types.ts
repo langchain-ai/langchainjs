@@ -19,3 +19,26 @@ export type BedrockToolChoice =
   | ToolChoice.AutoMember
   | ToolChoice.ToolMember;
 export type ChatBedrockConverseToolType = BindToolsInput | BedrockTool;
+
+export type MessageContentReasoningBlockReasoningText = {
+  type: "reasoning_content";
+  reasoningText: {
+    text: string;
+    signature: string;
+  };
+};
+
+export type MessageContentReasoningBlockRedacted = {
+  type: "reasoning_content";
+  redactedContent: string;
+};
+
+export type MessageContentReasoningBlockReasoningTextPartial = {
+  type: "reasoning_content";
+  reasoningText: { text: string } | { signature: string };
+};
+
+export type MessageContentReasoningBlock =
+  | MessageContentReasoningBlockReasoningText
+  | MessageContentReasoningBlockRedacted
+  | MessageContentReasoningBlockReasoningTextPartial;

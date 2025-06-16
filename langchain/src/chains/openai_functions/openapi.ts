@@ -1,9 +1,9 @@
 import type { OpenAIClient } from "@langchain/openai";
 import {
-  JsonSchema7ObjectType,
-  JsonSchema7ArrayType,
-  JsonSchema7Type,
-} from "zod-to-json-schema";
+  type JsonSchema7ObjectType,
+  type JsonSchema7ArrayType,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";
@@ -210,7 +210,7 @@ export function convertOpenAPISchemaToJSONSchema(
  * @param spec The OpenAPI specification to convert.
  * @returns An object containing the OpenAI functions derived from the OpenAPI specification and a default execution method.
  */
-function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
+export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
   openAIFunctions: OpenAIClient.Chat.ChatCompletionCreateParams.Function[];
   defaultExecutionMethod?: OpenAPIExecutionMethod;
 } {
@@ -488,7 +488,7 @@ export async function createOpenAPIChain(
     );
   }
   const {
-    llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
+    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }),
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"

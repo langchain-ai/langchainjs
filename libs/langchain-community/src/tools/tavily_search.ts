@@ -3,16 +3,104 @@ import { Tool, type ToolParams } from "@langchain/core/tools";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 /**
- * Options for the TavilySearchResults tool.
+ * Options for the TavilySearchResults tool. (Deprecated)
+ *
+ * @deprecated Please use the `TavilySearch` tool from the `@langchain/tavily` package, instead.
  */
 export type TavilySearchAPIRetrieverFields = ToolParams & {
+  /**
+   * The maximum number of search results to return.
+   *
+   * @default 5
+   */
   maxResults?: number;
+
+  /**
+   * Additional keyword arguments to pass to the API.
+   */
   kwargs?: Record<string, unknown>;
+
+  /**
+   * The API key used for authentication with the Tavily Search API.
+   *
+   */
   apiKey?: string;
+
+  /**
+   * Include a list of query-related images in the response.
+   *
+   * @default false
+   */
+  includeImages?: boolean;
+
+  /**
+   * When includeImages is set to True, this option adds descriptive text for each image.
+   *
+   * @default false
+   */
+  includeImageDescriptions?: boolean;
+
+  /**
+   * Include a short answer to the original query.
+   *
+   * @default false
+   */
+  includeAnswer?: boolean;
+
+  /**
+   * Include the cleaned and parsed HTML content of each search result.
+   *
+   * @default false
+   */
+  includeRawContent?: boolean;
+
+  /**
+   * A list of domains to specifically include in the search results.
+   *
+   * @default []
+   */
+  includeDomains?: string[];
+
+  /**
+   * A list of domains to specifically exclude from the search results.
+   *
+   * @default []
+   */
+  excludeDomains?: string[];
+
+  /**
+   * The depth of the search. It can be "basic" or "deep".
+   *
+   * @default "basic"
+   */
+  searchDepth?: "basic" | "deep";
+
+  /**
+   * The category of the search. This will determine which of our agents will be used for the search. Currently, only "general" and "news" are supported. See https://docs.tavily.com/docs/rest-api/api-reference
+   *
+   * @default "general"
+   */
+  topic?: string;
+
+  /**
+   * The number of days back from the current date to include in the search results.
+   *
+   * @default 3
+   */
+  days?: number;
+
+  /**
+   * The base API url used for the Tavily Search API.
+   *
+   * @default "https://api.tavily.com"
+   */
+  apiUrl?: string;
 };
 
 /**
- * Tavily search API tool integration.
+ * Tavily search API tool integration. (Deprecated)
+ *
+ * @deprecated Please use the `TavilySearch` tool from the `@langchain/tavily` package, instead.
  *
  * Setup:
  * Install `@langchain/community`. You'll also need an API key set as `TAVILY_API_KEY`.
@@ -93,11 +181,44 @@ export class TavilySearchResults extends Tool {
 
   protected kwargs: Record<string, unknown> = {};
 
+  protected includeImages?: boolean;
+
+  protected includeImageDescriptions?: boolean;
+
+  protected includeAnswer?: boolean;
+
+  protected includeRawContent?: boolean;
+
+  protected includeDomains?: string[];
+
+  protected excludeDomains?: string[];
+
+  protected searchDepth?: "basic" | "deep";
+
+  protected topic?: string;
+
+  protected days?: number;
+
+  protected apiUrl?: string;
+
   constructor(fields?: TavilySearchAPIRetrieverFields) {
     super(fields);
     this.maxResults = fields?.maxResults ?? this.maxResults;
     this.kwargs = fields?.kwargs ?? this.kwargs;
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
+    this.includeImages = fields?.includeImages ?? this.includeImages;
+    this.includeImageDescriptions =
+      fields?.includeImageDescriptions ?? this.includeImageDescriptions;
+    this.includeAnswer = fields?.includeAnswer ?? this.includeAnswer;
+    this.includeRawContent =
+      fields?.includeRawContent ?? this.includeRawContent;
+    this.includeDomains = fields?.includeDomains ?? this.includeDomains;
+    this.excludeDomains = fields?.excludeDomains ?? this.excludeDomains;
+    this.searchDepth = fields?.searchDepth ?? this.searchDepth;
+    this.topic = fields?.topic ?? this.topic;
+    this.days = fields?.days ?? this.days;
+    this.apiUrl = fields?.apiUrl ?? "https://api.tavily.com";
+
     if (this.apiKey === undefined) {
       throw new Error(
         `No Tavily API key found. Either set an environment variable named "TAVILY_API_KEY" or pass an API key as "apiKey".`
@@ -112,13 +233,22 @@ export class TavilySearchResults extends Tool {
     const body: Record<string, unknown> = {
       query: input,
       max_results: this.maxResults,
-      api_key: this.apiKey,
+      include_images: this.includeImages,
+      include_image_descriptions: this.includeImageDescriptions,
+      include_answer: this.includeAnswer,
+      include_raw_content: this.includeRawContent,
+      include_domains: this.includeDomains,
+      exclude_domains: this.excludeDomains,
+      search_depth: this.searchDepth,
+      topic: this.topic,
+      days: this.days,
     };
 
-    const response = await fetch("https://api.tavily.com/search", {
+    const response = await fetch(`${this.apiUrl}/search`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
+        authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({ ...body, ...this.kwargs }),
     });

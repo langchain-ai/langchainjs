@@ -3,7 +3,7 @@
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { BASE_ENTITY_LABEL, Neo4jGraph } from "../neo4j_graph.js";
-import { GraphDocument, Relationship, Node } from "../graph_document.js";
+import { GraphDocument, Relationship, Node } from "../document.js";
 
 const TEST_DATA = [
   new GraphDocument({

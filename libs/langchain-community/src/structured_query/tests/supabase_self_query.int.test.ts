@@ -602,3 +602,105 @@ test("Supabase Store Self Query Retriever Test With Default Filter And Merge Ope
   // console.log(query4);
   expect(query4.length).toEqual(0);
 });
+
+test("Supabase Store Self Query Retriever Test With Boolean Filters", async () => {
+  const docs = [
+    new Document({
+      pageContent: "A fun family movie about toys coming to life",
+      metadata: {
+        type: "movie",
+        year: 1995,
+        genre: "animated",
+        isKidsMovie: true,
+        hasSequels: true,
+      },
+    }),
+    new Document({
+      pageContent: "A dark psychological thriller about dreams",
+      metadata: {
+        type: "movie",
+        year: 2010,
+        director: "Christopher Nolan",
+        rating: 8.2,
+        isKidsMovie: false,
+        hasSequels: false,
+      },
+    }),
+    new Document({
+      pageContent: "A classic dinosaur adventure park goes wrong",
+      metadata: {
+        type: "movie",
+        year: 1993,
+        rating: 7.7,
+        genre: "science fiction",
+        isKidsMovie: false,
+        hasSequels: true,
+      },
+    }),
+  ];
+
+  const attributeInfo: AttributeInfo[] = [
+    {
+      name: "isKidsMovie",
+      description: "Whether the movie is made for children",
+      type: "boolean",
+    },
+    {
+      name: "hasSequels",
+      description: "Whether the movie has sequel movies",
+      type: "boolean",
+    },
+    {
+      name: "year",
+      description: "The year the movie was released",
+      type: "number",
+    },
+  ];
+
+  if (
+    !process.env.SUPABASE_VECTOR_STORE_URL ||
+    !process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
+  ) {
+    throw new Error(
+      "Supabase URL or private key not set. Please set it in the .env file"
+    );
+  }
+
+  const embeddings = new OpenAIEmbeddings();
+  const llm = new OpenAI();
+  const documentContents = "Brief summary of a movie";
+  const client = createClient(
+    process.env.SUPABASE_VECTOR_STORE_URL,
+    process.env.SUPABASE_VECTOR_STORE_PRIVATE_KEY
+  );
+  const vectorStore = new SupabaseVectorStore(embeddings, { client });
+  // idempotency
+  const opts = { ids: docs.map((_, idx) => idx) };
+  await vectorStore.addDocuments(docs, opts);
+  const selfQueryRetriever = SelfQueryRetriever.fromLLM({
+    llm,
+    vectorStore,
+    documentContents,
+    attributeInfo,
+    structuredQueryTranslator: new SupabaseTranslator(),
+  });
+
+  const query1 = await selfQueryRetriever.getRelevantDocuments(
+    "Which movies are made for kids?"
+  );
+  expect(query1.length).toEqual(1);
+  expect(query1[0].metadata.isKidsMovie).toBe(true);
+
+  const query2 = await selfQueryRetriever.getRelevantDocuments(
+    "Which movies have sequels?"
+  );
+  expect(query2.length).toEqual(2);
+  expect(query2.every((doc: Document) => doc.metadata.hasSequels)).toBe(true);
+
+  const query3 = await selfQueryRetriever.getRelevantDocuments(
+    "Which movies are not made for kids and have sequels?"
+  );
+  expect(query3.length).toEqual(1);
+  expect(query3[0].metadata.isKidsMovie).toBe(false);
+  expect(query3[0].metadata.hasSequels).toBe(true);
+});

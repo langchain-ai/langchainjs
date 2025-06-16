@@ -12,21 +12,48 @@ import {
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   StructuredTool,
   StructuredToolParams,
   tool,
 } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { concat } from "@langchain/core/utils/stream";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
+
+// Placeholder data for content block tests
+const TEST_IMAGE_URL =
+  "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/RedDisc.svg/24px-RedDisc.svg.png";
+
+const TEST_IMAGE_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="; // 1x1 black PNG
+
+const TEST_IMAGE_DATA_URL = `data:image/png;base64,${TEST_IMAGE_BASE64}`;
+
+// TODO: need to find a short mp3 or wav file to use as a test
+// const TEST_AUDIO_URL = "https://www.w3schools.com/html/horse.ogg";
+
+const TEST_AUDIO_BASE64 =
+  "UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; // Short silent WAV
+const TEST_AUDIO_DATA_URL = `data:audio/wav;base64,${TEST_AUDIO_BASE64}`;
+
+const TEST_FILE_TEXT_BASE64 = "SGVsbG8sIFdvcmxkIQ=="; // "Hello, World!"
+
+const TEST_FILE_URL =
+  "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+
+const TEST_FILE_TEXT_DATA_URL = `data:text/plain;base64,${TEST_FILE_TEXT_BASE64}`;
+
+// TODO: Find generic way to support file uploads so we can test file IDs
+// const TEST_FILE_ID = "file-123";
 
 const adderSchema = /* #__PURE__ */ z
   .object({
@@ -42,7 +69,7 @@ class AdderTool extends StructuredTool {
 
   schema = adderSchema;
 
-  async _call(input: z.infer<typeof adderSchema>) {
+  async _call(input: InferInteropZodOutput<typeof adderSchema>) {
     const sum = input.a + input.b;
     return JSON.stringify({ result: sum });
   }
@@ -152,11 +179,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Ensure that the content of the response is a string
-    expect(typeof result.content).toBe("string");
-
     // Verify that the response content is not empty
-    expect(result.content).not.toBe("");
+    expect(result.text).not.toBe("");
   }
 
   /**
@@ -181,9 +205,6 @@ export abstract class ChatModelIntegrationTests<
       // Verify each token is defined and of the correct type
       expect(token).toBeDefined();
       expect(token).toBeInstanceOf(AIMessageChunk);
-
-      // Ensure the content of each token is a string
-      expect(typeof token.content).toBe("string");
 
       // Keep track of the total number of characters
       numChars += token.content.length;
@@ -230,8 +251,7 @@ export abstract class ChatModelIntegrationTests<
       expect(result).toBeInstanceOf(this.invokeResponseType);
 
       // Ensure the content is a non-empty string
-      expect(typeof result.content).toBe("string");
-      expect(result.content).not.toBe("");
+      expect(result.text).not.toBe("");
     }
   }
 
@@ -339,11 +359,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Ensure that the content of the response is a string
-    expect(typeof result.content).toBe("string");
-
     // Verify that the response content is not empty
-    expect(result.content).not.toBe("");
+    expect(result.text).not.toBe("");
   }
 
   /**
@@ -1002,7 +1019,7 @@ export abstract class ChatModelIntegrationTests<
         function: {
           name: "math_addition",
           description: adderSchema.description,
-          parameters: zodToJsonSchema(adderSchema),
+          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
         },
       },
     ]);
@@ -1152,7 +1169,6 @@ export abstract class ChatModelIntegrationTests<
     const result = await model.invoke([humanMessage], callOptions);
 
     // Verify that the result matches the cached value
-    expect(result.content).toBe(cacheValue[0].text);
     expect(result).toEqual(cachedMessage);
 
     // Ensure no additional cache entries were created
@@ -1297,7 +1313,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);
@@ -1396,7 +1412,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);
@@ -1963,6 +1979,238 @@ Extraction path: {extractionPath}`,
       console.error("testStreamTools failed", e.message);
     }
 
+    try {
+      await this.testStandardTextContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardTextContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardImageContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardImageContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardAudioContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardAudioContentBlocks failed", e.message);
+    }
+
+    try {
+      await this.testStandardFileContentBlocks();
+    } catch (e: any) {
+      allTestsPassed = false;
+      console.error("testStandardFileContentBlocks failed", e.message);
+    }
+
     return allTestsPassed;
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard text content blocks.
+   */
+  async testStandardTextContentBlocks(callOptions?: any) {
+    const support = this.supportsStandardContentType?.text;
+    if (!support) {
+      this.skipTestMessage(
+        "testStandardTextContentBlocks",
+        this.Cls.name,
+        "text not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    if (support) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            source_type: "text",
+            text: "Hello from a text content block!",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard image content blocks.
+   */
+  async testStandardImageContentBlocks(callOptions?: any) {
+    // Cast support to (string[]) to allow 'id' check without TS error
+    const support = (this.supportsStandardContentType?.image ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardImageContentBlocks",
+        this.Cls.name,
+        "image not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    // URL
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "url",
+            url: TEST_IMAGE_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    // dataUrl/base64
+    if (support.includes("base64")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "base64",
+            data: TEST_IMAGE_BASE64,
+            mime_type: "image/png",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "image",
+            source_type: "url",
+            url: TEST_IMAGE_DATA_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard audio content blocks.
+   */
+  async testStandardAudioContentBlocks(callOptions?: any) {
+    const support = (this.supportsStandardContentType?.audio ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardAudioContentBlocks",
+        this.Cls.name,
+        "audio not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    // base64
+    if (support.includes("base64")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "base64",
+            data: TEST_AUDIO_BASE64,
+            mime_type: "audio/wav",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    // dataUrl
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "url",
+            url: TEST_AUDIO_DATA_URL,
+            mime_type: "audio/wav",
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+  }
+
+  /**
+   * Tests the chat model's ability to handle standard file content blocks.
+   */
+  async testStandardFileContentBlocks(callOptions?: any) {
+    const support = (this.supportsStandardContentType?.file ?? []) as string[];
+    if (!support.length) {
+      this.skipTestMessage(
+        "testStandardFileContentBlocks",
+        this.Cls.name,
+        "file not supported"
+      );
+      return;
+    }
+    const chatModel = new this.Cls(this.constructorArgs);
+    if (support.includes("dataUrl")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "url",
+            url: TEST_FILE_TEXT_DATA_URL,
+            mime_type: "text/plain",
+            metadata: { filename: "hello.txt" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "url",
+            url: TEST_FILE_URL,
+            mime_type: "application/pdf",
+            metadata: { filename: "dummy.pdf" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
+    if (support.includes("text")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "text",
+            text: "Hello, World! (file as text block)",
+            metadata: { filename: "hello.txt" },
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
   }
 }

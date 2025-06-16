@@ -117,6 +117,12 @@ export interface BaseBedrockInput {
   */
   model: string;
 
+  /** Optional URL Encoded overide for URL model parameter in fetch. Necessary for invoking an Application Inference Profile.
+      For example, "arn%3Aaws%3Abedrock%3Aus-east-1%3A1234567890%3Aapplication-inference-profile%2Fabcdefghi", will override this.model in final /invoke URL call.
+      Must still provide `model` as normal modelId to benefit from all the metadata.
+  */
+  applicationInferenceProfile?: string;
+
   /** The AWS region e.g. `us-west-2`.
       Fallback to AWS_DEFAULT_REGION env variable or region specified in ~/.aws/config in case it is not provided here.
   */
@@ -144,7 +150,7 @@ export interface BaseBedrockInput {
 
   /**
    * Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21.
-   * @deprecated Use .bind({ "stop": [...] }) instead
+   * @deprecated Use .withConfig({ "stop": [...] }) instead
    * */
   stopSequences?: string[];
 
@@ -459,13 +465,12 @@ function parseMessage(responseBody: any, asChunk?: boolean): ChatGeneration {
       generationInfo,
     });
   } else {
-    // TODO: we are throwing away here the text response, as the interface of this method returns only one
     const toolCalls = extractToolCalls(responseBody.content);
 
     if (toolCalls.length > 0) {
       return {
         message: new AIMessage({
-          content: "",
+          content: responseBody.content,
           additional_kwargs: { id },
           tool_calls: toolCalls,
         }),

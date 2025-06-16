@@ -2,7 +2,7 @@ import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
 import { z } from "zod";
 import { RunnableSequence } from "@langchain/core/runnables";
-import { OpenAI, ChatOpenAI } from "@langchain/openai";
+import { OpenAI, ChatOpenAI, AzureChatOpenAI } from "@langchain/openai";
 
 import {
   HumanMessagePromptTemplate,
@@ -234,6 +234,32 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
+    temperature: 0.5,
+    modelName: "gpt-4",
+    streaming: true,
+    prefixMessages: [
+      {
+        role: "system",
+        content: "You're a nice assistant",
+      },
+    ],
+  });
+  const prompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate("You are talking to {name}."),
+    HumanMessagePromptTemplate.fromTemplate("Hello, nice model."),
+  ]);
+  const chain = new LLMChain({ llm, prompt });
+  const str = JSON.stringify(chain, null, 2);
+  expect(stringify(JSON.parse(str))).toMatchSnapshot();
+  const chain2 = await load<LLMChain>(str);
+  expect(chain2).toBeInstanceOf(LLMChain);
+  expect(JSON.stringify(chain2, null, 2)).toBe(str);
+});
+
+test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
+  // eslint-disable-next-line no-process-env
+  process.env.OPENAI_API_KEY = undefined;
+  const llm = new AzureChatOpenAI({
     temperature: 0.5,
     modelName: "gpt-4",
     streaming: true,

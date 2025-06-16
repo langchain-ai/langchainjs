@@ -87,6 +87,7 @@ function revive(obj: any): any {
           content: obj.content,
           tool_call_id: obj.tool_call_id,
           status: obj.status,
+          artifact: obj.artifact,
         });
       }
       if (obj.type === "AIMessage" || obj.type === "ai") {
@@ -121,6 +122,7 @@ function revive(obj: any): any {
           content: obj.content,
           tool_call_id: obj.tool_call_id,
           status: obj.status,
+          artifact: obj.artifact,
         });
       }
       if (obj.type === "AIMessageChunk") {
@@ -266,6 +268,8 @@ function serialize<RunInput>(input: RunInput): any {
  * Allows you to interact with hosted runnables using the standard
  * `.invoke()`, `.stream()`, `.streamEvents()`, etc. methods that
  * other runnables support.
+ *
+ * @deprecated LangServe is no longer actively developed - please consider using LangGraph Platform.
  *
  * @param url - The base URL of the LangServe endpoint.
  * @param options - Optional configuration for the remote runnable, including timeout and headers.

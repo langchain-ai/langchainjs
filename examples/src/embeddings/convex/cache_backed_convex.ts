@@ -17,7 +17,7 @@ export const ask = action({
       underlyingEmbeddings,
       new ConvexKVStore({ ctx }),
       {
-        namespace: underlyingEmbeddings.modelName,
+        namespace: underlyingEmbeddings.model,
       }
     );
 

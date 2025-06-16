@@ -12,6 +12,7 @@ import {
   Operator,
   Operators,
   StructuredQuery,
+  isBoolean,
 } from "@langchain/core/structured_query";
 import type {
   SupabaseFilterRPCCall,
@@ -134,6 +135,8 @@ export class SupabaseTranslator<
       column = `metadata->${attr}${includeType ? "::int" : ""}`;
     } else if (isFloat(value)) {
       column = `metadata->${attr}${includeType ? "::float" : ""}`;
+    } else if (isBoolean(value)) {
+      column = `metadata->${attr}${includeType ? "::boolean" : ""}`;
     } else {
       throw new Error("Data type not supported");
     }

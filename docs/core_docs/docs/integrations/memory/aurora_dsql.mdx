@@ -1,0 +1,43 @@
+---
+hide_table_of_contents: true
+sidebar_class_name: node-only
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Aurora DSQL Chat Memory
+
+For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` for the serverless PostgreSQL-compatible [Amazon Aurora DSQL](https://aws.amazon.com/rds/aurora/dsql/) Database.
+
+This is very similar to the PostgreSQL integration with a few differences to make it compatible with DSQL:
+
+1. The `id` column in PostgreSQL is SERIAL auto-incrementent, and DSQL is UUID using the database function `gen_random_uuid`.
+2. A `created_at` column is created to track the order and history of the messages.
+3. The `message` column in PostgreSQL is JSONB, and DSQL is TEXT with Javascript parsing handling
+
+## Setup
+
+Go to you AWS Console and create an Aurora DSQL Cluster, https://console.aws.amazon.com/dsql/clusters
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/community @langchain/core pg @aws-sdk/dsql-signer
+```
+
+## Usage
+
+Each chat history session is stored in a Aurora DSQL (Postgres-compatible) database and requires a session id.
+
+The connection to Aurora DSQL is handled through a PostgreSQL pool. You can either pass an instance of a pool via the `pool` parameter or pass a pool config via the `poolConfig` parameter. See [pg-node docs on pools](https://node-postgres.com/apis/pool)
+for more information. A provided pool takes precedence, thus if both a pool instance and a pool config are passed, only the pool will be used.
+
+For options on how to do the authentication and authorization for DSQL please check https://docs.aws.amazon.com/aurora-dsql/latest/userguide/authentication-authorization.html.
+
+The following example uses the AWS-SDK to generate an authentication token that is passed to the pool configuration:
+
+import Example from "@examples/memory/aurora_dsql.ts";
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

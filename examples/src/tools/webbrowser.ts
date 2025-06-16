@@ -2,22 +2,8 @@ import { WebBrowser } from "langchain/tools/webbrowser";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
-  // this will not work with Azure OpenAI API yet
-  // Azure OpenAI API does not support embedding with multiple inputs yet
-  // Too many inputs. The max number of inputs is 1.  We hope to increase the number of inputs per request soon. Please contact us through an Azure support request at: https://go.microsoft.com/fwlink/?linkid=2213926 for further questions.
-  // So we will fail fast, when Azure OpenAI API is used
-  if (process.env.AZURE_OPENAI_API_KEY) {
-    throw new Error(
-      "Azure OpenAI API does not support embedding with multiple inputs yet"
-    );
-  }
-
   const model = new ChatOpenAI({ temperature: 0 });
-  const embeddings = new OpenAIEmbeddings(
-    process.env.AZURE_OPENAI_API_KEY
-      ? { azureOpenAIApiDeploymentName: "Embeddings2" }
-      : {}
-  );
+  const embeddings = new OpenAIEmbeddings();
 
   const browser = new WebBrowser({ model, embeddings });
 

@@ -79,7 +79,7 @@ Several more powerful methods that utilizes native features in the model provide
 
 Many [model providers support](/docs/integrations/chat/) tool calling, a concept discussed in more detail in our [tool calling guide](/docs/concepts/tool_calling/).
 In short, tool calling involves binding a tool to a model and, when appropriate, the model can _decide_ to call this tool and ensure its response conforms to the tool's schema.
-With this in mind, the central concept is straightforward: _simply bind our schema to a model as a tool!_
+With this in mind, the central concept is straightforward: _create a tool with our schema and bind it to the model!_
 Here is an example using the `ResponseFormatter` schema defined above:
 
 ```typescript
@@ -90,8 +90,14 @@ const model = new ChatOpenAI({
   temperature: 0,
 });
 
-// Bind ResponseFormatter schema as a tool to the model
-const modelWithTools = model.bindTools([ResponseFormatter]);
+// Create a tool with ResponseFormatter as its schema.
+const responseFormatterTool = tool(async () => {}, {
+  name: "responseFormatter",
+  schema: ResponseFormatter,
+});
+
+// Bind the created tool to the model
+const modelWithTools = model.bindTools([responseFormatterTool]);
 
 // Invoke the model
 const aiMsg = await modelWithTools.invoke(

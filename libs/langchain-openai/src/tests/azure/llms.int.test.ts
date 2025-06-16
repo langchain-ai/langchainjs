@@ -15,24 +15,6 @@ import { AzureOpenAI } from "../../azure/llms.js";
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
-beforeAll(() => {
-  if (!process.env.AZURE_OPENAI_API_KEY) {
-    process.env.AZURE_OPENAI_API_KEY = process.env.TEST_AZURE_OPENAI_API_KEY;
-  }
-  if (!process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME) {
-    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME =
-      process.env.TEST_AZURE_OPENAI_API_DEPLOYMENT_NAME;
-  }
-  if (!process.env.AZURE_OPENAI_BASE_PATH) {
-    process.env.AZURE_OPENAI_BASE_PATH =
-      process.env.TEST_AZURE_OPENAI_BASE_PATH;
-  }
-  if (!process.env.AZURE_OPENAI_API_VERSION) {
-    process.env.AZURE_OPENAI_API_VERSION =
-      process.env.TEST_AZURE_OPENAI_API_VERSION;
-  }
-});
-
 test("Test Azure OpenAI invoke", async () => {
   const model = new AzureOpenAI({
     maxTokens: 5,
@@ -262,7 +244,7 @@ test("Test Azure OpenAI in streaming mode with multiple prompts", async () => {
 
   const model = new AzureOpenAI({
     maxTokens: 5,
-    modelName: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo-instruct",
     streaming: true,
     n: 1,
     callbacks: CallbackManager.fromHandlers({

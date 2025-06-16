@@ -13,6 +13,16 @@ import {
   MessageContentImageUrl,
   AIMessageFields,
   AIMessageChunkFields,
+  AIMessage,
+  StandardContentBlockConverter,
+  StandardImageBlock,
+  StandardTextBlock,
+  StandardFileBlock,
+  DataContentBlock,
+  isDataContentBlock,
+  convertToProviderContentBlock,
+  parseBase64DataUrl,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ToolCall,
@@ -21,15 +31,22 @@ import {
 } from "@langchain/core/messages/tool";
 import {
   AnthropicAPIConfig,
+  AnthropicCacheControl,
   AnthropicContent,
+  AnthropicContentRedactedThinking,
   AnthropicContentText,
+  AnthropicContentThinking,
   AnthropicContentToolUse,
   AnthropicMessage,
   AnthropicMessageContent,
+  AnthropicMessageContentDocument,
   AnthropicMessageContentImage,
+  AnthropicMessageContentRedactedThinking,
   AnthropicMessageContentText,
+  AnthropicMessageContentThinking,
   AnthropicMessageContentToolResult,
   AnthropicMessageContentToolResultContent,
+  AnthropicMessageContentToolUse,
   AnthropicRequest,
   AnthropicRequestSettings,
   AnthropicResponseData,
@@ -128,6 +145,24 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToMessageFields(
+    thinkingContent: AnthropicContentThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
+  function redactedThinkingContentToMessageFields(
+    thinkingContent: AnthropicContentRedactedThinking
+  ): AIMessageFields {
+    // TODO: Once a reasoning/thinking type is defined in LangChain, use it
+    return {
+      content: [thinkingContent],
+    };
+  }
+
   function anthropicContentToMessageFields(
     anthropicContent: AnthropicContent
   ): AIMessageFields | undefined {
@@ -137,7 +172,12 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return textContentToMessageFields(anthropicContent);
       case "tool_use":
         return toolUseContentToMessageFields(anthropicContent);
+      case "thinking":
+        return thinkingContentToMessageFields(anthropicContent);
+      case "redacted_thinking":
+        return redactedThinkingContentToMessageFields(anthropicContent);
       default:
+        console.error(`Unknown message type: ${type}`, anthropicContent);
         return undefined;
     }
   }
@@ -166,13 +206,27 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return newAIMessageChunk(ret);
   }
 
-  function messageToGenerationInfo(message: AnthropicResponseMessage) {
+  function messageToUsageMetadata(
+    message: AnthropicResponseMessage
+  ): UsageMetadata {
     const usage = message?.usage;
-    const usageMetadata: Record<string, number> = {
-      input_tokens: usage?.input_tokens ?? 0,
-      output_tokens: usage?.output_tokens ?? 0,
-      total_tokens: (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
+    const inputTokens = usage?.input_tokens ?? 0;
+    const outputTokens = usage?.output_tokens ?? 0;
+    const usageMetadata: UsageMetadata = {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      total_tokens: inputTokens + outputTokens,
+      input_token_details: {
+        cache_read: usage?.cache_read_input_tokens ?? 0,
+        cache_creation: usage?.cache_creation_input_tokens ?? 0,
+      },
     };
+    return usageMetadata;
+  }
+
+  function messageToGenerationInfo(message: AnthropicResponseMessage) {
+    const usageMetadata = messageToUsageMetadata(message);
+
     return {
       usage_metadata: usageMetadata,
       finish_reason: message.stop_reason,
@@ -451,6 +505,29 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     };
   }
 
+  function thinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): AnthropicMessageContentThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    return {
+      type: "thinking",
+      thinking: content.thinking,
+      signature: content.signature,
+    };
+  }
+
+  function redactedThinkingContentToAnthropicContent(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): AnthropicMessageContentRedactedThinking | undefined {
+    // TODO: Once a Langchain Thinking type is defined, use it
+    return {
+      type: "redacted_thinking",
+      data: content.data,
+    };
+  }
+
   function contentComplexToAnthropicContent(
     content: MessageContentComplex
   ): AnthropicMessageContent | undefined {
@@ -462,27 +539,282 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
         return imageContentToAnthropicContent(
           content as MessageContentImageUrl
         );
+      case "thinking":
+        return thinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
+      case "redacted_thinking":
+        return redactedThinkingContentToAnthropicContent(
+          content as Record<string, unknown>
+        );
       default:
-        console.warn(`Unexpected content type: ${type}`);
+        console.warn(`Unexpected content type: ${type}`, content);
         return undefined;
     }
   }
 
-  function contentToAnthropicContent(
-    content: MessageContent
-  ): AnthropicMessageContent[] {
-    const ret: AnthropicMessageContent[] = [];
+  const anthropicContentConverter: StandardContentBlockConverter<{
+    text: AnthropicMessageContentText;
+    image: AnthropicMessageContentImage;
+    file: AnthropicMessageContentDocument;
+  }> = {
+    providerName: "anthropic",
 
+    fromStandardTextBlock(
+      block: StandardTextBlock
+    ): AnthropicMessageContentText {
+      return {
+        type: "text",
+        text: block.text,
+        ...("cache_control" in (block.metadata ?? {})
+          ? {
+              cache_control: block.metadata!
+                .cache_control as AnthropicCacheControl,
+            }
+          : {}),
+      };
+    },
+
+    fromStandardImageBlock(
+      block: StandardImageBlock
+    ): AnthropicMessageContentImage {
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({
+          dataUrl: block.url,
+          asTypedArray: false,
+        });
+        if (data) {
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              data: data.data,
+              media_type: data.mime_type,
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        } else {
+          return {
+            type: "image",
+            source: {
+              type: "url",
+              url: block.url,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        }
+      } else {
+        if (block.source_type === "base64") {
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              data: block.data,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? { cache_control: block.metadata!.cache_control }
+              : {}),
+          } as AnthropicMessageContentImage;
+        } else {
+          throw new Error(
+            `Unsupported image source type: ${block.source_type}`
+          );
+        }
+      }
+    },
+
+    fromStandardFileBlock(
+      block: StandardFileBlock
+    ): AnthropicMessageContentDocument {
+      const mime_type = (block.mime_type ?? "").split(";")[0];
+
+      if (block.source_type === "url") {
+        if (mime_type === "application/pdf" || mime_type === "") {
+          return {
+            type: "document",
+            source: {
+              type: "url",
+              url: block.url,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? {
+                  cache_control: block.metadata!
+                    .cache_control as AnthropicCacheControl,
+                }
+              : {}),
+            ...("citations" in (block.metadata ?? {})
+              ? {
+                  citations: block.metadata!.citations as { enabled?: boolean },
+                }
+              : {}),
+            ...("context" in (block.metadata ?? {})
+              ? { context: block.metadata!.context as string }
+              : {}),
+            ...(block.metadata?.title ||
+            block.metadata?.filename ||
+            block.metadata?.name
+              ? {
+                  title: (block.metadata?.title ||
+                    block.metadata?.filename ||
+                    block.metadata?.name) as string,
+                }
+              : {}),
+          };
+        }
+        throw new Error(
+          `Unsupported file mime type for file url source: ${block.mime_type}`
+        );
+      } else if (block.source_type === "text") {
+        if (mime_type === "text/plain" || mime_type === "") {
+          return {
+            type: "document",
+            source: {
+              type: "text",
+              data: block.text,
+              media_type: block.mime_type ?? "",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? {
+                  cache_control: block.metadata!
+                    .cache_control as AnthropicCacheControl,
+                }
+              : {}),
+            ...("citations" in (block.metadata ?? {})
+              ? {
+                  citations: block.metadata!.citations as { enabled?: boolean },
+                }
+              : {}),
+            ...("context" in (block.metadata ?? {})
+              ? { context: block.metadata!.context as string }
+              : {}),
+            ...("title" in (block.metadata ?? {})
+              ? { title: block.metadata!.title as string }
+              : {}),
+          };
+        } else {
+          throw new Error(
+            `Unsupported file mime type for file text source: ${block.mime_type}`
+          );
+        }
+      } else if (block.source_type === "base64") {
+        if (mime_type === "application/pdf" || mime_type === "") {
+          return {
+            type: "document",
+            source: {
+              type: "base64",
+              data: block.data,
+              media_type: "application/pdf",
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? {
+                  cache_control: block.metadata!
+                    .cache_control as AnthropicCacheControl,
+                }
+              : {}),
+            ...("citations" in (block.metadata ?? {})
+              ? {
+                  citations: block.metadata!.citations as { enabled?: boolean },
+                }
+              : {}),
+            ...("context" in (block.metadata ?? {})
+              ? { context: block.metadata!.context as string }
+              : {}),
+            ...("title" in (block.metadata ?? {})
+              ? { title: block.metadata!.title as string }
+              : {}),
+          };
+        } else if (
+          ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+            mime_type
+          )
+        ) {
+          return {
+            type: "document",
+            source: {
+              type: "content",
+              content: [
+                {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    data: block.data,
+                    media_type: mime_type as
+                      | "image/jpeg"
+                      | "image/png"
+                      | "image/gif"
+                      | "image/webp",
+                  },
+                },
+              ],
+            },
+            ...("cache_control" in (block.metadata ?? {})
+              ? {
+                  cache_control: block.metadata!
+                    .cache_control as AnthropicCacheControl,
+                }
+              : {}),
+            ...("citations" in (block.metadata ?? {})
+              ? {
+                  citations: block.metadata!.citations as { enabled?: boolean },
+                }
+              : {}),
+            ...("context" in (block.metadata ?? {})
+              ? { context: block.metadata!.context as string }
+              : {}),
+            ...("title" in (block.metadata ?? {})
+              ? { title: block.metadata!.title as string }
+              : {}),
+          };
+        } else {
+          throw new Error(
+            `Unsupported file mime type for file base64 source: ${block.mime_type}`
+          );
+        }
+      } else {
+        throw new Error(`Unsupported file source type: ${block.source_type}`);
+      }
+    },
+  };
+
+  function contentToAnthropicContent(
+    content: MessageContent | DataContentBlock[]
+  ): AnthropicMessageContent[] {
     const ca =
       typeof content === "string" ? [{ type: "text", text: content }] : content;
-    ca.forEach((complex) => {
-      const ac = contentComplexToAnthropicContent(complex);
-      if (ac) {
-        ret.push(ac);
-      }
-    });
+    return ca
+      .map((complex) =>
+        isDataContentBlock(complex)
+          ? convertToProviderContentBlock(complex, anthropicContentConverter)
+          : contentComplexToAnthropicContent(complex)
+      )
+      .filter(Boolean) as AnthropicMessageContent[];
+  }
 
-    return ret;
+  function toolCallToAnthropicContent(
+    toolCall: ToolCall
+  ): AnthropicMessageContentToolUse {
+    return {
+      type: "tool_use",
+      id: toolCall.id!,
+      name: toolCall.name,
+      input: toolCall.args,
+    };
+  }
+
+  function toolCallsToAnthropicContent(
+    toolCalls: ToolCall[] | undefined
+  ): AnthropicMessageContentToolUse[] {
+    if (toolCalls === undefined) {
+      return [];
+    }
+    return toolCalls.map(toolCallToAnthropicContent);
   }
 
   function baseRoleToAnthropicMessage(
@@ -494,6 +826,18 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       role,
       content,
     };
+  }
+
+  function aiMessageToAnthropicMessage(base: AIMessage): AnthropicMessage {
+    const ret = baseRoleToAnthropicMessage(base, "assistant");
+
+    const toolContent = toolCallsToAnthropicContent(base.tool_calls);
+    if (toolContent.length > 0) {
+      const content = ret.content as AnthropicMessageContent[];
+      ret.content = [...content, ...toolContent];
+    }
+
+    return ret;
   }
 
   function toolMessageToAnthropicMessage(base: ToolMessage): AnthropicMessage {
@@ -523,10 +867,14 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
       case "human":
         return baseRoleToAnthropicMessage(base, "user");
       case "ai":
-        return baseRoleToAnthropicMessage(base, "assistant");
+        return aiMessageToAnthropicMessage(base as AIMessage);
       case "tool":
         return toolMessageToAnthropicMessage(base as ToolMessage);
+      case "system":
+        //  System messages are handled in formatSystem()
+        return undefined;
       default:
+        console.warn(`Unknown BaseMessage type: ${type}`, base);
         return undefined;
     }
   }
@@ -695,6 +1043,9 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     }
     if (system?.length) {
       ret.system = system;
+    }
+    if (config?.thinking) {
+      ret.thinking = config?.thinking;
     }
 
     return ret;

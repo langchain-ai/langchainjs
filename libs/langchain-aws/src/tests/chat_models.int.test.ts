@@ -4,13 +4,19 @@ import { test, expect } from "@jest/globals";
 import {
   AIMessage,
   AIMessageChunk,
+  BaseMessage,
+  BaseMessageLike,
   HumanMessage,
+  MessageContentComplex,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatBedrockConverse } from "../chat_models.js";
+import { concatenateLangchainReasoningBlocks } from "../common.js";
+import { MessageContentReasoningBlockReasoningText } from "../types.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -365,4 +371,153 @@ test("Model can handle empty content messages", async () => {
   expect(result.content).toBeDefined();
   expect(typeof result.content).toBe("string");
   expect(result.content.length).toBeGreaterThan(1);
+});
+
+test("Test reasoning_content blocks multiturn invoke", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    maxTokens: 5000,
+    additionalModelRequestFields: {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    },
+  });
+
+  async function doInvoke(messages: BaseMessage[]) {
+    const response = await model.invoke(messages);
+
+    expect(Array.isArray(response.content)).toBe(true);
+    const content = response.content as MessageContentComplex[];
+    expect(content.some((block) => block.type === "reasoning_content")).toBe(
+      true
+    );
+
+    for (const block of content) {
+      expect(typeof block).toBe("object");
+      if (block.type === "reasoning_content") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "reasoningText"].sort()
+        );
+        expect(block.reasoningText).toBeTruthy();
+        expect(typeof block.reasoningText).toBe("object");
+        expect(block.reasoningText.text).toBeTruthy();
+        expect(typeof block.reasoningText.text).toBe("string");
+        expect(block.reasoningText.signature).toBeTruthy();
+        expect(typeof block.reasoningText.signature).toBe("string");
+      }
+    }
+    return response;
+  }
+
+  const invokeMessages = [new HumanMessage("Hello")];
+
+  invokeMessages.push(await doInvoke(invokeMessages));
+  invokeMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await model.invoke(invokeMessages);
+});
+
+test("Test reasoning_content blocks multiturn streaming", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    maxTokens: 5000,
+    additionalModelRequestFields: {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    },
+  });
+
+  async function doStreaming(messages: BaseMessage[]) {
+    let full: AIMessageChunk | null = null;
+    for await (const chunk of await model.stream(messages)) {
+      full = full ? concat(full, chunk) : chunk;
+    }
+    expect(full).toBeInstanceOf(AIMessageChunk);
+    expect(Array.isArray(full?.content)).toBe(true);
+    const content = concatenateLangchainReasoningBlocks(
+      full?.content as MessageContentComplex[]
+    );
+    expect(content.some((block) => block.type === "reasoning_content")).toBe(
+      true
+    );
+
+    for (const block of content) {
+      expect(typeof block).toBe("object");
+      if (block.type === "reasoning_content") {
+        expect(Object.keys(block).sort()).toEqual(
+          ["type", "reasoningText"].sort()
+        );
+
+        const reasoningBlock =
+          block as MessageContentReasoningBlockReasoningText;
+        expect(reasoningBlock.reasoningText).toBeTruthy();
+        expect(typeof reasoningBlock.reasoningText).toBe("object");
+        expect(reasoningBlock.reasoningText.text).toBeTruthy();
+        expect(typeof reasoningBlock.reasoningText.text).toBe("string");
+        expect(reasoningBlock.reasoningText.signature).toBeTruthy();
+        expect(typeof reasoningBlock.reasoningText.signature).toBe("string");
+      }
+    }
+    return full as AIMessageChunk;
+  }
+
+  const streamingMessages = [new HumanMessage("Hello")];
+
+  streamingMessages.push(await doStreaming(streamingMessages));
+  streamingMessages.push(new HumanMessage("What is 42+7?"));
+
+  // test a second time to make sure that we've got input translation working correctly
+  await doStreaming(streamingMessages);
+});
+
+test("Test ChatBedrockConverse can respond to tool invocations with thinking enabled", async () => {
+  const model = new ChatBedrockConverse({
+    ...baseConstructorArgs,
+    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    maxTokens: 5000,
+    additionalModelRequestFields: {
+      thinking: { type: "enabled", budget_tokens: 2000 },
+    },
+  });
+  const tools = [
+    tool(
+      ({ location }: { location: string }) =>
+        `In ${location}, the clouds are heavy with the promise of rain.`,
+      {
+        name: "weather_poet",
+        description:
+          "Gets the current weather conditions for the location, written in a poetic manner.",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }
+    ),
+  ];
+  const modelWithTools = model.bindTools(tools);
+  const messages: BaseMessageLike[] = [
+    new HumanMessage("What is the current weather in London?"),
+  ];
+
+  const result = await modelWithTools.invoke(messages);
+  messages.push(result);
+
+  expect(result.tool_calls).toBeDefined();
+  expect(result.tool_calls).toHaveLength(1);
+  // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
+
+  expect(typeof result.tool_calls![0]).toBe("object");
+  expect(result.tool_calls![0].name).toBe("weather_poet");
+
+  expect(typeof result.tool_calls![0].id).toBe("string");
+  expect(result.tool_calls![0].id!.length).toBeGreaterThan(0);
+
+  expect(typeof result.tool_calls![0].args).toBe("object");
+  expect(typeof result.tool_calls![0].args.location).toBe("string");
+  expect(result.tool_calls![0].args.location.length).toBeGreaterThan(0);
+
+  messages.push(await tools[0].invoke(result.tool_calls![0]));
+
+  const result2 = await modelWithTools.invoke(messages);
+  expect(result2.content).toBeDefined();
 });

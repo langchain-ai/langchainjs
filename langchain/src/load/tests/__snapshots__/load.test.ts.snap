@@ -1,5 +1,99 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`serialize + deserialize Azure llm chain chat prompt 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain
+  - chains
+  - llm
+  - LLMChain
+kwargs:
+  llm:
+    lc: 1
+    type: constructor
+    id:
+      - langchain
+      - chat_models
+      - azure_openai
+      - AzureChatOpenAI
+    kwargs:
+      temperature: 0.5
+      model: gpt-4
+      streaming: true
+      azure_open_ai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - AZURE_OPENAI_API_KEY
+      azure_open_ai_api_instance_name: openai-instance
+      deployment_name: openai-deployment
+      openai_api_version: openai-version
+      prefix_messages:
+        - role: system
+          content: You're a nice assistant
+      openai_api_key:
+        lc: 1
+        type: secret
+        id:
+          - OPENAI_API_KEY
+      azure_endpoint: https://openai-instance.openai.azure.com/
+  prompt:
+    lc: 1
+    type: constructor
+    id:
+      - langchain_core
+      - prompts
+      - chat
+      - ChatPromptTemplate
+    kwargs:
+      input_variables:
+        - name
+      messages:
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - SystemMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables:
+                  - name
+                template_format: f-string
+                template: You are talking to {name}.
+        - lc: 1
+          type: constructor
+          id:
+            - langchain_core
+            - prompts
+            - chat
+            - HumanMessagePromptTemplate
+          kwargs:
+            prompt:
+              lc: 1
+              type: constructor
+              id:
+                - langchain_core
+                - prompts
+                - prompt
+                - PromptTemplate
+              kwargs:
+                input_variables: []
+                template_format: f-string
+                template: Hello, nice model.
+"
+`;
+
 exports[`serialize + deserialize custom classes 1`] = `
 "lc: 1
 type: constructor
@@ -94,14 +188,6 @@ kwargs:
       temperature: 0.5
       model: gpt-4
       streaming: true
-      azure_openai_api_key:
-        lc: 1
-        type: secret
-        id:
-          - AZURE_OPENAI_API_KEY
-      azure_openai_api_instance_name: openai-instance
-      azure_openai_api_deployment_name: openai-deployment
-      azure_openai_api_version: openai-version
       prefix_messages:
         - role: system
           content: You're a nice assistant

@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { it } from "@jest/globals";
@@ -8,7 +9,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 import { AgentExecutor, createReactAgent } from "../../agents/index.js";
-import { pull } from "../../hub.js";
+import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
 // Make copies of API keys and remove them from the environment to avoid conflicts.
@@ -58,6 +59,21 @@ test("Initialize non-configurable models", async () => {
   const geminiResult = await gemini.invoke("what's your name");
   expect(geminiResult).toBeDefined();
   expect(geminiResult.content.length).toBeGreaterThan(0);
+});
+
+test("Works with model provider in model name", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let error: any;
+  const o3Mini = await initChatModel("openai:o3-mini", {
+    temperature: 0.25,
+    apiKey: openAIApiKey,
+  });
+  try {
+    await o3Mini.invoke("what's your name");
+  } catch (e) {
+    error = e;
+  }
+  expect(error.message).toContain("temperature");
 });
 
 test("Create a partially configurable model with no default model", async () => {
@@ -161,9 +177,10 @@ test("Bind tools to a configurable model", async () => {
     temperature: 0,
   });
 
-  const configurableModelWithTools = configurableModel.bind({
-    tools: [getWeatherTool, getPopulationTool],
-  });
+  const configurableModelWithTools = configurableModel.bindTools([
+    getWeatherTool,
+    getPopulationTool,
+  ]);
 
   const configurableToolResult = await configurableModelWithTools.invoke(
     "Which city is hotter today and which is bigger: LA or NY?",
@@ -434,6 +451,17 @@ describe("Works with all model providers", () => {
     );
     expect(vertexAIWebResult).toBeDefined();
     expect(vertexAIWebResult.content.length).toBeGreaterThan(0);
+  });
+
+  it("Can invoke deepseek", async () => {
+    const deepSeek = await initChatModel("deepseek-chat", {
+      modelProvider: "deepseek",
+      temperature: 0,
+    });
+
+    const deepSeekResult = await deepSeek.invoke("what's your name");
+    expect(deepSeekResult).toBeDefined();
+    expect(deepSeekResult.content.length).toBeGreaterThan(0);
   });
 });
 

@@ -51,7 +51,7 @@ jobs:
       - name: Build `@langchain/openai`
         run: yarn build --filter=@langchain/openai
       - name: Run integration tests for ChatOpenAI
-        run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts
+        run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models_responses.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts src/tests/chat_models_responses.standard.int.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 

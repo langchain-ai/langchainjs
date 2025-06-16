@@ -20,7 +20,7 @@ const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
   underlyingEmbeddings,
   redisStore,
   {
-    namespace: underlyingEmbeddings.modelName,
+    namespace: underlyingEmbeddings.model,
   }
 );
 

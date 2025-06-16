@@ -6,7 +6,7 @@ import {
   CloudPakForDataAuthenticator,
 } from "ibm-cloud-sdk-core";
 import {
-  JsonOutputKeyToolsParserParams,
+  JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -14,6 +14,10 @@ import { z } from "zod";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
+import {
+  InteropZodType,
+  interopSafeParseAsync,
+} from "@langchain/core/utils/types";
 import { WatsonxAuth, WatsonxInit } from "../types/ibm.js";
 
 export const authenticateAndSetInstance = ({
@@ -111,7 +115,7 @@ export function _convertToolCallIdToMistralCompatible(
 }
 
 interface WatsonxToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParams<T> {}
+  extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class WatsonxToolsOutputParser<
   T extends Record<string, any> = Record<string, any>
@@ -128,7 +132,7 @@ export class WatsonxToolsOutputParser<
 
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
   latestCorrect?: ToolCall;
 
@@ -160,7 +164,10 @@ export class WatsonxToolsOutputParser<
     if (this.zodSchema === undefined) {
       return parsedResult as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(parsedResult);
+    const zodParsedResult = await interopSafeParseAsync(
+      this.zodSchema,
+      parsedResult
+    );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -169,7 +176,7 @@ export class WatsonxToolsOutputParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }
@@ -184,11 +191,71 @@ export class WatsonxToolsOutputParser<
       const tool = message.tool_calls;
       return tool;
     });
+
     if (tools[0] === undefined) {
-      if (this.latestCorrect) tools.push(this.latestCorrect);
+      if (this.latestCorrect) {
+        tools.push(this.latestCorrect);
+      } else {
+        const toolCall: ToolCall = { name: "", args: {} };
+        tools.push(toolCall);
+      }
     }
+
     const [tool] = tools;
+    tool.name = "";
     this.latestCorrect = tool;
     return tool.args as T;
   }
+}
+
+export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
+  if (obj?.properties && obj.type === "object") {
+    const shape: Record<string, any> = {};
+
+    Object.keys(obj.properties).forEach((key) => {
+      if (obj.properties) {
+        const prop = obj.properties[key];
+
+        let zodType;
+        if (prop.type === "string") {
+          zodType = z.string();
+          if (prop?.pattern) {
+            zodType = zodType.regex(prop.pattern, "Invalid pattern");
+          }
+        } else if (
+          prop.type === "number" ||
+          prop.type === "integer" ||
+          prop.type === "float"
+        ) {
+          zodType = z.number();
+          if (typeof prop?.minimum === "number") {
+            zodType = zodType.min(prop.minimum, {
+              message: `${key} must be at least ${prop.minimum}`,
+            });
+          }
+          if (prop?.maximum)
+            zodType = zodType.lte(prop.maximum, {
+              message: `${key} must be maximum of ${prop.maximum}`,
+            });
+        } else if (prop.type === "boolean") zodType = z.boolean();
+        else if (prop.type === "array")
+          zodType = z.array(jsonSchemaToZod(prop.items));
+        else if (prop.type === "object") {
+          zodType = jsonSchemaToZod(prop);
+        } else throw new Error(`Unsupported type: ${prop.type}`);
+
+        if (prop.description) {
+          zodType = zodType.describe(prop.description);
+        }
+
+        if (!obj.required?.includes(key)) {
+          zodType = zodType.optional();
+        }
+
+        shape[key] = zodType;
+      }
+    });
+    return z.object(shape);
+  }
+  throw new Error("Unsupported root schema type");
 }

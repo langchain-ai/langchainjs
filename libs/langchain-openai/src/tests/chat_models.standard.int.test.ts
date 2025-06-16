@@ -28,6 +28,13 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       constructorArgs: {
         model: "gpt-3.5-turbo",
       },
+      supportsStandardContentType: {
+        text: true,
+        // TODO: audio only supported by gpt-4o-audio-preview, but gpt-4o doesn't support the other input types
+        // audio: ["base64", "url", "dataUrl"],
+        image: ["base64", "url", "dataUrl"],
+        file: ["base64", "url", "dataUrl"],
+      },
     });
   }
 

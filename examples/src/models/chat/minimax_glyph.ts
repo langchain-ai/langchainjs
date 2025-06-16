@@ -13,7 +13,7 @@ const model = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
+}).withConfig({
   replyConstraints: {
     sender_type: "BOT",
     sender_name: "MM Assistant",
@@ -59,7 +59,7 @@ const modelMinimax = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
+}).withConfig({
   replyConstraints: {
     sender_type: "BOT",
     sender_name: "MM Assistant",

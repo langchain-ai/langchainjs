@@ -4,9 +4,15 @@
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { jest, test, expect, describe } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
-import { BaseMessage, HumanMessage } from "../../messages/index.js";
+import {
+  BaseMessage,
+  HumanMessage,
+  AIMessageChunk,
+  AIMessage,
+} from "../../messages/index.js";
 import { OutputParserException } from "../../output_parsers/base.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 import {
@@ -24,10 +30,12 @@ import {
   SingleRunExtractor,
   FakeStreamingChatModel,
 } from "../../utils/testing/index.js";
+import { charChunks } from "../../utils/testing/helpers.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
 import { RunnableConfig } from "../config.js";
 import { JsonOutputParser } from "../../output_parsers/json.js";
+import { StructuredTool } from "../../tools/index.js";
 
 test("Test batch", async () => {
   const llm = new FakeLLM({});
@@ -584,5 +592,57 @@ describe("runId config", () => {
     });
     const run = await tracer.extract();
     expect(run.id).toBe(testId);
+  });
+
+  describe("FakeStreamingChatModel predefined chunks", () => {
+    test("streams predefined chunks including tool call", async () => {
+      class EchoTool extends StructuredTool<z.ZodObject<any>> {
+        name = "echo";
+
+        description = "Echo the input";
+
+        schema = z.object({ input: z.string() });
+
+        async _call(arg: z.output<this["schema"]>) {
+          return JSON.stringify(arg);
+        }
+      }
+
+      const toolCallChunk = new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "tool_call",
+            name: "echo",
+            args: { input: "hello" },
+          },
+        ],
+      });
+
+      const chunks = [...charChunks("Hi"), toolCallChunk, ...charChunks("!")];
+
+      const model = new FakeStreamingChatModel({ chunks, sleep: 0 }).bindTools([
+        new EchoTool(),
+      ]);
+
+      const seen: string[] = [];
+      for await (const gen of await model.stream([], {})) {
+        seen.push(gen.content as string);
+      }
+      expect(seen).toEqual(["H", "i", "", "!"]);
+    });
+
+    test("FakeStreamingChatModel fallback char streaming", async () => {
+      const model = new FakeStreamingChatModel({
+        responses: [new AIMessage("Hi")],
+        sleep: 0,
+      });
+      const out: string[] = [];
+      for await (const gen of await model.stream([], {})) {
+        out.push(gen.content as string);
+      }
+      expect(out).toEqual(["H", "i"]);
+    });
   });
 });

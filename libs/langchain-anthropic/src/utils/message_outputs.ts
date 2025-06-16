@@ -7,6 +7,7 @@ import {
   AIMessageChunk,
   UsageMetadata,
 } from "@langchain/core/messages";
+import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
@@ -76,10 +77,37 @@ export function _makeMessageChunkFromAnthropicEvent(
     };
   } else if (
     data.type === "content_block_start" &&
-    data.content_block.type === "tool_use"
+    [
+      "tool_use",
+      "document",
+      "server_tool_use",
+      "web_search_tool_result",
+    ].includes(data.content_block.type)
   ) {
-    const toolCallContentBlock =
-      data.content_block as Anthropic.Messages.ToolUseBlock;
+    const contentBlock = data.content_block;
+    let toolCallChunks: ToolCallChunk[];
+    if (contentBlock.type === "tool_use") {
+      toolCallChunks = [
+        {
+          id: contentBlock.id,
+          index: data.index,
+          name: contentBlock.name,
+          args: "",
+        },
+      ];
+    } else if (contentBlock.type === "server_tool_use") {
+      // Handle anthropic built-in server tool use (like web search)
+      toolCallChunks = [
+        {
+          id: contentBlock.id,
+          index: data.index,
+          name: contentBlock.name,
+          args: "",
+        },
+      ];
+    } else {
+      toolCallChunks = [];
+    }
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
@@ -88,37 +116,53 @@ export function _makeMessageChunkFromAnthropicEvent(
               {
                 index: data.index,
                 ...data.content_block,
-                input: "",
+                input:
+                  contentBlock.type === "server_tool_use" ||
+                  contentBlock.type === "tool_use"
+                    ? ""
+                    : undefined,
               },
             ],
         additional_kwargs: {},
-        tool_call_chunks: [
-          {
-            id: toolCallContentBlock.id,
-            index: data.index,
-            name: toolCallContentBlock.name,
-            args: "",
-          },
-        ],
+        tool_call_chunks: toolCallChunks,
       }),
     };
   } else if (
     data.type === "content_block_delta" &&
-    data.delta.type === "text_delta"
+    [
+      "text_delta",
+      "citations_delta",
+      "thinking_delta",
+      "signature_delta",
+    ].includes(data.delta.type)
   ) {
-    const content = data.delta?.text;
-    if (content !== undefined) {
+    if (fields.coerceContentToString && "text" in data.delta) {
       return {
         chunk: new AIMessageChunk({
-          content: fields.coerceContentToString
-            ? content
-            : [
-                {
-                  index: data.index,
-                  ...data.delta,
-                },
-              ],
-          additional_kwargs: {},
+          content: data.delta.text,
+        }),
+      };
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const contentBlock: Record<string, any> = data.delta;
+      if ("citation" in contentBlock) {
+        contentBlock.citations = [contentBlock.citation];
+        delete contentBlock.citation;
+      }
+      if (
+        contentBlock.type === "thinking_delta" ||
+        contentBlock.type === "signature_delta"
+      ) {
+        return {
+          chunk: new AIMessageChunk({
+            content: [{ index: data.index, ...contentBlock, type: "thinking" }],
+          }),
+        };
+      }
+
+      return {
+        chunk: new AIMessageChunk({
+          content: [{ index: data.index, ...contentBlock, type: "text" }],
         }),
       };
     }
@@ -166,8 +210,30 @@ export function _makeMessageChunkFromAnthropicEvent(
         }),
       };
     }
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "redacted_thinking"
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [{ index: data.index, ...data.content_block }],
+      }),
+    };
+  } else if (
+    data.type === "content_block_start" &&
+    data.content_block.type === "thinking"
+  ) {
+    const content = data.content_block.thinking;
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? content
+          : [{ index: data.index, ...data.content_block }],
+      }),
+    };
   }
-
   return null;
 }
 

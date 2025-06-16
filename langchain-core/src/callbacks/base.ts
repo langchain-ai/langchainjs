@@ -97,7 +97,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     err: Error,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    extraParams?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -108,7 +109,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     output: LLMResult,
     runId: string,
     parentRunId?: string,
-    tags?: string[]
+    tags?: string[],
+    extraParams?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
@@ -323,6 +325,10 @@ export abstract class BaseCallbackHandler
   }
 
   get lc_aliases(): { [key: string]: string } | undefined {
+    return undefined;
+  }
+
+  get lc_serializable_keys(): string[] | undefined {
     return undefined;
   }
 

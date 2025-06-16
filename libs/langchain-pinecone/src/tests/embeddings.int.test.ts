@@ -31,7 +31,7 @@ describe("Integration tests for Pinecone embeddings", () => {
     expect(embeddings[0].length).toBe(1024); // Assert correct dims on random doc
     expect(model.model).toBe("multilingual-e5-large");
     expect(model.params).toEqual({
-      inputType: "passage", // Maintain default inputType for docs
+      input_type: "passage", // Maintain default inputType for docs
       customParam: "value",
     });
 
@@ -40,7 +40,7 @@ describe("Integration tests for Pinecone embeddings", () => {
     expect(model.model).toBe("multilingual-e5-large");
     expect(queryEmbedding.length).toBe(1024);
     expect(model.params).toEqual({
-      inputType: "query", // Change inputType for query
+      input_type: "query", // Change inputType for query
       customParam: "value",
     });
   });

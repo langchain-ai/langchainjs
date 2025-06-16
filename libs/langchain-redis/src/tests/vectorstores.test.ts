@@ -6,6 +6,7 @@ import { RedisVectorStore } from "../vectorstores.js";
 
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();
+  const expireMock = jest.fn();
 
   return {
     ft: {
@@ -20,9 +21,11 @@ const createRedisClientMockup = () => {
       dropIndex: jest.fn(),
     },
     hSet: hSetMock,
+    expire: expireMock,
     multi: jest.fn<any>().mockImplementation(() => ({
       exec: jest.fn(),
       hSet: hSetMock,
+      expire: expireMock,
     })),
   };
 };
@@ -81,6 +84,25 @@ test("RedisVectorStore with generated keys", async () => {
   const results = await store.similaritySearch("goodbye", 1);
 
   expect(results).toHaveLength(0);
+});
+
+test("RedisVectorStore with TTL", async () => {
+  const client = createRedisClientMockup();
+  const embeddings = new FakeEmbeddings();
+  const ttl = 10;
+  const store = new RedisVectorStore(embeddings, {
+    redisClient: client as any,
+    indexName: "documents",
+    ttl,
+  });
+
+  expect(store).toBeDefined();
+
+  await store.addDocuments([{ pageContent: "hello", metadata: { a: 1 } }]);
+
+  expect(client.hSet).toHaveBeenCalledTimes(1);
+  expect(client.expire).toHaveBeenCalledTimes(1);
+  expect(client.expire).toHaveBeenCalledWith("doc:documents:0", ttl);
 });
 
 test("RedisVectorStore with filters", async () => {

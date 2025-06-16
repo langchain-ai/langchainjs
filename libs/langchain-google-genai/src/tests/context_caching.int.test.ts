@@ -13,7 +13,9 @@ import {
 } from "@google/generative-ai/server";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
-const model = new ChatGoogleGenerativeAI({});
+const model = new ChatGoogleGenerativeAI({
+  model: "gemini-2.0-flash",
+});
 let fileResult: UploadFileResponse;
 
 beforeAll(async () => {

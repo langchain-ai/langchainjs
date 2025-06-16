@@ -7,7 +7,7 @@ import type {
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import type { z } from "zod";
+import { InteropZodObject } from "@langchain/core/utils/types";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
@@ -22,6 +22,13 @@ export declare interface OpenAIBaseInput {
    * tokens as possible given the prompt and the model's maximum context size.
    */
   maxTokens?: number;
+
+  /**
+   * Maximum number of tokens to generate in the completion. -1 returns as many
+   * tokens as possible given the prompt and the model's maximum context size.
+   * Alias for `maxTokens` for reasoning models.
+   */
+  maxCompletionTokens?: number;
 
   /** Total probability mass of tokens to consider at each step */
   topP: number;
@@ -53,8 +60,10 @@ export declare interface OpenAIBaseInput {
   /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use "model" instead.
    */
   modelName: string;
+
   /** Model name to use */
   model: string;
 
@@ -91,23 +100,7 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-// TODO use OpenAI.Core.RequestOptions when SDK is updated to make it available
-export type OpenAICoreRequestOptions<
-  Req extends object = Record<string, unknown>
-> = {
-  path?: string;
-  query?: Req | undefined;
-  body?: Req | undefined;
-  headers?: Record<string, string | null | undefined> | undefined;
-
-  maxRetries?: number;
-  stream?: boolean | undefined;
-  timeout?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  httpAgent?: any;
-  signal?: AbortSignal | undefined | null;
-  idempotencyKey?: string;
-};
+export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -125,19 +118,6 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
-}
-
-/**
- * @deprecated Use "baseURL", "defaultHeaders", and "defaultParams" instead.
- */
-export interface LegacyOpenAIInput {
-  /** @deprecated Use baseURL instead */
-  basePath?: string;
-  /** @deprecated Use defaultHeaders and defaultQuery instead */
-  baseOptions?: {
-    headers?: Record<string, string>;
-    params?: Record<string, string>;
-  };
 }
 
 export interface OpenAIChatInput extends OpenAIBaseInput {
@@ -192,8 +172,26 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   /**
    * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
    * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   *
+   * @deprecated Use the {@link reasoning} object instead.
    */
-  reasoningEffort?: OpenAIClient.ChatCompletionReasoningEffort;
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
+  /**
+   * Options for reasoning models.
+   *
+   * Note that some options, like reasoning summaries, are only available when using the responses
+   * API. This option is ignored when not using a reasoning model.
+   */
+  reasoning?: OpenAIClient.Reasoning;
+
+  /**
+   * Should be set to `true` in tenancies with Zero Data Retention
+   * @see https://platform.openai.com/docs/guides/your-data
+   *
+   * @default false
+   */
+  zdrEnabled?: boolean;
 }
 
 export declare interface AzureOpenAIInput {
@@ -273,8 +271,25 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
      * or a Zod object.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+    schema: Record<string, any> | InteropZodObject;
   };
+};
+
+/**
+ * The summary of a model's reasoning step.
+ */
+export type ChatOpenAIReasoningSummary = Omit<
+  OpenAIClient.Responses.ResponseReasoningItem,
+  "summary"
+> & {
+  /**
+   * The summary of the reasoning step. The index field will be populated if the response was
+   * streamed. This allows LangChain to recompose the reasoning summary output correctly when the
+   * AIMessage is used as an input for future generation requests.
+   */
+  summary: Array<
+    OpenAIClient.Responses.ResponseReasoningItem.Summary & { index?: number }
+  >;
 };
 
 export type ChatOpenAIResponseFormat =

@@ -1,5 +1,4 @@
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -24,6 +23,8 @@ import {
   isAIMessage,
   BaseMessageChunk,
   UsageMetadata,
+  FunctionMessageChunk,
+  ToolMessageChunk,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -32,18 +33,18 @@ import {
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
-  type OpenAICoreRequestOptions,
-  type OpenAIClient,
-} from "@langchain/openai";
-import { isZodSchema } from "@langchain/core/utils/types";
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import Groq from "groq-sdk";
-import {
+import type {
   ChatCompletion,
   ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
-  CompletionCreateParams,
+  ChatCompletionTool,
 } from "groq-sdk/resources/chat/completions";
+import type { RequestOptions } from "groq-sdk/core";
 import {
   Runnable,
   RunnablePassthrough,
@@ -68,16 +69,164 @@ import {
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
 
-type ChatGroqToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
+type ChatGroqToolType = BindToolsInput | ChatCompletionTool;
 
-export interface ChatGroqCallOptions extends BaseChatModelCallOptions {
-  headers?: Record<string, string>;
-  tools?: ChatGroqToolType[];
-  tool_choice?: OpenAIClient.ChatCompletionToolChoiceOption | "any" | string;
-  response_format?: CompletionCreateParams.ResponseFormat;
+/**
+ * Const list of fields that we'll pick from the `ChatCompletionCreateParams` interface
+ * to use as the options allowed to be passed to invocation methods.
+ *
+ * @internal
+ */
+const CREATE_PARAMS_BASE_CALL_KEYS = [
+  // "messages", // passed as input arg to invocation methods
+  // "model", // don't allow override on invoke
+  "frequency_penalty",
+  "function_call",
+  "functions",
+  "logit_bias", // not supported, but left in for forward compatibility
+  "logprobs", // not supported, but left in for forward compatibility
+  "max_completion_tokens",
+  "max_tokens",
+  "n", // not supported, but left in for forward compatibility
+  "parallel_tool_calls",
+  "presence_penalty",
+  "reasoning_format",
+  "response_format",
+  "seed",
+  // TODO: also pass as constructor arg
+  "service_tier",
+  "stop",
+  // "stream", // determined by invocation method
+  // other models only specify temperature as a constructor arg, but I don't see the harm in
+  // allowing overrides on invocation
+  "temperature",
+  "tool_choice",
+  // "tools", // need to allow users to specify langchain style tools, so we use a different type
+  "top_logprobs",
+  "top_p",
+  // "user", // don't allow override on invoke
+] as const;
+
+const ADDED_CALL_KEYS = [
+  "headers",
+  "promptIndex",
+  "stream_options",
+  "tools",
+] as const;
+
+export type ChatGroqCallOptions = Pick<
+  ChatCompletionsAPI.ChatCompletionCreateParamsBase,
+  (typeof CREATE_PARAMS_BASE_CALL_KEYS)[number]
+> &
+  BaseChatModelCallOptions & {
+    /**
+     * Additional headers to pass to the API.
+     */
+    headers?: Record<string, string | null | undefined>;
+    /**
+     * The index of the prompt in the list of prompts.
+     */
+    promptIndex?: number;
+    /**
+     * Additional options to pass to streamed completions.
+     * If provided takes precedence over "streamUsage" set at initialization time.
+     */
+    stream_options?: {
+      /**
+       * Whether or not to include token usage in the stream.
+       * If set to `true`, this will include an additional
+       * chunk at the end of the stream with the token usage.
+       *
+       * Defaults to `true` when streaming, `false` otherwise.
+       */
+      include_usage: boolean;
+    };
+
+    tools?: ChatGroqToolType[];
+
+    // IMPORTANT: If you add a new key here you MUST add it to the `ADDED_CALL_KEYS`
+    // list above. Keep this comment at the bottom so people see it when they go to
+    // make additions.
+  };
+
+const ALL_CALL_KEYS: readonly (keyof ChatGroqCallOptions)[] = [
+  ...CREATE_PARAMS_BASE_CALL_KEYS,
+  ...ADDED_CALL_KEYS,
+] as const;
+
+/**
+ * Timing details about the request, useful for collecting performance metrics.
+ */
+interface TimingMetadata {
+  /**
+   * Time spent generating tokens
+   */
+  completion_time?: number;
+
+  /**
+   * Time spent processing input tokens
+   */
+  prompt_time?: number;
+
+  /**
+   * Time the requests was spent queued
+   */
+  queue_time?: number;
+
+  /**
+   * completion time and prompt time combined
+   */
+  total_time?: number;
 }
-
 export interface ChatGroqInput extends BaseChatModelParams {
+  /**
+   * The temperature to use for sampling.
+   * @default 0.7
+   */
+  temperature?: number;
+
+  /**
+   * The maximum number of tokens that the model can process in a single response.
+   * This limits ensures computational efficiency and resource management.
+   */
+  maxTokens?: number;
+
+  /** Total probability mass of tokens to consider at each step */
+  topP?: number;
+
+  /** Penalizes repeated tokens according to frequency */
+  frequencyPenalty?: number;
+
+  /** Penalizes repeated tokens */
+  presencePenalty?: number;
+
+  /** Number of completions to generate for each prompt */
+  n?: number;
+
+  /** Dictionary used to adjust the probability of specific tokens being generated */
+  logitBias?: Record<string, number>;
+
+  /** Unique string identifier representing your end-user, which can help OpenAI to monitor and detect abuse. */
+  user?: string;
+
+  /**
+   * Whether or not to include token usage data in streamed chunks.
+   * @default true
+   */
+  streamUsage?: boolean;
+
+  /**
+   * Whether to return log probabilities of the output tokens or not.
+   * If true, returns the log probabilities of each output token returned in the content of message.
+   */
+  logprobs?: boolean;
+
+  /**
+   * An integer between 0 and 5 specifying the number of most likely tokens to return at each token position,
+   * each with an associated log probability. logprobs must be set to true if this parameter is used.
+   */
+  topLogprobs?: number;
+
   /**
    * The Groq API key to use for requests.
    * @default process.env.GROQ_API_KEY
@@ -85,15 +234,8 @@ export interface ChatGroqInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
-   * Alias for `model`
-   * @default "mixtral-8x7b-32768"
    */
-  modelName?: string;
-  /**
-   * The name of the model to use.
-   * @default "mixtral-8x7b-32768"
-   */
-  model?: string;
+  model: string;
   /**
    * Up to 4 sequences where the API will stop generating further tokens. The
    * returned text will not contain the stop sequence.
@@ -109,16 +251,6 @@ export interface ChatGroqInput extends BaseChatModelParams {
    * Whether or not to stream responses.
    */
   streaming?: boolean;
-  /**
-   * The temperature to use for sampling.
-   * @default 0.7
-   */
-  temperature?: number;
-  /**
-   * The maximum number of tokens that the model can process in a single response.
-   * This limits ensures computational efficiency and resource management.
-   */
-  maxTokens?: number;
   /**
    * Override the default base URL for the API
    */
@@ -210,7 +342,8 @@ function convertMessagesToGroqParams(
 
 function groqResponseToChatMessage(
   message: ChatCompletionsAPI.ChatCompletionMessage,
-  usageMetadata?: UsageMetadata
+  usageMetadata?: UsageMetadata,
+  responseMetadata?: Record<string, unknown>
 ): BaseMessage {
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
@@ -233,6 +366,7 @@ function groqResponseToChatMessage(
         tool_calls: toolCalls,
         invalid_tool_calls: invalidToolCalls,
         usage_metadata: usageMetadata,
+        response_metadata: responseMetadata,
       });
     }
     default:
@@ -240,25 +374,116 @@ function groqResponseToChatMessage(
   }
 }
 
-function _convertDeltaToolCallToToolCallChunk(
-  toolCalls?: ChatCompletionsAPI.ChatCompletionChunk.Choice.Delta.ToolCall[],
-  index?: number
-): ToolCallChunk[] | undefined {
-  if (!toolCalls?.length) return undefined;
-
-  return toolCalls.map((tc) => ({
-    id: tc.id,
-    name: tc.function?.name,
-    args: tc.function?.arguments,
-    type: "tool_call_chunk",
-    index,
-  }));
-}
-
 function _convertDeltaToMessageChunk(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
+  defaultRole: GroqRoleEnum | undefined,
+  rawResponse: ChatCompletionsAPI.ChatCompletionChunk,
+  lastMessageId: string | undefined
+): BaseMessageChunk {
+  const role = delta.role ?? defaultRole;
+  const content = delta.content ?? "";
+  let additional_kwargs: Record<string, unknown>;
+  if (delta.function_call) {
+    additional_kwargs = {
+      function_call: delta.function_call,
+    };
+  } else if (delta.tool_calls) {
+    additional_kwargs = {
+      tool_calls: delta.tool_calls,
+    };
+  } else {
+    additional_kwargs = {};
+  }
+  if (delta.audio) {
+    additional_kwargs.audio = {
+      ...delta.audio,
+      index: rawResponse.choices[0].index,
+    };
+  }
+
+  let usage: UsageMetadata | undefined;
+  let groqMessageId: string | undefined = lastMessageId;
+  let timing: TimingMetadata | undefined;
+
+  const xGroq = rawResponse.x_groq;
+  if (xGroq?.usage) {
+    usage = {
+      input_tokens: xGroq.usage.prompt_tokens,
+      output_tokens: xGroq.usage.completion_tokens,
+      total_tokens: xGroq.usage.total_tokens,
+    };
+    timing = {
+      completion_time: xGroq.usage.completion_time,
+      prompt_time: xGroq.usage.prompt_time,
+      queue_time: xGroq.usage.queue_time,
+      total_time: xGroq.usage.total_time,
+    };
+  }
+
+  if (xGroq?.id) {
+    groqMessageId = xGroq.id;
+  }
+
+  const response_metadata = { usage, timing };
+  if (role === "user") {
+    return new HumanMessageChunk({ content, response_metadata });
+  } else if (role === "assistant") {
+    const toolCallChunks: ToolCallChunk[] = [];
+    if (Array.isArray(delta.tool_calls)) {
+      for (const rawToolCall of delta.tool_calls) {
+        toolCallChunks.push({
+          name: rawToolCall.function?.name,
+          args: rawToolCall.function?.arguments,
+          id: rawToolCall.id,
+          index: rawToolCall.index,
+          type: "tool_call_chunk",
+        });
+      }
+    }
+    return new AIMessageChunk({
+      content,
+      tool_call_chunks: toolCallChunks,
+      additional_kwargs,
+      id: groqMessageId,
+      response_metadata,
+    });
+  } else if (role === "system") {
+    return new SystemMessageChunk({ content, response_metadata });
+  } else if (role === "developer") {
+    return new SystemMessageChunk({
+      content,
+      response_metadata,
+      additional_kwargs: {
+        __openai_role__: "developer",
+      },
+    });
+  } else if (role === "function") {
+    return new FunctionMessageChunk({
+      content,
+      additional_kwargs,
+      name: delta.name,
+      response_metadata,
+    });
+  } else if (role === "tool") {
+    return new ToolMessageChunk({
+      content,
+      additional_kwargs,
+      tool_call_id: delta.tool_call_id,
+      response_metadata,
+    });
+  } else {
+    return new ChatMessageChunk({ content, role, response_metadata });
+  }
+}
+
+/*
+function _oldConvertDeltaToMessageChunk(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delta: Record<string, any>,
+  rawResponse: ChatCompletionsAPI.ChatCompletionChunk,
   index: number,
+  defaultRole: GroqRoleEnum | undefined,
   xGroq?: ChatCompletionsAPI.ChatCompletionChunk.XGroq
 ): {
   message: BaseMessageChunk;
@@ -337,6 +562,7 @@ function _convertDeltaToMessageChunk(
     };
   }
 }
+*/
 
 /**
  * Groq chat model integration.
@@ -358,13 +584,12 @@ function _convertDeltaToMessageChunk(
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_groq.ChatGroqCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
- *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -385,7 +610,7 @@ function _convertDeltaToMessageChunk(
  * import { ChatGroq } from '@langchain/groq';
  *
  * const llm = new ChatGroq({
- *   model: "mixtral-8x7b-32768",
+ *   model: "llama-3.3-70b-versatile",
  *   temperature: 0,
  *   // other params...
  * });
@@ -674,9 +899,7 @@ export class ChatGroq extends BaseChatModel<
 
   client: Groq;
 
-  modelName = "mixtral-8x7b-32768";
-
-  model = "mixtral-8x7b-32768";
+  model: string;
 
   temperature = 0.7;
 
@@ -689,6 +912,54 @@ export class ChatGroq extends BaseChatModel<
   streaming = false;
 
   apiKey?: string;
+
+  streamUsage: boolean = true;
+
+  topP: number | null | undefined;
+
+  frequencyPenalty: number | null | undefined;
+
+  presencePenalty: number | null | undefined;
+
+  logprobs: boolean | null | undefined;
+
+  n: number | null | undefined;
+
+  logitBias: Record<string, number> | null | undefined;
+
+  user: string | null | undefined;
+
+  reasoningFormat: ChatCompletionsAPI.ChatCompletionCreateParamsBase["reasoning_format"];
+
+  serviceTier: ChatCompletionsAPI.ChatCompletionCreateParamsBase["service_tier"];
+
+  topLogprobs: number | null | undefined;
+
+  lc_serializable = true;
+
+  get lc_serialized_keys(): string[] {
+    return [
+      "client",
+      "model",
+      "temperature",
+      "stop",
+      "stopSequences",
+      "maxTokens",
+      "streaming",
+      "apiKey",
+      "streamUsage",
+      "topP",
+      "frequencyPenalty",
+      "presencePenalty",
+      "logprobs",
+      "n",
+      "logitBias",
+      "user",
+      "reasoningFormat",
+      "serviceTier",
+      "topLogprobs",
+    ];
+  }
 
   static lc_name() {
     return "ChatGroq";
@@ -704,12 +975,14 @@ export class ChatGroq extends BaseChatModel<
     };
   }
 
-  lc_serializable = true;
+  get callKeys() {
+    return [...super.callKeys, ...ALL_CALL_KEYS];
+  }
 
-  constructor(fields?: ChatGroqInput) {
-    super(fields ?? {});
+  constructor(fields: ChatGroqInput) {
+    super(fields);
 
-    const apiKey = fields?.apiKey || getEnvironmentVariable("GROQ_API_KEY");
+    const apiKey = fields.apiKey || getEnvironmentVariable("GROQ_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Groq API key not found. Please set the GROQ_API_KEY environment variable or provide the key into "apiKey"`
@@ -717,31 +990,37 @@ export class ChatGroq extends BaseChatModel<
     }
     const defaultHeaders = {
       "User-Agent": "langchainjs",
-      ...(fields?.defaultHeaders ?? {}),
+      ...(fields.defaultHeaders ?? {}),
     };
 
     this.client = new Groq({
       apiKey,
       dangerouslyAllowBrowser: true,
-      baseURL: fields?.baseUrl,
-      timeout: fields?.timeout,
-      httpAgent: fields?.httpAgent,
-      fetch: fields?.fetch,
+      baseURL: fields.baseUrl,
+      timeout: fields.timeout,
+      httpAgent: fields.httpAgent,
+      fetch: fields.fetch,
       maxRetries: 0,
       defaultHeaders,
-      defaultQuery: fields?.defaultQuery,
+      defaultQuery: fields.defaultQuery,
     });
     this.apiKey = apiKey;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.temperature = fields.temperature ?? this.temperature;
+    this.model = fields.model;
+    this.streaming = fields.streaming ?? this.streaming;
     this.stop =
-      fields?.stopSequences ??
-      (typeof fields?.stop === "string" ? [fields.stop] : fields?.stop) ??
+      fields.stopSequences ??
+      (typeof fields.stop === "string" ? [fields.stop] : fields.stop) ??
       [];
     this.stopSequences = this.stop;
-    this.maxTokens = fields?.maxTokens;
+    this.maxTokens = fields.maxTokens;
+    this.topP = fields.topP;
+    this.frequencyPenalty = fields.frequencyPenalty;
+    this.presencePenalty = fields.presencePenalty;
+    this.logprobs = fields.logprobs;
+    this.n = fields.n;
+    this.logitBias = fields.logitBias;
+    this.user = fields.user;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -758,17 +1037,17 @@ export class ChatGroq extends BaseChatModel<
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: RequestOptions
   ): Promise<AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: RequestOptions
   ): Promise<ChatCompletion>;
 
   async completionWithRetry(
     request: ChatCompletionCreateParams,
-    options?: OpenAICoreRequestOptions
+    options?: RequestOptions
   ): Promise<
     AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk> | ChatCompletion
   > {
@@ -778,32 +1057,64 @@ export class ChatGroq extends BaseChatModel<
   }
 
   invocationParams(
-    options: this["ParsedCallOptions"]
-  ): ChatCompletionCreateParams {
+    options: this["ParsedCallOptions"],
+    extra?: { streaming?: boolean }
+  ): Omit<ChatCompletionCreateParams, "messages"> {
     const params = super.invocationParams(options);
-    if (options.tool_choice !== undefined) {
-      params.tool_choice = options.tool_choice;
+
+    let streamOptionsConfig = {};
+
+    if (options?.stream_options !== undefined) {
+      streamOptionsConfig = { stream_options: options.stream_options };
+    } else if ((this.streamUsage && this.streaming) || extra?.streaming) {
+      streamOptionsConfig = { stream_options: { include_usage: true } };
     }
-    if (options.tools !== undefined) {
-      params.tools = options.tools;
-    }
-    if (options.response_format !== undefined) {
-      params.response_format = options.response_format;
-    }
-    return {
-      ...params,
-      stop: options.stop ?? this.stopSequences,
+
+    const toReturn: Omit<ChatCompletionCreateParams, "messages"> = {
       model: this.model,
-      temperature: this.temperature,
-      max_tokens: this.maxTokens,
+      frequency_penalty: this.frequencyPenalty,
+      function_call: options?.function_call,
+      functions: options?.functions,
+      logit_bias: this.logitBias,
+      logprobs: this.logprobs,
+      // max_completion_tokens
+      // max_tokens
+      n: this.n,
+      parallel_tool_calls: options?.parallel_tool_calls,
+      presence_penalty: this.presencePenalty,
+      reasoning_format: this.reasoningFormat,
+      response_format: options?.response_format,
+      seed: options?.seed,
+      service_tier: this.serviceTier,
+      stop: options?.stop ?? this.stopSequences,
+      temperature: options?.temperature ?? this.temperature,
+      tool_choice: _formatToGroqToolChoice(options?.tool_choice),
+      tools: options?.tools?.length
+        ? options.tools.map((tool) => convertToOpenAITool(tool))
+        : undefined,
+      top_logprobs: this.topLogprobs,
+      top_p: this.topP,
+      user: this.user,
+      // if include_usage is set or streamUsage then stream must be set to true.
+      stream: this.streaming,
+      ...params,
+      ...streamOptionsConfig,
     };
+
+    toReturn.max_completion_tokens =
+      options?.max_completion_tokens ?? options?.max_tokens ?? this.maxTokens;
+    if (toReturn.max_completion_tokens === -1) {
+      delete toReturn.max_completion_tokens;
+    }
+
+    return toReturn;
   }
 
   override bindTools(
     tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
@@ -814,7 +1125,7 @@ export class ChatGroq extends BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const params = this.invocationParams(options);
+    const params = this.invocationParams(options, { streaming: true });
     const messagesMapped = convertMessagesToGroqParams(messages);
     const response = await this.completionWithRetry(
       {
@@ -827,15 +1138,12 @@ export class ChatGroq extends BaseChatModel<
         headers: options?.headers,
       }
     );
-    let role = "";
-    const toolCall: {
-      id: string;
-      name: string;
-      index: number;
-      type: "tool_call_chunk";
-    }[] = [];
+    let role: GroqRoleEnum | undefined;
+    let lastMessageId: string | undefined;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseMetadata: Record<string, any> | undefined;
+
     for await (const data of response) {
       responseMetadata = data;
       const choice = data?.choices[0];
@@ -845,44 +1153,48 @@ export class ChatGroq extends BaseChatModel<
       // The `role` field is populated in the first delta of the response
       // but is not present in subsequent deltas. Extract it when available.
       if (choice.delta?.role) {
-        role = choice.delta.role;
+        role = choice.delta.role as GroqRoleEnum;
       }
 
-      const { message, toolCallData } = _convertDeltaToMessageChunk(
-        {
-          ...choice.delta,
-          role,
-        } ?? {},
-        choice.index,
-        data.x_groq
+      const chunk = _convertDeltaToMessageChunk(
+        choice.delta,
+        role,
+        data,
+        lastMessageId
       );
-
-      if (toolCallData) {
-        // First, ensure the ID is not already present in toolCall
-        const newToolCallData = toolCallData.filter((tc) =>
-          toolCall.every((t) => t.id !== tc.id)
+      const newTokenIndices = {
+        prompt: options.promptIndex ?? 0,
+        completion: choice.index ?? 0,
+      };
+      if (typeof chunk.content !== "string") {
+        console.log(
+          "[WARNING]: Received non-string content from OpenAI. This is currently not supported."
         );
-        toolCall.push(...newToolCallData);
-
-        // Yield here, ensuring the ID and name fields are only yielded once.
-        yield new ChatGenerationChunk({
-          message: new AIMessageChunk({
-            content: "",
-            tool_call_chunks: newToolCallData,
-          }),
-          text: "",
-        });
+        continue;
       }
-
-      const chunk = new ChatGenerationChunk({
-        message,
-        text: choice.delta.content ?? "",
-        generationInfo: {
-          finishReason: choice.finish_reason,
-        },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const generationInfo: Record<string, any> = { ...newTokenIndices };
+      if (choice.finish_reason != null) {
+        generationInfo.finish_reason = choice.finish_reason;
+        // Only include system fingerprint in the last chunk for now
+        // to avoid concatenation issues
+        generationInfo.system_fingerprint = data.system_fingerprint;
+        generationInfo.model_name = data.model;
+      }
+      const generationChunk = new ChatGenerationChunk({
+        message: chunk,
+        text: chunk.content,
+        generationInfo,
       });
-      yield chunk;
-      void runManager?.handleLLMNewToken(chunk.text ?? "");
+      yield generationChunk;
+      await runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        newTokenIndices,
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
 
     if (responseMetadata) {
@@ -986,11 +1298,16 @@ export class ChatGroq extends BaseChatModel<
             total_tokens: tokenUsage.totalTokens,
           };
         }
+        // extract all fields from the response object except
+        // choices to be included as response metadata
+        const { choices: _choices, ...metadata } = data;
+
         const generation: ChatGeneration = {
           text,
           message: groqResponseToChatMessage(
             part.message ?? { role: "assistant" },
-            usageMetadata
+            usageMetadata,
+            metadata
           ),
         };
         generation.generationInfo = {
@@ -1012,7 +1329,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1023,7 +1340,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1034,7 +1351,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1045,7 +1362,8 @@ export class ChatGroq extends BaseChatModel<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1055,28 +1373,27 @@ export class ChatGroq extends BaseChatModel<
     let llm: Runnable<BaseLanguageModelInput>;
 
     if (method === "jsonMode") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: { type: "json_object" },
       });
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: {
+              name: functionName,
+              description: asJsonSchema.description,
+              parameters: asJsonSchema,
             },
-          ],
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {
@@ -1106,13 +1423,12 @@ export class ChatGroq extends BaseChatModel<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: openAIFunctionDefinition,
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {
@@ -1154,5 +1470,32 @@ export class ChatGroq extends BaseChatModel<
     ]).withConfig({
       runName: "ChatGroqStructuredOutput",
     });
+  }
+}
+
+function _formatToGroqToolChoice(
+  toolChoice?: string | ChatCompletionsAPI.ChatCompletionNamedToolChoice
+):
+  | ChatCompletionsAPI.ChatCompletionToolChoiceOption
+  | Record<string, unknown>
+  | null
+  | undefined {
+  if (!toolChoice) {
+    return undefined;
+  } else if (toolChoice === "any" || toolChoice === "required") {
+    return "required";
+  } else if (toolChoice === "auto") {
+    return "auto";
+  } else if (toolChoice === "none") {
+    return "none";
+  } else if (typeof toolChoice === "string") {
+    return {
+      type: "function",
+      function: {
+        name: toolChoice,
+      },
+    };
+  } else {
+    return toolChoice;
   }
 }

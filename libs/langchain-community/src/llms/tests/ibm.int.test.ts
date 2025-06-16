@@ -11,7 +11,7 @@ describe("Text generation", () => {
   describe("Test invoke method", () => {
     test("Correct value", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -21,7 +21,7 @@ describe("Text generation", () => {
 
     test("Overwritte params", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -33,7 +33,7 @@ describe("Text generation", () => {
 
     test("Invalid projectId", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: "Test wrong value",
@@ -43,7 +43,7 @@ describe("Text generation", () => {
 
     test("Invalid credentials", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: "Test wrong value",
@@ -56,7 +56,7 @@ describe("Text generation", () => {
 
     test("Wrong value", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -67,7 +67,7 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -79,7 +79,7 @@ describe("Text generation", () => {
 
     test("Stop with timeout", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: "sdadasdas" as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -94,7 +94,7 @@ describe("Text generation", () => {
 
     test("Signal in call options", async () => {
       const watsonXInstance = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -119,7 +119,7 @@ describe("Text generation", () => {
 
     test("Concurenccy", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         maxConcurrency: 1,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
@@ -139,7 +139,7 @@ describe("Text generation", () => {
           input_token_count: 0,
         };
         const model = new WatsonxLLM({
-          model: "ibm/granite-13b-chat-v2",
+          model: "ibm/granite-3-8b-instruct",
           version: "2024-05-31",
           maxNewTokens: 1,
           maxConcurrency: 1,
@@ -171,7 +171,7 @@ describe("Text generation", () => {
       let streamedText = "";
       let usedTokens = 0;
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -198,7 +198,7 @@ describe("Text generation", () => {
   describe("Test generate methods", () => {
     test("Basic usage", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -213,7 +213,7 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -221,12 +221,14 @@ describe("Text generation", () => {
       });
 
       const res = await model.generate(
-        ["Print hello world!", "Print hello world hello!"],
+        [
+          "Print hello world in JavaScript!!",
+          "Print hello world twice in Python!",
+        ],
         {
-          stop: ["Hello"],
+          stop: ["hello"],
         }
       );
-
       expect(
         res.generations
           .map((generation) => generation.map((item) => item.text))
@@ -239,7 +241,7 @@ describe("Text generation", () => {
       const nrNewTokens = [0, 0, 0];
       const completions = ["", "", ""];
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -270,7 +272,7 @@ describe("Text generation", () => {
 
     test("Prompt value", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -290,7 +292,7 @@ describe("Text generation", () => {
       let countedTokens = 0;
       let streamedText = "";
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -313,15 +315,15 @@ describe("Text generation", () => {
 
     test("Stop", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
         maxNewTokens: 100,
       });
 
-      const stream = await model.stream("Print hello world!", {
-        stop: ["Hello"],
+      const stream = await model.stream("Print hello world in JavaScript!", {
+        stop: ["hello"],
       });
       const chunks = [];
       for await (const chunk of stream) {
@@ -332,7 +334,7 @@ describe("Text generation", () => {
 
     test("Timeout", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -354,7 +356,7 @@ describe("Text generation", () => {
 
     test("Signal in call options", async () => {
       const model = new WatsonxLLM({
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -384,7 +386,7 @@ describe("Text generation", () => {
   describe("Test getNumToken method", () => {
     test("Passing correct value", async () => {
       const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -402,7 +404,7 @@ describe("Text generation", () => {
 
     test("Passing wrong value", async () => {
       const testProps: WatsonxInputLLM = {
-        model: "ibm/granite-13b-chat-v2",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         projectId: process.env.WATSONX_AI_PROJECT_ID,
@@ -425,7 +427,7 @@ describe("Text generation", () => {
     test("Single request callback", async () => {
       let callbackFlag = false;
       const service = new WatsonxLLM({
-        model: "mistralai/mistral-large",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -445,7 +447,7 @@ describe("Text generation", () => {
     test("Single response callback", async () => {
       let callbackFlag = false;
       const service = new WatsonxLLM({
-        model: "mistralai/mistral-large",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -467,7 +469,7 @@ describe("Text generation", () => {
       let callbackFlagReq = false;
       let callbackFlagRes = false;
       const service = new WatsonxLLM({
-        model: "mistralai/mistral-large",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -495,7 +497,7 @@ describe("Text generation", () => {
       let langchainCallback = false;
 
       const service = new WatsonxLLM({
-        model: "mistralai/mistral-large",
+        model: "ibm/granite-3-8b-instruct",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",

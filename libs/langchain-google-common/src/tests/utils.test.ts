@@ -4,7 +4,7 @@ import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
 import { z } from "zod";
-import { zodToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
+import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
   BackedBlobStore,
   BlobStore,
@@ -19,7 +19,7 @@ import {
   ReadableSseStream,
 } from "../utils/stream.js";
 
-describe("zodToGeminiParameters", () => {
+describe("schemaToGeminiParameters", () => {
   test("can convert zod schema to gemini schema", () => {
     const zodSchema = z
       .object({
@@ -32,7 +32,7 @@ describe("zodToGeminiParameters", () => {
       })
       .describe("A simple calculator tool");
 
-    const convertedSchema = zodToGeminiParameters(zodSchema);
+    const convertedSchema = schemaToGeminiParameters(zodSchema);
 
     expect(convertedSchema.type).toBe("object");
     expect(convertedSchema.description).toBe("A simple calculator tool");
@@ -76,7 +76,7 @@ describe("zodToGeminiParameters", () => {
       })
       .describe("A list of people");
 
-    const convertedSchema = zodToGeminiParameters(zodSchema);
+    const convertedSchema = schemaToGeminiParameters(zodSchema);
     expect(convertedSchema.type).toBe("object");
     expect(convertedSchema.description).toBe("A list of people");
     expect((convertedSchema as any).additionalProperties).toBeUndefined();

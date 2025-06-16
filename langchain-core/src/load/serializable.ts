@@ -140,8 +140,24 @@ export abstract class Serializable implements SerializableInterface {
     return undefined;
   }
 
+  /**
+   * A manual list of keys that should be serialized.
+   * If not overridden, all fields passed into the constructor will be serialized.
+   */
+  get lc_serializable_keys(): string[] | undefined {
+    return undefined;
+  }
+
   constructor(kwargs?: SerializedFields, ..._args: never[]) {
-    this.lc_kwargs = kwargs || {};
+    if (this.lc_serializable_keys !== undefined) {
+      this.lc_kwargs = Object.fromEntries(
+        Object.entries(kwargs || {}).filter(([key]) =>
+          this.lc_serializable_keys?.includes(key)
+        )
+      );
+    } else {
+      this.lc_kwargs = kwargs ?? {};
+    }
   }
 
   toJSON(): Serialized {

@@ -1,7 +1,14 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
-import { ChatWatsonx, ChatWatsonxInput, WatsonxCallParams } from "../ibm.js";
+import { z } from "zod";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import {
+  ChatWatsonx,
+  ChatWatsonxConstructor,
+  ChatWatsonxInput,
+  WatsonxCallParams,
+} from "../ibm.js";
 import { authenticateAndSetInstance } from "../../utils/ibm.js";
 
 const fakeAuthProp = {
@@ -13,7 +20,7 @@ export function getKey<K>(key: K): K {
 }
 export const testProperties = (
   instance: ChatWatsonx,
-  testProps: ChatWatsonxInput,
+  testProps: ChatWatsonxConstructor,
   notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
@@ -24,13 +31,19 @@ export const testProperties = (
     Object.keys(testProps).forEach((key) => {
       const keys = getKey<keyof T>(key);
       type Type = Pick<T, typeof keys>;
-
       if (typeof testProps[key as keyof T] === "object")
-        checkProperty<Type>(testProps[key as keyof T], instance[key], existing);
+        checkProperty<Type>(
+          testProps[key as keyof T],
+          instance[key as keyof typeof instance],
+          existing
+        );
       else {
         if (existing)
-          expect(instance[key as keyof T]).toBe(testProps[key as keyof T]);
-        else if (instance) expect(instance[key as keyof T]).toBeUndefined();
+          expect(instance[key as keyof typeof instance]).toBe(
+            testProps[key as keyof T]
+          );
+        else if (instance)
+          expect(instance[key as keyof typeof instance]).toBeUndefined();
       }
     });
   };
@@ -59,6 +72,40 @@ describe("LLM unit tests", () => {
       };
       const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
 
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with projectId", async () => {
+      const testProps = {
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with spaceId", async () => {
+      const testProps = {
+        model: "mistralai/mistral-large",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        spaceId: process.env.WATSONX_AI_SPACE_ID || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      testProperties(instance, testProps);
+    });
+
+    test("Authenticate with idOrName", async () => {
+      const testProps = {
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        idOrName: process.env.WATSONX_AI_ID_OR_NAME || "testString",
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
       testProperties(instance, testProps);
     });
 
@@ -96,24 +143,78 @@ describe("LLM unit tests", () => {
 
       testProperties(instance, testProps);
     });
-  });
 
-  describe("Negative tests", () => {
     test("Missing id", async () => {
       const testProps: ChatWatsonxInput = {
         model: "mistralai/mistral-large",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
       };
-      expect(
-        () =>
-          new ChatWatsonx({
-            ...testProps,
-            ...fakeAuthProp,
-          })
-      ).toThrowError();
+      const intance = new ChatWatsonx({
+        ...testProps,
+        ...fakeAuthProp,
+      });
+      expect(intance).toBeDefined();
     });
 
+    test("Tool conversion handles both Zod schemas and JSON schemas", () => {
+      const testProps: ChatWatsonxInput = {
+        model: "ibm/granite-13b-chat-v2",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
+        projectId: process.env.WATSONX_AI_PROJECT_ID || "testString",
+      };
+      const model = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      const zodTool = {
+        name: "zodTool",
+        description: "A tool with Zod schema",
+        schema: z.object({
+          input: z.string().describe("Input parameter"),
+        }),
+      };
+
+      const jsonSchemaTool = {
+        name: "jsonSchemaTool",
+        description: "A tool with JSON schema",
+        schema: {
+          type: "object",
+          properties: {
+            input: {
+              type: "string",
+              description: "Input parameter",
+            },
+          },
+          required: ["input"],
+        },
+      };
+
+      expect(() => {
+        const modelWithTools = model.bindTools([zodTool, jsonSchemaTool]);
+        expect(modelWithTools).toBeDefined();
+      }).not.toThrow();
+
+      const mcpLikeTool = new DynamicStructuredTool({
+        name: "mcpLikeTool",
+        description: "Tool similar to MCP tools",
+        schema: {
+          type: "object",
+          properties: {
+            city: { type: "string" },
+          },
+          required: ["city"],
+        },
+        func: async () => "test result",
+      });
+
+      expect(() => {
+        const modelWithMcpTool = model.bindTools([mcpLikeTool]);
+        expect(modelWithMcpTool).toBeDefined();
+      }).not.toThrow();
+    });
+  });
+
+  describe("Negative tests", () => {
     test("Missing other props", async () => {
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsProjectId: ChatWatsonxInput = {

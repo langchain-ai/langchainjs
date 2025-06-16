@@ -166,6 +166,20 @@ See [usage example](/docs/integrations/memory/azure_cosmosdb_nosql.mdx).
 import { AzureCosmosDBNoSQLChatMessageHistory } from "@langchain/azure-cosmosdb";
 ```
 
+### Azure Cosmos DB MongoDB vCore Chat Message History
+
+> The AzureCosmosDBMongoChatMessageHistory uses Cosmos DB Mongo vCore to store chat message history. For longer-term persistence across chat sessions, you can swap out the default in-memory `chatHistory` that backs chat memory classes like `BufferMemory`.
+
+```bash npm2yarn
+npm install @langchain/azure-cosmosdb @langchain/core
+```
+
+See a [usage example](/docs/integrations/memory/azure_cosmos_mongo_vcore.mdx).
+
+```typescript
+import { AzureCosmosDBMongoChatMessageHistory } from "@langchain/azure-cosmosdb";
+```
+
 ## Document loaders
 
 ### Azure Blob Storage

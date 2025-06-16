@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { ChatAnthropicTools } from "@langchain/anthropic/experimental";
+import { ChatAnthropic } from "@langchain/anthropic";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputToolsParser } from "@langchain/core/output_parsers/openai_tools";
 
@@ -20,28 +19,24 @@ const schema = z.object({
   hairColor: z.optional(z.string()).describe("The person's hair color"),
 });
 
-const model = new ChatAnthropicTools({
+const model = new ChatAnthropic({
   temperature: 0.1,
   model: "claude-3-sonnet-20240229",
-}).bind({
-  tools: [
+})
+  .bindTools([
     {
-      type: "function",
-      function: {
-        name: "person",
-        description: "Extracts the relevant people from the passage.",
-        parameters: zodToJsonSchema(schema),
-      },
+      name: "person",
+      description: "Extracts the relevant people from the passage.",
+      schema,
     },
-  ],
-  // Can also set to "auto" to let the model choose a tool
-  tool_choice: {
-    type: "function",
-    function: {
+  ])
+  .withConfig({
+    // Can also set to "auto" to let the model choose a tool
+    tool_choice: {
+      type: "tool",
       name: "person",
     },
-  },
-});
+  });
 
 // Use a JsonOutputToolsParser to get the parsed JSON response directly.
 const chain = await prompt.pipe(model).pipe(new JsonOutputToolsParser());

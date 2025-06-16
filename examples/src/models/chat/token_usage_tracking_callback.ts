@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
-  model: "gpt-4-turbo",
+  model: "gpt-4o-mini",
   callbacks: [
     {
       handleLLMEnd(output) {

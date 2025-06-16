@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.3.31",
+  "version": "0.3.58",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -38,12 +38,12 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "^0.2.8",
+    "langsmith": "^0.3.29",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "zod": "^3.22.4",
+    "zod": "^3.25.32",
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
@@ -65,7 +65,7 @@
     "jest-environment-node": "^29.6.4",
     "ml-matrix": "^6.10.4",
     "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
+    "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
     "typescript": "~5.1.6",
@@ -494,6 +494,15 @@
       "import": "./tracers/tracer_langchain_v1.js",
       "require": "./tracers/tracer_langchain_v1.cjs"
     },
+    "./types/stream": {
+      "types": {
+        "import": "./types/stream.d.ts",
+        "require": "./types/stream.d.cts",
+        "default": "./types/stream.d.ts"
+      },
+      "import": "./types/stream.js",
+      "require": "./types/stream.cjs"
+    },
     "./utils/async_caller": {
       "types": {
         "import": "./utils/async_caller.d.ts",
@@ -804,6 +813,10 @@
     "tracers/tracer_langchain_v1.js",
     "tracers/tracer_langchain_v1.d.ts",
     "tracers/tracer_langchain_v1.d.cts",
+    "types/stream.cjs",
+    "types/stream.js",
+    "types/stream.d.ts",
+    "types/stream.d.cts",
     "utils/async_caller.cjs",
     "utils/async_caller.js",
     "utils/async_caller.d.ts",

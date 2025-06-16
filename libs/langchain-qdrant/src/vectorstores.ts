@@ -32,8 +32,9 @@ export interface QdrantLibArgs {
 }
 
 export type QdrantAddDocumentOptions = {
+  ids?: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  customPayload: Record<string, any>[];
+  customPayload?: Record<string, any>[];
 };
 
 /**
@@ -157,12 +158,12 @@ export class QdrantVectorStore extends VectorStore {
     await this.ensureCollection();
 
     const points = vectors.map((embedding, idx) => ({
-      id: documents[idx].id ?? uuid(),
+      id: documents[idx].id ?? documentOptions?.ids?.[idx] ?? uuid(),
       vector: embedding,
       payload: {
         [this.contentPayloadKey]: documents[idx].pageContent,
         [this.metadataPayloadKey]: documents[idx].metadata,
-        customPayload: documentOptions?.customPayload[idx],
+        customPayload: documentOptions?.customPayload?.[idx],
       },
     }));
 

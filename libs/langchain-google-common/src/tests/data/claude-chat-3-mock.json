@@ -1,0 +1,24 @@
+{
+  "id": "msg_vrtx_01FDjo5jJ6AaUSZPkHJXGRaw",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-3-7-sonnet-20250219",
+  "content": [
+    {
+      "type": "redacted_thinking",
+      "data": "EroICooBCAEQAhgCIkDvEnr8/MqMckuryHRx//D3wPtlP+0whuFFRSLNu/gEvZzyALMEneb5I6SQ2wshZF0RSyXs7sfUDq481kb1xUjWKkDRrtG/WX1wSVRTvowEpP+qJpYZqMJNhI28E8Vo+5Mm/3qrk0yIukRoOWKTVGGoPFfJEP539gMa1AxnJlToaefjEgxW4f83l8+aMIMJF9UaDFZlJEIPQWk99r6EqiIwvtTVG2j01jARQXRWfM214Q8F/q4ctTOOZjxRjtT9v453gMqjZ10ljYrvBVBjyHCCKtwGquvKhyBgtsT1BgOKWAanjGHV5Bz1OB7hZmumkMisVVmxfOt7XW+BiyEFLLne7wL3KdKpzn+Js7AbDLbJ822ncksYPYOMnCAYE7IFntUcwXEeZf+/UzWVuwnlvbDtXYFnzYvkiY4+hO0DTBEzjnskpM6BoB7jfi5gYE50a8VLnEJHQS+RzbdB8CWYh5nmH3dN0Zro1SZowtwxlcTyGU0SKlrATCgxccdL41no39K36C/FNeRjYl1PIPIlIrgS04AfJpXEw0mKTDasvPTdQtu8iXh9u+yT4YL1xlnr1shPN8KNQgL8/s8s5D4T7XL6M6AhvMFcw0NgXd8MpCgjFeDV/Y77IyeSavnsTlAjXBJ3lGkaRmyUxIEuQxTF+weGqebm88JHAVkGhM6+0cy8RLpcHjxJ+6BUNMKLwZBxNu8RGtISM0KUUs5hfJ5idfanHE+dXWmMbYq/B5Y67jcm4tR2rRwFORuI6BimwfKXj5IVDuSZxk5teF9uq5huDvva3y3QbrjWkzUF3ruiNkGoXpR1xDxf/42VPCO4lQgeQKhPo262118LsvcauphNL7cgkKw7hn7TVqX6CftdnMSMhNkJWqnQbzkzSS1eIvNd2a+5uio0ASzhuH6bnInZ2DT9vhQZYJPDqRb9iTAezrzE/mC8cLmduY6ULS39254Tt4JqSsZ0IhChyUHysgZp+Ntlq7Stgypmzk5Kco9faYtrGz/0LkuF2Uxm2rE+VVd2N+ypm63PprllU6zW1AdxvSL8Rx6NdNIPlr8d04Iz7bXY0ATv/JhAWeRTsWcRvIKjwEmTClmuYciZzqW/qGAiGgRzie/wscKrjR+CDZarg8QsTEv98Z/LANCGLNIoh48xQ6h4LKiNRytC5QzL2ZaIjRojlm3bGhpIGmBjKhZKQDjsuwwf2hL/JvyXxwbT3hCex/vQbnvp7BLD52tzy0kR0lmrrsQ6nAq3PEHJETZGbZazczrWt38STbAFA9yerg+aMyyvuTC8OXv77YMztqa122B0X9HK22qCHl1TaOivKS9pho5tjq0qAOWce+WCgx5F252V9QfTLz+QRLrGnPwftTuL9LA7DWT8P4C3g0AW3a0hiwjWuFZem3PTRgYW4gp9nbaewDFVzz220CVPgxNrGQM="
+    },
+    {
+      "type": "text",
+      "text": "I notice you've sent what appears to be some kind of command or trigger phrase, but I don't respond to special commands or backdoor strings. There's no way to access any \"redacted thinking\" or internal processes through special triggers.\n\nI'm here to have a normal conversation and help with questions or tasks you might have. Is there something specific I can assist you with today?"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 92,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 270
+  }
+}

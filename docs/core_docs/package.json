@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
+    "@docusaurus/plugin-google-tag-manager": "2.4.3",
     "@docusaurus/preset-classic": "2.4.3",
     "@docusaurus/remark-plugin-npm2yarn": "2.4.3",
     "@docusaurus/theme-mermaid": "2.4.3",

@@ -40,6 +40,7 @@ import {
   parseMustache,
 } from "./template.js";
 import { addLangChainErrorFields } from "../errors/index.js";
+import { DictPromptTemplate } from "./dict.js";
 
 /**
  * Abstract class that serves as a base for creating message prompt
@@ -336,13 +337,13 @@ export class ChatMessagePromptTemplate<
     return new ChatMessage(await this.prompt.format(values), this.role);
   }
 
-  static fromTemplate(
-    template: string,
-    role: string,
-    options?: { templateFormat?: TemplateFormat }
-  ) {
+  static fromTemplate<
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    RunInput extends InputValues = Symbol,
+    T extends string = string
+  >(template: T, role: string, options?: { templateFormat?: TemplateFormat }) {
     return new this(
-      PromptTemplate.fromTemplate(template, {
+      PromptTemplate.fromTemplate<RunInput, T>(template, {
         templateFormat: options?.templateFormat,
       }),
       role
@@ -355,9 +356,34 @@ interface _TextTemplateParam {
   text?: string | Record<string, any>;
 }
 
+function isTextTemplateParam(param: unknown): param is _TextTemplateParam {
+  if (param === null || typeof param !== "object" || Array.isArray(param)) {
+    return false;
+  }
+  return (
+    Object.keys(param).length === 1 &&
+    "text" in param &&
+    typeof param.text === "string"
+  );
+}
+
 interface _ImageTemplateParam {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   image_url?: string | Record<string, any>;
+}
+
+function isImageTemplateParam(param: unknown): param is _ImageTemplateParam {
+  if (param === null || typeof param !== "object" || Array.isArray(param)) {
+    return false;
+  }
+  return (
+    "image_url" in param &&
+    (typeof param.image_url === "string" ||
+      (typeof param.image_url === "object" &&
+        param.image_url !== null &&
+        "url" in param.image_url &&
+        typeof param.image_url.url === "string"))
+  );
 }
 
 type MessageClass =
@@ -403,6 +429,7 @@ class _StringImageMessagePromptTemplate<
         | MessageStringPromptTemplateFields<
             InputValues<Extract<keyof RunInput, string>>
           >
+        | DictPromptTemplate<InputValues<Extract<keyof RunInput, string>>>
       >;
 
   protected messageClass?: MessageClass;
@@ -477,35 +504,42 @@ class _StringImageMessagePromptTemplate<
   }
 
   static fromTemplate(
-    template: string | Array<string | _TextTemplateParam | _ImageTemplateParam>,
+    template:
+      | string
+      | Array<
+          | string
+          | _TextTemplateParam
+          | _ImageTemplateParam
+          | Record<string, unknown>
+        >,
     additionalOptions?: _StringImageMessagePromptTemplateOptions
   ) {
     if (typeof template === "string") {
       return new this(PromptTemplate.fromTemplate(template, additionalOptions));
     }
     const prompt: Array<
-      PromptTemplate<InputValues> | ImagePromptTemplate<InputValues>
+      | PromptTemplate<InputValues>
+      | ImagePromptTemplate<InputValues>
+      | DictPromptTemplate
     > = [];
     for (const item of template) {
-      if (
-        typeof item === "string" ||
-        (typeof item === "object" && "text" in item)
-      ) {
+      // handle string cases
+      if (typeof item === "string") {
+        prompt.push(PromptTemplate.fromTemplate(item, additionalOptions));
+      } else if (item === null) {
+        // pass
+      } else if (isTextTemplateParam(item)) {
         let text = "";
-        if (typeof item === "string") {
-          text = item;
-        } else if (typeof item.text === "string") {
+        if (typeof item.text === "string") {
           text = item.text ?? "";
         }
 
         const options = {
           ...additionalOptions,
-          ...(typeof item !== "string"
-            ? { additionalContentFields: item }
-            : {}),
+          additionalContentFields: item,
         };
         prompt.push(PromptTemplate.fromTemplate(text, options));
-      } else if (typeof item === "object" && "image_url" in item) {
+      } else if (isImageTemplateParam(item)) {
         let imgTemplate = item.image_url ?? "";
         let imgTemplateObject: ImagePromptTemplate<InputValues>;
         let inputVariables: string[] = [];
@@ -564,6 +598,13 @@ class _StringImageMessagePromptTemplate<
           throw new Error("Invalid image template");
         }
         prompt.push(imgTemplateObject);
+      } else if (typeof item === "object") {
+        prompt.push(
+          new DictPromptTemplate({
+            template: item,
+            templateFormat: additionalOptions?.templateFormat,
+          })
+        );
       }
     }
     return new this({ prompt, additionalOptions });
@@ -621,6 +662,20 @@ class _StringImageMessagePromptTemplate<
             ...additionalContentFields,
             type: "image_url",
             image_url: formatted,
+          });
+          // eslint-disable-next-line no-instanceof/no-instanceof
+        } else if (prompt instanceof DictPromptTemplate) {
+          const formatted = await prompt.format(
+            inputs as TypedPromptInputValues<RunInput>
+          );
+          let additionalContentFields: MessageContentComplex | undefined;
+          if ("additionalContentFields" in prompt) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            additionalContentFields = prompt.additionalContentFields as any;
+          }
+          content.push({
+            ...additionalContentFields,
+            ...formatted,
           });
         }
       }
@@ -771,16 +826,30 @@ function _coerceMessagePromptTemplateLike<
   ) {
     const messageContent = messagePromptTemplateLike[1];
     if (
-      typeof messageContent !== "string" ||
-      messageContent[0] !== "{" ||
-      messageContent[messageContent.length - 1] !== "}"
+      extra?.templateFormat === "mustache" &&
+      typeof messageContent === "string" &&
+      messageContent.slice(0, 2) === "{{" &&
+      messageContent.slice(-2) === "}}"
     ) {
-      throw new Error(
-        `Invalid placeholder template: "${messagePromptTemplateLike[1]}". Expected a variable name surrounded by curly braces.`
-      );
+      const variableName = messageContent.slice(2, -2);
+      return new MessagesPlaceholder({ variableName, optional: true });
+    } else if (
+      typeof messageContent === "string" &&
+      messageContent[0] === "{" &&
+      messageContent[messageContent.length - 1] === "}"
+    ) {
+      const variableName = messageContent.slice(1, -1);
+      return new MessagesPlaceholder({ variableName, optional: true });
     }
-    const variableName = messageContent.slice(1, -1);
-    return new MessagesPlaceholder({ variableName, optional: true });
+    throw new Error(
+      `Invalid placeholder template for format ${
+        extra?.templateFormat ?? `"f-string"`
+      }: "${
+        messagePromptTemplateLike[1]
+      }". Expected a variable name surrounded by ${
+        extra?.templateFormat === "mustache" ? "double" : "single"
+      } curly braces.`
+    );
   }
   const message = coerceMessageLikeToMessage(messagePromptTemplateLike);
   let templateData:

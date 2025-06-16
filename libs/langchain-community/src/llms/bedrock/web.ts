@@ -37,6 +37,7 @@ const ALLOWED_MODEL_PROVIDERS = [
   "cohere",
   "meta",
   "mistral",
+  "deepseek",
 ];
 
 const PRELUDE_TOTAL_LENGTH_BYTES = 4;

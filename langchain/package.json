@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.11",
+  "version": "0.3.28",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -306,6 +306,10 @@
     "hub.js",
     "hub.d.ts",
     "hub.d.cts",
+    "hub/node.cjs",
+    "hub/node.js",
+    "hub/node.d.ts",
+    "hub/node.d.cts",
     "util/document.cjs",
     "util/document.js",
     "util/document.d.ts",
@@ -416,6 +420,7 @@
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
     "@langchain/core": "workspace:*",
+    "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/google-vertexai-web": "*",
@@ -423,6 +428,7 @@
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
+    "@langchain/xai": "*",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.2",
@@ -451,7 +457,8 @@
     "openai": "^4.41.1",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
-    "release-it": "^17.6.0",
+    "reflect-metadata": "^0.2.2",
+    "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
     "ts-jest": "^29.1.0",
@@ -464,13 +471,15 @@
     "@langchain/aws": "*",
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
-    "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/core": ">=0.3.58 <0.4.0",
+    "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
     "@langchain/google-vertexai-web": "*",
     "@langchain/groq": "*",
     "@langchain/mistralai": "*",
     "@langchain/ollama": "*",
+    "@langchain/xai": "*",
     "axios": "*",
     "cheerio": "*",
     "handlebars": "^4.7.8",
@@ -488,6 +497,9 @@
       "optional": true
     },
     "@langchain/cohere": {
+      "optional": true
+    },
+    "@langchain/deepseek": {
       "optional": true
     },
     "@langchain/google-genai": {
@@ -508,6 +520,9 @@
     "@langchain/ollama": {
       "optional": true
     },
+    "@langchain/xai": {
+      "optional": true
+    },
     "axios": {
       "optional": true
     },
@@ -525,18 +540,17 @@
     }
   },
   "dependencies": {
-    "@langchain/openai": ">=0.1.0 <0.4.0",
+    "@langchain/openai": ">=0.1.0 <0.6.0",
     "@langchain/textsplitters": ">=0.0.0 <0.2.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
-    "langsmith": "^0.2.8",
+    "langsmith": "^0.3.29",
     "openapi-types": "^12.1.3",
     "p-retry": "4",
     "uuid": "^10.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.3"
+    "zod": "^3.25.32"
   },
   "publishConfig": {
     "access": "public"
@@ -1221,6 +1235,15 @@
       },
       "import": "./hub.js",
       "require": "./hub.cjs"
+    },
+    "./hub/node": {
+      "types": {
+        "import": "./hub/node.d.ts",
+        "require": "./hub/node.d.cts",
+        "default": "./hub/node.d.ts"
+      },
+      "import": "./hub/node.js",
+      "require": "./hub/node.cjs"
     },
     "./util/document": {
       "types": {

@@ -145,7 +145,7 @@ export class DallEAPIWrapper extends Tool {
       apiKey: openAIApiKey,
       organization,
       dangerouslyAllowBrowser: true,
-      baseUrl: fields?.baseUrl,
+      baseURL: fields?.baseUrl,
     };
     this.client = new OpenAIClient(clientConfig);
     this.model = fields?.model ?? fields?.modelName ?? this.model;
@@ -173,44 +173,46 @@ export class DallEAPIWrapper extends Tool {
   ): MessageContentImageUrl[] {
     if (this.dallEResponseFormat === "url") {
       return response.flatMap((res) => {
-        const imageUrlContent = res.data
-          .flatMap((item) => {
-            if (!item.url) return [];
-            return {
-              type: "image_url" as const,
-              image_url: item.url,
-            };
-          })
-          .filter(
-            (item) =>
-              item !== undefined &&
-              item.type === "image_url" &&
-              typeof item.image_url === "string" &&
-              item.image_url !== undefined
-          );
+        const imageUrlContent =
+          res.data
+            ?.flatMap((item) => {
+              if (!item.url) return [];
+              return {
+                type: "image_url" as const,
+                image_url: item.url,
+              };
+            })
+            .filter(
+              (item) =>
+                item !== undefined &&
+                item.type === "image_url" &&
+                typeof item.image_url === "string" &&
+                item.image_url !== undefined
+            ) ?? [];
         return imageUrlContent;
       });
     } else {
       return response.flatMap((res) => {
-        const b64Content = res.data
-          .flatMap((item) => {
-            if (!item.b64_json) return [];
-            return {
-              type: "image_url" as const,
-              image_url: {
-                url: item.b64_json,
-              },
-            };
-          })
-          .filter(
-            (item) =>
-              item !== undefined &&
-              item.type === "image_url" &&
-              typeof item.image_url === "object" &&
-              "url" in item.image_url &&
-              typeof item.image_url.url === "string" &&
-              item.image_url.url !== undefined
-          );
+        const b64Content =
+          res.data
+            ?.flatMap((item) => {
+              if (!item.b64_json) return [];
+              return {
+                type: "image_url" as const,
+                image_url: {
+                  url: item.b64_json,
+                },
+              };
+            })
+            .filter(
+              (item) =>
+                item !== undefined &&
+                item.type === "image_url" &&
+                typeof item.image_url === "object" &&
+                "url" in item.image_url &&
+                typeof item.image_url.url === "string" &&
+                item.image_url.url !== undefined
+            ) ?? [];
         return b64Content;
       });
     }
@@ -243,13 +245,16 @@ export class DallEAPIWrapper extends Tool {
 
     let data = "";
     if (this.dallEResponseFormat === "url") {
-      [data] = response.data
-        .map((item) => item.url)
-        .filter((url): url is string => url !== "undefined");
+      [data] =
+        response.data
+          ?.map((item) => item.url)
+          .filter((url): url is string => url !== "undefined") ?? [];
     } else {
-      [data] = response.data
-        .map((item) => item.b64_json)
-        .filter((b64_json): b64_json is string => b64_json !== "undefined");
+      [data] =
+        response.data
+          ?.map((item) => item.b64_json)
+          .filter((b64_json): b64_json is string => b64_json !== "undefined") ??
+        [];
     }
     return data;
   }

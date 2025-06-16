@@ -69,6 +69,12 @@ const config = {
         },
       }),
     }),
+    [
+      "@docusaurus/plugin-google-tag-manager",
+      {
+        containerId: "GTM-NN9LVH7S",
+      },
+    ],
   ],
 
   presets: [
@@ -135,6 +141,11 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      announcementBar: {
+        content:
+          '<strong>We are growing and hiring for multiple roles for LangChain, LangGraph and LangSmith. <a href="https://www.langchain.com/careers" target="_blank" rel="noopener noreferrer"> Join our team!</a></strong>',
+        backgroundColor: "#d0c9fe",
+      },
       prism: {
         theme: {
           ...baseLightCodeBlockTheme,
@@ -311,13 +322,7 @@ const config = {
       },
     }),
 
-  scripts: [
-    baseUrl + "js/google_analytics.js",
-    {
-      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
-      async: true,
-    },
-  ],
+  scripts: [baseUrl + "js/job_link.js"],
 
   customFields: {
     supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,

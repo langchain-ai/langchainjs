@@ -5,14 +5,16 @@ const gpt4o = await initChatModel("gpt-4o", {
   modelProvider: "openai",
   temperature: 0,
 });
+
+// You can also specify the model provider in the model name like this in
+// langchain>=0.3.18:
+
 // Returns a @langchain/anthropic ChatAnthropic instance.
-const claudeOpus = await initChatModel("claude-3-opus-20240229", {
-  modelProvider: "anthropic",
+const claudeOpus = await initChatModel("anthropic:claude-3-opus-20240229", {
   temperature: 0,
 });
 // Returns a @langchain/google-vertexai ChatVertexAI instance.
-const gemini15 = await initChatModel("gemini-1.5-pro", {
-  modelProvider: "google-vertexai",
+const gemini15 = await initChatModel("google-vertexai:gemini-1.5-pro", {
   temperature: 0,
 });
 

@@ -103,9 +103,9 @@ export class OpenAIAssistantRunnable<
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
       run = await this.client.beta.threads.runs.submitToolOutputs(
-        parsedStepsInput.threadId,
         parsedStepsInput.runId,
         {
+          thread_id: parsedStepsInput.threadId,
           tool_outputs: parsedStepsInput.toolOutputs,
         }
       );
@@ -115,7 +115,7 @@ export class OpenAIAssistantRunnable<
           {
             role: "user",
             content: input.content,
-            file_ids: input.fileIds,
+            attachments: input.attachments,
             metadata: input.messagesMetadata,
           },
         ],
@@ -129,7 +129,7 @@ export class OpenAIAssistantRunnable<
       await this.client.beta.threads.messages.create(input.threadId, {
         content: input.content,
         role: "user",
-        file_ids: input.file_ids,
+        attachments: input.attachments,
         metadata: input.messagesMetadata,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
@@ -137,13 +137,10 @@ export class OpenAIAssistantRunnable<
     } else {
       // Submitting tool outputs to an existing run, outside the AgentExecutor
       // framework.
-      run = await this.client.beta.threads.runs.submitToolOutputs(
-        input.threadId,
-        input.runId,
-        {
-          tool_outputs: input.toolOutputs,
-        }
-      );
+      run = await this.client.beta.threads.runs.submitToolOutputs(input.runId, {
+        thread_id: input.threadId,
+        tool_outputs: input.toolOutputs,
+      });
     }
 
     return this._getResponse(run.id, run.thread_id);
@@ -156,7 +153,7 @@ export class OpenAIAssistantRunnable<
    * @returns {Promise<AssistantDeleted>}
    */
   public async deleteAssistant() {
-    return await this.client.beta.assistants.del(this.assistantId);
+    return await this.client.beta.assistants.delete(this.assistantId);
   }
 
   /**
@@ -268,7 +265,9 @@ export class OpenAIAssistantRunnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let run = {} as any;
     while (inProgress) {
-      run = await this.client.beta.threads.runs.retrieve(threadId, runId);
+      run = await this.client.beta.threads.runs.retrieve(runId, {
+        thread_id: threadId,
+      });
       inProgress = ["in_progress", "queued"].includes(run.status);
       if (inProgress) {
         await sleep(this.pollIntervalMs);

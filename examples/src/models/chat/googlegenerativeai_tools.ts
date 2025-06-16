@@ -24,11 +24,7 @@ class FakeBrowserTool extends StructuredTool {
 }
 
 // Bind your tools to the model
-const modelWithTools = model.bind({
-  tools: [new FakeBrowserTool()],
-});
-// Or, you can use `.bindTools` which works the same under the hood
-// const modelWithTools = model.bindTools([new FakeBrowserTool()]);
+const modelWithTools = model.bindTools([new FakeBrowserTool()]);
 
 const res = await modelWithTools.invoke([
   [

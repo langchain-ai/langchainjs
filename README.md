@@ -43,7 +43,7 @@ The LangChain libraries themselves are made up of several different packages.
 - **[`@langchain/core`](https://github.com/langchain-ai/langchainjs/blob/main/langchain-core)**: Base abstractions and LangChain Expression Language.
 - **[`@langchain/community`](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community)**: Third party integrations.
 - **[`langchain`](https://github.com/langchain-ai/langchainjs/blob/main/langchain)**: Chains, agents, and retrieval strategies that make up an application's cognitive architecture.
-- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: A library for building robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph. Integrates smoothly with LangChain, but can be used without it.
+- **[LangGraph.js](https://langchain-ai.github.io/langgraphjs/)**: LangGraph powers production-grade agents, trusted by Linkedin, Uber, Klarna, GitLab, and many more. Build robust and stateful multi-actor applications with LLMs by modeling steps as edges and nodes in a graph. Integrates smoothly with LangChain, but can be used without it.
 
 Integrations may also be split into their own compatible packages.
 
