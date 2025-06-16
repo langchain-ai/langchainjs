@@ -14,7 +14,7 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  */
 export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV4(schema)) {
-    return toJSONSchema(schema);
+    return toJSONSchema(schema, { io: "input" });
   }
   if (isZodSchemaV3(schema)) {
     return zodToJsonSchema(schema);
