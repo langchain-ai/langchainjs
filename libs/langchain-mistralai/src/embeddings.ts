@@ -10,6 +10,11 @@ import {
   HTTPClient as MistralAIHTTPClient,
 } from "@mistralai/mistralai/lib/http.js";
 
+export type MistralAIEmbeddingsModelId =
+  | "mistral-embed"
+  | "codestral-embed"
+  | (string & NonNullable<unknown>);
+
 /**
  * Interface for MistralAIEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the MistralAIEmbeddings class.
@@ -25,12 +30,12 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    * Alias for `model`.
    * @default {"mistral-embed"}
    */
-  modelName?: string;
+  modelName?: MistralAIEmbeddingsModelId;
   /**
    * The name of the model to use.
    * @default {"mistral-embed"}
    */
-  model?: string;
+  model?: MistralAIEmbeddingsModelId;
   /**
    * The format of the output data.
    * @default {"float"}

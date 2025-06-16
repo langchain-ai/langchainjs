@@ -143,7 +143,7 @@ export interface ChatMistralAIInput
    * @deprecated Use `model` instead.
    * @default {"mistral-small-latest"}
    */
-  modelName?: string;
+  modelName?: MistralChatModelId;
   /**
    * The name of the model to use.
    * @default {"mistral-small-latest"}

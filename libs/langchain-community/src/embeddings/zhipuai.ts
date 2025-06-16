@@ -4,6 +4,10 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
 
+export type ZhipuAIEmbeddingsModelId =
+  | "embedding-2"
+  | (string & NonNullable<unknown>);
+
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the ZhipuAIEmbeddingsParams class.
@@ -12,7 +16,7 @@ export interface ZhipuAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
    */
-  modelName?: "embedding-2";
+  modelName?: ZhipuAIEmbeddingsModelId;
   /**
    * ZhipuAI API key to use
    */
