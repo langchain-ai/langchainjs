@@ -22,9 +22,9 @@ describe("calculateMaxTokens", () => {
     expect(await calculateMaxTokens({ prompt: "", modelName: "gpt-4" })).toBe(
       8192
     );
-    expect(await calculateMaxTokens({ prompt: "", modelName: "gpt-4-32k" })).toBe(
-      32768
-    );
+    expect(
+      await calculateMaxTokens({ prompt: "", modelName: "gpt-4-32k" })
+    ).toBe(32768);
   });
 });
 
@@ -69,6 +69,7 @@ describe("getNumTokens", () => {
   });
 
   it("handles array with only text content", async () => {
+    const model = new FakeLLM({});
     const textOnlyArray: MessageContent = [
       {
         type: "text",
@@ -85,6 +86,7 @@ describe("getNumTokens", () => {
   });
 
   it("handles empty array", async () => {
+    const model = new FakeLLM({});
     const emptyArray: MessageContent = [];
     const emptyTokens = await model.getNumTokens(emptyArray);
     expect(emptyTokens).toBe(0);
