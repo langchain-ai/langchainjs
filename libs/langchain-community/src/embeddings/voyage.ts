@@ -142,7 +142,8 @@ export class VoyageEmbeddings
       throw new Error("Voyage AI API key not found");
     }
 
-    this.model = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.model =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.modelName = this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;

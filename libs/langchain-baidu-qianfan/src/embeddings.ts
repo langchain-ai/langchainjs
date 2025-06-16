@@ -126,7 +126,8 @@ export class BaiduQianfanEmbeddings
       throw new Error("Please provide AK/SK");
     }
 
-    this.model = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.model =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.modelName = this.model;
 
     if (this.model === "tao-8k") {
