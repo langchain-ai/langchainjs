@@ -422,6 +422,7 @@ test("Test nested runs", async () => {
 });
 
 test("Test tracer payload snapshots for run create and update", async () => {
+  process.env.LANGSMITH_TRACING = "true";
   const client = new Client();
   (client as any).multipartIngestRuns = jest.fn(async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
