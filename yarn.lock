@@ -7822,7 +7822,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.3.29
+    langsmith: ^0.3.32-rc.1
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -26717,6 +26717,26 @@ __metadata:
     openai:
       optional: true
   checksum: 5e714752d40bd90525436d2d977ed0e750031f946dbc6c5549a1d7ceb5546b48dfcc23a1fb1b758f18d954fe53e6089b7ca600c60f2f72d854aa24d5ff0a41fa
+  languageName: node
+  linkType: hard
+
+"langsmith@npm:^0.3.32-rc.1":
+  version: 0.3.32-rc.1
+  resolution: "langsmith@npm:0.3.32-rc.1"
+  dependencies:
+    "@types/uuid": ^10.0.0
+    chalk: ^4.1.2
+    console-table-printer: ^2.12.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    semver: ^7.6.3
+    uuid: ^10.0.0
+  peerDependencies:
+    openai: "*"
+  peerDependenciesMeta:
+    openai:
+      optional: true
+  checksum: 4a0ebf133480e1b140781af14ff348d8fb41c8876f8f5615d4497b7138cea79d6b6cda74b259d45a3ee585d6b9852a431c545bae06ea06d1fd23c069f534ccaa
   languageName: node
   linkType: hard
 

@@ -40,6 +40,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
   client?: LangSmithTracingClientInterface;
+  replicas?: RunTree["replicas"];
 }
 
 export class LangChainTracer
@@ -54,14 +55,17 @@ export class LangChainTracer
 
   client: LangSmithTracingClientInterface;
 
+  replicas?: RunTree["replicas"];
+
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client } = fields;
+    const { exampleId, projectName, client, replicas } = fields;
 
     this.projectName =
       projectName ??
       getEnvironmentVariable("LANGCHAIN_PROJECT") ??
       getEnvironmentVariable("LANGCHAIN_SESSION");
+    this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
 
@@ -113,6 +117,7 @@ export class LangChainTracer
     }
 
     this.client = runTree.client ?? this.client;
+    this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
   }
@@ -137,6 +142,7 @@ export class LangChainTracer
         // inherited properties
         client: this.client as Client,
         project_name: this.projectName,
+        replicas: this.replicas,
         reference_example_id: this.exampleId,
         tracingEnabled: true,
       });
