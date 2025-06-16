@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-promise-executor-return */
 import { test, expect, jest } from "@jest/globals";
 import * as uuid from "uuid";
 import { Client } from "langsmith";
