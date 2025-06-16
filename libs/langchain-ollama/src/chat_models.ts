@@ -831,6 +831,10 @@ export class ChatOllama
         },
       ]).withConfig({
         format: "json",
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(outputSchema),
+        },
       });
       const outputParser = outputSchemaIsZod
         ? StructuredOutputParser.fromZodSchema(outputSchema)

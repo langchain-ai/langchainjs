@@ -1,4 +1,7 @@
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -1373,14 +1376,20 @@ export class ChatGroq extends BaseChatModel<
     let llm: Runnable<BaseLanguageModelInput>;
 
     if (method === "jsonMode") {
-      llm = this.withConfig({
-        response_format: { type: "json_object" },
-      });
+      let outputSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputSchema,
+        },
+      });
     } else {
       if (isInteropZodSchema(schema)) {
         const asJsonSchema = toJsonSchema(schema);
@@ -1399,6 +1408,10 @@ export class ChatGroq extends BaseChatModel<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
           },
         });
         outputParser = new JsonOutputKeyToolsParser({
@@ -1434,6 +1447,10 @@ export class ChatGroq extends BaseChatModel<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema,
           },
         });
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({
