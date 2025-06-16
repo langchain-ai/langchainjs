@@ -43,7 +43,6 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
     (call: any) => call[1]
   );
 
-  console.log(createPayloads[0]);
   expect(createPayloads[0]).toMatchSnapshot({
     dotted_order: expect.any(String),
     start_time: expect.any(Number),
