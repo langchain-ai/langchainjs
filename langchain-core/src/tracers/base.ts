@@ -1,4 +1,5 @@
 import { KVMap, BaseRun } from "langsmith/schemas";
+import { RunTree } from "langsmith/run_trees";
 
 import type { ChainValues } from "../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
@@ -12,11 +13,11 @@ import {
   NewTokenIndices,
 } from "../callbacks/base.js";
 import type { Document } from "../documents/document.js";
-import { RunTree } from "langsmith/run_trees";
 import { getRuntimeEnvironmentSync } from "../utils/env.js";
 
 export type RunType = string;
 
+// TODO: Remove this type and just use the base LangSmith Run type.
 export interface Run extends BaseRun {
   // some optional fields are always present here
   id: string;
@@ -39,10 +40,15 @@ const convertRunTreeToRun = (runTree?: RunTree): Run | undefined => {
   if (!runTree) {
     return undefined;
   }
-  runTree.events = runTree.events ?? [];
-  runTree.child_runs = runTree.child_runs ?? [];
   // Important that we return the raw run tree object since the reference
   // is mutated in other places.
+  // TODO: Remove places where this is being done.
+
+  // eslint-disable-next-line no-param-reassign
+  runTree.events = runTree.events ?? [];
+  // eslint-disable-next-line no-param-reassign
+  runTree.child_runs = runTree.child_runs ?? [];
+  // TODO: Remove this cast and just use the LangSmith RunTree type.
   return runTree as unknown as Run;
 };
 
