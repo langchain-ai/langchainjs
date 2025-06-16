@@ -53,9 +53,7 @@ export async function pull<T extends Runnable>(
       } else if (model === "ChatGroq") {
         modelClass = (await import("@langchain/groq")).ChatGroq;
       } else if (model !== undefined) {
-        console.warn(
-          `Received unknown model name from prompt hub: "${model}"`
-        );
+        console.warn(`Received unknown model name from prompt hub: "${model}"`);
       }
     }
   }

@@ -3,8 +3,8 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 type AlibabaTongyiEmbeddingsModelId =
-  "text-embedding-v2" |
-  (string & NonNullable<unknown>);
+  | "text-embedding-v2"
+  | (string & NonNullable<unknown>);
 
 export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
   /** @deprecated Use `model` instead */
@@ -100,7 +100,8 @@ export class AlibabaTongyiEmbeddings
 
     this.apiKey = apiKey;
 
-    this.model = fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
+    this.model =
+      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
     this.modelName = this.model;
 
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
