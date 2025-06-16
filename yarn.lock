@@ -7369,7 +7369,7 @@ __metadata:
     jsdom: ^22.1.0
     jsonwebtoken: ^9.0.2
     langchain: ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0"
-    langsmith: ^0.3.29
+    langsmith: ^0.3.32
     llmonitor: ^0.5.9
     lodash: ^4.17.21
     lunary: ^0.7.10
@@ -7816,7 +7816,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.3.29
+    langsmith: ^0.3.32
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -21377,7 +21377,7 @@ __metadata:
     ioredis: ^5.3.2
     js-yaml: ^4.1.0
     langchain: "workspace:*"
-    langsmith: ^0.3.29
+    langsmith: ^0.3.32
     mariadb: ^3.4.0
     mem0ai: ^2.1.8
     mongodb: ^6.3.0
@@ -26450,7 +26450,7 @@ __metadata:
     js-tiktoken: ^1.0.12
     js-yaml: ^4.1.0
     jsonpointer: ^5.0.1
-    langsmith: ^0.3.29
+    langsmith: ^0.3.32
     openai: ^4.41.1
     openapi-types: ^12.1.3
     p-retry: 4
@@ -26541,9 +26541,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"langsmith@npm:^0.3.29":
-  version: 0.3.29
-  resolution: "langsmith@npm:0.3.29"
+"langsmith@npm:^0.3.32":
+  version: 0.3.32
+  resolution: "langsmith@npm:0.3.32"
   dependencies:
     "@types/uuid": ^10.0.0
     chalk: ^4.1.2
@@ -26557,7 +26557,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 5e714752d40bd90525436d2d977ed0e750031f946dbc6c5549a1d7ceb5546b48dfcc23a1fb1b758f18d954fe53e6089b7ca600c60f2f72d854aa24d5ff0a41fa
+  checksum: 0ec8dacfef50d5954397c46cf8c5364811832bd8c264db6bdccf4d6b1d06192e05da5d06231ce0c84a4ddec461f128a6e916e71b3cae5198e1e1a14b1a2bd2a1
   languageName: node
   linkType: hard
 
