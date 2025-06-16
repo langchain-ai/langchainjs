@@ -4,9 +4,7 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 
 import { encodeApiKey } from "../utils/zhipuai.js";
 
-type ZhipuAIEmbeddingModelId =
-  | "embedding-2"
-  | (string & NonNullable<unknown>);
+type ZhipuAIEmbeddingModelId = "embedding-2" | (string & NonNullable<unknown>);
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -60,7 +58,7 @@ export class ZhipuAIEmbeddings
   modelName: ZhipuAIEmbeddingModelId = "embedding-2";
 
   model: ZhipuAIEmbeddingModelId = "embedding-2";
-  
+
   apiKey?: string;
 
   stripNewLines = true;
