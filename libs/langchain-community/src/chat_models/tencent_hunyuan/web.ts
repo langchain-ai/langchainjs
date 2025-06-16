@@ -40,4 +40,4 @@ export class ChatTencentHunyuan extends BaseChatTencentHunyuan {
     super({ ...fields, sign } ?? { sign });
   }
 }
-export { TencentHunyuanChatInput } from "./base.js";
+export type { TencentHunyuanChatInput } from "./base.js";
