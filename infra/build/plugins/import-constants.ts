@@ -87,15 +87,10 @@ export function importConstantsPlugin(options: ImportConstantsPluginOptions): Pl
             try {
                 // Generate import constants
                 const optionalEntrypoints = getOptionalEntrypoints(opts.packageInfo, opts);
-
                 if (optionalEntrypoints.length > 0) {
                     console.log(`📋 Found ${optionalEntrypoints.length} optional entrypoints`);
                     generateImportConstants(opts.packagePath, optionalEntrypoints, opts);
-                } else {
-                    // Generate empty file to ensure consistency
-                    generateImportConstants(opts.packagePath, [], opts);
                 }
-
             } catch (error) {
                 console.warn('⚠️ Import constants generation failed:', error);
             }
