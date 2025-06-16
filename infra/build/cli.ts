@@ -27,10 +27,6 @@ const cliConfig = {
             type: 'string' as const,
             short: 'e',
             multiple: true,
-            /**
-             * WIP: currently failing
-             */
-            default: ['@langchain/community'],
             description: 'Exclude packages from the build (can be specified multiple times)'
         },
         noEmit: {

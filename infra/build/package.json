@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.1",
+    "@typescript/native-preview": "^7.0.0-dev.20250616.1",
     "publint": "^0.3.12",
     "tsdown": "^0.12.7",
     "tsx": "^4.19.4",

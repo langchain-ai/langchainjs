@@ -13,7 +13,6 @@ import type { CompilePackageOptions } from './types.js'
 
 const __dirname = fileURLToPath(import.meta.url)
 const root = resolve(__dirname, '..', '..', '..')
-const coreProject = '@langchain/core'
 
 export async function compilePackages(opts: CompilePackageOptions) {
     const packages = await findWorkspacePackages(root, opts)
@@ -38,7 +37,8 @@ async function buildProject(path: string, pkg: PackageJson, opts: CompilePackage
     const dts = !opts.noEmit ? {
         parallel: true,
         cwd: path,
-        sourcemap
+        sourcemap,
+        tsgo: true
     } : false
 
     /**

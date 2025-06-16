@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, basename } from 'node:path';
 
 import type { Plugin, PluginContext, OutputOptions } from 'rolldown';
 import type { PackageJson } from 'type-fest';
@@ -187,6 +187,15 @@ function filterEntrypoints(
 }
 
 /**
+ * Remove the file extension from a path
+ * @param path - The path to remove the file extension from
+ * @returns The path with the file extension removed
+ */
+function removeFileExtension(path: string) {
+    return path.replace(/\.[^/]*$/, '');
+}
+
+/**
  * Generate the import map TypeScript file
  */
 function generateImportMap(
@@ -206,10 +215,26 @@ function generateImportMap(
 
         // Transform the path to the compiled output
         // Remove ./ prefix, src/ prefix, and .ts extension
-        const outputPath = path
+        let outputPath = path
             .replace(/^\.\//, "")
             .replace(/^src\//, "")
             .replace(/\.ts$/, ".js");
+
+        // Check if the path points to a directory (doesn't end with .js and no file extension)
+        // If so, append /index.js for directory imports
+        const fullSourcePath = resolve(packagePath, 'src', removeFileExtension(outputPath));
+        try {
+            const stats = fs.statSync(fullSourcePath);
+            if (stats.isDirectory()) {
+                outputPath = removeFileExtension(outputPath) + '/index.js';
+            }
+        } catch {
+            // If we can't stat the file, check if the path looks like a directory
+            // (no file extension in the original path)
+            if (!path.includes('.') || path.endsWith('/')) {
+                outputPath = removeFileExtension(outputPath) + '/index.js';
+            }
+        }
 
         return `export * as ${exportName} from "../${outputPath}";`;
     };
