@@ -8,10 +8,7 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import {
-  getEnvironmentVariable,
-  getRuntimeEnvironmentSync,
-} from "../utils/env.js";
+import { getEnvironmentVariable } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
@@ -57,6 +54,8 @@ export class LangChainTracer
 
   replicas?: RunTree["replicas"];
 
+  usesRunTreeMap = true;
+
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
     const { exampleId, projectName, client, replicas } = fields;
@@ -78,17 +77,17 @@ export class LangChainTracer
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
-    const runTree = this.convertToRunTree(run.id);
+    const runTree = this.getRunTreeWithTracingConfig(run.id);
     await runTree?.postRun();
   }
 
   async onRunUpdate(run: Run): Promise<void> {
-    const runTree = this.convertToRunTree(run.id);
+    const runTree = this.getRunTreeWithTracingConfig(run.id);
     await runTree?.patchRun();
   }
 
   getRun(id: string): Run | undefined {
-    return this.runMap.get(id);
+    return this.runTreeMap.get(id);
   }
 
   updateFromRunTree(runTree: RunTree) {
@@ -109,8 +108,7 @@ export class LangChainTracer
       if (!current || visited.has(current.id)) continue;
       visited.add(current.id);
 
-      // @ts-expect-error Types of property 'events' are incompatible.
-      this.runMap.set(current.id, current);
+      this.runTreeMap.set(current.id, current);
       if (current.child_runs) {
         queue.push(...current.child_runs);
       }
@@ -122,55 +120,18 @@ export class LangChainTracer
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
   }
 
-  convertToRunTree(id: string): RunTree | undefined {
-    const runTreeMap: Record<string, RunTree> = {};
-    const runTreeList: [id: string, dotted_order: string | undefined][] = [];
-    for (const [id, run] of this.runMap) {
-      // by converting the run map to a run tree, we are doing a copy
-      // thus, any mutation performed on the run tree will not be reflected
-      // back in the run map
-      // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
-      const runTree = new RunTree({
-        ...run,
-        extra: {
-          ...run.extra,
-          runtime: getRuntimeEnvironmentSync(),
-        },
-        child_runs: [],
-        parent_run: undefined,
+  getRunTreeWithTracingConfig(id: string): RunTree | undefined {
+    const runTree = this.runTreeMap.get(id);
+    if (!runTree) return undefined;
 
-        // inherited properties
-        client: this.client as Client,
-        project_name: this.projectName,
-        replicas: this.replicas,
-        reference_example_id: this.exampleId,
-        tracingEnabled: true,
-      });
-
-      runTreeMap[id] = runTree;
-      runTreeList.push([id, run.dotted_order]);
-    }
-
-    runTreeList.sort((a, b) => {
-      if (!a[1] || !b[1]) return 0;
-      return a[1].localeCompare(b[1]);
+    return new RunTree({
+      ...runTree,
+      client: this.client as Client,
+      project_name: this.projectName,
+      replicas: this.replicas,
+      reference_example_id: this.exampleId,
+      tracingEnabled: true,
     });
-
-    for (const [id] of runTreeList) {
-      const run = this.runMap.get(id);
-      const runTree = runTreeMap[id];
-      if (!run || !runTree) continue;
-
-      if (run.parent_run_id) {
-        const parentRunTree = runTreeMap[run.parent_run_id];
-        if (parentRunTree) {
-          parentRunTree.child_runs.push(runTree);
-          runTree.parent_run = parentRunTree;
-        }
-      }
-    }
-
-    return runTreeMap[id];
   }
 
   static getTraceableRunTree(): RunTree | undefined {
