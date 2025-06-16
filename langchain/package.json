@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.27",
+  "version": "0.3.28",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -471,7 +471,7 @@
     "@langchain/aws": "*",
     "@langchain/cerebras": "*",
     "@langchain/cohere": "*",
-    "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/core": ">=0.3.58 <0.4.0",
     "@langchain/deepseek": "*",
     "@langchain/google-genai": "*",
     "@langchain/google-vertexai": "*",
@@ -550,8 +550,7 @@
     "p-retry": "4",
     "uuid": "^10.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.22.4",
-    "zod-to-json-schema": "^3.22.3"
+    "zod": "^3.25.32"
   },
   "publishConfig": {
     "access": "public"

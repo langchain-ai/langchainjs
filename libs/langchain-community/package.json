@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.45",
+  "version": "0.3.46",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -44,8 +44,7 @@
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
     "langsmith": "^0.3.29",
     "uuid": "^10.0.0",
-    "zod": "^3.22.3",
-    "zod-to-json-schema": "^3.22.5"
+    "zod": "^3.25.32"
   },
   "devDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
@@ -258,7 +257,7 @@
     "@huggingface/transformers": "^3.2.3",
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.12.0",
-    "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/core": ">=0.3.58 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",

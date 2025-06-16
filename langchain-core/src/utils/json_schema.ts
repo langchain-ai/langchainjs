@@ -1,7 +1,7 @@
-import type { z } from "zod";
+import { toJSONSchema } from "zod/v4/core";
 import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
-import { isZodSchema } from "./types/is_zod_schema.js";
+import { isZodSchemaV3, isZodSchemaV4, InteropZodType } from "./types/zod.js";
 
 export type JSONSchema = JsonSchema7Type;
 
@@ -12,11 +12,14 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  * @param schema - The schema to convert.
  * @returns The converted schema.
  */
-export function toJsonSchema(schema: z.ZodType | JSONSchema): JSONSchema {
-  if (isZodSchema(schema)) {
-    return zodToJsonSchema(schema) as JSONSchema;
+export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
+  if (isZodSchemaV4(schema)) {
+    return toJSONSchema(schema);
   }
-  return schema;
+  if (isZodSchemaV3(schema)) {
+    return zodToJsonSchema(schema);
+  }
+  return schema as JSONSchema;
 }
 
 /**
@@ -105,3 +108,18 @@ export function validatesOnlyStrings(schema: unknown): boolean {
 
   return false;
 }
+
+// Re-export of the types used throughout langchain for json schema serialization.
+// The plan is to eventually nix zod-to-json-schema altogether in place for
+// zod v4 / a more standardized way of serializing validated inputs, so its re-exported
+// here to remove the dependency on zod-to-json-schema in downstream packages until
+// a determination is made.
+
+export {
+  type JsonSchema7Type,
+  type JsonSchema7ArrayType,
+  type JsonSchema7ObjectType,
+  type JsonSchema7StringType,
+  type JsonSchema7NumberType,
+  type JsonSchema7NullableType,
+} from "zod-to-json-schema";

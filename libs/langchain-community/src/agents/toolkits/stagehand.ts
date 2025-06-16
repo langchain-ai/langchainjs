@@ -5,7 +5,7 @@ import {
   StructuredToolInterface,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { AnyZodObject, z } from "zod";
+import { z } from "zod";
 
 //  Documentation is here:
 //  https://js.langchain.com/docs/integrations/tools/stagehand
@@ -101,7 +101,7 @@ export class StagehandExtractTool extends StructuredTool {
 
   async _call(input: {
     instruction: string;
-    schema: AnyZodObject;
+    schema: z.AnyZodObject;
   }): Promise<string> {
     const stagehand = await this.getStagehand();
     const { instruction, schema } = input;

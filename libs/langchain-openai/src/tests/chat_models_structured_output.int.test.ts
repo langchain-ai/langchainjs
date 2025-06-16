@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { test, expect, describe, it } from "@jest/globals";
@@ -151,7 +151,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
     number2: z.number(),
   });
   const modelWithStructuredOutput = model.withStructuredOutput({
-    schema: zodToJsonSchema(calculatorSchema),
+    schema: toJsonSchema(calculatorSchema),
     name: "calculator",
   });
 
@@ -180,7 +180,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
   });
   const modelWithStructuredOutput = model.withStructuredOutput({
     name: "calculator",
-    parameters: zodToJsonSchema(calculatorSchema),
+    parameters: toJsonSchema(calculatorSchema),
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
@@ -207,7 +207,7 @@ test("withStructuredOutput JSON schema JSON mode", async () => {
     number2: z.number(),
   });
   const modelWithStructuredOutput = model.withStructuredOutput(
-    zodToJsonSchema(calculatorSchema),
+    toJsonSchema(calculatorSchema),
     {
       name: "calculator",
       method: "jsonMode",
@@ -359,7 +359,7 @@ test("parallelToolCalls param", async () => {
       function: {
         name: "calculator",
         description: calculatorSchema.description,
-        parameters: zodToJsonSchema(calculatorSchema),
+        parameters: toJsonSchema(calculatorSchema),
       },
     },
     {
@@ -367,7 +367,7 @@ test("parallelToolCalls param", async () => {
       function: {
         name: "weather",
         description: weatherSchema.description,
-        parameters: zodToJsonSchema(weatherSchema),
+        parameters: toJsonSchema(weatherSchema),
       },
     },
   ]);
@@ -394,7 +394,7 @@ test("Passing strict true forces the model to conform to the schema", async () =
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: zodToJsonSchema(
+      parameters: toJsonSchema(
         z.object({
           location: z.string().describe("The location to get the weather for"),
         })
@@ -435,7 +435,7 @@ describe("response_format: json_schema", () => {
         json_schema: {
           name: "get_current_weather",
           description: "Get the current weather in a location",
-          schema: zodToJsonSchema(weatherSchema),
+          schema: toJsonSchema(weatherSchema),
           strict: true,
         },
       },
@@ -460,7 +460,7 @@ describe("response_format: json_schema", () => {
         json_schema: {
           name: "get_current_weather",
           description: "Get the current weather in a location",
-          schema: zodToJsonSchema(weatherSchema),
+          schema: toJsonSchema(weatherSchema),
           strict: true,
         },
       },
