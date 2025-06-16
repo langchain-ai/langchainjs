@@ -3,13 +3,20 @@ import { OpenAI } from "@langchain/openai";
 import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
 
 /**
- * This example uses FalkorDB database, which is native graph database.
+ * This example uses FalkorDB database, which is a native graph database.
  * To set it up follow the instructions on https://docs.falkordb.com/.
+ * 
+ * You can run FalkorDB using Docker:
+ * docker run -p 6379:6379 -it --rm falkordb/falkordb:latest
  */
 
-const url = "bolt://localhost:6379";
+// Connect to FalkorDB using host and port (new approach)
+const graph = await FalkorDBGraph.initialize({ 
+  host: "localhost",
+  port: 6379,
+  graph: "movies"  // Fixed: use 'graph' instead of 'graphId'
+});
 
-const graph = await FalkorDBGraph.initialize({ url });
 const model = new OpenAI({ temperature: 0 });
 
 // Populate the database with two nodes and a relationship

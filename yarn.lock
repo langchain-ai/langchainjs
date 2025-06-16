@@ -10288,17 +10288,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@redis/client@npm:1.5.7":
-  version: 1.5.7
-  resolution: "@redis/client@npm:1.5.7"
-  dependencies:
-    cluster-key-slot: 1.1.2
-    generic-pool: 3.9.0
-    yallist: 4.0.0
-  checksum: 3ded14d947b1aba9121fb2608c99960d89716b1ef9baf48ef68384a30fc8e2fe2f1be7a959247d81e7ce15a38ea9e3fce512f3fdce5a400da88dc96496b09e89
-  languageName: node
-  linkType: hard
-
 "@redis/client@npm:1.6.0, @redis/client@npm:^1.6.0":
   version: 1.6.0
   resolution: "@redis/client@npm:1.6.0"
@@ -10307,15 +10296,6 @@ __metadata:
     generic-pool: 3.9.0
     yallist: 4.0.0
   checksum: c01c89a793541dc6908a97f375fec3ac28bed7f92b1c20351a3073ce75c0263998a30c3316cbb76e6a4403059d9982d40aec0bc8f1b3cab43615edaaf05980da
-  languageName: node
-  linkType: hard
-
-"@redis/graph@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@redis/graph@npm:1.1.0"
-  peerDependencies:
-    "@redis/client": ^1.0.0
-  checksum: d3df807108a42929ed65269c691fe6ab7eda55de91318f02a22b2d637c1bfef8817fccd17025904f5a0be8cf1cea5941334ec9f10719336da5d8f1c54cd4997e
   languageName: node
   linkType: hard
 
