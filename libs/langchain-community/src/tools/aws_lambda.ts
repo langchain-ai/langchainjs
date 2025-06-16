@@ -1,4 +1,4 @@
-import { DynamicTool, DynamicToolInput } from "./dynamic.js";
+import { DynamicTool, DynamicToolInput } from "@langchain/core/tools";
 
 /**
  * Interface for the configuration of the AWS Lambda function.

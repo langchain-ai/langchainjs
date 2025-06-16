@@ -3,7 +3,11 @@ import {
   BaseDocumentLoader,
   type DocumentLoader,
 } from "@langchain/core/document_loaders/base";
-import Browserbase, { LoadOptions, ClientOptions } from "@browserbasehq/sdk";
+import {
+  Browserbase,
+  type LoadOptions,
+  type ClientOptions,
+} from "@browserbasehq/sdk";
 
 type BrowserbaseLoaderOptions = ClientOptions & LoadOptions;
 
