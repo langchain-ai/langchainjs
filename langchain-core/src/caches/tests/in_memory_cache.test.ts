@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, jest } from "@jest/globals";
 import { MessageContentComplex } from "../../messages/base.js";
 import { InMemoryCache } from "../base.js";
 
@@ -38,4 +38,53 @@ test("InMemoryCache works with complex message types", async () => {
     type: "text",
     text: "text1",
   });
+});
+
+test("InMemoryCache handles default key encoder", async () => {
+  const cache = new InMemoryCache();
+  const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+  await cache.update("prompt1", "key1", [
+    {
+      text: "text1",
+    },
+  ]);
+  
+  // expect this to call console.warn about SHA-1 usage
+  const result = await cache.lookup("prompt1", "key1");
+
+  expect(result).toBeDefined();
+  if (!result) {
+    return;
+  }
+  expect(consoleWarnSpy).toHaveBeenCalled();
+  consoleWarnSpy.mockRestore();
+});
+
+
+test("InMemoryCache handles custom key encoder", async () => {
+  const cache = new InMemoryCache();
+  const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+  
+  // use fancy hashing algorithm to encode the key :)
+  cache.makeDefaultKeyEncoder((prompt, key) => `${prompt}###${key}`);
+  
+  // expect custom key encoder not to call console.warn
+  await cache.update("prompt1", "key1", [
+    {
+      text: "text1",
+    },
+  ]);
+
+  expect(consoleWarnSpy).not.toHaveBeenCalled();
+
+  const result1 = await cache.lookup("prompt1", "key1");
+  expect(result1).toBeDefined();
+  if (!result1) {
+    return;
+  }
+  expect(result1[0].text).toBe("text1");
+
+  consoleWarnSpy.mockRestore();
+
 });

@@ -51,10 +51,20 @@ export class _HashedDocument implements HashedDocumentInterface {
 
   metadata: Metadata;
 
+  // backwards compatibility with old code that used SHA-1
+  // as a key encoder. This will also print a warning about the security implications of using
+  private keyEncoder: (...strings: string[]) => string = insecureHash;
+
   constructor(fields: HashedDocumentArgs) {
     this.uid = fields.uid;
     this.pageContent = fields.pageContent;
     this.metadata = fields.metadata;
+  }
+
+  makeDefaultKeyEncoder(
+    keyEncoderFn: (...strings: string[]) => string
+  ): void {
+    this.keyEncoder = keyEncoderFn;
   }
 
   calculateHashes(): void {
@@ -110,13 +120,13 @@ export class _HashedDocument implements HashedDocumentInterface {
   }
 
   private _hashStringToUUID(inputString: string): string {
-    const hash_value = insecureHash(inputString);
+    const hash_value = this.keyEncoder(inputString);
     return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 
   private _hashNestedDictToUUID(data: Record<string, unknown>): string {
     const serialized_data = JSON.stringify(data, Object.keys(data).sort());
-    const hash_value = insecureHash(serialized_data);
+    const hash_value = this.keyEncoder(serialized_data);
     return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 }

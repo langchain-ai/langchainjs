@@ -412,6 +412,19 @@ Sha1.prototype.arrayBuffer = function () {
   return buffer;
 };
 
+/**
+ * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
+ * This function will be removed in a future version.
+ */
 export const insecureHash = (message) => {
+  console.warn(
+    "Using default key encoder: SHA-1 is *not* collision-resistant. " +
+      "While acceptable for most cache scenarios, a motivated attacker " +
+      "can craft two different payloads that map to the same cache key. " +
+      "If that risk matters in your environment, supply a stronger " +
+      "encoder (e.g. SHA-3) by calling the `makeDefaultKeyEncoder()` method. " +
+      "If you change the key encoder, consider also creating a new cache, " +
+      "to avoid (the potential for) collisions with existing keys."
+  );
   return new Sha1(true).update(message)["hex"]();
 };
