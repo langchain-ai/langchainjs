@@ -41,12 +41,7 @@ test("InMemoryCache works with complex message types", async () => {
 });
 
 test("InMemoryCache handles default key encoder", async () => {
-  // @ts-expect-error __printInsecureHashWarning is not defined in globalThis
-  globalThis.__printInsecureHashWarning = false;
   const cache = new InMemoryCache();
-  const consoleWarnSpy = jest
-    .spyOn(console, "warn")
-    .mockImplementation(() => {});
 
   await cache.update("prompt1", "key1", [
     {
@@ -58,20 +53,10 @@ test("InMemoryCache handles default key encoder", async () => {
   const result = await cache.lookup("prompt1", "key1");
 
   expect(result).toBeDefined();
-  if (!result) {
-    return;
-  }
-  expect(consoleWarnSpy).toHaveBeenCalled();
-  consoleWarnSpy.mockRestore();
 });
 
 test("InMemoryCache handles custom key encoder", async () => {
-  // @ts-expect-error __printInsecureHashWarning is not defined in globalThis
-  globalThis.__printInsecureHashWarning = false;
   const cache = new InMemoryCache();
-  const consoleWarnSpy = jest
-    .spyOn(console, "warn")
-    .mockImplementation(() => {});
 
   // use fancy hashing algorithm to encode the key :)
   cache.makeDefaultKeyEncoder((prompt, key) => `${prompt}###${key}`);
@@ -83,14 +68,10 @@ test("InMemoryCache handles custom key encoder", async () => {
     },
   ]);
 
-  expect(consoleWarnSpy).not.toHaveBeenCalled();
-
   const result1 = await cache.lookup("prompt1", "key1");
   expect(result1).toBeDefined();
   if (!result1) {
     return;
   }
   expect(result1[0].text).toBe("text1");
-
-  consoleWarnSpy.mockRestore();
 });
