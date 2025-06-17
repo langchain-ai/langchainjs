@@ -11,6 +11,7 @@ describe("toJsonSchema", () => {
           name: z4.string(),
           age: z4.number(),
         })
+        .describe("Object description")
         .transform((data) => ({
           ...data,
           upperName: data.name.toUpperCase(),
@@ -20,6 +21,7 @@ describe("toJsonSchema", () => {
       expect(jsonSchema).toEqual({
         $schema: "https://json-schema.org/draft/2020-12/schema",
         type: "object",
+        description: "Object description",
         properties: {
           name: { type: "string" },
           age: { type: "number" },
