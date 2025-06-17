@@ -10,11 +10,27 @@
     "https://json.schemastore.org/github-workflow.json": "./.github/workflows/deploy.yml"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": [
-    "AILLM",
-    "Upstash"
-  ],
-  "cSpell.enableFiletypes": [
-    "mdx"
-  ]
+  "cSpell.words": ["AILLM", "Upstash"],
+  "cSpell.enabledFileTypes": {
+    "mdx": true
+  },
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/.turbo": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/dist-cjs": true,
+    "**/.turbo": true,
+    "**/yarn.lock": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
