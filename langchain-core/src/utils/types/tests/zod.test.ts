@@ -21,6 +21,7 @@ import {
   getInteropZodDefaultGetter,
   interopZodObjectStrict,
   ZodObjectV4,
+  interopZodTransformInputSchema,
 } from "../zod.js";
 
 describe("Zod utility functions", () => {
@@ -1327,6 +1328,65 @@ describe("Zod utility functions", () => {
       expect(() => interopZodObjectStrict({ _def: "fake" })).toThrow();
       // @ts-expect-error - Testing invalid input
       expect(() => interopZodObjectStrict({ _zod: "fake" })).toThrow();
+    });
+  });
+
+  describe("interopZodTransformInputSchema", () => {
+    describe("v3 schemas", () => {
+      it("should return input schema for transform schema", () => {
+        const inputSchema = z3.string();
+        const transformSchema = inputSchema.transform((s) => s.toUpperCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for chained transforms", () => {
+        const inputSchema = z3.string();
+        const transformSchema = inputSchema
+          .transform((s) => s.toUpperCase())
+          .transform((s) => s.toLowerCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for non-transform schema", () => {
+        const inputSchema = z3.string();
+        const result = interopZodTransformInputSchema(inputSchema);
+        expect(result).toBe(inputSchema);
+      });
+    });
+
+    describe("v4 schemas", () => {
+      it("should return input schema for transform schema", () => {
+        const inputSchema = z4.string();
+        const transformSchema = inputSchema.transform((s) => s.toUpperCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for chained transforms", () => {
+        const inputSchema = z4.string();
+        const transformSchema = inputSchema
+          .transform((s) => s.toUpperCase())
+          .transform((s) => s.toLowerCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for non-transform schema", () => {
+        const inputSchema = z4.string();
+        const result = interopZodTransformInputSchema(inputSchema);
+        expect(result).toBe(inputSchema);
+      });
+    });
+
+    it("should throw error for non-schema values", () => {
+      expect(() => interopZodTransformInputSchema(null as any)).toThrow();
+      expect(() => interopZodTransformInputSchema(undefined as any)).toThrow();
+      expect(() => interopZodTransformInputSchema({} as any)).toThrow();
+      expect(() => interopZodTransformInputSchema("string" as any)).toThrow();
+      expect(() => interopZodTransformInputSchema(123 as any)).toThrow();
+      expect(() => interopZodTransformInputSchema([] as any)).toThrow();
     });
   });
 });
