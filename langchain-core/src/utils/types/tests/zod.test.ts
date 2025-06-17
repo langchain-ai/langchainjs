@@ -1046,7 +1046,6 @@ describe("Zod utility functions", () => {
           true
         ) as ZodObjectV4;
         const jsonSchema = z4.toJSONSchema(passthrough, { io: "input" });
-        console.log(jsonSchema);
         expect(jsonSchema.additionalProperties).toEqual({});
         // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
         expect(jsonSchema.properties?.user?.additionalProperties).toEqual({});
