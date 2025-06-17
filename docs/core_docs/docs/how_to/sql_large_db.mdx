@@ -44,6 +44,24 @@ import DbCheck from "@examples/use_cases/sql/db_check.ts";
 
 <CodeBlock language="typescript">{DbCheck}</CodeBlock>
 
+:::info Security Considerations for Large Databases
+
+When working with large databases, security becomes even more critical:
+
+```typescript
+const secureDb = await SqlDatabase.fromDataSourceParams({
+  appDataSource: datasource,
+  allowedStatements: ["SELECT"],        // Read-only access
+  includesTables: ["safe_table1"],      // Limit accessible tables
+  enableSqlValidation: true,            // SQL injection protection
+  maxQueryLength: 5000,                 // Prevent long-running queries
+});
+```
+
+Always use parameterized queries when filtering data: `db.run("SELECT * FROM users WHERE id = ?", [userId])`
+
+:::
+
 ## Many tables
 
 One of the main pieces of information we need to include in our prompt is the schemas of the relevant tables.

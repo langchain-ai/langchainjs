@@ -43,6 +43,27 @@ import DbCheck from "@examples/use_cases/sql/db_check.ts";
 
 <CodeBlock language="typescript">{DbCheck}</CodeBlock>
 
+:::tip Enhanced Security Features
+
+The `SqlDatabase` class allows to set security parameters, e.g.:
+
+```typescript
+const secureDb = await SqlDatabase.fromDataSourceParams({
+  appDataSource: datasource,
+  allowedStatements: ["SELECT"],    // Restrict to read-only queries
+  enableSqlValidation: true,        // SQL injection protection (default)
+  maxQueryLength: 10000,            // Query length limit
+});
+
+// Use parameterized queries for safer parameter binding
+const result = await secureDb.run(
+  "SELECT * FROM Artist WHERE ArtistId > ? LIMIT ?",
+  [5, 10]
+);
+```
+
+:::
+
 ## Dialect-specific prompting
 
 One of the simplest things we can do is make our prompt specific to the SQL dialect we're using.
