@@ -41,6 +41,9 @@ import { BlobStoreAIStudioFile } from "../media.js";
 import MockedFunction = jest.MockedFunction;
 
 function propSum(o: Record<string, number>): number {
+  if (typeof o !== "object") {
+    return 0;
+  }
   return Object.keys(o)
     .map((key) => o[key])
     .reduce((acc, val) => acc + val);
@@ -69,8 +72,9 @@ const apiKeyModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
-  ["gemini-2.5-flash-preview-05-20"],
-  ["gemini-2.5-pro-preview-05-06"],
+  ["gemini-2.5-flash"], // GA
+  ["gemini-2.5-pro"], // GA
+  ["gemini-2.5-flash-lite-preview-06-17"],
   ["gemma-3-27b-it"],
   ["gemma-3n-e4b-it"],
 ];
@@ -522,29 +526,36 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-preview-05-20",
+    modelName: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-preview-05-20",
+    modelName: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-pro-preview-05-06",
+    modelName: "gemini-2.5-flash",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-pro-preview-05-06",
+    modelName: "gemini-2.5-flash",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
+    modelName: "gemini-2.5-pro",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-pro",
     platformType: "gcp",
     apiVersion: "v1",
   },
 
-  // Flash Thinking doesn't have functions or other features
-  // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gai"},
-  // {modelName: "gemini-2.0-flash-thinking-exp", platformType: "gcp"},
 ];
 
 /*
@@ -1685,19 +1696,29 @@ describe.each(testTtsModelNames)(
 
 const testReasoningModelNames = [
   {
-    modelName: "gemini-2.5-flash-preview-05-20",
+    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    platformType: "gai",
+    apiVersion: "v1beta",
+  },
+  {
+    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    platformType: "gcp",
+    apiVersion: "v1",
+  },
+  {
+    modelName: "gemini-2.5-flash",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-flash-preview-05-20",
+    modelName: "gemini-2.5-flash",
     platformType: "gcp",
   },
   {
-    modelName: "gemini-2.5-pro-preview-05-06",
+    modelName: "gemini-2.5-pro",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-pro-preview-05-06",
+    modelName: "gemini-2.5-pro",
     platformType: "gcp",
   },
 ];
@@ -1746,6 +1767,7 @@ describe.each(testReasoningModelNames)(
 
     test("default", async () => {
       // By default, it should not return reasoning tokens, tho it should report some
+      // 2.5-flash-lite, apparently, defaults to thinking off.
       const model = newChatGoogle();
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
@@ -1788,6 +1810,7 @@ describe.each(testReasoningModelNames)(
 
     test("off", async () => {
       // By default, it should not return reasoning tokens, and should not report any
+      // 2.5 pro cannot turn reasoning off.
       const model = newChatGoogle({
         maxReasoningTokens: 0,
       });
