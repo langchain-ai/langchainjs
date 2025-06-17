@@ -99,7 +99,7 @@
     "langsmith": "^0.3.33",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
-    "mongodb": "^6.3.0",
+    "mongodb": "^6.17.0",
     "pg": "^8.11.0",
     "pickleparser": "^0.2.1",
     "prisma": "^4.11.0",
