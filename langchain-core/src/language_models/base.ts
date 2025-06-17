@@ -435,13 +435,35 @@ export abstract class BaseLanguageModel<
 
   private _encoding?: Tiktoken;
 
+  /**
+   * Get the number of tokens in the content.
+   * @param content The content to get the number of tokens for.
+   * @returns The number of tokens in the content.
+   */
   async getNumTokens(content: MessageContent) {
-    // TODO: Figure out correct value.
-    if (typeof content !== "string") {
-      return 0;
+    // Extract text content from MessageContent
+    let textContent: string;
+    if (typeof content === "string") {
+      textContent = content;
+    } else {
+      /**
+       * Content is an array of MessageContentComplex
+       *
+       * ToDo(@christian-bromann): This is a temporary fix to get the number of tokens for the content.
+       * We need to find a better way to do this.
+       * @see https://github.com/langchain-ai/langchainjs/pull/8341#pullrequestreview-2933713116
+       */
+      textContent = content
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item.type === "text" && "text" in item) return item.text;
+          return "";
+        })
+        .join("");
     }
+
     // fallback to approximate calculation if tiktoken is not available
-    let numTokens = Math.ceil(content.length / 4);
+    let numTokens = Math.ceil(textContent.length / 4);
 
     if (!this._encoding) {
       try {
@@ -460,7 +482,7 @@ export abstract class BaseLanguageModel<
 
     if (this._encoding) {
       try {
-        numTokens = this._encoding.encode(content).length;
+        numTokens = this._encoding.encode(textContent).length;
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
