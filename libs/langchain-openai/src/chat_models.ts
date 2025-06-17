@@ -442,7 +442,8 @@ function _convertReasoningSummaryToOpenAIResponsesParams(
 
 function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
-  model?: string
+  model?: string,
+  zdrEnabled?: boolean
 ): ResponsesInputItem[] {
   return messages.flatMap(
     (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
@@ -520,6 +521,7 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         // if we have the original response items, just reuse them
         if (
+          !zdrEnabled &&
           lcMsg.response_metadata.output != null &&
           Array.isArray(lcMsg.response_metadata.output) &&
           lcMsg.response_metadata.output.length > 0 &&
@@ -533,7 +535,7 @@ function _convertMessagesToOpenAIResponsesParams(
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning) {
+        if (additional_kwargs?.reasoning && !zdrEnabled) {
           const reasoningItem = _convertReasoningSummaryToOpenAIResponsesParams(
             additional_kwargs.reasoning
           );
@@ -555,7 +557,7 @@ function _convertMessagesToOpenAIResponsesParams(
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id ? { id: lcMsg.id } : {}),
+          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
           content:
             typeof content === "string"
               ? content
@@ -587,7 +589,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                id: functionCallIds?.[toolCall.id!],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               })
             )
           );
@@ -598,8 +600,8 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                id: functionCallIds?.[toolCall.id],
                 arguments: toolCall.function.arguments,
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
               })
             )
           );
@@ -2345,7 +2347,11 @@ export class ChatOpenAI<
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
-          input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
+          input: _convertMessagesToOpenAIResponsesParams(
+            messages,
+            this.model,
+            this.zdrEnabled
+          ),
           stream: true,
         },
         options
@@ -2509,7 +2515,11 @@ export class ChatOpenAI<
       };
     }
 
-    const input = _convertMessagesToOpenAIResponsesParams(messages, this.model);
+    const input = _convertMessagesToOpenAIResponsesParams(
+      messages,
+      this.model,
+      this.zdrEnabled
+    );
     const data = await this.responseApiWithRetry(
       {
         input,
