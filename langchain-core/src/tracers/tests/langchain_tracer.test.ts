@@ -44,7 +44,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
   );
 
   expect(createPayloads[0]).toMatchSnapshot({
-    session_id: expect.any(String),
+    session_name: expect.any(String),
     dotted_order: expect.any(String),
     start_time: expect.any(Number),
     events: expect.arrayContaining([
@@ -57,7 +57,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
   });
 
   expect(createPayloads[1]).toMatchSnapshot({
-    session_id: expect.any(String),
+    session_name: expect.any(String),
     dotted_order: expect.any(String),
     start_time: expect.any(Number),
     events: expect.arrayContaining([
@@ -71,7 +71,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
   });
 
   expect(updatePayloads[0]).toMatchSnapshot({
-    session_id: expect.any(String),
+    session_name: expect.any(String),
     dotted_order: expect.any(String),
     end_time: expect.any(Number),
     events: expect.arrayContaining([
@@ -84,7 +84,7 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
   });
 
   expect(updatePayloads[1]).toMatchSnapshot({
-    session_id: expect.any(String),
+    session_name: expect.any(String),
     dotted_order: expect.any(String),
     end_time: expect.any(Number),
     events: expect.arrayContaining([
