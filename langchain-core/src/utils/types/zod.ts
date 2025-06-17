@@ -11,6 +11,7 @@ import {
   $ZodUnknown,
   $ZodNever,
   $ZodOptional,
+  _array,
 } from "zod/v4/core";
 
 export type ZodStringV3 = z3.ZodString;
@@ -426,6 +427,26 @@ export function isZodObjectV4(obj: unknown): obj is z4.$ZodObject {
   return false;
 }
 
+export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 array schemas have _zod.def.type === "array"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "array"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
  *
@@ -433,7 +454,7 @@ export function isZodObjectV4(obj: unknown): obj is z4.$ZodObject {
  * @returns {boolean} True if the value is a Zod v3 or v4 object schema, false otherwise.
  */
 export function isInteropZodObject(obj: unknown): obj is InteropZodObject {
-  if (isZodSchemaV3(obj)) return true;
+  if (isZodObjectV3(obj)) return true;
   if (isZodObjectV4(obj)) return true;
   return false;
 }
@@ -520,10 +541,28 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
     const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
+        // If the shape key is a v4 object schema, we need to make it strict
         if (isZodObjectV4(keySchema)) {
           const outputSchema = interopZodObjectStrict(keySchema, recursive);
           outputShape[key] = outputSchema as ZodObjectV4;
-        } else {
+        }
+        // If the shape key is a v4 array schema, we need to make the element
+        // schema strict if it's an object schema
+        else if (isZodArrayV4(keySchema)) {
+          let elementSchema = keySchema._zod.def.element;
+          if (isZodObjectV4(elementSchema)) {
+            elementSchema = interopZodObjectStrict(
+              elementSchema,
+              recursive
+            ) as ZodObjectV4;
+          }
+          outputShape[key] = clone(keySchema, {
+            ...keySchema._zod.def,
+            element: elementSchema,
+          });
+        }
+        // Otherwise, just use the keySchema
+        else {
           outputShape[key] = keySchema;
         }
       }
@@ -550,13 +589,31 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
     const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
+        // If the shape key is a v4 object schema, we need to make it passthrough
         if (isZodObjectV4(keySchema)) {
           const outputSchema = interopZodObjectPassthrough(
             keySchema,
             recursive
           );
           outputShape[key] = outputSchema as ZodObjectV4;
-        } else {
+        }
+        // If the shape key is a v4 array schema, we need to make the element
+        // schema passthrough if it's an object schema
+        else if (isZodArrayV4(keySchema)) {
+          let elementSchema = keySchema._zod.def.element;
+          if (isZodObjectV4(elementSchema)) {
+            elementSchema = interopZodObjectPassthrough(
+              elementSchema,
+              recursive
+            ) as ZodObjectV4;
+          }
+          outputShape[key] = clone(keySchema, {
+            ...keySchema._zod.def,
+            element: elementSchema,
+          });
+        }
+        // Otherwise, just use the keySchema
+        else {
           outputShape[key] = keySchema;
         }
       }

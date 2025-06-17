@@ -1034,6 +1034,11 @@ describe("Zod utility functions", () => {
           user: z4.object({
             name: z4.string(),
             age: z4.number(),
+            locations: z4.array(
+              z4.object({
+                name: z4.string(),
+              })
+            ),
           }),
         });
         const passthrough = interopZodObjectPassthrough(
@@ -1045,6 +1050,31 @@ describe("Zod utility functions", () => {
         expect(jsonSchema.additionalProperties).toEqual({});
         // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
         expect(jsonSchema.properties?.user?.additionalProperties).toEqual({});
+        expect(
+          // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested array
+          jsonSchema.properties?.user?.properties?.locations?.items
+            ?.additionalProperties
+        ).toEqual({});
+      });
+
+      it("should handle arrays of objects with strict validation", () => {
+        const schema = z4.object({
+          users: z4.array(
+            z4.object({
+              name: z4.string(),
+              age: z4.number(),
+            })
+          ),
+        });
+        const strict = interopZodObjectStrict(schema, true);
+        expect(() =>
+          interopParse(strict, {
+            users: [
+              { name: "John", age: 30, extra: "field" },
+              { name: "Jane", age: 25 },
+            ],
+          })
+        ).toThrow();
       });
     });
   });
@@ -1204,6 +1234,26 @@ describe("Zod utility functions", () => {
         ).toThrow();
       });
 
+      it("should handle arrays of objects with strict validation", () => {
+        const schema = z4.object({
+          users: z4.array(
+            z4.object({
+              name: z4.string(),
+              age: z4.number(),
+            })
+          ),
+        });
+        const strict = interopZodObjectStrict(schema, true);
+        expect(() =>
+          interopParse(strict, {
+            users: [
+              { name: "John", age: 30, extra: "field" },
+              { name: "Jane", age: 25 },
+            ],
+          })
+        ).toThrow();
+      });
+
       it("should not apply strict validation recursively by default", () => {
         const schema = z4.object({
           user: z4.looseObject({
@@ -1236,6 +1286,11 @@ describe("Zod utility functions", () => {
           user: z4.object({
             name: z4.string(),
             age: z4.number(),
+            locations: z4.array(
+              z4.object({
+                name: z4.string(),
+              })
+            ),
           }),
         });
         const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
@@ -1243,6 +1298,11 @@ describe("Zod utility functions", () => {
         expect(jsonSchema.additionalProperties).toBe(false);
         // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
         expect(jsonSchema.properties?.user?.additionalProperties).toBe(false);
+        expect(
+          // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested array
+          jsonSchema.properties?.user?.properties?.locations?.items
+            ?.additionalProperties
+        ).toBe(false);
       });
     });
 
