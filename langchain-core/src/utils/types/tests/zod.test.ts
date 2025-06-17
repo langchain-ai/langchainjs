@@ -1076,6 +1076,22 @@ describe("Zod utility functions", () => {
           })
         ).toThrow();
       });
+
+      it("should keep meta fields", () => {
+        const schema = z4
+          .object({
+            name: z4.string().describe("The name of the author"),
+          })
+          .describe("The object");
+        const passthrough = interopZodObjectPassthrough(
+          schema,
+          true
+        ) as ZodObjectV4;
+        expect(z4.globalRegistry.get(passthrough)).toBeDefined();
+        expect(z4.globalRegistry.get(passthrough)?.description).toBe(
+          "The object"
+        );
+      });
     });
   });
 
@@ -1303,6 +1319,17 @@ describe("Zod utility functions", () => {
           jsonSchema.properties?.user?.properties?.locations?.items
             ?.additionalProperties
         ).toBe(false);
+      });
+
+      it("should keep meta fields", () => {
+        const schema = z4
+          .object({
+            name: z4.string().describe("The name of the author"),
+          })
+          .describe("The object");
+        const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
+        expect(z4.globalRegistry.get(strict)).toBeDefined();
+        expect(z4.globalRegistry.get(strict)?.description).toBe("The object");
       });
     });
 

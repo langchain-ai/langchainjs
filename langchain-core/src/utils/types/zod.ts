@@ -578,13 +578,19 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
         else {
           outputShape[key] = keySchema;
         }
+        // Assign meta fields to the keySchema
+        const meta = globalRegistry.get(keySchema);
+        if (meta) globalRegistry.add(outputShape[key], meta);
       }
     }
-    return clone<ZodObjectV4>(schema, {
+    const modifiedSchema = clone<ZodObjectV4>(schema, {
       ...schema._zod.def,
       shape: outputShape,
       catchall: _never($ZodNever),
     });
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(modifiedSchema, meta);
+    return modifiedSchema;
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -642,13 +648,19 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
         else {
           outputShape[key] = keySchema;
         }
+        // Assign meta fields to the keySchema
+        const meta = globalRegistry.get(keySchema);
+        if (meta) globalRegistry.add(outputShape[key], meta);
       }
     }
-    return clone<ZodObjectV4>(schema, {
+    const modifiedSchema = clone<ZodObjectV4>(schema, {
       ...schema._zod.def,
       shape: outputShape,
       catchall: _unknown($ZodUnknown),
     });
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(modifiedSchema, meta);
+    return modifiedSchema;
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -689,7 +701,7 @@ export function getInteropZodDefaultGetter<T extends InteropZodType>(
 
 function isZodTransformV3(
   schema: InteropZodType
-): schema is z3.ZodEffects<z3.ZodTypeAny, any, any> {
+): schema is z3.ZodEffects<z3.ZodTypeAny> {
   return (
     isZodSchemaV3(schema) &&
     "typeName" in schema._def &&
