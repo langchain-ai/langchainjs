@@ -2,6 +2,7 @@
 
 import PQueueMod from "p-queue";
 import { getGlobalAsyncLocalStorageInstance } from "./async_local_storage/globals.js";
+import { getDefaultLangChainClientSingleton } from "./tracer.js";
 
 let queue: typeof import("p-queue")["default"]["prototype"];
 
@@ -60,6 +61,10 @@ export async function consumeCallback<T>(
  * Waits for all promises in the queue to resolve. If the queue is
  * undefined, it immediately resolves a promise.
  */
-export function awaitAllCallbacks(): Promise<void> {
-  return typeof queue !== "undefined" ? queue.onIdle() : Promise.resolve();
+export async function awaitAllCallbacks(): Promise<void> {
+  const defaultClient = getDefaultLangChainClientSingleton();
+  await Promise.allSettled([
+    typeof queue !== "undefined" ? queue.onIdle() : Promise.resolve(),
+    defaultClient.awaitPendingTraceBatches(),
+  ]);
 }

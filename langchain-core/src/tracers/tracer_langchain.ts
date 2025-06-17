@@ -1,4 +1,8 @@
-import type { Client, LangSmithTracingClientInterface } from "langsmith";
+import {
+  type Client,
+  type LangSmithTracingClientInterface,
+  getDefaultProjectName,
+} from "langsmith";
 import { RunTree } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
@@ -8,7 +12,6 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { getEnvironmentVariable } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
@@ -60,10 +63,7 @@ export class LangChainTracer
     super(fields);
     const { exampleId, projectName, client, replicas } = fields;
 
-    this.projectName =
-      projectName ??
-      getEnvironmentVariable("LANGCHAIN_PROJECT") ??
-      getEnvironmentVariable("LANGCHAIN_SESSION");
+    this.projectName = projectName ?? getDefaultProjectName();
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
