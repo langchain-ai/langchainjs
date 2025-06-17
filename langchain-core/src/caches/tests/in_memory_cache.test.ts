@@ -41,6 +41,8 @@ test("InMemoryCache works with complex message types", async () => {
 });
 
 test("InMemoryCache handles default key encoder", async () => {
+  // @ts-expect-error __printInsecureHashWarning is not defined in globalThis
+  globalThis.__printInsecureHashWarning = false;
   const cache = new InMemoryCache();
   const consoleWarnSpy = jest
     .spyOn(console, "warn")
@@ -64,6 +66,8 @@ test("InMemoryCache handles default key encoder", async () => {
 });
 
 test("InMemoryCache handles custom key encoder", async () => {
+  // @ts-expect-error __printInsecureHashWarning is not defined in globalThis
+  globalThis.__printInsecureHashWarning = false;
   const cache = new InMemoryCache();
   const consoleWarnSpy = jest
     .spyOn(console, "warn")
