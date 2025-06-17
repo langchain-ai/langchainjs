@@ -10,9 +10,7 @@ import { wrapOpenAIClientError } from "./utils/openai.js";
  * @see https://platform.openai.com/docs/guides/embeddings#embedding-models
  */
 export type OpenAIEmbeddingModelId =
-  | 'text-embedding-3-small'
-  | 'text-embedding-3-large'
-  | 'text-embedding-ada-002'
+  | OpenAIClient.EmbeddingModel
   | (string & NonNullable<unknown>);
 
 /**
@@ -25,7 +23,7 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
    * Alias for `model`
    * @deprecated Use "model" instead.
    */
-  modelName: string;
+  modelName: OpenAIEmbeddingModelId;
   /** Model name to use */
   model: OpenAIEmbeddingModelId;
 

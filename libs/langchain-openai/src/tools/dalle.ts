@@ -11,9 +11,7 @@ import {
  * @see https://platform.openai.com/docs/api-reference/images/create
  */
 export type OpenAIImageModelId =
-  | 'gpt-image-1'
-  | "dall-e-2"
-  | "dall-e-3"
+  | OpenAIClient.ImageModel
   | (string & NonNullable<unknown>);
 
 /**
