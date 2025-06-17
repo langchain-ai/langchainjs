@@ -15,6 +15,8 @@ import {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
@@ -645,7 +647,7 @@ export class ChatOllama
   private async checkModelExistsOnMachine(model: string): Promise<boolean> {
     const { models } = await this.client.list();
     return !!models.find(
-      (m) => m.name === model || m.name === `${model}:latest`
+      (m: { name: string }) => m.name === model || m.name === `${model}:latest`
     );
   }
 

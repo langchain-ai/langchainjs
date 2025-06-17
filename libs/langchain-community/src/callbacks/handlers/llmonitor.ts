@@ -78,7 +78,7 @@ export const convertToLLMonitorMessages = (
     // @ts-ignore Confuses the compiler
     return input.length === 1
       ? convertToLLMonitorMessages(input[0])
-      : input.map(convertToLLMonitorMessages);
+      : (input.map(convertToLLMonitorMessages) as OutputMessage[]);
   }
   return parseMessage(input);
 };
