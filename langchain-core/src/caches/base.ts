@@ -12,7 +12,7 @@ import { type StoredGeneration } from "../messages/base.js";
  * separate concerns and scale horizontally.
  *
  * TODO: Make cache key consistent across versions of LangChain.
- * 
+ *
  * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
  * This function will be removed in a future version.
  */
@@ -46,7 +46,6 @@ export function serializeGeneration(generation: Generation) {
  * Base class for all caches. All caches should extend this class.
  */
 export abstract class BaseCache<T = Generation[]> {
-  
   // For backwards compatibility, we use a default key encoder
   // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
   // about the security implications of using SHA-1 as a cache key.
@@ -88,7 +87,9 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
    * @returns The data corresponding to the prompt and LLM key, or null if not found.
    */
   lookup(prompt: string, llmKey: string): Promise<T | null> {
-    return Promise.resolve(this.cache.get(this.keyEncoder(prompt, llmKey)) ?? null);
+    return Promise.resolve(
+      this.cache.get(this.keyEncoder(prompt, llmKey)) ?? null
+    );
   }
 
   /**

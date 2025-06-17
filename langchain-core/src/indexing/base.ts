@@ -61,9 +61,7 @@ export class _HashedDocument implements HashedDocumentInterface {
     this.metadata = fields.metadata;
   }
 
-  makeDefaultKeyEncoder(
-    keyEncoderFn: (...strings: string[]) => string
-  ): void {
+  makeDefaultKeyEncoder(keyEncoderFn: (...strings: string[]) => string): void {
     this.keyEncoder = keyEncoderFn;
   }
 
