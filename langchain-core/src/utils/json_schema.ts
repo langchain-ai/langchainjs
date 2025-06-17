@@ -8,6 +8,7 @@ import {
   interopZodObjectStrict,
   isZodObjectV4,
   ZodObjectV4,
+  interopZodTransformInputSchema,
 } from "./types/zod.js";
 
 export type JSONSchema = JsonSchema7Type;
@@ -21,11 +22,15 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  */
 export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV4(schema)) {
-    if (isZodObjectV4(schema)) {
-      const strictSchema = interopZodObjectStrict(schema, true) as ZodObjectV4;
-      return toJSONSchema(strictSchema, { io: "input" });
+    const inputSchema = interopZodTransformInputSchema(schema);
+    if (isZodObjectV4(inputSchema)) {
+      const strictSchema = interopZodObjectStrict(
+        inputSchema,
+        true
+      ) as ZodObjectV4;
+      return toJSONSchema(strictSchema);
     } else {
-      return toJSONSchema(schema, { io: "input" });
+      return toJSONSchema(schema);
     }
   }
   if (isZodSchemaV3(schema)) {
