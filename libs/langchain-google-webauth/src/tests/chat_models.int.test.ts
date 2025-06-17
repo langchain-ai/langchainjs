@@ -555,7 +555,6 @@ const testGeminiModelNames = [
     platformType: "gcp",
     apiVersion: "v1",
   },
-
 ];
 
 /*
