@@ -6,7 +6,8 @@ import {
 } from "mongodb";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
-  BaseMessage,
+  type StoredMessage,
+  type BaseMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
@@ -67,6 +68,5 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
 }
 
 interface ChatHistoryDocument extends MongoDBDocument {
-  _id: ObjectId;
-  messages: any[];
+  messages: StoredMessage[];
 }
