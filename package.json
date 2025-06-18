@@ -61,7 +61,7 @@
     "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch",
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "protobufjs": "^7.2.5",
-    "zod": "^3.25.32"
+    "zod": "^3.25.56"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
