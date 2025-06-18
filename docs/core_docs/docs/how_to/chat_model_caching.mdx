@@ -17,13 +17,21 @@ LangChain provides an optional caching layer for chat models. This is useful for
 
 It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
 It can speed up your application by reducing the number of API calls you make to the LLM provider.
+There are two methods for caching LLM responses: **semantic caching** and **key-value caching**.
+
+- **Key-value caching** stores responses based on exact query (LLM prompt) matches. When the same request is made again, the cached LLM response is retrieved. Key-value caching is fast, but its shortcoming is that even small changes in the prompt—such as punctuation differences or slight wording variations (e.g., _"yes"_ vs. _"yeah"_)—can cause a cache miss, leading to a fresh LLM call.
+- **[Semantic caching](/docs/integrations/semantic_caching)** improves upon key-value caching by relying on the meaning of the prompt rather than exact matches. If a new LLM prompt is semantically similar to a previously cached one, the stored response is retrieved and reused, reducing LLM usage costs. A typical implementation of semantic caching involves storing prompts as embeddings and using similarity search to identify a cache hit.
+
+This page goes over key-value caching. To use semantic caching, see [LLM Semantic Caching](/docs/integrations/semantic_caching).
+
+NOTE: The caching integrations in LangChain do not include expiring old or unused values. Based on your use and application, you should decide if and what kind of eviction process you need to implement and implement it directly with the storage.
 
 import CodeBlock from "@theme/CodeBlock";
 
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
 
-// To make the caching really obvious, lets use a slower model.
+// To make the caching really obvious, let's use a slower model.
 const model = new ChatOpenAI({
   model: "gpt-4",
   cache: true,
@@ -122,13 +130,13 @@ import AdvancedUpstashRedisCacheExample from "@examples/cache/chat_models/upstas
 
 ## Caching with Vercel KV
 
-LangChain provides an Vercel KV-based cache. Like the Redis-based cache, this cache is useful if you want to share the cache across multiple processes or servers. The Vercel KV client uses HTTP and supports edge environments. To use it, you'll need to install the `@vercel/kv` package:
+LangChain provides a Vercel KV-based cache. Like the Redis-based cache, this cache is useful if you want to share the cache across multiple processes or servers. The Vercel KV client uses HTTP and supports edge environments. To use it, you'll need to install the `@vercel/kv` package:
 
 ```bash npm2yarn
 npm install @vercel/kv
 ```
 
-You'll also need an Vercel account and a [KV database](https://vercel.com/docs/storage/vercel-kv/kv-reference) to connect to. Once you've done that, retrieve your REST URL and REST token.
+You'll also need a Vercel account and a [KV database](https://vercel.com/docs/storage/vercel-kv/kv-reference) to connect to. Once you've done that, retrieve your REST URL and REST token.
 
 Then, you can pass a `cache` option when you instantiate the LLM. For example:
 
@@ -156,6 +164,31 @@ import CloudflareExample from "@examples/cache/chat_models/cloudflare_kv.ts";
 
 <CodeBlock language="typescript">{CloudflareExample}</CodeBlock>
 
+## Caching with MongoDB
+
+NOTE: This section is for using MongoDB as a key-value LLM caching. For **semantic caching** see [MongoDB Atlas Semantic Cache](/docs/integrations/semantic_caching/mongodb_atlas).
+
+LangChain provides MongoDB-based cache support. This is especially useful if your application is already using MongoDB as a database, and you don't want to add another data store integration.
+
+To use this cache, you'll need to install the `mongodb` as well as `@langchain/mongodb`:
+
+```bash npm2yarn
+npm install mongodb @langchain/mongodb @langchain/core
+```
+
+The MongoDB cache integration does not create a collection for your cache storage.
+Assuming you have already set up your collection, you can utilize it for caching as follows:
+
+import MongoDBCacheExample from "@examples/cache/chat_models/mongodb.ts";
+
+<CodeBlock language="typescript">{MongoDBCacheExample}</CodeBlock>
+
+Hint: The key-value cache is stored in the collection using `prompt` as the key, and `llm` as the value. You can speed up fetching cached entries by setting up an index (not a Vector Search index) on prompt.
+
+```
+await db.collection(LLM_CACHE).createIndex({ prompt: 1 })
+```
+
 ## Caching on the File System
 
 :::warning
@@ -163,7 +196,7 @@ This cache is not recommended for production use. It is only intended for local 
 :::
 
 LangChain provides a simple file system cache.
-By default the cache is stored a temporary directory, but you can specify a custom directory if you want.
+By default, the cache is stored in a temporary directory, but you can specify a custom directory if you want.
 
 ```typescript
 const cache = await LocalFileCache.create();
