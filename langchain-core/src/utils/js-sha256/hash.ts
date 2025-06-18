@@ -13,8 +13,6 @@
 /*jslint bitwise: true */
 "use strict";
 
-import { type HashKeyEncoder } from "../hash.js";
-
 var HEX_CHARS = "0123456789abcdef".split("");
 var EXTRA = [-2147483648, 8388608, 32768, 128];
 var SHIFT = [24, 16, 8, 0];
@@ -501,6 +499,6 @@ Sha256.prototype.arrayBuffer = function () {
   return buffer;
 };
 
-export const sha256: HashKeyEncoder = (...strings: string[]) => {
+export const sha256 = (...strings: string[]) => {
   return new Sha256(false, true).update(strings.join("")).hex();
 };
