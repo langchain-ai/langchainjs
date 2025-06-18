@@ -16,15 +16,17 @@ import {
   type BaseLanguageModelInput,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
@@ -35,6 +37,7 @@ import {
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
 import {
+  AnthropicBuiltInToolUnion,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -98,6 +101,19 @@ function _thinkingInParams(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
+}
+
+function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
+  const builtinTools = ["web_search"];
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "type" in tool &&
+    "name" in tool &&
+    typeof tool.type === "string" &&
+    typeof tool.name === "string" &&
+    builtinTools.includes(tool.name)
+  );
 }
 
 /**
@@ -720,11 +736,14 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): Anthropic.Messages.Tool[] | undefined {
+  ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
     return tools.map((tool) => {
+      if (isBuiltinTool(tool)) {
+        return tool;
+      }
       if (isAnthropicTool(tool)) {
         return tool;
       }
@@ -740,8 +759,8 @@ export class ChatAnthropicMessages<
         return {
           name: tool.name,
           description: tool.description,
-          input_schema: (isZodSchema(tool.schema)
-            ? zodToJsonSchema(tool.schema)
+          input_schema: (isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
         };
       }
@@ -1056,7 +1075,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1067,7 +1086,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1078,7 +1097,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1089,7 +1108,8 @@ export class ChatAnthropicMessages<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1100,8 +1120,8 @@ export class ChatAnthropicMessages<
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: Anthropic.Messages.Tool[];
-    if (isZodSchema(schema)) {
-      const jsonSchema = zodToJsonSchema(schema);
+    if (isInteropZodSchema(schema)) {
+      const jsonSchema = toJsonSchema(schema);
       tools = [
         {
           name: functionName,
@@ -1151,6 +1171,10 @@ export class ChatAnthropicMessages<
 
       llm = this.withConfig({
         tools,
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1167,6 +1191,10 @@ export class ChatAnthropicMessages<
         tool_choice: {
           type: "tool",
           name: functionName,
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
     }

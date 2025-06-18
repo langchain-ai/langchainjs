@@ -8,6 +8,7 @@ import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
 import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "../utils/azure.js";
 import { wrapOpenAIClientError } from "../utils/openai.js";
+import { normalizeHeaders } from "../utils/headers.js";
 
 export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   azureOpenAIApiVersion?: string;
@@ -92,10 +93,11 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
         delete params.baseURL;
       }
 
+      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": params.defaultHeaders?.["User-Agent"]
-          ? `${params.defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
+        "User-Agent": defaultHeaders["User-Agent"]
+          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
           : `langchainjs-azure-openai-v2`,
       };
 
@@ -121,11 +123,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
       try {
         const res = await this.client.embeddings.create(
           request,
-          // This unknown cast is required because OpenAI types seem to be incorrect here
-          // without it, we can't pass arbitrary keys via the `query` field in the options,
-          // which means we can't specify the `api-version` as required by Azure OpenAI.
-          // See https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
-          requestOptions as unknown as OpenAICoreRequestOptions<OpenAIClient.EmbeddingCreateParams>
+          requestOptions
         );
         return res;
       } catch (e) {

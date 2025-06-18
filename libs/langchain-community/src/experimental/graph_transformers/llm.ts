@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Document } from "@langchain/core/documents";
@@ -289,7 +289,7 @@ export class LLMGraphTransformer {
       nodeProperties,
       relationshipProperties
     );
-    const structuredLLM = llm.withStructuredOutput(zodToJsonSchema(schema));
+    const structuredLLM = llm.withStructuredOutput(toJsonSchema(schema));
     this.chain = prompt.pipe(structuredLLM);
   }
 

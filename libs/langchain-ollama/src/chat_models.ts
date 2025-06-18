@@ -15,6 +15,8 @@ import {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
@@ -35,9 +37,11 @@ import {
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -643,7 +647,7 @@ export class ChatOllama
   private async checkModelExistsOnMachine(model: string): Promise<boolean> {
     const { models } = await this.client.list();
     return !!models.find(
-      (m) => m.name === model || m.name === `${model}:latest`
+      (m: { name: string }) => m.name === model || m.name === `${model}:latest`
     );
   }
 
@@ -694,10 +698,6 @@ export class ChatOllama
     };
   }
 
-  /**
-   * Implement to support streaming.
-   * Should yield chunks iteratively.
-   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -720,29 +720,6 @@ export class ChatOllama
       output_tokens: 0,
       total_tokens: 0,
     };
-
-    if (params.tools && params.tools.length > 0) {
-      const toolResult = await this.client.chat({
-        ...params,
-        messages: ollamaMessages,
-        stream: false, // Ollama currently does not support streaming with tools
-      });
-
-      const { message: responseMessage, ...rest } = toolResult;
-      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
-      usageMetadata.output_tokens += rest.eval_count ?? 0;
-      usageMetadata.total_tokens =
-        usageMetadata.input_tokens + usageMetadata.output_tokens;
-
-      yield new ChatGenerationChunk({
-        text: responseMessage.content,
-        message: convertOllamaMessagesToLangChain(responseMessage, {
-          responseMetadata: rest,
-          usageMetadata,
-        }),
-      });
-      return runManager?.handleLLMNewToken(responseMessage.content);
-    }
 
     const stream = await this.client.chat({
       ...params,
@@ -786,7 +763,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -797,7 +774,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -808,7 +785,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -827,7 +804,7 @@ export class ChatOllama
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -841,9 +818,9 @@ export class ChatOllama
         }
       > {
     if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isZodSchema(outputSchema);
+      const outputSchemaIsZod = isInteropZodSchema(outputSchema);
       const jsonSchema = outputSchemaIsZod
-        ? zodToJsonSchema(outputSchema)
+        ? toJsonSchema(outputSchema)
         : outputSchema;
       const llm = this.bindTools([
         {
@@ -856,6 +833,10 @@ export class ChatOllama
         },
       ]).withConfig({
         format: "json",
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(outputSchema),
+        },
       });
       const outputParser = outputSchemaIsZod
         ? StructuredOutputParser.fromZodSchema(outputSchema)

@@ -5,8 +5,8 @@ import { callToolList, model } from "./helpers.js";
 // Use readline to ask the user for approval
 function askQuestion(question: string): Promise<string> {
   const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+    input: process.stdin as unknown as NodeJS.ReadableStream,
+    output: process.stdout as unknown as NodeJS.WritableStream,
   });
 
   return new Promise((resolve) => {

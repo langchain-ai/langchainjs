@@ -4,7 +4,8 @@ import {
 } from "@langchain/core/utils/async_caller";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { StructuredTool } from "@langchain/core/tools";
-import { ZodOptional, ZodString, z } from "zod";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
+import { z } from "zod";
 
 /**
  * An object containing configuration parameters for the ConneryService class.
@@ -70,7 +71,7 @@ export class ConneryAction extends StructuredTool {
 
   description: string;
 
-  schema: z.ZodObject<Record<string, ZodString | ZodOptional<ZodString>>>;
+  schema: z.ZodObject<Record<string, z.ZodString | z.ZodOptional<z.ZodString>>>;
 
   /**
    * Creates a ConneryAction instance based on the provided Connery Action.
@@ -93,7 +94,9 @@ export class ConneryAction extends StructuredTool {
    * @param arg The input object expected by the action.
    * @returns A promise that resolves to a JSON string containing the output of the action.
    */
-  protected _call(arg: z.output<typeof this.schema>): Promise<string> {
+  protected _call(
+    arg: InferInteropZodOutput<typeof this.schema>
+  ): Promise<string> {
     return this._service.runAction(this._action.id, arg);
   }
 
@@ -102,16 +105,16 @@ export class ConneryAction extends StructuredTool {
    * @returns A Zod schema for the input object expected by the Connery action.
    */
   protected createInputSchema(): z.ZodObject<
-    Record<string, ZodString | ZodOptional<ZodString>>
+    Record<string, z.ZodString | z.ZodOptional<z.ZodString>>
   > {
     const dynamicInputFields: Record<
       string,
-      ZodString | ZodOptional<ZodString>
+      z.ZodString | z.ZodOptional<z.ZodString>
     > = {};
 
     this._action.inputParameters.forEach((param) => {
       const isRequired = param.validation?.required ?? false;
-      let fieldSchema: ZodString | ZodOptional<ZodString> = z.string();
+      let fieldSchema: z.ZodString | z.ZodOptional<z.ZodString> = z.string();
       fieldSchema = isRequired ? fieldSchema : fieldSchema.optional();
 
       const fieldDescription =

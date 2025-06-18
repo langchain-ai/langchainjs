@@ -1,6 +1,11 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isModelGemini, isModelGemma, validateGeminiParams } from "./gemini.js";
+import {
+  isModelGemini,
+  isModelGemma,
+  normalizeSpeechConfig,
+  validateGeminiParams,
+} from "./gemini.js";
 import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -194,6 +199,9 @@ export function copyAIModelParamsInto(
     options?.responseModalities ??
     params?.responseModalities ??
     target?.responseModalities;
+  ret.speechConfig = normalizeSpeechConfig(
+    options?.speechConfig ?? params?.speechConfig ?? target?.speechConfig
+  );
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
   const toolChoice = processToolChoice(
     options?.tool_choice,

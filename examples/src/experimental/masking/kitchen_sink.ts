@@ -32,8 +32,8 @@ const patterns = {
   name: { regex: /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, mask: nameMask },
   ssn: { regex: /\b\d{3}-\d{2}-\d{4}\b/g, mask: ssnMask },
   creditCard: { regex: /\b(?:\d{4}[ -]?){3}\d{4}\b/g, mask: creditCardMask },
-  passport: { regex: /(?i)\b[A-Z]{1,2}\d{6,9}\b/g, mask: passportMask },
-  license: { regex: /(?i)\b[A-Z]{1,2}\d{6,8}\b/g, mask: licenseMask },
+  passport: { regex: /(?:i)\b[A-Z]{1,2}\d{6,9}\b/g, mask: passportMask },
+  license: { regex: /(?:i)\b[A-Z]{1,2}\d{6,8}\b/g, mask: licenseMask },
   address: {
     regex: /\b\d{1,5}\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)\*\b/g,
     mask: addressMask,
