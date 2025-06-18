@@ -851,7 +851,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig).toHaveProperty("thinkingConfig");
     const { thinkingConfig } = data.generationConfig;
     expect(thinkingConfig).toHaveProperty("thinkingBudget");
-    expect(thinkingConfig.thinkingBudget).toEqual(8192);
+    expect(thinkingConfig.thinkingBudget).toEqual(1024);
   });
 
   test("2. Safety - settings", async () => {
