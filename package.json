@@ -53,7 +53,7 @@
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
-    "turbo": "^1.13.3",
+    "turbo": "^2.5.4",
     "typescript": "~5.8.3"
   },
   "resolutions": {
