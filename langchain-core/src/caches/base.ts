@@ -1,4 +1,4 @@
-import { insecureHash } from "../utils/hash.js";
+import { insecureHash, type HashKeyEncoder } from "../utils/hash.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
 import { mapStoredMessageToChatMessage } from "../messages/utils.js";
 import { type StoredGeneration } from "../messages/base.js";
@@ -16,7 +16,7 @@ import { type StoredGeneration } from "../messages/base.js";
  * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
  * This function will be removed in a future version.
  */
-export const getCacheKey = (...strings: string[]): string =>
+export const getCacheKey: HashKeyEncoder = (...strings) =>
   insecureHash(strings.join("_"));
 
 export function deserializeStoredGeneration(
@@ -49,7 +49,7 @@ export abstract class BaseCache<T = Generation[]> {
   // For backwards compatibility, we use a default key encoder
   // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
   // about the security implications of using SHA-1 as a cache key.
-  protected keyEncoder: (...strings: string[]) => string = getCacheKey;
+  protected keyEncoder: HashKeyEncoder = getCacheKey;
 
   /**
    * Sets a custom key encoder function for the cache.
@@ -57,7 +57,7 @@ export abstract class BaseCache<T = Generation[]> {
    * that will be used as the cache key.
    * @param keyEncoderFn The custom key encoder function.
    */
-  makeDefaultKeyEncoder(keyEncoderFn: (...strings: string[]) => string): void {
+  makeDefaultKeyEncoder(keyEncoderFn: HashKeyEncoder): void {
     this.keyEncoder = keyEncoderFn;
   }
 
