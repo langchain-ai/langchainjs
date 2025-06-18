@@ -421,13 +421,15 @@ let hasLoggedWarning = false;
 export const insecureHash = (message) => {
   if (!hasLoggedWarning) {
     console.warn(
-      "Using default key encoder: SHA-1 is *not* collision-resistant. " +
-        "While acceptable for most cache scenarios, a motivated attacker " +
-        "can craft two different payloads that map to the same cache key. " +
-        "If that risk matters in your environment, supply a stronger " +
-        "encoder (e.g. SHA-3) by calling the `makeDefaultKeyEncoder()` method. " +
-        "If you change the key encoder, consider also creating a new cache, " +
-        "to avoid (the potential for) collisions with existing keys."
+      [
+        `The default method for hashing keys is insecure and will be replaced in a future version,`,
+        `but hasn't been replaced yet as to not break existing caches. It's recommended that you use`,
+        `a more secure hashing algorithm to avoid cache poisoning.`,
+        ``,
+        `See this page for more information:`,
+        `|`,
+        `└> https://js.langchain.com/docs/troubleshooting/warnings/insecure-cache-algorithm`,
+      ].join("\n")
     );
     hasLoggedWarning = true;
   }

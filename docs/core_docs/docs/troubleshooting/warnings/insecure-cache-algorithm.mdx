@@ -1,0 +1,29 @@
+# Insecure Cache Algorithms
+
+> **Warning: Insecure Cache Key Algorithm (SHA-1)**
+
+LangChain's default cache key encoder uses the SHA-1 hashing algorithm to generate cache keys for prompt/LLM pairs. While this is generally acceptable for most cache scenarios, **SHA-1 is _not_ collision-resistant**. This means that a motivated attacker could potentially craft two different payloads that result in the same cache key, leading to possible cache poisoning or unexpected cache hits.
+
+SHA-1 is now deprecated for cache key generation in LangChain. However, to maintain compatibility with existing deployments, the transition away from SHA-1 is opt-in rather than automatic. In later versions, SHA-1 will be replaced as the default by a more secure hashing algorithm.
+
+### Why does this matter?
+
+- **Security Risk:** If your application is exposed to untrusted input, an attacker could intentionally generate two different prompts or LLM keys that hash to the same value, causing one to overwrite the other's cache entry.
+- **Data Integrity:** Collisions could result in incorrect generations being returned from the cache, which may be problematic in sensitive or high-integrity environments.
+
+### When should you care?
+
+- If your application is public-facing or handles sensitive data.
+- If cache integrity is critical to your workflow.
+- If you have compliance or security requirements that prohibit the use of weak hash functions.
+
+### How to mitigate
+
+You can supply a stronger hash function (such as SHA-256 or SHA-3) for cache key encoding by using the `makeDefaultKeyEncoder()` method on your cache instance. For example:
+
+```ts
+import { sha256 } from "@langchain/core/utils/hash/sha256";
+
+const client = new CacheClient(...);
+client.makeDefaultKeyEncoder(sha256);
+```
