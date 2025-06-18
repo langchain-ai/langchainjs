@@ -526,32 +526,32 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -570,7 +570,7 @@ const testGeminiModelDelay: Record<string, number> = {
 };
 
 describe.each(testGeminiModelNames)(
-  "Webauth ($platformType) Gemini Chat ($modelName)",
+  "Webauth ($platformType) Gemini Chat ($model)",
   ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -1460,7 +1460,7 @@ const testMultimodalModelNames = [
 ];
 
 describe.each(testMultimodalModelNames)(
-  "Webauth ($platformType) Gemini Multimodal ($modelName)",
+  "Webauth ($platformType) Gemini Multimodal ($model)",
   ({ model, platformType, apiVersion }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
@@ -1524,27 +1524,27 @@ describe.each(testMultimodalModelNames)(
 
 const testTtsModelNames = [
   {
-    modelName: "gemini-2.5-flash-preview-tts",
+    model: "gemini-2.5-flash-preview-tts",
     platformType: "gai",
   },
   // GCP doesn't currently support this model
   // {
-  //   modelName: "gemini-2.5-flash-preview-tts",
+  //   model: "gemini-2.5-flash-preview-tts",
   //   platformType: "gcp",
   // },
   {
-    modelName: "gemini-2.5-pro-preview-tts",
+    model: "gemini-2.5-pro-preview-tts",
     platformType: "gai",
   },
   // {
-  //   modelName: "gemini-2.5-pro-preview-tts",
+  //   model: "gemini-2.5-pro-preview-tts",
   //   platformType: "gcp",
   // },
 ];
 
 describe.each(testTtsModelNames)(
-  "Webauth ($platformType) Gemini TTS ($modelName)",
-  ({ modelName, platformType }) => {
+  "Webauth ($platformType) Gemini TTS ($model)",
+  ({ model, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
@@ -1564,7 +1564,7 @@ describe.each(testTtsModelNames)(
       const responseModalities = ["AUDIO"];
 
       return new ChatGoogle({
-        modelName,
+        model,
         platformType: platformType as GooglePlatformType,
         callbacks,
         apiKey,
@@ -1582,7 +1582,7 @@ describe.each(testTtsModelNames)(
     });
 
     function writeData(data: string) {
-      const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
+      const fn = `/tmp/tts-${model}-${platformType}-${testIndex}-${outputIndex}.pcm`;
       console.log(`writing to ${fn}`);
       Fs.writeFileSync(fn, data, "base64");
     }
@@ -1695,35 +1695,35 @@ describe.each(testTtsModelNames)(
 
 const testReasoningModelNames = [
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    model: "gemini-2.5-flash-lite-preview-06-17",
     platformType: "gcp",
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-flash",
+    model: "gemini-2.5-flash",
     platformType: "gcp",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gai",
   },
   {
-    modelName: "gemini-2.5-pro",
+    model: "gemini-2.5-pro",
     platformType: "gcp",
   },
 ];
 
 describe.each(testReasoningModelNames)(
-  "Webauth ($platformType) Reasoning($modelName)",
+  "Webauth ($platformType) Reasoning($model)",
   ({ model, platformType }) => {
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
