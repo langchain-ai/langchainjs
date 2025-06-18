@@ -55,7 +55,6 @@ import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
   CredentialType,
-  BedrockChatModelId,
 } from "./types.js";
 
 /**
@@ -85,7 +84,7 @@ export interface ChatBedrockConverseInput
    *
    * @default anthropic.claude-3-haiku-20240307-v1:0
    */
-  model?: BedrockChatModelId;
+  model?: string;
 
   /**
    * The AWS region e.g. `us-west-2`.

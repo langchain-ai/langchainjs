@@ -5,7 +5,7 @@ import {
 } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
-import type { WatsonxAuth, WatsonxParams, WatsonxEmbeddingModelId } from "../types/ibm.js";
+import { WatsonxAuth, WatsonxParams } from "../types/ibm.js";
 import { authenticateAndSetInstance } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
@@ -22,7 +22,7 @@ export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxParams
 {
-  model: WatsonxEmbeddingModelId;
+  model: string;
 
   serviceUrl: string;
 

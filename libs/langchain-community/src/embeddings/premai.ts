@@ -4,26 +4,6 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 import Prem from "@premai/prem-sdk";
 
 /**
- * @see https://docs.premai.io/get-started/supported-models
- */
-export type PremEmbeddingsModelId =
-  | 'embed-multilingual'
-  | 'embed-multilingual-light'
-  | 'embed-english'
-  | 'all-mpnet-base-v2'
-  | 'embed-english-light'
-  | 'gte-large'
-  | 'bge-large-en-v1.5'
-  | 'text-embedding-3-large'
-  | 'text-embedding-ada-002'
-  | 'bge-base-en'
-  | 'bge-large-en'
-  | 'bge-small-en'
-  | 'text-embedding-3-small'
-  | 'mistral-embed'
-  | (string & NonNullable<unknown>);
-
-/**
  * Interface for PremEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the PremEmbeddings class.
  */
@@ -43,7 +23,7 @@ export interface PremEmbeddingsParams extends EmbeddingsParams {
   /**
    * The model to generate the embeddings.
    */
-  model: PremEmbeddingsModelId;
+  model: string;
 
   encoding_format?: ("float" | "base64") & string;
 
@@ -63,7 +43,7 @@ export class PremEmbeddings extends Embeddings implements PremEmbeddingsParams {
 
   project_id: number;
 
-  model: PremEmbeddingsModelId;
+  model: string;
 
   encoding_format?: ("float" | "base64") & string;
 

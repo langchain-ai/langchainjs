@@ -3,9 +3,7 @@ import { CohereClient, Cohere as CohereTypes } from "cohere-ai";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-
 import { CohereClientOptions, getCohereClient } from "./client.js";
-import type { CohereChatModelId } from "./types.js";
 
 /**
  * Interface for the input parameters specific to the Cohere model.
@@ -20,7 +18,7 @@ export interface BaseCohereInput extends BaseLLMParams {
   maxTokens?: number;
 
   /** Model to use */
-  model?: CohereChatModelId;
+  model?: string;
 }
 
 export type CohereInput = BaseCohereInput & CohereClientOptions;
@@ -71,7 +69,7 @@ export class Cohere extends LLM<CohereCallOptions> implements CohereInput {
 
   maxTokens = 250;
 
-  model: CohereChatModelId;
+  model: string;
 
   apiKey: string;
 

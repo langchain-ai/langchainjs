@@ -9,27 +9,6 @@ export type EmbeddingTaskType =
   | "clustering"
   | "classification";
 
-export type NomicEmbeddingsModelId =
-  | "nomic-embed"
-  | "nomic-embed-text-v1"
-  | "nomic-embed-text-v1.5"
-  | "nomic-embed-text-v1-GGUF"
-  | "nomic-embed-text-v1.5-GGUF"
-  | "nomic-embed-text-v2-moe"
-  | "nomic-embed-text-v2-moe-GGUF"
-  | "nomic-embed-text-v2-moe-unsupervised"
-  | "nomic-embed-text-v1-unsupervised"
-  | "nomic-embed-text-v1-ablated"
-  | "nomic-embed-code"
-  | "nomic-embed-code-GGUF"
-  | "nomic-embed-multimodal-3b"
-  | "nomic-embed-multimodal-7b"
-  | "colnomic-embed-multimodal-3b"
-  | "colnomic-embed-multimodal-7b"
-  | "nomic-embed-vision-v1"
-  | "nomic-embed-vision-v1.5"
-  | (string & NonNullable<unknown>);
-
 /**
  * Interface for NomicEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the NomicEmbeddings class.
@@ -45,12 +24,12 @@ export interface NomicEmbeddingsParams extends EmbeddingsParams {
    * Alias for `model`
    * @default {"nomic-embed-text-v1"}
    */
-  modelName?: NomicEmbeddingsModelId;
+  modelName?: string;
   /**
    * The name of the model to use.
    * @default {"nomic-embed-text-v1"}
    */
-  model?: NomicEmbeddingsModelId;
+  model?: string;
   /**
    * The task your embeddings should be specialized for:
    * search_query, search_document, clustering, classification.

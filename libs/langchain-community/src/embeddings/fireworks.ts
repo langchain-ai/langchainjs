@@ -2,13 +2,6 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
-// Below is just a subset of the available models.
-export type FireworksEmbeddingModelId =
-  | 'nomic-ai/nomic-embed-text-v2-moe'
-  | 'nomic-ai/nomic-embed-text-v1.5'
-  | 'nomic-ai/nomic-embed-text-v1'
-  | (string & NonNullable<unknown>);
-
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the FireworksEmbeddings class.
@@ -17,12 +10,12 @@ export interface FireworksEmbeddingsParams extends EmbeddingsParams {
   /**
    * @deprecated Use `model` instead.
    */
-  modelName: FireworksEmbeddingModelId;
+  modelName: string;
 
   /**
    * Model name to use.
    */
-  model: FireworksEmbeddingModelId;
+  model: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -39,7 +32,7 @@ export interface CreateFireworksEmbeddingRequest {
    * @type {string}
    * @memberof CreateFireworksEmbeddingRequest
    */
-  model: FireworksEmbeddingModelId;
+  model: string;
 
   /**
    *  Text to generate vector expectation

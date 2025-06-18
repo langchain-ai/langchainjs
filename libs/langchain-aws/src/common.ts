@@ -49,7 +49,6 @@ import {
   MessageContentReasoningBlockReasoningText,
   MessageContentReasoningBlockReasoningTextPartial,
   MessageContentReasoningBlockRedacted,
-  BedrockChatModelId,
 } from "./types.js";
 
 const standardContentBlockConverter: StandardContentBlockConverter<{
@@ -563,7 +562,7 @@ export function convertToBedrockToolChoice(
   toolChoice: BedrockConverseToolChoice,
   tools: BedrockTool[],
   fields: {
-    model: BedrockChatModelId;
+    model: string;
     supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
   }
 ): BedrockToolChoice {

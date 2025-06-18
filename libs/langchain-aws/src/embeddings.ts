@@ -3,7 +3,7 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
-import { type BedrockEmbeddingModelId, type CredentialType } from "./types.js";
+import { CredentialType } from "./types.js";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -14,7 +14,7 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
    * Model Name to use. Defaults to `amazon.titan-embed-text-v1` if not provided
    *
    */
-  model?: BedrockEmbeddingModelId;
+  model?: string;
 
   /**
    * A client provided by the user that allows them to customze any
@@ -52,7 +52,7 @@ export class BedrockEmbeddings
   extends Embeddings
   implements BedrockEmbeddingsParams
 {
-  model: BedrockEmbeddingModelId;
+  model: string;
 
   client: BedrockRuntimeClient;
 

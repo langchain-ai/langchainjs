@@ -1,4 +1,8 @@
-import { type ClientOptions, type OpenAIChatModelId, OpenAIClient } from "@langchain/openai";
+import {
+  type ClientOptions,
+  type OpenAIChatModelId,
+  OpenAIClient,
+} from "@langchain/openai";
 import { StructuredTool } from "@langchain/core/tools";
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { formatToOpenAIAssistantTool } from "@langchain/openai";
