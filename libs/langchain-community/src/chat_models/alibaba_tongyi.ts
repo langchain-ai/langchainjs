@@ -94,11 +94,9 @@ interface ChatCompletionResponse {
  */
 interface AlibabaTongyiChatInput {
   /**
-   * Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
-   * Alias for `model`
-   * @default "qwen-turbo"
+   * @deprecated Use `model` instead.
    */
-  modelName: string;
+  modelName?: string;
 
   /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
    * @default "qwen-turbo"
@@ -237,6 +235,7 @@ export class ChatAlibabaTongyi
 
   prefixMessages?: TongyiMessage[];
 
+  /** @deprecated Use `model` instead. */
   modelName: ChatCompletionRequest["model"];
 
   model: ChatCompletionRequest["model"];
@@ -280,8 +279,8 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
-    this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields.modelName ?? "qwen-turbo";
+    this.modelName = this.model;
   }
 
   /**

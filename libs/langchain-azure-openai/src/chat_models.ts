@@ -231,7 +231,8 @@ export class AzureChatOpenAI
 
   streaming: boolean;
 
-  modelName: string;
+  /** @deprecated Use `model` instead */
+  modelName?: string;
 
   model: string;
 
@@ -300,8 +301,8 @@ export class AzureChatOpenAI
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
     this.temperature = fields?.temperature ?? this.temperature;

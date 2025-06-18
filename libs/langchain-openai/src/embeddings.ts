@@ -11,11 +11,7 @@ import { wrapOpenAIClientError } from "./utils/openai.js";
  * defines additional parameters specific to the OpenAIEmbeddings class.
  */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
-  /**
-   * Model name to use
-   * Alias for `model`
-   * @deprecated Use "model" instead.
-   */
+  /** @deprecated Use "model" instead. */
   modelName: string;
   /** Model name to use */
   model: string;

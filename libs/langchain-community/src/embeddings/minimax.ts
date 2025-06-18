@@ -8,10 +8,7 @@ import { ConfigurationParameters } from "../chat_models/minimax.js";
  * defines additional parameters specific to the MinimaxEmbeddings class.
  */
 export interface MinimaxEmbeddingsParams extends EmbeddingsParams {
-  /**
-   * Model name to use
-   * Alias for `model`
-   */
+  /** @deprecated Use `model` instead */
   modelName: string;
   /** Model name to use */
   model: string;
@@ -107,6 +104,7 @@ export class MinimaxEmbeddings
   extends Embeddings
   implements MinimaxEmbeddingsParams
 {
+  /** @deprecated Use `model` instead */
   modelName = "embo-01";
 
   model = "embo-01";
@@ -152,9 +150,9 @@ export class MinimaxEmbeddings
       throw new Error("Minimax ApiKey not found");
     }
 
-    this.modelName =
+    this.model =
       fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.modelName = this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.type = fieldsWithDefaults?.type ?? this.type;
     this.stripNewLines =

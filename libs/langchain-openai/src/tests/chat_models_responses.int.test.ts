@@ -76,7 +76,7 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
 }
 
 test("Test with built-in web search", async () => {
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
 
   // Test invoking with web search
   const firstResponse = await llm.invoke(
@@ -130,7 +130,7 @@ test.each(["stream", "invoke"])(
       schema: z.object({ x: z.number(), y: z.number() }),
     });
 
-    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
+    const llm = new ChatOpenAI({ model: "gpt-4o-mini" }).bindTools([
       multiply,
       { type: "web_search_preview" },
     ]);
@@ -189,7 +189,7 @@ test("Test structured output", async () => {
   };
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
   const response = await llm.invoke("how are ya", { response_format });
@@ -226,7 +226,7 @@ test("Test function calling and structured output", async () => {
   };
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
 
@@ -257,13 +257,13 @@ test("Test function calling and structured output", async () => {
 });
 
 test("Test reasoning", async () => {
-  const llm = new ChatOpenAI({ modelName: "o3-mini", useResponsesApi: true });
+  const llm = new ChatOpenAI({ model: "o3-mini", useResponsesApi: true });
   const response = await llm.invoke("Hello", { reasoning_effort: "low" });
   expect(response).toBeInstanceOf(AIMessage);
   expect(response.additional_kwargs.reasoning).toBeDefined();
 
   const llmWithEffort = new ChatOpenAI({
-    modelName: "o3-mini",
+    model: "o3-mini",
     reasoningEffort: "low",
     useResponsesApi: true,
   });
@@ -278,7 +278,7 @@ test("Test reasoning", async () => {
 
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
   const response = await llm.invoke("how are you, my name is Bobo");
@@ -300,7 +300,7 @@ test("Test stateful API", async () => {
 });
 
 test("Test file search", async () => {
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
   const tool = {
     type: "file_search",
     vector_store_ids: [process.env.OPENAI_VECTOR_STORE_ID],

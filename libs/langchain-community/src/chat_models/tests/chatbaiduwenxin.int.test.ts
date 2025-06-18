@@ -3,7 +3,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { ChatBaiduWenxin } from "../baiduwenxin.js";
 
 interface TestConfig {
-  modelName: string | undefined;
+  model: string | undefined;
   config: {
     description?: string;
     temperature?: number;
@@ -23,7 +23,7 @@ interface TestConfig {
 
 test.skip("Test chat.stream work fine", async () => {
   const chat = new ChatBaiduWenxin({
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
   });
   const stream = await chat.stream(
     `Translate "I love programming" into Chinese.`
@@ -36,13 +36,13 @@ test.skip("Test chat.stream work fine", async () => {
 });
 
 const runTest = async ({
-  modelName,
+  model,
   config,
   system = "",
   message = "Hello!",
   shouldThrow = false,
 }: TestConfig) => {
-  const description = `Test ChatBaiduWenxin ${modelName || "default model"} ${
+  const description = `Test ChatBaiduWenxin ${model || "default model"} ${
     config.description || ""
   }`.trim();
   let nrNewTokens = 0;
@@ -60,7 +60,7 @@ const runTest = async ({
   }
   test.skip(description, async () => {
     const chat = new ChatBaiduWenxin({
-      modelName,
+      model,
       ...config,
     });
 
@@ -86,19 +86,19 @@ const runTest = async ({
 };
 
 const testConfigs: TestConfig[] = [
-  { modelName: undefined, config: {} },
-  { modelName: "ERNIE-Bot", config: {} },
+  { model: undefined, config: {} },
+  { model: "ERNIE-Bot", config: {} },
   {
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
     config: { description: "with temperature", temperature: 1 },
   },
-  { modelName: "ERNIE-Bot", config: { description: "with topP", topP: 1 } },
+  { model: "ERNIE-Bot", config: { description: "with topP", topP: 1 } },
   {
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
     config: { description: "with penaltyScore", penaltyScore: 1 },
   },
   {
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -106,7 +106,7 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
     config: {
       description: "illegal input should throw an error",
       temperature: 0,
@@ -114,7 +114,7 @@ const testConfigs: TestConfig[] = [
     shouldThrow: true,
   },
   {
-    modelName: "ERNIE-Bot",
+    model: "ERNIE-Bot",
     config: {
       description: "illegal input in streaming mode should throw an error",
       streaming: true,
@@ -122,9 +122,9 @@ const testConfigs: TestConfig[] = [
     },
     shouldThrow: true,
   },
-  { modelName: "ERNIE-Lite-8K", config: {} },
+  { model: "ERNIE-Lite-8K", config: {} },
   {
-    modelName: "ERNIE-Lite-8K",
+    model: "ERNIE-Lite-8K",
     config: {
       description: "in streaming mode",
       streaming: true,
@@ -132,22 +132,22 @@ const testConfigs: TestConfig[] = [
     message: "您好，请讲个长笑话",
   },
   {
-    modelName: "ERNIE-Lite-8K",
+    model: "ERNIE-Lite-8K",
     config: {
       description: "with system message",
     },
     system: "你是一个说文言文的人",
   },
   {
-    modelName: "ERNIE-Bot-4",
+    model: "ERNIE-Bot-4",
     config: {},
   },
   {
-    modelName: "ERNIE-Speed-8K",
+    model: "ERNIE-Speed-8K",
     config: {},
   },
   {
-    modelName: "ERNIE-Speed-128K",
+    model: "ERNIE-Speed-128K",
     config: {},
   },
 ];

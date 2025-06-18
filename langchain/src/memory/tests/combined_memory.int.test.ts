@@ -19,7 +19,7 @@ test("Test combined memory", async () => {
   // summary memory
   const conversationSummaryMemory = new ConversationSummaryMemory({
     llm: new OpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       temperature: 0,
       verbose: true,
     }),
@@ -58,7 +58,7 @@ test("Test combined memory return messages", async () => {
   // summary memory
   const summary_memory = new ConversationSummaryMemory({
     llm: new OpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       temperature: 0,
       verbose: true,
     }),
