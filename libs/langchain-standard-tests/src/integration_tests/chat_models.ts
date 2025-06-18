@@ -163,7 +163,7 @@ export abstract class ChatModelIntegrationTests<
    *
    * It verifies that:
    * 1. The result is defined and is an instance of the correct type.
-   * 2. The content of the response is a non-empty string.
+   * 2. The text content of the result is a non-empty string.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
@@ -181,7 +181,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Verify that the response content is not empty
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
     expect(result.text).not.toBe("");
   }
 
@@ -252,7 +253,8 @@ export abstract class ChatModelIntegrationTests<
       // Verify the result is of the expected type
       expect(result).toBeInstanceOf(this.invokeResponseType);
 
-      // Ensure the content is a non-empty string
+      // Ensure the response content is a non-empty string
+      expect(typeof result.text).toBe("string");
       expect(result.text).not.toBe("");
     }
   }
