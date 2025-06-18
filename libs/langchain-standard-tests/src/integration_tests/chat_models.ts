@@ -7,6 +7,7 @@ import {
   AIMessageChunk,
   BaseMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   UsageMetadata,
   getBufferString,
@@ -360,7 +361,48 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Verify that the response content is not empty
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
+    expect(result.text).not.toBe("");
+  }
+
+  /**
+   * This test ensures that the model can process a sequence of numerous back-to-back messages
+   * from different roles (Human and AI) and generate an appropriate response.
+   *
+   * It verifies that:
+   * 1. The result is defined and is an instance of the correct response type.
+   * 2. The content of the response is a non-empty string.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testDoubleMessageConversation(callOptions?: any) {
+    // Create a new instance of the chat model
+    const chatModel = new this.Cls(this.constructorArgs);
+
+    // Prepare a conversation history with alternating Human and AI messages
+    const messages = [
+      new SystemMessage("hello"),
+      new SystemMessage("hello"),
+      new HumanMessage("hello"),
+      new HumanMessage("hello"),
+      new AIMessage("hello"),
+      new AIMessage("hello"),
+      new HumanMessage("how are you"),
+    ];
+
+    // Invoke the model with the conversation history
+    const result = await chatModel.invoke(messages, callOptions);
+
+    // Verify that the result is defined
+    expect(result).toBeDefined();
+
+    // Check that the result is an instance of the expected response type
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
     expect(result.text).not.toBe("");
   }
 
