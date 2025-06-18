@@ -557,6 +557,24 @@
       "import": "./utils/hash.js",
       "require": "./utils/hash.cjs"
     },
+    "./utils/hash/insecure": {
+      "types": {
+        "import": "./utils/hash/insecure.d.ts",
+        "require": "./utils/hash/insecure.d.cts",
+        "default": "./utils/hash/insecure.d.ts"
+      },
+      "import": "./utils/hash/insecure.js",
+      "require": "./utils/hash/insecure.cjs"
+    },
+    "./utils/hash/sha256": {
+      "types": {
+        "import": "./utils/hash/sha256.d.ts",
+        "require": "./utils/hash/sha256.d.cts",
+        "default": "./utils/hash/sha256.d.ts"
+      },
+      "import": "./utils/hash/sha256.js",
+      "require": "./utils/hash/sha256.cjs"
+    },
     "./utils/json_patch": {
       "types": {
         "import": "./utils/json_patch.d.ts",
@@ -841,6 +859,14 @@
     "utils/hash.js",
     "utils/hash.d.ts",
     "utils/hash.d.cts",
+    "utils/hash/insecure.cjs",
+    "utils/hash/insecure.js",
+    "utils/hash/insecure.d.ts",
+    "utils/hash/insecure.d.cts",
+    "utils/hash/sha256.cjs",
+    "utils/hash/sha256.js",
+    "utils/hash/sha256.d.ts",
+    "utils/hash/sha256.d.cts",
     "utils/json_patch.cjs",
     "utils/json_patch.js",
     "utils/json_patch.d.ts",
