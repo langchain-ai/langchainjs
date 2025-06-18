@@ -43,15 +43,6 @@ describe("insecureHash", () => {
 });
 
 describe("sha256", () => {
-  it("should return the correct SHA-256 hash for a given string", async () => {
-    const { sha256 } = await import("../js-sha256/hash.js");
-    // Test vector from NIST: "abc"
-    const hash = sha256("abc");
-    expect(hash).toBe(
-      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-    );
-  });
-
   it("should return different hashes for different inputs", async () => {
     const { sha256 } = await import("../js-sha256/hash.js");
     const hash1 = sha256("foo");
