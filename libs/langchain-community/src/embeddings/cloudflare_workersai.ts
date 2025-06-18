@@ -20,6 +20,7 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use `model` instead.
    */
   modelName?: string;
   /** Model name to use */
