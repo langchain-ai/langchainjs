@@ -1467,7 +1467,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function partsToSignatures(parts: GeminiPart[]): string[] {
-    return parts.map((part: GeminiPart) => part.thoughtSignature ?? "");
+    return parts.map((part: GeminiPart) => part?.thoughtSignature ?? "");
   }
 
   function partsToBaseMessageChunkFields(
