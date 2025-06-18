@@ -113,6 +113,86 @@ interface ChatModelIntegrationTestsFields<
   supportsParallelToolCalls?: boolean;
 }
 
+// --- Message Content Types ---
+// Per MessageContent and MessageContentComplex definitions
+export type MessageContentText = {
+  type: "text";
+  text: string;
+};
+
+export type MessageContentImageUrl = {
+  type: "image_url";
+  image_url:
+    | string
+    | {
+        url: string;
+        detail?: "auto" | "low" | "high";
+      };
+};
+
+// Generic fallback for other complex types
+export type MessageContentUnknown = Record<string, any> & {
+  type: string;
+};
+
+export type MessageContentComplex =
+  | MessageContentText
+  | MessageContentImageUrl
+  | MessageContentUnknown;
+
+export type MessageContent = string | MessageContentComplex[];
+
+// --- Type Guard Functions ---
+
+function isMessageContentText(obj: any): obj is MessageContentText {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    obj.type === "text" &&
+    typeof obj.text === "string"
+  );
+}
+
+/**
+ * Checks if an object is a valid MessageContentImageUrl which can be either a simple URL string
+ * or an object with a `url` property. We assume that the `url` property is always a string
+ */
+function isMessageContentImageUrl(obj: any): obj is MessageContentImageUrl {
+  if (obj?.type !== "image_url" || !("image_url" in obj)) {
+    return false;
+  }
+  const { image_url } = obj;
+  if (typeof image_url === "string") {
+    return true; // Simple URL string
+  }
+  if (
+    typeof image_url === "object" &&
+    image_url !== null &&
+    typeof image_url.url === "string"
+  ) {
+    return true; // Detailed object with a URL
+  }
+  return false;
+}
+
+/**
+ * Checks if an object is a valid MessageContentComplex object.
+ */
+function isMessageContentComplex(obj: any): obj is MessageContentComplex {
+  if (!obj || typeof obj !== "object" || typeof obj.type !== "string") {
+    return false;
+  }
+  // Check against the most specific types first
+  if (isMessageContentText(obj) || isMessageContentImageUrl(obj)) {
+    return true;
+  }
+  // Fallback for any other object that has any `type` property
+  if (obj.type) {
+    return true;
+  }
+  return false;
+}
+
 export abstract class ChatModelIntegrationTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
@@ -192,9 +272,10 @@ export abstract class ChatModelIntegrationTests<
    * and that each streamed token is a valid AIMessageChunk.
    *
    * It verifies that:
-   * 1. Each streamed token is defined and is an instance of AIMessageChunk.
-   * 2. The content of each token is a string.
-   * 3. The total number of characters streamed is greater than zero.
+   * 1. The stream produces at least one chunk.
+   * 2. Each streamed chunk is defined and is an instance of AIMessageChunk.
+   * 3. The content of each chunk is a string or a valid array of MessageContentComplex.
+   * 4. The total content received across all chunks is greater than zero.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
@@ -202,18 +283,37 @@ export abstract class ChatModelIntegrationTests<
   async testStream(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
     let numChars = 0;
+    let chunkCount = 0;
 
     // Stream the response for a simple "Hello" prompt
     for await (const token of await chatModel.stream("Hello", callOptions)) {
-      // Verify each token is defined and of the correct type
+      chunkCount += 1;
       expect(token).toBeDefined();
       expect(token).toBeInstanceOf(AIMessageChunk);
+      expect(token.content).toBeDefined();
 
-      // Keep track of the total number of characters
-      numChars += token.content.length;
+      if (typeof token.content === "string") {
+        numChars += token.content.length;
+      } else if (Array.isArray(token.content)) {
+        for (const part of token.content) {
+          expect(isMessageContentComplex(part)).toBe(true);
+          // We can still count this as received content.
+          // Let's count text characters if available.
+          if (part.type === "text") {
+            numChars += part.text.length;
+          } else {
+            numChars += 1; // Count non-text parts as "1" unit of content
+          }
+        }
+      } else {
+        fail("token.content must be a string or MessageContentComplex[]");
+      }
     }
 
-    // Verify that some content was actually streamed
+    // Ensure the stream actually produced at least one chunk.
+    expect(chunkCount).toBeGreaterThan(0);
+
+    // Ensure that across all chunks, some content was actually received.
     expect(numChars).toBeGreaterThan(0);
   }
 
