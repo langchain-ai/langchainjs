@@ -18,6 +18,7 @@ export interface HuggingFaceTransformersEmbeddingsParams
   /**
    * Model name to use
    * Alias for `model`
+   * @deprecated Use `model` instead.
    */
   modelName: string;
 
