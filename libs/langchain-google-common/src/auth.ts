@@ -28,7 +28,7 @@ export abstract class GoogleAbstractedFetchClient
 
   abstract request(opts: GoogleAbstractedClientOps): unknown;
 
-  _fetch: typeof fetch = fetch;
+  abstract fetch: typeof fetch;
 
   async _buildData(res: Response, opts: GoogleAbstractedClientOps) {
     switch (opts.responseType) {
@@ -67,7 +67,7 @@ export abstract class GoogleAbstractedFetchClient
       }
     }
 
-    const res = await this._fetch(url, fetchOptions);
+    const res = await this.fetch(url, fetchOptions);
 
     if (!res.ok) {
       const resText = await res.text();
@@ -100,6 +100,7 @@ export abstract class GoogleAbstractedFetchClient
 
 export class ApiKeyGoogleAuth extends GoogleAbstractedFetchClient {
   apiKey: string;
+  fetch: typeof fetch = fetch;
 
   constructor(apiKey: string) {
     super();
