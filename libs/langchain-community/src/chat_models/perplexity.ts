@@ -42,6 +42,10 @@ import {
   StructuredOutputParser,
   type BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
+import {
+  ReasoningJsonOutputParser,
+  ReasoningStructuredOutputParser,
+} from "../utils/output_parsers.js";
 
 /**
  * Type representing the role of a message in the Perplexity chat model.
@@ -428,43 +432,17 @@ export class ChatPerplexity
     // Check if this is a reasoning model
     const isReasoningModel = this.model.toLowerCase().includes("reasoning");
 
-    const stripThinkTags = (text: string): string => {
-      return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
-    };
-
     if (isInteropZodSchema(schema)) {
-      const baseParser = StructuredOutputParser.fromZodSchema(schema);
       if (isReasoningModel) {
-        // Create a custom parser class that extends the base parser's constructor
-        class ReasoningStructuredOutputParser extends StructuredOutputParser<
-          typeof schema
-        > {
-          constructor() {
-            super(schema as InteropZodType<RunOutput>);
-          }
-
-          async parse(text: string): Promise<RunOutput> {
-            const cleanedText = stripThinkTags(text);
-            return super.parse(cleanedText);
-          }
-        }
-        outputParser = new ReasoningStructuredOutputParser();
+        outputParser = new ReasoningStructuredOutputParser(schema);
       } else {
-        outputParser = baseParser;
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
       }
     } else {
-      const baseParser = new JsonOutputParser<RunOutput>();
       if (isReasoningModel) {
-        // custom parser class for JSON
-        class ReasoningJsonOutputParser extends JsonOutputParser<RunOutput> {
-          async parse(text: string): Promise<RunOutput> {
-            const cleanedText = stripThinkTags(text);
-            return super.parse(cleanedText);
-          }
-        }
-        outputParser = new ReasoningJsonOutputParser();
+        outputParser = new ReasoningJsonOutputParser(schema);
       } else {
-        outputParser = baseParser;
+        outputParser = new JsonOutputParser<RunOutput>();
       }
     }
 
