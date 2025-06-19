@@ -16,6 +16,7 @@ module.exports = {
     "src/utils/@cfworker",
     "src/utils/fast-json-patch",
     "src/utils/js-sha1",
+    "src/utils/js-sha256",
     "src/utils/sax-js",
     ".eslintrc.cjs",
     "scripts",
