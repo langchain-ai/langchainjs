@@ -36,6 +36,12 @@ export class ChatGoogle<Env extends Environment>
 }
 
 /**
+ * Input to a Google Vertex AI chat model class.
+ */
+export interface ChatVertexAIInput<Env extends Environment>
+  extends ChatGoogleInput<Env> {}
+
+/**
  * Integration with Google Vertex AI chat models.
  *
  * Setup:

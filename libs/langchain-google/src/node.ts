@@ -1,60 +1,75 @@
 import { GAuthClient } from "./auth/node.js";
 import { environment } from "./environment.js";
+import {
+  BlobStoreGoogleCloudStorage as CommonBlobStoreGoogleCloudStorage,
+  BlobStoreAIStudioFile as CommonBlobStoreAIStudioFile,
+  BlobStoreAIStudioFileParams as CommonBlobStoreAIStudioFileParams,
+  BlobStoreGoogleCloudStorageParams as CommonBlobStoreGoogleCloudStorageParams,
+} from "./media.js";
+
+import {
+  GoogleEmbeddingsInput as CommonGoogleEmbeddingsInput,
+  GoogleEmbeddings as CommonGoogleEmbeddings,
+  VertexAIEmbeddings as CommonVertexAIEmbeddings,
+  GoogleVertexAIEmbeddingsInput as CommonGoogleVertexAIEmbeddingsInput,
+} from "./embeddings.js";
+
+import {
+  GoogleLLMInput as CommonGoogleLLMInput,
+  GoogleLLM as CommonGoogleLLM,
+  VertexAI as CommonVertexAI,
+  VertexAIInput as CommonVertexAIInput,
+} from "./llms.js";
+
+import {
+  ChatGoogleInput as CommonChatGoogleInput,
+  ChatGoogle as CommonChatGoogle,
+  ChatVertexAI as CommonChatVertexAI,
+  ChatVertexAIInput as CommonChatVertexAIInput,
+} from "./chat_models.js";
 
 environment.value = {
   GoogleAuth: GAuthClient,
 };
 
+type Environment = "node";
+
 /**
  * embeddings for node
  */
-import {
-  GoogleEmbeddingsInput as CommonGoogleEmbeddingsInput,
-  GoogleEmbeddings as CommonGoogleEmbeddings,
-  VertexAIEmbeddings as CommonVertexAIEmbeddings,
-} from "./embeddings.js";
-export type GoogleEmbeddingsInput = CommonGoogleEmbeddingsInput<"node">;
-export class GoogleEmbeddings extends CommonGoogleEmbeddings<"node"> {}
-export class VertexAIEmbeddings extends CommonVertexAIEmbeddings<"node"> {}
+export type GoogleEmbeddingsInput = CommonGoogleEmbeddingsInput<Environment>;
+export class GoogleEmbeddings extends CommonGoogleEmbeddings<Environment> {}
+export class VertexAIEmbeddings extends CommonVertexAIEmbeddings<Environment> {}
+export type GoogleVertexAIEmbeddingsInput =
+  CommonGoogleVertexAIEmbeddingsInput<Environment>;
 
 /**
  * media for node
  */
-import {
-  BlobStoreGoogleCloudStorage as CommonBlobStoreGoogleCloudStorage,
-  BlobStoreAIStudioFile as CommonBlobStoreAIStudioFile,
-  BlobStoreGoogleCloudStorageParams as CommonBlobStoreGoogleCloudStorageParams,
-} from "./media.js";
 export type BlobStoreGoogleCloudStorageParams =
-  CommonBlobStoreGoogleCloudStorageParams<"node">;
-export class BlobStoreGoogleCloudStorage extends CommonBlobStoreGoogleCloudStorage<"node"> {}
-export class BlobStoreAIStudioFile extends CommonBlobStoreAIStudioFile<"node"> {}
+  CommonBlobStoreGoogleCloudStorageParams<Environment>;
+export class BlobStoreGoogleCloudStorage extends CommonBlobStoreGoogleCloudStorage<Environment> {}
+export class BlobStoreAIStudioFile extends CommonBlobStoreAIStudioFile<Environment> {}
+export type BlobStoreAIStudioFileParams =
+  CommonBlobStoreAIStudioFileParams<Environment>;
 
 /**
  * llms for node
  */
-import {
-  GoogleLLMInput as CommonGoogleLLMInput,
-  GoogleLLM as CommonGoogleLLM,
-  VertexAI as CommonVertexAI,
-} from "./llms.js";
-export type GoogleLLMInput = CommonGoogleLLMInput<"node">;
-export class GoogleLLM extends CommonGoogleLLM<"node"> {}
-export class VertexAI extends CommonVertexAI<"node"> {}
+export type GoogleLLMInput = CommonGoogleLLMInput<Environment>;
+export class GoogleLLM extends CommonGoogleLLM<Environment> {}
+export class VertexAI extends CommonVertexAI<Environment> {}
+export type VertexAIInput = CommonVertexAIInput<Environment>;
 
 /**
  * chat models for node
  */
-import {
-  ChatGoogleInput as CommonChatGoogleInput,
-  ChatGoogle as CommonChatGoogle,
-  ChatVertexAI as CommonChatVertexAI,
-} from "./chat_models.js";
-export type ChatGoogleInput = CommonChatGoogleInput<"node">;
-export class ChatGoogle extends CommonChatGoogle<"node"> {}
-export class ChatVertexAI extends CommonChatVertexAI<"node"> {}
+export type ChatGoogleInput = CommonChatGoogleInput<Environment>;
+export class ChatGoogle extends CommonChatGoogle<Environment> {}
+export class ChatVertexAI extends CommonChatVertexAI<Environment> {}
+export type ChatVertexAIInput = CommonChatVertexAIInput<Environment>;
 
 /**
  * export auth primitives
  */
-export * from "./auth/node.js";
+export { GAuthClient } from "./auth/node.js";
