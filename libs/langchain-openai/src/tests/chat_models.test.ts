@@ -2,8 +2,8 @@
 import { z } from "zod";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
-import { ChatOpenAI } from "../chat_models.js";
 import { tool } from "@langchain/core/tools";
+import { ChatOpenAI } from "../chat_models.js";
 
 describe("strict tool calling", () => {
   const weatherTool = {
