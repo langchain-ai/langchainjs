@@ -32,6 +32,12 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
    * Optional HTTP Headers to include in the request.
    */
   headers?: Headers | Record<string, string>;
+
+  /**
+   * The fetch function to use.
+   * @default fetch
+   */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -137,6 +143,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       ? fields?.baseUrl.slice(0, -1)
       : fields?.baseUrl ?? this.baseUrl;
     this.client = new OllamaClient({
+      fetch: fields?.fetch,
       host: this.baseUrl,
       headers: fields?.headers,
     });

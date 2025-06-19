@@ -45,6 +45,12 @@ export interface OllamaEmbeddingsParams extends EmbeddingsParams {
    * for details of the available parameters.
    */
   requestOptions?: OllamaCamelCaseOptions & Partial<OllamaOptions>;
+
+  /**
+   * The fetch function to use.
+   * @default fetch
+   */
+  fetch?: typeof fetch;
 }
 
 export class OllamaEmbeddings extends Embeddings {
@@ -64,6 +70,7 @@ export class OllamaEmbeddings extends Embeddings {
     super({ maxConcurrency: 1, ...fields });
 
     this.client = new Ollama({
+      fetch: fields?.fetch,
       host: fields?.baseUrl,
       headers: fields?.headers ? new Headers(fields.headers) : undefined,
     });
