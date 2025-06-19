@@ -6,8 +6,8 @@
   "engines": {
     "node": ">=18"
   },
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./node.js",
+  "types": "./node.d.ts",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -95,6 +95,15 @@
       "import": "./types.js",
       "require": "./types.cjs"
     },
+    "./web": {
+      "types": {
+        "import": "./web.d.ts",
+        "require": "./web.d.cts",
+        "default": "./web.d.ts"
+      },
+      "import": "./web.js",
+      "require": "./web.cjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -110,6 +119,10 @@
     "types.cjs",
     "types.js",
     "types.d.ts",
-    "types.d.cts"
+    "types.d.cts",
+    "web.cjs",
+    "web.js",
+    "web.d.ts",
+    "web.d.cts"
   ]
 }

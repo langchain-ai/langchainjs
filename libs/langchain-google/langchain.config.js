@@ -9,16 +9,16 @@ function abs(relativePath) {
   return resolve(dirname(fileURLToPath(import.meta.url)), relativePath);
 }
 
-
 export const config = {
   internals: [/node\:/, /@langchain\/core\//, /@langchain\/google-common/],
   entrypoints: {
     index: "index",
     utils: "utils",
     types: "types",
+    web: "web",
   },
   tsConfigPath: resolve("./tsconfig.json"),
   cjsSource: "./dist-cjs",
   cjsDestination: "./dist",
   abs,
-}
+};

@@ -1,1 +1,1 @@
-export * from "@langchain/google-common/types";
+export * from "@langchain/google/types";
