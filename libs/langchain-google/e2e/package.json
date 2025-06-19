@@ -1,0 +1,36 @@
+{
+  "name": "@langchain/google-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "wdio run ./wdio.conf.ts"
+  },
+  "dependencies": {
+    "@langchain/google": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "@wdio/cli": "latest",
+    "@wdio/local-runner": "latest",
+    "@wdio/mocha-framework": "latest",
+    "@wdio/spec-reporter": "latest",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5",
+    "wdio-vite-service": "^2.1.0"
+  }
+}

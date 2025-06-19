@@ -29,6 +29,7 @@
     "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
     "test:standard": "yarn test:standard:unit && yarn test:standard:int",
+    "test:e2e": "yarn workspace @langchain/google-e2e test",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },

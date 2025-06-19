@@ -11,7 +11,8 @@
     "libs/*",
     "examples",
     "docs/*",
-    "internal/*"
+    "internal/*",
+    "libs/langchain-google/e2e"
   ],
   "repository": {
     "type": "git",
