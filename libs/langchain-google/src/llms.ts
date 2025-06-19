@@ -37,6 +37,12 @@ export class GoogleLLM<Env extends Environment>
 }
 
 /**
+ * Input to a Google Vertex AI LLM class.
+ */
+export interface VertexAIInput<Env extends Environment>
+  extends GoogleLLMInput<Env> {}
+
+/**
  * Integration with a Google Vertex AI LLM using
  * the "@langchain/google-gauth" package for auth.
  */

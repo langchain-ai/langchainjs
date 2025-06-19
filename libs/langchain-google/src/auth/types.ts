@@ -5,6 +5,8 @@ import {
 
 export abstract class GoogleAuth extends GoogleAbstractedFetchClient {
   abstract getProjectId(): Promise<string>;
+
   abstract request(opts: GoogleAbstractedClientOps): Promise<unknown>;
+
   abstract get clientType(): string;
 }

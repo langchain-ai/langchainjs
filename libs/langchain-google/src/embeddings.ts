@@ -41,6 +41,9 @@ export class GoogleEmbeddings<Env extends Environment>
   }
 }
 
+export interface GoogleVertexAIEmbeddingsInput<Env extends Environment>
+  extends GoogleEmbeddingsInput<Env> {}
+
 /**
  * Integration with a Google Vertex AI embeddings model using
  * the "@langchain/google-gauth" package for auth.
