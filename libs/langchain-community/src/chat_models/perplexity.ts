@@ -425,11 +425,47 @@ export class ChatPerplexity
     });
 
     let outputParser: BaseLLMOutputParser;
+    // Check if this is a reasoning model
+    const isReasoningModel = this.model.toLowerCase().includes("reasoning");
+
+    const stripThinkTags = (text: string): string => {
+      return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+    };
 
     if (isInteropZodSchema(schema)) {
-      outputParser = StructuredOutputParser.fromZodSchema(schema);
+      const baseParser = StructuredOutputParser.fromZodSchema(schema);
+      if (isReasoningModel) {
+        // Create a custom parser class that extends the base parser's constructor
+        class ReasoningStructuredOutputParser extends StructuredOutputParser<
+          typeof schema
+        > {
+          constructor() {
+            super(schema as InteropZodType<RunOutput>);
+          }
+
+          async parse(text: string): Promise<RunOutput> {
+            const cleanedText = stripThinkTags(text);
+            return super.parse(cleanedText);
+          }
+        }
+        outputParser = new ReasoningStructuredOutputParser();
+      } else {
+        outputParser = baseParser;
+      }
     } else {
-      outputParser = new JsonOutputParser();
+      const baseParser = new JsonOutputParser<RunOutput>();
+      if (isReasoningModel) {
+        // custom parser class for JSON
+        class ReasoningJsonOutputParser extends JsonOutputParser<RunOutput> {
+          async parse(text: string): Promise<RunOutput> {
+            const cleanedText = stripThinkTags(text);
+            return super.parse(cleanedText);
+          }
+        }
+        outputParser = new ReasoningJsonOutputParser();
+      } else {
+        outputParser = baseParser;
+      }
     }
 
     if (!includeRaw) {
