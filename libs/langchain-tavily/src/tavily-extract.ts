@@ -36,6 +36,13 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
   includeImages?: boolean;
 
   /**
+   * The format of the respose. It can be "markdown" or "text"
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
+
+  /**
    * The name of the tool.
    *
    * @default "tavily_extract"
@@ -128,9 +135,11 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  extractDepthDefault: ExtractDepth;
+  extractDepthDefault?: ExtractDepth;
 
-  includeImagesDefault: boolean;
+  includeImagesDefault?: boolean;
+
+  formatDefault?: "markdown" | "text";
 
   private apiWrapper: TavilyExtractAPIWrapper;
 
@@ -155,8 +164,9 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
       this.apiWrapper = new TavilyExtractAPIWrapper({});
     }
 
-    this.extractDepthDefault = params.extractDepth ?? "basic";
-    this.includeImagesDefault = params.includeImages ?? false;
+    this.extractDepthDefault = params.extractDepth;
+    this.includeImagesDefault = params.includeImages;
+    this.formatDefault = params.format;
   }
 
   async _call(
@@ -166,13 +176,14 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     try {
       const { urls, extractDepth, includeImages } = input;
 
-      const effectiveExtractDepth = extractDepth ?? this.extractDepthDefault;
-      const effectiveIncludeImages = includeImages ?? this.includeImagesDefault;
+      const effectiveExtractDepth = this.extractDepthDefault ?? extractDepth;
+      const effectiveIncludeImages = this.includeImagesDefault ?? includeImages;
 
       const rawResults = await this.apiWrapper.rawResults({
         urls,
         extractDepth: effectiveExtractDepth,
         includeImages: effectiveIncludeImages,
+        format: this.formatDefault,
       });
 
       if (
@@ -188,6 +199,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         const searchParams = {
           extractDepth: effectiveExtractDepth,
           includeImages: effectiveIncludeImages,
+          format: this.formatDefault,
         };
         const suggestions = generateSuggestions(searchParams);
 
