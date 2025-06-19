@@ -210,7 +210,7 @@ describe("StructuredOutputParser.fromZodSchema", () => {
 
     Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
     \`\`\`json
-    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"answer":{"description":"answer to the user's question","type":"string"},"sources":{"description":"sources used to answer the question, should be websites.","type":"array","items":{"type":"string"}}},"required":["answer","sources"],"additionalProperties":false}
+    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"answer":{"description":"answer to the user's question","type":"string"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false}
     \`\`\`
     "
     `);
@@ -343,7 +343,7 @@ describe("StructuredOutputParser.fromZodSchema", () => {
 
     Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
     \`\`\`json
-    {"$schema":"https://json-schema.org/draft/2020-12/schema","description":"Only One object","type":"object","properties":{"url":{"description":"A link to the resource","type":"string"},"title":{"description":"A title for the resource","type":"string"},"year":{"description":"The year the resource was created","type":"number"},"createdAt":{"description":"The date and time the resource was created","type":"string"},"createdAtDate":{"description":"The date the resource was created","type":"string"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"description":"The name of the author","type":"string"},"email":{"description":"The email of the author","type":"string"},"type":{"type":"string","enum":["author","editor"]},"address":{"description":"The address of the author","type":"string"},"stateProvince":{"description":"The state or province of the author","type":"string","enum":["AL","AK","AZ"]}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false}
+    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"url":{"description":"A link to the resource","type":"string"},"title":{"description":"A title for the resource","type":"string"},"year":{"description":"The year the resource was created","type":"number"},"createdAt":{"description":"The date and time the resource was created","type":"string"},"createdAtDate":{"description":"The date the resource was created","type":"string"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"description":"The name of the author","type":"string"},"email":{"description":"The email of the author","type":"string"},"type":{"type":"string","enum":["author","editor"]},"address":{"description":"The address of the author","type":"string"},"stateProvince":{"description":"The state or province of the author","type":"string","enum":["AL","AK","AZ"]}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object"}
     \`\`\`
     "
     `);

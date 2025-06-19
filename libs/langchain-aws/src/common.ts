@@ -267,13 +267,7 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string
->({
-  block,
-  onUnknown = "throw",
-}: {
-  block: BlockT;
-  onUnknown?: "throw";
-}): ContentBlock;
+>({ block, onUnknown }: { block: BlockT; onUnknown?: "throw" }): ContentBlock;
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string

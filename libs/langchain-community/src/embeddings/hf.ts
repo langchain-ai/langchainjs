@@ -1,4 +1,7 @@
-import { HfInference, HfInferenceEndpoint } from "@huggingface/inference";
+import {
+  InferenceClient,
+  InferenceProviderOrPolicy,
+} from "@huggingface/inference";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -10,6 +13,7 @@ export interface HuggingFaceInferenceEmbeddingsParams extends EmbeddingsParams {
   apiKey?: string;
   model?: string;
   endpointUrl?: string;
+  provider?: InferenceProviderOrPolicy;
 }
 
 /**
@@ -27,18 +31,28 @@ export class HuggingFaceInferenceEmbeddings
 
   endpointUrl?: string;
 
-  client: HfInference | HfInferenceEndpoint;
+  provider?: InferenceProviderOrPolicy;
+
+  client: InferenceClient;
 
   constructor(fields?: HuggingFaceInferenceEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? "BAAI/bge-base-en-v1.5";
+    if (fields?.model) {
+      this.model = fields.model;
+    } else {
+      console.warn(
+        '[HuggingFaceInferenceEmbeddings] No "model" provided. Using default: "BAAI/bge-base-en-v1.5".'
+      );
+      this.model = "BAAI/bge-base-en-v1.5";
+    }
     this.apiKey =
       fields?.apiKey ?? getEnvironmentVariable("HUGGINGFACEHUB_API_KEY");
     this.endpointUrl = fields?.endpointUrl;
+    this.provider = fields?.provider;
     this.client = this.endpointUrl
-      ? new HfInference(this.apiKey).endpoint(this.endpointUrl)
-      : new HfInference(this.apiKey);
+      ? new InferenceClient(this.apiKey).endpoint(this.endpointUrl)
+      : new InferenceClient(this.apiKey);
   }
 
   async _embed(texts: string[]): Promise<number[][]> {
@@ -48,6 +62,7 @@ export class HuggingFaceInferenceEmbeddings
       this.client.featureExtraction({
         model: this.model,
         inputs: clean,
+        provider: this.provider,
       })
     ) as Promise<number[][]>;
   }

@@ -56,8 +56,7 @@ export class NeonPostgres extends VectorStore {
   constructor(embeddings: EmbeddingsInterface, config: NeonPostgresArgs) {
     super(embeddings, config);
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      !!config.verbose;
+      config.verbose ?? getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true";
 
     this.neonConnectionString = config.connectionString;
     this.tableName = config.tableName ?? "vectorstore_documents";

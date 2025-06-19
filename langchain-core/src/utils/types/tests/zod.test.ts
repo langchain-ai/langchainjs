@@ -19,6 +19,9 @@ import {
   interopZodObjectPartial,
   interopZodObjectPassthrough,
   getInteropZodDefaultGetter,
+  interopZodObjectStrict,
+  ZodObjectV4,
+  interopZodTransformInputSchema,
 } from "../zod.js";
 
 describe("Zod utility functions", () => {
@@ -968,6 +971,127 @@ describe("Zod utility functions", () => {
           extra: "field",
         });
       });
+
+      it("should handle recursive passthrough validation", () => {
+        const schema = z4.object({
+          user: z4.strictObject({
+            name: z4.string(),
+            age: z4.number(),
+          }),
+        });
+        const passthrough = interopZodObjectPassthrough(schema, true);
+        expect(
+          interopParse(passthrough, {
+            user: {
+              name: "John",
+              age: 30,
+              extra: "field",
+              additional: 123,
+            },
+            extra: "field",
+          })
+        ).toEqual({
+          user: {
+            name: "John",
+            age: 30,
+            extra: "field",
+            additional: 123,
+          },
+          extra: "field",
+        });
+      });
+
+      it("should not apply passthrough validation recursively by default", () => {
+        const schema = z4.object({
+          user: z4.strictObject({
+            name: z4.string(),
+            age: z4.number(),
+          }),
+        });
+        const passthrough = interopZodObjectPassthrough(schema);
+        expect(() =>
+          interopParse(passthrough, {
+            user: {
+              name: "John",
+              age: 30,
+              extra: "field",
+            },
+          })
+        ).toThrow();
+      });
+
+      it("should add `additionalProperties: {}` when serialized to JSON schema", () => {
+        const schema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const passthrough = interopZodObjectPassthrough(schema) as ZodObjectV4;
+        const jsonSchema = z4.toJSONSchema(passthrough, { io: "input" });
+        expect(jsonSchema.additionalProperties).toEqual({});
+      });
+
+      it("should add `additionalProperties: {}` when serialized to JSON schema recursively", () => {
+        const schema = z4.object({
+          user: z4.object({
+            name: z4.string(),
+            age: z4.number(),
+            locations: z4.array(
+              z4.object({
+                name: z4.string(),
+              })
+            ),
+          }),
+        });
+        const passthrough = interopZodObjectPassthrough(
+          schema,
+          true
+        ) as ZodObjectV4;
+        const jsonSchema = z4.toJSONSchema(passthrough, { io: "input" });
+        expect(jsonSchema.additionalProperties).toEqual({});
+        // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
+        expect(jsonSchema.properties?.user?.additionalProperties).toEqual({});
+        expect(
+          // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested array
+          jsonSchema.properties?.user?.properties?.locations?.items
+            ?.additionalProperties
+        ).toEqual({});
+      });
+
+      it("should handle arrays of objects with strict validation", () => {
+        const schema = z4.object({
+          users: z4.array(
+            z4.object({
+              name: z4.string(),
+              age: z4.number(),
+            })
+          ),
+        });
+        const strict = interopZodObjectStrict(schema, true);
+        expect(() =>
+          interopParse(strict, {
+            users: [
+              { name: "John", age: 30, extra: "field" },
+              { name: "Jane", age: 25 },
+            ],
+          })
+        ).toThrow();
+      });
+
+      it("should keep meta fields", () => {
+        const schema = z4
+          .object({
+            name: z4.string().describe("The name of the author"),
+          })
+          .describe("The object");
+        const passthrough = interopZodObjectPassthrough(
+          schema,
+          true
+        ) as ZodObjectV4;
+        expect(z4.globalRegistry.get(passthrough)).toBeDefined();
+        expect(z4.globalRegistry.get(passthrough)?.description).toBe(
+          "The object"
+        );
+      });
     });
   });
 
@@ -1056,6 +1180,240 @@ describe("Zod utility functions", () => {
           age: 30,
         });
       });
+    });
+  });
+
+  describe("interopZodObjectStrict", () => {
+    describe("v3 schemas", () => {
+      it("should make object schema strict", () => {
+        const schema = z3.object({
+          name: z3.string(),
+          age: z3.number(),
+        });
+        const strict = interopZodObjectStrict(schema);
+        expect(strict).toBeInstanceOf(z3.ZodObject);
+        const shape = getInteropZodObjectShape(strict);
+        expect(Object.keys(shape)).toEqual(["name", "age"]);
+        expect(shape.name).toBeInstanceOf(z3.ZodString);
+        expect(shape.age).toBeInstanceOf(z3.ZodNumber);
+      });
+
+      it("should reject extra properties", () => {
+        const schema = z3.object({
+          name: z3.string(),
+          age: z3.number(),
+        });
+        const strict = interopZodObjectStrict(schema);
+        expect(() =>
+          interopParse(strict, { name: "John", age: 30, extra: "field" })
+        ).toThrow();
+      });
+    });
+
+    describe("v4 schemas", () => {
+      it("should make object schema strict", () => {
+        const schema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const strict = interopZodObjectStrict(schema);
+        expect(strict).toBeInstanceOf(z4.ZodObject);
+        const shape = getInteropZodObjectShape(strict);
+        expect(Object.keys(shape)).toEqual(["name", "age"]);
+        expect(shape.name).toBeInstanceOf(z4.ZodString);
+        expect(shape.age).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should reject extra properties", () => {
+        const schema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const strict = interopZodObjectStrict(schema);
+        expect(() =>
+          interopParse(strict, { name: "John", age: 30, extra: "field" })
+        ).toThrow();
+      });
+
+      it("should handle recursive strict validation", () => {
+        const schema = z4.object({
+          user: z4.object({
+            name: z4.string(),
+            age: z4.number(),
+          }),
+        });
+        const strict = interopZodObjectStrict(schema, true);
+        expect(() =>
+          interopParse(strict, {
+            user: { name: "John", age: 30, extra: "field" },
+          })
+        ).toThrow();
+      });
+
+      it("should handle arrays of objects with strict validation", () => {
+        const schema = z4.object({
+          users: z4.array(
+            z4.object({
+              name: z4.string(),
+              age: z4.number(),
+            })
+          ),
+        });
+        const strict = interopZodObjectStrict(schema, true);
+        expect(() =>
+          interopParse(strict, {
+            users: [
+              { name: "John", age: 30, extra: "field" },
+              { name: "Jane", age: 25 },
+            ],
+          })
+        ).toThrow();
+      });
+
+      it("should not apply strict validation recursively by default", () => {
+        const schema = z4.object({
+          user: z4.looseObject({
+            name: z4.string(),
+            age: z4.number(),
+          }),
+        });
+        const strict = interopZodObjectStrict(schema);
+        expect(
+          interopParse(strict, {
+            user: { name: "John", age: 30, extra: "field" },
+          })
+        ).toEqual({
+          user: { name: "John", age: 30, extra: "field" },
+        });
+      });
+
+      it("should add `additionalProperties: false` when serialized to JSON schema", () => {
+        const schema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const strict = interopZodObjectStrict(schema) as ZodObjectV4;
+        const jsonSchema = z4.toJSONSchema(strict, { io: "input" });
+        expect(jsonSchema.additionalProperties).toBe(false);
+      });
+
+      it("should add `additionalProperties: false` when serialized to JSON schema recursively", () => {
+        const schema = z4.object({
+          user: z4.object({
+            name: z4.string(),
+            age: z4.number(),
+            locations: z4.array(
+              z4.object({
+                name: z4.string(),
+              })
+            ),
+          }),
+        });
+        const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
+        const jsonSchema = z4.toJSONSchema(strict, { io: "input" });
+        expect(jsonSchema.additionalProperties).toBe(false);
+        // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
+        expect(jsonSchema.properties?.user?.additionalProperties).toBe(false);
+        expect(
+          // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested array
+          jsonSchema.properties?.user?.properties?.locations?.items
+            ?.additionalProperties
+        ).toBe(false);
+      });
+
+      it("should keep meta fields", () => {
+        const schema = z4
+          .object({
+            name: z4.string().describe("The name of the author"),
+          })
+          .describe("The object");
+        const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
+        expect(z4.globalRegistry.get(strict)).toBeDefined();
+        expect(z4.globalRegistry.get(strict)?.description).toBe("The object");
+      });
+    });
+
+    it("should throw error for non-object schemas", () => {
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z3.string())).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z4.string())).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z3.number())).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z4.number())).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z3.array(z3.string()))).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict(z4.array(z4.string()))).toThrow();
+    });
+
+    it("should throw error for malformed schemas", () => {
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict({})).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict({ _def: "fake" })).toThrow();
+      // @ts-expect-error - Testing invalid input
+      expect(() => interopZodObjectStrict({ _zod: "fake" })).toThrow();
+    });
+  });
+
+  describe("interopZodTransformInputSchema", () => {
+    describe("v3 schemas", () => {
+      it("should return input schema for transform schema", () => {
+        const inputSchema = z3.string();
+        const transformSchema = inputSchema.transform((s) => s.toUpperCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for chained transforms", () => {
+        const inputSchema = z3.string();
+        const transformSchema = inputSchema
+          .transform((s) => s.toUpperCase())
+          .transform((s) => s.toLowerCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for non-transform schema", () => {
+        const inputSchema = z3.string();
+        const result = interopZodTransformInputSchema(inputSchema);
+        expect(result).toBe(inputSchema);
+      });
+    });
+
+    describe("v4 schemas", () => {
+      it("should return input schema for transform schema", () => {
+        const inputSchema = z4.string();
+        const transformSchema = inputSchema.transform((s) => s.toUpperCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for chained transforms", () => {
+        const inputSchema = z4.string();
+        const transformSchema = inputSchema
+          .transform((s) => s.toUpperCase())
+          .transform((s) => s.toLowerCase());
+        const result = interopZodTransformInputSchema(transformSchema);
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should return input schema for non-transform schema", () => {
+        const inputSchema = z4.string();
+        const result = interopZodTransformInputSchema(inputSchema);
+        expect(result).toBe(inputSchema);
+      });
+    });
+
+    it("should throw error for non-schema values", () => {
+      expect(() => interopZodTransformInputSchema(null as any)).toThrow();
+      expect(() => interopZodTransformInputSchema(undefined as any)).toThrow();
+      expect(() => interopZodTransformInputSchema({} as any)).toThrow();
+      expect(() => interopZodTransformInputSchema("string" as any)).toThrow();
+      expect(() => interopZodTransformInputSchema(123 as any)).toThrow();
+      expect(() => interopZodTransformInputSchema([] as any)).toThrow();
     });
   });
 });

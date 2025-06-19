@@ -7,8 +7,11 @@ import {
   util,
   clone,
   _unknown,
+  _never,
   $ZodUnknown,
+  $ZodNever,
   $ZodOptional,
+  _array,
 } from "zod/v4/core";
 
 export type ZodStringV3 = z3.ZodString;
@@ -61,6 +64,10 @@ export type InferInteropZodOutput<T> = T extends z3.ZodType<
   : T extends { _zod: { output: infer Output } }
   ? Output
   : never;
+
+export type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
 
 export function isZodSchemaV4(
   schema: unknown
@@ -384,6 +391,62 @@ export function isSimpleStringZodSchema(
   return false;
 }
 
+export function isZodObjectV3(obj: unknown): obj is ZodObjectV3 {
+  // Zod v3 object schemas have _def.typeName === "ZodObject"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_def" in obj &&
+    typeof obj._def === "object" &&
+    obj._def !== null &&
+    "typeName" in obj._def &&
+    obj._def.typeName === "ZodObject"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isZodObjectV4(obj: unknown): obj is z4.$ZodObject {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 object schemas have _zod.def.type === "object"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "object"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 array schemas have _zod.def.type === "array"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "array"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
  *
@@ -391,37 +454,8 @@ export function isSimpleStringZodSchema(
  * @returns {boolean} True if the value is a Zod v3 or v4 object schema, false otherwise.
  */
 export function isInteropZodObject(obj: unknown): obj is InteropZodObject {
-  if (isZodSchemaV3(obj)) {
-    // Zod v3 object schemas have _def.typeName === "ZodObject"
-    if (
-      typeof obj === "object" &&
-      obj !== null &&
-      "_def" in obj &&
-      typeof obj._def === "object" &&
-      obj._def !== null &&
-      "typeName" in obj._def &&
-      obj._def.typeName === "ZodObject"
-    ) {
-      return true;
-    }
-  }
-  if (isZodSchemaV4(obj)) {
-    // Zod v4 object schemas have _zod.def.type === "object"
-    if (
-      typeof obj === "object" &&
-      obj !== null &&
-      "_zod" in obj &&
-      typeof obj._zod === "object" &&
-      obj._zod !== null &&
-      "def" in obj._zod &&
-      typeof obj._zod.def === "object" &&
-      obj._zod.def !== null &&
-      "type" in obj._zod.def &&
-      obj._zod.def.type === "object"
-    ) {
-      return true;
-    }
-  }
+  if (isZodObjectV3(obj)) return true;
+  if (isZodObjectV4(obj)) return true;
   return false;
 }
 
@@ -496,21 +530,137 @@ export function interopZodObjectPartial<T extends InteropZodObject>(
   );
 }
 
-export function interopZodObjectPassthrough<T extends InteropZodObject>(
-  schema: T
+/**
+ * Returns a strict version of a Zod object schema, disallowing unknown keys.
+ * Supports both Zod v3 and v4 object schemas. If `recursive` is true, applies strictness
+ * recursively to all nested object schemas and arrays of object schemas.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @param {boolean} [recursive=false] - Whether to apply strictness recursively to nested objects/arrays.
+ * @returns {InteropZodObject} The strict Zod object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function interopZodObjectStrict<T extends InteropZodObject>(
+  schema: T,
+  recursive: boolean = false
 ): InteropZodObject {
-  if (isInteropZodObject(schema)) {
-    if (isZodSchemaV3(schema)) {
-      return schema.passthrough();
+  if (isZodSchemaV3(schema)) {
+    // TODO: v3 schemas aren't recursively handled here
+    // (currently not necessary since zodToJsonSchema handles this)
+    return schema.strict();
+  }
+  if (isZodObjectV4(schema)) {
+    const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
+    if (recursive) {
+      for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
+        // If the shape key is a v4 object schema, we need to make it strict
+        if (isZodObjectV4(keySchema)) {
+          const outputSchema = interopZodObjectStrict(keySchema, recursive);
+          outputShape[key] = outputSchema as ZodObjectV4;
+        }
+        // If the shape key is a v4 array schema, we need to make the element
+        // schema strict if it's an object schema
+        else if (isZodArrayV4(keySchema)) {
+          let elementSchema = keySchema._zod.def.element;
+          if (isZodObjectV4(elementSchema)) {
+            elementSchema = interopZodObjectStrict(
+              elementSchema,
+              recursive
+            ) as ZodObjectV4;
+          }
+          outputShape[key] = clone(keySchema, {
+            ...keySchema._zod.def,
+            element: elementSchema,
+          });
+        }
+        // Otherwise, just use the keySchema
+        else {
+          outputShape[key] = keySchema;
+        }
+        // Assign meta fields to the keySchema
+        const meta = globalRegistry.get(keySchema);
+        if (meta) globalRegistry.add(outputShape[key], meta);
+      }
     }
-    if (isZodSchemaV4(schema)) {
-      // Type reassign since ZodObjectV4 assumes that generics should be washed
-      const objectSchema: z4.$ZodObject<z4.$ZodShape> = schema;
-      return clone(objectSchema, {
-        ...objectSchema._zod.def,
-        catchall: _unknown($ZodUnknown),
-      });
+    const modifiedSchema = clone<ZodObjectV4>(schema, {
+      ...schema._zod.def,
+      shape: outputShape,
+      catchall: _never($ZodNever),
+    });
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(modifiedSchema, meta);
+    return modifiedSchema;
+  }
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
+}
+
+/**
+ * Returns a passthrough version of a Zod object schema, allowing unknown keys.
+ * Supports both Zod v3 and v4 object schemas. If `recursive` is true, applies passthrough
+ * recursively to all nested object schemas and arrays of object schemas.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @param {boolean} [recursive=false] - Whether to apply passthrough recursively to nested objects/arrays.
+ * @returns {InteropZodObject} The passthrough Zod object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function interopZodObjectPassthrough<T extends InteropZodObject>(
+  schema: T,
+  recursive: boolean = false
+): InteropZodObject {
+  if (isZodObjectV3(schema)) {
+    // TODO: v3 schemas aren't recursively handled here
+    // (currently not necessary since zodToJsonSchema handles this)
+    return schema.passthrough();
+  }
+  if (isZodObjectV4(schema)) {
+    const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
+    if (recursive) {
+      for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
+        // If the shape key is a v4 object schema, we need to make it passthrough
+        if (isZodObjectV4(keySchema)) {
+          const outputSchema = interopZodObjectPassthrough(
+            keySchema,
+            recursive
+          );
+          outputShape[key] = outputSchema as ZodObjectV4;
+        }
+        // If the shape key is a v4 array schema, we need to make the element
+        // schema passthrough if it's an object schema
+        else if (isZodArrayV4(keySchema)) {
+          let elementSchema = keySchema._zod.def.element;
+          if (isZodObjectV4(elementSchema)) {
+            elementSchema = interopZodObjectPassthrough(
+              elementSchema,
+              recursive
+            ) as ZodObjectV4;
+          }
+          outputShape[key] = clone(keySchema, {
+            ...keySchema._zod.def,
+            element: elementSchema,
+          });
+        }
+        // Otherwise, just use the keySchema
+        else {
+          outputShape[key] = keySchema;
+        }
+        // Assign meta fields to the keySchema
+        const meta = globalRegistry.get(keySchema);
+        if (meta) globalRegistry.add(outputShape[key], meta);
+      }
     }
+    const modifiedSchema = clone<ZodObjectV4>(schema, {
+      ...schema._zod.def,
+      shape: outputShape,
+      catchall: _unknown($ZodUnknown),
+    });
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(modifiedSchema, meta);
+    return modifiedSchema;
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -547,4 +697,48 @@ export function getInteropZodDefaultGetter<T extends InteropZodType>(
     }
   }
   return undefined;
+}
+
+function isZodTransformV3(
+  schema: InteropZodType
+): schema is z3.ZodEffects<z3.ZodTypeAny> {
+  return (
+    isZodSchemaV3(schema) &&
+    "typeName" in schema._def &&
+    schema._def.typeName === "ZodEffects"
+  );
+}
+
+function isZodTransformV4(schema: InteropZodType): schema is z4.$ZodPipe {
+  return isZodSchemaV4(schema) && schema._zod.def.type === "pipe";
+}
+
+/**
+ * Returns the input type of a Zod transform schema, for both v3 and v4.
+ * If the schema is not a transform, returns undefined.
+ *
+ * @param schema - The Zod schema instance (v3 or v4)
+ * @returns The input Zod schema of the transform, or undefined if not a transform
+ */
+export function interopZodTransformInputSchema(
+  schema: InteropZodType
+): InteropZodType | undefined {
+  // Zod v3: ._def.schema is the input schema for ZodEffects (transform)
+  if (isZodSchemaV3(schema)) {
+    if (isZodTransformV3(schema)) {
+      return interopZodTransformInputSchema(schema._def.schema);
+    }
+    return schema;
+  }
+
+  // Zod v4: _def.type is the input schema for ZodEffects (transform)
+  if (isZodSchemaV4(schema)) {
+    if (isZodTransformV4(schema)) {
+      const inner = interopZodTransformInputSchema(schema._zod.def.in);
+      return inner ?? schema;
+    }
+    return schema;
+  }
+
+  throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }

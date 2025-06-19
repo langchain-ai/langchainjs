@@ -193,7 +193,7 @@ export abstract class BaseChain<
     config?: Callbacks | RunnableConfig
   ): Promise<string> {
     const inputKeys = this.inputKeys.filter(
-      (k) => !this.memory?.memoryKeys.includes(k) ?? true
+      (k) => !this.memory?.memoryKeys.includes(k)
     );
     const isKeylessInput = inputKeys.length <= 1;
     if (!isKeylessInput) {

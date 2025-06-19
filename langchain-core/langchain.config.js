@@ -64,6 +64,8 @@ export const config = {
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/function_calling": "utils/function_calling",
     "utils/hash": "utils/hash",
+    "utils/hash/insecure": "utils/js-sha1/hash",
+    "utils/hash/sha256": "utils/js-sha256/hash",
     "utils/json_patch": "utils/json_patch",
     "utils/json_schema": "utils/json_schema",
     "utils/math": "utils/math",

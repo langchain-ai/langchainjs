@@ -4,7 +4,6 @@ import { ExaRetriever } from "../retrievers.js";
 
 test("ExaRetriever can retrieve some data", async () => {
   const exaRetriever = new ExaRetriever<{ text: true }>({
-    // @ts-expect-error type errors
     client: new Exa(),
   });
 

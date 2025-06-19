@@ -38,6 +38,25 @@ export type AnthropicDocumentBlockParam = Anthropic.Messages.DocumentBlockParam;
 export type AnthropicThinkingBlockParam = Anthropic.Messages.ThinkingBlockParam;
 export type AnthropicRedactedThinkingBlockParam =
   Anthropic.Messages.RedactedThinkingBlockParam;
+export type AnthropicServerToolUseBlockParam =
+  Anthropic.Messages.ServerToolUseBlockParam;
+export type AnthropicWebSearchToolResultBlockParam =
+  Anthropic.Messages.WebSearchToolResultBlockParam;
+export type AnthropicWebSearchResultBlockParam =
+  Anthropic.Messages.WebSearchResultBlockParam;
+
+// Union of all possible content block types including server tool use
+export type AnthropicContentBlock =
+  | AnthropicTextBlockParam
+  | AnthropicImageBlockParam
+  | AnthropicToolUseBlockParam
+  | AnthropicToolResultBlockParam
+  | AnthropicDocumentBlockParam
+  | AnthropicThinkingBlockParam
+  | AnthropicRedactedThinkingBlockParam
+  | AnthropicServerToolUseBlockParam
+  | AnthropicWebSearchToolResultBlockParam
+  | AnthropicWebSearchResultBlockParam;
 
 export function isAnthropicImageBlockParam(
   block: unknown
@@ -98,3 +117,9 @@ export function isAnthropicImageBlockParam(
 
   return false;
 }
+
+// Type for built-in tools only (excludes custom Tool type)
+export type AnthropicBuiltInToolUnion = Exclude<
+  Anthropic.Messages.ToolUnion,
+  Anthropic.Messages.Tool
+>;
