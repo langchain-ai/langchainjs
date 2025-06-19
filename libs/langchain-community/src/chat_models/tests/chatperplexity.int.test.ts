@@ -85,42 +85,44 @@ describe("ChatPerplexity", () => {
     expect(response.country).toBe("India");
   });
 
-  test("ChatPerplexity reasoning model with structured output", async () => {
-    const responseSchema = z.object({
-      answer: z.string().describe("Answer to the question"),
-      reasoning: z.string().describe("Reasoning process for the answer"),
-      confidence: z
-        .number()
-        .min(0)
-        .max(1)
-        .describe("Confidence level of the answer"),
-    });
+  test("reasoning model", async () => {
     const model = new ChatPerplexity({
       apiKey: process.env.PERPLEXITY_API_KEY,
       model: "sonar-reasoning",
     });
 
-    const modelWithStructuredOutput = model.withStructuredOutput(
-      responseSchema,
-      {
-        name: "reasoning_response",
-      }
-    );
-
-    const result = await modelWithStructuredOutput.invoke([
+    const result = await model.invoke([
       {
         role: "user",
         content: "What are the most popular LLM frameworks?",
       },
     ]);
 
-    expect(result.answer).toBeDefined();
-    expect(typeof result.answer).toBe("string");
-    expect(result.reasoning).toBeDefined();
-    expect(typeof result.reasoning).toBe("string");
-    expect(result.confidence).toBeDefined();
-    expect(typeof result.confidence).toBe("number");
-    expect(result.confidence).toBeGreaterThanOrEqual(0);
-    expect(result.confidence).toBeLessThanOrEqual(1);
+    expect(result.content).toBeDefined();
+    expect(typeof result.content).toBe("string");
+    expect(result.content.length).toBeGreaterThan(0);
+  });
+
+  test("reasoning model with structured output", async () => {
+    const chat = new ChatPerplexity({
+      apiKey: process.env.PERPLEXITY_API_KEY,
+      model: "sonar-reasoning",
+    }).withStructuredOutput(
+      z.object({
+        capital: z.string(),
+        country: z.string(),
+      }),
+      {
+        name: "reasoning_response",
+      }
+    );
+
+    const messages = [
+      new SystemMessage("You are a geography expert."),
+      new HumanMessage("What is the capital of India? Return JSON."),
+    ];
+    const response = await chat.invoke(messages);
+    expect(response.capital).toBe("New Delhi");
+    expect(response.country).toBe("India");
   });
 });
