@@ -104,6 +104,11 @@ export interface ChatOllamaInput
   streaming?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  /**
+   * The fetch function to use.
+   * @default fetch
+   */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -488,6 +493,7 @@ export class ChatOllama
     super(fields ?? {});
 
     this.client = new Ollama({
+      fetch: fields?.fetch,
       host: fields?.baseUrl,
       headers: fields?.headers,
     });
