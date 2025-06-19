@@ -40,8 +40,8 @@ const TEST_IMAGE_BASE64 =
 
 const TEST_IMAGE_DATA_URL = `data:image/png;base64,${TEST_IMAGE_BASE64}`;
 
-// TODO: need to find a short mp3 or wav file to use as a test
-// const TEST_AUDIO_URL = "https://www.w3schools.com/html/horse.ogg";
+const TEST_AUDIO_URL =
+  "https://upload.wikimedia.org/wikipedia/commons/e/ef/Phylloscopus_collybita_-_Common_Chiffchaff_XC170664.mp3";
 
 const TEST_AUDIO_BASE64 =
   "UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; // Short silent WAV
@@ -2298,6 +2298,21 @@ Extraction path: {extractionPath}`,
       return;
     }
     const chatModel = new this.Cls(this.constructorArgs);
+    // URL
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "url",
+            url: TEST_AUDIO_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
     // base64
     if (support.includes("base64")) {
       const msg = new HumanMessage({
