@@ -256,14 +256,6 @@ Use "finance" for markets, investments, economic data, or financial news.
 Use "news" ONLY for politics, sports, or major current events covered by 
 mainstream media - NOT simply because a query asks for "new" information.`
     ),
-  country: z.string().optional().describe(
-    `Specifies the country to search in. MUST be the full country name in lowercase
-    like "united states" or "united kingdom".
-
-    Use this parameter when the user explicitly mentions a country or region.
-
-    Default is None.`
-  ),
 });
 
 /**
