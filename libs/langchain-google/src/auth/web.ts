@@ -22,7 +22,6 @@ export type WebGoogleAuthOptions = {
 
 export class WebGoogleAuth extends GoogleAbstractedFetchClient {
   options: WebGoogleAuthOptions;
-  fetch: typeof fetch = fetch;
 
   constructor(fields: GoogleBaseLLMInput<WebGoogleAuthOptions> | undefined) {
     super();
@@ -44,6 +43,10 @@ export class WebGoogleAuth extends GoogleAbstractedFetchClient {
       "scope",
       fields?.platformType
     );
+  }
+
+  async fetch(...args: Parameters<typeof fetch>) {
+    return fetch(...args);
   }
 
   get clientType(): string {

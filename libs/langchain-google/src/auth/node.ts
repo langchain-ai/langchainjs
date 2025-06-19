@@ -82,7 +82,7 @@ export class GAuthClient extends GoogleAbstractedFetchClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const opts: any = args[1] ?? {};
     opts.responseType = "stream";
-    return await this.gauth.fetch(url, opts);
+    return (await this.gauth.fetch(url, opts)) as Response;
   }
 
   get clientType(): string {

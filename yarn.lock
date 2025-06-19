@@ -7539,7 +7539,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@^0.2.10, @langchain/google-common@^0.2.13, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
+"@langchain/google-common@^0.2.10, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -7573,14 +7573,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@^0.2.10, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
+"@langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/scripts": ">=0.1.0 <0.2.0"
+    "@langchain/google": "workspace:*"
+    "@langchain/scripts": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -7594,7 +7594,6 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    google-auth-library: ^10.1.0
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -7651,10 +7650,10 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/google-webauth": ^0.2.13
-    "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/google": "workspace:*"
+    "@langchain/google-common": "workspace:*"
+    "@langchain/scripts": "workspace:*"
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -7687,10 +7686,10 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/google-gauth": ^0.2.10
-    "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/google": "workspace:*"
+    "@langchain/google-common": "workspace:*"
+    "@langchain/scripts": "workspace:*"
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -7717,14 +7716,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@^0.2.13, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
+"@langchain/google-webauth@workspace:libs/langchain-google-webauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/scripts": ">=0.1.0 <0.2.0"
+    "@langchain/google": "workspace:*"
+    "@langchain/scripts": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -7745,14 +7744,13 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    web-auth-library: ^1.0.3
     zod: ^3.23.8
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
   linkType: soft
 
-"@langchain/google@workspace:libs/langchain-google":
+"@langchain/google@workspace:*, @langchain/google@workspace:libs/langchain-google":
   version: 0.0.0-use.local
   resolution: "@langchain/google@workspace:libs/langchain-google"
   dependencies:
