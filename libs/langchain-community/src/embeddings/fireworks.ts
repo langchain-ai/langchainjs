@@ -11,6 +11,10 @@ export interface FireworksEmbeddingsParams extends EmbeddingsParams {
    * @deprecated Use `model` instead.
    */
   modelName: string;
+
+  /**
+   * Model name to use.
+   */
   model: string;
 
   /**

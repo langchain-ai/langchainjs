@@ -1,4 +1,8 @@
-import { type ClientOptions, OpenAIClient } from "@langchain/openai";
+import {
+  type ClientOptions,
+  type OpenAIChatModelId,
+  OpenAIClient,
+} from "@langchain/openai";
 import { StructuredTool } from "@langchain/core/tools";
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { formatToOpenAIAssistantTool } from "@langchain/openai";
@@ -62,7 +66,7 @@ export class OpenAIAssistantRunnable<
     pollIntervalMs,
     fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
-    model: string;
+    model: OpenAIChatModelId;
     name?: string;
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
@@ -178,7 +182,7 @@ export class OpenAIAssistantRunnable<
     instructions,
     fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId" | "tools"> & {
-    model?: string;
+    model?: OpenAIChatModelId;
     name?: string;
     instructions?: string;
     fileIds?: string[];

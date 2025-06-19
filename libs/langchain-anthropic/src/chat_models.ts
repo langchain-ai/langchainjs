@@ -117,6 +117,13 @@ function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
 }
 
 /**
+ * @see https://docs.anthropic.com/claude/docs/models-overview
+ */
+export type AnthropicMessagesModelId =
+  | Anthropic.Model
+  | (string & NonNullable<unknown>);
+
+/**
  * Input to AnthropicChat class.
  */
 export interface AnthropicInput {
@@ -170,9 +177,9 @@ export interface AnthropicInput {
   anthropicApiUrl?: string;
 
   /** @deprecated Use "model" instead */
-  modelName?: string;
+  modelName?: AnthropicMessagesModelId;
   /** Model name to use */
-  model?: string;
+  model?: AnthropicMessagesModelId;
 
   /** Overridable Anthropic ClientOptions */
   clientOptions?: ClientOptions;
