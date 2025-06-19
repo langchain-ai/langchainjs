@@ -37,7 +37,6 @@ export function _convertToOpenAITool(
     // the schemas produced by zod. Ideally, we should be using the
     // `zodFunction` util always, but that can only happen when OpenAI
     // supports zod v4.
-    // https://github.com/langchain-ai/langchainjs/pull/8389
     if (isZodSchemaV3(tool.schema)) {
       toolDef = zodFunction({
         name: tool.name,
