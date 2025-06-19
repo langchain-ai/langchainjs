@@ -84,4 +84,45 @@ describe("ChatPerplexity", () => {
     expect(response.capital).toBe("New Delhi");
     expect(response.country).toBe("India");
   });
+
+  test("reasoning model", async () => {
+    const model = new ChatPerplexity({
+      apiKey: process.env.PERPLEXITY_API_KEY,
+      model: "sonar-reasoning",
+    });
+
+    const result = await model.invoke([
+      {
+        role: "user",
+        content: "What are the most popular LLM frameworks?",
+      },
+    ]);
+
+    expect(result.content).toBeDefined();
+    expect(typeof result.content).toBe("string");
+    expect(result.content.length).toBeGreaterThan(0);
+  });
+
+  test("reasoning model with structured output", async () => {
+    const chat = new ChatPerplexity({
+      apiKey: process.env.PERPLEXITY_API_KEY,
+      model: "sonar-reasoning",
+    }).withStructuredOutput(
+      z.object({
+        capital: z.string(),
+        country: z.string(),
+      }),
+      {
+        name: "reasoning_response",
+      }
+    );
+
+    const messages = [
+      new SystemMessage("You are a geography expert."),
+      new HumanMessage("What is the capital of India? Return JSON."),
+    ];
+    const response = await chat.invoke(messages);
+    expect(response.capital).toBe("New Delhi");
+    expect(response.country).toBe("India");
+  });
 });
