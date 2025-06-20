@@ -256,6 +256,24 @@ test("Test function calling and structured output", async () => {
   expect(parsed.response).toBeDefined();
 });
 
+test("Test tool binding with optional zod fields", async () => {
+  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const multiply = tool((args) => args.x * args.y, {
+    name: "multiply",
+    description: "Multiply two numbers",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+      foo: z.number().optional(),
+    }),
+  });
+  const response = await llm
+    .bindTools([multiply], { strict: true })
+    .invoke("whats 5 * 4");
+  expect(response.tool_calls?.[0].args).toHaveProperty("foo");
+  expect(response.tool_calls?.[0].args.foo).toBe(null);
+});
+
 test("Test reasoning", async () => {
   const llm = new ChatOpenAI({ modelName: "o3-mini", useResponsesApi: true });
   const response = await llm.invoke("Hello", { reasoning_effort: "low" });
