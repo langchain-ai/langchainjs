@@ -884,155 +884,9 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
-   * Tests the chat model's ability to handle message histories with string tool contents.
-   * This test is specifically designed for models that support tool calling with string-based content,
-   * such as OpenAI's GPT models.
-   *
-   * The test performs the following steps:
-   * 1. Creates a chat model and binds an AdderTool to it.
-   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with string content
-   *    (simulating a tool call), and a ToolMessage with the tool's response.
-   * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk) and defined.
-   *
-   * This test ensures that the model can correctly process and respond to complex message
-   * histories that include tool calls with string-based content structures.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testToolMessageHistoriesStringContent(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    const adderTool = new AdderTool();
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test tool message histories."
-      );
-    }
-    // Bind the AdderTool to the model
-    const modelWithTools = model.bindTools([adderTool]);
-    const functionName = adderTool.name;
-    const functionArgs = { a: 1, b: 2 };
-
-    const { functionId } = this;
-    // Invoke the tool (standalone) to get the result
-    const functionResult = await adderTool.invoke(functionArgs);
-
-    // Construct a message history with string-based content
-    const messagesStringContent = [
-      new HumanMessage("What is 1 + 2"),
-      // AIMessage with string content (simulating OpenAI's format) including the tool call
-      new AIMessage({
-        content: "",
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-            type: "tool_call",
-          },
-        ],
-      }),
-      // ToolMessage with the result of the tool call
-      new ToolMessage(functionResult, functionId, functionName),
-    ];
-
-    // Invoke the model with the constructed message history
-    const result = await modelWithTools.invoke(
-      messagesStringContent,
-      callOptions
-    );
-
-    // Verify that the result is of the expected type and defined
-    expect(result).toBeInstanceOf(this.invokeResponseType);
-    expect(result.content).toBeDefined();
-  }
-
-  /**
-   * Tests the chat model's ability to handle message histories with list tool contents.
-   * This test is specifically designed for models that support tool calling with list-based content,
-   * such as Anthropic's Claude.
-   *
-   * The test performs the following steps:
-   * 1. Creates a chat model and binds an AdderTool to it.
-   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with list content
-   *    (simulating a tool call), and a ToolMessage with the tool's response.
-   * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
-   *
-   * This test ensures that the model can correctly process and respond to complex message
-   * histories that include tool calls with list-based content structures.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   */
-  async testToolMessageHistoriesListContent(callOptions?: any) {
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    const adderTool = new AdderTool();
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test tool message histories."
-      );
-    }
-    const modelWithTools = model.bindTools([adderTool]);
-    const functionName = adderTool.name;
-    const functionArgs = { a: 1, b: 2 };
-
-    const { functionId } = this;
-    const functionResult = await adderTool.invoke(functionArgs);
-
-    // Construct a message history with list-based content
-    const messagesListContent = [
-      new HumanMessage("What is 1 + 2"),
-      // AIMessage with list content (simulating Anthropic's format)
-      new AIMessage({
-        content: [
-          { type: "text", text: "some text" },
-          {
-            type: "tool_use",
-            id: functionId,
-            name: functionName,
-            input: functionArgs,
-          },
-        ],
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-            type: "tool_call",
-          },
-        ],
-      }),
-      // ToolMessage with the result of the tool call
-      new ToolMessage(functionResult, functionId, functionName),
-    ];
-
-    // Invoke the model with the constructed message history
-    const resultListContent = await modelWithTools.invoke(
-      messagesListContent,
-      callOptions
-    );
-
-    // Verify that the result is of the expected type and defined
-    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
-    expect(resultListContent.content).toBeDefined();
-  }
-
-  /**
-   * Tests the chat model's ability to bind and use OpenAI-formatted tools.
-   * This test ensures that the model can correctly process and use tools
-   * formatted in the OpenAI function calling style.
+   * Tests the chat model's ability to bind and decide to use an OpenAI-formatted tool.
+   * This test ensures that the model can correctly process and use tools formatted in
+   * the OpenAI function calling style.
    *
    * It verifies that:
    * 1. The model supports tool calling functionality.
@@ -1173,6 +1027,153 @@ export abstract class ChatModelIntegrationTests<
 
     // Verify the tool call type is correct
     expect(toolCall.type).toBe("tool_call");
+  }
+
+  /**
+   * Tests the chat model's ability to handle message histories with string tool contents.
+   * This test is specifically designed for models that support tool calling with string-based content,
+   * such as OpenAI's GPT models. It's ultimately ensuring that the model can continue a conversation
+   * that includes a completed tool call cycle (that has string content).
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with string content
+   *    (simulating a tool call), and a ToolMessage with the tool's response.
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk) and defined.
+   *
+   * This test ensures that the model can correctly process and respond to complex message
+   * histories that include tool calls with string-based content structures.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testToolMessageHistoriesStringContent(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test tool message histories."
+      );
+    }
+    // Bind the AdderTool to the model
+    const modelWithTools = model.bindTools([adderTool]);
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+
+    const { functionId } = this;
+    // Invoke the tool (standalone) to get the result
+    const functionResult = await adderTool.invoke(functionArgs);
+
+    // Construct a message history with string-based content
+    const messagesStringContent = [
+      new HumanMessage("What is 1 + 2"),
+      // AIMessage with string content (simulating OpenAI's format) including the tool call
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: functionName,
+            args: functionArgs,
+            id: functionId,
+            type: "tool_call",
+          },
+        ],
+      }),
+      // ToolMessage with the result of the tool call
+      new ToolMessage(functionResult, functionId, functionName),
+    ];
+
+    // Invoke the model with the constructed message history
+    const result = await modelWithTools.invoke(
+      messagesStringContent,
+      callOptions
+    );
+
+    // Verify that the result is of the expected type and defined
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+    expect(result.content).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to handle message histories with list tool contents.
+   * This test is specifically designed for models that support tool calling with list-based content,
+   * such as Anthropic's Claude.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with list content
+   *    (simulating a tool call), and a ToolMessage with the tool's response.
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
+   *
+   * This test ensures that the model can correctly process and respond to complex message
+   * histories that include tool calls with list-based content structures.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   */
+  async testToolMessageHistoriesListContent(callOptions?: any) {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test tool message histories."
+      );
+    }
+    const modelWithTools = model.bindTools([adderTool]);
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+
+    const { functionId } = this;
+    const functionResult = await adderTool.invoke(functionArgs);
+
+    // Construct a message history with list-based content
+    const messagesListContent = [
+      new HumanMessage("What is 1 + 2"),
+      // AIMessage with list content (simulating Anthropic's format)
+      new AIMessage({
+        content: [
+          { type: "text", text: "some text" },
+          {
+            type: "tool_use",
+            id: functionId,
+            name: functionName,
+            input: functionArgs,
+          },
+        ],
+        tool_calls: [
+          {
+            name: functionName,
+            args: functionArgs,
+            id: functionId,
+            type: "tool_call",
+          },
+        ],
+      }),
+      // ToolMessage with the result of the tool call
+      new ToolMessage(functionResult, functionId, functionName),
+    ];
+
+    // Invoke the model with the constructed message history
+    const resultListContent = await modelWithTools.invoke(
+      messagesListContent,
+      callOptions
+    );
+
+    // Verify that the result is of the expected type and defined
+    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
+    expect(resultListContent.content).toBeDefined();
   }
 
   /**
