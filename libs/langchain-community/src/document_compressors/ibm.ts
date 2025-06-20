@@ -64,6 +64,7 @@ export class WatsonxRerank
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     } = fields;
@@ -75,6 +76,7 @@ export class WatsonxRerank
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });

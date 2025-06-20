@@ -11,6 +11,7 @@ export interface WatsonxAuth {
   watsonxAIPassword?: string;
   watsonxAIUrl?: string;
   watsonxAIAuthType?: string;
+  disableSSL?: boolean;
 }
 
 export interface WatsonxInit {

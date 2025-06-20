@@ -192,6 +192,7 @@ export class WatsonxLLM<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     } = fields;
@@ -203,6 +204,7 @@ export class WatsonxLLM<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });
