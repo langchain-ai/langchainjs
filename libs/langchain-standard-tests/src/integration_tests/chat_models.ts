@@ -839,6 +839,51 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
+   * Test that the model generates tool calls correctly.
+   *
+   * This test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with a tool call,
+   */
+  async testToolCalling(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error("bindTools undefined. Cannot test tool calling.");
+    }
+    // Bind the AdderTool to the model
+    const modelWithTools = model.bindTools([adderTool]);
+
+    // Test invoke
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+    const { functionId } = this;
+
+    const query = "What is the value of adderTool(1, 2)? Use the tool.";
+    const result: AIMessage = await modelWithTools.invoke(query, callOptions);
+
+    // Validate the result of the tool call
+    expect(result).toBeDefined();
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+
+    // Ensure only one tool call was made
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls!.length).toBe(1);
+
+    // Check the tool call details
+    const toolCall = result.tool_calls![0];
+    expect(toolCall.name).toBe(functionName);
+    expect(toolCall.args).toEqual(functionArgs);
+    expect(toolCall.id).toBe(functionId);
+    expect(toolCall.type).toBe("tool_call");
+  }
+
+  /**
    * Tests the chat model's ability to handle message histories with string tool contents.
    * This test is specifically designed for models that support tool calling with string-based content,
    * such as OpenAI's GPT models.
