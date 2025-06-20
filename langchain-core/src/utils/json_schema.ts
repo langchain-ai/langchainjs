@@ -22,7 +22,7 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  */
 export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV4(schema)) {
-    const inputSchema = interopZodTransformInputSchema(schema);
+    const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {
       const strictSchema = interopZodObjectStrict(
         inputSchema,
