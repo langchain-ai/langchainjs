@@ -537,7 +537,7 @@ export abstract class ChatModelIntegrationTests<
 
     // Ensure that the result contains usage_metadata
     if (!("usage_metadata" in result)) {
-      throw new Error("result is not an instance of AIMessage");
+      throw new Error("result is missing `usage_metadata`");
     }
 
     // Extract the usage metadata from the result
