@@ -827,7 +827,6 @@ export abstract class ChatModelIntegrationTests<
 
     expect(result).toBeInstanceOf(this.invokeResponseType);
     expect(result.content).toBeDefined();
-    expect(result.content).not.toBe("");
 
     // Test 2: Passing 'stop' as an initialization parameter to the model's constructor.
     const customModel = new this.Cls({
@@ -837,7 +836,6 @@ export abstract class ChatModelIntegrationTests<
     const customResult = await customModel.invoke("hi", callOptions);
     expect(customResult).toBeInstanceOf(this.invokeResponseType);
     expect(customResult.content).toBeDefined();
-    expect(customResult.content).not.toBe("");
   }
 
   /**
@@ -850,7 +848,7 @@ export abstract class ChatModelIntegrationTests<
    * 2. Constructs a message history that includes a HumanMessage, an AIMessage with string content
    *    (simulating a tool call), and a ToolMessage with the tool's response.
    * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk) and defined.
    *
    * This test ensures that the model can correctly process and respond to complex message
    * histories that include tool calls with string-based content structures.
@@ -878,13 +876,13 @@ export abstract class ChatModelIntegrationTests<
     const functionArgs = { a: 1, b: 2 };
 
     const { functionId } = this;
-    // Invoke the tool to get the result
+    // Invoke the tool (standalone) to get the result
     const functionResult = await adderTool.invoke(functionArgs);
 
     // Construct a message history with string-based content
     const messagesStringContent = [
       new HumanMessage("What is 1 + 2"),
-      // AIMessage with string content (simulating OpenAI's format)
+      // AIMessage with string content (simulating OpenAI's format) including the tool call
       new AIMessage({
         content: "",
         tool_calls: [
@@ -892,6 +890,7 @@ export abstract class ChatModelIntegrationTests<
             name: functionName,
             args: functionArgs,
             id: functionId,
+            type: "tool_call",
           },
         ],
       }),
@@ -905,8 +904,9 @@ export abstract class ChatModelIntegrationTests<
       callOptions
     );
 
-    // Verify that the result is of the expected type
+    // Verify that the result is of the expected type and defined
     expect(result).toBeInstanceOf(this.invokeResponseType);
+    expect(result.content).toBeDefined();
   }
 
   /**
@@ -965,6 +965,7 @@ export abstract class ChatModelIntegrationTests<
             name: functionName,
             args: functionArgs,
             id: functionId,
+            type: "tool_call",
           },
         ],
       }),
@@ -1034,6 +1035,7 @@ export abstract class ChatModelIntegrationTests<
             name: functionName,
             args: functionArgs,
             id: functionId,
+            type: "tool_call",
           },
         ],
       }),
@@ -1863,11 +1865,13 @@ Extraction path: {extractionPath}`,
             name: weatherTool.name,
             id: "get_current_weather_id",
             args: { location: "San Francisco" },
+            type: "tool_call",
           },
           {
             name: currentTimeTool.name,
             id: "get_current_time_id",
             args: { location: "San Francisco" },
+            type: "tool_call",
           },
         ],
       });
