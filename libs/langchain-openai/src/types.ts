@@ -199,6 +199,12 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * @default false
    */
   zdrEnabled?: boolean;
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: "auto" | "default" | "flex";
 }
 
 export declare interface AzureOpenAIInput {
