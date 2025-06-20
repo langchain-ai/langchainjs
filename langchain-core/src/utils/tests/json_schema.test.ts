@@ -11,12 +11,12 @@ describe("toJsonSchema", () => {
           name: z4.string(),
           age: z4.number(),
         })
-        .describe("Object description")
         .transform((data) => ({
           ...data,
           upperName: data.name.toUpperCase(),
           doubledAge: data.age * 2,
-        }));
+        }))
+        .describe("Object description");
       const jsonSchema = toJsonSchema(schema);
       expect(jsonSchema).toEqual({
         $schema: "https://json-schema.org/draft/2020-12/schema",
