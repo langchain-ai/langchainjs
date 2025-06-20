@@ -884,70 +884,6 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
-   * Tests the chat model's ability to bind and decide to use an OpenAI-formatted tool.
-   * This test ensures that the model can correctly process and use tools formatted in
-   * the OpenAI function calling style.
-   *
-   * It verifies that:
-   * 1. The model supports tool calling functionality.
-   * 2. The model can successfully bind an OpenAI-formatted tool.
-   * 3. The model invokes the bound tool correctly when prompted.
-   * 4. The result contains a tool call with the expected name.
-   *
-   * This test is crucial for ensuring compatibility with OpenAI's function
-   * calling format, which is a common standard in AI tool integration.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test OpenAI formatted tool calls."
-      );
-    }
-
-    // Bind an OpenAI-formatted tool to the model
-    const modelWithTools = model.bindTools([
-      {
-        type: "function",
-        function: {
-          name: "math_addition",
-          description: adderSchema.description,
-          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
-        },
-      },
-    ]);
-
-    // Invoke the model with a prompt that should trigger the tool use
-    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
-      modelWithTools
-    ).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
-    if (!result.tool_calls?.[0]) {
-      throw new Error("result.tool_calls is undefined");
-    }
-    const { tool_calls } = result;
-
-    // Check that the correct tool was called
-    expect(tool_calls[0].name).toBe("math_addition");
-  }
-
-  /**
    * Tests the chat model's ability to bind and use Runnable-like tools.
    * This test ensures that the model can correctly process and use tools
    * that are created from Runnable objects using the `asTool` method.
@@ -1027,6 +963,70 @@ export abstract class ChatModelIntegrationTests<
 
     // Verify the tool call type is correct
     expect(toolCall.type).toBe("tool_call");
+  }
+
+  /**
+   * Tests the chat model's ability to bind and decide to use an OpenAI-formatted tool.
+   * This test ensures that the model can correctly process and use tools formatted in
+   * the OpenAI function calling style.
+   *
+   * It verifies that:
+   * 1. The model supports tool calling functionality.
+   * 2. The model can successfully bind an OpenAI-formatted tool.
+   * 3. The model invokes the bound tool correctly when prompted.
+   * 4. The result contains a tool call with the expected name.
+   *
+   * This test is crucial for ensuring compatibility with OpenAI's function
+   * calling format, which is a common standard in AI tool integration.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    // Bind an OpenAI-formatted tool to the model
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "math_addition",
+          description: adderSchema.description,
+          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
+        },
+      },
+    ]);
+
+    // Invoke the model with a prompt that should trigger the tool use
+    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
+      modelWithTools
+    ).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptions
+    );
+
+    // Verify that a tool call was made
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+
+    // Check that the correct tool was called
+    expect(tool_calls[0].name).toBe("math_addition");
   }
 
   /**
