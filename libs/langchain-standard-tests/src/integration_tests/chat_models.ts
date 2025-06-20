@@ -810,6 +810,37 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
+   * Tests that the model does not fail when invoked with the `stop` parameter, which is a standard
+   * parameter for stopping generation at a certain token.
+   *
+   * This test verifies that the `stop` sequence can be supplied in two ways:
+   * 1. As a runtime option to the `invoke` method.
+   * 2. As a parameter during the model's initialization.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   * These options will be applied to the model at runtime.
+   */
+  async testStopSequence(callOptions?: any) {
+    // Test 1: Passing 'stop' as a runtime argument to the invoke call.
+    const model = new this.Cls(this.constructorArgs);
+    const result = await model.invoke("hi", { ...callOptions, stop: ["you"] });
+
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+    expect(result.content).toBeDefined();
+    expect(result.content).not.toBe("");
+
+    // Test 2: Passing 'stop' as an initialization parameter to the model's constructor.
+    const customModel = new this.Cls({
+      ...this.constructorArgs,
+      stop: ["you"],
+    });
+    const customResult = await customModel.invoke("hi", callOptions);
+    expect(customResult).toBeInstanceOf(this.invokeResponseType);
+    expect(customResult.content).toBeDefined();
+    expect(customResult.content).not.toBe("");
+  }
+
+  /**
    * Tests the chat model's ability to handle message histories with string tool contents.
    * This test is specifically designed for models that support tool calling with string-based content,
    * such as OpenAI's GPT models.
