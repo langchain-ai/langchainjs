@@ -979,8 +979,155 @@ export abstract class ChatModelIntegrationTests<
       callOptions
     );
 
-    // Verify that the result is of the expected type
+    // Verify that the result is of the expected type and defined
     expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
+    expect(resultListContent.content).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to bind and use OpenAI-formatted tools.
+   * This test ensures that the model can correctly process and use tools
+   * formatted in the OpenAI function calling style.
+   *
+   * It verifies that:
+   * 1. The model supports tool calling functionality.
+   * 2. The model can successfully bind an OpenAI-formatted tool.
+   * 3. The model invokes the bound tool correctly when prompted.
+   * 4. The result contains a tool call with the expected name.
+   *
+   * This test is crucial for ensuring compatibility with OpenAI's function
+   * calling format, which is a common standard in AI tool integration.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    // Bind an OpenAI-formatted tool to the model
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "math_addition",
+          description: adderSchema.description,
+          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
+        },
+      },
+    ]);
+
+    // Invoke the model with a prompt that should trigger the tool use
+    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
+      modelWithTools
+    ).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptions
+    );
+
+    // Verify that a tool call was made
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+
+    // Check that the correct tool was called
+    expect(tool_calls[0].name).toBe("math_addition");
+  }
+
+  /**
+   * Tests the chat model's ability to bind and use Runnable-like tools.
+   * This test ensures that the model can correctly process and use tools
+   * that are created from Runnable objects using the `asTool` method.
+   *
+   * It verifies that:
+   * 1. The model supports tool calling functionality.
+   * 2. The model can successfully bind a Runnable-like tool.
+   * 3. The model invokes the bound tool correctly when prompted.
+   * 4. The result contains a tool call with the expected name.
+   *
+   * This test is crucial for ensuring compatibility with tools created
+   * from Runnable objects, which provides a flexible way to integrate
+   * custom logic into the model's tool-calling capabilities.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testBindToolsWithRunnableToolLike(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test Runnable-like tool calls."
+      );
+    }
+
+    // Create a Runnable-like tool using RunnableLambda and asTool
+    const runnableLike = RunnableLambda.from((_) => {
+      // no-op implementation for testing purposes
+    }).asTool({
+      name: "math_addition",
+      description: adderSchema.description,
+      schema: adderSchema,
+    });
+
+    // Bind the Runnable-like tool to the model
+    const modelWithTools = model.bindTools([runnableLike]);
+
+    // Invoke the model with a prompt that should trigger the tool use
+    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
+      modelWithTools
+    ).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptions
+    );
+
+    // Verify that a tool call was made
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+
+    // Check that only one tool call was made
+    expect(tool_calls).toHaveLength(1);
+
+    const toolCall = tool_calls[0];
+
+    // Check that the correct tool was called
+    expect(toolCall.name).toBe("math_addition");
+
+    // Verify that the tool call has the expected arguments
+    expect(toolCall.args).toEqual({
+      a: expect.any(String),
+      b: expect.any(String),
+    }); // TODO: verify the values if possible? 1836281973 and 19973286
+
+    // Verify call ID is present
+    expect(toolCall.id).toBeDefined();
+
+    // Verify the tool call type is correct
+    expect(toolCall.type).toBe("tool_call");
   }
 
   /**
@@ -1204,135 +1351,6 @@ export abstract class ChatModelIntegrationTests<
         },
       })
     );
-  }
-
-  /**
-   * Tests the chat model's ability to bind and use OpenAI-formatted tools.
-   * This test ensures that the model can correctly process and use tools
-   * formatted in the OpenAI function calling style.
-   *
-   * It verifies that:
-   * 1. The model supports tool calling functionality.
-   * 2. The model can successfully bind an OpenAI-formatted tool.
-   * 3. The model invokes the bound tool correctly when prompted.
-   * 4. The result contains a tool call with the expected name.
-   *
-   * This test is crucial for ensuring compatibility with OpenAI's function
-   * calling format, which is a common standard in AI tool integration.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test OpenAI formatted tool calls."
-      );
-    }
-
-    // Bind an OpenAI-formatted tool to the model
-    const modelWithTools = model.bindTools([
-      {
-        type: "function",
-        function: {
-          name: "math_addition",
-          description: adderSchema.description,
-          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
-        },
-      },
-    ]);
-
-    // Invoke the model with a prompt that should trigger the tool use
-    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
-      modelWithTools
-    ).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
-    if (!result.tool_calls?.[0]) {
-      throw new Error("result.tool_calls is undefined");
-    }
-    const { tool_calls } = result;
-
-    // Check that the correct tool was called
-    expect(tool_calls[0].name).toBe("math_addition");
-  }
-
-  /**
-   * Tests the chat model's ability to bind and use Runnable-like tools.
-   * This test ensures that the model can correctly process and use tools
-   * that are created from Runnable objects using the `asTool` method.
-   *
-   * It verifies that:
-   * 1. The model supports tool calling functionality.
-   * 2. The model can successfully bind a Runnable-like tool.
-   * 3. The model invokes the bound tool correctly when prompted.
-   * 4. The result contains a tool call with the expected name.
-   *
-   * This test is crucial for ensuring compatibility with tools created
-   * from Runnable objects, which provides a flexible way to integrate
-   * custom logic into the model's tool-calling capabilities.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testBindToolsWithRunnableToolLike(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test Runnable-like tool calls."
-      );
-    }
-
-    // Create a Runnable-like tool using RunnableLambda and asTool
-    const runnableLike = RunnableLambda.from((_) => {
-      // no-op implementation for testing purposes
-    }).asTool({
-      name: "math_addition",
-      description: adderSchema.description,
-      schema: adderSchema,
-    });
-
-    // Bind the Runnable-like tool to the model
-    const modelWithTools = model.bindTools([runnableLike]);
-
-    // Invoke the model with a prompt that should trigger the tool use
-    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
-      modelWithTools
-    ).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
-    if (!result.tool_calls?.[0]) {
-      throw new Error("result.tool_calls is undefined");
-    }
-    const { tool_calls } = result;
-
-    // Check that the correct tool was called
-    expect(tool_calls[0].name).toBe("math_addition");
   }
 
   /**
