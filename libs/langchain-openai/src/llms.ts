@@ -24,7 +24,15 @@ export type { OpenAICallOptions, OpenAIInput };
  */
 interface TokenUsage {
   completionTokens?: number;
+  completionTokensDetails?: {
+    reasoningTokens?: number;
+    acceptedPredictionTokens?: number;
+    rejectedPredictionTokens?: number;
+  };
   promptTokens?: number;
+  promptTokensDetails?: {
+    cachedTokens?: number;
+  };
   totalTokens?: number;
 }
 
@@ -342,13 +350,17 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       choices.push(...data.choices);
       const {
         completion_tokens: completionTokens,
+        completion_tokens_details: completionTokensDetails,
         prompt_tokens: promptTokens,
+        prompt_tokens_details: promptTokensDetails,
         total_tokens: totalTokens,
       } = data.usage
         ? data.usage
         : {
             completion_tokens: undefined,
+            completion_tokens_details: undefined,
             prompt_tokens: undefined,
+            prompt_tokens_details: undefined,
             total_tokens: undefined,
           };
 
@@ -357,8 +369,36 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
           (tokenUsage.completionTokens ?? 0) + completionTokens;
       }
 
+      if (completionTokensDetails) {
+        if (!tokenUsage.completionTokensDetails) {
+          tokenUsage.completionTokensDetails = {};
+        }
+        if (completionTokensDetails.reasoning_tokens) {
+          tokenUsage.completionTokensDetails.reasoningTokens =
+            (tokenUsage.completionTokensDetails.reasoningTokens ?? 0) + completionTokensDetails.reasoning_tokens;
+        }
+        if (completionTokensDetails.accepted_prediction_tokens) {
+          tokenUsage.completionTokensDetails.acceptedPredictionTokens =
+            (tokenUsage.completionTokensDetails.acceptedPredictionTokens ?? 0) + completionTokensDetails.accepted_prediction_tokens;
+        }
+        if (completionTokensDetails.rejected_prediction_tokens) {
+          tokenUsage.completionTokensDetails.rejectedPredictionTokens =
+            (tokenUsage.completionTokensDetails.rejectedPredictionTokens ?? 0) + completionTokensDetails.rejected_prediction_tokens;
+        }
+      }
+
       if (promptTokens) {
         tokenUsage.promptTokens = (tokenUsage.promptTokens ?? 0) + promptTokens;
+      }
+
+      if (promptTokensDetails) {
+        if (!tokenUsage.promptTokensDetails) {
+          tokenUsage.promptTokensDetails = {};
+        }
+        if (promptTokensDetails.cached_tokens) {
+          tokenUsage.promptTokensDetails.cachedTokens =
+            (tokenUsage.promptTokensDetails.cachedTokens ?? 0) + promptTokensDetails.cached_tokens;
+        }
       }
 
       if (totalTokens) {
