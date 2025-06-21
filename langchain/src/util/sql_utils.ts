@@ -18,10 +18,43 @@ interface RawResultTableAndColumn {
 }
 
 export interface SqlDatabaseParams {
-  includesTables?: Array<string>;
-  ignoreTables?: Array<string>;
+  /**
+   * Tables to include in the database.
+   */
+  includesTables?: string[];
+  /**
+   * Tables to ignore in the database.
+   */
+  ignoreTables?: string[];
+  /**
+   * Number of rows to sample from each table for table info.
+   * @default 3
+   */
   sampleRowsInTableInfo?: number;
+  /**
+   * Custom description for each table.
+   */
   customDescription?: Record<string, string>;
+  /**
+   * Allowed SQL statements.
+   *
+   * Note: In the next major version, the default allowed statements
+   * will be restricted to ["SELECT"] only for improved security. Users requiring other
+   * statement types should explicitly configure allowedStatements in the constructor.
+   *
+   * @default ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER"]
+   */
+  allowedStatements?: string[];
+  /**
+   * Enable SQL validation.
+   * @default true
+   */
+  enableSqlValidation?: boolean;
+  /**
+   * Maximum allowed query length in characters.
+   * @default 10000
+   */
+  maxQueryLength?: number;
 }
 
 export interface SqlDatabaseOptionsParams extends SqlDatabaseParams {
