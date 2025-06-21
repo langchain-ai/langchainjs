@@ -696,7 +696,15 @@ export class AzureChatOpenAI
       {
         tokenUsage: {
           completionTokens: 0,
+          completionTokensDetails: {
+            reasoningTokens: 0,
+            acceptedPredictionTokens: 0,
+            rejectedPredictionTokens: 0,
+          },
           promptTokens: 0,
+          promptTokensDetails: {
+            cachedTokens: 0,
+          },
           totalTokens: 0,
         },
       }
