@@ -10,7 +10,8 @@
     "langchain-core",
     "libs/*",
     "examples",
-    "docs/*"
+    "docs/*",
+    "libs/langchain-google/e2e"
   ],
   "repository": {
     "type": "git",

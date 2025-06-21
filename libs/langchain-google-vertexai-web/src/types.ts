@@ -1,1 +1,1 @@
-export * from "@langchain/google-webauth/types";
+export * from "@langchain/google";
