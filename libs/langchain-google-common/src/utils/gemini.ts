@@ -688,6 +688,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       toolParts = messageKwargsToParts(message.additional_kwargs);
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
+
+    const signatures: string[] =
+      (message?.additional_kwargs?.signatures as string[]) ?? [];
+    if (signatures.length === parts.length) {
+      for (let co = 0; co < signatures.length; co += 1) {
+        const signature = signatures[co];
+        if (signature && signature.length > 0) {
+          parts[co].thoughtSignature = signature;
+        }
+      }
+    }
+
     return [
       {
         role,
@@ -1454,6 +1466,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return partsToBaseMessageChunkFields(parts);
   }
 
+  function partsToSignatures(parts: GeminiPart[]): string[] {
+    return parts.map((part: GeminiPart) => part?.thoughtSignature ?? "");
+  }
+
   function partsToBaseMessageChunkFields(
     parts: GeminiPart[]
   ): AIMessageChunkFields {
@@ -1463,6 +1479,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       tool_calls: [],
       invalid_tool_calls: [],
     };
+    fields.additional_kwargs = {};
 
     const rawTools = partsToToolsRaw(parts);
     if (rawTools.length > 0) {
@@ -1492,10 +1509,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           });
         }
       }
-      fields.additional_kwargs = {
-        tool_calls: tools,
-      };
+      fields.additional_kwargs.tool_calls = tools;
     }
+
+    fields.additional_kwargs.signatures = partsToSignatures(parts);
+
     return fields;
   }
 

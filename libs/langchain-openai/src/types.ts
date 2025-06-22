@@ -13,6 +13,13 @@ import { InteropZodObject } from "@langchain/core/utils/types";
 // also makes it easier for folks to import this type without digging around into the dependent packages
 export type { TiktokenModel };
 
+/**
+ * @see https://platform.openai.com/docs/models
+ */
+export type OpenAIChatModelId =
+  | OpenAIClient.ChatModel
+  | (string & NonNullable<unknown>);
+
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
   temperature: number;
@@ -65,7 +72,7 @@ export declare interface OpenAIBaseInput {
   modelName: string;
 
   /** Model name to use */
-  model: string;
+  model: OpenAIChatModelId;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |

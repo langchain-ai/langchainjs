@@ -120,6 +120,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
   });
 
   test("invoke global", async () => {
+    // Global endpoint is not supported for Gemini 1.5
     const model = new ChatVertexAI({
       callbacks,
       modelName,

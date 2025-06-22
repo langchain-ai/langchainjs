@@ -349,7 +349,11 @@ export abstract class GoogleAIConnection<
   get computedLocation(): string {
     switch (this.apiName) {
       case "google":
-        return super.computedLocation;
+        if (this.modelName.startsWith("gemini-2.5-flash-lite")) {
+          return "global";
+        } else {
+          return super.computedLocation;
+        }
       case "anthropic":
         return "us-east5";
       default:

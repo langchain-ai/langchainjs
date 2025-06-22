@@ -272,7 +272,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       body: JSON.stringify(this.constructBody(prompt, options)),
     });
 
-    if (fetchResponse.status !== 200 ?? !fetchResponse.body) {
+    if (fetchResponse.status !== 200 || !fetchResponse.body) {
       const errorResponse = await fetchResponse.json();
       throw new Error(
         `Error getting prompt completion from Together AI. ${JSON.stringify(
