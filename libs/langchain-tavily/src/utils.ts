@@ -128,6 +128,132 @@ export type TavilyExtractParams = {
 } & Record<string, unknown>;
 
 /**
+ * The parameters for the Tavily Search API.
+ */
+export type ExtractDepth = "basic" | "advanced";
+export type CrawlCategory =
+  | "Documentation"
+  | "Blog"
+  | "Blogs"
+  | "Community"
+  | "About"
+  | "Contact"
+  | "Privacy"
+  | "Terms"
+  | "Status"
+  | "Pricing"
+  | "Enterprise"
+  | "Careers"
+  | "E-Commerce"
+  | "Authentication"
+  | "Developer"
+  | "Developers"
+  | "Solutions"
+  | "Partners"
+  | "Downloads"
+  | "Media"
+  | "Events"
+  | "People";
+export type TavilyCrawlParams = {
+  /**
+   * The URL to start crawling from.
+   *
+   * Example: "https://example.com"
+   */
+  url: string;
+
+  /**
+   * Natural language instructions to guide the crawler
+   *
+   * @default undefined
+   */
+  instructions?: string;
+
+  /**
+   * The depth of the extractions. It can be "basic" or "advanced".
+   *
+   */
+  extractDepth?: ExtractDepth;
+
+  /**
+   * The format of the respose. It can be "markdown" or "text"
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
+
+  /**
+   * The maximum number of hops from the starting URL.
+   *
+   * @default 3
+   */
+  maxDepth?: number;
+
+  /**
+   * The maximum number of pages to crawl per level.
+   *
+   * @default 50
+   */
+  maxBreadth?: number;
+
+  /**
+   * The maximum number of pages to crawl.
+   *
+   * @default 100
+   */
+  limit?: number;
+
+  /**
+   * Only crawl URLs containing these categories.
+   *
+   * @default undefined
+   */
+  categories?: Set<CrawlCategory>;
+
+  /**
+   * Only crawl URLs containing these paths.
+   *
+   * @default undefined
+   */
+  selectPaths?: string[];
+
+  /**
+   * Only crawl these domains.
+   *
+   * @default undefined
+   */
+  selectDomains?: string[];
+
+  /**
+   * Exclude these paths.
+   *
+   * @default undefined
+   */
+  excludePaths?: string[];
+
+  /**
+   * Exclude these domains.
+   *
+   * @default undefined
+   */
+  excludeDomains?: string[];
+
+  /**
+   * Allow crawling external domains.
+   *
+   * @default undefined
+   */
+  allowExternal?: boolean;
+
+  /**
+   * Include images in the crawl results.
+   *
+   * @default false
+   */
+  includeImages?: boolean;
+} & Record<string, unknown>;
+
+/**
  * A single extraction result from the Tavily Extract API.
  */
 export type TavilyExtractResult = {
@@ -265,6 +391,21 @@ export type TavilySearchResponseWithSimpleImages = TavilyBaseSearchResponse & {
   images?: string[];
 };
 
+export type TavilyCrawlResponse = {
+  /**
+   * The base URL that was crawled.
+   */
+  base_url: string;
+  /**
+   * The results of the crawl.
+   */
+  results: TavilyExtractResult[];
+  /**
+   * The response time of the crawl.
+   */
+  response_time: number;
+} & Record<string, unknown>;
+
 export type TavilySearchResponse =
   | TavilySearchResponseWithImageDescriptions
   | TavilySearchResponseWithSimpleImages;
@@ -380,6 +521,39 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
     const apiParams = this.convertCamelToSnakeCase(params);
 
     const response = await fetch(`${TAVILY_BASE_URL}/extract`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(apiParams),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail?.error || "Unknown error";
+      throw new Error(`Error ${response.status}: ${errorMessage}`);
+    }
+
+    return response.json();
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Crawl API. Primarily used for testing.
+ */
+export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
+  /**
+   * Crawls a list of URLs using the Tavily Crawl API.
+   * @param params The parameters for the crawl. See {@link TavilyCrawlParams}.
+   * @returns The raw response body from the Tavily Crawl API. See {@link TavilyCrawlResponse}.
+   */
+  async rawResults(params: TavilyCrawlParams): Promise<TavilyCrawlResponse> {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const apiParams = this.convertCamelToSnakeCase(params);
+
+    const response = await fetch(`${TAVILY_BASE_URL}/crawl`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),

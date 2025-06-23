@@ -15,6 +15,10 @@ export type {
 
 export { TavilySearch } from "./tavily-search.js";
 
+export type { TavilyCrawlAPIRetrieverFields } from "./tavily-crawl.js";
+
+export { TavilyCrawl } from "./tavily-crawl.js";
+
 export type {
   TavilyBaseSearchResponse,
   TavilySearchResponseWithSimpleImages,
@@ -25,6 +29,13 @@ export type {
   TavilyExtractResponse,
   TavilyExtractResult,
   TavilyFailedResult,
+  TavilyCrawlParams,
+  TavilyCrawlResponse,
+  CrawlCategory,
 } from "./utils.js";
 
-export { TavilySearchAPIWrapper, TavilyExtractAPIWrapper } from "./utils.js";
+export {
+  TavilySearchAPIWrapper,
+  TavilyExtractAPIWrapper,
+  TavilyCrawlAPIWrapper,
+} from "./utils.js";
