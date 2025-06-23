@@ -1,0 +1,24 @@
+{
+  "name": "net-mocks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run --config=example/vitest.config.ts"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/core": "workspace:*",
+    "@langchain/openai": "workspace:*",
+    "@mswjs/interceptors": "^0.39.2",
+    "cookie": "^1.0.2"
+  },
+  "devDependencies": {
+    "@mswjs/source": "^0.4.1",
+    "msw": "^2.10.2",
+    "vitest": "^3.2.4"
+  }
+}
