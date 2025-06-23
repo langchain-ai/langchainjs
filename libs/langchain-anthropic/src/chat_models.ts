@@ -841,7 +841,6 @@ export class ChatAnthropicMessages<
       max_tokens: this.maxTokens,
       tools: this.formatStructuredToolToAnthropic(options?.tools),
       tool_choice,
-      thinking: this.thinking,
       ...this.invocationKwargs,
     };
   }
