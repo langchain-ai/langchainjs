@@ -555,16 +555,15 @@ export abstract class ChatModelIntegrationTests<
     // Check that total_tokens is a number
     expect(typeof usageMetadata.total_tokens).toBe("number");
 
-    // This is required in Python: come back to this after checking
-    // // Ensure model_name is in response_metadata and is a non-empty string
-    // if (!("response_metadata" in result)) {
-    //   throw new Error("result is missing `response_metadata`");
-    // }
-    // const responseMetadata = result.response_metadata;
-    // expect(responseMetadata).toBeDefined();
-    // expect(responseMetadata.model_name).toBeDefined();
-    // expect(typeof responseMetadata.model_name).toBe("string");
-    // expect(responseMetadata.model_name).not.toBe("");
+    // Ensure model_name is in response_metadata and is a non-empty string
+    if (!("response_metadata" in result)) {
+      throw new Error("result is missing `response_metadata`");
+    }
+    const responseMetadata = result.response_metadata;
+    expect(responseMetadata).toBeDefined();
+    expect(responseMetadata.model_name).toBeDefined();
+    expect(typeof responseMetadata.model_name).toBe("string");
+    expect(responseMetadata.model_name).not.toBe("");
 
     // Test additional usage metadata details
     if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
