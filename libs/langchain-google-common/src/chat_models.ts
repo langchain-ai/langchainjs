@@ -37,6 +37,8 @@ import {
   GoogleAIAPI,
   GoogleAIAPIParams,
   GoogleSearchToolSetting,
+  GoogleSpeechConfig,
+  GeminiJsonSchema,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -58,7 +60,10 @@ import type {
   GeminiAPIConfig,
   GoogleAIModelModality,
 } from "./types.js";
-import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import {
+  removeAdditionalProperties,
+  schemaToGeminiParameters,
+} from "./utils/zod_to_gemini_parameters.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -219,6 +224,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   convertSystemMessageToHumanContent: boolean | undefined;
 
   safetyHandler: GoogleAISafetyHandler;
+
+  speechConfig: GoogleSpeechConfig;
 
   streamUsage = true;
 
@@ -503,10 +510,12 @@ export abstract class ChatGoogleBase<AuthOptions>
         geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
         functionName = schema.name;
       } else {
+        // We are providing the schema for *just* the parameters, probably
+        const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
         geminiFunctionDefinition = {
           name: functionName,
           description: schema.description ?? "",
-          parameters: schema as GeminiFunctionSchema,
+          parameters,
         };
       }
       tools = [

@@ -18,6 +18,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
     image: node:18
@@ -37,6 +39,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-tsc:
     image: node:18
@@ -56,6 +60,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
     image: node:18
@@ -75,6 +81,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
     image: node:18
@@ -94,6 +102,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
     image: node:18
@@ -113,6 +123,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
     image: node:18
@@ -132,6 +144,8 @@ services:
       - ../libs/langchain-anthropic:/langchain-anthropic
       - ../libs/langchain-openai:/langchain-openai
       - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   # test-exports-bun:
   #   image: oven/bun

@@ -37,6 +37,7 @@ import {
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
 import {
+  AnthropicBuiltInToolUnion,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -102,6 +103,26 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
+function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
+  const builtinTools = ["web_search"];
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "type" in tool &&
+    "name" in tool &&
+    typeof tool.type === "string" &&
+    typeof tool.name === "string" &&
+    builtinTools.includes(tool.name)
+  );
+}
+
+/**
+ * @see https://docs.anthropic.com/claude/docs/models-overview
+ */
+export type AnthropicMessagesModelId =
+  | Anthropic.Model
+  | (string & NonNullable<unknown>);
+
 /**
  * Input to AnthropicChat class.
  */
@@ -156,9 +177,9 @@ export interface AnthropicInput {
   anthropicApiUrl?: string;
 
   /** @deprecated Use "model" instead */
-  modelName?: string;
+  modelName?: AnthropicMessagesModelId;
   /** Model name to use */
-  model?: string;
+  model?: AnthropicMessagesModelId;
 
   /** Overridable Anthropic ClientOptions */
   clientOptions?: ClientOptions;
@@ -722,11 +743,14 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): Anthropic.Messages.Tool[] | undefined {
+  ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
     return tools.map((tool) => {
+      if (isBuiltinTool(tool)) {
+        return tool;
+      }
       if (isAnthropicTool(tool)) {
         return tool;
       }
@@ -1154,6 +1178,10 @@ export class ChatAnthropicMessages<
 
       llm = this.withConfig({
         tools,
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1170,6 +1198,10 @@ export class ChatAnthropicMessages<
         tool_choice: {
           type: "tool",
           name: functionName,
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
     }

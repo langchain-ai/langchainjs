@@ -31,7 +31,7 @@ import {
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import type {
+import {
   GoogleLLMResponse,
   GoogleAIModelParams,
   GeminiPartText,
@@ -52,10 +52,13 @@ import type {
   GeminiLogprobsTopCandidate,
   ModalityTokenCount,
   GeminiUrlContextMetadata,
-} from "../types.js";
-import { GoogleAISafetyError } from "./safety.js";
-import { MediaBlob } from "../experimental/utils/media_core.js";
-import {
+  GoogleSpeechConfig,
+  GoogleSpeechConfigSimplified,
+  GoogleSpeechSimplifiedLanguage,
+  GoogleSpeechVoiceLanguage,
+  GoogleSpeechVoice,
+  GoogleSpeechSpeakerName,
+  GoogleSpeakerVoiceConfig,
   GeminiFunctionDeclaration,
   GeminiGenerationConfig,
   GeminiRequest,
@@ -65,6 +68,8 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
+import { GoogleAISafetyError } from "./safety.js";
+import { MediaBlob } from "../experimental/utils/media_core.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
 export interface FunctionCall {
@@ -222,6 +227,93 @@ const extractMimeType = (
   }
   return null;
 };
+
+export function normalizeSpeechConfig(
+  config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
+): GoogleSpeechConfig | undefined {
+  function isSpeechConfig(
+    config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechConfig {
+    return (
+      typeof config === "object" &&
+      (Object.hasOwn(config, "voiceConfig") ||
+        Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+    );
+  }
+
+  function hasLanguage(
+    config: GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechSimplifiedLanguage {
+    return typeof config === "object" && Object.hasOwn(config, "languageCode");
+  }
+
+  function hasVoice(
+    config: GoogleSpeechSimplifiedLanguage
+  ): config is GoogleSpeechVoiceLanguage {
+    return Object.hasOwn(config, "voice");
+  }
+
+  if (typeof config === "undefined") {
+    return undefined;
+  }
+
+  // If this is already a GoogleSpeechConfig, just return it
+  if (isSpeechConfig(config)) {
+    return config;
+  }
+
+  let languageCode: string | undefined;
+  let voice: GoogleSpeechVoice;
+  if (hasLanguage(config)) {
+    languageCode = config.languageCode;
+    voice = hasVoice(config) ? config.voice : config.voices;
+  } else {
+    languageCode = undefined;
+    voice = config;
+  }
+
+  let ret: GoogleSpeechConfig;
+
+  if (typeof voice === "string") {
+    // They just provided the prebuilt voice configuration name. Use it.
+    ret = {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: voice,
+        },
+      },
+    };
+  } else {
+    // This is multi-speaker, so we have speaker/name pairs
+    // If we have just one (why?), turn it into an array for the moment
+    const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
+      ? voice
+      : [voice];
+    // Go through all the speaker/name pairs and turn this into the voice config array
+    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
+      (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
+        speaker: v.speaker,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: v.name,
+          },
+        },
+      })
+    );
+    // Create the multi-speaker voice configuration
+    ret = {
+      multiSpeakerVoiceConfig: {
+        speakerVoiceConfigs,
+      },
+    };
+  }
+
+  if (languageCode) {
+    ret.languageCode = languageCode;
+  }
+
+  return ret;
+}
 
 export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function messageContentText(
@@ -596,6 +688,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       toolParts = messageKwargsToParts(message.additional_kwargs);
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
+
+    const signatures: string[] =
+      (message?.additional_kwargs?.signatures as string[]) ?? [];
+    if (signatures.length === parts.length) {
+      for (let co = 0; co < signatures.length; co += 1) {
+        const signature = signatures[co];
+        if (signature && signature.length > 0) {
+          parts[co].thoughtSignature = signature;
+        }
+      }
+    }
+
     return [
       {
         role,
@@ -720,13 +824,36 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function inlineDataPartToMessageContent(
+  function inlineDataPartToMessageContentImage(
     part: GeminiPartInlineData
   ): MessageContentImageUrl {
     return {
       type: "image_url",
       image_url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
     };
+  }
+
+  function inlineDataPartToMessageContentMedia(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    return {
+      type: "media",
+      mimeType: part.inlineData.mimeType,
+      data: part.inlineData.data,
+    };
+  }
+
+  function inlineDataPartToMessageContent(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): MessageContentImageUrl | Record<string, any> {
+    const mimeType = part?.inlineData?.mimeType ?? "";
+    if (mimeType.startsWith("image")) {
+      return inlineDataPartToMessageContentImage(part);
+    } else {
+      return inlineDataPartToMessageContentMedia(part);
+    }
   }
 
   function fileDataPartToMessageContent(
@@ -740,7 +867,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function partsToMessageContent(parts: GeminiPart[]): MessageContent {
     return parts
-      .map((part) => {
+      .map((part: GeminiPart): MessageContentComplex | null => {
         if (part === undefined || part === null) {
           return null;
         } else if (part.thought) {
@@ -1339,6 +1466,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return partsToBaseMessageChunkFields(parts);
   }
 
+  function partsToSignatures(parts: GeminiPart[]): string[] {
+    return parts.map((part: GeminiPart) => part?.thoughtSignature ?? "");
+  }
+
   function partsToBaseMessageChunkFields(
     parts: GeminiPart[]
   ): AIMessageChunkFields {
@@ -1348,6 +1479,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       tool_calls: [],
       invalid_tool_calls: [],
     };
+    fields.additional_kwargs = {};
 
     const rawTools = partsToToolsRaw(parts);
     if (rawTools.length > 0) {
@@ -1377,10 +1509,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           });
         }
       }
-      fields.additional_kwargs = {
-        tool_calls: tools,
-      };
+      fields.additional_kwargs.tool_calls = tools;
     }
+
+    fields.additional_kwargs.signatures = partsToSignatures(parts);
+
     return fields;
   }
 
@@ -1496,6 +1629,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
       responseModalities: parameters.responseModalities,
+      speechConfig: normalizeSpeechConfig(parameters.speechConfig),
     };
 
     // Add the logprobs if explicitly set

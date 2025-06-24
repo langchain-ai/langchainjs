@@ -42,6 +42,10 @@ import {
   StructuredOutputParser,
   type BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
+import {
+  ReasoningJsonOutputParser,
+  ReasoningStructuredOutputParser,
+} from "../utils/output_parsers.js";
 
 /**
  * Type representing the role of a message in the Perplexity chat model.
@@ -425,11 +429,21 @@ export class ChatPerplexity
     });
 
     let outputParser: BaseLLMOutputParser;
+    // Check if this is a reasoning model
+    const isReasoningModel = this.model.toLowerCase().includes("reasoning");
 
     if (isInteropZodSchema(schema)) {
-      outputParser = StructuredOutputParser.fromZodSchema(schema);
+      if (isReasoningModel) {
+        outputParser = new ReasoningStructuredOutputParser(schema);
+      } else {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      }
     } else {
-      outputParser = new JsonOutputParser();
+      if (isReasoningModel) {
+        outputParser = new ReasoningJsonOutputParser(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     }
 
     if (!includeRaw) {

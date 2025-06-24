@@ -931,8 +931,10 @@ export abstract class Runnable<
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
+      let signal;
+      let listener: (() => void) | null = null;
+
       try {
-        let signal;
         if (options?.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
@@ -945,13 +947,12 @@ export abstract class Runnable<
             // Fallback for Node 18 and below - just use the provided signal
             signal = options.signal;
             // Ensure we still abort our controller when the parent signal aborts
-            options.signal.addEventListener(
-              "abort",
-              () => {
-                abortController.abort();
-              },
-              { once: true }
-            );
+
+            listener = () => {
+              abortController.abort();
+            };
+
+            options.signal.addEventListener("abort", listener, { once: true });
           }
         } else {
           signal = abortController.signal;
@@ -971,6 +972,10 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
+
+        if (signal && listener) {
+          signal.removeEventListener("abort", listener);
+        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
@@ -3326,7 +3331,9 @@ export class RunnablePick<
       const picked = this.keys
         .map((key) => [key, input[key]])
         .filter((v) => v[1] !== undefined);
-      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+      return picked.length === 0
+        ? (undefined as RunOutput)
+        : Object.fromEntries(picked);
     }
   }
 
