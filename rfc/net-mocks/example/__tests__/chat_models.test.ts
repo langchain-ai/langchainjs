@@ -27,6 +27,7 @@ describe("ChatOpenAI", () => {
     await multiTurn();
   });
 
+  /// delete the har file and uncomment this
   // it.fails(
   //   "will reject when there isn't a match when `noMatch: reject`",
   //   async () => {
