@@ -82,7 +82,10 @@ import {
   isZodSchemaV3,
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -439,7 +442,8 @@ function _convertReasoningSummaryToOpenAIResponsesParams(
 
 function _convertMessagesToOpenAIResponsesParams(
   messages: BaseMessage[],
-  model?: string
+  model?: string,
+  zdrEnabled?: boolean
 ): ResponsesInputItem[] {
   return messages.flatMap(
     (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
@@ -517,6 +521,7 @@ function _convertMessagesToOpenAIResponsesParams(
       if (role === "assistant") {
         // if we have the original response items, just reuse them
         if (
+          !zdrEnabled &&
           lcMsg.response_metadata.output != null &&
           Array.isArray(lcMsg.response_metadata.output) &&
           lcMsg.response_metadata.output.length > 0 &&
@@ -530,7 +535,7 @@ function _convertMessagesToOpenAIResponsesParams(
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning) {
+        if (additional_kwargs?.reasoning && !zdrEnabled) {
           const reasoningItem = _convertReasoningSummaryToOpenAIResponsesParams(
             additional_kwargs.reasoning
           );
@@ -552,7 +557,7 @@ function _convertMessagesToOpenAIResponsesParams(
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id ? { id: lcMsg.id } : {}),
+          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
           content:
             typeof content === "string"
               ? content
@@ -584,7 +589,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 name: toolCall.name,
                 arguments: JSON.stringify(toolCall.args),
                 call_id: toolCall.id!,
-                id: functionCallIds?.[toolCall.id!],
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               })
             )
           );
@@ -595,8 +600,8 @@ function _convertMessagesToOpenAIResponsesParams(
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                id: functionCallIds?.[toolCall.id],
                 arguments: toolCall.function.arguments,
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
               })
             )
           );
@@ -608,62 +613,77 @@ function _convertMessagesToOpenAIResponsesParams(
           ? lcMsg.response_metadata.output
           : additional_kwargs.tool_outputs;
 
-        let computerCalls: Array<ResponsesInputItem> = [];
+        const fallthroughCallTypes: ResponsesInputItem["type"][] = [
+          "computer_call",
+          "mcp_call",
+          "code_interpreter_call",
+          "image_generation_call",
+        ];
 
         if (toolOutputs != null) {
           const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
-
-          computerCalls = castToolOutputs?.filter(
-            (item) => item.type === "computer_call"
+          const fallthroughCalls = castToolOutputs?.filter((item) =>
+            fallthroughCallTypes.includes(item.type)
           );
-
-          if (computerCalls.length > 0) input.push(...computerCalls);
+          if (fallthroughCalls.length > 0) input.push(...fallthroughCalls);
         }
 
         return input;
       }
 
-      const content =
-        typeof lcMsg.content === "string"
-          ? lcMsg.content
-          : lcMsg.content.flatMap((item) => {
-              if (isDataContentBlock(item)) {
-                return convertToProviderContentBlock(
-                  item,
-                  completionsApiContentBlockConverter
-                );
-              }
-
-              if (item.type === "text") {
-                return { type: "input_text", text: item.text };
-              }
-
-              if (item.type === "image_url") {
-                const image_url =
-                  typeof item.image_url === "string"
-                    ? item.image_url
-                    : item.image_url.url;
-                const detail =
-                  typeof item.image_url === "string"
-                    ? "auto"
-                    : item.image_url.detail;
-
-                return { type: "input_image", image_url, detail };
-              }
-
-              if (
-                item.type === "input_text" ||
-                item.type === "input_image" ||
-                item.type === "input_file"
-              ) {
-                return item;
-              }
-
-              return [];
-            });
-
       if (role === "user" || role === "system" || role === "developer") {
-        return { type: "message", role, content };
+        if (typeof lcMsg.content === "string") {
+          return { type: "message", role, content: lcMsg.content };
+        }
+
+        const messages: ResponsesInputItem[] = [];
+        const content = lcMsg.content.flatMap((item) => {
+          if (item.type === "mcp_approval_response") {
+            messages.push({
+              type: "mcp_approval_response",
+              approval_request_id: item.approval_request_id,
+              approve: item.approve,
+            });
+          }
+          if (isDataContentBlock(item)) {
+            return convertToProviderContentBlock(
+              item,
+              completionsApiContentBlockConverter
+            );
+          }
+          if (item.type === "text") {
+            return {
+              type: "input_text",
+              text: item.text,
+            };
+          }
+          if (item.type === "image_url") {
+            return {
+              type: "input_image",
+              image_url:
+                typeof item.image_url === "string"
+                  ? item.image_url
+                  : item.image_url.url,
+              detail:
+                typeof item.image_url === "string"
+                  ? "auto"
+                  : item.image_url.detail,
+            };
+          }
+          if (
+            item.type === "input_text" ||
+            item.type === "input_image" ||
+            item.type === "input_file"
+          ) {
+            return item;
+          }
+          return [];
+        });
+
+        if (content.length > 0) {
+          messages.push({ type: "message", role, content });
+        }
+        return messages;
       }
 
       console.warn(
@@ -790,6 +810,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   const additional_kwargs: {
     [key: string]: unknown;
     reasoning?: Partial<ChatOpenAIReasoningSummary>;
+    tool_outputs?: unknown[];
   } = {};
   let id: string | undefined;
   if (chunk.type === "response.output_text.delta") {
@@ -827,9 +848,16 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     };
   } else if (
     chunk.type === "response.output_item.done" &&
-    (chunk.item.type === "web_search_call" ||
-      chunk.item.type === "file_search_call" ||
-      chunk.item.type === "computer_call")
+    [
+      "web_search_call",
+      "file_search_call",
+      "computer_call",
+      "code_interpreter_call",
+      "mcp_call",
+      "mcp_list_tools",
+      "mcp_approval_request",
+      "image_generation_call",
+    ].includes(chunk.item.type)
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
   } else if (chunk.type === "response.created") {
@@ -898,6 +926,10 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
         { text: chunk.delta, type: "summary_text", index: chunk.summary_index },
       ],
     };
+  } else if (chunk.type === "response.image_generation_call.partial_image") {
+    // noop/fixme: retaining partial images in a message chunk means that _all_
+    // partial images get kept in history, so we don't do anything here.
+    return null;
   } else {
     return null;
   }
@@ -974,6 +1006,35 @@ function isBuiltInToolChoice(
     "type" in tool_choice &&
     tool_choice.type !== "function"
   );
+}
+
+function _reduceChatOpenAIToolsForResponses(
+  tools: ChatOpenAIToolType[],
+  fields?: {
+    stream?: boolean;
+    strict?: boolean;
+  }
+) {
+  const reducedTools: ResponsesTool[] = [];
+  for (const tool of tools) {
+    if (isBuiltInTool(tool)) {
+      if (tool.type === "image_generation" && fields?.stream) {
+        // OpenAI sends a 400 error if partial_images is not set and we want to stream.
+        // We also set it to 1 since we don't support partial images yet.
+        tool.partial_images = 1;
+      }
+      reducedTools.push(tool);
+    } else if (isOpenAITool(tool)) {
+      reducedTools.push({
+        type: "function",
+        name: tool.function.name,
+        parameters: tool.function.parameters,
+        description: tool.function.description,
+        strict: fields?.strict ?? null,
+      });
+    }
+  }
+  return reducedTools;
 }
 
 function _convertChatOpenAIToolTypeToOpenAITool(
@@ -2054,23 +2115,10 @@ export class ChatOpenAI<
         truncation: options?.truncation,
         include: options?.include,
         tools: options?.tools?.length
-          ? options.tools
-              .map((tool) => {
-                if (isBuiltInTool(tool)) {
-                  return tool;
-                } else if (isOpenAITool(tool)) {
-                  return {
-                    type: "function",
-                    name: tool.function.name,
-                    parameters: tool.function.parameters,
-                    description: tool.function.description,
-                    strict,
-                  };
-                } else {
-                  return null;
-                }
-              })
-              .filter((tool): tool is ResponsesTool => tool !== null)
+          ? _reduceChatOpenAIToolsForResponses(options.tools, {
+              stream: this.streaming,
+              strict,
+            })
           : undefined,
         tool_choice: isBuiltInToolChoice(options?.tool_choice)
           ? options?.tool_choice
@@ -2342,7 +2390,11 @@ export class ChatOpenAI<
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
-          input: _convertMessagesToOpenAIResponsesParams(messages, this.model),
+          input: _convertMessagesToOpenAIResponsesParams(
+            messages,
+            this.model,
+            this.zdrEnabled
+          ),
           stream: true,
         },
         options
@@ -2506,7 +2558,11 @@ export class ChatOpenAI<
       };
     }
 
-    const input = _convertMessagesToOpenAIResponsesParams(messages, this.model);
+    const input = _convertMessagesToOpenAIResponsesParams(
+      messages,
+      this.model,
+      this.zdrEnabled
+    );
     const data = await this.responseApiWithRetry(
       {
         input,
@@ -3112,14 +3168,20 @@ export class ChatOpenAI<
     }
 
     if (method === "jsonMode") {
-      llm = this.withConfig({
-        response_format: { type: "json_object" },
-      } as Partial<CallOptions>);
+      let outputFormatSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputFormatSchema,
+        },
+      } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
       llm = this.withConfig({
         response_format: {
@@ -3130,6 +3192,10 @@ export class ChatOpenAI<
             schema,
             strict: config?.strict,
           },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -3166,6 +3232,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -3204,6 +3274,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: toJsonSchema(schema),
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),

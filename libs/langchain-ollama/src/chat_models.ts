@@ -15,6 +15,8 @@ import {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
@@ -102,6 +104,11 @@ export interface ChatOllamaInput
   streaming?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  /**
+   * The fetch function to use.
+   * @default fetch
+   */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -486,6 +493,7 @@ export class ChatOllama
     super(fields ?? {});
 
     this.client = new Ollama({
+      fetch: fields?.fetch,
       host: fields?.baseUrl,
       headers: fields?.headers,
     });
@@ -645,7 +653,7 @@ export class ChatOllama
   private async checkModelExistsOnMachine(model: string): Promise<boolean> {
     const { models } = await this.client.list();
     return !!models.find(
-      (m) => m.name === model || m.name === `${model}:latest`
+      (m: { name: string }) => m.name === model || m.name === `${model}:latest`
     );
   }
 
@@ -696,10 +704,6 @@ export class ChatOllama
     };
   }
 
-  /**
-   * Implement to support streaming.
-   * Should yield chunks iteratively.
-   */
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -722,29 +726,6 @@ export class ChatOllama
       output_tokens: 0,
       total_tokens: 0,
     };
-
-    if (params.tools && params.tools.length > 0) {
-      const toolResult = await this.client.chat({
-        ...params,
-        messages: ollamaMessages,
-        stream: false, // Ollama currently does not support streaming with tools
-      });
-
-      const { message: responseMessage, ...rest } = toolResult;
-      usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
-      usageMetadata.output_tokens += rest.eval_count ?? 0;
-      usageMetadata.total_tokens =
-        usageMetadata.input_tokens + usageMetadata.output_tokens;
-
-      yield new ChatGenerationChunk({
-        text: responseMessage.content,
-        message: convertOllamaMessagesToLangChain(responseMessage, {
-          responseMetadata: rest,
-          usageMetadata,
-        }),
-      });
-      return runManager?.handleLLMNewToken(responseMessage.content);
-    }
 
     const stream = await this.client.chat({
       ...params,
@@ -858,6 +839,10 @@ export class ChatOllama
         },
       ]).withConfig({
         format: "json",
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(outputSchema),
+        },
       });
       const outputParser = outputSchemaIsZod
         ? StructuredOutputParser.fromZodSchema(outputSchema)
