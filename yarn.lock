@@ -29246,9 +29246,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"net-mocks@workspace:rfc/net-mocks":
+"net-mocks@workspace:internal/net-mocks":
   version: 0.0.0-use.local
-  resolution: "net-mocks@workspace:rfc/net-mocks"
+  resolution: "net-mocks@workspace:internal/net-mocks"
   dependencies:
     "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:*"

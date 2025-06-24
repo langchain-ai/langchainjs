@@ -11,7 +11,7 @@
     "libs/*",
     "examples",
     "docs/*",
-    "rfc/*"
+    "internal/*"
   ],
   "repository": {
     "type": "git",
