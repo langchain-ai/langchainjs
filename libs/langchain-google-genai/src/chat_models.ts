@@ -36,8 +36,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import type { z } from "zod";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InferInteropZodOutput,
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
@@ -871,7 +874,7 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    // may not have generations in output if there was a refusal for safety reasons
+    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
     if (generationResult.generations?.length > 0) {
       await runManager?.handleLLMNewToken(
         generationResult.generations[0]?.text ?? ""
@@ -982,7 +985,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -993,7 +996,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1004,7 +1007,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1015,7 +1018,8 @@ export class ChatGoogleGenerativeAI
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1030,7 +1034,7 @@ export class ChatGoogleGenerativeAI
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
       let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         const jsonSchema = schemaToGenerativeAIParameters(schema);
         tools = [
           {
@@ -1045,7 +1049,7 @@ export class ChatGoogleGenerativeAI
           },
         ];
         outputParser = new GoogleGenerativeAIToolsOutputParser<
-          z.infer<typeof schema>
+          InferInteropZodOutput<typeof schema>
         >({
           returnSingle: true,
           keyName: functionName,

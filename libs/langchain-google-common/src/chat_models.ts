@@ -13,7 +13,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import type { z } from "zod";
 import {
   Runnable,
   RunnablePassthrough,
@@ -23,6 +22,10 @@ import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { concat } from "@langchain/core/utils/stream";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -426,7 +429,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -437,7 +440,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -448,7 +451,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -459,7 +462,8 @@ export abstract class ChatGoogleBase<AuthOptions>
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -470,7 +474,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
@@ -545,15 +549,4 @@ export abstract class ChatGoogleBase<AuthOptions>
       runName: "StructuredOutputRunnable",
     });
   }
-}
-
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
