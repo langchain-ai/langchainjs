@@ -8503,7 +8503,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^4.96.0
+    openai: ^5.7.0
     prettier: ^2.8.3
     release-it: ^18.1.2
     rimraf: ^5.0.1
@@ -29432,7 +29432,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1, openai@npm:^4.96.0":
+"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1":
   version: 4.96.0
   resolution: "openai@npm:4.96.0"
   dependencies:
@@ -29473,6 +29473,23 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: bc572c9ac2a149722193d9f8e88a95fc2da021be9d18e36d5e840ce673dab78943f5b406e2a20d1044453fb259c7d1e10d2e2e34a92d94d73afc24832a183249
+  languageName: node
+  linkType: hard
+
+"openai@npm:^5.7.0":
+  version: 5.7.0
+  resolution: "openai@npm:5.7.0"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: 3f175ce520cc277fe14f9b0c6cd523e91e972b309db6d8457fb1d5d4b992c309312367eaacf0ab3ade4fbeeb97c39cdcdea3d7689f8c8f888ca57cef0c9fe547
   languageName: node
   linkType: hard
 
