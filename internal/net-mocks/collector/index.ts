@@ -95,7 +95,7 @@ export class NetMockContext {
     maxAge: 1000 * 60 * 60 * 24,
     stale: "warn",
     noMatch: "warn",
-    useTimings: true,
+    useTimings: false,
     redactedKeys: [],
   };
   /** @internal */
