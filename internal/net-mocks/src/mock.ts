@@ -40,7 +40,7 @@ export interface ArchiveStore {
 export type NetMockOptions = {
   /**
    * Maximum age (in milliseconds) for cached network entries before considered stale.
-   * @default '30 days'
+   * @default '60 days'
    */
   maxAge: number;
   /**
@@ -49,7 +49,7 @@ export type NetMockOptions = {
    * - "warn": Warn but allow the request.
    * - "refetch": Refetch the request from the network.
    * - "ignore": Ignore staleness and use the entry.
-   * @default warn
+   * @default reject
    */
   stale: "reject" | "warn" | "refetch" | "ignore";
   /**
@@ -57,7 +57,7 @@ export type NetMockOptions = {
    * - "reject": Reject unmatched requests.
    * - "warn": Warn but allow unmatched requests.
    * - "fetch": Fetch the request from the network.
-   * @default warn
+   * @default reject
    */
   noMatch: "reject" | "warn" | "fetch";
   /**
@@ -100,9 +100,9 @@ export class NetMockContext {
 
   /** @internal */
   private _defaultOptions: NetMockOptions = {
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-    stale: "warn",
-    noMatch: "warn",
+    maxAge: 1000 * 60 * 60 * 24 * 60, // 60 days
+    stale: "reject",
+    noMatch: "reject",
     useTimings: false,
     redactedKeys: [],
   };

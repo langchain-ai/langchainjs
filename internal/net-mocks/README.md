@@ -60,7 +60,7 @@ export type NetMockOptions = {
    * - "warn": Warn but allow the request.
    * - "refetch": Refetch the request from the network.
    * - "ignore": Ignore staleness and use the entry.
-   * @default warn
+   * @default reject
    */
   stale: "reject" | "warn" | "refetch" | "ignore";
   /**
@@ -68,7 +68,7 @@ export type NetMockOptions = {
    * - "reject": Reject unmatched requests.
    * - "warn": Warn but allow unmatched requests.
    * - "fetch": Fetch the request from the network.
-   * @default warn
+   * @default reject
    */
   noMatch: "reject" | "warn" | "fetch";
   /**
