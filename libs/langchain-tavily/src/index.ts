@@ -19,6 +19,10 @@ export type { TavilyCrawlAPIRetrieverFields } from "./tavily-crawl.js";
 
 export { TavilyCrawl } from "./tavily-crawl.js";
 
+export type { TavilyMapAPIRetrieverFields } from "./tavily-map.js";
+
+export { TavilyMap } from "./tavily-map.js";
+
 export type {
   TavilyBaseSearchResponse,
   TavilySearchResponseWithSimpleImages,
@@ -31,6 +35,8 @@ export type {
   TavilyFailedResult,
   TavilyCrawlParams,
   TavilyCrawlResponse,
+  TavilyMapParams,
+  TavilyMapResponse,
   CrawlCategory,
 } from "./utils.js";
 
@@ -38,4 +44,5 @@ export {
   TavilySearchAPIWrapper,
   TavilyExtractAPIWrapper,
   TavilyCrawlAPIWrapper,
+  TavilyMapAPIWrapper,
 } from "./utils.js";

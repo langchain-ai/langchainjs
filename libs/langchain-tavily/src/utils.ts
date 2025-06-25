@@ -406,6 +406,103 @@ export type TavilyCrawlResponse = {
   response_time: number;
 } & Record<string, unknown>;
 
+/**
+ * The parameters for the Tavily Map API.
+ */
+export type TavilyMapParams = {
+  /**
+   * The URL to start mapping from.
+   *
+   * Example: "https://example.com"
+   */
+  url: string;
+
+  /**
+   * Natural language instructions to guide the crawler
+   *
+   * @default undefined
+   */
+  instructions?: string;
+
+  /**
+   * The maximum number of hops from the starting URL.
+   *
+   * @default 3
+   */
+  maxDepth?: number;
+
+  /**
+   * The maximum number of pages to crawl per level.
+   *
+   * @default 50
+   */
+  maxBreadth?: number;
+
+  /**
+   * The maximum number of pages to crawl.
+   *
+   * @default 100
+   */
+  limit?: number;
+
+  /**
+   * Only crawl URLs containing these categories.
+   *
+   * @default undefined
+   */
+  categories?: Set<CrawlCategory>;
+
+  /**
+   * Only crawl URLs containing these paths.
+   *
+   * @default undefined
+   */
+  selectPaths?: string[];
+
+  /**
+   * Only crawl these domains.
+   *
+   * @default undefined
+   */
+  selectDomains?: string[];
+
+  /**
+   * Exclude these paths.
+   *
+   * @default undefined
+   */
+  excludePaths?: string[];
+
+  /**
+   * Exclude these domains.
+   *
+   * @default undefined
+   */
+  excludeDomains?: string[];
+
+  /**
+   * Allow crawling external domains.
+   *
+   * @default undefined
+   */
+  allowExternal?: boolean;
+} & Record<string, unknown>;
+
+export type TavilyMapResponse = {
+  /**
+   * The base URL that was mapped.
+   */
+  base_url: string;
+  /**
+   * The results of the map operation - array of URL strings.
+   */
+  results: string[];
+  /**
+   * The response time of the map operation.
+   */
+  response_time: number;
+} & Record<string, unknown>;
+
 export type TavilySearchResponse =
   | TavilySearchResponseWithImageDescriptions
   | TavilySearchResponseWithSimpleImages;
@@ -554,6 +651,39 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
     const apiParams = this.convertCamelToSnakeCase(params);
 
     const response = await fetch(`${TAVILY_BASE_URL}/crawl`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(apiParams),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail?.error || "Unknown error";
+      throw new Error(`Error ${response.status}: ${errorMessage}`);
+    }
+
+    return response.json();
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Map API. Primarily used for testing.
+ */
+export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
+  /**
+   * Maps a URL using the Tavily Map API.
+   * @param params The parameters for the map. See {@link TavilyMapParams}.
+   * @returns The raw response body from the Tavily Map API. See {@link TavilyMapResponse}.
+   */
+  async rawResults(params: TavilyMapParams): Promise<TavilyMapResponse> {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const apiParams = this.convertCamelToSnakeCase(params);
+
+    const response = await fetch(`${TAVILY_BASE_URL}/map`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
