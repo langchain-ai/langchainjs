@@ -179,8 +179,8 @@ export class NetMockContext {
         ].join("\n");
         if (isStale) {
           if (options.stale === "reject") {
-            controller.errorWith(new Error(message));
             this.hooks?.fail(message);
+            controller.respondWith(new Response(message, { status: 400 }));
             return;
           } else if (options.stale === "warn") {
             this.hooks?.warn(message);
@@ -197,7 +197,7 @@ export class NetMockContext {
         ].join("\n");
         if (options.noMatch === "reject") {
           this.hooks?.fail(message);
-          controller.errorWith(new Error(message));
+          controller.respondWith(new Response(message, { status: 400 }));
           return;
         } else if (options.noMatch === "warn") {
           // this.hooks?.warn(message);
