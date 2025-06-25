@@ -1,4 +1,3 @@
-import { ArchiveStore, getArchiveStore } from "./store";
 import { HARArchive, HAREntry } from "./spec";
 import {
   encodeHARRequest,
@@ -179,8 +178,8 @@ export class NetMockContext {
         ].join("\n");
         if (isStale) {
           if (options.stale === "reject") {
-            this.hooks?.fail(message);
             controller.respondWith(new Response(message, { status: 400 }));
+            this.hooks?.fail(message);
             return;
           } else if (options.stale === "warn") {
             this.hooks?.warn(message);
@@ -196,8 +195,8 @@ export class NetMockContext {
           `  - URL: ${clonedRequest.url}`,
         ].join("\n");
         if (options.noMatch === "reject") {
-          this.hooks?.fail(message);
           controller.respondWith(new Response(message, { status: 400 }));
+          this.hooks?.fail(message);
           return;
         } else if (options.noMatch === "warn") {
           // this.hooks?.warn(message);
@@ -283,7 +282,12 @@ export class NetMockContext {
       getTestPath: () => expect.getState().testPath,
       getDefaultSource: () => expect.getState().currentTestName,
       cleanup: onTestFinished,
-      fail: assert.fail,
+      fail: (message) => {
+        // This will mark the test as failed, but we don't want to do an explicit
+        // assertion since that causes an error to be thrown, which if thrown within
+        // the msw handler causes a retry loop with async-caller
+        expect.soft(message).toBeUndefined();
+      },
       // TODO: use vitest annotations
       warn: console.warn,
     };
