@@ -1,5 +1,5 @@
 import { BatchInterceptor } from "@mswjs/interceptors";
-import { ArchiveStore, NetMockContextHooks } from ".";
+import { ArchiveStore, NetMockContextHooks } from "./mock";
 import { toFileSafeString } from "./utils";
 import { HARArchive } from "./spec";
 
@@ -14,7 +14,7 @@ import { HARArchive } from "./spec";
  * @returns {Promise<BatchInterceptor>} A promise that resolves to a configured BatchInterceptor instance.
  * @throws {Error} If no suitable interceptor is found for the current environment.
  */
-export async function globalInterceptor() {
+export async function getInterceptor() {
   if (globalThis.window !== undefined) {
     // FIXME: browser interceptors are awkward to import since ts auto assumes node types
     // A no-op right now since we don't do integration tests directly in the browser
@@ -34,7 +34,7 @@ export async function globalInterceptor() {
       "@mswjs/interceptors/presets/node"
     );
     const interceptor = new BatchInterceptor({
-      name: "langchain-net-mocks",
+      name: "langchain-node-net-mocks",
       interceptors: nodeInterceptors,
     });
     return interceptor;
@@ -43,7 +43,7 @@ export async function globalInterceptor() {
 }
 
 export type EnvironmentBatchInterceptor = Awaited<
-  ReturnType<typeof globalInterceptor>
+  ReturnType<typeof getInterceptor>
 >;
 
 /**
@@ -85,15 +85,6 @@ export async function getArchiveStore(
         } catch (err) {
           return undefined;
         }
-      },
-      async getAll() {
-        const files = await fs.readdir(getOutputDir());
-        return Promise.all(
-          files.map(async (file) => {
-            const content = await fs.readFile(file, "utf-8");
-            return JSON.parse(content);
-          })
-        );
       },
       async save(key: string, archive: HARArchive) {
         const filePath = getArchivePath(key);

@@ -11,10 +11,17 @@ import {
 import { parse as parseCookie } from "cookie";
 import { deepEqual, delay, iife } from "./utils";
 
+/**
+ * Options for matching an incoming HTTP request against a HAR entry.
+ */
 export type MatchRequestEntryOptions = {
+  /** The incoming Request object to be matched. */
   request: Request;
+  /** The body of the incoming request as a Uint8Array, or null if not present. */
   requestBody: Uint8Array | null;
+  /** The HAR entry to match against. */
   entry: HAREntry;
+  /** Optional array of header or query parameter names to ignore during matching. */
   redactedKeys?: string[];
 };
 
@@ -128,7 +135,10 @@ export async function consumeBodyStream(
  * @param {number} delayMs - The delay in milliseconds before emitting the content.
  * @returns {ReadableStream<Uint8Array>} A ReadableStream that emits the encoded content after the specified delay.
  */
-function delayedReadableStream(content: string | undefined, delayMs: number) {
+export function delayedReadableStream(
+  content: string | undefined,
+  delayMs: number
+) {
   return new ReadableStream({
     async start(controller) {
       if (delayMs > 0) await delay(delayMs);
@@ -146,7 +156,9 @@ function delayedReadableStream(content: string | undefined, delayMs: number) {
  * @param {unknown} value - The value to check.
  * @returns {value is EncodedEventStream} True if the value is an EncodedEventStream, false otherwise.
  */
-function isEncodedEventStream(value: unknown): value is EncodedEventStream {
+export function isEncodedEventStream(
+  value: unknown
+): value is EncodedEventStream {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -167,7 +179,9 @@ function isEncodedEventStream(value: unknown): value is EncodedEventStream {
  * @throws {Error} If the provided value is not a valid encoded event stream.
  * @returns {ReadableStream<Uint8Array>} A ReadableStream emitting the encoded event data as Uint8Array chunks.
  */
-function readableEncodedEventStream(encodedEventStream: EncodedEventStream) {
+export function readableEncodedEventStream(
+  encodedEventStream: EncodedEventStream
+) {
   if (!isEncodedEventStream(encodedEventStream)) {
     throw new Error("Provided value is not an encoded event stream");
   }
@@ -284,6 +298,17 @@ export function readableHARResponseStream(
   );
 }
 
+/**
+ * Encodes HTTP headers into the HAR (HTTP Archive) header format.
+ *
+ * Filters out headers that are either in the `redactedKeys` list or are
+ * the special passthrough header ("x-mock-passthrough"), and returns
+ * an array of HARHeader objects suitable for inclusion in a HAR entry.
+ *
+ * @param {Headers} headers - The HTTP headers to encode.
+ * @param {string[]} [redactedKeys=[]] - An array of header names to redact (exclude) from the output.
+ * @returns {HARHeader[]} The encoded HAR header objects.
+ */
 function encodeHARHeaders(headers: Headers, redactedKeys: string[] = []) {
   const harHeaders: HARHeader[] = [];
   for (const [key, value] of headers.entries()) {
@@ -295,6 +320,16 @@ function encodeHARHeaders(headers: Headers, redactedKeys: string[] = []) {
   return harHeaders;
 }
 
+/**
+ * Encodes cookies from HTTP headers into the HAR (HTTP Archive) cookie format.
+ *
+ * Parses the "cookie" header, filters out cookies whose names are in the
+ * `redactedKeys` list or have empty values, and returns an array of HARCookie objects.
+ *
+ * @param {Headers} headers - The HTTP headers containing the "cookie" header.
+ * @param {string[]} [redactedKeys=[]] - An array of cookie names to redact (exclude) from the output.
+ * @returns {HARCookie[]} The encoded HAR cookie objects.
+ */
 function encodeHARCookies(headers: Headers, redactedKeys: string[] = []) {
   const cookies: HARCookie[] = [];
   const cookieMap = parseCookie(headers.get("cookie") ?? "");
@@ -306,6 +341,17 @@ function encodeHARCookies(headers: Headers, redactedKeys: string[] = []) {
   return cookies;
 }
 
+/**
+ * Encodes a Fetch API Request object into a HAR (HTTP Archive) request object.
+ *
+ * Extracts method, URL, HTTP version, headers, cookies, query parameters,
+ * and (if present) the request body. Redacts any headers or cookies whose
+ * names are in the `redactedKeys` list.
+ *
+ * @param {Request} request - The Fetch API Request to encode.
+ * @param {string[]} [redactedKeys=[]] - An array of header or cookie names to redact (exclude) from the output.
+ * @returns {Promise<HARRequest>} A promise that resolves to the encoded HAR request object.
+ */
 export async function encodeHARRequest(
   request: Request,
   redactedKeys: string[] = []
@@ -338,6 +384,17 @@ export async function encodeHARRequest(
   };
 }
 
+/**
+ * Encodes a Fetch API Response object into a HAR (HTTP Archive) response object.
+ *
+ * Extracts status, status text, HTTP version, headers, cookies, and response body.
+ * If the response is a text/event-stream, encodes the event stream as JSON.
+ * Redacts any headers or cookies whose names are in the `redactedKeys` list.
+ *
+ * @param {Response} response - The Fetch API Response to encode.
+ * @param {string[]} [redactedKeys=[]] - An array of header or cookie names to redact (exclude) from the output.
+ * @returns {Promise<HARResponse>} A promise that resolves to the encoded HAR response object.
+ */
 export async function encodeHARResponse(
   response: Response,
   redactedKeys: string[] = []
@@ -381,6 +438,13 @@ export async function encodeHARResponse(
   };
 }
 
+/**
+ * Determines whether a HAR entry is considered stale based on its start time and a maximum age.
+ *
+ * @param {HAREntry} entry - The HAR entry to check.
+ * @param {number} maxAge - The maximum allowed age in milliseconds.
+ * @returns {boolean} True if the entry is older than the allowed maxAge, false otherwise.
+ */
 export function entryIsStale(entry: HAREntry, maxAge: number) {
   return new Date(entry.startedDateTime).getTime() < Date.now() - maxAge;
 }

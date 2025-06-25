@@ -1,8 +1,29 @@
-export const iife = <T>(fn: () => T) => fn();
+import _deepEqual from "deep-equal";
 
+/**
+ * Immediately invokes the provided function and returns its result.
+ * Useful for creating immediately-invoked function expressions (IIFE) in a concise way.
+ *
+ * @template T The return type of the function.
+ * @param {() => T} fn - The function to invoke.
+ * @returns {T} The result of invoking the function.
+ */
+export const iife = <T>(fn: () => T): T => fn();
+
+/**
+ * Represents a value that can be either a direct value of type T or a Promise that resolves to T.
+ *
+ * @template T The type of the value.
+ */
 export type PromiseOrValue<T> = T | Promise<T>;
 
-export const delay = (ms: number) =>
+/**
+ * Returns a Promise that resolves after a specified number of milliseconds.
+ *
+ * @param {number} ms - The number of milliseconds to delay.
+ * @returns {Promise<void>} A Promise that resolves after the delay.
+ */
+export const delay = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 /**

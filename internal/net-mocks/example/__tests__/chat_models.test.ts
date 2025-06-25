@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ChatAnthropic } from "../../../../libs/langchain-anthropic/src/chat_models";
-import { net } from "../../collector";
+import { net } from "../../src";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatAnthropic({
@@ -21,20 +21,19 @@ const multiTurn = async () => {
   expect(result2.content).toBeDefined();
 };
 
-describe("ChatOpenAI", () => {
+describe("ChatAnthropic", () => {
   it("works as expected", async () => {
     await net.vcr();
     await multiTurn();
   });
 
-  /// delete the har file and uncomment this
-  // it.fails(
-  //   "will reject when there isn't a match when `noMatch: reject`",
-  //   async () => {
-  //     await net.vcr({ noMatch: "reject" });
-  //     await multiTurn();
-  //   }
-  // );
+  it.fails(
+    "will reject when there isn't a match when `noMatch: reject`",
+    async () => {
+      await net.vcr({ noMatch: "reject" });
+      await multiTurn();
+    }
+  );
 
   it.fails("will reject stale responses when `stale: reject`", async () => {
     await net.vcr({ stale: "reject", maxAge: 0 });

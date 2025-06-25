@@ -10,7 +10,7 @@ import { iife, PromiseOrValue } from "./utils";
 import {
   EnvironmentBatchInterceptor,
   getArchiveStore,
-  globalInterceptor,
+  getInterceptor,
 } from "./env";
 
 /**
@@ -26,12 +26,6 @@ export interface ArchiveStore {
   get(key: string): PromiseOrValue<HARArchive | undefined>;
 
   /**
-   * Retrieves all HAR archives available in the store.
-   * @returns {PromiseOrValue<HARArchive[]>} An array of all HAR archives in the store.
-   */
-  getAll(): PromiseOrValue<HARArchive[]>;
-
-  /**
    * Saves a HAR log to the store under the specified key.
    * @param {string} key - The identifier or filename to save the HAR log under.
    * @param {HARArchive} log - The HAR log object to save.
@@ -43,8 +37,11 @@ export interface ArchiveStore {
 /**
  * Options for configuring network mocking and recording behavior.
  */
-type NetOptions = {
-  /** Maximum age (in milliseconds) for cached network entries before considered stale. */
+export type NetMockOptions = {
+  /**
+   * Maximum age (in milliseconds) for cached network entries before considered stale.
+   * @default '30 days'
+   */
   maxAge: number;
   /**
    * Strategy for handling stale cache entries:
@@ -52,6 +49,7 @@ type NetOptions = {
    * - "warn": Warn but allow the request.
    * - "refetch": Refetch the request from the network.
    * - "ignore": Ignore staleness and use the entry.
+   * @default warn
    */
   stale: "reject" | "warn" | "refetch" | "ignore";
   /**
@@ -59,13 +57,22 @@ type NetOptions = {
    * - "reject": Reject unmatched requests.
    * - "warn": Warn but allow unmatched requests.
    * - "fetch": Fetch the request from the network.
+   * @default warn
    */
   noMatch: "reject" | "warn" | "fetch";
-  /** Whether to mimick the timings of the original request. */
+  /**
+   * Whether to mimick the timings of the original request.
+   * @default false
+   */
   useTimings: boolean;
-  /** Output file path for saving the archive or mock data. */
+  /**
+   * Output file path for saving the archive or mock data.
+   * @default 'The current test name, or "archive" if no test name is available.'
+   */
   out?: string;
-  /** List of header or body keys to redact from the archive for privacy/security. */
+  /**
+   * List of header or body keys to redact from the archive for privacy/security.
+   */
   redactedKeys: string[];
 };
 
@@ -85,31 +92,33 @@ export class NetMockContext {
 
   _store: Promise<ArchiveStore> | null = null;
   get store() {
-    if (this._store === null) this._store = getArchiveStore(this.hooks!);
+    if (this._store === null) this._store = getArchiveStore(this.hooks);
     return this._store;
   }
 
   /** @internal */
-  private _defaultOptions: NetOptions = {
-    maxAge: 1000 * 60 * 60 * 24,
+  private _defaultOptions: NetMockOptions = {
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
     stale: "warn",
     noMatch: "warn",
     useTimings: false,
     redactedKeys: [],
   };
   /** @internal */
-  private _mergeDefaultOptions(options?: Partial<NetOptions>): NetOptions {
+  private _mergeDefaultOptions(
+    options?: Partial<NetMockOptions>
+  ): NetMockOptions {
     return {
       ...this._defaultOptions,
       ...options,
     };
   }
 
-  async vcr(source: string, options?: Partial<NetOptions>): Promise<void>;
-  async vcr(options?: Partial<NetOptions>): Promise<void>;
+  async vcr(source: string, options?: Partial<NetMockOptions>): Promise<void>;
+  async vcr(options?: Partial<NetMockOptions>): Promise<void>;
   async vcr(
-    sourceOrOptions?: string | Partial<NetOptions>,
-    optionsArg?: Partial<NetOptions>
+    sourceOrOptions?: string | Partial<NetMockOptions>,
+    optionsArg?: Partial<NetMockOptions>
   ) {
     const options = this._mergeDefaultOptions(
       typeof sourceOrOptions === "object" ? sourceOrOptions : optionsArg
@@ -142,7 +151,7 @@ export class NetMockContext {
 
       // MSW has some shortcomings when it comes to dealing with gzip
       // streams (teed readable streams don't take on the same semantics
-      // because it's using an internal prototype that plays nice with gunzip)
+      // because http streams use an internal prototype that plays nice with gunzip)
       // If you're getting 'incorrect header check' errors from node internals
       // then it's probably because the remote being fetched doesn't support
       // this header
@@ -199,7 +208,7 @@ export class NetMockContext {
           this.hooks?.fail(message);
           return;
         } else if (options.noMatch === "warn") {
-          // this.hooks?.warn(message);
+          this.hooks?.warn(message);
           shouldFetch = true;
         } else if (options.noMatch === "fetch") {
           shouldFetch = true;
@@ -274,9 +283,9 @@ export class NetMockContext {
     });
   }
 
-  async setupVitest(options?: Partial<NetOptions>) {
-    const { onTestFinished, assert, expect } = await import("vitest");
-    this.interceptor = await globalInterceptor();
+  async setupVitest(options?: Partial<NetMockOptions>) {
+    const { onTestFinished, expect } = await import("vitest");
+    this.interceptor = await getInterceptor();
     this.interceptor.apply();
     this.hooks = {
       getTestPath: () => expect.getState().testPath,

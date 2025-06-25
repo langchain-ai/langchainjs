@@ -1,10 +1,8 @@
 import { beforeAll } from "vitest";
-import { net } from "../collector";
+import { net } from "../src";
 
 beforeAll(() =>
   net.setupVitest({
-    maxAge: 60000,
     redactedKeys: ["x-api-key"],
-    useTimings: false,
   })
 );
