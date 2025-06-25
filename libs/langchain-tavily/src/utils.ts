@@ -348,6 +348,7 @@ export type TavilyBaseSearchResponse = {
   /**
    * The results from the search.
    */
+  auto_parameters?: Partial<TavilySearchParams>;
   results: TavilySearchResult[];
   /**
    * The response time of the search.

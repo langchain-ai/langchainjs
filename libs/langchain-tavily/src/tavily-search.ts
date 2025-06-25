@@ -134,6 +134,14 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default undefined
    */
   country?: string;
+
+  /**
+   * Whether to automatically determine optimal search parameters based on the query.
+   * This can only be set during tool instantiation, not at invocation time.
+   *
+   * @default false
+   */
+  autoParameters?: boolean;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
@@ -319,6 +327,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   country?: string;
 
+  autoParameters?: boolean;
+
   handleToolError = true;
 
   apiWrapper: TavilySearchAPIWrapper;
@@ -363,6 +373,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.includeImageDescriptions = params.includeImageDescriptions;
     this.chunksPerSource = params.chunksPerSource;
     this.country = params.country;
+    this.autoParameters = params.autoParameters;
   }
 
   async _call(
@@ -402,6 +413,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         includeImageDescriptions: this.includeImageDescriptions,
         chunksPerSource: this.chunksPerSource,
         country: this.country,
+        autoParameters: this.autoParameters,
       });
 
       if (
