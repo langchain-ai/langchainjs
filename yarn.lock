@@ -8615,6 +8615,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@langchain/net-mocks@workspace:internal/net-mocks":
+  version: 0.0.0-use.local
+  resolution: "@langchain/net-mocks@workspace:internal/net-mocks"
+  dependencies:
+    "@langchain/core": "workspace:*"
+    "@langchain/openai": "workspace:*"
+    "@mswjs/interceptors": ^0.39.2
+    "@types/deep-equal": ^1.0.4
+    cookie: ^1.0.2
+    deep-equal: ^2.2.3
+    vitest: ^3.2.4
+  languageName: unknown
+  linkType: soft
+
 "@langchain/nomic@workspace:*, @langchain/nomic@workspace:libs/langchain-nomic":
   version: 0.0.0-use.local
   resolution: "@langchain/nomic@workspace:libs/langchain-nomic"
@@ -29061,20 +29075,6 @@ __metadata:
   checksum: e131ade815385f1df91667e84e5b668b91ab0352745d59c8f12e3e4778dfdebcd874ba0ac2d6897d241240998ad3d63c2c60fb235e23d9fc85d2032460a925d2
   languageName: node
   linkType: hard
-
-"net-mocks@workspace:internal/net-mocks":
-  version: 0.0.0-use.local
-  resolution: "net-mocks@workspace:internal/net-mocks"
-  dependencies:
-    "@langchain/core": "workspace:*"
-    "@langchain/openai": "workspace:*"
-    "@mswjs/interceptors": ^0.39.2
-    "@types/deep-equal": ^1.0.4
-    cookie: ^1.0.2
-    deep-equal: ^2.2.3
-    vitest: ^3.2.4
-  languageName: unknown
-  linkType: soft
 
 "netmask@npm:^2.0.2":
   version: 2.0.2
