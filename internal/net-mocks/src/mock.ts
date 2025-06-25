@@ -260,7 +260,7 @@ export class NetMockContext {
                 // `wait` is the time it takes to start a response from the server
                 wait: waitTime,
                 // `receive` is the time it takes for the entire response to be received
-                receive: performance.now() - waitTime,
+                receive: performance.now() - startTime,
               },
             };
             archive.log.entries.push(entry);

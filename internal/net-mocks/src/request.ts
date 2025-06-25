@@ -180,7 +180,8 @@ export function isEncodedEventStream(
  * @returns {ReadableStream<Uint8Array>} A ReadableStream emitting the encoded event data as Uint8Array chunks.
  */
 export function readableEncodedEventStream(
-  encodedEventStream: EncodedEventStream
+  encodedEventStream: EncodedEventStream,
+  initialDelayMs: number = 0
 ) {
   if (!isEncodedEventStream(encodedEventStream)) {
     throw new Error("Provided value is not an encoded event stream");
@@ -188,6 +189,7 @@ export function readableEncodedEventStream(
   const encoder = new TextEncoder();
   return new ReadableStream({
     async start(controller) {
+      if (initialDelayMs > 0) await delay(initialDelayMs);
       // Emit each event in the stream with the associated delay
       await Promise.all(
         encodedEventStream.events.map(async (event) => {
@@ -288,7 +290,7 @@ export function readableHARResponseStream(
       }
     });
     if (isEncodedEventStream(responseJson)) {
-      return readableEncodedEventStream(responseJson);
+      return readableEncodedEventStream(responseJson, entry.timings.wait);
     }
   }
   // Otherwise, we default to using the timings contained within the HAR entry.
