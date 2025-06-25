@@ -7,8 +7,39 @@ import {
   matchRequestEntryPredicate,
   readableHARResponseStream,
 } from "./request";
-import { iife } from "./utils";
-import { EnvironmentBatchInterceptor, globalInterceptor } from "./env";
+import { iife, PromiseOrValue } from "./utils";
+import {
+  EnvironmentBatchInterceptor,
+  getArchiveStore,
+  globalInterceptor,
+} from "./env";
+
+/**
+ * Interface representing a storage mechanism for HAR archives.
+ * Provides methods to retrieve, list, and save HAR archives by key.
+ */
+export interface ArchiveStore {
+  /**
+   * Retrieves a HAR log by its key.
+   * @param {string} key - The identifier or filename of the HAR log to retrieve.
+   * @returns {PromiseOrValue<HARArchive | undefined>} The HAR log associated with the given key.
+   */
+  get(key: string): PromiseOrValue<HARArchive | undefined>;
+
+  /**
+   * Retrieves all HAR archives available in the store.
+   * @returns {PromiseOrValue<HARArchive[]>} An array of all HAR archives in the store.
+   */
+  getAll(): PromiseOrValue<HARArchive[]>;
+
+  /**
+   * Saves a HAR log to the store under the specified key.
+   * @param {string} key - The identifier or filename to save the HAR log under.
+   * @param {HARArchive} log - The HAR log object to save.
+   * @returns {PromiseOrValue<void>} A promise that resolves when the save is complete.
+   */
+  save(key: string, log: HARArchive): PromiseOrValue<void>;
+}
 
 /**
  * Options for configuring network mocking and recording behavior.
