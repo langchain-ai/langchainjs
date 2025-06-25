@@ -1201,10 +1201,10 @@ export interface ChatOpenAICallOptions
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
 
   /**
-   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Service tier to use for this request. Can be "auto", "default", or "flex", or "priority"
    * Specifies the service tier for prioritization and latency optimization.
    */
-  service_tier?: "auto" | "default" | "flex";
+  service_tier?: "auto" | "default" | "flex" | "priority";
 }
 
 export interface ChatOpenAIFields
@@ -1932,10 +1932,10 @@ export class ChatOpenAI<
   zdrEnabled?: boolean | undefined;
 
   /**
-   * Service tier to use for this request. Can be "auto", "default", or "flex".
+   * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
    * Specifies the service tier for prioritization and latency optimization.
    */
-  service_tier?: "auto" | "default" | "flex";
+  service_tier?: "auto" | "default" | "flex" | "priority";
 
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
