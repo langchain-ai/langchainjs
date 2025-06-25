@@ -1,3 +1,4 @@
+import { parse as parseCookie } from "cookie";
 import {
   EncodedEventStream,
   HARCookie,
@@ -8,7 +9,6 @@ import {
   HARRequest,
   HARResponse,
 } from "./spec";
-import { parse as parseCookie } from "cookie";
 import { deepEqual, delay, iife } from "./utils";
 
 /**
@@ -230,31 +230,31 @@ export async function encodeEventStream(
   const reader = readableStream.getReader();
   const startTime = performance.now();
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
+  let result: ReadableStreamReadResult<Uint8Array>;
+  do {
+    result = await reader.read();
+    if (result.done) break;
 
     const eventTime = performance.now();
     const timing = eventTime - startTime;
 
-    const event = iife(() => {
-      try {
-        const output = JSON.parse(decoder.decode(value));
-        return {
-          event: output.event,
-          id: output.id,
-          data: output.data,
-        };
-      } catch (error) {
-        return { data: decoder.decode(value) };
-      }
-    });
+    let event;
+    try {
+      const output = JSON.parse(decoder.decode(result.value));
+      event = {
+        event: output.event,
+        id: output.id,
+        data: output.data,
+      };
+    } catch (error) {
+      event = { data: decoder.decode(result.value) };
+    }
 
     events.push({
       timing: Math.round(timing), // Round to nearest millisecond
       ...event,
     });
-  }
+  } while (!result.done);
   return { $type: "event-stream", events };
 }
 

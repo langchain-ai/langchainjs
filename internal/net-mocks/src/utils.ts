@@ -24,7 +24,9 @@ export type PromiseOrValue<T> = T | Promise<T>;
  * @returns {Promise<void>} A Promise that resolves after the delay.
  */
 export const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 /**
  * Converts a string into a file-safe string by replacing or removing
@@ -39,7 +41,7 @@ export function toFileSafeString(input: string): string {
     .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
     .replace(/[^a-zA-Z0-9._-]/g, "_") // Replace unsafe chars with _
     .replace(/_+/g, "_") // Collapse multiple underscores
-    .replace(/^[_\.]+|[_\.]+$/g, "") // Trim leading/trailing _ or .
+    .replace(/^[_.]+|[_.]+$/g, "") // Trim leading/trailing _ or .
     .slice(0, 255); // Limit to 255 chars (common FS limit)
 }
 

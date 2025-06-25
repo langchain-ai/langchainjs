@@ -86,11 +86,13 @@ export interface NetMockContextHooks {
 
 export class NetMockContext {
   interceptor: EnvironmentBatchInterceptor | null = null;
+
   hooks: NetMockContextHooks | null = null;
 
   _archivePromises: Promise<void>[] = [];
 
   _store: Promise<ArchiveStore> | null = null;
+
   get store() {
     if (this._store === null) this._store = getArchiveStore(this.hooks);
     return this._store;
@@ -104,6 +106,7 @@ export class NetMockContext {
     useTimings: false,
     redactedKeys: [],
   };
+
   /** @internal */
   private _mergeDefaultOptions(
     options?: Partial<NetMockOptions>
@@ -115,7 +118,9 @@ export class NetMockContext {
   }
 
   async vcr(source: string, options?: Partial<NetMockOptions>): Promise<void>;
+
   async vcr(options?: Partial<NetMockOptions>): Promise<void>;
+
   async vcr(
     sourceOrOptions?: string | Partial<NetMockOptions>,
     optionsArg?: Partial<NetMockOptions>
@@ -142,11 +147,12 @@ export class NetMockContext {
       },
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.interceptor?.on("request", async ({ request, controller }) => {
       // If the request has a passthrough header, we shouldn't try to intercept it
       if (request.headers.get("x-mock-passthrough") !== null) {
         request.headers.delete("x-mock-passthrough");
-        return request;
+        return;
       }
 
       // MSW has some shortcomings when it comes to dealing with gzip

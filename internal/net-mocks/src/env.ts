@@ -74,7 +74,7 @@ export async function getArchiveStore(
     };
 
     const getArchivePath = (key: string) => {
-      return path.join(getOutputDir(), toFileSafeString(key) + ".har");
+      return path.join(getOutputDir(), `${toFileSafeString(key)}.har`);
     };
 
     return {
@@ -91,9 +91,15 @@ export async function getArchiveStore(
         const dir = path.dirname(filePath);
         try {
           await fs.mkdir(dir, { recursive: true });
-        } catch (err: any) {
+        } catch (err: unknown) {
           // ignore error if it already exists
-          if (err.code !== "EEXIST") throw err;
+          if (
+            typeof err === "object" &&
+            err !== null &&
+            "code" in err &&
+            err.code !== "EEXIST"
+          )
+            throw err;
         }
         await fs.writeFile(filePath, JSON.stringify(archive));
       },

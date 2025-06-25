@@ -15,5 +15,7 @@
     "strictPropertyInitialization": false,
     "allowJs": true,
     "strict": true
-  }
+  },
+  "include": ["src/*", "src/**/*"],
+  "exclude": ["__tests__", "node_modules"]
 }
