@@ -9,7 +9,7 @@ import {
   HARResponse,
 } from "./spec";
 import { parse as parseCookie } from "cookie";
-import { delay, iife } from "./utils";
+import { deepEqual, delay, iife } from "./utils";
 
 export type MatchRequestEntryOptions = {
   request: Request;
@@ -86,7 +86,7 @@ export function matchRequestEntryPredicate({
   // Compare request body if it's provided
   if (requestBody) {
     const requestBodyText = new TextDecoder().decode(requestBody);
-    if (entry.request.postData?.text !== requestBodyText) return false;
+    return deepEqual(entry.request.postData?.text, requestBodyText);
   }
 
   return true;

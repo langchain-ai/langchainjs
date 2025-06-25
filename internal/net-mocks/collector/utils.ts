@@ -21,3 +21,26 @@ export function toFileSafeString(input: string): string {
     .replace(/^[_\.]+|[_\.]+$/g, "") // Trim leading/trailing _ or .
     .slice(0, 255); // Limit to 255 chars (common FS limit)
 }
+
+/**
+ * Performs a deep equality check between two values, with special handling for stringified JSON.
+ *
+ * If either value is a string that can be parsed as JSON, it will be parsed before comparison.
+ * This allows for deep equality checks between objects and their JSON string representations.
+ *
+ * @param {unknown} a - The first value to compare. Can be any type.
+ * @param {unknown} b - The second value to compare. Can be any type.
+ * @returns {boolean} True if the values are deeply equal (after normalization), false otherwise.
+ */
+export function deepEqual(a: unknown, b: unknown): boolean {
+  const normalize = (value: unknown) => {
+    if (typeof value !== "string") return value;
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      return value;
+    }
+  };
+
+  return _deepEqual(normalize(a), normalize(b));
+}
