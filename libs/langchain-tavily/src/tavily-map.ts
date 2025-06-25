@@ -48,7 +48,7 @@ export type TavilyMapAPIRetrieverFields = ToolParams & {
    *
    * @default undefined
    */
-  categories?: Set<CrawlCategory>;
+  categories?: CrawlCategory[];
 
   /**
    * Only crawl URLs containing these paths.
@@ -120,40 +120,14 @@ export type TavilyMapAPIRetrieverFields = ToolParams & {
 
 function generateSuggestions(): string[] {
   const suggestions: string[] = [];
-  suggestions.push("Try adjusting maxDepth to explore deeper or shallower");
-  suggestions.push(
-    "Try adjusting maxBreadth to crawl more or fewer pages per level"
-  );
-  suggestions.push("Try adding specific domain or path filters");
+  suggestions.push("Try adding specific path filters using selectPaths");
+  suggestions.push("Try adding domain filters using selectDomains");
+  suggestions.push("Try excluding specific domains using excludeDomains");
   return suggestions;
 }
 
 const inputSchema = z.object({
   url: z.string().describe("URL to map"),
-  maxDepth: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "Max depth of the crawl. Defines how far from the base URL the crawler can explore. Must be greater than 0."
-    ),
-  maxBreadth: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "The maximum number of links to follow per level of the tree (i.e., per page). Must be greater than 0."
-    ),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "Total number of links the crawler will process before stopping. Must be greater than 0."
-    ),
   instructions: z
     .string()
     .optional()
@@ -254,7 +228,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
   allowExternalDefault?: boolean;
 
-  categoriesDefault?: Set<CrawlCategory>;
+  categoriesDefault?: CrawlCategory[];
 
   private apiWrapper: TavilyMapAPIWrapper;
 
@@ -298,9 +272,6 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
     try {
       const {
         url,
-        maxDepth,
-        maxBreadth,
-        limit,
         instructions,
         selectPaths,
         selectDomains,
@@ -311,9 +282,9 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
       } = input;
 
       // Class instance values take precedence over call parameters
-      const effectiveMaxDepth = this.maxDepthDefault ?? maxDepth;
-      const effectiveMaxBreadth = this.maxBreadthDefault ?? maxBreadth;
-      const effectiveLimit = this.limitDefault ?? limit;
+      const effectiveMaxDepth = this.maxDepthDefault;
+      const effectiveMaxBreadth = this.maxBreadthDefault;
+      const effectiveLimit = this.limitDefault;
       const effectiveInstructions = this.instructionsDefault ?? instructions;
       const effectiveSelectPaths = this.selectPathsDefault ?? selectPaths;
       const effectiveSelectDomains = this.selectDomainsDefault ?? selectDomains;
@@ -321,9 +292,15 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
       const effectiveExcludeDomains =
         this.excludeDomainsDefault ?? excludeDomains;
       const effectiveAllowExternal = this.allowExternalDefault ?? allowExternal;
-      const effectiveCategories =
-        this.categoriesDefault ??
-        (categories ? new Set(categories) : categories);
+      // Remove duplicates from categories and convert to array
+      let effectiveCategories: CrawlCategory[] | undefined;
+      if (this.categoriesDefault) {
+        effectiveCategories = Array.from(new Set(this.categoriesDefault));
+      } else if (categories) {
+        effectiveCategories = Array.from(new Set(categories));
+      } else {
+        effectiveCategories = categories;
+      }
 
       const rawResults = await this.apiWrapper.rawResults({
         url,

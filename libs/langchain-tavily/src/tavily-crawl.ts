@@ -68,7 +68,7 @@ export type TavilyCrawlAPIRetrieverFields = ToolParams & {
    *
    * @default undefined
    */
-  categories?: Set<CrawlCategory>;
+  categories?: CrawlCategory[];
 
   /**
    * Only crawl URLs containing these paths.
@@ -145,46 +145,16 @@ export type TavilyCrawlAPIRetrieverFields = ToolParams & {
   apiWrapper?: TavilyCrawlAPIWrapper;
 };
 
-function generateSuggestions(params: Record<string, unknown>): string[] {
+function generateSuggestions(): string[] {
   const suggestions: string[] = [];
-
-  const { extractDepth } = params;
-
-  if (extractDepth === "basic") {
-    suggestions.push(
-      "Try a more detailed extraction using 'advanced' extractDepth"
-    );
-  }
-
+  suggestions.push("Try adding specific path filters using selectPaths");
+  suggestions.push("Try adding domain filters using selectDomains");
+  suggestions.push("Try excluding specific domains using excludeDomains");
   return suggestions;
 }
 
 const inputSchema = z.object({
   url: z.string().describe("URL to crawl"),
-  maxDepth: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "Max depth of the crawl. Defines how far from the base URL the crawler can explore. Must be greater than 0."
-    ),
-  maxBreadth: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "The maximum number of links to follow per level of the tree (i.e., per page). Must be greater than 0."
-    ),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe(
-      "Total number of links the crawler will process before stopping. Must be greater than 0."
-    ),
   instructions: z
     .string()
     .optional()
@@ -219,10 +189,6 @@ const inputSchema = z.object({
     .boolean()
     .optional()
     .describe("Whether to allow following links that go to external domains."),
-  includeImages: z
-    .boolean()
-    .optional()
-    .describe("Whether to include images in the crawl results."),
   categories: z
     .array(
       z.enum([
@@ -253,18 +219,6 @@ const inputSchema = z.object({
     .optional()
     .describe(
       "Filter URLs using predefined categories like 'Documentation', 'Blogs', etc."
-    ),
-  extractDepth: z
-    .enum(["basic", "advanced"])
-    .optional()
-    .describe(
-      "Advanced extraction retrieves more data, including tables and embedded content, with higher success but may increase latency."
-    ),
-  format: z
-    .string()
-    .optional()
-    .describe(
-      "The format of the extracted web page content. 'markdown' returns content in markdown format. 'text' returns plain text and may increase latency."
     ),
 });
 
@@ -307,7 +261,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   allowExternalDefault?: boolean;
 
-  categoriesDefault?: Set<CrawlCategory>;
+  categoriesDefault?: CrawlCategory[];
 
   private apiWrapper: TavilyCrawlAPIWrapper;
 
@@ -354,11 +308,6 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
     try {
       const {
         url,
-        extractDepth,
-        includeImages,
-        maxDepth,
-        maxBreadth,
-        limit,
         instructions,
         selectPaths,
         selectDomains,
@@ -366,17 +315,15 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         excludeDomains,
         allowExternal,
         categories,
-        format,
       } = input;
 
       // Class instance values take precedence over call parameters
-      const effectiveExtractDepth = this.extractDepthDefault ?? extractDepth;
-      const effectiveIncludeImages = this.includeImagesDefault ?? includeImages;
-      const effectiveFormat =
-        this.formatDefault ?? (format as "markdown" | "text" | undefined);
-      const effectiveMaxDepth = this.maxDepthDefault ?? maxDepth;
-      const effectiveMaxBreadth = this.maxBreadthDefault ?? maxBreadth;
-      const effectiveLimit = this.limitDefault ?? limit;
+      const effectiveExtractDepth = this.extractDepthDefault;
+      const effectiveIncludeImages = this.includeImagesDefault;
+      const effectiveFormat = this.formatDefault;
+      const effectiveMaxDepth = this.maxDepthDefault;
+      const effectiveMaxBreadth = this.maxBreadthDefault;
+      const effectiveLimit = this.limitDefault;
       const effectiveInstructions = this.instructionsDefault ?? instructions;
       const effectiveSelectPaths = this.selectPathsDefault ?? selectPaths;
       const effectiveSelectDomains = this.selectDomainsDefault ?? selectDomains;
@@ -384,9 +331,15 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
       const effectiveExcludeDomains =
         this.excludeDomainsDefault ?? excludeDomains;
       const effectiveAllowExternal = this.allowExternalDefault ?? allowExternal;
-      const effectiveCategories =
-        this.categoriesDefault ??
-        (categories ? new Set(categories) : categories);
+      // Remove duplicates from categories and convert to array
+      let effectiveCategories: CrawlCategory[] | undefined;
+      if (this.categoriesDefault) {
+        effectiveCategories = Array.from(new Set(this.categoriesDefault));
+      } else if (categories) {
+        effectiveCategories = Array.from(new Set(categories));
+      } else {
+        effectiveCategories = categories;
+      }
 
       const rawResults = await this.apiWrapper.rawResults({
         url,
@@ -412,12 +365,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         !Array.isArray(rawResults.results) ||
         rawResults.results.length === 0
       ) {
-        const searchParams = {
-          extractDepth: effectiveExtractDepth,
-          includeImages: effectiveIncludeImages,
-          format: effectiveFormat,
-        };
-        const suggestions = generateSuggestions(searchParams);
+        const suggestions = generateSuggestions();
 
         const errorMessage =
           `No crawl results found for '${url}'. ` +

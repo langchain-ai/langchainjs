@@ -208,7 +208,7 @@ export type TavilyCrawlParams = {
    *
    * @default undefined
    */
-  categories?: Set<CrawlCategory>;
+  categories?: CrawlCategory[];
 
   /**
    * Only crawl URLs containing these paths.
@@ -450,7 +450,7 @@ export type TavilyMapParams = {
    *
    * @default undefined
    */
-  categories?: Set<CrawlCategory>;
+  categories?: CrawlCategory[];
 
   /**
    * Only crawl URLs containing these paths.
