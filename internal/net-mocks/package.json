@@ -18,8 +18,15 @@
   "dependencies": {
     "@mswjs/interceptors": "^0.39.2",
     "cookie": "^1.0.2",
-    "deep-equal": "^2.2.3",
+    "deep-equal": "^2.2.3"
+  },
+  "peerDependencies": {
     "vitest": "^3.2.4"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/deep-equal": "^1.0.4",
