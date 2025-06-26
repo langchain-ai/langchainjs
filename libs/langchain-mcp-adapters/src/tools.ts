@@ -540,6 +540,7 @@ export async function loadMcpTools(
               description: tool.description || "",
               schema: tool.inputSchema,
               responseFormat: "content_and_artifact",
+              metadata: { annotations: tool.annotations },
               func: async (
                 args: Record<string, unknown>,
                 _runManager?: CallbackManagerForToolRun,
