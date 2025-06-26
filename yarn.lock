@@ -8619,8 +8619,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/net-mocks@workspace:internal/net-mocks"
   dependencies:
-    "@langchain/core": "workspace:*"
-    "@langchain/openai": "workspace:*"
     "@mswjs/interceptors": ^0.39.2
     "@types/deep-equal": ^1.0.4
     "@typescript-eslint/eslint-plugin": ^6.12.0
