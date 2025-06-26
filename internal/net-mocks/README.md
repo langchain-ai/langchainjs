@@ -46,33 +46,45 @@ Options are defined by collapsing a set of default options, the options provided
 
 ```ts
 /**
+ * Strategy for handling stale cache entries:
+ * - "reject": Reject the request if the entry is stale.
+ * - "warn": Warn but allow the request.
+ * - "refetch": Refetch the request from the network.
+ * - "ignore": Ignore staleness and use the entry.
+ */
+type StaleStrategy = "reject" | "warn" | "refetch" | "ignore";
+/**
+ * Strategy for handling unmatched requests:
+ * - "reject": Reject unmatched requests.
+ * - "warn": Warn but allow unmatched requests.
+ * - "fetch": Fetch the request from the network.
+ */
+type NoMatchStrategy = "reject" | "warn" | "fetch";
+
+/**
  * Options for configuring network mocking and recording behavior.
  */
 export type NetMockOptions = {
   /**
-   * Maximum age (in milliseconds) for cached network entries before considered stale.
-   * @default '30 days'
-   */
+   /**
+    * Maximum age (in milliseconds) for cached network entries before considered stale.
+    * Can be set via the `MOCKS_MAX_AGE` environment variable.
+    * @default '60 days'
+    */
   maxAge: number;
   /**
-   * Strategy for handling stale cache entries:
-   * - "reject": Reject the request if the entry is stale.
-   * - "warn": Warn but allow the request.
-   * - "refetch": Refetch the request from the network.
-   * - "ignore": Ignore staleness and use the entry.
+   * Can be set via the `MOCKS_STALE` environment variable.
    * @default reject
    */
-  stale: "reject" | "warn" | "refetch" | "ignore";
+  stale: StaleStrategy;
   /**
-   * Strategy for handling unmatched requests:
-   * - "reject": Reject unmatched requests.
-   * - "warn": Warn but allow unmatched requests.
-   * - "fetch": Fetch the request from the network.
+   * Can be set via the `MOCKS_NO_MATCH` environment variable.
    * @default reject
    */
-  noMatch: "reject" | "warn" | "fetch";
+  noMatch: NoMatchStrategy;
   /**
    * Whether to mimick the timings of the original request.
+   * Can be set via the `MOCKS_USE_TIMINGS` environment variable.
    * @default false
    */
   useTimings: boolean;
@@ -83,6 +95,8 @@ export type NetMockOptions = {
   out?: string;
   /**
    * List of header or body keys to include in request archives.
+   * Can be set via the `MOCKS_INCLUDE_KEYS` environment variable.
+   * @default []
    */
   includeKeys: string[];
 };

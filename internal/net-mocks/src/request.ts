@@ -319,7 +319,7 @@ function encodeHARHeaders(headers: Headers, includeKeys: string[] = []) {
     else if (!includeKeys.includes(key) && !WELL_KNOWN_HEADERS.includes(key)) {
       harHeaders.push({ name: key, value: "<redacted>" });
     } else {
-    harHeaders.push({ name: key, value });
+      harHeaders.push({ name: key, value });
     }
   }
   return harHeaders;

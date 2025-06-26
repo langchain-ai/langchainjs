@@ -10,6 +10,7 @@ import { iife, PromiseOrValue } from "./utils";
 import {
   EnvironmentBatchInterceptor,
   getArchiveStore,
+  getEnvironmentVariable,
   getInterceptor,
 } from "./env";
 
@@ -35,33 +36,45 @@ export interface ArchiveStore {
 }
 
 /**
+ * Strategy for handling stale cache entries:
+ * - "reject": Reject the request if the entry is stale.
+ * - "warn": Warn but allow the request.
+ * - "refetch": Refetch the request from the network.
+ * - "ignore": Ignore staleness and use the entry.
+ */
+type StaleStrategy = "reject" | "warn" | "refetch" | "ignore";
+/**
+ * Strategy for handling unmatched requests:
+ * - "reject": Reject unmatched requests.
+ * - "warn": Warn but allow unmatched requests.
+ * - "fetch": Fetch the request from the network.
+ */
+type NoMatchStrategy = "reject" | "warn" | "fetch";
+
+/**
  * Options for configuring network mocking and recording behavior.
  */
 export type NetMockOptions = {
   /**
-   * Maximum age (in milliseconds) for cached network entries before considered stale.
-   * @default '60 days'
-   */
+   /**
+    * Maximum age (in milliseconds) for cached network entries before considered stale.
+    * Can be set via the `MOCKS_MAX_AGE` environment variable.
+    * @default '60 days'
+    */
   maxAge: number;
   /**
-   * Strategy for handling stale cache entries:
-   * - "reject": Reject the request if the entry is stale.
-   * - "warn": Warn but allow the request.
-   * - "refetch": Refetch the request from the network.
-   * - "ignore": Ignore staleness and use the entry.
+   * Can be set via the `MOCKS_STALE` environment variable.
    * @default reject
    */
-  stale: "reject" | "warn" | "refetch" | "ignore";
+  stale: StaleStrategy;
   /**
-   * Strategy for handling unmatched requests:
-   * - "reject": Reject unmatched requests.
-   * - "warn": Warn but allow unmatched requests.
-   * - "fetch": Fetch the request from the network.
+   * Can be set via the `MOCKS_NO_MATCH` environment variable.
    * @default reject
    */
-  noMatch: "reject" | "warn" | "fetch";
+  noMatch: NoMatchStrategy;
   /**
    * Whether to mimick the timings of the original request.
+   * Can be set via the `MOCKS_USE_TIMINGS` environment variable.
    * @default false
    */
   useTimings: boolean;
@@ -71,9 +84,11 @@ export type NetMockOptions = {
    */
   out?: string;
   /**
-   * List of header or body keys to redact from the archive for privacy/security.
+   * List of header or body keys to include in request archives.
+   * Can be set via the `MOCKS_INCLUDE_KEYS` environment variable.
+   * @default []
    */
-  redactedKeys: string[];
+  includeKeys: string[];
 };
 
 export interface NetMockContextHooks {
@@ -100,11 +115,32 @@ export class NetMockContext {
 
   /** @internal */
   private _defaultOptions: NetMockOptions = {
-    maxAge: 1000 * 60 * 60 * 24 * 60, // 60 days
-    stale: "reject",
-    noMatch: "reject",
-    useTimings: false,
-    redactedKeys: [],
+    maxAge: getEnvironmentVariable("MOCKS_MAX_AGE", (value) => {
+      if (!value) return 1000 * 60 * 60 * 24 * 60; // 60 days
+      return Number(value);
+    }),
+    stale: getEnvironmentVariable("MOCKS_STALE", (value) => {
+      if (!value) return "reject";
+      if (!["reject", "warn", "refetch", "ignore"].includes(value)) {
+        throw new Error(`Invalid stale strategy: ${value}`);
+      }
+      return value as StaleStrategy;
+    }),
+    noMatch: getEnvironmentVariable("MOCKS_NO_MATCH", (value) => {
+      if (!value) return "reject";
+      if (!["reject", "warn", "fetch"].includes(value)) {
+        throw new Error(`Invalid no match strategy: ${value}`);
+      }
+      return value as NoMatchStrategy;
+    }),
+    useTimings: getEnvironmentVariable("MOCKS_USE_TIMINGS", (value) => {
+      if (value === undefined) return Boolean(false);
+      return Boolean(value);
+    }),
+    includeKeys: getEnvironmentVariable("MOCKS_INCLUDE_KEYS", (value) => {
+      if (!value) return [];
+      return value.split(",");
+    }),
   };
 
   /** @internal */

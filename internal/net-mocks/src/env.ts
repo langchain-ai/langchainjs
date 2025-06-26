@@ -3,6 +3,12 @@ import { ArchiveStore, NetMockContextHooks } from "./mock";
 import { toFileSafeString } from "./utils";
 import { HARArchive } from "./spec";
 
+declare global {
+  interface Window {
+    env?: Record<string, string>;
+  }
+}
+
 /**
  * Creates and returns a BatchInterceptor appropriate for the current environment (browser or Node.js).
  *
@@ -106,4 +112,39 @@ export async function getArchiveStore(
     };
   }
   throw new Error("No archive store found for current environment");
+}
+
+/**
+ * Safely retrieves an environment variable value, supporting both Node.js and browser environments.
+ * Returns undefined if the variable is not set or not accessible in the current environment.
+ *
+ * @param {string} key - The name of the environment variable.
+ * @param {Function} [transform] - An optional function to transform the value.
+ * @returns {string | undefined} The value of the environment variable, or undefined if not found.
+ */
+export function getEnvironmentVariable(key: string): string | undefined;
+export function getEnvironmentVariable<T>(
+  key: string,
+  transform: (value: string | undefined) => T
+): T;
+export function getEnvironmentVariable<T>(
+  key: string,
+  transform?: (value: string | undefined) => T
+): T | string | undefined {
+  let value: string | undefined;
+  if (
+    typeof globalThis.window !== "undefined" &&
+    globalThis.window?.env &&
+    typeof globalThis.window.env[key] === "string"
+  ) {
+    value = globalThis.window.env[key];
+  }
+  if (
+    typeof globalThis.process !== "undefined" &&
+    globalThis.process?.env &&
+    typeof globalThis.process.env[key] === "string"
+  ) {
+    value = globalThis.process.env[key];
+  }
+  return transform ? transform(value) : value;
 }
