@@ -311,12 +311,16 @@ export function readableHARResponseStream(
  * @param {string[]} [includeKeys=[]] - An array of header names to include in the output.
  * @returns {HARHeader[]} The encoded HAR header objects.
  */
-function encodeHARHeaders(headers: Headers, includeKeys: string[] = []) {
+function encodeHARHeaders(headers: Headers, includeKeys?: string[]) {
   const harHeaders: HARHeader[] = [];
   for (const [key, value] of headers.entries()) {
     // don't store the passthrough header in the archive
     if (key === "x-mock-passthrough") continue;
-    else if (!includeKeys.includes(key) && !WELL_KNOWN_HEADERS.includes(key)) {
+    else if (
+      includeKeys &&
+      !includeKeys.includes(key) &&
+      !WELL_KNOWN_HEADERS.includes(key)
+    ) {
       harHeaders.push({ name: key, value: "<redacted>" });
     } else {
       harHeaders.push({ name: key, value });
