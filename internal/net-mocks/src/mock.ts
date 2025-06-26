@@ -165,7 +165,7 @@ export class NetMockContext {
 
       const encodedRequest = encodeHARRequest(
         request.clone(),
-        options.redactedKeys
+        options.includeKeys
       );
 
       const clonedRequest = request.clone();
@@ -177,7 +177,7 @@ export class NetMockContext {
           request: clonedRequest,
           requestBody: clonedRequestBody,
           entry,
-          redactedKeys: options.redactedKeys.filter(Boolean) as string[],
+          includeKeys: options.includeKeys.filter(Boolean) as string[],
         })
       );
 
@@ -257,7 +257,7 @@ export class NetMockContext {
               request: await encodedRequest,
               response: await encodeHARResponse(
                 clonedResponse,
-                options.redactedKeys
+                options.includeKeys
               ),
               cache: {},
               timings: {

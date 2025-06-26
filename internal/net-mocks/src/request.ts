@@ -11,6 +11,8 @@ import {
 } from "./spec";
 import { deepEqual, delay, iife } from "./utils";
 
+const WELL_KNOWN_HEADERS = ["accept", "accept-encoding", "content-type"];
+
 /**
  * Options for matching an incoming HTTP request against a HAR entry.
  */
@@ -21,8 +23,8 @@ export type MatchRequestEntryOptions = {
   requestBody: Uint8Array | null;
   /** The HAR entry to match against. */
   entry: HAREntry;
-  /** Optional array of header or query parameter names to ignore during matching. */
-  redactedKeys?: string[];
+  /** Optional array of header or query parameter names to include during matching. */
+  includeKeys?: string[];
 };
 
 /**
@@ -41,14 +43,14 @@ export type MatchRequestEntryOptions = {
  * @param {Request} params.request - The incoming Request object to match against the HAR entry.
  * @param {Uint8Array | null} params.requestBody - The body of the incoming request as a Uint8Array, or null if not present.
  * @param {HAREntry} params.entry - The HAR entry to match against.
- * @param {string[]} [params.redactedKeys=[]] - An array of header or query parameter names to ignore during matching.
+ * @param {string[]} [params.includeKeys=[]] - An array of header or query parameter names to include during matching.
  * @returns {boolean} True if the request matches the HAR entry, false otherwise.
  */
 export function matchRequestEntryPredicate({
   request,
   requestBody,
   entry,
-  redactedKeys = [],
+  includeKeys = [],
 }: MatchRequestEntryOptions): boolean {
   const { request: storedRequest } = entry;
   if (storedRequest.method !== request.method) return false;
@@ -71,23 +73,21 @@ export function matchRequestEntryPredicate({
   }
 
   // Compare request headers with (excluding content-type and redacted keys)
-  const redactedRequestHeaders = storedRequest.headers.filter((header) =>
-    redactedKeys.includes(header.name)
+  const includedRequestHeaders = storedRequest.headers.filter((header) =>
+    includeKeys.includes(header.name)
   );
-  for (const header of redactedRequestHeaders) {
+  for (const header of includedRequestHeaders) {
     if (header.name.toLowerCase() === "content-type") continue;
-    if (header.value !== request.headers.get(header.name)) return false;
+    if (header.value === request.headers.get(header.name)) return false;
   }
 
   // Compare query params
   const storedRequestQueryParams = new URLSearchParams(storedRequestUrl.search);
   const requestQueryParams = new URLSearchParams(requestUrl.search);
-  for (const key of redactedKeys) {
-    storedRequestQueryParams.delete(key);
-    requestQueryParams.delete(key);
-  }
-  if (storedRequestQueryParams.toString() !== requestQueryParams.toString()) {
-    return false;
+  for (const key of includeKeys) {
+    const storedValue = storedRequestQueryParams.get(key);
+    const requestValue = requestQueryParams.get(key);
+    if (storedValue !== requestValue) return false;
   }
 
   // Compare request body if it's provided
@@ -303,21 +303,24 @@ export function readableHARResponseStream(
 /**
  * Encodes HTTP headers into the HAR (HTTP Archive) header format.
  *
- * Filters out headers that are either in the `redactedKeys` list or are
+ * Filters out headers that are not in the `includeKeys` list or are
  * the special passthrough header ("x-mock-passthrough"), and returns
  * an array of HARHeader objects suitable for inclusion in a HAR entry.
  *
  * @param {Headers} headers - The HTTP headers to encode.
- * @param {string[]} [redactedKeys=[]] - An array of header names to redact (exclude) from the output.
+ * @param {string[]} [includeKeys=[]] - An array of header names to include in the output.
  * @returns {HARHeader[]} The encoded HAR header objects.
  */
-function encodeHARHeaders(headers: Headers, redactedKeys: string[] = []) {
+function encodeHARHeaders(headers: Headers, includeKeys: string[] = []) {
   const harHeaders: HARHeader[] = [];
   for (const [key, value] of headers.entries()) {
     // don't store the passthrough header in the archive
     if (key === "x-mock-passthrough") continue;
-    if (redactedKeys.includes(key)) continue;
+    else if (!includeKeys.includes(key) && !WELL_KNOWN_HEADERS.includes(key)) {
+      harHeaders.push({ name: key, value: "<redacted>" });
+    } else {
     harHeaders.push({ name: key, value });
+    }
   }
   return harHeaders;
 }
@@ -325,19 +328,19 @@ function encodeHARHeaders(headers: Headers, redactedKeys: string[] = []) {
 /**
  * Encodes cookies from HTTP headers into the HAR (HTTP Archive) cookie format.
  *
- * Parses the "cookie" header, filters out cookies whose names are in the
- * `redactedKeys` list or have empty values, and returns an array of HARCookie objects.
+ * Parses the "cookie" header, filters out cookies whose names are not in the
+ * `includeKeys` list or have empty values, and returns an array of HARCookie objects.
  *
  * @param {Headers} headers - The HTTP headers containing the "cookie" header.
- * @param {string[]} [redactedKeys=[]] - An array of cookie names to redact (exclude) from the output.
+ * @param {string[]} [includeKeys=[]] - An array of cookie names to include in the output.
  * @returns {HARCookie[]} The encoded HAR cookie objects.
  */
-function encodeHARCookies(headers: Headers, redactedKeys: string[] = []) {
+function encodeHARCookies(headers: Headers, includeKeys: string[] = []) {
   const cookies: HARCookie[] = [];
   const cookieMap = parseCookie(headers.get("cookie") ?? "");
   for (const [key, value] of Object.entries(cookieMap)) {
     if (!value) continue;
-    if (redactedKeys.includes(key)) continue;
+    if (!includeKeys.includes(key)) continue;
     cookies.push({ name: key, value });
   }
   return cookies;
@@ -347,16 +350,16 @@ function encodeHARCookies(headers: Headers, redactedKeys: string[] = []) {
  * Encodes a Fetch API Request object into a HAR (HTTP Archive) request object.
  *
  * Extracts method, URL, HTTP version, headers, cookies, query parameters,
- * and (if present) the request body. Redacts any headers or cookies whose
- * names are in the `redactedKeys` list.
+ * and (if present) the request body. Includes any headers or cookies whose
+ * names are in the `includeKeys` list.
  *
  * @param {Request} request - The Fetch API Request to encode.
- * @param {string[]} [redactedKeys=[]] - An array of header or cookie names to redact (exclude) from the output.
+ * @param {string[]} [includeKeys=[]] - An array of header or cookie names to include in the output.
  * @returns {Promise<HARRequest>} A promise that resolves to the encoded HAR request object.
  */
 export async function encodeHARRequest(
   request: Request,
-  redactedKeys: string[] = []
+  includeKeys: string[] = []
 ): Promise<HARRequest> {
   const requestUrl = new URL(request.url);
   const queryParams = new URLSearchParams(requestUrl.search);
@@ -377,8 +380,8 @@ export async function encodeHARRequest(
     method: request.method,
     url: request.url,
     httpVersion: request.headers.get("version") ?? "HTTP/1.1",
-    cookies: encodeHARCookies(request.headers, redactedKeys),
-    headers: encodeHARHeaders(request.headers, redactedKeys),
+    cookies: encodeHARCookies(request.headers, includeKeys),
+    headers: encodeHARHeaders(request.headers, includeKeys),
     queryString,
     postData,
     headersSize: JSON.stringify(request.headers.entries()).length,
@@ -391,15 +394,15 @@ export async function encodeHARRequest(
  *
  * Extracts status, status text, HTTP version, headers, cookies, and response body.
  * If the response is a text/event-stream, encodes the event stream as JSON.
- * Redacts any headers or cookies whose names are in the `redactedKeys` list.
+ * Includes any headers or cookies whose names are in the `includeKeys` list.
  *
  * @param {Response} response - The Fetch API Response to encode.
- * @param {string[]} [redactedKeys=[]] - An array of header or cookie names to redact (exclude) from the output.
+ * @param {string[]} [includeKeys=[]] - An array of header or cookie names to include in the output.
  * @returns {Promise<HARResponse>} A promise that resolves to the encoded HAR response object.
  */
 export async function encodeHARResponse(
   response: Response,
-  redactedKeys: string[] = []
+  includeKeys: string[] = []
 ): Promise<HARResponse> {
   const content = await iife(async () => {
     const contentType = response.headers.get("content-type");
@@ -431,8 +434,8 @@ export async function encodeHARResponse(
     status: response.status,
     statusText: response.statusText,
     httpVersion: response.headers.get("version") ?? "HTTP/1.1",
-    cookies: encodeHARCookies(response.headers, redactedKeys),
-    headers: encodeHARHeaders(response.headers, redactedKeys),
+    cookies: encodeHARCookies(response.headers, includeKeys),
+    headers: encodeHARHeaders(response.headers),
     content,
     redirectURL: response.headers.get("location") ?? "",
     headersSize: JSON.stringify(response.headers.entries()).length,

@@ -82,9 +82,9 @@ export type NetMockOptions = {
    */
   out?: string;
   /**
-   * List of header or body keys to redact from the archive for privacy/security.
+   * List of header or body keys to include in request archives.
    */
-  redactedKeys: string[];
+  includeKeys: string[];
 };
 ```
 
