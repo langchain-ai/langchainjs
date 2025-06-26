@@ -3,7 +3,7 @@
   "name": "@langchain/net-mocks",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
     "test": "vitest run --config=example/vitest.config.ts",
     "lint": "eslint --cache --ext .ts,.js src/",
@@ -16,8 +16,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@langchain/core": "workspace:*",
-    "@langchain/openai": "workspace:*",
     "@mswjs/interceptors": "^0.39.2",
     "cookie": "^1.0.2",
     "deep-equal": "^2.2.3",
