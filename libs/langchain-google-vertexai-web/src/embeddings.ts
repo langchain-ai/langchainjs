@@ -1,26 +1,8 @@
-import {
-  type GoogleEmbeddingsInput,
-  GoogleEmbeddings,
-} from "@langchain/google-webauth";
-
 /**
- * Input to a Google Vertex AI embeddings class.
+ * The implementation of this file was consolidated into the @langchain/google package.
+ * This file is kept here for backwards compatibility.
  */
-export interface GoogleVertexAIEmbeddingsInput extends GoogleEmbeddingsInput {}
-
-/**
- * Integration with a Google Vertex AI embeddings model using
- * the "@langchain/google-webauth" package for auth.
- */
-export class VertexAIEmbeddings extends GoogleEmbeddings {
-  static lc_name() {
-    return "VertexAIEmbeddings";
-  }
-
-  constructor(fields: GoogleVertexAIEmbeddingsInput) {
-    super({
-      ...fields,
-      platformType: "gcp",
-    });
-  }
-}
+export {
+  GoogleVertexAIEmbeddingsInput,
+  VertexAIEmbeddings,
+} from "@langchain/google/web";
