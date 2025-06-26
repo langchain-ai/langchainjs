@@ -1646,7 +1646,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // Add thinking configuration if explicitly set
     // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
     if (typeof parameters.maxReasoningTokens !== "undefined") {
-      const includeThoughts = parameters.maxReasoningTokens > 0;
+      const includeThoughts = parameters.maxReasoningTokens !== 0;
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
         includeThoughts,
@@ -1852,9 +1852,6 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
     throw new Error("`maxOutputTokens` must be a positive integer");
   }
   if (typeof params.maxReasoningTokens !== "undefined") {
-    if (params.maxReasoningTokens < 0) {
-      throw new Error("`maxReasoningTokens` must be non-negative integer");
-    }
     if (typeof params.maxOutputTokens !== "undefined") {
       if (params.maxReasoningTokens >= params.maxOutputTokens) {
         throw new Error(
