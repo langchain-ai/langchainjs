@@ -717,6 +717,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     object: response.object,
     status: response.status,
     user: response.user,
+    service_tier: response.service_tier,
 
     // for compatibility with chat completion calls.
     model_name: response.model,
@@ -1201,10 +1202,10 @@ export interface ChatOpenAICallOptions
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
 
   /**
-   * Service tier to use for this request. Can be "auto", "default", or "flex", or "priority"
+   * Service tier to use for this request. Can be "auto", "default", or "flex"
    * Specifies the service tier for prioritization and latency optimization.
    */
-  service_tier?: "auto" | "default" | "flex" | "priority";
+  service_tier?: ResponsesCreateParams["service_tier"];
 }
 
 export interface ChatOpenAIFields
@@ -1935,7 +1936,7 @@ export class ChatOpenAI<
    * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
    * Specifies the service tier for prioritization and latency optimization.
    */
-  service_tier?: "auto" | "default" | "flex" | "priority";
+  service_tier?: ResponsesCreateParams["service_tier"];
 
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
@@ -2483,6 +2484,7 @@ export class ChatOpenAI<
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
         generationInfo.model_name = data.model;
+        generationInfo.service_tier = data.service_tier;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -3334,17 +3336,6 @@ export class ChatOpenAI<
       { raw: BaseMessage; parsed: RunOutput }
     >([{ raw: llm }, parsedWithFallback]);
   }
-}
-
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }
 
 function isStructuredOutputMethodParams(
