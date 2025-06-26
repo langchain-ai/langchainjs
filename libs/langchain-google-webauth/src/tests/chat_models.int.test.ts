@@ -463,30 +463,36 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   }, 90000); // Increase timeout
 });
 
-const weatherTool = tool((_) => ({
-  temp: 21,
-}), {
-  name: "get_weather",
-  description:
-    "Get the weather of a specific location and return the temperature in Celsius.",
-  schema: z.object({
-    location: z.string().describe("The name of city to get the weather for."),
+const weatherTool = tool(
+  (_) => ({
+    temp: 21,
   }),
-});
+  {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z.string().describe("The name of city to get the weather for."),
+    }),
+  }
+);
 
-const nullishWeatherTool = tool((_) => ({
-  temp: 21,
-}), {
-  name: "get_nullish_weather",
-  description:
-    "Get the weather of a specific location and return the temperature in Celsius.",
-  schema: z.object({
-    location: z
-      .string()
-      .nullish()
-      .describe("The name of city to get the weather for."),
+const nullishWeatherTool = tool(
+  (_) => ({
+    temp: 21,
   }),
-});
+  {
+    name: "get_nullish_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z
+        .string()
+        .nullish()
+        .describe("The name of city to get the weather for."),
+    }),
+  }
+);
 
 const calculatorTool = tool((_) => "no-op", {
   name: "calculator",
@@ -784,9 +790,7 @@ describe.each(testGeminiModelNames)(
         tools,
         temperature: 0.1,
       });
-      const history = [
-        new HumanMessage("What is the weather in New York?"),
-      ];
+      const history = [new HumanMessage("What is the weather in New York?")];
       const result1 = await model.invoke(history);
       history.push(result1);
 
