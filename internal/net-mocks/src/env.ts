@@ -70,7 +70,7 @@ export async function getArchiveStore(
 
     const getOutputDir = () => {
       const testPath = path.dirname(hooks?.getTestPath() ?? "./");
-      return path.join(testPath, "__data__");
+      return path.join(testPath, "__snapshots__");
     };
 
     const getArchivePath = (key: string) => {

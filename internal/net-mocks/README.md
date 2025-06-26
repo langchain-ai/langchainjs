@@ -2,7 +2,7 @@
 
 This is an internal utility used within LangChain to record & mock network activity for use in tests. Here's how it works:
 
-1. **Record:** When running tests for the first time, `net-mocks` intercepts outgoing HTTP requests and records them, along with the corresponding responses, into a `.har` file. These files are stored in a `__data__` directory (by default) alongside the tests.
+1. **Record:** When running tests for the first time, `net-mocks` intercepts outgoing HTTP requests and records them, along with the corresponding responses, into a `.har` file. These files are stored in a `__snapshots__` directory (by default) alongside the tests.
 2. **Replay:** On subsequent test runs, `net-mocks` intercepts the same HTTP requests but instead of hitting the actual API, it finds a matching request in the `.har` file and returns the recorded response. This makes tests deterministic and runnable offline.
 3. **Refresh:** If the underlying API changes, or tests are slightly modified, then the matching function between the stored and actual request becomes falsy and data is automatically re-fetched (or will reject the test if configured)
    - Mainstream model providers that use stainless as their sdk backing (openAI, anthropic) typically pin a `sdk-version` or `api-version` header that gets sent with requests. Once those change (like by an sdk upgrade), that means that the network activity stored with a test will automatically be refetched. This makes it easy to mocked tests up-to-date with the latest API changes.
