@@ -3,6 +3,7 @@ import {
   configure,
   type DataObject,
   type FilterValue,
+  HybridOptions,
   WeaviateClient,
   type WeaviateField,
 } from "weaviate-client";
@@ -254,6 +255,40 @@ export class WeaviateStore extends VectorStore {
         `This method requires either "ids" or "filter" to be set in the input object`
       );
     }
+  }
+
+  async hybridSearch(
+    query: string,
+    options?: HybridOptions<undefined>
+  ): Promise<Document[]> {
+    console.log("in new similarity search");
+    const collection = this.client.collections.get(this.indexName);
+    let result;
+    if (this.tenant) {
+      result = await collection.withTenant(this.tenant).query.hybrid(query, {
+        ...(options || {}),
+      });
+    } else {
+      result = await collection.query.hybrid(query, {
+        ...(options || {}),
+      });
+    }
+    const documents = [];
+    for (const data of result.objects) {
+      const { properties = {} } = data ?? {};
+      const { [this.textKey]: text, ...rest } = properties;
+
+      documents.push(
+        new Document({
+          pageContent: String(text ?? ""),
+          metadata: {
+            ...rest,
+          },
+          id: data.uuid,
+        })
+      );
+    }
+    return documents;
   }
 
   /**
