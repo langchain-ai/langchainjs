@@ -8195,7 +8195,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@^0.2.13, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
+"@langchain/google-gauth@^0.2.14, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
@@ -8310,7 +8310,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/google-common": ^0.2.14
-    "@langchain/google-gauth": ^0.2.13
+    "@langchain/google-gauth": ^0.2.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
