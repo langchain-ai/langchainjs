@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { ChatAnthropic } from "../../../../libs/langchain-anthropic/src/chat_models";
-import { net } from "../../src";
 import { HumanMessage } from "@langchain/core/messages";
+import { ChatAnthropic } from "@langchain/anthropic";
+import { net } from "../../src";
 
 const model = new ChatAnthropic({
   model: "claude-3-5-sonnet-20241022",

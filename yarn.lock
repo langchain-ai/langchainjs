@@ -8161,7 +8161,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@^0.2.13, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
+"@langchain/google-common@^0.2.14, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -8195,13 +8195,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@^0.2.10, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
+"@langchain/google-gauth@^0.2.14, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
+    "@langchain/google-common": ^0.2.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8273,8 +8273,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/google-webauth": ^0.2.13
+    "@langchain/google-common": ^0.2.14
+    "@langchain/google-webauth": ^0.2.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -8309,8 +8309,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
-    "@langchain/google-gauth": ^0.2.10
+    "@langchain/google-common": ^0.2.14
+    "@langchain/google-gauth": ^0.2.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -8339,13 +8339,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@^0.2.13, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
+"@langchain/google-webauth@^0.2.14, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.13
+    "@langchain/google-common": ^0.2.14
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8619,6 +8619,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/net-mocks@workspace:internal/net-mocks"
   dependencies:
+    "@langchain/anthropic": "workspace:*"
+    "@langchain/core": "workspace:*"
     "@mswjs/interceptors": ^0.39.2
     "@types/deep-equal": ^1.0.4
     "@typescript-eslint/eslint-plugin": ^6.12.0
