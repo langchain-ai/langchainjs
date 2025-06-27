@@ -67,6 +67,12 @@ describe("Test model provider detection", () => {
       region: "eu-west-1",
     },
     {
+      modelId: "mx.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      expectedProvider: "anthropic",
+      shouldThrow: false,
+      region: "us-west-2",
+    },
+    {
       modelId: "apac.anthropic.claude-3-5-sonnet-20240620-v1:0",
       expectedProvider: "anthropic",
       shouldThrow: false,

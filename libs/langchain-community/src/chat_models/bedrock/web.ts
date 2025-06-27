@@ -59,6 +59,7 @@ const AWS_REGIONS = [
   "us",
   "sa",
   "me",
+  "mx",
   "il",
   "eu",
   "cn",
