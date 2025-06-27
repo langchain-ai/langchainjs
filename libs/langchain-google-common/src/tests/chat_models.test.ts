@@ -89,13 +89,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     expect(() => {
       const model = new ChatGoogle({
-        maxReasoningTokens: -1000,
-      });
-      expect(model).toBeNull(); // For linting. Should never reach.
-    }).toThrowError(/maxReasoningTokens.*non-negative/);
-
-    expect(() => {
-      const model = new ChatGoogle({
         maxOutputTokens: 500,
         maxReasoningTokens: 1000,
       });

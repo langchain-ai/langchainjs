@@ -68,6 +68,7 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   expect(message.usage_metadata?.output_tokens).toBeGreaterThan(0);
   expect(message.usage_metadata?.total_tokens).toBeGreaterThan(0);
   expect(message.response_metadata.model_name).toBeDefined();
+  expect(message.response_metadata.service_tier).toBeDefined();
   for (const toolOutput of (message.additional_kwargs.tool_outputs ??
     []) as Record<string, unknown>[]) {
     expect(toolOutput.id).toBeDefined();
