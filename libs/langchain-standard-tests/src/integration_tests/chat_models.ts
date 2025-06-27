@@ -30,6 +30,7 @@ import {
   RecordStringAny,
 } from "../base.js";
 import { TestCallbackHandler } from "../utils.js";
+import { isMessageContentComplex } from "../utils/types.js";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -111,86 +112,6 @@ interface ChatModelIntegrationTestsFields<
    * @default false
    */
   supportsParallelToolCalls?: boolean;
-}
-
-// --- Message Content Types ---
-// Per MessageContent and MessageContentComplex definitions
-export type MessageContentText = {
-  type: "text";
-  text: string;
-};
-
-export type MessageContentImageUrl = {
-  type: "image_url";
-  image_url:
-    | string
-    | {
-        url: string;
-        detail?: "auto" | "low" | "high";
-      };
-};
-
-// Generic fallback for other complex types
-export type MessageContentUnknown = Record<string, any> & {
-  type: string;
-};
-
-export type MessageContentComplex =
-  | MessageContentText
-  | MessageContentImageUrl
-  | MessageContentUnknown;
-
-export type MessageContent = string | MessageContentComplex[];
-
-// --- Type Guard Functions ---
-
-function isMessageContentText(obj: any): obj is MessageContentText {
-  return (
-    obj &&
-    typeof obj === "object" &&
-    obj.type === "text" &&
-    typeof obj.text === "string"
-  );
-}
-
-/**
- * Checks if an object is a valid MessageContentImageUrl which can be either a simple URL string
- * or an object with a `url` property. We assume that the `url` property is always a string
- */
-function isMessageContentImageUrl(obj: any): obj is MessageContentImageUrl {
-  if (obj?.type !== "image_url" || !("image_url" in obj)) {
-    return false;
-  }
-  const { image_url } = obj;
-  if (typeof image_url === "string") {
-    return true; // Simple URL string
-  }
-  if (
-    typeof image_url === "object" &&
-    image_url !== null &&
-    typeof image_url.url === "string"
-  ) {
-    return true; // Detailed object with a URL
-  }
-  return false;
-}
-
-/**
- * Checks if an object is a valid MessageContentComplex object.
- */
-function isMessageContentComplex(obj: any): obj is MessageContentComplex {
-  if (!obj || typeof obj !== "object" || typeof obj.type !== "string") {
-    return false;
-  }
-  // Check against the most specific types first
-  if (isMessageContentText(obj) || isMessageContentImageUrl(obj)) {
-    return true;
-  }
-  // Fallback for any other object that has any `type` property
-  if (obj.type) {
-    return true;
-  }
-  return false;
 }
 
 export abstract class ChatModelIntegrationTests<
