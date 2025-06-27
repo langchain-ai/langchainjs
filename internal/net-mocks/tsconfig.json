@@ -16,18 +16,6 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "langchain/src/**/*",
-    "langchain-core/src/**/*",
-    "libs/*/src/**/*",
-    "internal/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/dist/",
-    "docs",
-    "langchain/dist/",
-    "langchain-core/dist/",
-    "libs/*/dist/"
-  ]
+  "include": ["src/*", "src/**/*"],
+  "exclude": ["__tests__", "node_modules"]
 }
