@@ -2,6 +2,7 @@ import type { readFile as ReadFileT } from "node:fs/promises";
 import { Document } from "@langchain/core/documents";
 import { getEnv } from "@langchain/core/utils/env";
 import { BaseDocumentLoader } from "../base.js";
+import { detectFileEncodings, FileEncoding } from "./helpers.js";
 
 /**
  * A class that extends the `BaseDocumentLoader` class. It represents a
@@ -46,9 +47,26 @@ export class TextLoader extends BaseDocumentLoader {
   public async load(): Promise<Document[]> {
     let text: string;
     let metadata: Record<string, string>;
+    let currentEncoding: BufferEncoding | null = null;
+
     if (typeof this.filePathOrBlob === "string") {
       const { readFile } = await TextLoader.imports();
-      text = await readFile(this.filePathOrBlob, "utf8");
+      const detectedEncodings: FileEncoding[] = await detectFileEncodings(
+        this.filePathOrBlob
+      );
+
+      for (const encoding of detectedEncodings) {
+        try {
+          await readFile(this.filePathOrBlob, { encoding: encoding.encoding });
+          currentEncoding = encoding.encoding;
+          break;
+        } catch (error) {
+          continue;
+        }
+      }
+      text = (await readFile(this.filePathOrBlob, {
+        encoding: currentEncoding,
+      })) as string;
       metadata = { source: this.filePathOrBlob };
     } else {
       text = await this.filePathOrBlob.text();
