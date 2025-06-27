@@ -28,6 +28,7 @@ const AWS_REGIONS = [
   "ap",
   "af",
   "us-gov",
+  "apac",
 ];
 
 const ALLOWED_MODEL_PROVIDERS = [
