@@ -1,6 +1,7 @@
 import { parse as parseCookie } from "cookie";
 import {
   EncodedEventStream,
+  HARContent,
   HARCookie,
   HAREntry,
   HARHeader,
@@ -351,6 +352,45 @@ function encodeHARCookies(headers: Headers, includeKeys: string[] = []) {
 }
 
 /**
+ * Encodes a request or response body into a HAR-compatible format, handling
+ * both text and binary content.
+ * @param {ReadableStream<Uint8Array> | null} body The body stream to encode.
+ * @param {string | null} mimeType The MIME type of the content.
+ * @returns {Promise<HARContent>} An object with the encoded text and an optional encoding property.
+ */
+async function encodeHARContent(
+  body: ReadableStream<Uint8Array> | null,
+  mimeType: string | null
+): Promise<HARContent> {
+  const resolvedMimeType = mimeType ?? "";
+  if (!body) {
+    return { text: "", mimeType: resolvedMimeType, size: 0 };
+  }
+  const buffer = await consumeBodyStream(body);
+
+  if (isTextMimeType(resolvedMimeType)) {
+    const text = buffer ? new TextDecoder("utf-8").decode(buffer) : "";
+    return { text, mimeType: resolvedMimeType, size: text.length };
+  }
+  let text = "";
+  if (buffer) {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    text = btoa(binary);
+  }
+  return {
+    text,
+    encoding: "base64",
+    mimeType: resolvedMimeType,
+    size: text.length,
+  };
+}
+
+/**
  * Encodes a Fetch API Request object into a HAR (HTTP Archive) request object.
  *
  * Extracts method, URL, HTTP version, headers, cookies, query parameters,
@@ -373,12 +413,8 @@ export async function encodeHARRequest(
   }
   let postData: HARPostData | undefined;
   if (request.body && request.method !== "GET") {
-    const buffer = await consumeBodyStream(request.body);
-    const text = buffer ? new TextDecoder("utf-8").decode(buffer) : "";
-    postData = {
-      mimeType: request.headers.get("content-type") ?? "",
-      text,
-    };
+    const mimeType = request.headers.get("content-type");
+    postData = await encodeHARContent(request.body, mimeType);
   }
   return {
     method: request.method,
@@ -426,13 +462,7 @@ export async function encodeHARResponse(
         text,
       };
     }
-    const body = await consumeBodyStream(response.body);
-    const text = body ? new TextDecoder("utf-8").decode(body) : "";
-    return {
-      size: text.length,
-      mimeType: contentType ?? "",
-      text,
-    };
+    return encodeHARContent(response.body, contentType);
   });
   return {
     status: response.status,
@@ -445,6 +475,27 @@ export async function encodeHARResponse(
     headersSize: JSON.stringify(response.headers.entries()).length,
     bodySize: content.size,
   };
+}
+
+/**
+ * A helper function to determine if a mime type should be treated as text.
+ * @param {string | null | undefined} mimeType The mime type to check.
+ * @returns {boolean} True if the mime type is text-based, false otherwise.
+ */
+function isTextMimeType(mimeType: string | null | undefined): boolean {
+  if (!mimeType) {
+    return true; // Default to text if mime type is not provided
+  }
+  const textMimeTypes = [
+    "application/json",
+    "application/xml",
+    "application/x-www-form-urlencoded",
+    "application/javascript",
+    "text/",
+  ];
+  return textMimeTypes.some((textMimeType) =>
+    mimeType.startsWith(textMimeType)
+  );
 }
 
 /**

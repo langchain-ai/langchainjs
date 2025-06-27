@@ -218,6 +218,8 @@ export interface HARPostData {
   params?: HARParam[];
   /** Plain text posted data (optional, mutually exclusive with params) */
   text?: string;
+  /** Encoding used for posted data e.g. "base64" (optional) */
+  encoding?: string;
   /** A comment provided by the user or the application (optional) */
   comment?: string;
 }
