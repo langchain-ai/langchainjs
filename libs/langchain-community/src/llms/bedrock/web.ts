@@ -17,6 +17,9 @@ import {
 } from "../../utils/bedrock/index.js";
 import type { SerializedFields } from "../../load/map_keys.js";
 
+/**
+ * @see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html#Concepts.RegionsAndAvailabilityZones.Regions
+ */
 const AWS_REGIONS = [
   "us",
   "sa",
