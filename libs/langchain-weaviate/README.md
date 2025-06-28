@@ -1,6 +1,6 @@
 # @langchain/weaviate
 
-This package contains the LangChain.js integrations for Weaviate with the `weaviate-ts-client` SDK.
+This package contains the LangChain.js integrations for Weaviate with the `weaviate-client` SDK.
 
 ## Installation
 
