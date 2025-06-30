@@ -3,8 +3,6 @@ import { OpenAI as OpenAIClient } from "openai";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isZodSchemaV3 } from "@langchain/core/utils/types";
-import { zodFunction } from "openai/helpers/zod";
 import { formatToOpenAITool } from "./openai.js";
 
 /**
@@ -32,20 +30,7 @@ export function _convertToOpenAITool(
   let toolDef: OpenAIClient.ChatCompletionTool | undefined;
 
   if (isLangChainTool(tool)) {
-    // FIXME: This is a hack to use OpenAI's native zodFunction util
-    // since their json schema standard is not always compatible with
-    // the schemas produced by zod. Ideally, we should be using the
-    // `zodFunction` util always, but that can only happen when OpenAI
-    // supports zod v4.
-    if (isZodSchemaV3(tool.schema)) {
-      toolDef = zodFunction({
-        name: tool.name,
-        parameters: tool.schema,
-        description: tool.description,
-      });
-    } else {
-      toolDef = formatToOpenAITool(tool);
-    }
+    toolDef = formatToOpenAITool(tool);
   } else {
     toolDef = tool as ToolDefinition;
   }

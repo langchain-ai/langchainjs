@@ -1405,6 +1405,126 @@ describe("Zod utility functions", () => {
         const result = interopZodTransformInputSchema(inputSchema);
         expect(result).toBe(inputSchema);
       });
+
+      it("should handle recursive processing of nested object schemas", () => {
+        const nestedSchema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const inputSchema = z4.object({
+          user: nestedSchema,
+          metadata: z4.string(),
+        });
+        const transformSchema = inputSchema.transform((obj) => ({
+          ...obj,
+          processed: true,
+        }));
+        const result = interopZodTransformInputSchema(transformSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["user", "metadata"]);
+        expect(resultShape.user).toBeInstanceOf(z4.ZodObject);
+        expect(resultShape.metadata).toBeInstanceOf(z4.ZodString);
+      });
+
+      it("should handle recursive processing of arrays of object schemas", () => {
+        const userSchema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const inputSchema = z4.object({
+          users: z4.array(userSchema),
+          count: z4.number(),
+        });
+        const transformSchema = inputSchema.transform((obj) => ({
+          ...obj,
+          processed: true,
+        }));
+        const result = interopZodTransformInputSchema(transformSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["users", "count"]);
+        expect(resultShape.users).toBeInstanceOf(z4.ZodArray);
+        expect(resultShape.count).toBeInstanceOf(z4.ZodNumber);
+      });
+
+      it("should not apply recursive processing by default", () => {
+        const nestedSchema = z4.object({
+          name: z4.string(),
+          age: z4.number(),
+        });
+        const inputSchema = z4.object({
+          user: nestedSchema,
+          metadata: z4.string(),
+        });
+        const transformSchema = inputSchema.transform((obj) => ({
+          ...obj,
+          processed: true,
+        }));
+        const result = interopZodTransformInputSchema(transformSchema);
+
+        // Should return the original input schema without recursive processing
+        expect(result).toBe(inputSchema);
+      });
+
+      it("should handle nested transforms in object properties", () => {
+        // Create a schema where inner properties are transformed
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number().transform((n) => n * 2),
+        });
+        const inputSchema = z4.object({
+          user: userSchema,
+          metadata: z4.string(),
+        });
+
+        // When recursive=true, we should get the input schema with the original property types
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["user", "metadata"]);
+
+        // The user property should be an object with untransformed schemas
+        expect(resultShape.user).toBeInstanceOf(z4.ZodObject);
+        const userShape = getInteropZodObjectShape(resultShape.user as any);
+        expect(Object.keys(userShape)).toEqual(["name", "age"]);
+        expect(userShape.name).toBeInstanceOf(z4.ZodString);
+        expect(userShape.age).toBeInstanceOf(z4.ZodNumber);
+
+        // The metadata should remain unchanged
+        expect(resultShape.metadata).toBeInstanceOf(z4.ZodString);
+      });
+
+      it("should handle transforms in array elements", () => {
+        // Create a schema where array elements are transformed
+        const userSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          age: z4.number(),
+        });
+        const inputSchema = z4.object({
+          users: z4.array(userSchema),
+          count: z4.number(),
+        });
+
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(Object.keys(resultShape)).toEqual(["users", "count"]);
+
+        // The users property should be an array with untransformed element schema
+        expect(resultShape.users).toBeInstanceOf(z4.ZodArray);
+        const arrayElement = (resultShape.users as any)._zod.def.element;
+        expect(arrayElement).toBeInstanceOf(z4.ZodObject);
+
+        const elementShape = getInteropZodObjectShape(arrayElement as any);
+        expect(Object.keys(elementShape)).toEqual(["name", "age"]);
+        expect(elementShape.name).toBeInstanceOf(z4.ZodString);
+        expect(elementShape.age).toBeInstanceOf(z4.ZodNumber);
+      });
     });
 
     it("should throw error for non-schema values", () => {

@@ -715,29 +715,68 @@ function isZodTransformV4(schema: InteropZodType): schema is z4.$ZodPipe {
 
 /**
  * Returns the input type of a Zod transform schema, for both v3 and v4.
- * If the schema is not a transform, returns undefined.
+ * If the schema is not a transform, returns undefined. If `recursive` is true,
+ * recursively processes nested object schemas and arrays of object schemas.
  *
  * @param schema - The Zod schema instance (v3 or v4)
+ * @param {boolean} [recursive=false] - Whether to recursively process nested objects/arrays.
  * @returns The input Zod schema of the transform, or undefined if not a transform
  */
 export function interopZodTransformInputSchema(
-  schema: InteropZodType
-): InteropZodType | undefined {
+  schema: InteropZodType,
+  recursive: boolean = false
+): InteropZodType {
   // Zod v3: ._def.schema is the input schema for ZodEffects (transform)
   if (isZodSchemaV3(schema)) {
     if (isZodTransformV3(schema)) {
-      return interopZodTransformInputSchema(schema._def.schema);
+      return interopZodTransformInputSchema(schema._def.schema, recursive);
     }
+    // TODO: v3 schemas aren't recursively handled here
+    // (currently not necessary since zodToJsonSchema handles this)
     return schema;
   }
 
   // Zod v4: _def.type is the input schema for ZodEffects (transform)
   if (isZodSchemaV4(schema)) {
+    let outputSchema: InteropZodType = schema;
     if (isZodTransformV4(schema)) {
-      const inner = interopZodTransformInputSchema(schema._zod.def.in);
-      return inner ?? schema;
+      outputSchema = interopZodTransformInputSchema(
+        schema._zod.def.in,
+        recursive
+      );
     }
-    return schema;
+    if (recursive) {
+      // Handle nested object schemas
+      if (isZodObjectV4(outputSchema)) {
+        const outputShape: Mutable<z4.$ZodShape> = outputSchema._zod.def.shape;
+        for (const [key, keySchema] of Object.entries(
+          outputSchema._zod.def.shape
+        )) {
+          outputShape[key] = interopZodTransformInputSchema(
+            keySchema,
+            recursive
+          ) as z4.$ZodType;
+        }
+        outputSchema = clone<ZodObjectV4>(outputSchema, {
+          ...outputSchema._zod.def,
+          shape: outputShape,
+        });
+      }
+      // Handle nested array schemas
+      else if (isZodArrayV4(outputSchema)) {
+        const elementSchema = interopZodTransformInputSchema(
+          outputSchema._zod.def.element,
+          recursive
+        );
+        outputSchema = clone<z4.$ZodArray>(outputSchema, {
+          ...outputSchema._zod.def,
+          element: elementSchema as z4.$ZodType,
+        });
+      }
+    }
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(outputSchema as z4.$ZodType, meta);
+    return outputSchema;
   }
 
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");

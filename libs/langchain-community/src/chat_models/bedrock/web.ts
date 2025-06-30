@@ -52,10 +52,14 @@ type AnthropicTool = Record<string, unknown>;
 
 type BedrockChatToolType = BindToolsInput | AnthropicTool;
 
+/**
+ * @see https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html#Concepts.RegionsAndAvailabilityZones.Regions
+ */
 const AWS_REGIONS = [
   "us",
   "sa",
   "me",
+  "mx",
   "il",
   "eu",
   "cn",
@@ -63,6 +67,7 @@ const AWS_REGIONS = [
   "ap",
   "af",
   "us-gov",
+  "apac",
 ];
 
 const ALLOWED_MODEL_PROVIDERS = [

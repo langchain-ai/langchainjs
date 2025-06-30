@@ -68,6 +68,7 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   expect(message.usage_metadata?.output_tokens).toBeGreaterThan(0);
   expect(message.usage_metadata?.total_tokens).toBeGreaterThan(0);
   expect(message.response_metadata.model_name).toBeDefined();
+  expect(message.response_metadata.service_tier).toBeDefined();
   for (const toolOutput of (message.additional_kwargs.tool_outputs ??
     []) as Record<string, unknown>[]) {
     expect(toolOutput.id).toBeDefined();
@@ -254,6 +255,24 @@ test("Test function calling and structured output", async () => {
   parsed = schema.parse(JSON.parse(response.text));
   expect(parsed).toEqual(response.additional_kwargs.parsed);
   expect(parsed.response).toBeDefined();
+});
+
+test("Test tool binding with optional zod fields", async () => {
+  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const multiply = tool((args) => args.x * args.y, {
+    name: "multiply",
+    description: "Multiply two numbers",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+      foo: z.number().optional(),
+    }),
+  });
+  const response = await llm
+    .bindTools([multiply], { strict: true })
+    .invoke("whats 5 * 4");
+  expect(response.tool_calls?.[0].args).toHaveProperty("foo");
+  expect(response.tool_calls?.[0].args.foo).toBe(null);
 });
 
 test("Test reasoning", async () => {
