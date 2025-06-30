@@ -29622,7 +29622,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^4.32.1, openai@npm:^4.41.1":
+"openai@npm:*, openai@npm:^4.32.1":
   version: 4.96.0
   resolution: "openai@npm:4.96.0"
   dependencies:
@@ -29644,6 +29644,25 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
+  languageName: node
+  linkType: hard
+
+"openai@npm:4.28.0":
+  version: 4.28.0
+  resolution: "openai@npm:4.28.0"
+  dependencies:
+    "@types/node": ^18.11.18
+    "@types/node-fetch": ^2.6.4
+    abort-controller: ^3.0.0
+    agentkeepalive: ^4.2.1
+    digest-fetch: ^1.3.0
+    form-data-encoder: 1.7.2
+    formdata-node: ^4.3.2
+    node-fetch: ^2.6.7
+    web-streams-polyfill: ^3.2.1
+  bin:
+    openai: bin/cli
+  checksum: bc572c9ac2a149722193d9f8e88a95fc2da021be9d18e36d5e840ce673dab78943f5b406e2a20d1044453fb259c7d1e10d2e2e34a92d94d73afc24832a183249
   languageName: node
   linkType: hard
 
