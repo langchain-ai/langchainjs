@@ -1,0 +1,29 @@
+---
+sidebar_class_name: hidden
+hide_table_of_contents: true
+---
+
+# LLM Semantic Caching
+
+[Caching LLM calls](/docs/how_to/chat_model_caching) can be useful for testing, cost savings, and speed.
+
+## Caching LLM Responses: Semantic vs. Key-Value Caching
+
+Currently, there are two methods for caching LLM responses: **semantic caching** and **key-value caching**.
+
+_Key-value LLM caching guide:_
+See [LLM Cache how-to guide](/docs/how_to/llm_caching)
+
+### Key-Value Caching
+
+Key-value caching stores responses based on exact query (LLM prompt) matches. When the same request is made again, the cached LLM response is retrieved. Key-value caching is fast, but its shortcoming is that even small changes in the prompt—such as punctuation differences or slight wording variations (e.g., _"yes"_ vs. _"yeah"_)—can cause a cache miss, leading to a fresh LLM call.
+
+### Semantic Caching
+
+Semantic caching improves upon this by relying on the meaning of the prompt rather than exact matches. If a new LLM prompt is semantically similar to a previously cached one, the stored response is retrieved and reused, reducing LLM usage costs. A typical implementation of semantic caching involves storing prompts as embeddings and using similarity search to identify a cache hit.
+
+_Semantic Caching Guides:_
+
+import { IndexTable } from "@theme/FeatureTables";
+
+<IndexTable />
