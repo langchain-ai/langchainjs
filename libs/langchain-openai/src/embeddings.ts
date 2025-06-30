@@ -73,8 +73,8 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  *
  * ```
  */
-export class OpenAIEmbeddings
-  extends Embeddings
+export class OpenAIEmbeddings<TOutput = number[]>
+  extends Embeddings<TOutput>
   implements Partial<OpenAIEmbeddingsParams>
 {
   model = "text-embedding-ada-002";
@@ -154,7 +154,7 @@ export class OpenAIEmbeddings
    * @param texts Array of documents to generate embeddings for.
    * @returns Promise that resolves to a 2D array of embeddings for each document.
    */
-  async embedDocuments(texts: string[]): Promise<number[][]> {
+  async embedDocuments(texts: string[]): Promise<TOutput[]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
@@ -175,12 +175,12 @@ export class OpenAIEmbeddings
     });
     const batchResponses = await Promise.all(batchRequests);
 
-    const embeddings: number[][] = [];
+    const embeddings: TOutput[] = [];
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
       const { data: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse[j].embedding);
+        embeddings.push(batchResponse[j].embedding as TOutput);
       }
     }
     return embeddings;
@@ -192,7 +192,7 @@ export class OpenAIEmbeddings
    * @param text Document to generate an embedding for.
    * @returns Promise that resolves to an embedding for the document.
    */
-  async embedQuery(text: string): Promise<number[]> {
+  async embedQuery(text: string): Promise<TOutput> {
     const params: OpenAIClient.EmbeddingCreateParams = {
       model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
@@ -204,7 +204,7 @@ export class OpenAIEmbeddings
       params.encoding_format = this.encodingFormat;
     }
     const { data } = await this.embeddingWithRetry(params);
-    return data[0].embedding;
+    return data[0].embedding as TOutput;
   }
 
   /**

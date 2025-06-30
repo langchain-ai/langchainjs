@@ -6,7 +6,7 @@ import { AsyncCaller, AsyncCallerParams } from "./utils/async_caller.js";
  */
 export type EmbeddingsParams = AsyncCallerParams;
 
-export interface EmbeddingsInterface {
+export interface EmbeddingsInterface<TOutput = number[]> {
   /**
    * An abstract method that takes an array of documents as input and
    * returns a promise that resolves to an array of vectors for each
@@ -14,7 +14,7 @@ export interface EmbeddingsInterface {
    * @param documents An array of documents to be embedded.
    * @returns A promise that resolves to an array of vectors for each document.
    */
-  embedDocuments(documents: string[]): Promise<number[][]>;
+  embedDocuments(documents: string[]): Promise<TOutput[]>;
 
   /**
    * An abstract method that takes a single document as input and returns a
@@ -22,14 +22,16 @@ export interface EmbeddingsInterface {
    * @param document A single document to be embedded.
    * @returns A promise that resolves to a vector for the query document.
    */
-  embedQuery(document: string): Promise<number[]>;
+  embedQuery(document: string): Promise<TOutput>;
 }
 
 /**
  * An abstract class that provides methods for embedding documents and
  * queries using LangChain.
  */
-export abstract class Embeddings implements EmbeddingsInterface {
+export abstract class Embeddings<TOutput = number[]>
+  implements EmbeddingsInterface<TOutput>
+{
   /**
    * The async caller should be used by subclasses to make any async calls,
    * which will thus benefit from the concurrency and retry logic.
@@ -47,7 +49,7 @@ export abstract class Embeddings implements EmbeddingsInterface {
    * @param documents An array of documents to be embedded.
    * @returns A promise that resolves to an array of vectors for each document.
    */
-  abstract embedDocuments(documents: string[]): Promise<number[][]>;
+  abstract embedDocuments(documents: string[]): Promise<TOutput[]>;
 
   /**
    * An abstract method that takes a single document as input and returns a
@@ -55,5 +57,5 @@ export abstract class Embeddings implements EmbeddingsInterface {
    * @param document A single document to be embedded.
    * @returns A promise that resolves to a vector for the query document.
    */
-  abstract embedQuery(document: string): Promise<number[]>;
+  abstract embedQuery(document: string): Promise<TOutput>;
 }
