@@ -46,12 +46,9 @@ test("Hybridsearch with limit", async () => {
   };
   const weaviateArgs = {
     client,
-    indexName: collectionName,
-    metadataKeys: ["title", "foo"]
+    schema,
   };
   try {
-    
-    await client.collections.create(schema);
     const store = await WeaviateStore.fromTexts(
       ["hello world", "hi there", "how are you", "bye now"],
       [
@@ -67,7 +64,7 @@ test("Hybridsearch with limit", async () => {
     const results = await store.hybridSearch("hello world", {
       limit: 1,
     });
-    // console.log(results)
+
     expect(results).toEqual([
       new Document({
         id: expect.any(String) as unknown as string,
@@ -76,42 +73,40 @@ test("Hybridsearch with limit", async () => {
       }),
     ]);
   } finally {
-    await client.collections.delete(weaviateArgs.indexName);
+    await client.collections.delete(weaviateArgs.schema.name);
   }
 });
 
 test("Hybridsearch with named vectors", async () => {
   const embeddings = new OpenAIEmbeddings();
+  const schemaWithNamedVectors = {
+    name: collectionName,
+    description: "A simple dataset",
+    properties: [
+      {
+        name: "title",
+        dataType: dataType.TEXT,
+        vectorizePropertyName: true, // (Optional)
+        tokenization: tokenization.LOWERCASE, // (Optional)
+      },
+      {
+        name: "foo",
+        dataType: dataType.TEXT,
+      },
+    ],
+    vectorizers: [
+      vectorizer.text2VecOpenAI({
+        name: "title",
+        sourceProperties: ["title"], // (Optional) Set the source property(ies)
+        // vectorIndexConfig: configure.vectorIndex.hnsw()   // (Optional) Set the vector index configuration
+      }),
+    ],
+  };
   const weaviateArgs = {
     client,
-    indexName: collectionName,
-    metadataKeys: ["title", "foo"],
+    schema: schemaWithNamedVectors,
   };
   try {
-    const schemaWithNamedVectors = {
-      name: collectionName,
-      description: "A simple dataset",
-      properties: [
-        {
-          name: "title",
-          dataType: dataType.TEXT,
-          vectorizePropertyName: true, // (Optional)
-          tokenization: tokenization.LOWERCASE, // (Optional)
-        },
-        {
-          name: "foo",
-          dataType: dataType.TEXT,
-        },
-      ],
-      vectorizers: [
-        vectorizer.text2VecOpenAI({
-          name: "title",
-          sourceProperties: ["title"],                // (Optional) Set the source property(ies)
-          // vectorIndexConfig: configure.vectorIndex.hnsw()   // (Optional) Set the vector index configuration
-        }),
-      ],
-    };
-    await client.collections.create(schemaWithNamedVectors);
     const store = await WeaviateStore.fromTexts(
       ["hello world", "hi there", "how are you", "bye now"],
       [
@@ -128,7 +123,7 @@ test("Hybridsearch with named vectors", async () => {
       limit: 1,
       targetVector: ["title"],
     });
-    // console.log(results)
+
     expect(results).toEqual([
       new Document({
         id: expect.any(String) as unknown as string,
@@ -137,35 +132,33 @@ test("Hybridsearch with named vectors", async () => {
       }),
     ]);
   } finally {
-    await client.collections.delete(weaviateArgs.indexName);
+    await client.collections.delete(weaviateArgs.schema.name);
   }
 });
 
 test("Hybridsearch with rerank", async () => {
   const embeddings = new OpenAIEmbeddings();
+  const schemaWithReranker = {
+    name: collectionName,
+    description: "A simple dataset",
+    properties: [
+      {
+        name: "title",
+        dataType: dataType.TEXT,
+      },
+      {
+        name: "foo",
+        dataType: dataType.TEXT,
+      },
+    ],
+    vectorizers: vectorizer.text2VecOpenAI(),
+    reranker: weaviate.configure.reranker.cohere(),
+  };
   const weaviateArgs = {
     client,
-    indexName: collectionName,
-    metadataKeys: ["title", "foo"],
+    schema: schemaWithReranker,
   };
   try {
-    const schemaWithReranker = {
-      name: collectionName,
-      description: "A simple dataset",
-      properties: [
-        {
-          name: "title",
-          dataType: dataType.TEXT,
-        },
-        {
-          name: "foo",
-          dataType: dataType.TEXT,
-        },
-      ],
-      vectorizers: vectorizer.text2VecOpenAI(),
-      reranker: weaviate.configure.reranker.cohere(),
-    };
-    await client.collections.create(schemaWithReranker);
     const store = await WeaviateStore.fromTexts(
       ["hello world", "hi there", "how are you", "bye now"],
       [
@@ -185,7 +178,7 @@ test("Hybridsearch with rerank", async () => {
         query: "greeting",
       },
     });
-    // console.log(results)
+
     expect(results).toEqual([
       new Document({
         id: expect.any(String) as unknown as string,
@@ -194,7 +187,7 @@ test("Hybridsearch with rerank", async () => {
       }),
     ]);
   } finally {
-    await client.collections.delete(weaviateArgs.indexName);
+    await client.collections.delete(weaviateArgs.schema.name);
   }
 });
 
