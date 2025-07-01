@@ -52,6 +52,34 @@ import {
  */
 export type PerplexityRole = "system" | "user" | "assistant";
 
+export interface WebSearchOptions {
+  /**
+   * Determines how much search context is retrieved for the model.
+   * Options are: low (minimizes context for cost savings but less comprehensive answers), medium (balanced approach suitable for most queries), and high (maximizes context for comprehensive answers but at higher cost).
+   */
+  search_context_size?: "low" | "medium" | "high";
+
+  /**
+   * To refine search results based on geography, you can specify an approximate user location.
+   */
+  user_location?: {
+    /**
+     * The latitude of the user's location.
+     */
+    latitude: number;
+
+    /**
+     * The longitude of the user's location.
+     */
+    longitude: number;
+
+    /**
+     * The two letter ISO country code of the user's location.
+     */
+    country: string;
+  };
+}
+
 /**
  * Interface defining the parameters for the Perplexity chat model.
  */
@@ -112,8 +140,10 @@ export interface PerplexityChatInput extends BaseChatModelParams {
   /** Filters search results to only include content published before this date. */
   searchBeforeDateFilter?: string;
 
-  /** Configuration for using web search in model responses. */
-  webSearchOptions?: Record<string, unknown>;
+  /**
+   * Configuration for using web search in model responses.
+   */
+  webSearchOptions?: WebSearchOptions;
 }
 
 export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
@@ -174,7 +204,7 @@ export class ChatPerplexity
 
   searchBeforeDateFilter?: string;
 
-  webSearchOptions?: Record<string, unknown>;
+  webSearchOptions?: WebSearchOptions;
 
   private client: OpenAI;
 
@@ -241,7 +271,7 @@ export class ChatPerplexity
       reasoning_effort: this.reasoningEffort,
       search_after_date_filter: this.searchAfterDateFilter,
       search_before_date_filter: this.searchBeforeDateFilter,
-      web_search_options: this.webSearchOptions,
+      web_search_options: this.webSearchOptions as Record<string, unknown>, // Cast WebSearchOptions to generic type to avoid conflict with OpenAI's WebSearchOptions interface
     };
   }
 
