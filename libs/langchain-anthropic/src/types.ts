@@ -29,6 +29,7 @@ export type AnthropicToolChoice =
   | "none"
   | string;
 export type ChatAnthropicToolType = Anthropic.Messages.Tool | BindToolsInput;
+
 export type AnthropicTextBlockParam = Anthropic.Messages.TextBlockParam;
 export type AnthropicImageBlockParam = Anthropic.Messages.ImageBlockParam;
 export type AnthropicToolUseBlockParam = Anthropic.Messages.ToolUseBlockParam;
@@ -44,9 +45,21 @@ export type AnthropicWebSearchToolResultBlockParam =
   Anthropic.Messages.WebSearchToolResultBlockParam;
 export type AnthropicWebSearchResultBlockParam =
   Anthropic.Messages.WebSearchResultBlockParam;
+// TODO(hntrl, 2025-07-16): replace this with sdk type when it is released
+export type AnthropicSearchResultBlockParam = {
+  type: "search_result";
+  content: AnthropicTextBlockParam[];
+  title: string;
+  source: string;
+  /**
+   * Create a cache control breakpoint at this content block.
+   */
+  cache_control?: Anthropic.CacheControlEphemeral | null;
+  citations?: { enabled: boolean };
+};
 
 // Union of all possible content block types including server tool use
-export type AnthropicContentBlock =
+export type ChatAnthropicContentBlock =
   | AnthropicTextBlockParam
   | AnthropicImageBlockParam
   | AnthropicToolUseBlockParam
@@ -56,7 +69,8 @@ export type AnthropicContentBlock =
   | AnthropicRedactedThinkingBlockParam
   | AnthropicServerToolUseBlockParam
   | AnthropicWebSearchToolResultBlockParam
-  | AnthropicWebSearchResultBlockParam;
+  | AnthropicWebSearchResultBlockParam
+  | AnthropicSearchResultBlockParam;
 
 export function isAnthropicImageBlockParam(
   block: unknown
