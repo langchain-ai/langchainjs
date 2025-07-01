@@ -16,9 +16,9 @@ import {
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4";
+import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4/core";
 import { ResponseFormatJSONSchema } from "openai/resources";
-import { zodResponseFormat } from "openai/helpers/zod.js";
+import { zodResponseFormat } from "openai/helpers/zod";
 import { addLangChainErrorFields } from "./errors.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

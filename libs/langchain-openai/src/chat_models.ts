@@ -127,6 +127,8 @@ interface OpenAILLMOutput {
   };
 }
 
+export type { OpenAICallOptions, OpenAIChatInput };
+
 function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
   return "type" in tool && tool.type !== "function";
 }
@@ -2742,10 +2744,10 @@ export class ChatOpenAICompletions<
   }
 }
 
-type ChatOpenAICallOptions = ChatOpenAICompletionsCallOptions &
+export type ChatOpenAICallOptions = ChatOpenAICompletionsCallOptions &
   ChatOpenAIResponsesCallOptions;
 
-interface ChatOpenAIFields extends BaseChatOpenAIFields {
+export interface ChatOpenAIFields extends BaseChatOpenAIFields {
   /**
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.
@@ -3399,6 +3401,7 @@ export class ChatOpenAI<
 
     this.responses = bindChatOpenAIConfig(this.responses, config);
     this.completions = bindChatOpenAIConfig(this.completions, config);
+    // Proxy chat class is also bound for `_useResponsesApi`,
     return bindChatOpenAIConfig(this, config);
   }
 }
