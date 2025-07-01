@@ -1605,7 +1605,8 @@ export class ChatOpenAIResponses<
     });
   }
 
-  private _convertResponsesMessageToBaseMessage(
+  /** @internal */
+  protected _convertResponsesMessageToBaseMessage(
     response: ResponsesCreateInvoke | ResponsesParseInvoke
   ): BaseMessage {
     if (response.error) {
@@ -1712,7 +1713,7 @@ export class ChatOpenAIResponses<
   }
 
   /** @internal */
-  private _convertResponsesDeltaToBaseMessageChunk(
+  protected _convertResponsesDeltaToBaseMessageChunk(
     chunk: OpenAIClient.Responses.ResponseStreamEvent
   ) {
     const content: Record<string, unknown>[] = [];
@@ -1866,7 +1867,8 @@ export class ChatOpenAIResponses<
     });
   }
 
-  private _convertMessagesToResponsesParams(messages: BaseMessage[]) {
+  /** @internal */
+  protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
         const additional_kwargs = lcMsg.additional_kwargs as
@@ -2129,7 +2131,8 @@ export class ChatOpenAIResponses<
     );
   }
 
-  private _convertReasoningSummary(
+  /** @internal */
+  protected _convertReasoningSummary(
     reasoning: ChatOpenAIReasoningSummary
   ): OpenAIClient.Responses.ResponseReasoningItem {
     // combine summary parts that have the the same index and then remove the indexes
@@ -2160,7 +2163,7 @@ export class ChatOpenAIResponses<
   }
 
   /** @internal */
-  private _reduceChatOpenAITools(
+  protected _reduceChatOpenAITools(
     tools: ChatOpenAIToolType[],
     fields: { stream?: boolean; strict?: boolean }
   ): ResponsesTool[] {
@@ -2602,7 +2605,7 @@ export class ChatOpenAICompletions<
   }
 
   /** @internal */
-  private _convertCompletionsMessageToBaseMessage(
+  protected _convertCompletionsMessageToBaseMessage(
     message: OpenAIClient.Chat.Completions.ChatCompletionMessage,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletion
   ): BaseMessage {
@@ -2660,7 +2663,7 @@ export class ChatOpenAICompletions<
   }
 
   /** @internal */
-  private _convertCompletionsDeltaToBaseMessageChunk(
+  protected _convertCompletionsDeltaToBaseMessageChunk(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,

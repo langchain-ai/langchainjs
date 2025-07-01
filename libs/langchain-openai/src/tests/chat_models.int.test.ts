@@ -25,7 +25,7 @@ import {
   ChatCompletionChunk,
   ChatCompletionMessage,
 } from "openai/resources/index.mjs";
-import { ChatOpenAI } from "../chat_models.js";
+import { ChatOpenAI, ChatOpenAICompletions } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -1253,9 +1253,9 @@ test("Works with maxCompletionTokens with o3", async () => {
   expect(res.content).toEqual("testing");
 });
 
-test.skip("Allow overriding", async () => {
-  class ChatDeepSeek extends ChatOpenAI {
-    protected override _convertOpenAIDeltaToBaseMessageChunk(
+test.skip("Allow overriding completions", async () => {
+  class ChatDeepSeek extends ChatOpenAICompletions {
+    protected override _convertCompletionsDeltaToBaseMessageChunk(
       delta: Record<string, any>,
       rawResponse: ChatCompletionChunk,
       defaultRole?:
@@ -1266,7 +1266,7 @@ test.skip("Allow overriding", async () => {
         | "assistant"
         | "tool"
     ) {
-      const messageChunk = super._convertOpenAIDeltaToBaseMessageChunk(
+      const messageChunk = super._convertCompletionsDeltaToBaseMessageChunk(
         delta,
         rawResponse,
         defaultRole
@@ -1276,15 +1276,14 @@ test.skip("Allow overriding", async () => {
       return messageChunk;
     }
 
-    protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+    protected override _convertCompletionsMessageToBaseMessage(
       message: ChatCompletionMessage,
       rawResponse: ChatCompletion
     ) {
-      const langChainMessage =
-        super._convertOpenAIChatCompletionMessageToBaseMessage(
-          message,
-          rawResponse
-        );
+      const langChainMessage = super._convertCompletionsMessageToBaseMessage(
+        message,
+        rawResponse
+      );
       langChainMessage.additional_kwargs.reasoning_content = (
         message as any
       ).reasoning_content;
