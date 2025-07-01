@@ -2566,17 +2566,17 @@ export class ChatOpenAICompletions<
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    requestOptions: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    requestOptions: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParams,
-    requestOptions: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
