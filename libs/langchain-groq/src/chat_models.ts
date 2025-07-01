@@ -315,9 +315,6 @@ function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletionsAPI.ChatCompletionMessage> {
   return messages.map((message): ChatCompletionsAPI.ChatCompletionMessage => {
-    if (typeof message.content !== "string") {
-      throw new Error("Non string message content not supported");
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
