@@ -53,11 +53,14 @@ export type TavilySearchParamsBase = {
    */
   include_answer?: boolean | "basic" | "advanced";
   /**
-   * Whether to include the raw content of the search results.
+   * Include the cleaned and parsed HTML content of each search result. 
+   * "markdown" returns search result content in markdown format. 
+   * "text" returns the plain text from the results and may increase latency. 
+   * If true, defaults to "markdown"
    *
    * @default false
    */
-  include_raw_content?: boolean;
+  include_raw_content?: boolean | "markdown" | "text";
   /**
    * A list of domains to specifically include in the search results.
    */
@@ -66,6 +69,13 @@ export type TavilySearchParamsBase = {
    * A list of domains to specifically exclude from the search results.
    */
   exclude_domains?: string[];
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
@@ -125,6 +135,22 @@ export type TavilyExtractParams = {
    * @default "basic"
    */
   extract_depth?: "basic" | "advanced";
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
+
+  /**
+   * The format of the extracted web page content. 
+   * "markdown" returns content in markdown format. 
+   * "text" returns plain text and may increase latency.
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
 } & Record<string, unknown>;
 
 /**
@@ -251,6 +277,13 @@ export type TavilyCrawlParams = {
    * @default false
    */
   includeImages?: boolean;
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
 } & Record<string, unknown>;
 
 /**

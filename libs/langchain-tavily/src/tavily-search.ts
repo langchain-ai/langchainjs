@@ -47,11 +47,14 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   includeAnswer?: boolean;
 
   /**
-   * Include the cleaned and parsed HTML content of each search result.
+   * Include the cleaned and parsed HTML content of each search result. 
+   * "markdown" returns search result content in markdown format. 
+   * "text" returns the plain text from the results and may increase latency. 
+   * If true, defaults to "markdown"
    *
-   * @default false
+   * @default "markdown"
    */
-  includeRawContent?: boolean;
+  includeRawContent?: boolean | "markdown" | "text";
 
   /**
    * A list of domains to specifically include in the search results.
@@ -87,6 +90,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default "general"
    */
   timeRange?: TimeRange;
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  includeFavicon?: boolean;
 
   /**
    * The name of the tool.
@@ -263,7 +273,7 @@ Use "finance" for markets, investments, economic data, or financial news.
 
 Use "news" ONLY for politics, sports, or major current events covered by 
 mainstream media - NOT simply because a query asks for "new" information.`
-    ),
+    )
 });
 
 /**
@@ -309,7 +319,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeAnswer?: boolean;
 
-  includeRawContent?: boolean;
+  includeRawContent?: boolean | "markdown" | "text";
 
   includeDomains?: string[];
 
@@ -328,6 +338,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
   country?: string;
 
   autoParameters?: boolean;
+
+  includeFavicon?: boolean;
 
   handleToolError = true;
 
@@ -374,6 +386,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.chunksPerSource = params.chunksPerSource;
     this.country = params.country;
     this.autoParameters = params.autoParameters;
+    this.includeFavicon = params.includeFavicon;
   }
 
   async _call(
@@ -414,6 +427,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         chunksPerSource: this.chunksPerSource,
         country: this.country,
         autoParameters: this.autoParameters,
+        includeFavicon: this.includeFavicon,
       });
 
       if (

@@ -13,6 +13,8 @@ export interface TavilyExtractInput {
   urls: string[];
   extractDepth?: ExtractDepth;
   includeImages?: boolean;
+  format?: "markdown" | "text";
+  includeFavicon?: boolean;
 }
 
 export type TavilyExtractAPIRetrieverFields = ToolParams & {
@@ -41,6 +43,13 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
    * @default "markdown"
    */
   format?: "markdown" | "text";
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  includeFavicon?: boolean;
 
   /**
    * The name of the tool.
@@ -141,6 +150,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
   formatDefault?: "markdown" | "text";
 
+  includeFaviconDefault?: boolean;
+
   private apiWrapper: TavilyExtractAPIWrapper;
 
   constructor(params: TavilyExtractAPIRetrieverFields = {}) {
@@ -167,6 +178,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     this.extractDepthDefault = params.extractDepth;
     this.includeImagesDefault = params.includeImages;
     this.formatDefault = params.format;
+    this.includeFaviconDefault = params.includeFavicon;
   }
 
   async _call(
@@ -184,6 +196,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         extractDepth: effectiveExtractDepth,
         includeImages: effectiveIncludeImages,
         format: this.formatDefault,
+        includeFavicon: this.includeFaviconDefault,
       });
 
       if (
@@ -200,6 +213,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
           extractDepth: effectiveExtractDepth,
           includeImages: effectiveIncludeImages,
           format: this.formatDefault,
+          includeFavicon: this.includeFaviconDefault,
         };
         const suggestions = generateSuggestions(searchParams);
 

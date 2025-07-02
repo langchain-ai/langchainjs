@@ -9,12 +9,6 @@ import {
   CrawlCategory,
 } from "./utils.js";
 
-export interface TavilyExtractInput {
-  urls: string[];
-  extractDepth?: ExtractDepth;
-  includeImages?: boolean;
-}
-
 export type TavilyCrawlAPIRetrieverFields = ToolParams & {
   /**
    * The API key used for authentication with the Tavily Search API.
@@ -111,6 +105,13 @@ export type TavilyCrawlAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeImages?: boolean;
+
+  /**
+   * Include the favicon URL for each crawl result.
+   *
+   * @default false
+   */
+  includeFavicon?: boolean;
 
   /**
    * The name of the tool.
@@ -263,6 +264,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   categoriesDefault?: CrawlCategory[];
 
+  includeFaviconDefault?: boolean;
+
   private apiWrapper: TavilyCrawlAPIWrapper;
 
   constructor(params: TavilyCrawlAPIRetrieverFields = {}) {
@@ -299,6 +302,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
     this.excludeDomainsDefault = params.excludeDomains;
     this.allowExternalDefault = params.allowExternal;
     this.categoriesDefault = params.categories;
+    this.includeFaviconDefault = params.includeFavicon;
   }
 
   async _call(
@@ -331,6 +335,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
       const effectiveExcludeDomains =
         this.excludeDomainsDefault ?? excludeDomains;
       const effectiveAllowExternal = this.allowExternalDefault ?? allowExternal;
+      const effectiveIncludeFavicon = this.includeFaviconDefault;
       // Remove duplicates from categories and convert to array
       let effectiveCategories: CrawlCategory[] | undefined;
       if (this.categoriesDefault) {
@@ -356,6 +361,7 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
         excludeDomains: effectiveExcludeDomains,
         allowExternal: effectiveAllowExternal,
         categories: effectiveCategories,
+        includeFavicon: effectiveIncludeFavicon,
       });
 
       if (
