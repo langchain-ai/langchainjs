@@ -86,7 +86,7 @@ test("WeaviateStore", async () => {
 });
 
 test("WeaviateStore upsert + delete", async () => {
-  // Something wrong with the weaviate-ts-client types, so we need to disable
+  // Something wrong with the weaviate-client types, so we need to disable
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (weaviate as any).client({
     scheme:

@@ -10,7 +10,8 @@
     "langchain-core",
     "libs/*",
     "examples",
-    "docs/*"
+    "docs/*",
+    "internal/*"
   ],
   "repository": {
     "type": "git",

@@ -717,6 +717,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     object: response.object,
     status: response.status,
     user: response.user,
+    service_tier: response.service_tier,
 
     // for compatibility with chat completion calls.
     model_name: response.model,
@@ -1199,6 +1200,12 @@ export interface ChatOpenAICallOptions
    * If set, the Responses API will be used to fulfill the request.
    */
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex"
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: ResponsesCreateParams["service_tier"];
 }
 
 export interface ChatOpenAIFields
@@ -1773,6 +1780,7 @@ export class ChatOpenAI<
       "response_format",
       "seed",
       "reasoning_effort",
+      "service_tier",
     ];
   }
 
@@ -1924,6 +1932,12 @@ export class ChatOpenAI<
    */
   zdrEnabled?: boolean | undefined;
 
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: ResponsesCreateParams["service_tier"];
+
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
 
@@ -1983,6 +1997,10 @@ export class ChatOpenAI<
     // Else leave undefined so it's not passed to OpenAI.
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
+
+    if (fields?.service_tier !== undefined) {
+      this.service_tier = fields.service_tier;
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
@@ -2211,6 +2229,12 @@ export class ChatOpenAI<
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
+    }
+    if (this.service_tier !== undefined) {
+      params.service_tier = this.service_tier;
+    }
+    if (options?.service_tier !== undefined) {
+      params.service_tier = options.service_tier;
     }
     const reasoning = this.getReasoningParams(options);
     if (reasoning !== undefined && reasoning.effort !== undefined) {
@@ -2460,6 +2484,7 @@ export class ChatOpenAI<
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
         generationInfo.model_name = data.model;
+        generationInfo.service_tier = data.service_tier;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
