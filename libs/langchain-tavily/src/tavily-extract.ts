@@ -144,13 +144,13 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  extractDepthDefault?: ExtractDepth;
+  extractDepth?: ExtractDepth;
 
-  includeImagesDefault?: boolean;
+  includeImages?: boolean;
 
-  formatDefault?: "markdown" | "text";
+  format?: "markdown" | "text";
 
-  includeFaviconDefault?: boolean;
+  includeFavicon?: boolean;
 
   private apiWrapper: TavilyExtractAPIWrapper;
 
@@ -175,10 +175,10 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
       this.apiWrapper = new TavilyExtractAPIWrapper({});
     }
 
-    this.extractDepthDefault = params.extractDepth;
-    this.includeImagesDefault = params.includeImages;
-    this.formatDefault = params.format;
-    this.includeFaviconDefault = params.includeFavicon;
+    this.extractDepth = params.extractDepth;
+    this.includeImages = params.includeImages;
+    this.format = params.format;
+    this.includeFavicon = params.includeFavicon;
   }
 
   async _call(
@@ -188,15 +188,15 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     try {
       const { urls, extractDepth, includeImages } = input;
 
-      const effectiveExtractDepth = this.extractDepthDefault ?? extractDepth;
-      const effectiveIncludeImages = this.includeImagesDefault ?? includeImages;
+      const effectiveExtractDepth = this.extractDepth ?? extractDepth;
+      const effectiveIncludeImages = this.includeImages ?? includeImages;
 
       const rawResults = await this.apiWrapper.rawResults({
         urls,
         extractDepth: effectiveExtractDepth,
         includeImages: effectiveIncludeImages,
-        format: this.formatDefault,
-        includeFavicon: this.includeFaviconDefault,
+        format: this.format,
+        includeFavicon: this.includeFavicon,
       });
 
       if (
@@ -212,8 +212,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         const searchParams = {
           extractDepth: effectiveExtractDepth,
           includeImages: effectiveIncludeImages,
-          format: this.formatDefault,
-          includeFavicon: this.includeFaviconDefault,
+          format: this.format,
+          includeFavicon: this.includeFavicon,
         };
         const suggestions = generateSuggestions(searchParams);
 
