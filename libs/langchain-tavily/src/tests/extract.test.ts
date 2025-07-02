@@ -37,8 +37,8 @@ describe("TavilyExtract", () => {
 
     expect(tool.name).toBe("custom_extract");
     expect(tool.description).toBe("Custom description");
-    expect(tool.extractDepthDefault).toBe("advanced");
-    expect(tool.includeImagesDefault).toBe(true);
+    expect(tool.extractDepth).toBe("advanced");
+    expect(tool.includeImages).toBe(true);
   });
 
   test("initializes with custom apiWrapper", () => {
