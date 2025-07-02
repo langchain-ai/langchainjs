@@ -52,32 +52,33 @@ Allowing raw user input to be concatenated into SQL-like clauses - such as `WHER
 Here is an example of unsafe code:
 
 ```typescript
-// Unsafe: user-controlled input injected into query string
-const status = req.query.status;  // e.g. "active' OR 1=1"
-const query = `SELECT * FROM c WHERE c.status = '${status}'`;
-const { resources } = await container.items.query(query).fetchAll();
-```
+import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
 
-if the attacker provides `active' OR 1=1`, then the query becomes:
+const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {});
 
-```typescript
-SELECT * FROM c WHERE c.status = 'active' OR 1=1
-```
-
-which forces the condition to always be true, causing it to bypasses the intended filter and return all user documents.
-
-To prevent injection risk, use a parameterized query by defining a placeholder like `@status` in the query string and binding user input separately as a parameter, ensuring it is treated strictly as data and not executable query logic.
-
-```typescript
-const status = req.query.status;
-const queryDef = {
-  query: "SELECT * FROM c WHERE c.status = @status",
-  parameters: [{ name: "@status", value: status }],
+// Unsafe: user-controlled input injected into the query
+const userId = req.query.userId;  // e.g. "123' OR 1=1"
+const unsafeQuerySpec = {
+  query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`
 };
-const { resources } = await container.items.query(queryDef).fetchAll();
+
+await store.delete(unsafeQuerySpec);
 ```
 
-Now, if the attacker enters `active' OR 1=1`, the input will be treated as a literal string value to match, and not as part of the query structure.
+If the attacker provides `123 OR 1=1`, then the query becomes `SELECT * FROM c WHERE c.metadata.userId = '123' OR 1=1`, which forces the condition to always be true, causing it to bypass the intended filter and delete all documents.
+
+To prevent this injection risk, you define a placeholder like `@userId` and Cosmos DB binds the user input separately as a parameter, ensuring it is treated strictly as data and not executable query logic as shown below.
+
+```typescript
+const safeQuerySpec = {
+  query: "SELECT * FROM c WHERE c.metadata.userId = @userId",
+  parameters: [{ name: "@userId", value: userId }]
+};
+
+await store.delete(safeQuerySpec);
+```
+
+Now, if the attacker enters `123 OR 1=1`, the input will be treated as a literal string value to match, and not as part of the query structure.
 
 Please refer to the official documentation on [parameterized queries in Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries) for more usage examples and best practices.
 
