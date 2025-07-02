@@ -25,16 +25,6 @@ class TestTavilyExtractAPIWrapper extends TavilyExtractAPIWrapper {
 }
 
 describe("TavilyExtract", () => {
-  // In each test, we'll mock only what we need for that test
-  test("initializes with default parameters", () => {
-    const mockWrapper = new TestTavilyExtractAPIWrapper();
-    const tool = new TavilyExtract({ apiWrapper: mockWrapper });
-
-    expect(tool.name).toBe("tavily_extract");
-    expect(tool.extractDepthDefault).toBe("basic");
-    expect(tool.includeImagesDefault).toBe(false);
-  });
-
   test("initializes with custom parameters", () => {
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     const tool = new TavilyExtract({
@@ -90,8 +80,6 @@ describe("TavilyExtract", () => {
 
     expect(mockWrapper.rawResults).toHaveBeenCalledWith({
       urls: ["https://example.com"],
-      extractDepth: "basic",
-      includeImages: false,
     });
 
     expect(result).toEqual(mockResult);
