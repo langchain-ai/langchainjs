@@ -13,6 +13,13 @@ export type TopicType = "general" | "news" | "finance";
  */
 export type TavilySearchAPIRetrieverFields = ToolParams & {
   /**
+   * The base URL to be used for the Tavily Search API.
+   *
+   *
+   */
+  apiBaseUrl?: string;
+
+  /**
    * The maximum number of search results to return.
    *
    * @default 5
@@ -309,9 +316,9 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  maxResults?: number;
+  apiBaseUrl?: string;
 
-  apiKey?: string;
+  maxResults?: number;
 
   includeImages?: boolean;
 
@@ -365,12 +372,16 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
     if (params.apiWrapper) {
       this.apiWrapper = params.apiWrapper;
-    } else if (params.tavilyApiKey) {
-      this.apiWrapper = new TavilySearchAPIWrapper({
-        tavilyApiKey: params.tavilyApiKey,
-      });
     } else {
-      this.apiWrapper = new TavilySearchAPIWrapper({});
+      const apiWrapperParams: { tavilyApiKey?: string; apiBaseUrl?: string } =
+        {};
+      if (params.tavilyApiKey) {
+        apiWrapperParams.tavilyApiKey = params.tavilyApiKey;
+      }
+      if (params.apiBaseUrl) {
+        apiWrapperParams.apiBaseUrl = params.apiBaseUrl;
+      }
+      this.apiWrapper = new TavilySearchAPIWrapper(apiWrapperParams);
     }
 
     this.includeDomains = params.includeDomains;

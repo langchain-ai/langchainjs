@@ -10,6 +10,13 @@ import {
 
 export type TavilyMapAPIRetrieverFields = ToolParams & {
   /**
+   * The base URL to be used for the Tavily Search API.
+   *
+   *
+   */
+  apiBaseUrl?: string;
+
+  /**
    * The API key used for authentication with the Tavily Search API.
    *
    */
@@ -228,6 +235,8 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
+  apiBaseUrl?: string;
+
   maxDepth?: number;
 
   maxBreadth?: number;
@@ -263,12 +272,16 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
     if (params.apiWrapper) {
       this.apiWrapper = params.apiWrapper;
-    } else if (params.tavilyApiKey) {
-      this.apiWrapper = new TavilyMapAPIWrapper({
-        tavilyApiKey: params.tavilyApiKey,
-      });
     } else {
-      this.apiWrapper = new TavilyMapAPIWrapper({});
+      const apiWrapperParams: { tavilyApiKey?: string; apiBaseUrl?: string } =
+        {};
+      if (params.tavilyApiKey) {
+        apiWrapperParams.tavilyApiKey = params.tavilyApiKey;
+      }
+      if (params.apiBaseUrl) {
+        apiWrapperParams.apiBaseUrl = params.apiBaseUrl;
+      }
+      this.apiWrapper = new TavilyMapAPIWrapper(apiWrapperParams);
     }
 
     this.maxDepth = params.maxDepth;

@@ -547,11 +547,13 @@ export type TavilySearchResponse =
 abstract class BaseTavilyAPIWrapper {
   tavilyApiKey?: string;
 
+  apiBaseUrl?: string;
+
   /**
    * Constructs a new instance of the BaseTavilyAPIWrapper.
    * @param fields The fields used to initialize the wrapper.
    */
-  constructor(fields: { tavilyApiKey?: string }) {
+  constructor(fields: { tavilyApiKey?: string; apiBaseUrl?: string }) {
     const apiKey =
       fields.tavilyApiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
     if (!apiKey) {
@@ -560,6 +562,7 @@ abstract class BaseTavilyAPIWrapper {
       );
     }
     this.tavilyApiKey = apiKey;
+    this.apiBaseUrl = fields.apiBaseUrl ?? TAVILY_BASE_URL;
   }
 
   /**
@@ -615,7 +618,7 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     // Convert camelCase to snake_case for API compatibility
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/search`, {
+    const response = await fetch(`${this.apiBaseUrl}/search`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
@@ -651,7 +654,7 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
 
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/extract`, {
+    const response = await fetch(`${this.apiBaseUrl}/extract`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
@@ -684,7 +687,7 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
 
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/crawl`, {
+    const response = await fetch(`${this.apiBaseUrl}/crawl`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
@@ -717,7 +720,7 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
 
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/map`, {
+    const response = await fetch(`${this.apiBaseUrl}/map`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),

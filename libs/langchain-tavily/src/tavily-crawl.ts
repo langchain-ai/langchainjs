@@ -11,6 +11,13 @@ import {
 
 export type TavilyCrawlAPIRetrieverFields = ToolParams & {
   /**
+   * The base URL to be used for the Tavily Search API.
+   *
+   *
+   */
+  apiBaseUrl?: string;
+
+  /**
    * The API key used for authentication with the Tavily Search API.
    *
    */
@@ -256,6 +263,8 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
+  apiBaseUrl?: string;
+
   extractDepth?: ExtractDepth;
 
   includeImages?: boolean;
@@ -299,12 +308,16 @@ export class TavilyCrawl extends StructuredTool<typeof inputSchema> {
 
     if (params.apiWrapper) {
       this.apiWrapper = params.apiWrapper;
-    } else if (params.tavilyApiKey) {
-      this.apiWrapper = new TavilyCrawlAPIWrapper({
-        tavilyApiKey: params.tavilyApiKey,
-      });
     } else {
-      this.apiWrapper = new TavilyCrawlAPIWrapper({});
+      const apiWrapperParams: { tavilyApiKey?: string; apiBaseUrl?: string } =
+        {};
+      if (params.tavilyApiKey) {
+        apiWrapperParams.tavilyApiKey = params.tavilyApiKey;
+      }
+      if (params.apiBaseUrl) {
+        apiWrapperParams.apiBaseUrl = params.apiBaseUrl;
+      }
+      this.apiWrapper = new TavilyCrawlAPIWrapper(apiWrapperParams);
     }
 
     this.extractDepth = params.extractDepth;
