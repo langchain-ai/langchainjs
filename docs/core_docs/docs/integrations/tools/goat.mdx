@@ -104,7 +104,7 @@ const tools = await getOnChainTools({
 
 // 3. Create the agent
 const model = new ChatOpenAI({
-  model: "gpt-4o",
+  model: "gpt-4o-mini",
 });
 
 const agent = createReactAgent({ llm: model, tools: tools });

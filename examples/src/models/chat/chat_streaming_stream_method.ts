@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 
 const chat = new ChatOpenAI({
+  model: "gpt-4o-mini",
   maxTokens: 25,
 });
 

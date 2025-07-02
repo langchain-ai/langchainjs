@@ -56,7 +56,7 @@ export interface FirestoreDBChatMessageHistory {
  * });
  *
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   memory: new BufferMemory({ chatHistory }),
  * });
  *
