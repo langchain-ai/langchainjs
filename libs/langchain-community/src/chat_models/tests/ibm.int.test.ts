@@ -19,11 +19,13 @@ import {
 import { concat } from "@langchain/core/utils/stream";
 import { ChatWatsonx } from "../ibm.js";
 
-describe("Tests for chat", () => {
+const models = ["ibm/granite-3-2-8b-instruct", "mistralai/mistral-large"];
+
+describe.each(models)("Tests for chat %s", (model) => {
   describe("Test ChatWatsonx invoke and generate", () => {
     test("Basic invoke with projectId", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -33,7 +35,7 @@ describe("Tests for chat", () => {
     });
     test("Basic invoke with spaceId", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         spaceId: process.env.WATSONX_AI_SPACE_ID ?? "testString",
@@ -64,7 +66,7 @@ describe("Tests for chat", () => {
     });
     test("Basic generate", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -75,7 +77,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with system message", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -89,7 +91,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with output parser", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -105,7 +107,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with prompt", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -121,7 +123,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with chat conversation", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -143,7 +145,7 @@ describe("Tests for chat", () => {
         totalTokens: 0,
       };
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -160,7 +162,7 @@ describe("Tests for chat", () => {
     });
     test("Timeout", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -173,7 +175,7 @@ describe("Tests for chat", () => {
     }, 5000);
     test("Controller options", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -192,7 +194,7 @@ describe("Tests for chat", () => {
   describe("Test ChatWatsonx invoke and generate with stream mode", () => {
     test("Basic invoke", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -203,7 +205,7 @@ describe("Tests for chat", () => {
     });
     test("Basic generate", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -214,7 +216,7 @@ describe("Tests for chat", () => {
     });
     test("Generate with n>1", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -243,7 +245,7 @@ describe("Tests for chat", () => {
       ];
       let tokenUsed = 0;
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -282,7 +284,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with system message", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -296,7 +298,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with output parser", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -312,7 +314,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with prompt", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -328,7 +330,7 @@ describe("Tests for chat", () => {
     });
     test("Invoke with chat conversation", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -350,7 +352,7 @@ describe("Tests for chat", () => {
         totalTokens: 0,
       };
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -367,7 +369,7 @@ describe("Tests for chat", () => {
     });
     test("Timeout", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -380,7 +382,7 @@ describe("Tests for chat", () => {
     }, 5000);
     test("Controller options", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -399,7 +401,7 @@ describe("Tests for chat", () => {
   describe("Test ChatWatsonx stream", () => {
     test("Basic stream", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -420,7 +422,7 @@ describe("Tests for chat", () => {
     });
     test("Timeout", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -433,7 +435,7 @@ describe("Tests for chat", () => {
     }, 5000);
     test("Controller options", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -455,7 +457,7 @@ describe("Tests for chat", () => {
     test("Token count and response equality", async () => {
       let generation = "";
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -483,7 +485,7 @@ describe("Tests for chat", () => {
     });
     test("Token count usage_metadata", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -507,7 +509,7 @@ describe("Tests for chat", () => {
     });
     test("with n>1", async () => {
       const service = new ChatWatsonx({
-        model: "meta-llama/llama-3-1-70b-instruct",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -527,7 +529,7 @@ describe("Tests for chat", () => {
   describe("Test tool usage", () => {
     test("Passing tool to chat model", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -583,7 +585,7 @@ describe("Tests for chat", () => {
     });
     test("Passing tool to chat model extended", async () => {
       const service = new ChatWatsonx({
-        model: "meta-llama/llama-3-1-70b-instruct",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -638,13 +640,13 @@ describe("Tests for chat", () => {
       for (const tool_call of res.tool_calls) {
         expect(tool_call.name).toBe("calculator");
         expect(typeof tool_call.args?.operation).toBe("string");
-        expect(typeof tool_call.args?.number1).toBe("string");
-        expect(typeof tool_call.args?.number2).toBe("string");
+        expect(typeof tool_call.args?.number1).toBe("number");
+        expect(typeof tool_call.args?.number2).toBe("number");
       }
     });
     test("Binding model-specific formats", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -685,7 +687,7 @@ describe("Tests for chat", () => {
     });
     test("Passing tool to chat model", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -735,7 +737,7 @@ describe("Tests for chat", () => {
     });
     test("Passing tool to chat model and invoking the tools with stream", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -785,13 +787,13 @@ describe("Tests for chat", () => {
       expect(toolMessage?.tool_calls?.length).toBeGreaterThan(1);
     });
     test("React agent creation", async () => {
-      const model = new ChatWatsonx({
+      const chat = new ChatWatsonx({
         projectId: process.env.WATSONX_AI_PROJECT_ID,
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL as string,
         watsonxAIApikey: process.env.WATSONX_AI_APIKEY,
         watsonxAIAuthType: "iam",
         version: "2024-05-31",
-        model: "mistralai/mistral-large",
+        model,
       });
       const testModel = (
         model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>
@@ -800,14 +802,14 @@ describe("Tests for chat", () => {
         if (model instanceof BaseChatModel) return true;
         else throw new Error("Wrong model passed");
       };
-      expect(testModel(model)).toBeTruthy();
+      expect(testModel(chat)).toBeTruthy();
     });
   });
 
   describe("Test withStructuredOutput usage", () => {
     test("Schema with zod", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -830,7 +832,7 @@ describe("Tests for chat", () => {
 
     test("Schema with zod and stream", async () => {
       const service = new ChatWatsonx({
-        model: "meta-llama/llama-3-1-70b-instruct",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -850,14 +852,13 @@ describe("Tests for chat", () => {
       for await (const chunk of res) {
         expect(typeof chunk).toBe("object");
         object = chunk;
-        console.log(chunk);
       }
       expect("setup" in object).toBe(true);
       expect("punchline" in object).toBe(true);
     });
     test("Schema with object", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -884,7 +885,7 @@ describe("Tests for chat", () => {
     });
     test("Schema with rawOutput", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -917,7 +918,7 @@ describe("Tests for chat", () => {
     });
     test("Schema with zod and JSON mode", async () => {
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -960,7 +961,7 @@ describe("Tests for chat", () => {
     test("Single request callback", async () => {
       let callbackFlag = false;
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -981,7 +982,7 @@ describe("Tests for chat", () => {
     test("Single response callback", async () => {
       let callbackFlag = false;
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -1003,7 +1004,7 @@ describe("Tests for chat", () => {
       let callbackFlagReq = false;
       let callbackFlagRes = false;
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -1031,7 +1032,7 @@ describe("Tests for chat", () => {
       let langchainCallback = false;
 
       const service = new ChatWatsonx({
-        model: "mistralai/mistral-large",
+        model,
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",

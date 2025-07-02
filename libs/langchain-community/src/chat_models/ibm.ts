@@ -891,7 +891,8 @@ export class ChatWatsonx<
               type: "function" as const,
               function: {
                 name: functionName,
-                description: asJsonSchema.description,
+                description:
+                  asJsonSchema.description ?? "Tool: " + functionName,
                 parameters: asJsonSchema,
               },
             },
