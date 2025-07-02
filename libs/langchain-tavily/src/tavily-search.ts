@@ -47,12 +47,12 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   includeAnswer?: boolean;
 
   /**
-   * Include the cleaned and parsed HTML content of each search result. 
-   * "markdown" returns search result content in markdown format. 
-   * "text" returns the plain text from the results and may increase latency. 
+   * Include the cleaned and parsed HTML content of each search result.
+   * "markdown" returns search result content in markdown format.
+   * "text" returns the plain text from the results and may increase latency.
    * If true, defaults to "markdown"
    *
-   * @default "markdown"
+   * @default false
    */
   includeRawContent?: boolean | "markdown" | "text";
 
@@ -273,7 +273,7 @@ Use "finance" for markets, investments, economic data, or financial news.
 
 Use "news" ONLY for politics, sports, or major current events covered by 
 mainstream media - NOT simply because a query asks for "new" information.`
-    )
+    ),
 });
 
 /**

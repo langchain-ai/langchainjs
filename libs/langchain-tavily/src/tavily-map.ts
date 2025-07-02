@@ -118,11 +118,29 @@ export type TavilyMapAPIRetrieverFields = ToolParams & {
   apiWrapper?: TavilyMapAPIWrapper;
 };
 
-function generateSuggestions(): string[] {
+function generateSuggestions(params: Record<string, unknown>): string[] {
   const suggestions: string[] = [];
-  suggestions.push("Try adding specific path filters using selectPaths");
-  suggestions.push("Try adding domain filters using selectDomains");
-  suggestions.push("Try excluding specific domains using excludeDomains");
+
+  const { selectPaths, selectDomains, excludeDomains } = params;
+
+  if (
+    !selectPaths ||
+    (Array.isArray(selectPaths) && selectPaths.length === 0)
+  ) {
+    suggestions.push("Try adding specific path filters using selectPaths");
+  }
+  if (
+    !selectDomains ||
+    (Array.isArray(selectDomains) && selectDomains.length === 0)
+  ) {
+    suggestions.push("Try adding domain filters using selectDomains");
+  }
+  if (
+    !excludeDomains ||
+    (Array.isArray(excludeDomains) && excludeDomains.length === 0)
+  ) {
+    suggestions.push("Try excluding specific domains using excludeDomains");
+  }
   return suggestions;
 }
 
@@ -210,25 +228,25 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  maxDepthDefault?: number;
+  maxDepth?: number;
 
-  maxBreadthDefault?: number;
+  maxBreadth?: number;
 
-  limitDefault?: number;
+  limit?: number;
 
-  instructionsDefault?: string;
+  instructions?: string;
 
-  selectPathsDefault?: string[];
+  selectPaths?: string[];
 
-  selectDomainsDefault?: string[];
+  selectDomains?: string[];
 
-  excludePathsDefault?: string[];
+  excludePaths?: string[];
 
-  excludeDomainsDefault?: string[];
+  excludeDomains?: string[];
 
-  allowExternalDefault?: boolean;
+  allowExternal?: boolean;
 
-  categoriesDefault?: CrawlCategory[];
+  categories?: CrawlCategory[];
 
   private apiWrapper: TavilyMapAPIWrapper;
 
@@ -253,16 +271,16 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
       this.apiWrapper = new TavilyMapAPIWrapper({});
     }
 
-    this.maxDepthDefault = params.maxDepth;
-    this.maxBreadthDefault = params.maxBreadth;
-    this.limitDefault = params.limit;
-    this.instructionsDefault = params.instructions;
-    this.selectPathsDefault = params.selectPaths;
-    this.selectDomainsDefault = params.selectDomains;
-    this.excludePathsDefault = params.excludePaths;
-    this.excludeDomainsDefault = params.excludeDomains;
-    this.allowExternalDefault = params.allowExternal;
-    this.categoriesDefault = params.categories;
+    this.maxDepth = params.maxDepth;
+    this.maxBreadth = params.maxBreadth;
+    this.limit = params.limit;
+    this.instructions = params.instructions;
+    this.selectPaths = params.selectPaths;
+    this.selectDomains = params.selectDomains;
+    this.excludePaths = params.excludePaths;
+    this.excludeDomains = params.excludeDomains;
+    this.allowExternal = params.allowExternal;
+    this.categories = params.categories;
   }
 
   async _call(
@@ -282,20 +300,19 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
       } = input;
 
       // Class instance values take precedence over call parameters
-      const effectiveMaxDepth = this.maxDepthDefault;
-      const effectiveMaxBreadth = this.maxBreadthDefault;
-      const effectiveLimit = this.limitDefault;
-      const effectiveInstructions = this.instructionsDefault ?? instructions;
-      const effectiveSelectPaths = this.selectPathsDefault ?? selectPaths;
-      const effectiveSelectDomains = this.selectDomainsDefault ?? selectDomains;
-      const effectiveExcludePaths = this.excludePathsDefault ?? excludePaths;
-      const effectiveExcludeDomains =
-        this.excludeDomainsDefault ?? excludeDomains;
-      const effectiveAllowExternal = this.allowExternalDefault ?? allowExternal;
+      const effectiveMaxDepth = this.maxDepth;
+      const effectiveMaxBreadth = this.maxBreadth;
+      const effectiveLimit = this.limit;
+      const effectiveInstructions = this.instructions ?? instructions;
+      const effectiveSelectPaths = this.selectPaths ?? selectPaths;
+      const effectiveSelectDomains = this.selectDomains ?? selectDomains;
+      const effectiveExcludePaths = this.excludePaths ?? excludePaths;
+      const effectiveExcludeDomains = this.excludeDomains ?? excludeDomains;
+      const effectiveAllowExternal = this.allowExternal ?? allowExternal;
       // Remove duplicates from categories and convert to array
       let effectiveCategories: CrawlCategory[] | undefined;
-      if (this.categoriesDefault) {
-        effectiveCategories = Array.from(new Set(this.categoriesDefault));
+      if (this.categories) {
+        effectiveCategories = Array.from(new Set(this.categories));
       } else if (categories) {
         effectiveCategories = Array.from(new Set(categories));
       } else {
@@ -323,7 +340,7 @@ export class TavilyMap extends StructuredTool<typeof inputSchema> {
         !Array.isArray(rawResults.results) ||
         rawResults.results.length === 0
       ) {
-        const suggestions = generateSuggestions();
+        const suggestions = generateSuggestions(input);
 
         const errorMessage =
           `No map results found for '${url}'. ` +

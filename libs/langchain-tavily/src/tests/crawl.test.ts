@@ -1,19 +1,15 @@
 import { test, expect, jest, describe } from "@jest/globals";
-import { TavilySearch } from "../tavily-search.js";
+import { TavilyCrawl } from "../tavily-crawl.js";
 import {
-  TavilySearchAPIWrapper,
-  TavilySearchResponse,
-  TavilySearchParams,
-  TavilySearchParamsWithSimpleImages,
-  TavilySearchParamsWithImageDescriptions,
-  TavilySearchResponseWithSimpleImages,
-  TavilySearchResponseWithImageDescriptions,
+  TavilyCrawlAPIWrapper,
+  TavilyCrawlResponse,
+  TavilyCrawlParams,
 } from "../utils.js";
 
 /**
  * A test implementation of TavilySearchAPIWrapper that doesn't need API keys
  */
-class TestTavilySearchAPIWrapper extends TavilySearchAPIWrapper {
+class TestTavilyCrawlAPIWrapper extends TavilyCrawlAPIWrapper {
   constructor() {
     // Pass a dummy key
     super({ tavilyApiKey: "test-key" });
@@ -22,83 +18,77 @@ class TestTavilySearchAPIWrapper extends TavilySearchAPIWrapper {
   }
 
   // Mock the raw results method with the correct overload signatures
-  async rawResults(
-    params: TavilySearchParamsWithSimpleImages
-  ): Promise<TavilySearchResponseWithSimpleImages>;
-
-  async rawResults(
-    params: TavilySearchParamsWithImageDescriptions
-  ): Promise<TavilySearchResponseWithImageDescriptions>;
-
-  async rawResults(params: TavilySearchParams): Promise<TavilySearchResponse> {
+  async rawResults(params: TavilyCrawlParams): Promise<TavilyCrawlResponse> {
     // This is overridden by mockImplementation in each test
     return {
-      query: params.query,
+      base_url: params.url,
       results: [],
       response_time: 0,
     };
   }
 }
 
-describe("TavilySearch", () => {
+describe("TavilyCrawl", () => {
   test("initializes with custom parameters", () => {
-    const mockWrapper = new TestTavilySearchAPIWrapper();
-    const tool = new TavilySearch({
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
+    const tool = new TavilyCrawl({
       apiWrapper: mockWrapper,
-      name: "custom_search",
+      name: "custom_crawl",
       description: "Custom description",
-      searchDepth: "advanced",
+      extractDepth: "advanced",
       includeImages: true,
-      maxResults: 10,
-      topic: "news",
-      includeAnswer: true,
-      includeRawContent: true,
-      includeImageDescriptions: true,
-      includeDomains: ["example.com"],
+      maxDepth: 10,
+      maxBreadth: 20,
+      limit: 100,
+      allowExternal: true,
+      categories: ["Documentation"],
+      selectPaths: ["example.com"],
+      selectDomains: ["exclude.com"],
+      excludePaths: ["exclude.com"],
       excludeDomains: ["exclude.com"],
-      timeRange: "day",
+      includeFavicon: true,
     });
 
-    expect(tool.name).toBe("custom_search");
+    expect(tool.name).toBe("custom_crawl");
     expect(tool.description).toBe("Custom description");
-    expect(tool.searchDepth).toBe("advanced");
+    expect(tool.extractDepth).toBe("advanced");
     expect(tool.includeImages).toBe(true);
-    expect(tool.maxResults).toBe(10);
-    expect(tool.topic).toBe("news");
-    expect(tool.includeAnswer).toBe(true);
-    expect(tool.includeRawContent).toBe(true);
-    expect(tool.includeImageDescriptions).toBe(true);
-    expect(tool.includeDomains).toEqual(["example.com"]);
+    expect(tool.maxDepth).toBe(10);
+    expect(tool.maxBreadth).toBe(20);
+    expect(tool.limit).toBe(100);
+    expect(tool.allowExternal).toBe(true);
+    expect(tool.categories).toEqual(["Documentation"]);
+    expect(tool.selectPaths).toEqual(["example.com"]);
+    expect(tool.selectDomains).toEqual(["exclude.com"]);
+    expect(tool.excludePaths).toEqual(["exclude.com"]);
     expect(tool.excludeDomains).toEqual(["exclude.com"]);
-    expect(tool.timeRange).toBe("day");
+    expect(tool.includeFavicon).toBe(true);
   });
 
   test("initializes with custom apiWrapper", () => {
-    const mockWrapper = new TestTavilySearchAPIWrapper();
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
 
     // Using a type assertion to access the property
     expect(
-      (tool as unknown as { apiWrapper: TestTavilySearchAPIWrapper }).apiWrapper
+      (tool as unknown as { apiWrapper: TestTavilyCrawlAPIWrapper }).apiWrapper
     ).toBe(mockWrapper);
   });
 
-  test("successfully performs a search", async () => {
-    const mockResult: TavilySearchResponse = {
-      query: "test query",
+  test("successfully performs a crawl", async () => {
+    const mockResult: TavilyCrawlResponse = {
+      base_url: "https://example.com",
       results: [
         {
-          title: "Test Result",
           url: "https://example.com",
-          content: "Example content",
-          score: 0.95,
-          raw_content: null,
+          raw_content: "Example content",
+          images: [],
         },
       ],
       response_time: 0.5,
     };
 
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -106,15 +96,15 @@ describe("TavilySearch", () => {
         Promise.resolve(mockResult)
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
     const result = await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     // The schema auto-defaults empty arrays
     expect(mockWrapper.rawResults).toHaveBeenCalledWith(
       expect.objectContaining({
-        query: "test query",
+        url: "https://example.com",
       })
     );
 
@@ -122,21 +112,19 @@ describe("TavilySearch", () => {
   });
 
   test("respects input parameters", async () => {
-    const mockResult: TavilySearchResponse = {
-      query: "test query",
+    const mockResult: TavilyCrawlResponse = {
+      base_url: "https://example.com",
       results: [
         {
-          title: "Test Result",
           url: "https://example.com",
-          content: "Example content",
-          score: 0.95,
-          raw_content: null,
+          raw_content: "Example content",
+          images: [],
         },
       ],
       response_time: 0.5,
     };
 
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -144,46 +132,36 @@ describe("TavilySearch", () => {
         Promise.resolve(mockResult)
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
     await tool.invoke({
-      query: "test query",
-      includeDomains: ["example.com"],
-      excludeDomains: ["exclude.com"],
-      searchDepth: "advanced",
-      includeImages: true,
-      timeRange: "week",
-      topic: "news",
+      url: "https://example.com",
+      allowExternal: true,
+      categories: ["Documentation"],
     });
 
     expect(mockWrapper.rawResults).toHaveBeenCalledWith(
       expect.objectContaining({
-        query: "test query",
-        includeDomains: ["example.com"],
-        excludeDomains: ["exclude.com"],
-        searchDepth: "advanced",
-        includeImages: true,
-        timeRange: "week",
-        topic: "news",
+        url: "https://example.com",
+        allowExternal: true,
+        categories: ["Documentation"],
       })
     );
   });
 
   test("uses default parameters when not provided in input", async () => {
-    const mockResult: TavilySearchResponse = {
-      query: "test query",
+    const mockResult: TavilyCrawlResponse = {
+      base_url: "https://example.com",
       results: [
         {
-          title: "Test Result",
           url: "https://example.com",
-          content: "Example content",
-          score: 0.95,
-          raw_content: null,
+          raw_content: "Example content",
+          images: [],
         },
       ],
       response_time: 0.5,
     };
 
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -192,34 +170,30 @@ describe("TavilySearch", () => {
       ) as typeof mockWrapper.rawResults;
 
     // Create a tool with custom defaults
-    const tool = new TavilySearch({
+    const tool = new TavilyCrawl({
       apiWrapper: mockWrapper,
-      searchDepth: "advanced",
+      extractDepth: "advanced",
       includeImages: true,
-      maxResults: 10,
-      topic: "finance",
-      includeAnswer: true,
-      includeRawContent: true,
+      format: "markdown",
     });
 
     await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     // We expect the constructor defaults to be respected
-    expect(mockWrapper.rawResults).toHaveBeenCalledWith({
-      query: "test query",
-      searchDepth: "advanced",
-      includeImages: true,
-      topic: "finance",
-      maxResults: 10,
-      includeAnswer: true,
-      includeRawContent: true,
-    });
+    expect(mockWrapper.rawResults).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "https://example.com",
+        extractDepth: "advanced",
+        includeImages: true,
+        format: "markdown",
+      })
+    );
   });
 
   test("handles API errors", async () => {
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -227,22 +201,22 @@ describe("TavilySearch", () => {
         Promise.reject(new Error("API error"))
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
     const result = await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     expect(result).toEqual({ error: "API error" });
   });
 
   test("handles empty results", async () => {
-    const mockResult: TavilySearchResponse = {
-      query: "test query",
+    const mockResult: TavilyCrawlResponse = {
+      base_url: "https://example.com",
       results: [],
       response_time: 0.5,
     };
 
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -250,26 +224,26 @@ describe("TavilySearch", () => {
         Promise.resolve(mockResult)
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
     const result = await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     expect(result).toEqual({
       error: expect.stringContaining(
-        "No search results found for 'test query'"
+        "No crawl results found for 'https://example.com'"
       ),
     });
   });
 
   test("generates suggestions when search fails", async () => {
-    const mockResult: TavilySearchResponse = {
-      query: "test query",
+    const mockResult: TavilyCrawlResponse = {
+      base_url: "https://example.com",
       results: [],
       response_time: 0.5,
     };
 
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -277,30 +251,35 @@ describe("TavilySearch", () => {
         Promise.resolve(mockResult)
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({
+    const tool = new TavilyCrawl({
       apiWrapper: mockWrapper,
-      searchDepth: "basic",
-      timeRange: "day",
-      includeDomains: ["example.com"],
+      extractDepth: "basic",
     });
 
     const result = await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     // Verify that the error message contains the expected suggestions
     expect(result).toEqual({
-      error: expect.stringContaining("Remove time_range argument"),
+      error: expect.stringContaining(
+        "Try adding specific path filters using selectPaths"
+      ),
     });
     expect(result).toEqual({
       error: expect.stringContaining(
-        "Try a more detailed search using 'advanced' search_depth"
+        "Try adding domain filters using selectDomains"
+      ),
+    });
+    expect(result).toEqual({
+      error: expect.stringContaining(
+        "Try excluding specific domains using excludeDomains"
       ),
     });
   });
 
   test("handles non-standard errors", async () => {
-    const mockWrapper = new TestTavilySearchAPIWrapper();
+    const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
     mockWrapper.rawResults = jest
       .fn()
@@ -308,9 +287,9 @@ describe("TavilySearch", () => {
         Promise.reject(new Error("String error without message property"))
       ) as typeof mockWrapper.rawResults;
 
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
+    const tool = new TavilyCrawl({ apiWrapper: mockWrapper });
     const result = await tool.invoke({
-      query: "test query",
+      url: "https://example.com",
     });
 
     expect(result).toEqual({
@@ -326,7 +305,7 @@ describe("TavilySearch", () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            query: "test query",
+            base_url: "https://example.com",
             results: [],
             response_time: 0.5,
           }),
@@ -336,15 +315,15 @@ describe("TavilySearch", () => {
 
     try {
       // Create a wrapper with test API key
-      const wrapper = new TavilySearchAPIWrapper({ tavilyApiKey: "test-key" });
+      const wrapper = new TavilyCrawlAPIWrapper({ tavilyApiKey: "test-key" });
 
       // Call with camelCase parameters
       await wrapper.rawResults({
-        query: "test query",
-        includeDomains: ["example.com"],
-        searchDepth: "advanced",
+        url: "https://example.com",
+        extractDepth: "advanced",
         includeImages: true,
-        timeRange: "week",
+        maxDepth: 3,
+        maxBreadth: 20,
       });
 
       // Verify the parameters in the request body
@@ -356,16 +335,16 @@ describe("TavilySearch", () => {
       const requestBody = JSON.parse(bodyString);
 
       // Check that parameters were converted to snake_case
-      expect(requestBody.include_domains).toEqual(["example.com"]);
-      expect(requestBody.search_depth).toBe("advanced");
+      expect(requestBody.extract_depth).toEqual("advanced");
       expect(requestBody.include_images).toBe(true);
-      expect(requestBody.time_range).toBe("week");
+      expect(requestBody.max_depth).toBe(3);
+      expect(requestBody.max_breadth).toBe(20);
 
       // Original camelCase keys should not be present
-      expect(requestBody.includeDomains).toBeUndefined();
-      expect(requestBody.searchDepth).toBeUndefined();
+      expect(requestBody.extractDepth).toBeUndefined();
       expect(requestBody.includeImages).toBeUndefined();
-      expect(requestBody.timeRange).toBeUndefined();
+      expect(requestBody.maxDepth).toBeUndefined();
+      expect(requestBody.maxBreadth).toBeUndefined();
     } finally {
       // Restore original fetch
       global.fetch = originalFetch;

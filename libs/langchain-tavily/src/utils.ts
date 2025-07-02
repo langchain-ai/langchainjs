@@ -53,9 +53,9 @@ export type TavilySearchParamsBase = {
    */
   include_answer?: boolean | "basic" | "advanced";
   /**
-   * Include the cleaned and parsed HTML content of each search result. 
-   * "markdown" returns search result content in markdown format. 
-   * "text" returns the plain text from the results and may increase latency. 
+   * Include the cleaned and parsed HTML content of each search result.
+   * "markdown" returns search result content in markdown format.
+   * "text" returns the plain text from the results and may increase latency.
    * If true, defaults to "markdown"
    *
    * @default false
@@ -144,8 +144,8 @@ export type TavilyExtractParams = {
   include_favicon?: boolean;
 
   /**
-   * The format of the extracted web page content. 
-   * "markdown" returns content in markdown format. 
+   * The format of the extracted web page content.
+   * "markdown" returns content in markdown format.
    * "text" returns plain text and may increase latency.
    *
    * @default "markdown"
