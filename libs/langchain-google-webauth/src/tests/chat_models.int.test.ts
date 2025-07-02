@@ -463,26 +463,36 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
   }, 90000); // Increase timeout
 });
 
-const weatherTool = tool((_) => "no-op", {
-  name: "get_weather",
-  description:
-    "Get the weather of a specific location and return the temperature in Celsius.",
-  schema: z.object({
-    location: z.string().describe("The name of city to get the weather for."),
+const weatherTool = tool(
+  (_) => ({
+    temp: 21,
   }),
-});
+  {
+    name: "get_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z.string().describe("The name of city to get the weather for."),
+    }),
+  }
+);
 
-const nullishWeatherTool = tool((_) => "no-op", {
-  name: "get_nullish_weather",
-  description:
-    "Get the weather of a specific location and return the temperature in Celsius.",
-  schema: z.object({
-    location: z
-      .string()
-      .nullish()
-      .describe("The name of city to get the weather for."),
+const nullishWeatherTool = tool(
+  (_) => ({
+    temp: 21,
   }),
-});
+  {
+    name: "get_nullish_weather",
+    description:
+      "Get the weather of a specific location and return the temperature in Celsius.",
+    schema: z.object({
+      location: z
+        .string()
+        .nullish()
+        .describe("The name of city to get the weather for."),
+    }),
+  }
+);
 
 const calculatorTool = tool((_) => "no-op", {
   name: "calculator",
@@ -772,6 +782,26 @@ describe.each(testGeminiModelNames)(
       expect(func.arguments.replaceAll("\n", "")).toBe(
         '{"location":"New York"}'
       );
+    });
+
+    test("function conversation", async () => {
+      const tools = [weatherTool];
+      const model = newChatGoogle().bind({
+        tools,
+        temperature: 0.1,
+      });
+      const history = [new HumanMessage("What is the weather in New York?")];
+      const result1 = await model.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      const result2 = await model.invoke(history);
+      console.log(result2);
+      expect(result2.content).toMatch(/21/);
     });
 
     test("function reply", async () => {
@@ -1766,7 +1796,7 @@ describe.each(testReasoningModelNames)(
 
     test("default", async () => {
       // By default, it should not return reasoning tokens, tho it should report some
-      // 2.5-flash-lite, apparently, defaults to thinking off.
+      // 2.5-flash-lite defaults to thinking off.
       const model = newChatGoogle();
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
@@ -1776,6 +1806,31 @@ describe.each(testReasoningModelNames)(
       expect(Array.isArray(response.content)).toEqual(false);
       expect(typeof response.content).toEqual("string");
       expect(response.content).toMatch(/^1\/6/);
+
+      expect(
+        response?.usage_metadata?.output_token_details?.reasoning
+      ).toBeGreaterThan(0);
+    });
+
+    test("dynamic", async () => {
+      const model = newChatGoogle({
+        maxReasoningTokens: -1,
+      });
+      const prompt =
+        "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
+      const response = await model.invoke(prompt);
+      console.log(response);
+
+      expect(Array.isArray(response.content)).toEqual(true);
+      const content: MessageContentComplex[] =
+        response.content as MessageContentComplex[];
+      expect(content.length).toBeGreaterThanOrEqual(2);
+      expect(
+        content.filter((c) => c.type === "reasoning").length
+      ).toBeGreaterThanOrEqual(1);
+      expect(
+        content.filter((c) => c.type === "text").length
+      ).toBeGreaterThanOrEqual(1);
 
       expect(
         response?.usage_metadata?.output_token_details?.reasoning
