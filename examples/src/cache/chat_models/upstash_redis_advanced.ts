@@ -16,4 +16,4 @@ const client = Redis.fromEnv({
 });
 
 const cache = new UpstashRedisCache({ client });
-const model = new ChatOpenAI({ cache });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
