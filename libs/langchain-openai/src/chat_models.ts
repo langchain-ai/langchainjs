@@ -574,9 +574,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
-  /** @deprecated Use "model" instead */
-  modelName: string;
-
   model = "gpt-3.5-turbo";
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
@@ -675,7 +672,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   get lc_aliases(): Record<string, string> {
     return {
-      modelName: "model",
       apiKey: "openai_api_key",
     };
   }
@@ -699,7 +695,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "user",
       "streaming",
       "streamUsage",
-      "modelName",
       "model",
       "modelKwargs",
       "stop",
@@ -763,8 +758,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
