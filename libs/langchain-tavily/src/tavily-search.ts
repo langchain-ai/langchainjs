@@ -13,6 +13,13 @@ export type TopicType = "general" | "news" | "finance";
  */
 export type TavilySearchAPIRetrieverFields = ToolParams & {
   /**
+   * The base URL to be used for the Tavily Search API.
+   *
+   *
+   */
+  apiBaseUrl?: string;
+
+  /**
    * The maximum number of search results to return.
    *
    * @default 5
@@ -48,10 +55,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
 
   /**
    * Include the cleaned and parsed HTML content of each search result.
+   * "markdown" returns search result content in markdown format.
+   * "text" returns the plain text from the results and may increase latency.
+   * If true, defaults to "markdown"
    *
    * @default false
    */
-  includeRawContent?: boolean;
+  includeRawContent?: boolean | "markdown" | "text";
 
   /**
    * A list of domains to specifically include in the search results.
@@ -87,6 +97,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default "general"
    */
   timeRange?: TimeRange;
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  includeFavicon?: boolean;
 
   /**
    * The name of the tool.
@@ -126,6 +143,22 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default 3
    */
   chunksPerSource?: number;
+
+  /**
+   * The country to search in. MUST be the full country name in lowercase
+   * like "united states" or "united kingdom".
+   *
+   * @default undefined
+   */
+  country?: string;
+
+  /**
+   * Whether to automatically determine optimal search parameters based on the query.
+   * This can only be set during tool instantiation, not at invocation time.
+   *
+   * @default false
+   */
+  autoParameters?: boolean;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
@@ -201,9 +234,9 @@ Default is None (no domain exclusion).`
     .describe(
       `Controls search thoroughness and result comprehensiveness.
 
-Use "basic" for simple queries requiring quick, straightforward answers.
+Use "basic" (default) for simple queries requiring quick, straightforward answers.
 
-Use "advanced" (default) for complex queries, specialized topics, 
+Use "advanced" for complex queries, specialized topics, 
 rare information, or when in-depth analysis is needed.`
     ),
   includeImages: z
@@ -283,9 +316,9 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  maxResults = 5;
+  apiBaseUrl?: string;
 
-  apiKey?: string;
+  maxResults?: number;
 
   includeImages?: boolean;
 
@@ -293,7 +326,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeAnswer?: boolean;
 
-  includeRawContent?: boolean;
+  includeRawContent?: boolean | "markdown" | "text";
 
   includeDomains?: string[];
 
@@ -308,6 +341,12 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
   timeRange?: TimeRange;
 
   chunksPerSource?: number;
+
+  country?: string;
+
+  autoParameters?: boolean;
+
+  includeFavicon?: boolean;
 
   handleToolError = true;
 
@@ -333,25 +372,32 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
     if (params.apiWrapper) {
       this.apiWrapper = params.apiWrapper;
-    } else if (params.tavilyApiKey) {
-      this.apiWrapper = new TavilySearchAPIWrapper({
-        tavilyApiKey: params.tavilyApiKey,
-      });
     } else {
-      this.apiWrapper = new TavilySearchAPIWrapper({});
+      const apiWrapperParams: { tavilyApiKey?: string; apiBaseUrl?: string } =
+        {};
+      if (params.tavilyApiKey) {
+        apiWrapperParams.tavilyApiKey = params.tavilyApiKey;
+      }
+      if (params.apiBaseUrl) {
+        apiWrapperParams.apiBaseUrl = params.apiBaseUrl;
+      }
+      this.apiWrapper = new TavilySearchAPIWrapper(apiWrapperParams);
     }
 
     this.includeDomains = params.includeDomains;
     this.excludeDomains = params.excludeDomains;
-    this.searchDepth = params.searchDepth ?? "basic";
-    this.includeImages = params.includeImages ?? false;
+    this.searchDepth = params.searchDepth;
+    this.includeImages = params.includeImages;
     this.timeRange = params.timeRange;
-    this.maxResults = params.maxResults ?? 5;
-    this.topic = params.topic ?? "general";
-    this.includeAnswer = params.includeAnswer ?? false;
-    this.includeRawContent = params.includeRawContent ?? false;
-    this.includeImageDescriptions = params.includeImageDescriptions ?? false;
-    this.chunksPerSource = params.chunksPerSource ?? 3;
+    this.maxResults = params.maxResults;
+    this.topic = params.topic;
+    this.includeAnswer = params.includeAnswer;
+    this.includeRawContent = params.includeRawContent;
+    this.includeImageDescriptions = params.includeImageDescriptions;
+    this.chunksPerSource = params.chunksPerSource;
+    this.country = params.country;
+    this.autoParameters = params.autoParameters;
+    this.includeFavicon = params.includeFavicon;
   }
 
   async _call(
@@ -369,13 +415,13 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         topic,
       } = input;
 
-      // Apply defaults using the nullish coalescing pattern
-      const effectiveIncludeDomains = includeDomains ?? this.includeDomains;
-      const effectiveExcludeDomains = excludeDomains ?? this.excludeDomains;
-      const effectiveSearchDepth = searchDepth ?? this.searchDepth;
-      const effectiveIncludeImages = includeImages ?? this.includeImages;
-      const effectiveTimeRange = timeRange ?? this.timeRange;
-      const effectiveTopic = topic ?? this.topic;
+      // Class instance values take precedence over call parameters
+      const effectiveIncludeDomains = this.includeDomains ?? includeDomains;
+      const effectiveExcludeDomains = this.excludeDomains ?? excludeDomains;
+      const effectiveSearchDepth = this.searchDepth ?? searchDepth;
+      const effectiveIncludeImages = this.includeImages ?? includeImages;
+      const effectiveTimeRange = this.timeRange ?? timeRange;
+      const effectiveTopic = this.topic ?? topic;
 
       const rawResults = await this.apiWrapper.rawResults({
         query,
@@ -390,6 +436,9 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         includeRawContent: this.includeRawContent,
         includeImageDescriptions: this.includeImageDescriptions,
         chunksPerSource: this.chunksPerSource,
+        country: this.country,
+        autoParameters: this.autoParameters,
+        includeFavicon: this.includeFavicon,
       });
 
       if (
