@@ -4,7 +4,7 @@
 
 This package provides integrations for the [Tavily](https://tavily.com/) search engine within LangChain.js. Tavily is a search engine built specifically for AI agents (LLMs), delivering real-time, accurate, and factual results at speed.
 
-This package exposes two tools:
+This package exposes four tools:
 
 - `TavilySearch`: Performs a search optimized for LLMs and RAG.
 - `TavilyExtract`: Extracts raw content from a list of URLs.
@@ -104,14 +104,12 @@ const tool = new TavilyMap({
   // maxDepth: 3,
   // maxBreadth: 50,
   // limit: 100,
-  // includeImages: false,
   // allowExternal: false,
 });
 
 // Invoke with a URL and optional parameters
 const results = await tool.invoke({
   url: "https://docs.tavily.com/",
-  instructions: "Find information about the Pythona and JS SDKs.",
 });
 
 console.log(results);
