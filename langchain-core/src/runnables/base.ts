@@ -66,6 +66,7 @@ import {
   InteropZodType,
   isSimpleStringZodSchema,
 } from "../utils/types/zod.js";
+import { maybeCreateOtelContext } from "../singletons/async_local_storage/otel.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -394,27 +395,33 @@ export abstract class Runnable<
     options?: Partial<CallOptions> & { runType?: string }
   ) {
     const config = ensureConfig(options);
-    const callbackManager_ = await getCallbackManagerForConfig(config);
-    const runManager = await callbackManager_?.handleChainStart(
-      this.toJSON(),
-      _coerceToDict(input, "input"),
-      config.runId,
-      config?.runType,
-      undefined,
-      undefined,
-      config?.runName ?? this.getName()
-    );
-    delete config.runId;
-    let output;
-    try {
-      const promise = func.call(this, input, config, runManager);
-      output = await raceWithSignal(promise, options?.signal);
-    } catch (e) {
-      await runManager?.handleChainError(e);
-      throw e;
-    }
-    await runManager?.handleChainEnd(_coerceToDict(output, "output"));
-    return output;
+    const otelContextWrapper = maybeCreateOtelContext<Promise<RunOutput>>({
+      name: this.getName(),
+      id: config.runId ?? uuidv4(),
+    });
+    return otelContextWrapper(async () => {
+      const callbackManager_ = await getCallbackManagerForConfig(config);
+      const runManager = await callbackManager_?.handleChainStart(
+        this.toJSON(),
+        _coerceToDict(input, "input"),
+        config.runId,
+        config?.runType,
+        undefined,
+        undefined,
+        config?.runName ?? this.getName()
+      );
+      delete config.runId;
+      let output;
+      try {
+        const promise = func.call(this, input, config, runManager);
+        output = await raceWithSignal(promise, options?.signal);
+      } catch (e) {
+        await runManager?.handleChainError(e);
+        throw e;
+      }
+      await runManager?.handleChainEnd(_coerceToDict(output, "output"));
+      return output;
+    });
   }
 
   /**

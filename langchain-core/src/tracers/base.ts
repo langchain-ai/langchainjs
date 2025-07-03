@@ -15,6 +15,8 @@ import {
 import type { Document } from "../documents/document.js";
 import { getRuntimeEnvironmentSync } from "../utils/env.js";
 
+import { getOtelGlobalsIfInitializedInLangSmith } from "../singletons/async_local_storage/otel.js";
+
 export type RunType = string;
 
 // TODO: Remove this type and just use the base LangSmith Run type.
@@ -33,6 +35,7 @@ export interface Run extends BaseRun {
   }>;
   trace_id?: string;
   dotted_order?: string;
+  __otelContext?: any;
 }
 
 // TODO: Remove and just use base LangSmith Run type
@@ -422,6 +425,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     runType?: string,
     name?: string
   ) {
+    const { otel_context } = getOtelGlobalsIfInitializedInLangSmith();
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
     const run: Run = {
@@ -443,6 +447,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_runs: [],
       extra: metadata ? { metadata } : {},
       tags: tags || [],
+      __otelContext: otel_context?.active(),
     };
     return this._addRunToRunMap(run);
   }

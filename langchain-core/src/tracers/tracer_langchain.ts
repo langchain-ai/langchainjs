@@ -15,6 +15,7 @@ import {
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
+import { getOtelGlobalsIfInitializedInLangSmith } from "../singletons/async_local_storage/otel.js";
 
 export interface Run extends BaseRun {
   id: string;
@@ -22,6 +23,7 @@ export interface Run extends BaseRun {
   child_execution_order: number;
   dotted_order?: string;
   trace_id?: string;
+  __otelContext?: any;
 }
 
 export interface RunCreate2 extends RunCreate {
@@ -78,12 +80,26 @@ export class LangChainTracer
 
   async onRunCreate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);
-    await runTree?.postRun();
+    const { otel_context } = getOtelGlobalsIfInitializedInLangSmith();
+    if (otel_context) {
+      await otel_context.with(run.__otelContext, () => {
+        return runTree?.postRun();
+      });
+    } else {
+      await runTree?.postRun();
+    }
   }
 
   async onRunUpdate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);
-    await runTree?.patchRun();
+    const { otel_context } = getOtelGlobalsIfInitializedInLangSmith();
+    if (otel_context) {
+      await otel_context.with(run.__otelContext, () => {
+        return runTree?.patchRun();
+      });
+    } else {
+      await runTree?.patchRun();
+    }
   }
 
   getRun(id: string): Run | undefined {
