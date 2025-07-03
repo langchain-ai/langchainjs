@@ -1,8 +1,15 @@
 import * as uuid from "uuid";
 import {
+  BaseHybridOptions,
+  CollectionConfigCreate,
   configure,
   type DataObject,
   type FilterValue,
+  GenerateOptions,
+  GenerativeConfigRuntime,
+  HybridOptions,
+  Metadata,
+  Vectors,
   WeaviateClient,
   type WeaviateField,
 } from "weaviate-client";
@@ -63,10 +70,19 @@ export interface WeaviateLibArgs {
   /**
    * The name of the class in Weaviate. Must start with a capital letter.
    */
-  indexName: string;
+  indexName?: string;
   textKey?: string;
   metadataKeys?: string[];
   tenant?: string;
+  schema?: CollectionConfigCreate;
+}
+
+export class WeaviateDocument extends Document {
+  generated?: string;
+
+  additional: Partial<Metadata>;
+
+  vectors: Vectors;
 }
 
 /**
@@ -87,6 +103,8 @@ export class WeaviateStore extends VectorStore {
 
   private tenant?: string;
 
+  private schema?: CollectionConfigCreate;
+
   _vectorstoreType(): string {
     return "weaviate";
   }
@@ -95,10 +113,11 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
-    this.indexName = args.indexName;
+    this.indexName = args.indexName || args.schema?.name || "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;
+    this.schema = args.schema;
 
     if (args.metadataKeys) {
       this.queryAttrs = [
@@ -129,18 +148,22 @@ export class WeaviateStore extends VectorStore {
       weaviateStore.indexName
     );
     if (!collection) {
-      if (config.tenant) {
-        await weaviateStore.client.collections.create({
-          name: weaviateStore.indexName,
-          multiTenancy: configure.multiTenancy({
-            enabled: true,
-            autoTenantCreation: true,
-          }),
-        });
+      if (weaviateStore.schema) {
+        await weaviateStore.client.collections.create(weaviateStore.schema);
       } else {
-        await weaviateStore.client.collections.create({
-          name: weaviateStore.indexName,
-        });
+        if (config.tenant) {
+          await weaviateStore.client.collections.create({
+            name: weaviateStore.indexName,
+            multiTenancy: configure.multiTenancy({
+              enabled: true,
+              autoTenantCreation: true,
+            }),
+          });
+        } else {
+          await weaviateStore.client.collections.create({
+            name: weaviateStore.indexName,
+          });
+        }
       }
     }
     return weaviateStore;
@@ -254,6 +277,99 @@ export class WeaviateStore extends VectorStore {
         `This method requires either "ids" or "filter" to be set in the input object`
       );
     }
+  }
+
+  /**
+   * Hybrid search combines the results of a vector search and a
+   * keyword (BM25F) search by fusing the two result sets.
+   * @param query The query to search for.
+   * @param options available options for the search. Check docs for complete list
+   * @returns Promise that resolves the result of the search within the fetched collection.
+   */
+  async hybridSearch(
+    query: string,
+    options?: HybridOptions<undefined>
+  ): Promise<Document[]> {
+    const collection = this.client.collections.get(this.indexName);
+    let result;
+    if (this.tenant) {
+      result = await collection.withTenant(this.tenant).query.hybrid(query, {
+        ...(options || {}),
+      });
+    } else {
+      result = await collection.query.hybrid(query, {
+        ...(options || {}),
+      });
+    }
+    const documents = [];
+    for (const data of result.objects) {
+      const { properties = {} } = data ?? {};
+      const { [this.textKey]: text, ...rest } = properties;
+
+      documents.push(
+        new Document({
+          pageContent: String(text ?? ""),
+          metadata: {
+            ...rest,
+          },
+          id: data.uuid,
+        })
+      );
+    }
+    return documents;
+  }
+
+  /**
+   * Weaviate's Retrieval Augmented Generation (RAG) combines information retrieval
+   * with generative AI models. It first performs the search, then passes both
+   * the search results and your prompt to a generative AI model before returning the generated response.
+   * @param query The query to search for.
+   * @param generate available options for the generation. Check docs for complete list
+   * @param options available options for performing the hybrid search
+   * @returns Promise that resolves the result of the search including the generated data.
+   */
+  async generate(
+    query: string,
+    generate: GenerateOptions<undefined, GenerativeConfigRuntime | undefined>,
+    options?: BaseHybridOptions<undefined>
+  ): Promise<WeaviateDocument[]> {
+    const collection = this.client.collections.get(this.indexName);
+    let result;
+    if (this.tenant) {
+      result = await collection
+        .withTenant(this.tenant)
+        .generate.hybrid(
+          query,
+          { ...(generate || {}) },
+          { ...(options || {}) }
+        );
+    } else {
+      result = await collection.generate.hybrid(
+        query,
+        { ...(generate || {}) },
+        { ...(options || {}) }
+      );
+    }
+    const documents = [];
+    for (const data of result.objects) {
+      const { properties = {} } = data ?? {};
+      const { [this.textKey]: text, ...rest } = properties;
+
+      const doc = new WeaviateDocument({
+        pageContent: String(text ?? ""),
+        metadata: {
+          ...rest,
+        },
+        id: data.uuid,
+      });
+
+      doc.generated = data.generative?.text;
+      doc.vectors = data.vectors;
+      doc.additional = data.metadata || {};
+
+      documents.push(doc);
+    }
+    return documents;
   }
 
   /**

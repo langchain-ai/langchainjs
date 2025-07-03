@@ -25,7 +25,7 @@ import {
  * const cache = new AzureCosmosDBMongoDBSemanticCache(embeddings, {
  *   client?: MongoClient
  * });
- * const model = new ChatOpenAI({cache});
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
  *
  * // Invoke the model to perform an action
  * const response = await model.invoke("Do something random!");

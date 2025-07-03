@@ -65,6 +65,7 @@ export class WatsonxEmbeddings
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     } = fields;
@@ -75,6 +76,7 @@ export class WatsonxEmbeddings
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });

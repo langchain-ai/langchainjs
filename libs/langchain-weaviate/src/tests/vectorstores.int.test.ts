@@ -246,7 +246,6 @@ test("WeaviateStore with tenant", async () => {
       1,
       collection.filter.byProperty("foo").equal("bar")
     );
-    console.log(results2);
     expect(results2).toEqual([]);
   } finally {
     await collection.tenants.remove([{ name: weaviateArgs.tenant }]);

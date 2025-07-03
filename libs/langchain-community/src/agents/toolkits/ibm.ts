@@ -98,6 +98,7 @@ export class WatsonxToolkit extends BaseToolkit {
       watsonxAIPassword,
       watsonxAIUrl,
       version,
+      disableSSL,
       serviceUrl,
     } = fields;
 
@@ -108,6 +109,7 @@ export class WatsonxToolkit extends BaseToolkit {
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });
