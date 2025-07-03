@@ -1,6 +1,6 @@
 # 🦜🍎️ @langchain/core
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai) 
+[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai)
 
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
@@ -13,7 +13,7 @@ $ yarn add @langchain/core
 
 ## 🤔 What is this?
 
-`@langchain/core` contains the base abstractions that power the rest of the LangChain ecosystem. 
+`@langchain/core` contains the base abstractions that power the rest of the LangChain ecosystem.
 These abstractions are designed to be as modular and simple as possible.
 Examples of these abstractions include those for language models, document loaders, embedding models, vectorstores, retrievers, and more.
 The benefit of having these abstractions is that any provider can implement the required interface and then easily be used in the rest of the LangChain ecosystem.
@@ -36,6 +36,7 @@ const prompt = ChatPromptTemplate.fromTemplate(
 );
 
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0.8,
 });
 
@@ -133,7 +134,7 @@ Because all used packages must share the same version of core, packages should n
 
 This recommendation will change to a caret once a major version (1.x.x) release has occurred.
 
-We suggest making all packages cross-compatible with ESM and CJS using a build step like the one in 
+We suggest making all packages cross-compatible with ESM and CJS using a build step like the one in
 [@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic), then running `yarn build` before running `npm publish`.
 
 We will be exploring how to make this process easier in the future.

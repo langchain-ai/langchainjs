@@ -44,7 +44,7 @@ export type SearchApiParameters = {
  *     ["ai", "Answer the following questions using a bulleted list markdown format.""],
  *     ["human", "{input}"],
  *   ]),
- *   new ChatOpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   (input: BaseMessageChunk) => ({
  *     log: "test",
  *     returnValues: {

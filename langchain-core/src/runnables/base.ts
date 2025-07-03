@@ -1887,7 +1887,7 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
  * const promptTemplate = PromptTemplate.fromTemplate(
  *   "Tell me a joke about {topic}",
  * );
- * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
+ * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({ model: "gpt-4o-mini" })]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
  */

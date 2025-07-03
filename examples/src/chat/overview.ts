@@ -12,7 +12,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
-  const chat = new ChatOpenAI({ temperature: 0 });
+  const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
   // Sending one message to the chat model, receiving one message back
 
