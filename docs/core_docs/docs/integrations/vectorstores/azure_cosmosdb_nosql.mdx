@@ -62,7 +62,7 @@ const unsafeQuerySpec = {
   query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`
 };
 
-await store.delete(unsafeQuerySpec);
+await store.delete({ filter: unsafeQuerySpec });
 ```
 
 If the attacker provides `123 OR 1=1`, then the query becomes `SELECT * FROM c WHERE c.metadata.userId = '123' OR 1=1`, which forces the condition to always be true, causing it to bypass the intended filter and delete all documents.
@@ -70,12 +70,14 @@ If the attacker provides `123 OR 1=1`, then the query becomes `SELECT * FROM c W
 To prevent this injection risk, you define a placeholder like `@userId` and Cosmos DB binds the user input separately as a parameter, ensuring it is treated strictly as data and not executable query logic as shown below.
 
 ```typescript
-const safeQuerySpec = {
+import { SqlQuerySpec } from "@azure/cosmos";
+
+const safeQuerySpec: SqlQuerySpec = {
   query: "SELECT * FROM c WHERE c.metadata.userId = @userId",
   parameters: [{ name: "@userId", value: userId }]
 };
 
-await store.delete(safeQuerySpec);
+await store.delete({ filter: safeQuerySpec });
 ```
 
 Now, if the attacker enters `123 OR 1=1`, the input will be treated as a literal string value to match, and not as part of the query structure.
