@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+/* eslint-disable prefer-template */
 import { test } from "@jest/globals";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { initializeOTEL } from "langsmith/experimental/otel/setup";

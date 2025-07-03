@@ -1,5 +1,5 @@
-import { getEnvironmentVariable } from "../../utils/env";
-import { OTEL_CONTEXT_KEY, OTEL_TRACE_KEY } from "./globals";
+import { getEnvironmentVariable } from "../../utils/env.js";
+import { OTEL_CONTEXT_KEY, OTEL_TRACE_KEY } from "./globals.js";
 
 /**
  * Get OpenTelemetry trace ID as hex string from UUID.
@@ -65,11 +65,13 @@ export function maybeCreateOtelContext<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): (fn: (...args: any[]) => T) => T {
   if (!partialRunTree || getEnvironmentVariable("OTEL_ENABLED") !== "true") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (fn: (...args: any[]) => T) => fn();
   }
 
   const { otel_trace, otel_context } = getOtelGlobalsIfInitializedInLangSmith();
   if (!otel_trace || !otel_context) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (fn: (...args: any[]) => T) => fn();
   }
 
