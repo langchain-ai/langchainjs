@@ -395,16 +395,17 @@ export abstract class Runnable<
     options?: Partial<CallOptions> & { runType?: string }
   ) {
     const config = ensureConfig(options);
+    const runId = config.runId ?? uuidv4();
     const otelContextWrapper = maybeCreateOtelContext<Promise<RunOutput>>({
       name: this.getName(),
-      id: config.runId ?? uuidv4(),
+      id: runId,
     });
     return otelContextWrapper(async () => {
       const callbackManager_ = await getCallbackManagerForConfig(config);
       const runManager = await callbackManager_?.handleChainStart(
         this.toJSON(),
         _coerceToDict(input, "input"),
-        config.runId,
+        runId,
         config?.runType,
         undefined,
         undefined,
