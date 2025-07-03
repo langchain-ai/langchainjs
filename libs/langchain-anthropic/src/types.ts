@@ -45,18 +45,9 @@ export type AnthropicWebSearchToolResultBlockParam =
   Anthropic.Messages.WebSearchToolResultBlockParam;
 export type AnthropicWebSearchResultBlockParam =
   Anthropic.Messages.WebSearchResultBlockParam;
-// TODO(hntrl, 2025-07-16): replace this with sdk type when it is released
-export type AnthropicSearchResultBlockParam = {
-  type: "search_result";
-  content: AnthropicTextBlockParam[];
-  title: string;
-  source: string;
-  /**
-   * Create a cache control breakpoint at this content block.
-   */
-  cache_control?: Anthropic.CacheControlEphemeral | null;
-  citations?: { enabled: boolean };
-};
+// TODO(hntrl): beta blocks should be separated
+export type AnthropicSearchResultBlockParam =
+  Anthropic.Beta.BetaSearchResultBlockParam;
 
 // Union of all possible content block types including server tool use
 export type ChatAnthropicContentBlock =

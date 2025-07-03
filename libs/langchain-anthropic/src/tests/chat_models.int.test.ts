@@ -1220,7 +1220,7 @@ describe("Citations", () => {
       model: citationsModelName,
       clientOptions: {
         defaultHeaders: {
-          "anthropic-beta": "search-results-2025-06-09",
+          "anthropic-beta": "search-results-2025-01-01",
         },
       },
     }).bindTools([ragTool]);
@@ -1232,6 +1232,7 @@ describe("Citations", () => {
     ];
 
     const response = await citationsModel.invoke(messages);
+    messages.push(response);
 
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content.length).toBeGreaterThan(0);
@@ -1240,7 +1241,9 @@ describe("Citations", () => {
     expect(response.tool_calls?.length).toBeGreaterThan(0);
     expect(response.tool_calls?.[0].name).toBe("search_knowledge_base");
 
-    messages.push(response);
+    const toolResponse = await ragTool.invoke(response.tool_calls![0]);
+    messages.push(toolResponse);
+
     const response2 = await citationsModel.invoke(messages);
 
     expect(Array.isArray(response2.content)).toBe(true);
