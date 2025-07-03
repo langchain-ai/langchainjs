@@ -13,7 +13,7 @@ test("extraction chain", async () => {
       "dog-name": z.string().optional(),
       "dog-breed": z.string().optional(),
     }),
-    new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 })
+    new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 })
   );
 
   const result =

@@ -7,7 +7,7 @@ import {
   type ChatOpenAICallOptions,
   type OpenAIChatInput,
   type OpenAICoreRequestOptions,
-  ChatOpenAI,
+  ChatOpenAICompletions,
 } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -45,7 +45,7 @@ export interface ChatNovitaInput
 /**
  * Novita chat model implementation
  */
-export class ChatNovitaAI extends ChatOpenAI<ChatNovitaCallOptions> {
+export class ChatNovitaAI extends ChatOpenAICompletions<ChatNovitaCallOptions> {
   static lc_name() {
     return "ChatNovita";
   }

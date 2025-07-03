@@ -6,7 +6,7 @@ import { GraphDocument, Node, Relationship } from "../../graphs/document.js";
 test.skip("convertToGraphDocuments", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
 
   const llmGraphTransformer = new LLMGraphTransformer({
@@ -23,7 +23,7 @@ test.skip("convertToGraphDocuments", async () => {
 test("convertToGraphDocuments with allowed", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
 
   const llmGraphTransformer = new LLMGraphTransformer({
@@ -60,7 +60,7 @@ test("convertToGraphDocuments with allowed", async () => {
 test("convertToGraphDocuments with allowed lowercased", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
 
   const llmGraphTransformer = new LLMGraphTransformer({
@@ -97,7 +97,7 @@ test("convertToGraphDocuments with allowed lowercased", async () => {
 test("convertToGraphDocuments with node properties", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
 
   const llmGraphTransformer = new LLMGraphTransformer({
@@ -135,7 +135,7 @@ test("convertToGraphDocuments with node properties", async () => {
 test("convertToGraphDocuments with relationship properties", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
   });
 
   const llmGraphTransformer = new LLMGraphTransformer({
