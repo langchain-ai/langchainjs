@@ -234,6 +234,7 @@ export const config = {
     "graphs/document": "graphs/document",
     "graphs/memgraph_graph": "graphs/memgraph_graph",
     "graphs/neo4j_graph": "graphs/neo4j_graph",
+    "graphs/falkordb": "graphs/falkordb",
     // document_compressors
     "document_compressors/ibm": "document_compressors/ibm",
     // document transformers
@@ -478,6 +479,7 @@ export const config = {
     //graphs
     "graphs/memgraph_graph",
     "graphs/neo4j_graph",
+    "graphs/falkordb",
     // document_compressors
     "document_compressors/ibm",
     // document_transformers
