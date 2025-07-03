@@ -211,7 +211,7 @@ test("serialize + deserialize with new and old ids", async () => {
 test("serialize + deserialize runnable sequence with new and old ids", async () => {
   const runnable = RunnableSequence.from([
     ChatPromptTemplate.fromTemplate("hi there"),
-    new ChatOpenAI(),
+    new ChatOpenAI({ model: "gpt-4o-mini" }),
   ]);
   const strWithNewId = JSON.stringify(runnable, null, 2);
   expect(stringify(JSON.parse(strWithNewId))).toMatchSnapshot();
@@ -235,7 +235,7 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
     temperature: 0.5,
-    modelName: "gpt-4",
+    model: "gpt-4",
     streaming: true,
     prefixMessages: [
       {
@@ -261,7 +261,7 @@ test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
   process.env.OPENAI_API_KEY = undefined;
   const llm = new AzureChatOpenAI({
     temperature: 0.5,
-    modelName: "gpt-4",
+    model: "gpt-4",
     streaming: true,
     azureOpenAIApiKey: "openai-key",
     azureOpenAIApiInstanceName: "openai-instance",
@@ -432,7 +432,7 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
 test.skip("serialize + deserialize agent", async () => {
   const llm = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4",
+    model: "gpt-4",
     openAIApiKey: "openai-key",
   });
   const executor = await initializeAgentExecutorWithOptions(

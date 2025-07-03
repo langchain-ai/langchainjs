@@ -30,6 +30,7 @@ export type VercelKVCacheProps = {
  *
  * // Initialize the OpenAI model with Vercel KV cache for caching responses
  * const model = new ChatOpenAI({
+ *   model: "gpt-4o-mini",
  *   cache,
  * });
  * await model.invoke("How are you today?");
