@@ -1942,7 +1942,9 @@ export class ChatOpenAIResponses<
           input.push({
             type: "message",
             role: "assistant",
-            ...(lcMsg.id && !this.zdrEnabled ? { id: lcMsg.id } : {}),
+            ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
+              ? { id: lcMsg.id }
+              : {}),
             content:
               typeof content === "string"
                 ? content
