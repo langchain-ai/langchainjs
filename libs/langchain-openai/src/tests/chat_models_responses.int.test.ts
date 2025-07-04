@@ -13,6 +13,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
@@ -607,6 +608,23 @@ test("Test computer call", async () => {
 
   computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
+});
+
+test("external message ids", async () => {
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", useResponsesApi: true });
+  const response = await model.invoke([
+    new HumanMessage({
+      id: randomUUID(),
+      content: "What is 3 to the power of 3?",
+    }),
+    new AIMessage({ id: randomUUID(), content: "42" }),
+    new HumanMessage({
+      id: randomUUID(),
+      content: "What is 42 to the power of 3?",
+    }),
+  ]);
+
+  expect(response.id).toBeDefined();
 });
 
 describe("reasoning summaries", () => {
