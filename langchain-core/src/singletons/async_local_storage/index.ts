@@ -8,6 +8,7 @@ import {
 } from "./globals.js";
 import { CallbackManager } from "../../callbacks/manager.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
+import { getOtelGlobalsIfInitializedInLangSmith } from "./otel.js";
 
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   getStore(): any {
@@ -83,6 +84,14 @@ class AsyncLocalStorageProvider {
       }
       (runTree as any)[_CONTEXT_VARIABLES_KEY] =
         previousValue[_CONTEXT_VARIABLES_KEY];
+    }
+
+    const { otel_context } = getOtelGlobalsIfInitializedInLangSmith();
+    if (otel_context) {
+      const currentContext = otel_context.active();
+      return storage.run(runTree, () => {
+        return otel_context.with(currentContext, callback);
+      });
     }
 
     return storage.run(runTree, callback);
