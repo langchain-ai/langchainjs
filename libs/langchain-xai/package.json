@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "xAI integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": "^0.5.5"
+    "@langchain/openai": "^0.6.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
