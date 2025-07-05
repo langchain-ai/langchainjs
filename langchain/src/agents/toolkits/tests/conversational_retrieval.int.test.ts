@@ -17,7 +17,9 @@ test("Test ConversationalRetrievalAgent", async () => {
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new OpenAIEmbeddings()
   );
-  const llm = new ChatOpenAI({});
+  const llm = new ChatOpenAI({
+    model: "gpt-4o-mini",
+  });
   const tools = [
     createRetrieverTool(vectorStore.asRetriever(), {
       name: "search_LangCo_knowledge",

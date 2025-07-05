@@ -23,7 +23,9 @@ const openAIFunction = {
   },
 };
 
-const model = new ChatOpenAI();
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const prompt = ChatPromptTemplate.fromMessages([
   ["human", "Human description: {description}"],
 ]);

@@ -26,7 +26,7 @@ export interface BufferMemoryInput extends BaseChatMemoryInput {
  * ```typescript
  * // Initialize the memory to store chat history and set up the language model with a specific temperature.
  * const memory = new BufferMemory({ memoryKey: "chat_history" });
- * const model = new ChatOpenAI({ temperature: 0.9 });
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 });
  *
  * // Create a prompt template for a friendly conversation between a human and an AI.
  * const prompt =

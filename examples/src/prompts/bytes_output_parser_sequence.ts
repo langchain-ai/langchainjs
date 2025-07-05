@@ -3,7 +3,7 @@ import { BytesOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 
 const chain = RunnableSequence.from([
-  new ChatOpenAI({ temperature: 0 }),
+  new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
   new BytesOutputParser(),
 ]);
 

@@ -21,7 +21,7 @@ describe("Test RedisCache", () => {
       ttl: 60,
     });
 
-    const model = new OpenAI({ cache });
+    const model = new OpenAI({ model: "gpt-4o-mini", cache });
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).toEqual(response2);
@@ -32,7 +32,7 @@ describe("Test RedisCache", () => {
       ttl: 60,
     });
 
-    const model = new ChatOpenAI({ cache });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).not.toBeUndefined();

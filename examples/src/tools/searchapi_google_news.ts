@@ -7,6 +7,7 @@ import { BaseMessageChunk } from "@langchain/core/messages";
 import { SearchApi } from "@langchain/community/tools/searchapi";
 
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0,
 });
 const tools = [

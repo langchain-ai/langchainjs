@@ -10,7 +10,9 @@ import {
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 
 // Instantiate your model and prompt.
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a helpful assistant"],
   new MessagesPlaceholder("history"),

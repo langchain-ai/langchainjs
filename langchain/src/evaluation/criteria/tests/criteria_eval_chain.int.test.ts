@@ -88,7 +88,7 @@ test("Test Using Constitutional Principles ", async () => {
 });
 
 test("Test Configuring the LLM", async () => {
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
 
   const chain = await loadEvaluator("criteria", {
     criteria: PRINCIPLES.harmful1,

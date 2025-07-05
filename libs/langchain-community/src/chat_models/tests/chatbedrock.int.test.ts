@@ -554,7 +554,7 @@ test("withStructuredOutput result should be compatible with OpenAI typing", asyn
 
   const _prepareClient = () => {
     if (Math.random() > 0.5) {
-      return new ChatOpenAI();
+      return new ChatOpenAI({ model: "gpt-4o-mini" });
     }
     return new BedrockChatWeb();
   };

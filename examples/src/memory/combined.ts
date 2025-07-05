@@ -38,7 +38,11 @@ const PROMPT = new PromptTemplate({
   inputVariables: ["input", "conversation_summary", "chat_history_lines"],
   template: _DEFAULT_TEMPLATE,
 });
-const model = new ChatOpenAI({ temperature: 0.9, verbose: true });
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0.9,
+  verbose: true,
+});
 const chain = new ConversationChain({ llm: model, memory, prompt: PROMPT });
 
 const res1 = await chain.invoke({ input: "Hi! I'm Jim." });

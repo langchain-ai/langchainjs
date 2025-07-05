@@ -30,7 +30,7 @@ test("Test summary buffer memory", async () => {
 
 test("Test summary buffer memory with chat model", async () => {
   const memory = new ConversationSummaryBufferMemory({
-    llm: new ChatOpenAI({ temperature: 0 }),
+    llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
     maxTokenLimit: 10,
   });
   expect(await memory.loadMemoryVariables({})).toEqual({

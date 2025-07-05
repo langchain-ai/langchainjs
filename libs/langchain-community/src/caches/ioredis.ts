@@ -12,6 +12,7 @@ import { Generation } from "@langchain/core/outputs";
  * @example
  * ```typescript
  * const model = new ChatOpenAI({
+ *   model: "gpt-4o-mini",
  *   cache: new RedisCache(new Redis(), { ttl: 60 }),
  * });
  *

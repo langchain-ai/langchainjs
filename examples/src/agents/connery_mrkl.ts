@@ -18,7 +18,7 @@ const conneryService = new ConneryService();
 const conneryToolkit = await ConneryToolkit.createInstance(conneryService);
 
 // Use OpenAI Functions agent to execute the prompt using actions from the Connery Toolkit.
-const llm = new ChatOpenAI({ temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const agent = await initializeAgentExecutorWithOptions(
   conneryToolkit.tools,
   llm,

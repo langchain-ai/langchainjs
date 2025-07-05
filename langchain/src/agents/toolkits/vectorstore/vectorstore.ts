@@ -30,7 +30,7 @@ export interface VectorStoreInfo {
  *     description: "the most recent state of the Union address",
  *     vectorStore: new HNSWLib(),
  *   },
- *   new ChatOpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  * );
  * const result = await toolkit.invoke({
  *   input:

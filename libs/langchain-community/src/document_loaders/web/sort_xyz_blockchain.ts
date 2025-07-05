@@ -55,7 +55,7 @@ export interface SortXYZBlockchainAPIResponse {
  *
  * const prompt =
  *   "Describe the character with the attributes from the following json document in a 4 sentence story. ";
- * const model = new ChatOpenAI({ temperature: 0.9 })
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 })
  * const response = await model.invoke(
  *   prompt + JSON.stringify(blockchainData[0], null, 2),
  * );

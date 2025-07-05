@@ -6,7 +6,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["ai", "You are a nice assistant."],
   ["human", "{question}"],
 ]);
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const chain = prompt.pipe(model);
 
 const trackTime = () => {

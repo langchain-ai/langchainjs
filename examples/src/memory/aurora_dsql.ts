@@ -35,7 +35,9 @@ async function getPostgresqlPool() {
 
 const pool = await getPostgresqlPool();
 
-const model = new ChatOpenAI();
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 const prompt = ChatPromptTemplate.fromMessages([
   [

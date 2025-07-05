@@ -10,4 +10,4 @@ const cache = new UpstashRedisCache({
   ttl: 3600,
 });
 
-const model = new ChatOpenAI({ cache });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
