@@ -521,7 +521,7 @@ describe("Can call base runnable methods", () => {
       {
         version: "v2",
         configurable: {
-          model: "gpt-4o-mini",
+          model: "gpt-4o",
         },
       }
     );

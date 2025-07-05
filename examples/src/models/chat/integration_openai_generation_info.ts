@@ -3,7 +3,6 @@ import { HumanMessage } from "@langchain/core/messages";
 
 // See https://cookbook.openai.com/examples/using_logprobs for details
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
   logprobs: true,
   // topLogprobs: 5,
 });

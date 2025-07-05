@@ -3,9 +3,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 const prompt = PromptTemplate.fromTemplate(`Tell me a joke about {subject}`);
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 const functionSchema = [
   {

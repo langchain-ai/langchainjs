@@ -4,14 +4,14 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
-import {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
-import { ChatOpenAI } from "../chat_models.js";
+import {
+  ChatOpenAI,
+  ChatOpenAIStructuredOutputMethodOptions,
+} from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
@@ -363,7 +363,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
- * const logprobsLlm = new ChatOpenAI({ model: "gpt-4o-mini", logprobs: true });
+ * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
@@ -675,7 +675,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -686,7 +686,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -697,7 +697,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -710,7 +710,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

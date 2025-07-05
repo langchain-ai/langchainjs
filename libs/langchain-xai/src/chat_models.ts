@@ -1,7 +1,4 @@
-import {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   BaseChatModelCallOptions,
   BindToolsInput,
@@ -16,8 +13,9 @@ import { InteropZodType } from "@langchain/core/utils/types";
 import {
   type OpenAICoreRequestOptions,
   type OpenAIClient,
+  ChatOpenAI,
   OpenAIToolChoice,
-  ChatOpenAICompletions,
+  ChatOpenAIStructuredOutputMethodOptions,
 } from "@langchain/openai";
 
 type ChatXAIToolType = BindToolsInput | OpenAIClient.ChatCompletionTool;
@@ -392,7 +390,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  *
  * <br />
  */
-export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
+export class ChatXAI extends ChatOpenAI<ChatXAICallOptions> {
   static lc_name() {
     return "ChatXAI";
   }
@@ -502,7 +500,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     return super.completionWithRetry(newRequest, options);
   }
 
-  protected override _convertCompletionsDeltaToBaseMessageChunk(
+  protected override _convertOpenAIDeltaToBaseMessageChunk(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
@@ -515,7 +513,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | "tool"
   ) {
     const messageChunk: AIMessageChunk =
-      super._convertCompletionsDeltaToBaseMessageChunk(
+      super._convertOpenAIDeltaToBaseMessageChunk(
         delta,
         rawResponse,
         defaultRole
@@ -530,14 +528,15 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     return messageChunk;
   }
 
-  protected override _convertCompletionsMessageToBaseMessage(
+  protected override _convertOpenAIChatCompletionMessageToBaseMessage(
     message: OpenAIClient.ChatCompletionMessage,
     rawResponse: OpenAIClient.ChatCompletion
   ) {
-    const langChainMessage = super._convertCompletionsMessageToBaseMessage(
-      message,
-      rawResponse
-    );
+    const langChainMessage =
+      super._convertOpenAIChatCompletionMessageToBaseMessage(
+        message,
+        rawResponse
+      );
     langChainMessage.additional_kwargs.reasoning_content =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
@@ -552,7 +551,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: ChatOpenAIStructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   override withStructuredOutput<
@@ -563,7 +562,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: ChatOpenAIStructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   override withStructuredOutput<
@@ -574,7 +573,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -587,7 +586,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

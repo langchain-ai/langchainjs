@@ -17,7 +17,7 @@ const formatDocumentsAsString = (documents: Document[]) => {
 
 // Initialize the LLM to use to answer the question.
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  model: "gpt-4o",
 });
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });

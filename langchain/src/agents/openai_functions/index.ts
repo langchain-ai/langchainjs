@@ -302,7 +302,6 @@ export type CreateOpenAIFunctionsAgentParams = {
  * );
  *
  * const llm = new ChatOpenAI({
- *   model: "gpt-4o-mini",
  *   temperature: 0,
  * });
  *

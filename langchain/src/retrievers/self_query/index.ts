@@ -45,7 +45,7 @@ export interface SelfQueryRetrieverArgs<T extends VectorStore>
  * @example
  * ```typescript
  * const selfQueryRetriever = SelfQueryRetriever.fromLLM({
- *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   llm: new ChatOpenAI(),
  *   vectorStore: await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings()),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: attributeInfo,

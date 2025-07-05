@@ -13,9 +13,7 @@ import {
 } from "@langchain/core/prompts";
 
 // Initialize the LLM to use to answer the question.
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 const vectorStore = await HNSWLib.fromTexts(
   [

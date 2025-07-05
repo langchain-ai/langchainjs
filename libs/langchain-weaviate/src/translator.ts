@@ -57,7 +57,7 @@ export type WeaviateStructuredQueryResult = {
  * @example
  * ```typescript
  * const selfQueryRetriever = new SelfQueryRetriever({
- *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   llm: new ChatOpenAI(),
  *   vectorStore: new WeaviateStore(),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: [],
