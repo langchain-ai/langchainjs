@@ -2,7 +2,6 @@ import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { OpenAICoreRequestOptions } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
@@ -50,6 +49,12 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
    * See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
    */
   stripNewLines?: boolean;
+
+  /**
+   * The format to return the embeddings in. Can be either `float` or
+   * [`base64`](https://pypi.org/project/pybase64/).
+   */
+  encodingFormat?: "float" | "base64";
 }
 
 /**
@@ -68,8 +73,8 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
  *
  * ```
  */
-export class OpenAIEmbeddings
-  extends Embeddings
+export class OpenAIEmbeddings<TOutput = number[]>
+  extends Embeddings<TOutput>
   implements Partial<OpenAIEmbeddingsParams>
 {
   model = "text-embedding-ada-002";
@@ -91,6 +96,8 @@ export class OpenAIEmbeddings
   timeout?: number;
 
   organization?: string;
+
+  encodingFormat?: "float" | "base64";
 
   protected client: OpenAIClient;
 
@@ -130,6 +137,7 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
     this.timeout = fieldsWithDefaults?.timeout;
     this.dimensions = fieldsWithDefaults?.dimensions;
+    this.encodingFormat = fieldsWithDefaults?.encodingFormat;
 
     this.clientConfig = {
       apiKey,
@@ -146,7 +154,7 @@ export class OpenAIEmbeddings
    * @param texts Array of documents to generate embeddings for.
    * @returns Promise that resolves to a 2D array of embeddings for each document.
    */
-  async embedDocuments(texts: string[]): Promise<number[][]> {
+  async embedDocuments(texts: string[]): Promise<TOutput[]> {
     const batches = chunkArray(
       this.stripNewLines ? texts.map((t) => t.replace(/\n/g, " ")) : texts,
       this.batchSize
@@ -160,16 +168,19 @@ export class OpenAIEmbeddings
       if (this.dimensions) {
         params.dimensions = this.dimensions;
       }
+      if (this.encodingFormat) {
+        params.encoding_format = this.encodingFormat;
+      }
       return this.embeddingWithRetry(params);
     });
     const batchResponses = await Promise.all(batchRequests);
 
-    const embeddings: number[][] = [];
+    const embeddings: TOutput[] = [];
     for (let i = 0; i < batchResponses.length; i += 1) {
       const batch = batches[i];
       const { data: batchResponse } = batchResponses[i];
       for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse[j].embedding);
+        embeddings.push(batchResponse[j].embedding as TOutput);
       }
     }
     return embeddings;
@@ -181,7 +192,7 @@ export class OpenAIEmbeddings
    * @param text Document to generate an embedding for.
    * @returns Promise that resolves to an embedding for the document.
    */
-  async embedQuery(text: string): Promise<number[]> {
+  async embedQuery(text: string): Promise<TOutput> {
     const params: OpenAIClient.EmbeddingCreateParams = {
       model: this.model,
       input: this.stripNewLines ? text.replace(/\n/g, " ") : text,
@@ -189,8 +200,11 @@ export class OpenAIEmbeddings
     if (this.dimensions) {
       params.dimensions = this.dimensions;
     }
+    if (this.encodingFormat) {
+      params.encoding_format = this.encodingFormat;
+    }
     const { data } = await this.embeddingWithRetry(params);
-    return data[0].embedding;
+    return data[0].embedding as TOutput;
   }
 
   /**
@@ -223,7 +237,8 @@ export class OpenAIEmbeddings
 
       this.client = new OpenAIClient(params);
     }
-    const requestOptions: OpenAICoreRequestOptions = {};
+    const requestOptions = {};
+
     return this.caller.call(async () => {
       try {
         const res = await this.client.embeddings.create(
