@@ -328,7 +328,6 @@ const config = {
 
         contextualSearch: false,
       },
-
     }),
 
   scripts: [baseUrl + "js/job_link.js"],
