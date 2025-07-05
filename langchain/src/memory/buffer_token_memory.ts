@@ -36,7 +36,7 @@ export interface ConversationTokenBufferMemoryInput
  * @example
  * ```typescript
  * const memory = new ConversationTokenBufferMemory({
- *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   llm: new ChatOpenAI({}),
  *   maxTokenLimit: 10,
  * });
  *

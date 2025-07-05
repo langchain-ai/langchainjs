@@ -185,7 +185,7 @@ export type CreateStructuredOutputRunnableConfig<
  *   required: ["name", "age"],
  * };
  *
- * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+ * const model = new ChatOpenAI();
  * const prompt = ChatPromptTemplate.fromMessages([
  *   ["human", "Human description: {description}"],
  * ]);

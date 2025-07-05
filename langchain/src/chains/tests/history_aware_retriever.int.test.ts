@@ -27,9 +27,7 @@ test("History aware retriever with a followup", async () => {
     new OpenAIEmbeddings()
   );
   const retriever = vectorstore.asRetriever(2);
-  const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const llm = new ChatOpenAI({});
   const chain = await createHistoryAwareRetriever({
     llm,
     retriever,

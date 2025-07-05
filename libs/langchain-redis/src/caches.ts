@@ -25,8 +25,7 @@ type RedisClientType =
  * @example
  * ```typescript
  * const model = new ChatOpenAI({
- *   model: "gpt-4o-mini",
- *   cache: new RedisCache(new Redis(), { ttl: 60 }),
+ * cache: new RedisCache(new Redis(), { ttl: 60 }),
  * });
  *
  * // Invoke the model to perform an action

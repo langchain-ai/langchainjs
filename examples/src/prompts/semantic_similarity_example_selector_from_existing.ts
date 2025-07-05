@@ -84,9 +84,7 @@ Answer the user's question, using the below examples as reference:
 User question: What is a healthy food?
 */
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 const chain = dynamicPrompt.pipe(model);
 

@@ -33,7 +33,7 @@ test("createToolCallingAgent works", async () => {
     ["placeholder", "{agent_scratchpad}"],
   ]);
   const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
+    modelName: "gpt-4o-mini",
     temperature: 0,
   });
   const agent = await createToolCallingAgent({
@@ -67,7 +67,7 @@ test("createToolCallingAgent stream events works", async () => {
     ["placeholder", "{agent_scratchpad}"],
   ]);
   const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
+    modelName: "gpt-4o",
     temperature: 0,
   });
   const agent = await createToolCallingAgent({
@@ -106,7 +106,7 @@ test("createToolCallingAgent stream events works for multiple turns", async () =
     ["placeholder", "{agent_scratchpad}"],
   ]);
   const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
+    modelName: "gpt-4o",
     temperature: 0,
   });
   const agent = await createToolCallingAgent({
@@ -147,14 +147,14 @@ test("createToolCallingAgent accepts fallbacks", async () => {
     ["placeholder", "{agent_scratchpad}"],
   ]);
   const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
+    modelName: "gpt-4o",
     temperature: 0,
   })
     .bindTools(tools)
     .withFallbacks({
       fallbacks: [
         new ChatOpenAI({
-          model: "gpt-4o-mini",
+          modelName: "gpt-4o",
           temperature: 0,
         }).bindTools(tools),
       ],

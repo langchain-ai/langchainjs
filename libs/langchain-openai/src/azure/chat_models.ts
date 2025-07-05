@@ -363,7 +363,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
- * const logprobsLlm = new ChatOpenAI({ model: "gpt-4o-mini", logprobs: true });
+ * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```

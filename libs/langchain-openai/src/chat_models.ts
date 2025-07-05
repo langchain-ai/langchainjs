@@ -104,12 +104,14 @@ import { _convertToOpenAITool } from "./utils/tools.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
-type ResponsesTool = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tools"]
+type ResponsesTool = Exclude<
+  OpenAIClient.Responses.ResponseCreateParams["tools"],
+  undefined
 >[number];
 
-type ResponsesToolChoice = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tool_choice"]
+type ResponsesToolChoice = Exclude<
+  OpenAIClient.Responses.ResponseCreateParams["tool_choice"],
+  undefined
 >;
 
 type ChatOpenAIToolType =
@@ -532,6 +534,14 @@ interface BaseChatOpenAICallOptions
   prediction?: OpenAIClient.ChatCompletionPredictionContent;
 
   /**
+   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
+   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+   *
+   * @deprecated Use {@link reasoning} object instead.
+   */
+  reasoning_effort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
+
+  /**
    * Options for reasoning models.
    *
    * Note that some options, like reasoning summaries, are only available when using the responses
@@ -574,6 +584,9 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   logitBias?: Record<string, number>;
 
+  /** @deprecated Use "model" instead */
+  modelName: string;
+
   model = "gpt-3.5-turbo";
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
@@ -596,6 +609,9 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   topLogprobs?: number;
 
+  /** @deprecated Use "apiKey" instead */
+  openAIApiKey?: string;
+
   apiKey?: string;
 
   organization?: string;
@@ -615,6 +631,11 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 
   modalities?: Array<OpenAIClient.Chat.ChatCompletionModality>;
+
+  /**
+   * @deprecated Use {@link reasoning} object instead.
+   */
+  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
 
   reasoning?: OpenAIClient.Reasoning;
 
@@ -656,7 +677,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "promptIndex",
       "response_format",
       "seed",
-      "reasoning",
+      "reasoning_effort",
       "service_tier",
     ];
   }
@@ -665,6 +686,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
+      openAIApiKey: "OPENAI_API_KEY",
       apiKey: "OPENAI_API_KEY",
       organization: "OPENAI_ORGANIZATION",
     };
@@ -672,6 +694,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
   get lc_aliases(): Record<string, string> {
     return {
+      modelName: "model",
+      openAIApiKey: "openai_api_key",
       apiKey: "openai_api_key",
     };
   }
@@ -685,6 +709,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "supportsStrictToolCalling",
       "modalities",
       "audio",
+      "reasoningEffort",
       "temperature",
       "maxTokens",
       "topP",
@@ -695,11 +720,13 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "user",
       "streaming",
       "streamUsage",
+      "modelName",
       "model",
       "modelKwargs",
       "stop",
       "stopSequences",
       "timeout",
+      "openAIApiKey",
       "apiKey",
       "cache",
       "maxConcurrency",
@@ -750,15 +777,18 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
   constructor(fields?: BaseChatOpenAIFields) {
     super(fields ?? {});
 
-    this.apiKey =
+    this.openAIApiKey =
       fields?.apiKey ??
+      fields?.openAIApiKey ??
       fields?.configuration?.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
+    this.apiKey = this.openAIApiKey;
     this.organization =
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? this.model;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.modelName = this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
@@ -776,7 +806,12 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
-    this.reasoning = fields?.reasoning;
+    this.reasoningEffort = fields?.reasoningEffort ?? fields?.reasoning?.effort;
+    this.reasoning =
+      fields?.reasoning ??
+      (fields?.reasoningEffort
+        ? { effort: fields.reasoningEffort }
+        : undefined);
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
 
@@ -819,10 +854,19 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
 
     // apply options in reverse order of importance -- newer options supersede older options
     let reasoning: OpenAIClient.Reasoning | undefined;
+    if (this.reasoningEffort !== undefined) {
+      reasoning = { effort: this.reasoningEffort };
+    }
     if (this.reasoning !== undefined) {
       reasoning = {
         ...reasoning,
         ...this.reasoning,
+      };
+    }
+    if (options?.reasoning_effort !== undefined) {
+      reasoning = {
+        ...reasoning,
+        effort: options.reasoning_effort,
       };
     }
     if (options?.reasoning !== undefined) {
@@ -2761,7 +2805,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * import { ChatOpenAI } from '@langchain/openai';
  *
  * const llm = new ChatOpenAI({
- *   model: "gpt-4o-mini",
+ *   model: "gpt-4o",
  *   temperature: 0,
  *   maxTokens: undefined,
  *   timeout: undefined,
@@ -3062,7 +3106,7 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
- * const logprobsLlm = new ChatOpenAI({ model: "gpt-4o-mini", logprobs: true });
+ * const logprobsLlm = new ChatOpenAI({ logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```

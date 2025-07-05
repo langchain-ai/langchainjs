@@ -13,7 +13,6 @@ export const run = async () => {
   const vectorStore = await HNSWLib.fromDocuments(docs, new OpenAIEmbeddings());
   let streamedResponse = "";
   const streamingModel = new ChatOpenAI({
-    model: "gpt-4o-mini",
     streaming: true,
     callbacks: [
       {
@@ -23,9 +22,7 @@ export const run = async () => {
       },
     ],
   });
-  const nonStreamingModel = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const nonStreamingModel = new ChatOpenAI({});
   const chain = ConversationalRetrievalQAChain.fromLLM(
     streamingModel,
     vectorStore.asRetriever(),

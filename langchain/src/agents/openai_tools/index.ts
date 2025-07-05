@@ -74,7 +74,7 @@ export type CreateOpenAIToolsAgentParams = {
  *
  * const llm = new ChatOpenAI({
  *   temperature: 0,
- *   model: "gpt-3.5-turbo-1106",
+ *   modelName: "gpt-3.5-turbo-1106",
  * });
  *
  * const agent = await createOpenAIToolsAgent({

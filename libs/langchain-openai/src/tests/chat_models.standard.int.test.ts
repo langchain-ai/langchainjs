@@ -107,7 +107,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     const constructorArgsCopy = { ...this.constructorArgs };
     this.constructorArgs = {
       ...this.constructorArgs,
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
     };
     await super.testParallelToolCalling();
     this.constructorArgs = constructorArgsCopy;

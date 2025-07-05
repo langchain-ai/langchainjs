@@ -59,9 +59,7 @@ const weatherFunction = {
 };
 
 test("createStructuredOutputRunnable works with Zod", async () => {
-  const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"],
   ]);
@@ -99,9 +97,7 @@ test("createStructuredOutputRunnable works with Zod", async () => {
 });
 
 test("createStructuredOutputRunnable works with JSON schema", async () => {
-  const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"],
   ]);
@@ -128,9 +124,7 @@ test("createStructuredOutputRunnable works with JSON schema", async () => {
 });
 
 test("createOpenAIFnRunnable works", async () => {
-  const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ description: string }>([
     ["human", "Human description: {description}"],
   ]);
@@ -157,9 +151,7 @@ test("createOpenAIFnRunnable works", async () => {
 });
 
 test("createOpenAIFnRunnable works with multiple functions", async () => {
-  const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const model = new ChatOpenAI();
   const prompt = ChatPromptTemplate.fromMessages<{ question: string }>([
     ["human", "Question: {question}"],
   ]);
