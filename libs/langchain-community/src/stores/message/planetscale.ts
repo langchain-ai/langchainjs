@@ -50,7 +50,7 @@ interface selectStoredMessagesDTO {
  *   },
  * });
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   llm: new ChatOpenAI(),
  *   memory: chatHistory,
  * });
  * const response = await chain.invoke({

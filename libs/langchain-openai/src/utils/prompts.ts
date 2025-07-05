@@ -28,7 +28,7 @@ import { _convertMessagesToOpenAIParams } from "../chat_models.js";
  * const openAIClient = new OpenAI();
  *
  * const openaiResponse = await openAIClient.chat.completions.create({
- *   model: "gpt-4o-mini",
+ *   model: "gpt-4o",
  *   messages,
  * });
  * ```

@@ -63,9 +63,7 @@ test("Pass custom structured output parsers", async () => {
   );
   const retriever = vectorStore.asRetriever();
   /** Instantiate the LLM */
-  const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
-  });
+  const llm = new ChatOpenAI({});
   /** Define the prompt template */
   const prompt = ChatPromptTemplate.fromMessages([
     ["system", "You are a helpful assistant"],

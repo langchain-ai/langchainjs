@@ -197,6 +197,7 @@ export class AzureChatOpenAI
 
   get lc_aliases(): Record<string, string> {
     return {
+      modelName: "model",
       openAIApiKey: "openai_api_key",
       azureOpenAIApiKey: "azure_openai_api_key",
       azureOpenAIEndpoint: "azure_openai_api_endpoint",
@@ -229,6 +230,8 @@ export class AzureChatOpenAI
   stopSequences?: string[] | undefined;
 
   streaming: boolean;
+
+  modelName: string;
 
   model: string;
 
@@ -297,7 +300,8 @@ export class AzureChatOpenAI
       throw new Error("Azure OpenAI Deployment name not found");
     }
 
-    this.model = fields?.model ?? this.model;
+    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = this.modelName;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
     this.temperature = fields?.temperature ?? this.temperature;

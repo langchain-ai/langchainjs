@@ -15,7 +15,7 @@ import {
  *
  * const chain = RunnableSequence.from([
  *   promptTemplate,
- *   new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   new ChatOpenAI({}),
  *   new StringOutputParser(),
  * ]);
  *

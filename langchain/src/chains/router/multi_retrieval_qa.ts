@@ -36,7 +36,7 @@ export type MultiRetrievalDefaults = {
  * @example
  * ```typescript
  * const multiRetrievalQAChain = MultiRetrievalQAChain.fromLLMAndRetrievers(
- *   new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   new ChatOpenAI(),
  *   {
  *     retrieverNames: ["aqua teen", "mst3k", "animaniacs"],
  *     retrieverDescriptions: [

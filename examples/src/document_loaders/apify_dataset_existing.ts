@@ -36,7 +36,6 @@ const vectorStore = await HNSWLib.fromDocuments(
 );
 
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
   temperature: 0,
   apiKey: OPENAI_API_KEY,
 });

@@ -3,9 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { concat } from "@langchain/core/utils/stream";
 
 // Instantiate the model
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI();
 
 const response = await model.stream("Hello, how are you?", {
   // Pass the stream options

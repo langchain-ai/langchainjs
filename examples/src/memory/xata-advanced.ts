@@ -34,9 +34,7 @@ const memory = new BufferMemory({
   }),
 });
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI();
 const chain = new ConversationChain({ llm: model, memory });
 
 const res1 = await chain.invoke({ input: "Hi! I'm Jim." });

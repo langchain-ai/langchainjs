@@ -58,7 +58,6 @@ export interface MomentoCacheProps {
  * });
  * // Initialize the OpenAI model with Momento cache for caching responses
  * const model = new ChatOpenAI({
- *   model: "gpt-4o-mini",
  *   cache,
  * });
  * await model.invoke("How are you today?");

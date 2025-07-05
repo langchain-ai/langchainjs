@@ -39,7 +39,7 @@ const llmWithTools = llm.bindTools([weatherTool, populationTool]);
 
 const toolCalls1 = (
   await llmWithTools.invoke("what's bigger in 2024 LA or NYC", {
-    configurable: { model: "gpt-4o-mini" },
+    configurable: { model: "gpt-4o" },
   })
 ).tool_calls;
 console.log("toolCalls1: ", JSON.stringify(toolCalls1, null, 2));
