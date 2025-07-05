@@ -86,7 +86,7 @@ Here is an example using the `ResponseFormatter` schema defined above:
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  modelName: "gpt-4",
   temperature: 0,
 });
 
@@ -116,7 +116,7 @@ Here is an example of how to use JSON mode with OpenAI:
 import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
+  model: "gpt-4",
 }).bind({
   response_format: { type: "json_object" },
 });

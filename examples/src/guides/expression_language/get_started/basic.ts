@@ -5,9 +5,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 const prompt = ChatPromptTemplate.fromMessages([
   ["human", "Tell me a short joke about {topic}"],
 ]);
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 const outputParser = new StringOutputParser();
 
 const chain = prompt.pipe(model).pipe(outputParser);

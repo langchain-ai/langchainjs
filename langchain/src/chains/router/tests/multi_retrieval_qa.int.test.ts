@@ -45,7 +45,6 @@ test("Test MultiPromptChain", async () => {
   );
 
   const llm = new ChatOpenAI({
-    model: "gpt-4o-mini",
     callbacks: [new ConsoleCallbackHandler()],
   });
 

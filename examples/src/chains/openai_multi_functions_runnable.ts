@@ -51,9 +51,7 @@ const weatherFunction = {
   },
 };
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI();
 const prompt = ChatPromptTemplate.fromMessages([
   ["human", "Question: {question}"],
 ]);

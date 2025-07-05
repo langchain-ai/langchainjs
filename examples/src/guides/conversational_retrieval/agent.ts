@@ -29,9 +29,7 @@ const tool = createRetrieverTool(retriever, {
     "Searches and returns documents regarding the state-of-the-union.",
 });
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 const executor = await createConversationalRetrievalAgent(model, [tool], {
   verbose: true,

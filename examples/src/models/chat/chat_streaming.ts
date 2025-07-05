@@ -2,7 +2,6 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const chat = new ChatOpenAI({
-  model: "gpt-4o-mini",
   maxTokens: 25,
   streaming: true,
 });

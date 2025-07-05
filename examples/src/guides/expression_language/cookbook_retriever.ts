@@ -8,9 +8,7 @@ import {
 } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 const vectorStore = await HNSWLib.fromTexts(
   ["mitochondria is the powerhouse of the cell"],

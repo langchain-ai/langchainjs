@@ -19,9 +19,7 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-const llm = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const llm = new ChatOpenAI();
 
 /**
  * Create the first prompt template used for getting the SQL query.

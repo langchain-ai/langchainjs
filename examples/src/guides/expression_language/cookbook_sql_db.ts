@@ -24,9 +24,7 @@ const prompt =
 Question: {question}
 SQL Query:`);
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI();
 
 // The `RunnablePassthrough.assign()` is used here to passthrough the input from the `.invoke()`
 // call (in this example it's the question), along with any inputs passed to the `.assign()` method.
