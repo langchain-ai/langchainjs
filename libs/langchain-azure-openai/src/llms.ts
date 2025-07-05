@@ -62,7 +62,6 @@ export class AzureOpenAI<
 
   get lc_aliases(): Record<string, string> {
     return {
-      modelName: "model",
       openAIApiKey: "openai_api_key",
       azureOpenAIApiKey: "azure_openai_api_key",
       azureOpenAIEndpoint: "azure_openai_api_endpoint",
@@ -85,8 +84,6 @@ export class AzureOpenAI<
   bestOf?: number;
 
   logitBias?: Record<string, number>;
-
-  modelName = "gpt-3.5-turbo-instruct";
 
   model = "gpt-3.5-turbo-instruct";
 
@@ -181,8 +178,7 @@ export class AzureOpenAI<
     this.presencePenalty = fields?.presencePenalty ?? this.presencePenalty;
     this.frequencyPenalty = fields?.frequencyPenalty ?? this.frequencyPenalty;
     this.bestOf = fields?.bestOf ?? this.bestOf;
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.streaming = fields?.streaming ?? false;
     this.batchSize = fields?.batchSize ?? this.batchSize;
