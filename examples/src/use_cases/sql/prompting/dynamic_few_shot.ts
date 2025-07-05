@@ -94,7 +94,6 @@ SQL query:
 // Now we can use it in a chain:
 
 const llm = new ChatOpenAI({
-  model: "gpt-4o-mini",
   temperature: 0,
 });
 const chain = await createSqlQueryChain({

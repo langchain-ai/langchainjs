@@ -14,9 +14,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 // Initialize the OpenAI model
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 
 // Define prompt templates for document formatting, summarizing, collapsing, and combining
 const documentPrompt = PromptTemplate.fromTemplate("{pageContent}");

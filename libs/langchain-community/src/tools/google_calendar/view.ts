@@ -17,7 +17,7 @@ import { runViewEvents } from "./commands/run-view-events.js";
  *     "https:
  *     "https:
  *   ],
- *   model: new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   model: new ChatOpenAI({}),
  * });
  * const viewInput = `What meetings do I have this week?`;
  * const viewResult = await googleCalendarViewTool.invoke({ input: viewInput });

@@ -31,7 +31,6 @@ test("Streaming JSON patch", async () => {
     `tell me a long joke about {foo}`
   );
   const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
     temperature: 0,
   }).withConfig(modelParams);
 
@@ -61,7 +60,6 @@ test("Streaming JSON patch with an event stream output parser", async () => {
     `tell me a long joke about {foo}`
   );
   const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
     temperature: 0,
   }).withConfig(modelParams);
 
@@ -93,7 +91,6 @@ test("Streaming aggregated JSON", async () => {
     `tell me a long joke about {foo}`
   );
   const model = new ChatOpenAI({
-    model: "gpt-4o-mini",
     temperature: 0,
   }).withConfig(modelParams);
 

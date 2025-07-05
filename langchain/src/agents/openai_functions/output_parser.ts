@@ -23,7 +23,7 @@ export type FunctionsAgentAction = AgentAction & {
  * ]);
  *
  * const modelWithFunctions = new ChatOpenAI({
- *   model: "gpt-4",
+ *   modelName: "gpt-4",
  *   temperature: 0,
  * }).bindTools(tools);
  *

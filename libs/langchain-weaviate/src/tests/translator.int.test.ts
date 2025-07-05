@@ -92,7 +92,7 @@ test("Weaviate Self Query Retriever Test", async () => {
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo",
   });
   const weaviateArgs = {
     client,
@@ -232,7 +232,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo",
   });
   const weaviateArgs = {
     client,
@@ -373,7 +373,7 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    modelName: "gpt-3.5-turbo",
   });
   expect(process.env.WEAVIATE_URL).toBeDefined();
   expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);

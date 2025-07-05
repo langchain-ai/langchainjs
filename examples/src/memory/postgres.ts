@@ -19,9 +19,7 @@ const poolConfig = {
 
 const pool = new pg.Pool(poolConfig);
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI();
 
 const prompt = ChatPromptTemplate.fromMessages([
   [

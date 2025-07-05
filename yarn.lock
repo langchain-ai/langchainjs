@@ -211,12 +211,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:>=0.14 <1, @anthropic-ai/sdk@npm:^0.52.0":
-  version: 0.52.0
-  resolution: "@anthropic-ai/sdk@npm:0.52.0"
+"@anthropic-ai/sdk@npm:>=0.50.3 <1":
+  version: 0.55.1
+  resolution: "@anthropic-ai/sdk@npm:0.55.1"
   bin:
     anthropic-ai-sdk: bin/cli
-  checksum: 09b8edc517d05c76bfa63f72537aad4e292d08560daf7a179e9f7ab648278a74e41ef34688e9711d54e6219e57d92a6b22105b9a0648a227dd80fdc15dd80abd
+  checksum: 35c2ea10207c578debfecc874b1a714c718d5306a51cb1c9dd5a0a36883cdf5e48ac1ac9b31f5cf4e26c2259fdd876d7f14444cbb35884852d7c6887de3167f0
   languageName: node
   linkType: hard
 
@@ -235,13 +235,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/vertex-sdk@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "@anthropic-ai/vertex-sdk@npm:0.4.1"
+"@anthropic-ai/sdk@npm:^0.56.0":
+  version: 0.56.0
+  resolution: "@anthropic-ai/sdk@npm:0.56.0"
+  bin:
+    anthropic-ai-sdk: bin/cli
+  checksum: b34d152f287bdec3a3201ecb2b65d7b00c9d9739b3153681cd68fe3d6298655266441f68a4f381fd650b895cfa26724844ae2a637e558c32c81083efa2a43f7d
+  languageName: node
+  linkType: hard
+
+"@anthropic-ai/vertex-sdk@npm:^0.11.5":
+  version: 0.11.5
+  resolution: "@anthropic-ai/vertex-sdk@npm:0.11.5"
   dependencies:
-    "@anthropic-ai/sdk": ">=0.14 <1"
+    "@anthropic-ai/sdk": ">=0.50.3 <1"
     google-auth-library: ^9.4.2
-  checksum: 3983c6f1b0e0aa2ce6896a0269177d1374343ba86169a30ad6cc0d9beef40ddcf410159baaa3f0942afbf62930951d067a870aa5c5e0624fe2c47981dc8d8c55
+  checksum: c9ad7dda54b047716ebf60cae8e031a5a82e7c9687c1bbcf759131fb036b7bc56942c8db608206814eafde84b760f15e4a9aaf0255b79e053c12d135923ed503
   languageName: node
   linkType: hard
 
@@ -7118,8 +7127,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
-    "@anthropic-ai/sdk": ^0.52.0
-    "@anthropic-ai/vertex-sdk": ^0.4.1
+    "@anthropic-ai/sdk": ^0.56.0
+    "@anthropic-ai/vertex-sdk": ^0.11.5
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"

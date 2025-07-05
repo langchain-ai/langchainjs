@@ -8,9 +8,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 /* Initialize the LLM to use to answer the question */
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
+const model = new ChatOpenAI({});
 /* Load in the file we want to do question answering over */
 const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 /* Split the text into chunks */
