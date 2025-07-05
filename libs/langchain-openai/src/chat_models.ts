@@ -557,7 +557,7 @@ function _convertMessagesToOpenAIResponsesParams(
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id && !zdrEnabled && !lcMsg.id.startsWith("msg_")
+          ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
             ? { id: lcMsg.id }
             : {}),
           content:
