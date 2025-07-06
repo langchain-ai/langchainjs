@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mcp-adapters",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
