@@ -644,7 +644,7 @@ export class OracleVS extends VectorStore {
     try {
       const vss = new OracleVS(embeddings, dbConfig);
       connection = await vss.getConnection();
-      await dropTablePurge(connection, dbConfig.tableName); // FIX it is needed?
+      //await dropTablePurge(connection, dbConfig.tableName); // FIX it is needed?
       if (connection) await vss.retConnection(connection);
       await vss.initialize();
 
