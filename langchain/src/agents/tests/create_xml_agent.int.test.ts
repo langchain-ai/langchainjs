@@ -10,7 +10,7 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 test("createXmlAgent works", async () => {
   const prompt = await pull<PromptTemplate>("hwchase17/xml-agent-convo");
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     temperature: 0,
   });
   const agent = await createXmlAgent({

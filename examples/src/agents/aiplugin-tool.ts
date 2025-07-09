@@ -13,7 +13,7 @@ export const run = async () => {
   ];
   const executor = await initializeAgentExecutorWithOptions(
     tools,
-    new ChatOpenAI({ temperature: 0 }),
+    new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
     { agentType: "chat-zero-shot-react-description", verbose: true }
   );
 

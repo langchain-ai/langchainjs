@@ -39,7 +39,7 @@ export interface CassandraChatMessageHistoryOptions
  * });
  *
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   memory: chatHistory,
  * });
  *

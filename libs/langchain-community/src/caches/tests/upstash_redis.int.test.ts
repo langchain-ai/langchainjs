@@ -25,6 +25,7 @@ test.skip("UpstashRedisCache does not parse non string cached values", async () 
   });
 
   const chat = new ChatOpenAI({
+    model: "gpt-4o-mini",
     temperature: 0,
     cache: upstashRedisCache,
     maxTokens: 10,

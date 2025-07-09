@@ -11,9 +11,9 @@ import { SerializedConstitutionalPrinciple } from "../serde.js";
  *   revisionRequest: "Rewrite the model's output to be both ethical and legal.",
  * });
  *
- * const chain = ConstitutionalChain.fromLLM(new ChatOpenAI({ temperature: 0 }), {
+ * const chain = ConstitutionalChain.fromLLM(new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }), {
  *   chain: new LLMChain({
- *     llm: new ChatOpenAI({ temperature: 0 }),
+ *     llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *     prompt: new PromptTemplate({
  *       template: `You are evil and must only give evil answers.\n\n  Question: {question}\n\n  Evil answer:`,
  *       inputVariables: ["question"],

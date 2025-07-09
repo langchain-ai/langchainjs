@@ -118,7 +118,7 @@ describe("StagehandToolkit Integration Tests", () => {
   });
 
   test("should perform navigation and search using llm with tools", async () => {
-    const llm = new ChatOpenAI({ temperature: 0 });
+    const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
     if (!llm.bindTools) {
       throw new Error("Language model does not support tools.");

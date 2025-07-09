@@ -53,6 +53,7 @@ test("StructuredOutputParser deals special chars in prompt with llm model", asyn
 
 test("StructuredOutputParser deals special chars in prompt with chat model", async () => {
   const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     temperature: 0,
   });
 
@@ -97,6 +98,7 @@ test("StructuredOutputParser deals special chars in prompt with chat model", asy
 
 test("StructuredOutputParser deals special chars in prompt with chat model 2", async () => {
   const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     temperature: 0,
   });
 

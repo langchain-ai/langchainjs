@@ -6,7 +6,7 @@ const handler = async () => {
     contentType: "text/event-stream",
   });
 
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
   // Values are stringified to avoid dealing with newlines and should
   // be parsed with `JSON.parse()` when consuming.

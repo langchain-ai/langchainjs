@@ -25,6 +25,7 @@ const chain = RunnableSequence.from([
   { content: (doc: Document) => doc.pageContent },
   PromptTemplate.fromTemplate(`Summarize the following document:\n\n{content}`),
   new ChatOpenAI({
+    model: "gpt-4o-mini",
     maxRetries: 0,
   }),
   new StringOutputParser(),

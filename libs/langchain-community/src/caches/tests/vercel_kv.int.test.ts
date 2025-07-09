@@ -21,6 +21,7 @@ test("VercelKVCache works with ChatOpenAI", async () => {
   });
 
   const chat = new ChatOpenAI({
+    model: "gpt-4o-mini",
     temperature: 0,
     cache: vercelKVCache,
     maxTokens: 10,

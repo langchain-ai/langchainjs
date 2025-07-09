@@ -5,7 +5,7 @@ import { BufferMemory } from "langchain/memory";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 export const run = async () => {
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const tools = [new Calculator()];
 
   const executor = await initializeAgentExecutorWithOptions(tools, model, {

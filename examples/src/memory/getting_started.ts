@@ -63,7 +63,7 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 
-const chatModel = new ChatOpenAI({ temperature: 0 });
+const chatModel = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const chatPrompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a nice chatbot having a conversation with a human."],
   new MessagesPlaceholder("chat_history"),

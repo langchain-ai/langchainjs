@@ -7,6 +7,7 @@ import { LLMonitorHandler } from "../handlers/llmonitor.js";
 
 test.skip("Test traced chat call with tags", async () => {
   const chat = new ChatOpenAI({
+    model: "gpt-4o-mini",
     callbacks: [new LLMonitorHandler({ verbose: true })],
   });
 

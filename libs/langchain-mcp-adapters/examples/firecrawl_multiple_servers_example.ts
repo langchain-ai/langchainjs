@@ -72,7 +72,7 @@ async function runExample() {
 
     // Create an OpenAI model
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4o",
       temperature: 0,
     });
 

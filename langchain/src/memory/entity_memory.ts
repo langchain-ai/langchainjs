@@ -41,11 +41,11 @@ export interface EntityMemoryInput extends BaseChatMemoryInput {
  * @example
  * ```typescript
  * const memory = new EntityMemory({
- *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   chatHistoryKey: "history",
  *   entitiesKey: "entities",
  * });
- * const model = new ChatOpenAI({ temperature: 0.9 });
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 });
  * const chain = new LLMChain({
  *   llm: model,
  *   prompt: ENTITY_MEMORY_CONVERSATION_TEMPLATE,

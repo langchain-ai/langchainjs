@@ -39,7 +39,7 @@ export type RedisChatMessageHistoryInput = {
  * });
  *
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 }),
+ *   llm: new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
  *   memory: { chatHistory },
  * });
  *

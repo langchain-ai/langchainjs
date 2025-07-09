@@ -24,7 +24,7 @@ test("Test OpenAIFunctions MetadataTagger", async () => {
   });
 
   const metadataTagger = createMetadataTaggerFromZod(zodSchema, {
-    llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo" }),
+    llm: new ChatOpenAI({ model: "gpt-3.5-turbo" }),
     prompt: PromptTemplate.fromTemplate(taggingChainTemplate),
   });
 

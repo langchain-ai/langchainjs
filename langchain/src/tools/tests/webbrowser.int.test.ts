@@ -5,7 +5,7 @@ import fetchAdapter from "../../util/axios-fetch-adapter.js";
 
 describe("webbrowser Test suite", () => {
   test("get word of the day", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -17,7 +17,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test("get a summary of the page when empty request with fetch adapter", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({
@@ -36,7 +36,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test("error no url", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -46,7 +46,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test("error no protocol or malformed", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -58,7 +58,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test("error bad site", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -72,7 +72,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test.skip("get a summary of a page that detects scraping", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -85,7 +85,7 @@ describe("webbrowser Test suite", () => {
 
   // cant we figure the headers to fix this?
   test.skip("get a summary of a page that detects scraping 2", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -96,7 +96,7 @@ describe("webbrowser Test suite", () => {
   });
 
   test("get a summary of a page that rejects unauthorized", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
@@ -111,7 +111,7 @@ describe("webbrowser Test suite", () => {
   // "https://wsimag.com/economy-and-politics/15473-power-and-money",
   // "https://thriveglobal.com/stories/sleep-what-to-do-what-not-to-do",
   test.skip("get a summary of a page that redirects too many times", async () => {
-    const model = new ChatOpenAI({ temperature: 0 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });

@@ -95,7 +95,7 @@ import { ChatOpenAI } from "@langchain/openai";
 ```
 
 ```typescript
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({ model: "gpt-4o-mini" });
 const examples = [
   {
     input: "Could the members of The Police perform lawful arrests?",

@@ -46,7 +46,7 @@ export const run = async () => {
    */
   }
   const fixParser = OutputFixingParser.fromLLM(
-    new ChatOpenAI({ temperature: 0 }),
+    new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
     parser
   );
   const output = await fixParser.parse(badOutput);

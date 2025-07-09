@@ -40,7 +40,7 @@ export class RequestsToolkit extends BaseToolkit {
  * const toolkit = new OpenApiToolkit(
  *   new JsonSpec({
  *   }),
- *   new ChatOpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   {
  *     "Content-Type": "application/json",
  *     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,

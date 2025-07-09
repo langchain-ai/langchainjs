@@ -6,7 +6,7 @@ import {
 } from "@langchain/core/prompts";
 import { BufferMemory } from "langchain/memory";
 
-const chat = new ChatOpenAI({ temperature: 0 });
+const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
 const chatPrompt = ChatPromptTemplate.fromMessages([
   [

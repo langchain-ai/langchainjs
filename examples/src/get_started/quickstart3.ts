@@ -2,7 +2,9 @@
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
-const chatModel = new ChatOpenAI({});
+const chatModel = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 const embeddings = new OpenAIEmbeddings({});
 

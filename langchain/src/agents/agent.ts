@@ -394,7 +394,7 @@ export interface LLMSingleActionAgentInput {
  * const agent = new LLMSingleActionAgent({
  *   llmChain: new LLMChain({
  *     prompt: customPromptTemplate,
- *     llm: new ChatOpenAI({ temperature: 0 }),
+ *     llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   }),
  *   outputParser: customOutputParser,
  *   stop: ["\nObservation"],

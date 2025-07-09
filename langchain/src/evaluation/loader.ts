@@ -52,7 +52,7 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
   const llm_ =
     llm ??
     new ChatOpenAI({
-      modelName: "gpt-4",
+      model: "gpt-4",
       temperature: 0.0,
     });
 
