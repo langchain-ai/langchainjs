@@ -535,6 +535,7 @@ export class ChatOllama
     this.streaming = fields?.streaming;
     this.format = fields?.format;
     this.keepAlive = fields?.keepAlive;
+    this.think = fields?.think;
     this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
   }
 
