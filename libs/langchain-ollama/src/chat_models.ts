@@ -607,6 +607,7 @@ export class ChatOllama
       model: this.model,
       format: options?.format ?? this.format,
       keep_alive: this.keepAlive,
+      think: this.think,
       options: {
         numa: this.numa,
         num_ctx: this.numCtx,
