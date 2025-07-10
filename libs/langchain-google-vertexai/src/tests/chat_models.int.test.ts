@@ -67,8 +67,8 @@ const testGeminiModelNames = [
   ["gemini-1.5-flash-002"],
   ["gemini-2.0-flash-001"],
   ["gemini-2.0-flash-lite-001"],
-  // ["gemini-2.0-flash-thinking-exp-1219"],
-  ["gemini-2.5-pro-exp-03-25"],
+  ["gemini-2.5-flash-preview-04-17"],
+  ["gemini-2.5-pro-preview-05-06"],
 ];
 
 /*
@@ -76,9 +76,9 @@ const testGeminiModelNames = [
  * For those models, set how long (in millis) to wait in between each test.
  */
 const testGeminiModelDelay: Record<string, number> = {
-  "gemini-2.0-flash-exp": 5000,
-  "gemini-2.0-flash-thinking-exp-1219": 5000,
   "gemini-2.5-pro-exp-03-25": 5000,
+  "gemini-2.5-pro-preview-05-06": 5000,
+  "gemini-2.5-flash-preview-04-17": 5000,
 };
 
 describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
@@ -106,6 +106,30 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
     expect(recorder?.request?.connection?.url).toMatch(
       /https:\/\/.+-aiplatform.googleapis.com/
+    );
+
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
+
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+  });
+
+  test("invoke global", async () => {
+    // Global endpoint is not supported for Gemini 1.5
+    const model = new ChatVertexAI({
+      callbacks,
+      modelName,
+      location: "global",
+    });
+    const res = await model.invoke("What is 1 + 1?");
+
+    expect(recorder?.request?.connection?.url).toMatch(
+      /https:\/\/aiplatform.googleapis.com/
     );
 
     expect(res).toBeDefined();
@@ -193,11 +217,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({
-      modelName,
-    }).bind({
-      tools,
-    });
+    const model = new ChatVertexAI({ modelName }).bindTools(tools);
     const result = await model.invoke("Run a test on the cobalt project");
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
@@ -241,11 +261,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         ],
       },
     ];
-    const model = new ChatVertexAI({
-      modelName,
-    }).bind({
-      tools,
-    });
+    const model = new ChatVertexAI({ modelName }).bindTools(tools);
     const toolResult = {
       testPassed: true,
     };
@@ -462,8 +478,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatVertexAI({
       modelName,
     });
-    const modelWithTools = model.bind({
-      tools: [calculatorTool, weatherTool],
+    const modelWithTools = model.bindTools([calculatorTool, weatherTool], {
       tool_choice: "calculator",
     });
 
@@ -762,9 +777,7 @@ describe.each(testAnthropicModelNames)(
         modelName,
         callbacks,
       });
-      const modelWithTools = model.bind({
-        tools: [weatherTool],
-      });
+      const modelWithTools = model.bindTools([weatherTool]);
 
       const result = await modelWithTools.invoke(
         "Whats the weather like in paris today?"

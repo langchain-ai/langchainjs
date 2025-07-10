@@ -35,8 +35,8 @@ import {
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
 import { Runnable } from "@langchain/core/runnables";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { CohereClientOptions, getCohereClient } from "./client.js";
 
 type ChatCohereToolType = BindToolsInput | Cohere.Tool;
@@ -255,8 +255,8 @@ function _formatToolsToCohere(
     });
   } else if (tools.every(isLangChainTool)) {
     return tools.map((tool) => {
-      const parameterDefinitionsFromZod = isZodSchema(tool.schema)
-        ? zodToJsonSchema(tool.schema)
+      const parameterDefinitionsFromZod = isInteropZodSchema(tool.schema)
+        ? toJsonSchema(tool.schema)
         : tool.schema;
       return {
         name: tool.name,
@@ -289,11 +289,11 @@ function _formatToolsToCohere(
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_cohere.ChatCohereCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -792,7 +792,7 @@ export class ChatCohere<
     tools: ChatCohereToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: _formatToolsToCohere(tools),
       ...kwargs,
     } as Partial<CallOptions>);

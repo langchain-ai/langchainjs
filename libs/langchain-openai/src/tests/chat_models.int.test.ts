@@ -757,11 +757,11 @@ test("Test ChatOpenAI token usage reporting for streaming function calls", async
   const streamingModel = new ChatOpenAI({
     ...constructorArgs,
     streaming: true,
-  }).bind(callOptions);
+  }).withConfig(callOptions);
   const nonStreamingModel = new ChatOpenAI({
     ...constructorArgs,
     streaming: false,
-  }).bind(callOptions);
+  }).withConfig(callOptions);
 
   const [nonStreamingResult, streamingResult] = await Promise.all([
     nonStreamingModel.invoke([new HumanMessage(humanMessage)]),
@@ -1057,7 +1057,7 @@ describe("Audio output", () => {
       maxRetries: 0,
       model: "gpt-4o-audio-preview",
       temperature: 0,
-    }).bind({
+    }).withConfig({
       modalities: ["text", "audio"],
       audio: {
         voice: "alloy",
@@ -1188,7 +1188,7 @@ test("Can stream o1-mini requests", async () => {
   expect(numChunks).toBeGreaterThan(3);
 });
 
-test("Doesn't stream o1 requests", async () => {
+test("Can stream o1 requests", async () => {
   const model = new ChatOpenAI({
     model: "o1",
   });
@@ -1212,7 +1212,7 @@ test("Doesn't stream o1 requests", async () => {
     expect(finalMsg.content.length).toBeGreaterThanOrEqual(1);
   }
 
-  expect(numChunks).toBe(1);
+  expect(numChunks).toBeGreaterThan(3);
 });
 
 test("Allows developer messages with o1", async () => {

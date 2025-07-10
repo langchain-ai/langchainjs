@@ -2,7 +2,7 @@
 
 import { expect, test } from "@jest/globals";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { Operation, applyPatch } from "@langchain/core/utils/json_patch";
 
 import { ChatOpenAI } from "@langchain/openai";
@@ -20,7 +20,7 @@ const modelParams = {
     {
       name: "joke",
       description: "A joke",
-      parameters: zodToJsonSchema(schema),
+      parameters: toJsonSchema(schema),
     },
   ],
   function_call: { name: "joke" },
@@ -32,7 +32,7 @@ test("Streaming JSON patch", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const parser = new JsonOutputFunctionsParser({ diff: true });
   const chain = prompt.pipe(model).pipe(parser);
@@ -61,7 +61,7 @@ test("Streaming JSON patch with an event stream output parser", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const jsonParser = new JsonOutputFunctionsParser({ diff: true });
   const parser = new HttpResponseOutputParser({
@@ -92,7 +92,7 @@ test("Streaming aggregated JSON", async () => {
   );
   const model = new ChatOpenAI({
     temperature: 0,
-  }).bind(modelParams);
+  }).withConfig(modelParams);
 
   const parser = new JsonOutputFunctionsParser();
   const chain = prompt.pipe(model).pipe(parser);

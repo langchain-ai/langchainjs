@@ -1,5 +1,7 @@
-import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -33,7 +35,10 @@ import {
   ChatResult,
 } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import Groq from "groq-sdk";
 import type {
   ChatCompletion,
@@ -582,13 +587,12 @@ function _oldConvertDeltaToMessageChunk(
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_groq.ChatGroqCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
- *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -1113,7 +1117,7 @@ export class ChatGroq extends BaseChatModel<
     tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
@@ -1328,7 +1332,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1339,7 +1343,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1350,7 +1354,7 @@ export class ChatGroq extends BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1361,7 +1365,8 @@ export class ChatGroq extends BaseChatModel<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1371,33 +1376,42 @@ export class ChatGroq extends BaseChatModel<
     let llm: Runnable<BaseLanguageModelInput>;
 
     if (method === "jsonMode") {
-      llm = this.bind({
-        response_format: { type: "json_object" },
-      });
-      if (isZodSchema(schema)) {
+      let outputSchema: JsonSchema7Type | undefined;
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputSchema,
+        },
+      });
     } else {
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: {
+              name: functionName,
+              description: asJsonSchema.description,
+              parameters: asJsonSchema,
             },
-          ],
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
           },
         });
         outputParser = new JsonOutputKeyToolsParser({
@@ -1422,18 +1436,21 @@ export class ChatGroq extends BaseChatModel<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
+        llm = this.bindTools([
+          {
+            type: "function" as const,
+            function: openAIFunctionDefinition,
+          },
+        ]).withConfig({
           tool_choice: {
             type: "function" as const,
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema,
           },
         });
         outputParser = new JsonOutputKeyToolsParser<RunOutput>({

@@ -13,7 +13,6 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import type { z } from "zod";
 import {
   Runnable,
   RunnablePassthrough,
@@ -23,6 +22,10 @@ import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { concat } from "@langchain/core/utils/stream";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   GoogleAIBaseLLMInput,
   GoogleAIModelParams,
@@ -34,6 +37,8 @@ import {
   GoogleAIAPI,
   GoogleAIAPIParams,
   GoogleSearchToolSetting,
+  GoogleSpeechConfig,
+  GeminiJsonSchema,
 } from "./types.js";
 import {
   convertToGeminiTools,
@@ -55,7 +60,10 @@ import type {
   GeminiAPIConfig,
   GoogleAIModelModality,
 } from "./types.js";
-import { schemaToGeminiParameters } from "./utils/zod_to_gemini_parameters.js";
+import {
+  removeAdditionalProperties,
+  schemaToGeminiParameters,
+} from "./utils/zod_to_gemini_parameters.js";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -196,6 +204,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   topK: number;
 
+  seed: number;
+
   presencePenalty: number;
 
   frequencyPenalty: number;
@@ -214,6 +224,8 @@ export abstract class ChatGoogleBase<AuthOptions>
   convertSystemMessageToHumanContent: boolean | undefined;
 
   safetyHandler: GoogleAISafetyHandler;
+
+  speechConfig: GoogleSpeechConfig;
 
   streamUsage = true;
 
@@ -300,7 +312,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     AIMessageChunk,
     GoogleAIBaseLanguageModelCallOptions
   > {
-    return this.bind({ tools: convertToGeminiTools(tools), ...kwargs });
+    return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
   // Replace
@@ -424,7 +436,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -435,7 +447,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -446,7 +458,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -457,7 +469,8 @@ export abstract class ChatGoogleBase<AuthOptions>
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -468,7 +481,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: GeminiTool[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       const jsonSchema = schemaToGeminiParameters(schema);
       tools = [
         {
@@ -497,10 +510,12 @@ export abstract class ChatGoogleBase<AuthOptions>
         geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
         functionName = schema.name;
       } else {
+        // We are providing the schema for *just* the parameters, probably
+        const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
         geminiFunctionDefinition = {
           name: functionName,
           description: schema.description ?? "",
-          parameters: schema as GeminiFunctionSchema,
+          parameters,
         };
       }
       tools = [
@@ -513,10 +528,7 @@ export abstract class ChatGoogleBase<AuthOptions>
         keyName: functionName,
       });
     }
-    const llm = this.bind({
-      tools,
-      tool_choice: functionName,
-    });
+    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
 
     if (!includeRaw) {
       return llm.pipe(outputParser).withConfig({
@@ -546,15 +558,4 @@ export abstract class ChatGoogleBase<AuthOptions>
       runName: "StructuredOutputRunnable",
     });
   }
-}
-
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
 }

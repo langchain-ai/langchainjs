@@ -7,7 +7,7 @@ import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
-import { z } from "zod";
+import { InteropZodType } from "@langchain/core/utils/types";
 import {
   ChatOpenAI,
   ChatOpenAIStructuredOutputMethodOptions,
@@ -18,6 +18,7 @@ import {
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { normalizeHeaders } from "../utils/headers.js";
 
 export type { AzureOpenAIInput };
 
@@ -40,11 +41,11 @@ export type { AzureOpenAIInput };
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -296,7 +297,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>JSON Object Response Format</strong></summary>
  *
  * ```typescript
- * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlm = llm.withConfig({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
@@ -541,7 +542,9 @@ export class AzureChatOpenAI extends ChatOpenAI {
     return params;
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -575,12 +578,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
         env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
       }
 
-      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
+      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
-          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
-        }`,
+        "User-Agent": defaultHeaders["User-Agent"]
+          ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
+          : `langchainjs-azure-openai/2.0.0 (${env})`,
       };
 
       this.client = new AzureOpenAIClient({
@@ -669,7 +672,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -680,7 +683,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -691,7 +694,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -704,7 +707,7 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>

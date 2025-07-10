@@ -28,16 +28,6 @@ const modelWithTools = model.bindTools([
     input_schema: zodToJsonSchema(weatherSchema),
   },
 ]);
-// Optionally, you can bind tools via the `.bind` method:
-// const modelWithTools = model.bind({
-//   tools: [
-//     {
-//       name: "weather_tool",
-//       description: weatherSchema.description,
-//       input_schema: zodToJsonSchema(weatherSchema),
-//     },
-//   ],
-// });
 
 const res = await modelWithTools.invoke("What's the weather in New York?");
 console.log(res);

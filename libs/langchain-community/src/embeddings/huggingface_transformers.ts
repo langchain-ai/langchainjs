@@ -72,7 +72,7 @@ export class HuggingFaceTransformersEmbeddings
 
   pipelineOptions?: FeatureExtractionPipelineOptions;
 
-  private pipelinePromise: Promise<FeatureExtractionPipeline>;
+  private pipelinePromise: Promise<FeatureExtractionPipeline> | null = null;
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
@@ -116,10 +116,20 @@ export class HuggingFaceTransformersEmbeddings
   }
 
   private async runEmbedding(texts: string[]) {
-    const pipe = await (this.pipelinePromise ??= (
-      await import("@huggingface/transformers")
-    ).pipeline("feature-extraction", this.model, this.pretrainedOptions));
+    if (!this.pipelinePromise) {
+      this.pipelinePromise = (async () => {
+        const transformers = await import("@huggingface/transformers");
+        const pipeline = transformers.pipeline;
+        const result = await pipeline(
+          "feature-extraction",
+          this.model,
+          this.pretrainedOptions
+        );
+        return result as FeatureExtractionPipeline;
+      })();
+    }
 
+    const pipe = await this.pipelinePromise;
     return this.caller.call(async () => {
       const output = await pipe(texts, this.pipelineOptions);
       return output.tolist();

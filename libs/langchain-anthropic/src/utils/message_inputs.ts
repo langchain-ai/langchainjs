@@ -23,13 +23,16 @@ import {
   AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
   AnthropicTextBlockParam,
-  AnthropicToolResponse,
   AnthropicToolResultBlockParam,
   AnthropicToolUseBlockParam,
   AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
+  AnthropicServerToolUseBlockParam,
+  AnthropicWebSearchToolResultBlockParam,
   isAnthropicImageBlockParam,
+  AnthropicSearchResultBlockParam,
+  AnthropicToolResponse,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -116,7 +119,10 @@ function _ensureMessageContents(
             content: [
               {
                 type: "tool_result",
-                content: _formatContent(message.content),
+                // rare case: message.content could be undefined
+                ...(message.content != null
+                  ? { content: _formatContent(message.content) }
+                  : {}),
                 tool_use_id: (message as ToolMessage).tool_call_id,
               },
             ],
@@ -341,7 +347,14 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 };
 
 function _formatContent(content: MessageContent) {
-  const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
+  const toolTypes = [
+    "tool_use",
+    "tool_result",
+    "input_json_delta",
+    "server_tool_use",
+    "web_search_tool_result",
+    "web_search_result",
+  ];
   const textTypes = ["text", "text_delta"];
 
   if (typeof content === "string") {
@@ -393,6 +406,20 @@ function _formatContent(content: MessageContent) {
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
         return block;
+      } else if (contentPart.type === "search_result") {
+        const block: AnthropicSearchResultBlockParam = {
+          type: "search_result" as const, // Explicitly setting the type as "search_result"
+          title: contentPart.title,
+          source: contentPart.source,
+          ...("cache_control" in contentPart && contentPart.cache_control
+            ? { cache_control: contentPart.cache_control }
+            : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
+          content: contentPart.content,
+        };
+        return block;
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
         "text" in contentPart
@@ -402,6 +429,9 @@ function _formatContent(content: MessageContent) {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -496,7 +526,8 @@ export function _convertMessagesToAnthropicPayload(
           content.find(
             (contentPart) =>
               (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta") &&
+                contentPart.type === "input_json_delta" ||
+                contentPart.type === "server_tool_use") &&
               contentPart.id === toolCall.id
           )
         );
@@ -542,6 +573,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicDocumentBlockParam
           | AnthropicThinkingBlockParam
           | AnthropicRedactedThinkingBlockParam
+          | AnthropicServerToolUseBlockParam
+          | AnthropicWebSearchToolResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -551,6 +584,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicDocumentBlockParam
     | AnthropicThinkingBlockParam
     | AnthropicRedactedThinkingBlockParam
+    | AnthropicServerToolUseBlockParam
+    | AnthropicWebSearchToolResultBlockParam
   > => {
     if (typeof content === "string") {
       return [

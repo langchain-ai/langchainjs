@@ -57,14 +57,16 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { z } from "zod";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
   StructuredOutputParser,
 } from "@langchain/core/output_parsers";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
   Neverify,
@@ -139,12 +141,17 @@ function _convertToolToWatsonxTool(
     if ("type" in tool) {
       return tool as WatsonXAI.TextChatParameterTools;
     }
+    // Check if schema is a Zod schema or already a JSON schema
+    const parameters = isInteropZodSchema(tool.schema)
+      ? toJsonSchema(tool.schema)
+      : tool.schema;
+
     return {
       type: "function",
       function: {
         name: tool.name,
         description: tool.description ?? "Tool: " + tool.name,
-        parameters: zodToJsonSchema(tool.schema),
+        parameters,
       },
     };
   });
@@ -494,6 +501,7 @@ export class ChatWatsonx<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     } = fields;
@@ -505,6 +513,7 @@ export class ChatWatsonx<
       watsonxAIUsername,
       watsonxAIPassword,
       watsonxAIUrl,
+      disableSSL,
       version,
       serviceUrl,
     });
@@ -550,7 +559,7 @@ export class ChatWatsonx<
     tools: ChatWatsonxToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: _convertToolToWatsonxTool(tools),
       ...kwargs,
     } as CallOptions);
@@ -821,7 +830,7 @@ export class ChatWatsonx<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -832,7 +841,7 @@ export class ChatWatsonx<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -843,7 +852,7 @@ export class ChatWatsonx<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -854,7 +863,8 @@ export class ChatWatsonx<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -865,18 +875,18 @@ export class ChatWatsonx<
       const options = {
         responseFormat: { type: "json_object" },
       } as Partial<CallOptions>;
-      llm = this.bind(options);
+      llm = this.withConfig(options);
 
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
-          tools: [
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: {
@@ -886,14 +896,16 @@ export class ChatWatsonx<
               },
             },
           ],
-          // Ideally that would be set to required but this is not supported yet
-          tool_choice: {
-            type: "function",
-            function: {
-              name: functionName,
+          {
+            // Ideally that would be set to required but this is not supported yet
+            tool_choice: {
+              type: "function",
+              function: {
+                name: functionName,
+              },
             },
-          },
-        } as Partial<CallOptions>);
+          } as Partial<CallOptions>
+        );
         outputParser = new WatsonxToolsOutputParser({
           returnSingle: true,
           keyName: functionName,
@@ -915,21 +927,23 @@ export class ChatWatsonx<
             parameters: schema,
           };
         }
-        llm = this.bind({
-          tools: [
+        llm = this.bindTools(
+          [
             {
               type: "function" as const,
               function: openAIFunctionDefinition,
             },
           ],
-          // Ideally that would be set to required but this is not supported yet
-          tool_choice: {
-            type: "function",
-            function: {
-              name: functionName,
+          {
+            // Ideally that would be set to required but this is not supported yet
+            tool_choice: {
+              type: "function",
+              function: {
+                name: functionName,
+              },
             },
-          },
-        } as Partial<CallOptions>);
+          } as Partial<CallOptions>
+        );
         outputParser = new WatsonxToolsOutputParser<RunOutput>({
           returnSingle: true,
           keyName: functionName,

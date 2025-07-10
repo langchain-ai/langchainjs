@@ -40,8 +40,8 @@ import type {
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   ChatBedrockConverseToolType,
   BedrockToolChoice,
@@ -267,13 +267,7 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string
->({
-  block,
-  onUnknown = "throw",
-}: {
-  block: BlockT;
-  onUnknown?: "throw";
-}): ContentBlock;
+>({ block, onUnknown }: { block: BlockT; onUnknown?: "throw" }): ContentBlock;
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string
@@ -297,7 +291,11 @@ function convertLangChainContentBlockToConverseContentBlock<
   }
 
   if (block.type === "image_url") {
-    return extractImageInfo(block.image_url);
+    return extractImageInfo(
+      typeof block.image_url === "string"
+        ? block.image_url
+        : block.image_url.url
+    );
   }
 
   if (block.type === "document" && block.document !== undefined) {
@@ -539,8 +537,8 @@ export function convertToConverseTools(
         name: tool.name,
         description: tool.description,
         inputSchema: {
-          json: (isZodSchema(tool.schema)
-            ? zodToJsonSchema(tool.schema)
+          json: (isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
             : tool.schema) as __DocumentType,
         },
       },

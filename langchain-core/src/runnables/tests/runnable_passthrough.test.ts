@@ -90,7 +90,7 @@ test("RunnablePassthrough can invoke a function and pass through config", async 
   const addOne = (input: number, config?: RunnableConfig) => {
     wasCalled = true;
     if (
-      !config?.configurable?.number ??
+      !config?.configurable?.number ||
       Number.isNaN(config?.configurable?.number)
     ) {
       throw new Error("configurable.number is NaN");

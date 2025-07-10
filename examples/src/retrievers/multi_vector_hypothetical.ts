@@ -43,10 +43,11 @@ const functionsSchema = [
 const functionCallingModel = new ChatOpenAI({
   maxRetries: 0,
   model: "gpt-4",
-}).bind({
-  functions: functionsSchema,
-  function_call: { name: "hypothetical_questions" },
-});
+})
+  .bindTools(functionsSchema)
+  .withConfig({
+    function_call: { name: "hypothetical_questions" },
+  });
 
 const chain = RunnableSequence.from([
   { content: (doc: Document) => doc.pageContent },

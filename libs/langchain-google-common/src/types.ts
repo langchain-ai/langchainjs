@@ -55,6 +55,12 @@ export interface GoogleConnectionParams<AuthOptions>
    * the "platform" getter.
    */
   platformType?: GooglePlatformType;
+
+  /**
+   * For compatibility with Google's libraries, should this use Vertex?
+   * The "platformType" parmeter takes precedence.
+   */
+  vertexai?: boolean;
 }
 
 export const GoogleAISafetyCategory = {
@@ -130,6 +136,79 @@ export interface GoogleThinkingConfig {
   includeThoughts?: boolean;
 }
 
+export type GooglePrebuiltVoiceName = string;
+
+export interface GooglePrebuiltVoiceConfig {
+  voiceName: GooglePrebuiltVoiceName;
+}
+
+export interface GoogleVoiceConfig {
+  prebuiltVoiceConfig: GooglePrebuiltVoiceConfig;
+}
+
+export interface GoogleSpeakerVoiceConfig {
+  speaker: string;
+  voiceConfig: GoogleVoiceConfig;
+}
+
+export interface GoogleMultiSpeakerVoiceConfig {
+  speakerVoiceConfigs: GoogleSpeakerVoiceConfig[];
+}
+
+export interface GoogleSpeechConfigSingle {
+  voiceConfig: GoogleVoiceConfig;
+  languageCode?: string;
+}
+
+export interface GoogleSpeechConfigMulti {
+  multiSpeakerVoiceConfig: GoogleMultiSpeakerVoiceConfig;
+  languageCode?: string;
+}
+
+export type GoogleSpeechConfig =
+  | GoogleSpeechConfigSingle
+  | GoogleSpeechConfigMulti;
+
+/**
+ * A simplified version of the GoogleSpeakerVoiceConfig
+ */
+export interface GoogleSpeechSpeakerName {
+  speaker: string;
+  name: GooglePrebuiltVoiceName;
+}
+
+export type GoogleSpeechVoice =
+  | GooglePrebuiltVoiceName
+  | GoogleSpeechSpeakerName
+  | GoogleSpeechSpeakerName[];
+
+export interface GoogleSpeechVoiceLanguage {
+  voice: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+export interface GoogleSpeechVoicesLanguage {
+  voices: GoogleSpeechVoice;
+  languageCode: string;
+}
+
+/**
+ * A simplified way to represent the voice (or voices) and language code.
+ * "voice" and "voices" are semantically the same, we're not enforcing
+ * that one is an array and one isn't.
+ */
+export type GoogleSpeechSimplifiedLanguage =
+  | GoogleSpeechVoiceLanguage
+  | GoogleSpeechVoicesLanguage;
+
+/**
+ * A simplified way to represent the voices.
+ * It can either be the voice (or voices), or the voice or voices with language configuration
+ */
+export type GoogleSpeechConfigSimplified =
+  | GoogleSpeechVoice
+  | GoogleSpeechSimplifiedLanguage;
+
 export interface GoogleAIModelParams {
   /** Model to use */
   model?: string;
@@ -185,6 +264,11 @@ export interface GoogleAIModelParams {
    * among the 3 most probable tokens (using temperature).
    */
   topK?: number;
+
+  /**
+   * Seed used in decoding. If not set, the request uses a randomly generated seed.
+   */
+  seed?: number;
 
   /**
    * Presence penalty applied to the next token's logprobs
@@ -258,6 +342,14 @@ export interface GoogleAIModelParams {
    * The modalities of the response.
    */
   responseModalities?: GoogleAIModelModality[];
+
+  /**
+   * Speech generation configuration.
+   * You can use either Google's definition of the speech configuration,
+   * or a simplified version we've defined (which can be as simple
+   * as the name of a pre-defined voice).
+   */
+  speechConfig?: GoogleSpeechConfig | GoogleSpeechConfigSimplified;
 }
 
 export type GoogleAIToolType = BindToolsInput | GeminiTool;
@@ -333,18 +425,33 @@ export interface GoogleRawResponse extends GoogleResponse {
   data: Blob;
 }
 
-export interface GeminiPartText {
+export interface GeminiPartBase {
+  thought?: boolean; // Output only
+  thoughtSignature?: string;
+}
+
+export interface GeminiVideoMetadata {
+  fps?: number; // Double in range (0.0, 24.0]
+  startOffset?: string;
+  endOffset?: string;
+}
+
+export interface GeminiPartBaseFile extends GeminiPartBase {
+  videoMetadata?: GeminiVideoMetadata;
+}
+
+export interface GeminiPartText extends GeminiPartBase {
   text: string;
 }
 
-export interface GeminiPartInlineData {
+export interface GeminiPartInlineData extends GeminiPartBaseFile {
   inlineData: {
     mimeType: string;
     data: string;
   };
 }
 
-export interface GeminiPartFileData {
+export interface GeminiPartFileData extends GeminiPartBaseFile {
   fileData: {
     mimeType: string;
     fileUri: string;
@@ -352,7 +459,7 @@ export interface GeminiPartFileData {
 }
 
 // AI Studio only?
-export interface GeminiPartFunctionCall {
+export interface GeminiPartFunctionCall extends GeminiPartBase {
   functionCall: {
     name: string;
     args?: object;
@@ -360,7 +467,7 @@ export interface GeminiPartFunctionCall {
 }
 
 // AI Studio Only?
-export interface GeminiPartFunctionResponse {
+export interface GeminiPartFunctionResponse extends GeminiPartBase {
   functionResponse: {
     name: string;
     response: object;
@@ -449,6 +556,25 @@ export interface GeminiRetrievalMetadata {
   googleSearchDynamicRetrievalScore: number;
 }
 
+export type GeminiUrlRetrievalStatus =
+  | "URL_RETRIEVAL_STATUS_SUCCESS"
+  | "URL_RETRIEVAL_STATUS_ERROR";
+
+export interface GeminiUrlRetrievalContext {
+  retrievedUrl: string;
+  urlRetrievalStatus: GeminiUrlRetrievalStatus;
+}
+
+export interface GeminiUrlRetrievalMetadata {
+  urlRetrievalContexts: GeminiUrlRetrievalContext[];
+}
+
+export type GeminiUrlMetadata = GeminiUrlRetrievalContext;
+
+export interface GeminiUrlContextMetadata {
+  urlMetadata: GeminiUrlMetadata[];
+}
+
 export interface GeminiLogprobsResult {
   topCandidates: GeminiLogprobsTopCandidate[];
   chosenCandidates: GeminiLogprobsResultCandidate[];
@@ -480,6 +606,7 @@ export interface GeminiTool {
   functionDeclarations?: GeminiFunctionDeclaration[];
   googleSearchRetrieval?: GoogleSearchRetrieval; // Gemini-1.5
   googleSearch?: GoogleSearch; // Gemini-2.0
+  urlContext?: UrlContext;
   retrieval?: VertexAIRetrieval;
 }
 
@@ -500,6 +627,7 @@ export const GeminiSearchToolAttributes = [
 export const GeminiToolAttributes = [
   "functionDeclaration",
   "retrieval",
+  "urlContext",
   ...GeminiSearchToolAttributes,
 ];
 
@@ -511,6 +639,8 @@ export interface GoogleSearchRetrieval {
 }
 
 export interface GoogleSearch {}
+
+export interface UrlContext {}
 
 export interface VertexAIRetrieval {
   vertexAiSearch: {
@@ -551,6 +681,7 @@ export interface GeminiGenerationConfig {
   temperature?: number;
   topP?: number;
   topK?: number;
+  seed?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   responseMimeType?: GoogleAIResponseMimeType;
@@ -558,6 +689,7 @@ export interface GeminiGenerationConfig {
   logprobs?: number;
   responseModalities?: GoogleAIModelModality[];
   thinkingConfig?: GoogleThinkingConfig;
+  speechConfig?: GoogleSpeechConfig;
 }
 
 export interface GeminiRequest {
@@ -586,6 +718,8 @@ export interface GeminiResponseCandidate {
   safetyRatings: GeminiSafetyRating[];
   citationMetadata?: GeminiCitationMetadata;
   groundingMetadata?: GeminiGroundingMetadata;
+  urlRetrievalMetadata?: GeminiUrlRetrievalMetadata;
+  urlContextMetadata?: GeminiUrlContextMetadata;
   avgLogprobs?: number;
   logprobsResult: GeminiLogprobsResult;
   finishMessage?: string;
@@ -596,10 +730,39 @@ interface GeminiResponsePromptFeedback {
   safetyRatings: GeminiSafetyRating[];
 }
 
+export type ModalityEnum =
+  | "TEXT"
+  | "IMAGE"
+  | "VIDEO"
+  | "AUDIO"
+  | "DOCUMENT"
+  | string;
+
+export interface ModalityTokenCount {
+  modality: ModalityEnum;
+  tokenCount: number;
+}
+
+export interface GenerateContentResponseUsageMetadata {
+  promptTokenCount: number;
+  toolUsePromptTokenCount: number;
+  cachedContentTokenCount: number;
+  thoughtsTokenCount: number;
+  candidatesTokenCount: number;
+  totalTokenCount: number;
+
+  promptTokensDetails: ModalityTokenCount[];
+  toolUsePromptTokensDetails: ModalityTokenCount[];
+  cacheTokensDetails: ModalityTokenCount[];
+  candidatesTokensDetails: ModalityTokenCount[];
+
+  [key: string]: unknown;
+}
+
 export interface GenerateContentResponseData {
   candidates: GeminiResponseCandidate[];
   promptFeedback: GeminiResponsePromptFeedback;
-  usageMetadata: Record<string, unknown>;
+  usageMetadata: GenerateContentResponseUsageMetadata;
 }
 
 export type GoogleLLMModelFamily = null | "palm" | "gemini" | "gemma";
@@ -632,6 +795,7 @@ export interface GoogleAISafetyParams {
 export type GeminiJsonSchema = Record<string, unknown> & {
   properties?: Record<string, GeminiJsonSchema>;
   type: GeminiFunctionSchemaType;
+  nullable?: boolean;
 };
 
 export interface GeminiJsonSchemaDirty extends GeminiJsonSchema {

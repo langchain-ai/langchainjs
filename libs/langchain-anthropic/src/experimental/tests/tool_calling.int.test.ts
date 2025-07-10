@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropicTools } from "../tool_calling.js";
@@ -39,7 +39,7 @@ test.skip("Test ChatAnthropicTools with tools", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
@@ -78,7 +78,7 @@ test.skip("Test ChatAnthropicTools with a forced function call", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
@@ -133,14 +133,14 @@ test.skip("ChatAnthropicTools with Zod schema", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
         function: {
           name: "information_extraction",
           description: "Extracts the relevant information from the passage.",
-          parameters: zodToJsonSchema(schema),
+          parameters: toJsonSchema(schema),
         },
       },
     ],
@@ -180,14 +180,14 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
     modelName: "claude-3-sonnet-20240229",
     temperature: 0.1,
     maxRetries: 0,
-  }).bind({
+  }).withConfig({
     tools: [
       {
         type: "function",
         function: {
           name: "person",
           description: "A person mentioned in the passage.",
-          parameters: zodToJsonSchema(schema),
+          parameters: toJsonSchema(schema),
         },
       },
     ],
@@ -198,7 +198,7 @@ test.skip("ChatAnthropicTools with parallel tool calling", async () => {
       },
     },
   });
-  // console.log(zodToJsonSchema(schema));
+  // console.log(toJsonSchema(schema));
   const message = new HumanMessage(
     "Alex is 5 feet tall. Claudia is 1 foot taller than Alex and jumps higher than him. Claudia is a brunette and Alex is blonde."
   );

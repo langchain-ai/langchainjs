@@ -15,6 +15,7 @@ import {
 import type {
   ToolConfiguration,
   GuardrailConfiguration,
+  PerformanceConfiguration,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -34,9 +35,12 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   convertToConverseTools,
   convertToBedrockToolChoice,
@@ -141,6 +145,12 @@ export interface ChatBedrockConverseInput
   guardrailConfig?: GuardrailConfiguration;
 
   /**
+   * Model performance configuration.
+   * See https://docs.aws.amazon.com/bedrock/latest/userguide/latency-optimized-inference.html
+   */
+  performanceConfig?: PerformanceConfiguration;
+
+  /**
    * Which types of `tool_choice` values the model supports.
    *
    * Inferred if not specified. Inferred as ['auto', 'any', 'tool'] if a 'claude-3'
@@ -153,7 +163,10 @@ export interface ChatBedrockConverseCallOptions
   extends BaseChatModelCallOptions,
     Pick<
       ChatBedrockConverseInput,
-      "additionalModelRequestFields" | "streamUsage"
+      | "additionalModelRequestFields"
+      | "streamUsage"
+      | "guardrailConfig"
+      | "performanceConfig"
     > {
   /**
    * A list of stop sequences. A stop sequence is a sequence of characters that causes
@@ -193,11 +206,11 @@ export interface ChatBedrockConverseCallOptions
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_aws.ChatBedrockConverseCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -648,6 +661,8 @@ export class ChatBedrockConverse
 
   guardrailConfig?: GuardrailConfiguration;
 
+  performanceConfig?: PerformanceConfiguration;
+
   client: BedrockRuntimeClient;
 
   /**
@@ -714,6 +729,7 @@ export class ChatBedrockConverse
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
     this.guardrailConfig = rest?.guardrailConfig;
+    this.performanceConfig = rest?.performanceConfig;
 
     if (rest?.supportsToolChoiceValues === undefined) {
       if (this.model.includes("claude-3")) {
@@ -748,7 +764,10 @@ export class ChatBedrockConverse
     AIMessageChunk,
     this["ParsedCallOptions"]
   > {
-    return this.bind({ tools: convertToConverseTools(tools), ...kwargs });
+    return this.withConfig({
+      tools: convertToConverseTools(tools),
+      ...kwargs,
+    });
   }
 
   // Replace
@@ -783,7 +802,8 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
-      guardrailConfig: this.guardrailConfig,
+      guardrailConfig: options?.guardrailConfig,
+      performanceConfig: options?.performanceConfig,
     };
   }
 
@@ -915,7 +935,7 @@ export class ChatBedrockConverse
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -926,7 +946,7 @@ export class ChatBedrockConverse
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -937,7 +957,7 @@ export class ChatBedrockConverse
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -951,9 +971,11 @@ export class ChatBedrockConverse
         }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
-    const description = schema.description ?? "A function available to call.";
+    const description =
+      getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -962,14 +984,14 @@ export class ChatBedrockConverse
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",
           function: {
             name: functionName,
             description,
-            parameters: zodToJsonSchema(schema),
+            parameters: toJsonSchema(schema),
           },
         },
       ];

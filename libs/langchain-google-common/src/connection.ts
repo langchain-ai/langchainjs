@@ -165,11 +165,26 @@ export abstract class GoogleHostConnection<
     super(caller, client, streaming);
     this.caller = caller;
 
-    this.platformType = fields?.platformType;
+    this.platformType = this.fieldPlatformType(fields);
     this._endpoint = fields?.endpoint;
     this._location = fields?.location;
     this._apiVersion = fields?.apiVersion;
     this.client = client;
+  }
+
+  fieldPlatformType(
+    fields: GoogleConnectionParams<any> | undefined
+  ): GooglePlatformType | undefined {
+    if (typeof fields === "undefined") {
+      return undefined;
+    }
+    if (typeof fields.platformType !== "undefined") {
+      return fields.platformType;
+    }
+    if (fields.vertexai === true) {
+      return "gcp";
+    }
+    return undefined;
   }
 
   get platform(): GooglePlatformType {
@@ -201,7 +216,11 @@ export abstract class GoogleHostConnection<
   }
 
   get computedEndpoint(): string {
-    return `${this.location}-aiplatform.googleapis.com`;
+    if (this.location === "global") {
+      return "aiplatform.googleapis.com";
+    } else {
+      return `${this.location}-aiplatform.googleapis.com`;
+    }
   }
 
   buildMethod(): GoogleAbstractedClientOpsMethod {
@@ -294,6 +313,19 @@ export abstract class GoogleAIConnection<
     return this.client.clientType === "apiKey";
   }
 
+  fieldPlatformType(
+    fields: GoogleConnectionParams<any> | undefined
+  ): GooglePlatformType | undefined {
+    const ret = super.fieldPlatformType(fields);
+    if (typeof ret !== "undefined") {
+      return ret;
+    }
+    if (fields?.vertexai === false) {
+      return "gai";
+    }
+    return undefined;
+  }
+
   get computedPlatformType(): GooglePlatformType {
     // This is not a completely correct assumption, since GCP can
     // have an API Key. But if so, then people need to set the platform
@@ -317,7 +349,11 @@ export abstract class GoogleAIConnection<
   get computedLocation(): string {
     switch (this.apiName) {
       case "google":
-        return super.computedLocation;
+        if (this.modelName.startsWith("gemini-2.5-flash-lite")) {
+          return "global";
+        } else {
+          return super.computedLocation;
+        }
       case "anthropic":
         return "us-east5";
       default:

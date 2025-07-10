@@ -1,3 +1,4 @@
+import * as z4 from "zod/v4/core";
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import type {
   ChatCompletionContentPartText,
@@ -51,7 +52,6 @@ import {
   type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { z } from "zod";
 import {
   Runnable,
   RunnableLambda,
@@ -68,7 +68,6 @@ import {
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import { zodResponseFormat } from "openai/helpers/zod";
 import type {
@@ -76,6 +75,17 @@ import type {
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
 } from "openai/resources/shared";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+  isZodSchemaV3,
+  isZodSchemaV4,
+} from "@langchain/core/utils/types";
+import {
+  JsonSchema7Type,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -435,15 +445,16 @@ function _convertMessagesToOpenAIResponsesParams(
   model?: string,
   zdrEnabled?: boolean
 ): ResponsesInputItem[] {
-  const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-  const lastAIMessageId = lastAIMessage?.response_metadata?.id;
-  const newMessages =
-    lastAIMessageId && lastAIMessageId.startsWith("resp_") && !zdrEnabled
-      ? messages.slice(messages.indexOf(lastAIMessage) + 1)
-      : messages;
-
-  return newMessages.flatMap(
+  return messages.flatMap(
     (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
+      const additional_kwargs = lcMsg.additional_kwargs as
+        | BaseMessageFields["additional_kwargs"] & {
+            [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+            reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+            type?: string;
+            refusal?: string;
+          };
+
       let role = messageToOpenAIRole(lcMsg);
       if (role === "system" && isReasoningModel(model)) role = "developer";
 
@@ -455,7 +466,7 @@ function _convertMessagesToOpenAIResponsesParams(
         const toolMessage = lcMsg as ToolMessage;
 
         // Handle computer call output
-        if (toolMessage.additional_kwargs?.type === "computer_call_output") {
+        if (additional_kwargs?.type === "computer_call_output") {
           const output = (() => {
             if (typeof toolMessage.content === "string") {
               return {
@@ -499,7 +510,7 @@ function _convertMessagesToOpenAIResponsesParams(
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
-          id: toolMessage.id,
+          id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output:
             typeof toolMessage.content !== "string"
               ? JSON.stringify(toolMessage.content)
@@ -524,43 +535,31 @@ function _convertMessagesToOpenAIResponsesParams(
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (!zdrEnabled && lcMsg.additional_kwargs.reasoning != null) {
-          type FindType<T, TType extends string> = T extends { type: TType }
-            ? T
-            : never;
-          type ReasoningItem = FindType<ResponsesInputItem, "reasoning">;
-
-          const isReasoningItem = (item: unknown): item is ReasoningItem =>
-            typeof item === "object" &&
-            item != null &&
-            "type" in item &&
-            item.type === "reasoning";
-
-          if (isReasoningItem(lcMsg.additional_kwargs.reasoning)) {
-            const reasoningItem =
-              _convertReasoningSummaryToOpenAIResponsesParams(
-                lcMsg.additional_kwargs.reasoning
-              );
-            input.push(reasoningItem);
-          }
+        if (additional_kwargs?.reasoning && !zdrEnabled) {
+          const reasoningItem = _convertReasoningSummaryToOpenAIResponsesParams(
+            additional_kwargs.reasoning
+          );
+          input.push(reasoningItem);
         }
 
         // ai content
         let { content } = lcMsg;
-        if (lcMsg.additional_kwargs.refusal != null) {
+        if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
           }
           content = [
             ...content,
-            { type: "refusal", refusal: lcMsg.additional_kwargs.refusal },
+            { type: "refusal", refusal: additional_kwargs.refusal },
           ];
         }
 
         input.push({
           type: "message",
           role: "assistant",
-          ...(lcMsg.id && !zdrEnabled ? { id: lcMsg.id } : {}),
+          ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
+            ? { id: lcMsg.id }
+            : {}),
           content:
             typeof content === "string"
               ? content
@@ -582,12 +581,7 @@ function _convertMessagesToOpenAIResponsesParams(
                 }),
         });
 
-        // function tool calls and computer use tool calls
-        const functionCallIds =
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          lcMsg.additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] as
-            | Record<string, string>
-            | undefined;
+        const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
 
         if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
@@ -601,15 +595,15 @@ function _convertMessagesToOpenAIResponsesParams(
               })
             )
           );
-        } else if (lcMsg.additional_kwargs.tool_calls != null) {
+        } else if (additional_kwargs?.tool_calls) {
           input.push(
-            ...lcMsg.additional_kwargs.tool_calls.map(
+            ...additional_kwargs.tool_calls.map(
               (toolCall): ResponsesInputItem => ({
                 type: "function_call",
                 name: toolCall.function.name,
                 call_id: toolCall.id,
-                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
                 arguments: toolCall.function.arguments,
+                ...(zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
               })
             )
           );
@@ -619,64 +613,79 @@ function _convertMessagesToOpenAIResponsesParams(
           lcMsg.response_metadata.output as Array<ResponsesInputItem>
         )?.length
           ? lcMsg.response_metadata.output
-          : lcMsg.additional_kwargs.tool_outputs;
+          : additional_kwargs.tool_outputs;
 
-        let computerCalls: Array<ResponsesInputItem> = [];
+        const fallthroughCallTypes: ResponsesInputItem["type"][] = [
+          "computer_call",
+          "mcp_call",
+          "code_interpreter_call",
+          "image_generation_call",
+        ];
 
         if (toolOutputs != null) {
           const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
-
-          computerCalls = castToolOutputs?.filter(
-            (item) => item.type === "computer_call"
+          const fallthroughCalls = castToolOutputs?.filter((item) =>
+            fallthroughCallTypes.includes(item.type)
           );
-
-          if (computerCalls.length > 0) input.push(...computerCalls);
+          if (fallthroughCalls.length > 0) input.push(...fallthroughCalls);
         }
 
         return input;
       }
 
-      const content =
-        typeof lcMsg.content === "string"
-          ? lcMsg.content
-          : lcMsg.content.flatMap((item) => {
-              if (isDataContentBlock(item)) {
-                return convertToProviderContentBlock(
-                  item,
-                  completionsApiContentBlockConverter
-                );
-              }
-
-              if (item.type === "text") {
-                return { type: "input_text", text: item.text };
-              }
-
-              if (item.type === "image_url") {
-                const image_url =
-                  typeof item.image_url === "string"
-                    ? item.image_url
-                    : item.image_url.url;
-                const detail =
-                  typeof item.image_url === "string"
-                    ? "auto"
-                    : item.image_url.detail;
-
-                return { type: "input_image", image_url, detail };
-              }
-
-              if (
-                item.type === "input_text" ||
-                item.type === "input_image" ||
-                item.type === "input_file"
-              ) {
-                return item;
-              }
-
-              return [];
-            });
-
       if (role === "user" || role === "system" || role === "developer") {
-        return { type: "message", role, content };
+        if (typeof lcMsg.content === "string") {
+          return { type: "message", role, content: lcMsg.content };
+        }
+
+        const messages: ResponsesInputItem[] = [];
+        const content = lcMsg.content.flatMap((item) => {
+          if (item.type === "mcp_approval_response") {
+            messages.push({
+              type: "mcp_approval_response",
+              approval_request_id: item.approval_request_id,
+              approve: item.approve,
+            });
+          }
+          if (isDataContentBlock(item)) {
+            return convertToProviderContentBlock(
+              item,
+              completionsApiContentBlockConverter
+            );
+          }
+          if (item.type === "text") {
+            return {
+              type: "input_text",
+              text: item.text,
+            };
+          }
+          if (item.type === "image_url") {
+            return {
+              type: "input_image",
+              image_url:
+                typeof item.image_url === "string"
+                  ? item.image_url
+                  : item.image_url.url,
+              detail:
+                typeof item.image_url === "string"
+                  ? "auto"
+                  : item.image_url.detail,
+            };
+          }
+          if (
+            item.type === "input_text" ||
+            item.type === "input_image" ||
+            item.type === "input_file"
+          ) {
+            return item;
+          }
+          return [];
+        });
+
+        if (content.length > 0) {
+          messages.push({ type: "message", role, content });
+        }
+        return messages;
       }
 
       console.warn(
@@ -710,6 +719,7 @@ function _convertOpenAIResponsesMessageToBaseMessage(
     object: response.object,
     status: response.status,
     user: response.user,
+    service_tier: response.service_tier,
 
     // for compatibility with chat completion calls.
     model_name: response.model,
@@ -803,6 +813,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
   const additional_kwargs: {
     [key: string]: unknown;
     reasoning?: Partial<ChatOpenAIReasoningSummary>;
+    tool_outputs?: unknown[];
   } = {};
   let id: string | undefined;
   if (chunk.type === "response.output_text.delta") {
@@ -811,7 +822,7 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
       text: chunk.delta,
       index: chunk.content_index,
     });
-  } else if (chunk.type === "response.output_text.annotation.added") {
+  } else if (chunk.type === "response.output_text_annotation.added") {
     content.push({
       type: "text",
       text: "",
@@ -840,9 +851,16 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
     };
   } else if (
     chunk.type === "response.output_item.done" &&
-    (chunk.item.type === "web_search_call" ||
-      chunk.item.type === "file_search_call" ||
-      chunk.item.type === "computer_call")
+    [
+      "web_search_call",
+      "file_search_call",
+      "computer_call",
+      "code_interpreter_call",
+      "mcp_call",
+      "mcp_list_tools",
+      "mcp_approval_request",
+      "image_generation_call",
+    ].includes(chunk.item.type)
   ) {
     additional_kwargs.tool_outputs = [chunk.item];
   } else if (chunk.type === "response.created") {
@@ -911,6 +929,10 @@ function _convertOpenAIResponsesDeltaToBaseMessageChunk(
         { text: chunk.delta, type: "summary_text", index: chunk.summary_index },
       ],
     };
+  } else if (chunk.type === "response.image_generation_call.partial_image") {
+    // noop/fixme: retaining partial images in a message chunk means that _all_
+    // partial images get kept in history, so we don't do anything here.
+    return null;
   } else {
     return null;
   }
@@ -987,6 +1009,35 @@ function isBuiltInToolChoice(
     "type" in tool_choice &&
     tool_choice.type !== "function"
   );
+}
+
+function _reduceChatOpenAIToolsForResponses(
+  tools: ChatOpenAIToolType[],
+  fields?: {
+    stream?: boolean;
+    strict?: boolean;
+  }
+) {
+  const reducedTools: ResponsesTool[] = [];
+  for (const tool of tools) {
+    if (isBuiltInTool(tool)) {
+      if (tool.type === "image_generation" && fields?.stream) {
+        // OpenAI sends a 400 error if partial_images is not set and we want to stream.
+        // We also set it to 1 since we don't support partial images yet.
+        tool.partial_images = 1;
+      }
+      reducedTools.push(tool);
+    } else if (isOpenAITool(tool)) {
+      reducedTools.push({
+        type: "function",
+        name: tool.function.name,
+        parameters: tool.function.parameters,
+        description: tool.function.description,
+        strict: fields?.strict ?? null,
+      });
+    }
+  }
+  return reducedTools;
 }
 
 function _convertChatOpenAIToolTypeToOpenAITool(
@@ -1151,6 +1202,12 @@ export interface ChatOpenAICallOptions
    * If set, the Responses API will be used to fulfill the request.
    */
   previous_response_id?: ResponsesCreateParams["previous_response_id"];
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex"
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: ResponsesCreateParams["service_tier"];
 }
 
 export interface ChatOpenAIFields
@@ -1183,11 +1240,11 @@ export interface ChatOpenAIFields
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_openai.ChatOpenAICallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -1445,7 +1502,7 @@ export interface ChatOpenAIFields
  * <summary><strong>JSON Object Response Format</strong></summary>
  *
  * ```typescript
- * const jsonLlm = llm.bind({ response_format: { type: "json_object" } });
+ * const jsonLlm = llm.withConfig({ response_format: { type: "json_object" } });
  * const jsonLlmAiMsg = await jsonLlm.invoke(
  *   "Return a JSON object with key 'randomInts' and a value of 10 random ints in [0-99]"
  * );
@@ -1637,7 +1694,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1674,7 +1731,7 @@ export interface ChatOpenAIFields
  *
  * const modelWithAudioOutput = new ChatOpenAI({
  *   model: "gpt-4o-audio-preview",
- *   // You may also pass these fields to `.bind` as a call argument.
+ *   // You may also pass these fields to `.withConfig` as a call argument.
  *   modalities: ["text", "audio"], // Specifies that the model should output audio.
  *   audio: {
  *     voice: "alloy",
@@ -1725,6 +1782,7 @@ export class ChatOpenAI<
       "response_format",
       "seed",
       "reasoning_effort",
+      "service_tier",
     ];
   }
 
@@ -1876,6 +1934,12 @@ export class ChatOpenAI<
    */
   zdrEnabled?: boolean | undefined;
 
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: ResponsesCreateParams["service_tier"];
+
   constructor(fields?: ChatOpenAIFields) {
     super(fields ?? {});
 
@@ -1917,7 +1981,6 @@ export class ChatOpenAI<
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.useResponsesApi = fields?.useResponsesApi ?? this.useResponsesApi;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
-    if (this.model === "o1") this.disableStreaming = true;
 
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;
@@ -1936,6 +1999,10 @@ export class ChatOpenAI<
     // Else leave undefined so it's not passed to OpenAI.
     if (fields?.supportsStrictToolCalling !== undefined) {
       this.supportsStrictToolCalling = fields.supportsStrictToolCalling;
+    }
+
+    if (fields?.service_tier !== undefined) {
+      this.service_tier = fields.service_tier;
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
@@ -1963,7 +2030,7 @@ export class ChatOpenAI<
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) =>
         isBuiltInTool(tool)
           ? tool
@@ -1984,9 +2051,9 @@ export class ChatOpenAI<
       resFormat &&
       resFormat.type === "json_schema" &&
       resFormat.json_schema.schema &&
-      isZodSchema(resFormat.json_schema.schema)
+      isInteropZodSchema(resFormat.json_schema.schema)
     ) {
-      return zodResponseFormat(
+      return interopZodResponseFormat(
         resFormat.json_schema.schema,
         resFormat.json_schema.name,
         {
@@ -2068,23 +2135,10 @@ export class ChatOpenAI<
         truncation: options?.truncation,
         include: options?.include,
         tools: options?.tools?.length
-          ? options.tools
-              .map((tool) => {
-                if (isBuiltInTool(tool)) {
-                  return tool;
-                } else if (isOpenAITool(tool)) {
-                  return {
-                    type: "function",
-                    name: tool.function.name,
-                    parameters: tool.function.parameters,
-                    description: tool.function.description,
-                    strict,
-                  };
-                } else {
-                  return null;
-                }
-              })
-              .filter((tool): tool is ResponsesTool => tool !== null)
+          ? _reduceChatOpenAIToolsForResponses(options.tools, {
+              stream: this.streaming,
+              strict,
+            })
           : undefined,
         tool_choice: isBuiltInToolChoice(options?.tool_choice)
           ? options?.tool_choice
@@ -2177,6 +2231,12 @@ export class ChatOpenAI<
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
+    }
+    if (this.service_tier !== undefined) {
+      params.service_tier = this.service_tier;
+    }
+    if (options?.service_tier !== undefined) {
+      params.service_tier = options.service_tier;
     }
     const reasoning = this.getReasoningParams(options);
     if (reasoning !== undefined && reasoning.effort !== undefined) {
@@ -2353,8 +2413,6 @@ export class ChatOpenAI<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponseApi(options)) {
-      const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-      const lastAIMessageId = lastAIMessage?.response_metadata?.id;
       const streamIterable = await this.responseApiWithRetry(
         {
           ...this.invocationParams<"responses">(options, { streaming: true }),
@@ -2364,11 +2422,6 @@ export class ChatOpenAI<
             this.zdrEnabled
           ),
           stream: true,
-          ...(lastAIMessageId &&
-          lastAIMessageId.startsWith("resp_") &&
-          !this.zdrEnabled
-            ? { previous_response_id: lastAIMessageId }
-            : {}),
         },
         options
       );
@@ -2433,6 +2486,7 @@ export class ChatOpenAI<
         // to avoid concatenation issues
         generationInfo.system_fingerprint = data.system_fingerprint;
         generationInfo.model_name = data.model;
+        generationInfo.service_tier = data.service_tier;
       }
       if (this.logprobs) {
         generationInfo.logprobs = choice.logprobs;
@@ -2531,8 +2585,6 @@ export class ChatOpenAI<
       };
     }
 
-    const lastAIMessage = messages.filter((m) => isAIMessage(m)).pop();
-    const lastAIMessageId = lastAIMessage?.response_metadata?.id;
     const input = _convertMessagesToOpenAIResponsesParams(
       messages,
       this.model,
@@ -2542,11 +2594,6 @@ export class ChatOpenAI<
       {
         input,
         ...invocationParams,
-        ...(lastAIMessageId &&
-        lastAIMessageId.startsWith("resp_") &&
-        !this.zdrEnabled
-          ? { previous_response_id: lastAIMessageId }
-          : {}),
       },
       { signal: options?.signal, ...options?.options }
     );
@@ -2986,11 +3033,11 @@ export class ChatOpenAI<
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
     options?: OpenAICoreRequestOptions
     // Avoid relying importing a beta type with no official entrypoint
-  ): Promise<ReturnType<OpenAIClient["beta"]["chat"]["completions"]["parse"]>> {
+  ): Promise<ReturnType<OpenAIClient["chat"]["completions"]["parse"]>> {
     const requestOptions = this._getClientOptions(options);
     return this.caller.call(async () => {
       try {
-        const res = await this.client.beta.chat.completions.parse(
+        const res = await this.client.chat.completions.parse(
           request,
           requestOptions
         );
@@ -3002,7 +3049,9 @@ export class ChatOpenAI<
     });
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  protected _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         baseURL: this.clientConfig.baseURL,
@@ -3061,7 +3110,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<false>
@@ -3072,7 +3121,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<true>
@@ -3083,7 +3132,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -3096,7 +3145,7 @@ export class ChatOpenAI<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
@@ -3107,7 +3156,7 @@ export class ChatOpenAI<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any>;
+    let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
     let method;
     let includeRaw;
@@ -3146,27 +3195,37 @@ export class ChatOpenAI<
     }
 
     if (method === "jsonMode") {
-      llm = this.bind({
-        response_format: { type: "json_object" },
-      } as Partial<CallOptions>);
-      if (isZodSchema(schema)) {
+      let outputFormatSchema: JsonSchema7Type | undefined;
+      if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
+        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      llm = this.withConfig({
+        response_format: { type: "json_object" },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: outputFormatSchema,
+        },
+      } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
-      llm = this.bind({
+      llm = this.withConfig({
         response_format: {
           type: "json_schema",
           json_schema: {
             name: name ?? "extract",
-            description: schema.description,
+            description: getSchemaDescription(schema),
             schema,
             strict: config?.strict,
           },
         },
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         const altParser = StructuredOutputParser.fromZodSchema(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
           (aiMessage: AIMessageChunk) => {
@@ -3182,9 +3241,9 @@ export class ChatOpenAI<
     } else {
       let functionName = name ?? "extract";
       // Is function calling
-      if (isZodSchema(schema)) {
-        const asJsonSchema = zodToJsonSchema(schema);
-        llm = this.bind({
+      if (isInteropZodSchema(schema)) {
+        const asJsonSchema = toJsonSchema(schema);
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,
@@ -3200,6 +3259,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: asJsonSchema,
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -3226,7 +3289,7 @@ export class ChatOpenAI<
             parameters: schema,
           };
         }
-        llm = this.bind({
+        llm = this.withConfig({
           tools: [
             {
               type: "function" as const,
@@ -3238,6 +3301,10 @@ export class ChatOpenAI<
             function: {
               name: functionName,
             },
+          },
+          ls_structured_output_format: {
+            kwargs: { method: "functionCalling" },
+            schema: toJsonSchema(schema),
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -3273,17 +3340,6 @@ export class ChatOpenAI<
   }
 }
 
-function isZodSchema<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  input: z.ZodType<RunOutput> | Record<string, any>
-): input is z.ZodType<RunOutput> {
-  // Check for a characteristic method of Zod schemas
-  return typeof (input as z.ZodType<RunOutput>)?.parse === "function";
-}
-
 function isStructuredOutputMethodParams(
   x: unknown
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3294,4 +3350,64 @@ function isStructuredOutputMethodParams(
     typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
       "object"
   );
+}
+
+// inlined from openai/lib/parser.ts
+function makeParseableResponseFormat<ParsedT>(
+  response_format: ResponseFormatJSONSchema,
+  parser: (content: string) => ParsedT
+) {
+  const obj = { ...response_format };
+
+  Object.defineProperties(obj, {
+    $brand: {
+      value: "auto-parseable-response-format",
+      enumerable: false,
+    },
+    $parseRaw: {
+      value: parser,
+      enumerable: false,
+    },
+  });
+
+  return obj;
+}
+
+function interopZodResponseFormat(
+  zodSchema: InteropZodType,
+  name: string,
+  props: Omit<ResponseFormatJSONSchema.JSONSchema, "schema" | "strict" | "name">
+) {
+  if (isZodSchemaV3(zodSchema)) {
+    return zodResponseFormat(zodSchema, name, props);
+  }
+  if (isZodSchemaV4(zodSchema)) {
+    return makeParseableResponseFormat(
+      {
+        type: "json_schema",
+        json_schema: {
+          ...props,
+          name,
+          strict: true,
+          schema: z4.toJSONSchema(zodSchema, {
+            cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
+            reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
+            override(ctx) {
+              ctx.jsonSchema.title = name; // equivalent to `name` property
+              // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
+              // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
+            },
+            /// property equivalents from native `zodResponseFormat` fn
+            // openaiStrictMode: true,
+            // name,
+            // nameStrategy: 'duplicate-ref',
+            // $refStrategy: 'extract-to-root',
+            // nullableStrategy: 'property',
+          }),
+        },
+      },
+      (content) => z4.parse(zodSchema, JSON.parse(content))
+    );
+  }
+  throw new Error("Unsupported schema response format");
 }
