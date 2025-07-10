@@ -365,6 +365,12 @@ export class PostgresVectorStore extends VectorStore {
       delete allColumns[contentColumn];
       delete allColumns[embeddingColumn];
       allMetadataColumns = Object.keys(allColumns);
+    } else {
+      for (const column of metadataColumns) {
+        if (Object.prototype.hasOwnProperty.call(allColumns, column)) {
+          allMetadataColumns.push(column);
+        }
+      }
     }
     return new PostgresVectorStore(embeddings, {
       engine,
