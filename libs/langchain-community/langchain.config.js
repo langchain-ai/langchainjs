@@ -50,6 +50,7 @@ export const config = {
     "tools/gmail": "tools/gmail/index",
     "tools/google_calendar": "tools/google_calendar/index",
     "tools/google_custom_search": "tools/google_custom_search",
+    "tools/google_finance": "tools/google_finance",
     "tools/google_places": "tools/google_places",
     "tools/google_trends": "tools/google_trends",
     "tools/google_routes": "tools/google_routes",
