@@ -26,6 +26,7 @@ export interface PGVectorStoreArgs {
   collectionMetadata?: Metadata | null;
   schemaName?: string | null;
   extensionSchemaName?: string | null;
+  skipInitializationCheck?: boolean;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -213,6 +214,8 @@ export class PGVectorStore extends VectorStore {
 
   extensionSchemaName: string | null;
 
+  skipInitializationCheck: boolean;
+
   metadataColumnName: string;
 
   filter?: Metadata;
@@ -247,6 +250,7 @@ export class PGVectorStore extends VectorStore {
     this.collectionMetadata = config.collectionMetadata ?? null;
     this.schemaName = config.schemaName ?? null;
     this.extensionSchemaName = config.extensionSchemaName ?? null;
+    this.skipInitializationCheck = config.skipInitializationCheck ?? false;
 
     this.filter = config.filter;
 
@@ -741,6 +745,9 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when the table has been ensured.
    */
   async ensureTableInDatabase(dimensions?: number): Promise<void> {
+    if (this.skipInitializationCheck) {
+      return;
+    }
     const vectorQuery =
       this.extensionSchemaName == null
         ? "CREATE EXTENSION IF NOT EXISTS vector;"
@@ -772,6 +779,9 @@ export class PGVectorStore extends VectorStore {
    */
   async ensureCollectionTableInDatabase(): Promise<void> {
     try {
+      if (this.skipInitializationCheck) {
+        return;
+      }
       const queryString = `
         CREATE TABLE IF NOT EXISTS ${this.computedCollectionTableName} (
           uuid uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
