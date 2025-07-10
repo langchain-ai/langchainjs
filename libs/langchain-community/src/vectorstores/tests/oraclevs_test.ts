@@ -5,7 +5,11 @@ import { Document, type DocumentInterface } from "@langchain/core/documents";
 import { Embeddings } from "@langchain/core/embeddings";
 import type { Callbacks } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { createIndex, OracleVS, type OracleDBVSStoreArgs } from "../oraclevs.js";
+import {
+  createIndex,
+  OracleVS,
+  type OracleDBVSStoreArgs,
+} from "../oraclevs.js";
 import { HuggingFaceTransformersEmbeddings } from "../../embeddings/hf_transformers.js";
 
 interface DataRow {
@@ -70,7 +74,10 @@ class TestsOracleVS {
     };
 
     try {
-      this.oraclevs = new OracleVS(this.embeddingFunction, this.dbConfig as OracleDBVSStoreArgs);
+      this.oraclevs = new OracleVS(
+        this.embeddingFunction,
+        this.dbConfig as OracleDBVSStoreArgs
+      );
     } catch (error) {
       console.error("An exception occurred ::", error);
       // Handle error
@@ -150,17 +157,13 @@ class TestsOracleVS {
     options: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>,
     _callbacks?: Callbacks | undefined
   ): Promise<DocumentInterface[]> {
-    return this.oraclevs?.maxMarginalRelevanceSearchByVector(
-      query,
-      options
-    );
+    return this.oraclevs?.maxMarginalRelevanceSearchByVector(query, options);
   }
 
   public async testMaxMarginalRelevanceSearchWithScoreByVector(
     embedding: number[],
     options?: MaxMarginalRelevanceSearchOptions<OracleVS["FilterType"]>
   ): Promise<Array<{ document: Document; score: number }>> {
-    
     return this.oraclevs.maxMarginalRelevanceSearchWithScoreByVector(
       embedding,
       options ?? { k: 10, fetchK: 20 }
@@ -229,11 +232,17 @@ async function runTestsOracleVS() {
   console.log("Similarity Search Results:", similaritySearchByEmbeddings);
 
   const maxMarginalRelevanceSearch =
-    await testsOracleVS.testMaxMarginalRelevanceSearch(query, { k: 10, fetchK: 20 });
+    await testsOracleVS.testMaxMarginalRelevanceSearch(query, {
+      k: 10,
+      fetchK: 20,
+    });
   console.log("Max Marginal Relevance Search:", maxMarginalRelevanceSearch);
 
   const maxMarginalRelevanceSearchByVector =
-    await testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding, { k: 10, fetchK: 20 });
+    await testsOracleVS.testMaxMarginalRelevanceSearchByVector(embedding, {
+      k: 10,
+      fetchK: 20,
+    });
   console.log(
     "Max Marginal Relevance Search By Vector:",
     maxMarginalRelevanceSearchByVector

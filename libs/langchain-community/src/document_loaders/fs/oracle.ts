@@ -71,11 +71,11 @@ export class OracleDocLoader extends BaseDocumentLoader {
         throw new Error("Invalid preferences: missing owner or colname");
       }
       docs.push(
-        ...await this._loadFromTable(
+        ...(await this._loadFromTable(
           this.pref.owner,
           this.pref.tablename,
           this.pref.colname
-        )
+        ))
       );
     } else {
       throw new Error("Invalid preferences: missing file, dir, or tablename");
