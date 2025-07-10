@@ -52,7 +52,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
    * @returns A promise that resolves to an array of `Document` instances.
    */
   async load(): Promise<Document[]> {
-    const docs = [];
+    const docs: Document[] = [];
 
     if ("file" in this.pref) {
       const doc = await this._loadFromFile(this.pref.file);
@@ -68,17 +68,17 @@ export class OracleDocLoader extends BaseDocumentLoader {
       }
     } else if ("tablename" in this.pref) {
       if (!("owner" in this.pref) || !("colname" in this.pref)) {
-        throw new Error(`Invalid preferences: missing owner or colname`);
+        throw new Error("Invalid preferences: missing owner or colname");
       }
       docs.push(
-        await this._loadFromTable(
+        ...await this._loadFromTable(
           this.pref.owner,
           this.pref.tablename,
           this.pref.colname
         )
       );
     } else {
-      throw new Error(`Invalid preferences: missing file, dir, or tablename`);
+      throw new Error("Invalid preferences: missing file, dir, or tablename");
     }
 
     return docs;
@@ -109,7 +109,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
     const resultSet = result.resultSet;
     try {
       if (resultSet) {
-        for await (const row of resultSet) {
+        for await (const row of resultSet as unknown as Array<any>) {
           const [plain_text, metadata] = await this._extract(row);
           doc = new Document({
             pageContent: <string>plain_text,
@@ -142,7 +142,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
       const binds = [col, qn];
       await this.conn.execute(sql, binds);
     } catch (error) {
-      throw new Error(`Invalid owner, table, or column name`);
+      throw new Error("Invalid owner, table, or column name");
     }
 
     const result = await this.conn.execute(
@@ -166,7 +166,7 @@ export class OracleDocLoader extends BaseDocumentLoader {
     const resultSet = result.resultSet;
     try {
       if (resultSet) {
-        for await (const row of resultSet) {
+        for await (const row of resultSet as unknown as Array<any>) {
           const [plain_text, metadata] = await this._extract(row);
           docs.push(
             new Document({

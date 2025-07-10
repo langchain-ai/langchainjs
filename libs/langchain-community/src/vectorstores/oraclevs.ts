@@ -1,5 +1,5 @@
 import * as oracledb from "oracledb";
-import { createHash } from "node:crypto";
+import { createHash } from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -401,8 +401,6 @@ export class OracleVS extends VectorStore {
 
       // Commit once all inserts are queued up
       await connection.commit();
-
-      return ids;
     } catch (error: any) {
       handleError(error);
     } finally {
@@ -410,6 +408,7 @@ export class OracleVS extends VectorStore {
         await this.retConnection(connection);
       }
     }
+    return ids;
   }
 
   public async addDocuments(
@@ -432,7 +431,7 @@ export class OracleVS extends VectorStore {
    * @param filter Optional filter for the search results.
    * @returns Promise that resolves with an array of tuples, each containing a Document and a score.
    */
-  public async _similaritySearchByVectorReturningEmbeddings(
+  public async similaritySearchByVectorReturningEmbeddings(
     query: number[],
     k = 4,
     filter?: this["FilterType"]
@@ -512,7 +511,7 @@ export class OracleVS extends VectorStore {
     filter?: this["FilterType"]
   ): Promise<[DocumentInterface, number][]> {
     const docsScoresAndEmbeddings =
-      await this._similaritySearchByVectorReturningEmbeddings(query, k, filter);
+      await this.similaritySearchByVectorReturningEmbeddings(query, k, filter);
     return docsScoresAndEmbeddings.map(([document, score]) => [
       document,
       score,
@@ -540,16 +539,16 @@ export class OracleVS extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const embedding = await this.embeddings.embedQuery(query);
-    return await this._maxMarginalRelevanceSearchByVector(embedding, options);
+    return await this.maxMarginalRelevanceSearchByVector(embedding, options);
   }
 
-  async _maxMarginalRelevanceSearchByVector(
+  public async maxMarginalRelevanceSearchByVector(
     embedding: number[],
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     // Fetch documents and their scores. This calls the previously adapted function.
     const docsAndScores =
-      await this._maxMarginalRelevanceSearchWithScoreByVector(
+      await this.maxMarginalRelevanceSearchWithScoreByVector(
         embedding,
         options
       );
@@ -558,13 +557,13 @@ export class OracleVS extends VectorStore {
     return docsAndScores.map((ds) => ds.document);
   }
 
-  async _maxMarginalRelevanceSearchWithScoreByVector(
+  public async maxMarginalRelevanceSearchWithScoreByVector(
     embedding: number[],
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Array<{ document: Document; score: number }>> {
     // Fetch documents and their scores.
     const docsScoresEmbeddings =
-      await this._similaritySearchByVectorReturningEmbeddings(
+      await this.similaritySearchByVectorReturningEmbeddings(
         embedding,
         options.fetchK,
         options.filter
