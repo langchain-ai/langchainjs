@@ -109,6 +109,7 @@ export interface ChatOllamaInput
    * @default fetch
    */
   fetch?: typeof fetch;
+  think?: boolean;
 }
 
 /**
@@ -488,6 +489,8 @@ export class ChatOllama
   checkOrPullModel = false;
 
   baseUrl = "http://127.0.0.1:11434";
+
+  think?: boolean;
 
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
