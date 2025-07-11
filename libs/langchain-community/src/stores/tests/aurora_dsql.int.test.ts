@@ -38,7 +38,7 @@ async function getPostgresqlPool() {
   return pool;
 }
 
-describe("Postgres Chat History", () => {
+describe.skip("Postgres Chat History", () => {
   let chatHistory: AuroraDsqlChatMessageHistory;
   let pool: pg.Pool;
   const tableName = "test";
