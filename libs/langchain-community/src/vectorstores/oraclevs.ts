@@ -351,19 +351,24 @@ export class OracleVS extends VectorStore {
       throw new Error("Vectors input null. Nothing to add...");
     }
 
-    const ids: string[] = options?.ids || [];
+    let ids: string[] = options?.ids;
     let connection: oracledb.Connection | null = null;
 
     try {
       // Ensure there are IDs for all documents
-      if (ids.length === 0) {
-        documents.forEach((doc, index) => {
-          if (!doc.metadata?.id) {
-            throw new Error(
+       if (ids !== undefined && ids.length !== vectors.length) {
+            throw new Error("The number of ids must match the number of vectors provided.");
+        }
+      if (!ids) {
+        ids = [];
+        documents.forEach((doc, _index) => {
+          if (doc.metadata?.id) {
+            ids.push(doc.metadata.id);
+            /* throw new Error(
               `Missing ID in document metadata at index ${index}.`
-            );
+            ); */
           }
-          ids.push(doc.metadata.id);
+          // ids.push(doc.metadata.id);
         });
       }
 
@@ -611,6 +616,7 @@ export class OracleVS extends VectorStore {
     let connection: oracledb.Connection | null = null;
     try {
       connection = await this.getConnection();
+      const options = {autoCommit : true};
       if (params.ids && params.ids.length > 0) {
         // Dynamically create placeholders
         const placeholders = params.ids
@@ -619,10 +625,9 @@ export class OracleVS extends VectorStore {
         // Prepare the query
         const query = `DELETE FROM ${this.tableName} WHERE id IN (${placeholders})`;
         // Execute the query with the IDs as bind parameters
-        await connection.execute(query, [...params.ids]);
-        await connection.commit();
+        await connection.execute(query, [...params.ids], options);
       } else if (params.deleteAll) {
-        await connection.execute(`TRUNCATE TABLE ${this.tableName}`);
+        await connection.execute(`TRUNCATE TABLE ${this.tableName}`, [], options);
       }
     } catch (error: unknown) {
       handleError(error);
@@ -636,15 +641,11 @@ export class OracleVS extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig: OracleDBVSStoreArgs
   ): Promise<OracleVS> {
-    let connection: oracledb.Connection | null = null;
     const client = dbConfig.client;
     if (!client) throw new Error("client parameter is required...");
 
     try {
       const vss = new OracleVS(embeddings, dbConfig);
-      connection = await vss.getConnection();
-      //await dropTablePurge(connection, dbConfig.tableName); // FIX it is needed?
-      if (connection) await vss.retConnection(connection);
       await vss.initialize();
 
       // Use Promise.all to wait for all embedQuery promises to resolve
