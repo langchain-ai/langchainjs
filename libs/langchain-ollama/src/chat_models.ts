@@ -751,11 +751,15 @@ export class ChatOllama
         usageMetadata.input_tokens + usageMetadata.output_tokens;
       lastMetadata = rest;
 
+      // when think is enabled, try thinking first
+      const token = this.think ? responseMessage.thinking ?? responseMessage.content ?? ""
+        : responseMessage.content ?? "" 
+
       yield new ChatGenerationChunk({
-        text: responseMessage.content ?? "",
+        text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(responseMessage.content ?? "");
+      await runManager?.handleLLMNewToken(token);
     }
 
     // Yield the `response_metadata` as the final chunk.
