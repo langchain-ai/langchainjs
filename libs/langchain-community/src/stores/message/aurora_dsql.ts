@@ -114,7 +114,7 @@ export class AuroraDsqlChatMessageHistory extends BaseListChatMessageHistory {
 
     const query = `
     CREATE TABLE IF NOT EXISTS ${this.tableName} (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       created_at timestamp default current_timestamp,
       session_id VARCHAR(255) NOT NULL,
       message TEXT NOT NULL
@@ -138,7 +138,7 @@ export class AuroraDsqlChatMessageHistory extends BaseListChatMessageHistory {
   }
 
   private async createIndex() {
-    const query = `CREATE INDEX IF NOT EXISTS idx_on_session_id on ${this.tableName} (session_id);`;
+    const query = `CREATE INDEX ASYNC IF NOT EXISTS idx_on_session_id on ${this.tableName} (session_id);`;
     await this.pool.query(query);
   }
 
