@@ -1,0 +1,49 @@
+name: Sync Fork with Upstream
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+  workflow_dispatch:     # Allows manual triggering
+  
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.event.repository.fork == true
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Add upstream remote
+        run: |
+          git remote add upstream ${{ github.event.repository.parent.clone_url }}
+          git remote -v
+          
+      - name: Fetch upstream
+        run: git fetch upstream
+        
+      - name: Sync main branch
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit
+          git push origin main
+        continue-on-error: true
+        
+      - name: Sync other branches (optional)
+        run: |
+          for branch in $(git branch -r --format='%(refname:short)' | grep '^upstream/' | grep -v 'upstream/HEAD' | sed 's/upstream\///'); do
+            if git show-ref --verify --quiet refs/remotes/origin/$branch; then
+              echo "Syncing branch: $branch"
+              git checkout $branch 2>/dev/null || git checkout -b $branch upstream/$branch
+              git merge upstream/$branch --no-edit || echo "Merge conflict in $branch, skipping"
+              git push origin $branch || echo "Push failed for $branch, skipping"
+            fi
+          done
+        continue-on-error: true
