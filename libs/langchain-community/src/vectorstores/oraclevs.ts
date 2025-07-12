@@ -356,9 +356,11 @@ export class OracleVS extends VectorStore {
 
     try {
       // Ensure there are IDs for all documents
-       if (ids !== undefined && ids.length !== vectors.length) {
-            throw new Error("The number of ids must match the number of vectors provided.");
-        }
+      if (ids !== undefined && ids.length !== vectors.length) {
+        throw new Error(
+          "The number of ids must match the number of vectors provided."
+        );
+      }
       if (!ids) {
         ids = [];
         documents.forEach((doc, _index) => {
@@ -373,6 +375,7 @@ export class OracleVS extends VectorStore {
       }
 
       connection = await this.getConnection();
+      const binds = [];
       for (let index = 0; index < documents.length; index += 1) {
         const doc = documents[index];
         const sourceId = doc.metadata.id ?? uuidv4();
@@ -382,30 +385,34 @@ export class OracleVS extends VectorStore {
           .substring(0, 16)
           .toUpperCase();
         const idBuffer = Buffer.from(processedId, "hex");
-        const lobSz = 64 * 1024;
 
-        const bind = {
+        const bind: any = {
           id: idBuffer,
-          text: {
-            val: doc.pageContent.toString(),
-            type: oracledb.STRING,
-            maxSize: lobSz,
-          },
-          metadata: {
-            val: JSON.stringify(doc.metadata),
-            type: oracledb.DB_TYPE_JSON,
-          },
-          embedding: { val: new Float32Array(vectors[index]) },
+          text: doc.pageContent.toString(),
+          metadata: JSON.stringify(doc.metadata),
+          embedding: new Float32Array(vectors[index]),
         };
-
-        const sql = `INSERT INTO ${this.tableName} (id, embedding, text, metadata )
+        binds.push(bind);
+      }
+      const sql = `INSERT INTO ${this.tableName} (id, embedding, text, metadata )
                VALUES (:id, :embedding, :text, :metadata)`;
 
-        await connection.execute(sql, bind);
-      }
+      const options = {
+        bindDefs: {
+          id: { type: oracledb.DB_TYPE_RAW, maxSize: 24 },
+          text: { type: oracledb.CLOB, maxSize: 10000000 },
+          metadata: { type: oracledb.DB_TYPE_JSON },
+          embedding: { type: oracledb.DB_TYPE_VECTOR },
+        },
+        autoCommit: false,
+      };
+
+      const result = await connection.executeMany(sql, binds, options);
+      console.log(result);
 
       // Commit once all inserts are queued up
       await connection.commit();
+      console.log("All documents have been inserted and committed.");
     } catch (error: any) {
       handleError(error);
     } finally {
@@ -616,7 +623,7 @@ export class OracleVS extends VectorStore {
     let connection: oracledb.Connection | null = null;
     try {
       connection = await this.getConnection();
-      const options = {autoCommit : true};
+      const options = { autoCommit: true };
       if (params.ids && params.ids.length > 0) {
         // Dynamically create placeholders
         const placeholders = params.ids
@@ -627,7 +634,11 @@ export class OracleVS extends VectorStore {
         // Execute the query with the IDs as bind parameters
         await connection.execute(query, [...params.ids], options);
       } else if (params.deleteAll) {
-        await connection.execute(`TRUNCATE TABLE ${this.tableName}`, [], options);
+        await connection.execute(
+          `TRUNCATE TABLE ${this.tableName}`,
+          [],
+          options
+        );
       }
     } catch (error: unknown) {
       handleError(error);
