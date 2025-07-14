@@ -4,7 +4,7 @@
 
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { jest, test, expect, describe } from "@jest/globals";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import {

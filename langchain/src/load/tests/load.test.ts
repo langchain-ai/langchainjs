@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { stringify } from "yaml";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { OpenAI, ChatOpenAI, AzureChatOpenAI } from "@langchain/openai";
 

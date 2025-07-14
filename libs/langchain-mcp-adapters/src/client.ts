@@ -14,7 +14,7 @@ import {
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import debug from "debug";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
 import {
   type ClientConfig,

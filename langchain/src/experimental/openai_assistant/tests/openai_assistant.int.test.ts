@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { StructuredTool } from "@langchain/core/tools";
 import { AgentExecutor } from "../../../agents/executor.js";
 import { OpenAIAssistantRunnable } from "../index.js";

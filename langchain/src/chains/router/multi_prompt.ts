@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { interpolateFString, PromptTemplate } from "@langchain/core/prompts";
 import { MultiRouteChain, MultiRouteChainInput } from "./multi_route.js";
 import { STRUCTURED_MULTI_PROMPT_ROUTER_TEMPLATE } from "./multi_prompt_prompt.js";

@@ -12,7 +12,7 @@ import {
   UsageMetadata,
   getBufferString,
 } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   StructuredTool,

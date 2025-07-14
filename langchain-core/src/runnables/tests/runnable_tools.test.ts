@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { test, expect } from "@jest/globals";
 import { RunnableLambda, RunnableToolLike } from "../base.js";
 import { FakeRetriever } from "../../utils/testing/index.js";

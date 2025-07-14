@@ -5,7 +5,7 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { StructuredTool } from "@langchain/core/tools";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * An object containing configuration parameters for the ConneryService class.

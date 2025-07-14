@@ -4,7 +4,7 @@ import {
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessageChunk } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { StructuredTool } from "@langchain/core/tools";
 import {

@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { test, jest, expect } from "@jest/globals";
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   BaseMessage,
   ChatMessage,
