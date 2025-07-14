@@ -1,4 +1,4 @@
-import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { Embeddings } from "@langchain/core/embeddings";
 import {
   AsyncCaller,
   AsyncCallerCallOptions,
@@ -9,9 +9,10 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { GoogleAIConnection } from "./connection.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import {
-  GoogleAIModelRequestParams,
-  GoogleConnectionParams,
-  GoogleResponse,
+  BaseGoogleEmbeddingsOptions,
+  BaseGoogleEmbeddingsParams,
+  GoogleConnectionParams, GoogleEmbeddingsInstance, GoogleEmbeddingsResponse,
+  VertexEmbeddingsParameters,
 } from "./types.js";
 
 class EmbeddingsConnection<
@@ -26,7 +27,7 @@ class EmbeddingsConnection<
   convertSystemMessageToHumanContent: boolean | undefined;
 
   constructor(
-    fields: GoogleConnectionParams<AuthOptions> | undefined,
+    fields: BaseGoogleEmbeddingsParams<AuthOptions> | undefined,
     caller: AsyncCaller,
     client: GoogleAbstractedClient,
     streaming: boolean
@@ -45,57 +46,13 @@ class EmbeddingsConnection<
 
   async formatData(
     input: GoogleEmbeddingsInstance[],
-    parameters: GoogleAIModelRequestParams
+    parameters: VertexEmbeddingsParameters,
   ): Promise<unknown> {
     return {
       instances: input,
       parameters,
     };
   }
-}
-
-/**
- * Defines the parameters required to initialize a
- * GoogleEmbeddings instance. It extends EmbeddingsParams and
- * GoogleConnectionParams.
- */
-export interface BaseGoogleEmbeddingsParams<AuthOptions>
-  extends EmbeddingsParams,
-    GoogleConnectionParams<AuthOptions> {
-  model: string;
-}
-
-/**
- * Defines additional options specific to the
- * GoogleEmbeddingsInstance. It extends AsyncCallerCallOptions.
- */
-export interface BaseGoogleEmbeddingsOptions extends AsyncCallerCallOptions {}
-
-/**
- * Represents an instance for generating embeddings using the Google
- * Vertex AI API. It contains the content to be embedded.
- */
-export interface GoogleEmbeddingsInstance {
-  content: string;
-}
-
-/**
- * Defines the structure of the embeddings results returned by the Google
- * Vertex AI API. It extends GoogleBasePrediction and contains the
- * embeddings and their statistics.
- */
-export interface GoogleEmbeddingsResponse extends GoogleResponse {
-  data: {
-    predictions: {
-      embeddings: {
-        statistics: {
-          token_count: number;
-          truncated: boolean;
-        };
-        values: number[];
-      };
-    }[];
-  };
 }
 
 /**
@@ -108,6 +65,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
 {
   model: string;
 
+  dimensions?: number;
+
   private connection: EmbeddingsConnection<
     BaseGoogleEmbeddingsOptions,
     AuthOptions
@@ -117,6 +76,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     super(fields);
 
     this.model = fields.model;
+    this.dimensions = fields.dimensions ?? fields.outputDimensionality;
+
     this.connection = new EmbeddingsConnection(
       { ...fields, ...this },
       this.caller,
@@ -150,6 +111,22 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     }
   }
 
+  buildParameters(): VertexEmbeddingsParameters {
+    const ret: VertexEmbeddingsParameters = {
+      outputDimensionality: this.dimensions,
+    };
+
+    // Remove undefined attributes
+    let key: keyof VertexEmbeddingsParameters;
+    for (key in ret) {
+      if (ret[key] === undefined) {
+        delete ret[key];
+      }
+    }
+
+    return ret;
+  }
+
   /**
    * Takes an array of documents as input and returns a promise that
    * resolves to a 2D array of embeddings for each document. It splits the
@@ -169,7 +146,7 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       })),
       chunkSize
     );
-    const parameters = {};
+    const parameters: VertexEmbeddingsParameters = this.buildParameters();
     const options = {};
     const responses = await Promise.all(
       instanceChunks.map((instances) =>

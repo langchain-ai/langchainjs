@@ -9,6 +9,8 @@ import {
   MessageContent,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import {EmbeddingsParams} from "@langchain/core/embeddings";
+import {AsyncCallerCallOptions} from "@langchain/core/utils/async_caller";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
 import {
@@ -209,14 +211,18 @@ export type GoogleSpeechConfigSimplified =
   | GoogleSpeechVoice
   | GoogleSpeechSimplifiedLanguage;
 
-export interface GoogleAIModelParams {
+export interface GoogleModelParams {
   /** Model to use */
   model?: string;
+
   /**
    * Model to use
    * Alias for `model`
    */
   modelName?: string;
+}
+
+export interface GoogleAIModelParams extends GoogleModelParams {
 
   /** Sampling temperature to use */
   temperature?: number;
@@ -854,4 +860,85 @@ export type GoogleAIAPIConfig = GeminiAPIConfig | AnthropicAPIConfig;
 export interface GoogleAIAPIParams {
   apiName?: string;
   apiConfig?: GoogleAIAPIConfig;
+}
+
+// Embeddings
+
+/**
+ * Defines the parameters required to initialize a
+ * GoogleEmbeddings instance. It extends EmbeddingsParams and
+ * GoogleConnectionParams.
+ */
+export interface BaseGoogleEmbeddingsParams<AuthOptions>
+  extends EmbeddingsParams,
+    GoogleConnectionParams<AuthOptions> {
+  model: string;
+
+  /**
+   * Used to specify output embedding size.
+   * If set, output embeddings will be truncated to the size specified.
+   */
+  dimensions?: number;
+
+  /**
+   * An alias for "dimensions"
+   */
+  outputDimensionality?: number;
+
+}
+
+/**
+ * Defines additional options specific to the
+ * GoogleEmbeddingsInstance. It extends AsyncCallerCallOptions.
+ */
+export interface BaseGoogleEmbeddingsOptions extends AsyncCallerCallOptions {}
+
+export type GoogleEmbeddingsTaskType =
+  | "RETRIEVAL_QUERY"
+  | "RETRIEVAL_DOCUMENT"
+  | "SEMANTIC_SIMILARITY"
+  | "CLASSIFICATION"
+  | "CLUSTERING"
+  | "QUESTION_ANSWERING"
+  | "FACT_VERIFICATION"
+  | "CODE_RETRIEVAL_QUERY"
+  | string;
+
+/**
+ * Represents an instance for generating embeddings using the Google
+ * Vertex AI API. It contains the content to be embedded.
+ */
+export interface GoogleEmbeddingsInstance {
+  content: string;
+  task_type?: GoogleEmbeddingsTaskType;
+  title?: string;
+}
+
+export interface VertexEmbeddingsParameters extends GoogleModelParams {
+  autoTruncate?: boolean;
+  outputDimensionality?: number;
+}
+
+export interface VertexEmbeddingsRequest {
+  instances: GoogleEmbeddingsInstance[],
+  parameters?: VertexEmbeddingsParameters,
+}
+
+/**
+ * Defines the structure of the embeddings results returned by the Google
+ * Vertex AI API. It extends GoogleBasePrediction and contains the
+ * embeddings and their statistics.
+ */
+export interface GoogleEmbeddingsResponse extends GoogleResponse {
+  data: {
+    predictions: {
+      embeddings: {
+        statistics: {
+          token_count: number;
+          truncated: boolean;
+        };
+        values: number[];
+      };
+    }[];
+  };
 }

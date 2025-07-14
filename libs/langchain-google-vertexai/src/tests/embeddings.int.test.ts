@@ -54,7 +54,6 @@ describe.each(testModels)(
         model: modelName,
         location,
         onFailedAttempt,
-
       });
 
       const res = await embeddings.embedDocuments([
@@ -74,5 +73,17 @@ describe.each(testModels)(
 
     });
 
+    test("dimensions", async () => {
+      const testDimensions: number = 512;
+      const embeddings = new VertexAIEmbeddings({
+        model: modelName,
+        location,
+        onFailedAttempt,
+        dimensions: testDimensions,
+      });
+      const res = await embeddings.embedQuery("Hello world");
+      expect(typeof res[0]).toBe("number");
+      expect(res.length).toEqual(testDimensions);
+    })
   }
 );
