@@ -43,7 +43,7 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "zod": "^3.25.32",
+    "zod": "^3.25.0 || ^4.0.0",
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
@@ -70,6 +70,14 @@
     "ts-jest": "^29.1.0",
     "typescript": "~5.8.3",
     "web-streams-polyfill": "^4.0.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.25.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

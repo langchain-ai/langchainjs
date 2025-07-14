@@ -34,7 +34,7 @@
   "dependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "zod": "^3.25.32"
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "devDependencies": {
     "@langchain/scripts": "workspace:*",
