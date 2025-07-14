@@ -7770,6 +7770,7 @@ __metadata:
     word-extractor: "*"
     ws: ^8.14.2
     youtubei.js: "*"
+    zod: ^3.25.0 || ^4.0.0
   peerDependenciesMeta:
     "@arcjet/redact":
       optional: true
@@ -8019,6 +8020,8 @@ __metadata:
       optional: true
     youtubei.js:
       optional: true
+    zod:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -8061,6 +8064,11 @@ __metadata:
     web-streams-polyfill: ^4.0.0
     zod: ^3.25.0 || ^4.0.0
     zod-to-json-schema: ^3.22.3
+  peerDependencies:
+    zod: ^3.25.0 || ^4.0.0
+  peerDependenciesMeta:
+    zod:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -8198,7 +8206,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.22.4
+    zod: ^4.0.5
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -8414,7 +8422,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.0 || ^4.0.0
+    zod: ^3.22.4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -8751,7 +8759,7 @@ __metadata:
     rimraf: ^5.0.1
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.0 || ^4.0.0
+    zod: ^3.25.0
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -8970,9 +8978,13 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.0 || ^4.0.0
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
+    zod: ^3.25.0 || ^4.0.0
+  peerDependenciesMeta:
+    zod:
+      optional: true
   languageName: unknown
   linkType: soft
 
@@ -27075,7 +27087,7 @@ __metadata:
     uuid: ^10.0.0
     wikipedia: ^2.1.2
     yaml: ^2.2.1
-    zod: ^3.25.32
+    zod: ^3.25.0 || ^4.0.0
   peerDependencies:
     "@langchain/anthropic": "*"
     "@langchain/aws": "*"
@@ -27095,6 +27107,7 @@ __metadata:
     handlebars: ^4.7.8
     peggy: ^3.0.2
     typeorm: "*"
+    zod: ^3.25.0 || ^4.0.0
   peerDependenciesMeta:
     "@langchain/anthropic":
       optional: true
@@ -27129,6 +27142,8 @@ __metadata:
     peggy:
       optional: true
     typeorm:
+      optional: true
+    zod:
       optional: true
   languageName: unknown
   linkType: soft
