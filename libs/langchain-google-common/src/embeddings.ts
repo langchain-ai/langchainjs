@@ -159,12 +159,16 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
    * @returns A promise that resolves to a 2D array of embeddings for each document.
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
+    // Vertex "text-" models could do up 5 documents at once,
+    // but the "gemini-embedding-001" can only do 1.
+    // TODO: Make this configurable
+    const chunkSize = 1;
     const instanceChunks: GoogleEmbeddingsInstance[][] = chunkArray(
       documents.map((document) => ({
         content: document,
       })),
-      5
-    ); // Vertex AI accepts max 5 instances per prediction
+      chunkSize
+    );
     const parameters = {};
     const options = {};
     const responses = await Promise.all(
