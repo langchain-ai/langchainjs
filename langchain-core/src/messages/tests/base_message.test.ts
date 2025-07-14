@@ -498,4 +498,85 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
   });
+
+  test("Audio ID should not be concatenated when merging chunks", () => {
+    const audioId = "audio_6871323ab2fc8191b2cf516af96cd851";
+
+    const chunk1 = new AIMessageChunk({
+      content: "Hello",
+      additional_kwargs: {
+        audio: {
+          id: audioId,
+          data: "data1",
+          transcript: "Hello",
+          expires_at: 1729201448,
+        },
+      },
+    });
+
+    const chunk2 = new AIMessageChunk({
+      content: " world",
+      additional_kwargs: {
+        audio: {
+          id: audioId,
+          data: "data2",
+          transcript: " world",
+          expires_at: 1729201448,
+        },
+      },
+    });
+
+    const result = concat(chunk1, chunk2);
+
+    // Audio ID should be preserved (not concatenated)
+    expect(
+      (result.additional_kwargs.audio as Record<string, unknown>)?.id
+    ).toBe(audioId);
+
+    // Other audio fields should be concatenated normally
+    expect(
+      (result.additional_kwargs.audio as Record<string, unknown>)?.data
+    ).toBe("data1data2");
+    expect(
+      (result.additional_kwargs.audio as Record<string, unknown>)?.transcript
+    ).toBe("Hello world");
+
+    // Expires_at should be preserved (not concatenated) - numeric field
+    expect(
+      (result.additional_kwargs.audio as Record<string, unknown>)?.expires_at
+    ).toBe(1729201448);
+
+    // Main content should be concatenated
+    expect(result.content).toBe("Hello world");
+  });
+
+  test("Non-audio ID fields should still be concatenated normally", () => {
+    const chunk1 = new AIMessageChunk({
+      content: "Hello",
+      additional_kwargs: {
+        request_id: "req_",
+        session_id: "sess_",
+        custom_text: "part1",
+      },
+    });
+
+    const chunk2 = new AIMessageChunk({
+      content: " world",
+      additional_kwargs: {
+        request_id: "123",
+        session_id: "456",
+        custom_text: "part2",
+      },
+    });
+
+    const result = concat(chunk1, chunk2);
+
+    // Non-audio ID fields should be concatenated normally
+    expect(result.additional_kwargs.request_id).toBe("req_123");
+    expect(result.additional_kwargs.session_id).toBe("sess_456");
+    expect(result.additional_kwargs.custom_text).toBe("part1part2");
+
+    // Main content should be concatenated
+    expect(result.content).toBe("Hello world");
+  });
 });
