@@ -358,6 +358,10 @@ vectorstores/chroma.cjs
 vectorstores/chroma.js
 vectorstores/chroma.d.ts
 vectorstores/chroma.d.cts
+vectorstores/chromia.cjs
+vectorstores/chromia.js
+vectorstores/chromia.d.ts
+vectorstores/chromia.d.cts
 vectorstores/clickhouse.cjs
 vectorstores/clickhouse.js
 vectorstores/clickhouse.d.ts
