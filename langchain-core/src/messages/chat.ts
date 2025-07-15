@@ -45,7 +45,10 @@ export class ChatMessage
     return "generic";
   }
 
-  static isInstance(message: BaseMessage): message is ChatMessage {
+  static isInstance(
+    message: BaseMessage | null | undefined
+  ): message is ChatMessage {
+    if (message == null) return false;
     return message._getType() === "generic";
   }
 
@@ -109,10 +112,16 @@ export class ChatMessageChunk extends BaseMessageChunk {
   }
 }
 
-export function isChatMessage(x: BaseMessage): x is ChatMessage {
+export function isChatMessage(
+  x: BaseMessage | null | undefined
+): x is ChatMessage {
+  if (x == null) return false;
   return x._getType() === "generic";
 }
 
-export function isChatMessageChunk(x: BaseMessageChunk): x is ChatMessageChunk {
+export function isChatMessageChunk(
+  x: BaseMessageChunk | null | undefined
+): x is ChatMessageChunk {
+  if (x == null) return false;
   return x._getType() === "generic";
 }

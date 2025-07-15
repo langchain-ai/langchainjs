@@ -219,11 +219,15 @@ export class AIMessage extends BaseMessage {
   }
 }
 
-export function isAIMessage(x: BaseMessage): x is AIMessage {
+export function isAIMessage(x: BaseMessage | null | undefined): x is AIMessage {
+  if (x == null) return false;
   return x._getType() === "ai";
 }
 
-export function isAIMessageChunk(x: BaseMessageChunk): x is AIMessageChunk {
+export function isAIMessageChunk(
+  x: BaseMessageChunk | null | undefined
+): x is AIMessageChunk {
+  if (x == null) return false;
   return x._getType() === "ai";
 }
 

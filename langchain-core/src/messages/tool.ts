@@ -115,7 +115,10 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     return "tool";
   }
 
-  static isInstance(message: BaseMessage): message is ToolMessage {
+  static isInstance(
+    message: BaseMessage | null | undefined
+  ): message is ToolMessage {
+    if (message == null) return false;
     return message._getType() === "tool";
   }
 
@@ -314,10 +317,16 @@ export function defaultToolCallParser(
   return [toolCalls, invalidToolCalls];
 }
 
-export function isToolMessage(x: BaseMessage): x is ToolMessage {
+export function isToolMessage(
+  x: BaseMessage | null | undefined
+): x is ToolMessage {
+  if (x == null) return false;
   return x._getType() === "tool";
 }
 
-export function isToolMessageChunk(x: BaseMessageChunk): x is ToolMessageChunk {
+export function isToolMessageChunk(
+  x: BaseMessageChunk | null | undefined
+): x is ToolMessageChunk {
+  if (x == null) return false;
   return x._getType() === "tool";
 }

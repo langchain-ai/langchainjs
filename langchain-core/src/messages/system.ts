@@ -75,12 +75,16 @@ export class SystemMessageChunk extends BaseMessageChunk {
   }
 }
 
-export function isSystemMessage(x: BaseMessage): x is SystemMessage {
+export function isSystemMessage(
+  x: BaseMessage | null | undefined
+): x is SystemMessage {
+  if (x == null) return false;
   return x._getType() === "system";
 }
 
 export function isSystemMessageChunk(
-  x: BaseMessageChunk
+  x: BaseMessageChunk | null | undefined
 ): x is SystemMessageChunk {
+  if (x == null) return false;
   return x._getType() === "system";
 }

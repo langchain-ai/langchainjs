@@ -76,12 +76,16 @@ export class HumanMessageChunk extends BaseMessageChunk {
   }
 }
 
-export function isHumanMessage(x: BaseMessage): x is HumanMessage {
+export function isHumanMessage(
+  x: BaseMessage | null | undefined
+): x is HumanMessage {
+  if (x == null) return false;
   return x.getType() === "human";
 }
 
 export function isHumanMessageChunk(
-  x: BaseMessageChunk
+  x: BaseMessageChunk | null | undefined
 ): x is HumanMessageChunk {
+  if (x == null) return false;
   return x.getType() === "human";
 }

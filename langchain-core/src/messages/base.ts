@@ -544,13 +544,14 @@ export type BaseMessageLike =
   | SerializedConstructor;
 
 export function isBaseMessage(
-  messageLike?: unknown
+  messageLike: unknown | null | undefined
 ): messageLike is BaseMessage {
+  if (messageLike == null) return false;
   return typeof (messageLike as BaseMessage)?._getType === "function";
 }
 
 export function isBaseMessageChunk(
-  messageLike?: unknown
+  messageLike: unknown | null | undefined
 ): messageLike is BaseMessageChunk {
   return (
     isBaseMessage(messageLike) &&

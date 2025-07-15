@@ -74,12 +74,16 @@ export class FunctionMessageChunk extends BaseMessageChunk {
   }
 }
 
-export function isFunctionMessage(x: BaseMessage): x is FunctionMessage {
+export function isFunctionMessage(
+  x: BaseMessage | null | undefined
+): x is FunctionMessage {
+  if (x == null) return false;
   return x._getType() === "function";
 }
 
 export function isFunctionMessageChunk(
-  x: BaseMessageChunk
+  x: BaseMessageChunk | null | undefined
 ): x is FunctionMessageChunk {
+  if (x == null) return false;
   return x._getType() === "function";
 }
