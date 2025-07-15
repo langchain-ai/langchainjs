@@ -843,8 +843,11 @@ describe("PGVectorStore with skipInitializationCheck", () => {
       },
     };
 
-    pgvectorVectorStore = await PGVectorStore.initialize(embeddingsEngine, config);
-    
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
     const result = await pgvectorVectorStore.pool.query(
       `SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -852,7 +855,7 @@ describe("PGVectorStore with skipInitializationCheck", () => {
         AND table_name = '${tableName}'
       )`
     );
-    
+
     expect(result.rows[0].exists).toBe(true);
     await pgvectorVectorStore.end();
   });
@@ -869,9 +872,12 @@ describe("PGVectorStore with skipInitializationCheck", () => {
         metadataColumnName: "metadata",
       },
     };
-    
-    pgvectorVectorStore = await PGVectorStore.initialize(embeddingsEngine, config);
-    
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
     const tableExists = await pgvectorVectorStore.pool.query(
       `SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -879,15 +885,15 @@ describe("PGVectorStore with skipInitializationCheck", () => {
         AND table_name = '${tableName}'
       )`
     );
-    
+
     expect(tableExists.rows[0].exists).toBe(false);
-    
+
     await pgvectorVectorStore.end();
   });
 
   test("skipInitializationCheck=true should work with addDocuments", async () => {
     const setupPool = new pg.Pool(postgresConnectionOptions);
-    
+
     await setupPool.query(`CREATE EXTENSION IF NOT EXISTS vector`);
     await setupPool.query(`
       CREATE TABLE "${tableName}" (
@@ -897,9 +903,9 @@ describe("PGVectorStore with skipInitializationCheck", () => {
         "vector" vector(1536)
       );
     `);
-    
+
     await setupPool.end();
-    
+
     const config: PGVectorStoreArgs = {
       postgresConnectionOptions,
       tableName,
@@ -911,22 +917,31 @@ describe("PGVectorStore with skipInitializationCheck", () => {
         metadataColumnName: "metadata",
       },
     };
-    
-    pgvectorVectorStore = await PGVectorStore.initialize(embeddingsEngine, config);
-    
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
     const documents = [
       { pageContent: "Hello world", metadata: { source: "test" } },
-      { pageContent: "Testing skipInitializationCheck", metadata: { source: "test" } },
+      {
+        pageContent: "Testing skipInitializationCheck",
+        metadata: { source: "test" },
+      },
     ];
-    
+
     await pgvectorVectorStore.addDocuments(documents);
-    
+
     const query = await embeddingsEngine.embedQuery("Hello");
-    const results = await pgvectorVectorStore.similaritySearchVectorWithScore(query, 1);
-    
+    const results = await pgvectorVectorStore.similaritySearchVectorWithScore(
+      query,
+      1
+    );
+
     expect(results).toHaveLength(1);
     expect(results[0][0].pageContent).toBe("Hello world");
-    
+
     await pgvectorVectorStore.end();
   });
 });
