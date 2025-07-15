@@ -271,15 +271,14 @@ export class AIMessageChunk extends BaseMessageChunk {
             : undefined,
       };
     } else {
-      //Group fields.tool_call_chunks by id (fix for #8394)
-      let groupedToolCallChunk = fields.tool_call_chunks.reduce(
-        (rec: Record<string, ToolCallChunk[]>, chunk: ToolCallChunk) => {
-          if (!chunk.id) return rec;
-          rec[chunk.id] = rec[chunk.id] || [];
-          rec[chunk.id].push(chunk);
-          return rec;
+      const groupedToolCallChunk = fields.tool_call_chunks.reduce(
+        (acc, chunk) => {
+          if (!chunk.id) return acc;
+          acc[chunk.id] = acc[chunk.id] ?? [];
+          acc[chunk.id].push(chunk);
+          return acc;
         },
-        {}
+        {} as Record<string, ToolCallChunk[]>
       );
 
       const toolCalls: ToolCall[] = [];
@@ -298,16 +297,16 @@ export class AIMessageChunk extends BaseMessageChunk {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({
-            name: name,
+            name,
             args: parsedArgs,
-            id: id,
+            id,
             type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
-            name: name,
+            name,
             args: argStr,
-            id: id,
+            id,
             error: "Malformed args.",
             type: "invalid_tool_call",
           });
