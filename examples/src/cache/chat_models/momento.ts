@@ -19,4 +19,4 @@ const cache = await MomentoCache.fromProps({
   cacheName: "langchain",
 });
 
-const model = new ChatOpenAI({ cache });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });

@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {
-  const chat = new ChatOpenAI({ temperature: 0 });
+  const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
   const chatPrompt = ChatPromptTemplate.fromMessages([
     [

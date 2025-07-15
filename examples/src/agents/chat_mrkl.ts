@@ -4,7 +4,7 @@ import { Calculator } from "@langchain/community/tools/calculator";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const tools = [
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",

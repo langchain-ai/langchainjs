@@ -1,7 +1,9 @@
 /* eslint-disable import/first */
 import { ChatOpenAI } from "@langchain/openai";
 
-const chatModel = new ChatOpenAI({});
+const chatModel = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 console.log(await chatModel.invoke("what is LangSmith?"));
 

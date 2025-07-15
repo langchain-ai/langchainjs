@@ -6,7 +6,9 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 
 // Initialize the necessary components
-const llm = new ChatOpenAI();
+const llm = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const embeddings = new OpenAIEmbeddings();
 const apiKey = "Your SerpAPI API key";
 
