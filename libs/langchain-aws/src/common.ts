@@ -319,14 +319,33 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertSystemMessageToConverseMessage(
   msg: SystemMessage
-): BedrockSystemContentBlock {
+): BedrockSystemContentBlock[] {
   if (typeof msg.content === "string") {
-    return { text: msg.content };
-  } else if (msg.content.length === 1 && msg.content[0].type === "text") {
-    return { text: msg.content[0].text };
+    return [{ text: msg.content }];
+  } else if (Array.isArray(msg.content) && msg.content.length > 0) {
+    const contentBlocks: BedrockSystemContentBlock[] = [];
+    for (const block of msg.content) {
+      if (block.type === "text" && typeof block.text === "string") {
+        contentBlocks.push({
+          text: block.text,
+        });
+      } else if (
+        "cachePoint" in block &&
+        block.cachePoint &&
+        typeof block.cachePoint === "object" &&
+        block.cachePoint.type === "default"
+      ) {
+        contentBlocks.push({
+          cachePoint: {
+            type: "default",
+          },
+        });
+      } else break;
+    }
+    if (msg.content.length === contentBlocks.length) return contentBlocks;
   }
   throw new Error(
-    "System message content must be either a string, or a content array containing a single text object."
+    "System message content must be either a string, or an array of text blocks, optionally including a cache point."
   );
 }
 
@@ -470,7 +489,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
 } {
   const converseSystem: BedrockSystemContentBlock[] = messages
     .filter((msg) => msg.getType() === "system")
-    .map((msg) => convertSystemMessageToConverseMessage(msg));
+    .flatMap((msg) => convertSystemMessageToConverseMessage(msg));
 
   const converseMessages: BedrockMessage[] = messages
     .filter((msg) => msg.getType() !== "system")

@@ -108,6 +108,91 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "cache checkpoints",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
+        }),
+        new HumanMessage(
+          "What's the weather like today in Berkeley, CA? Use weather.com to check."
+        ),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "retrieverTool",
+              args: {
+                url: "https://weather.com",
+              },
+              id: "123_retriever_tool",
+            },
+          ],
+        }),
+        new ToolMessage({
+          tool_call_id: "123_retriever_tool",
+          content: "The weather in Berkeley, CA is 70 degrees and sunny.",
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: "user",
+            content: [
+              {
+                text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                toolUse: {
+                  name: "retrieverTool",
+                  toolUseId: "123_retriever_tool",
+                  input: {
+                    url: "https://weather.com",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "123_retriever_tool",
+                  content: [
+                    {
+                      text: "The weather in Berkeley, CA is 70 degrees and sunny.",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "consecutive user tool messages",
       input: [
         new SystemMessage("You're an advanced AI assistant."),
