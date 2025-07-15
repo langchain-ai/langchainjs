@@ -11,7 +11,6 @@ import {
   $ZodUnknown,
   $ZodNever,
   $ZodOptional,
-  _array,
 } from "zod/v4/core";
 
 export type ZodStringV3 = z3.ZodString;

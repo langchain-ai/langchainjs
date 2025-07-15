@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool, tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { afterEach, expect, jest, test } from "@jest/globals";
 import {
   AIMessage,

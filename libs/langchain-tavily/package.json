@@ -31,8 +31,17 @@
   },
   "author": "LangChain",
   "license": "MIT",
+  "dependencies": {
+    "zod": "^3.25.0 || ^4.0.0"
+  },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.58 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0",
+    "zod": "^3.25.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -80,8 +89,5 @@
     "index.js",
     "index.d.ts",
     "index.d.cts"
-  ],
-  "dependencies": {
-    "zod": "^3.25.32"
-  }
+  ]
 }

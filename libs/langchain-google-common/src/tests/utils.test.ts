@@ -3,7 +3,7 @@ import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
   BackedBlobStore,

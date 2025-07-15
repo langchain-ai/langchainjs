@@ -11,7 +11,7 @@ import {
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
 import { interpolateFString, PromptTemplate } from "@langchain/core/prompts";

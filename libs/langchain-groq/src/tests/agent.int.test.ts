@@ -1,7 +1,7 @@
 // import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 // import { ChatPromptTemplate } from "@langchain/core/prompts";
 // import { DynamicStructuredTool } from "@langchain/core/tools";
-// import { z } from "zod";
+// import { z } from "zod/v3";
 // import { ChatGroq } from "../chat_models.js";
 
 // TODO: This test breaks CI build due to dependencies. Figure out a way around it.

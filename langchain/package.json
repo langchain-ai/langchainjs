@@ -484,7 +484,8 @@
     "cheerio": "*",
     "handlebars": "^4.7.8",
     "peggy": "^3.0.2",
-    "typeorm": "*"
+    "typeorm": "*",
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "@langchain/anthropic": {
@@ -537,6 +538,9 @@
     },
     "typeorm": {
       "optional": true
+    },
+    "zod": {
+      "optional": true
     }
   },
   "dependencies": {
@@ -550,7 +554,7 @@
     "p-retry": "4",
     "uuid": "^10.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.25.32"
+    "zod": "^3.25.0 || ^4.0.0"
   },
   "publishConfig": {
     "access": "public"

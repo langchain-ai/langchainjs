@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { StructuredTool } from "@langchain/core/tools";
 import { getPrompt } from "../prompt_generator.js";

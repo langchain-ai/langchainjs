@@ -34,7 +34,13 @@ export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
     }
   }
   if (isZodSchemaV3(schema)) {
-    return zodToJsonSchema(schema);
+    // FIXME: this is typed as any because transitive zod dependencies
+    // for zod-to-json-schema resolve to zod@4.x.x with yarn, which
+    // causes errors since we know that zodToJsonSchema can only take
+    // zod v3 schemas even though it reaches for zod v4.
+    // Will be fixed by a move to pnpm.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return zodToJsonSchema(schema as any);
   }
   return schema as JSONSchema;
 }

@@ -11,7 +11,7 @@ import type {
   Message as BedrockMessage,
   SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { describe, expect, test } from "@jest/globals";
 import {
   convertToConverseMessages,

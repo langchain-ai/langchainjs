@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { expect, test } from "@jest/globals";
 
 import { Document } from "@langchain/core/documents";

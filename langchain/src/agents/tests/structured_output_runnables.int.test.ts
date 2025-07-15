@@ -1,6 +1,6 @@
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import fs from "fs";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { AgentAction, AgentFinish, AgentStep } from "@langchain/core/agents";
 import { AIMessage } from "@langchain/core/messages";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";

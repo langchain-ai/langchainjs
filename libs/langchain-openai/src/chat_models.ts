@@ -3379,7 +3379,12 @@ function interopZodResponseFormat(
   props: Omit<ResponseFormatJSONSchema.JSONSchema, "schema" | "strict" | "name">
 ) {
   if (isZodSchemaV3(zodSchema)) {
-    return zodResponseFormat(zodSchema, name, props);
+    // FIXME: this is typed as any because transitive zod dependencies
+    // for openai resolve to zod@4.x.x with yarn, which causes errors
+    // since we know that zodResponseFormat can only take zod v3 schemas
+    // even though it reaches for zod v4.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return zodResponseFormat(zodSchema as any, name, props);
   }
   if (isZodSchemaV4(zodSchema)) {
     return makeParseableResponseFormat(

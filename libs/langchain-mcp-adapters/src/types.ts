@@ -7,7 +7,7 @@ import {
   ZodRawShape,
   UnknownKeysParam,
   Primitive,
-} from "zod";
+} from "zod/v3";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { UnionToTuple } from "./util.js";
