@@ -50,7 +50,7 @@
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.840.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
     "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
