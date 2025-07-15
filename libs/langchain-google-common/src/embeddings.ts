@@ -18,7 +18,10 @@ import {
   GoogleEmbeddingsRequest,
   VertexEmbeddingsResponse,
   AIStudioEmbeddingsResponse,
-  VertexEmbeddingsResponsePrediction, AIStudioEmbeddingsRequest, GeminiPartText, VertexEmbeddingsRequest,
+  VertexEmbeddingsResponsePrediction,
+  AIStudioEmbeddingsRequest,
+  GeminiPartText,
+  VertexEmbeddingsRequest,
 } from "./types.js";
 
 class EmbeddingsConnection<
@@ -56,7 +59,9 @@ class EmbeddingsConnection<
       case "gai":
         return this.buildUrlMethodAiStudio();
       default:
-        throw new Error(`Unknown platform when building method: ${this.platform}`);
+        throw new Error(
+          `Unknown platform when building method: ${this.platform}`
+        );
     }
   }
 
@@ -67,20 +72,22 @@ class EmbeddingsConnection<
 
   formatDataAiStudio(
     input: VertexEmbeddingsInstance[],
-    parameters: VertexEmbeddingsParameters,
+    parameters: VertexEmbeddingsParameters
   ): AIStudioEmbeddingsRequest {
-    const parts: GeminiPartText[] = input.map((instance: VertexEmbeddingsInstance) => ({
-      text: instance.content,
-    }))
+    const parts: GeminiPartText[] = input.map(
+      (instance: VertexEmbeddingsInstance) => ({
+        text: instance.content,
+      })
+    );
     const content = {
-      parts
-    }
+      parts,
+    };
     const outputDimensionality = parameters?.outputDimensionality;
 
     const ret: AIStudioEmbeddingsRequest = {
       content,
       outputDimensionality,
-    }
+    };
 
     // Remove undefined attributes
     let key: keyof AIStudioEmbeddingsRequest;
@@ -95,7 +102,7 @@ class EmbeddingsConnection<
 
   formatDataVertex(
     input: VertexEmbeddingsInstance[],
-    parameters: VertexEmbeddingsParameters,
+    parameters: VertexEmbeddingsParameters
   ): VertexEmbeddingsRequest {
     return {
       instances: input,
@@ -105,7 +112,7 @@ class EmbeddingsConnection<
 
   async formatData(
     input: VertexEmbeddingsInstance[],
-    parameters: VertexEmbeddingsParameters,
+    parameters: VertexEmbeddingsParameters
   ): Promise<GoogleEmbeddingsRequest> {
     switch (this.platform) {
       case "gcp":
@@ -113,7 +120,9 @@ class EmbeddingsConnection<
       case "gai":
         return this.formatDataAiStudio(input, parameters);
       default:
-        throw new Error(`Unknown platform to format embeddings ${this.platform}`);
+        throw new Error(
+          `Unknown platform to format embeddings ${this.platform}`
+        );
     }
   }
 }
@@ -191,8 +200,12 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
   }
 
   vertexResponseToValues(response: VertexEmbeddingsResponse): number[][] {
-    const predictions: VertexEmbeddingsResponsePrediction[] = response?.data?.predictions ?? [];
-    return predictions.map( (prediction: VertexEmbeddingsResponsePrediction): number[] => prediction.embeddings.values);
+    const predictions: VertexEmbeddingsResponsePrediction[] =
+      response?.data?.predictions ?? [];
+    return predictions.map(
+      (prediction: VertexEmbeddingsResponsePrediction): number[] =>
+        prediction.embeddings.values
+    );
   }
 
   aiStudioResponseToValues(response: AIStudioEmbeddingsResponse): number[][] {
@@ -203,11 +216,17 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
   responseToValues(response: GoogleEmbeddingsResponse): number[][] {
     switch (this.connection.platform) {
       case "gcp":
-        return this.vertexResponseToValues(response as VertexEmbeddingsResponse);
+        return this.vertexResponseToValues(
+          response as VertexEmbeddingsResponse
+        );
       case "gai":
-        return this.aiStudioResponseToValues(response as AIStudioEmbeddingsResponse);
+        return this.aiStudioResponseToValues(
+          response as AIStudioEmbeddingsResponse
+        );
       default:
-        throw new Error(`Unknown response platform: ${this.connection.platform}`)
+        throw new Error(
+          `Unknown response platform: ${this.connection.platform}`
+        );
     }
   }
 
@@ -239,12 +258,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       )
     );
     const result: number[][] =
-      responses
-        ?.map(
-          (response) =>
-            this.responseToValues(response)
-        )
-        .flat() ?? [];
+      responses?.map((response) => this.responseToValues(response)).flat() ??
+      [];
     return result;
   }
 

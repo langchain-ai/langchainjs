@@ -19,7 +19,8 @@ import type {
   VertexModelFamily,
   GoogleAIAPIConfig,
   AnthropicAPIConfig,
-  GeminiAPIConfig, GoogleModelParams,
+  GeminiAPIConfig,
+  GoogleModelParams,
 } from "./types.js";
 import {
   GoogleAbstractedClient,

@@ -37,8 +37,7 @@ const testModels = [
 
 describe.each(testModels)(
   `Vertex Embeddings ($modelName) ($location)`,
-  ({modelName, location, defaultOutputDimensions}) => {
-
+  ({ modelName, location, defaultOutputDimensions }) => {
     test("embedQuery", async () => {
       const embeddings = new VertexAIEmbeddings({
         model: modelName,
@@ -70,7 +69,6 @@ describe.each(testModels)(
         expect(typeof r[0]).toBe("number");
         expect(r.length).toEqual(defaultOutputDimensions);
       });
-
     });
 
     test("dimensions", async () => {
@@ -84,6 +82,6 @@ describe.each(testModels)(
       const res = await embeddings.embedQuery("Hello world");
       expect(typeof res[0]).toBe("number");
       expect(res.length).toEqual(testDimensions);
-    })
+    });
   }
 );

@@ -1,7 +1,7 @@
 import { test, expect } from "@jest/globals";
-import {GooglePlatformType} from "@langchain/google-common";
-import {getEnvironmentVariable} from "@langchain/core/utils/env";
-import {GoogleEmbeddings, GoogleEmbeddingsInput} from "../embeddings.js";
+import { GooglePlatformType } from "@langchain/google-common";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { GoogleEmbeddings, GoogleEmbeddingsInput } from "../embeddings.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onFailedAttempt(err: any): any {
@@ -49,9 +49,10 @@ const testModels = [
 
 describe.each(testModels)(
   `Webauth Embeddings ($modelName) ($location)`,
-  ({modelName, platformType, location, defaultOutputDimensions}) => {
-
-    function newModel(fields?: Omit<GoogleEmbeddingsInput, "model">): GoogleEmbeddings {
+  ({ modelName, platformType, location, defaultOutputDimensions }) => {
+    function newModel(
+      fields?: Omit<GoogleEmbeddingsInput, "model">
+    ): GoogleEmbeddings {
       const apiKey =
         platformType === "gai"
           ? getEnvironmentVariable("TEST_API_KEY")
@@ -64,7 +65,7 @@ describe.each(testModels)(
         location,
         onFailedAttempt,
         ...(fields ?? {}),
-      })
+      });
     }
 
     test("embedQuery", async () => {
@@ -91,7 +92,6 @@ describe.each(testModels)(
         expect(typeof r[0]).toBe("number");
         expect(r.length).toEqual(defaultOutputDimensions);
       });
-
     });
 
     test("dimensions", async () => {
@@ -102,6 +102,6 @@ describe.each(testModels)(
       const res = await embeddings.embedQuery("Hello world");
       expect(typeof res[0]).toBe("number");
       expect(res.length).toEqual(testDimensions);
-    })
+    });
   }
 );

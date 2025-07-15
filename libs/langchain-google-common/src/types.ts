@@ -9,8 +9,8 @@ import {
   MessageContent,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
-import {EmbeddingsParams} from "@langchain/core/embeddings";
-import {AsyncCallerCallOptions} from "@langchain/core/utils/async_caller";
+import { EmbeddingsParams } from "@langchain/core/embeddings";
+import { AsyncCallerCallOptions } from "@langchain/core/utils/async_caller";
 import type { JsonStream } from "./utils/stream.js";
 import { MediaManager } from "./experimental/utils/media_core.js";
 import {
@@ -223,7 +223,6 @@ export interface GoogleModelParams {
 }
 
 export interface GoogleAIModelParams extends GoogleModelParams {
-
   /** Sampling temperature to use */
   temperature?: number;
 
@@ -884,7 +883,6 @@ export interface BaseGoogleEmbeddingsParams<AuthOptions>
    * An alias for "dimensions"
    */
   outputDimensionality?: number;
-
 }
 
 /**
@@ -920,21 +918,23 @@ export interface VertexEmbeddingsParameters extends GoogleModelParams {
 }
 
 export interface VertexEmbeddingsRequest {
-  instances: VertexEmbeddingsInstance[],
-  parameters?: VertexEmbeddingsParameters,
+  instances: VertexEmbeddingsInstance[];
+  parameters?: VertexEmbeddingsParameters;
 }
 
 export interface AIStudioEmbeddingsRequest {
   content: {
-    parts: GeminiPartText[],
-  },
-  model?: string, // Documentation says required, but tests say otherwise
-  taskType?: GoogleEmbeddingsTaskType,
-  title?: string,
-  outputDimensionality?: number,
+    parts: GeminiPartText[];
+  };
+  model?: string; // Documentation says required, but tests say otherwise
+  taskType?: GoogleEmbeddingsTaskType;
+  title?: string;
+  outputDimensionality?: number;
 }
 
-export type GoogleEmbeddingsRequest = VertexEmbeddingsRequest | AIStudioEmbeddingsRequest;
+export type GoogleEmbeddingsRequest =
+  | VertexEmbeddingsRequest
+  | AIStudioEmbeddingsRequest;
 
 export interface VertexEmbeddingsResponsePrediction {
   embeddings: {
@@ -961,8 +961,10 @@ export interface AIStudioEmbeddingsResponse extends GoogleResponse {
   data: {
     embedding: {
       values: number[];
-    }
-  }
+    };
+  };
 }
 
-export type GoogleEmbeddingsResponse = VertexEmbeddingsResponse | AIStudioEmbeddingsResponse;
+export type GoogleEmbeddingsResponse =
+  | VertexEmbeddingsResponse
+  | AIStudioEmbeddingsResponse;
