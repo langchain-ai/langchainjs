@@ -758,7 +758,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? this.model;
+    this.model = fields?.model ?? fields?.modelName ?? this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 
