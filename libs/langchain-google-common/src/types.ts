@@ -908,9 +908,9 @@ export type GoogleEmbeddingsTaskType =
  * Represents an instance for generating embeddings using the Google
  * Vertex AI API. It contains the content to be embedded.
  */
-export interface GoogleEmbeddingsInstance {
+export interface VertexEmbeddingsInstance {
   content: string;
-  task_type?: GoogleEmbeddingsTaskType;
+  taskType?: GoogleEmbeddingsTaskType;
   title?: string;
 }
 
@@ -920,8 +920,30 @@ export interface VertexEmbeddingsParameters extends GoogleModelParams {
 }
 
 export interface VertexEmbeddingsRequest {
-  instances: GoogleEmbeddingsInstance[],
+  instances: VertexEmbeddingsInstance[],
   parameters?: VertexEmbeddingsParameters,
+}
+
+export interface AIStudioEmbeddingsRequest {
+  content: {
+    parts: GeminiPartText[],
+  },
+  model?: string, // Documentation says required, but tests say otherwise
+  taskType?: GoogleEmbeddingsTaskType,
+  title?: string,
+  outputDimensionality?: number,
+}
+
+export type GoogleEmbeddingsRequest = VertexEmbeddingsRequest | AIStudioEmbeddingsRequest;
+
+export interface VertexEmbeddingsResponsePrediction {
+  embeddings: {
+    statistics: {
+      token_count: number;
+      truncated: boolean;
+    };
+    values: number[];
+  };
 }
 
 /**
@@ -929,16 +951,18 @@ export interface VertexEmbeddingsRequest {
  * Vertex AI API. It extends GoogleBasePrediction and contains the
  * embeddings and their statistics.
  */
-export interface GoogleEmbeddingsResponse extends GoogleResponse {
+export interface VertexEmbeddingsResponse extends GoogleResponse {
   data: {
-    predictions: {
-      embeddings: {
-        statistics: {
-          token_count: number;
-          truncated: boolean;
-        };
-        values: number[];
-      };
-    }[];
+    predictions: VertexEmbeddingsResponsePrediction[];
   };
 }
+
+export interface AIStudioEmbeddingsResponse extends GoogleResponse {
+  data: {
+    embedding: {
+      values: number[];
+    }
+  }
+}
+
+export type GoogleEmbeddingsResponse = VertexEmbeddingsResponse | AIStudioEmbeddingsResponse;

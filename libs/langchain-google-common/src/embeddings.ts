@@ -11,8 +11,14 @@ import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import {
   BaseGoogleEmbeddingsOptions,
   BaseGoogleEmbeddingsParams,
-  GoogleConnectionParams, GoogleEmbeddingsInstance, GoogleEmbeddingsResponse,
+  GoogleConnectionParams,
+  VertexEmbeddingsInstance,
+  GoogleEmbeddingsResponse,
   VertexEmbeddingsParameters,
+  GoogleEmbeddingsRequest,
+  VertexEmbeddingsResponse,
+  AIStudioEmbeddingsResponse,
+  VertexEmbeddingsResponsePrediction, AIStudioEmbeddingsRequest, GeminiPartText, VertexEmbeddingsRequest,
 } from "./types.js";
 
 class EmbeddingsConnection<
@@ -20,7 +26,7 @@ class EmbeddingsConnection<
   AuthOptions
 > extends GoogleAIConnection<
   CallOptions,
-  GoogleEmbeddingsInstance[],
+  VertexEmbeddingsInstance[],
   AuthOptions,
   GoogleEmbeddingsResponse
 > {
@@ -35,8 +41,23 @@ class EmbeddingsConnection<
     super(fields, caller, client, streaming);
   }
 
-  async buildUrlMethod(): Promise<string> {
+  buildUrlMethodAiStudio(): string {
+    return "embedContent";
+  }
+
+  buildUrlMethodVertex(): string {
     return "predict";
+  }
+
+  async buildUrlMethod(): Promise<string> {
+    switch (this.platform) {
+      case "gcp":
+        return this.buildUrlMethodVertex();
+      case "gai":
+        return this.buildUrlMethodAiStudio();
+      default:
+        throw new Error(`Unknown platform when building method: ${this.platform}`);
+    }
   }
 
   get modelPublisher(): string {
@@ -44,14 +65,56 @@ class EmbeddingsConnection<
     return "google";
   }
 
-  async formatData(
-    input: GoogleEmbeddingsInstance[],
+  formatDataAiStudio(
+    input: VertexEmbeddingsInstance[],
     parameters: VertexEmbeddingsParameters,
-  ): Promise<unknown> {
+  ): AIStudioEmbeddingsRequest {
+    const parts: GeminiPartText[] = input.map((instance: VertexEmbeddingsInstance) => ({
+      text: instance.content,
+    }))
+    const content = {
+      parts
+    }
+    const outputDimensionality = parameters?.outputDimensionality;
+
+    const ret: AIStudioEmbeddingsRequest = {
+      content,
+      outputDimensionality,
+    }
+
+    // Remove undefined attributes
+    let key: keyof AIStudioEmbeddingsRequest;
+    for (key in ret) {
+      if (ret[key] === undefined) {
+        delete ret[key];
+      }
+    }
+
+    return ret;
+  }
+
+  formatDataVertex(
+    input: VertexEmbeddingsInstance[],
+    parameters: VertexEmbeddingsParameters,
+  ): VertexEmbeddingsRequest {
     return {
       instances: input,
       parameters,
     };
+  }
+
+  async formatData(
+    input: VertexEmbeddingsInstance[],
+    parameters: VertexEmbeddingsParameters,
+  ): Promise<GoogleEmbeddingsRequest> {
+    switch (this.platform) {
+      case "gcp":
+        return this.formatDataVertex(input, parameters);
+      case "gai":
+        return this.formatDataAiStudio(input, parameters);
+      default:
+        throw new Error(`Unknown platform to format embeddings ${this.platform}`);
+    }
   }
 }
 
@@ -127,6 +190,27 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     return ret;
   }
 
+  vertexResponseToValues(response: VertexEmbeddingsResponse): number[][] {
+    const predictions: VertexEmbeddingsResponsePrediction[] = response?.data?.predictions ?? [];
+    return predictions.map( (prediction: VertexEmbeddingsResponsePrediction): number[] => prediction.embeddings.values);
+  }
+
+  aiStudioResponseToValues(response: AIStudioEmbeddingsResponse): number[][] {
+    const value: number[] = response?.data?.embedding?.values ?? [];
+    return [value];
+  }
+
+  responseToValues(response: GoogleEmbeddingsResponse): number[][] {
+    switch (this.connection.platform) {
+      case "gcp":
+        return this.vertexResponseToValues(response as VertexEmbeddingsResponse);
+      case "gai":
+        return this.aiStudioResponseToValues(response as AIStudioEmbeddingsResponse);
+      default:
+        throw new Error(`Unknown response platform: ${this.connection.platform}`)
+    }
+  }
+
   /**
    * Takes an array of documents as input and returns a promise that
    * resolves to a 2D array of embeddings for each document. It splits the
@@ -138,9 +222,10 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
   async embedDocuments(documents: string[]): Promise<number[][]> {
     // Vertex "text-" models could do up 5 documents at once,
     // but the "gemini-embedding-001" can only do 1.
+    // AI Studio can only do a chunk size of 1.
     // TODO: Make this configurable
     const chunkSize = 1;
-    const instanceChunks: GoogleEmbeddingsInstance[][] = chunkArray(
+    const instanceChunks: VertexEmbeddingsInstance[][] = chunkArray(
       documents.map((document) => ({
         content: document,
       })),
@@ -157,10 +242,7 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       responses
         ?.map(
           (response) =>
-            response?.data?.predictions?.map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (result: any) => result.embeddings?.values
-            ) ?? []
+            this.responseToValues(response)
         )
         .flat() ?? [];
     return result;
