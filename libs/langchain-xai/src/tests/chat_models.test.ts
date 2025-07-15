@@ -13,13 +13,13 @@ test("Serialization", () => {
     apiKey: "bar",
   });
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-2-1212"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model_name":"grok-2-1212"}}`
   );
 });
 
 test("Serialization with no params", () => {
   const model = new ChatXAI();
   expect(JSON.stringify(model)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model":"grok-beta"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","xai","ChatXAI"],"kwargs":{"model_name":"grok-beta"}}`
   );
 });
