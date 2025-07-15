@@ -393,7 +393,7 @@ function convertHumanMessageToConverseMessage(
 ): BedrockMessage {
   if (msg.content === "") {
     throw new Error(
-      `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+      `Invalid message content: empty string. '${msg.getType()}' must contain non-empty content.`
     );
   }
 
@@ -469,20 +469,20 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   converseSystem: BedrockSystemContentBlock[];
 } {
   const converseSystem: BedrockSystemContentBlock[] = messages
-    .filter((msg) => msg._getType() === "system")
+    .filter((msg) => msg.getType() === "system")
     .map((msg) => convertSystemMessageToConverseMessage(msg));
 
   const converseMessages: BedrockMessage[] = messages
-    .filter((msg) => msg._getType() !== "system")
+    .filter((msg) => msg.getType() !== "system")
     .map((msg) => {
-      if (msg._getType() === "ai") {
+      if (msg.getType() === "ai") {
         return convertAIMessageToConverseMessage(msg as AIMessage);
-      } else if (msg._getType() === "human" || msg._getType() === "generic") {
+      } else if (msg.getType() === "human" || msg.getType() === "generic") {
         return convertHumanMessageToConverseMessage(msg as HumanMessage);
-      } else if (msg._getType() === "tool") {
+      } else if (msg.getType() === "tool") {
         return convertToolMessageToConverseMessage(msg as ToolMessage);
       } else {
-        throw new Error(`Unsupported message type: ${msg._getType()}`);
+        throw new Error(`Unsupported message type: ${msg.getType()}`);
       }
     });
 
