@@ -118,7 +118,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
   static isInstance(
     message: BaseMessage | null | undefined
   ): message is ToolMessage {
-    if (message == null) return false;
+    if (!message) return false;
     return message._getType() === "tool";
   }
 

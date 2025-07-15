@@ -546,7 +546,7 @@ export type BaseMessageLike =
 export function isBaseMessage(
   messageLike: unknown | null | undefined
 ): messageLike is BaseMessage {
-  if (messageLike == null) return false;
+  if (!messageLike) return false;
   return typeof (messageLike as BaseMessage)?._getType === "function";
 }
 
