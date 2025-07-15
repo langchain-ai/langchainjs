@@ -673,7 +673,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
   get lc_aliases(): Record<string, string> {
     return {
       apiKey: "openai_api_key",
-      model: "model_name",
+      modelName: "model",
     };
   }
 
@@ -697,6 +697,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "streaming",
       "streamUsage",
       "model",
+      "modelName",
       "modelKwargs",
       "stop",
       "stopSequences",
