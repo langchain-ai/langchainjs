@@ -5,7 +5,7 @@ import { AzureChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).withConfig({
     response_format: {
@@ -21,7 +21,7 @@ test("Test ChatOpenAI JSON mode", async () => {
 
 test("Test ChatOpenAI seed", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
   }).withConfig({
@@ -36,7 +36,7 @@ test("Test ChatOpenAI seed", async () => {
 
 test("Test ChatOpenAI tool calling", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).withConfig({
     tools: [
@@ -83,7 +83,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     }
   }
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).withConfig({
     tools: [
@@ -136,7 +136,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
 
 test("Test ChatOpenAI tool calling with streaming", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 256,
   }).withConfig({
     tools: [
@@ -185,7 +185,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 1,
     cache: memoryCache,
   }).withConfig({

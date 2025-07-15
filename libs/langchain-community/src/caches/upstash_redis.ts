@@ -38,6 +38,7 @@ export type UpstashRedisCacheProps = {
  * });
  * // Initialize the OpenAI model with Upstash Redis cache for caching responses
  * const model = new ChatOpenAI({
+ *   model: "gpt-4o-mini",
  *   cache,
  * });
  * await model.invoke("How are you today?");

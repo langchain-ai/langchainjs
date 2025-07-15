@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.3.23",
+  "version": "0.3.24",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,14 +35,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.52.0",
+    "@anthropic-ai/sdk": "^0.56.0",
     "fast-xml-parser": "^4.4.1"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
-    "@anthropic-ai/vertex-sdk": "^0.4.1",
+    "@anthropic-ai/vertex-sdk": "^0.11.5",
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",

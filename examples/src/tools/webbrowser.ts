@@ -2,7 +2,7 @@ import { WebBrowser } from "langchain/tools/webbrowser";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const embeddings = new OpenAIEmbeddings();
 
   const browser = new WebBrowser({ model, embeddings });
