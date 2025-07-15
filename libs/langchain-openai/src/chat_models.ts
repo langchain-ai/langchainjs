@@ -697,6 +697,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       "streaming",
       "streamUsage",
       "model",
+      "modelName",
       "modelKwargs",
       "stop",
       "stopSequences",
