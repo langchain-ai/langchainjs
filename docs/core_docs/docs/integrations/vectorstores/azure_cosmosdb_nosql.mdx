@@ -57,9 +57,9 @@ import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
 const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {});
 
 // Unsafe: user-controlled input injected into the query
-const userId = req.query.userId;  // e.g. "123' OR 1=1"
+const userId = req.query.userId; // e.g. "123' OR 1=1"
 const unsafeQuerySpec = {
-  query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`
+  query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`,
 };
 
 await store.delete({ filter: unsafeQuerySpec });
@@ -73,8 +73,8 @@ To prevent this injection risk, you define a placeholder like `@userId` and Cosm
 import { SqlQuerySpec } from "@azure/cosmos";
 
 const safeQuerySpec: SqlQuerySpec = {
-  query: "SELECT * FROM c WHERE c.metadata.userId = @userId",
-  parameters: [{ name: "@userId", value: userId }]
+  query: "SELECT * FROM c WHERE c.metadata.userId = @userId",
+  parameters: [{ name: "@userId", value: userId }],
 };
 
 await store.delete({ filter: safeQuerySpec });
