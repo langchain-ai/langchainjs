@@ -269,7 +269,7 @@ test("Test OpenAI serialization doesn't pass along extra params", async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
   expect(JSON.stringify(chat)).toEqual(
-    `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model_name":"o3-mini"}}`
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
   );
 
   const loadedChat = await load<ChatOpenAI>(JSON.stringify(chat), {
