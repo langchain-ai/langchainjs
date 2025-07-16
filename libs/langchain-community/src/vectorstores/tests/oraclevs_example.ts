@@ -1,3 +1,5 @@
+/* eslint-disable no-process-env */
+
 import oracledb from "oracledb";
 import { promises as fs } from "fs";
 import type { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
@@ -21,9 +23,9 @@ interface DataRow {
 async function dbConnect(): Promise<oracledb.Connection> {
   // Create a connection
   const connection = await oracledb.getConnection({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
   console.log("Connection pool started");
   return connection;
@@ -32,9 +34,9 @@ async function dbConnect(): Promise<oracledb.Connection> {
 async function dbPool(): Promise<oracledb.Pool> {
   // Create a connection pool
   const pool = await oracledb.createPool({
-    user: getEnvironmentVariable("ORACLE_USERNAME"),
-    password: getEnvironmentVariable("ORACLE_PASSWORD"),
-    connectString: getEnvironmentVariable("ORACLE_DSN"),
+    user: process.env.ORACLE_USERNAME,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_DSN,
   });
 
   console.log("Connection pool started");
