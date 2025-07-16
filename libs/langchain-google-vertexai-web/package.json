@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/google-webauth": "^0.2.14"
+    "@langchain/google-webauth": "^0.2.15"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
