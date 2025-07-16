@@ -120,9 +120,19 @@ describe("convertToConverseMessages", () => {
             },
           ],
         }),
-        new HumanMessage(
-          "What's the weather like today in Berkeley, CA? Use weather.com to check."
-        ),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
+            },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
+        }),
         new AIMessage({
           content: "",
           tool_calls: [
@@ -147,6 +157,11 @@ describe("convertToConverseMessages", () => {
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
               },
             ],
           },

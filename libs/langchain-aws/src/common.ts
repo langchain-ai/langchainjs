@@ -310,6 +310,20 @@ function convertLangChainContentBlockToConverseContentBlock<
     };
   }
 
+  if (
+    typeof block === "object" &&
+    "cachePoint" in block &&
+    block.cachePoint &&
+    typeof block.cachePoint === "object" &&
+    block.cachePoint.type === "default"
+  ) {
+    return {
+      cachePoint: {
+        type: "default",
+      },
+    };
+  }
+
   if (onUnknown === "throw") {
     throw new Error(`Unsupported content block type: ${block.type}`);
   } else {
