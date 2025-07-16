@@ -187,7 +187,7 @@ test("Test Chain Run", async () => {
 test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
     start_time: _DATE,
