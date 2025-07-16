@@ -1,5 +1,5 @@
 import { KVMap, BaseRun } from "langsmith/schemas";
-import { RunTree } from "langsmith/run_trees";
+import { RunTree, convertToDottedOrderFormat } from "langsmith/run_trees";
 
 import type { ChainValues } from "../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
@@ -81,27 +81,6 @@ function _coerceToDict(value: any, defaultKey: string) {
     : { [defaultKey]: value };
 }
 
-function stripNonAlphanumeric(input: string) {
-  return input.replace(/[-:.]/g, "");
-}
-
-export function convertToDottedOrderFormat(
-  epoch: number | string,
-  runId: string,
-  executionOrder = 1
-) {
-  // Date only has millisecond precision, so we use the microseconds to break
-  // possible ties, avoiding incorrect run order
-  const paddedOrder = executionOrder.toFixed(0).slice(0, 3).padStart(3, "0");
-  const microsecondPrecisionDatestring = `${new Date(epoch)
-    .toISOString()
-    .slice(0, -1)}${paddedOrder}Z`;
-  return {
-    dottedOrder: stripNonAlphanumeric(microsecondPrecisionDatestring) + runId,
-    microsecondPrecisionDatestring,
-  };
-}
-
 export function isBaseTracer(x: BaseCallbackHandler): x is BaseTracer {
   return typeof (x as BaseTracer)._addRunToRunMap === "function";
 }
@@ -152,7 +131,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   _addRunToRunMap(run: Run) {
     const { dottedOrder: currentDottedOrder, microsecondPrecisionDatestring } =
-      convertToDottedOrderFormat(run.start_time, run.id, run.execution_order);
+      convertToDottedOrderFormat(
+        new Date(run.start_time).getTime(),
+        run.id,
+        run.execution_order
+      );
     const storedRun = { ...run };
     const parentRun = this.getRunById(storedRun.parent_run_id);
     if (storedRun.parent_run_id !== undefined) {
