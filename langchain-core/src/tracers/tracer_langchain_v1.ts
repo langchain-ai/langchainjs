@@ -9,8 +9,8 @@ import { BaseTracer, type RunType, type Run } from "./base.js";
 export interface BaseRunV1 {
   uuid: string;
   parent_uuid?: string;
-  start_time: string | number;
-  end_time?: string | number;
+  start_time: number;
+  end_time?: number;
   execution_order: number;
   child_execution_order: number;
   serialized: { name: string };

@@ -28,8 +28,7 @@ function formatKVMapItem(value: unknown) {
 
 function elapsed(run: Run): string {
   if (!run.end_time) return "";
-  const elapsed =
-    new Date(run.end_time).getTime() - new Date(run.start_time).getTime();
+  const elapsed = run.end_time - run.start_time;
   if (elapsed < 1000) {
     return `${elapsed}ms`;
   }

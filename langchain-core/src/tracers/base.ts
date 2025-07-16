@@ -21,7 +21,8 @@ export type RunType = string;
 export interface Run extends BaseRun {
   // some optional fields are always present here
   id: string;
-  start_time: number | string;
+  start_time: number;
+  end_time?: number;
   execution_order: number;
   // some additional fields that don't exist in sdk runs
   child_runs: this[];
@@ -33,6 +34,8 @@ export interface Run extends BaseRun {
   }>;
   trace_id?: string;
   dotted_order?: string;
+  /** @internal */
+  _serialized_start_time?: string;
 }
 
 // TODO: Remove and just use base LangSmith Run type
@@ -58,6 +61,7 @@ function convertRunToRunTree(run?: Run, parentRun?: Run): RunTree | undefined {
   }
   return new RunTree({
     ...run,
+    start_time: run._serialized_start_time ?? run.start_time,
     parent_run: convertRunToRunTree(parentRun),
     child_runs: run.child_runs
       .map((r) => convertRunToRunTree(r))
@@ -151,7 +155,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
             parentRun.dotted_order,
             currentDottedOrder,
           ].join(".");
-          storedRun.start_time = microsecondPrecisionDatestring;
+          storedRun._serialized_start_time = microsecondPrecisionDatestring;
         } else {
           // This can happen naturally for callbacks added within a run
           // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
@@ -165,7 +169,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     } else {
       storedRun.trace_id = storedRun.id;
       storedRun.dotted_order = currentDottedOrder;
-      storedRun.start_time = microsecondPrecisionDatestring;
+      storedRun._serialized_start_time = microsecondPrecisionDatestring;
     }
     if (this.usesRunTreeMap) {
       const runTree = convertRunToRunTree(storedRun, parentRun);

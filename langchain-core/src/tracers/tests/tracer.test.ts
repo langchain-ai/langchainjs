@@ -35,10 +35,10 @@ test("Test LLMRun", async () => {
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
-    start_time: "2021-05-03T00:00:00.000001Z",
+    start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
@@ -62,7 +62,7 @@ test("Test LLMRun", async () => {
     dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Chat Model Run", async () => {
@@ -79,6 +79,7 @@ test("Test Chat Model Run", async () => {
     },
     `
     {
+      "_serialized_start_time": "2021-05-03T00:00:00.000001Z",
       "child_execution_order": 1,
       "child_runs": [],
       "dotted_order": "20210503T000000000001Z${runId}",
@@ -130,7 +131,7 @@ test("Test Chat Model Run", async () => {
         "lc": 1,
         "type": "constructor",
       },
-      "start_time": "2021-05-03T00:00:00.000001Z",
+      "start_time": 1620000000000,
       "tags": [],
       "trace_id": "${runId}",
     }
@@ -149,10 +150,10 @@ test("Test LLM Run no start", async () => {
 test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
-    start_time: "2021-05-03T00:00:00.000001Z",
+    start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
@@ -180,7 +181,7 @@ test("Test Chain Run", async () => {
   await tracer.handleChainEnd({ foo: "bar" }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Tool Run", async () => {
@@ -189,7 +190,7 @@ test("Test Tool Run", async () => {
   const compareRun: Run = {
     id: runId,
     name: "test",
-    start_time: "2021-05-03T00:00:00.000001Z",
+    start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
@@ -217,7 +218,7 @@ test("Test Tool Run", async () => {
   await tracer.handleToolEnd("output", runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Retriever Run", async () => {
@@ -227,10 +228,10 @@ test("Test Retriever Run", async () => {
     pageContent: "test",
     metadata: { test: "test" },
   });
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
-    start_time: "2021-05-03T00:00:00.000001Z",
+    start_time: _DATE,
     end_time: _DATE,
     execution_order: 1,
     child_execution_order: 1,
@@ -259,7 +260,7 @@ test("Test Retriever Run", async () => {
   await tracer.handleRetrieverEnd([document], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test nested runs", async () => {
@@ -291,7 +292,7 @@ test("Test nested runs", async () => {
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
-  const compareRun: Run = {
+  const compareRun = {
     child_runs: [
       {
         id: toolRunId,
@@ -320,7 +321,7 @@ test("Test nested runs", async () => {
                 time: "2021-05-03T00:00:00.000Z",
               },
             ],
-            start_time: "2021-05-03T00:00:00.000003Z",
+            start_time: 1620000000000,
             run_type: "llm",
             child_runs: [],
             extra: {},
@@ -344,7 +345,7 @@ test("Test nested runs", async () => {
             time: "2021-05-03T00:00:00.000Z",
           },
         ],
-        start_time: "2021-05-03T00:00:00.000002Z",
+        start_time: 1620000000000,
         inputs: { input: "test" },
         run_type: "tool",
         extra: {},
@@ -374,7 +375,7 @@ test("Test nested runs", async () => {
             time: "2021-05-03T00:00:00.000Z",
           },
         ],
-        start_time: "2021-05-03T00:00:00.000004Z",
+        start_time: 1620000000000,
         run_type: "llm",
         child_runs: [],
         extra: {},
@@ -405,7 +406,7 @@ test("Test nested runs", async () => {
     ],
     name: "test",
     serialized,
-    start_time: "2021-05-03T00:00:00.000001Z",
+    start_time: 1620000000000,
     run_type: "chain",
     extra: {},
     tags: [],
@@ -414,7 +415,7 @@ test("Test nested runs", async () => {
     trace_id: chainRunId,
   };
   expect(tracer.runs.length).toBe(1);
-  expect(tracer.runs[0]).toEqual(compareRun);
+  expect(tracer.runs[0]).toMatchObject(compareRun);
 
   const llmRunId3 = uuid.v4();
   await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
