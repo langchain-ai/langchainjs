@@ -25,14 +25,14 @@ import {
   ChatCompletionChunk,
   ChatCompletionMessage,
 } from "openai/resources/index.mjs";
-import { ChatOpenAI } from "../chat_models.js";
+import { ChatOpenAI, ChatOpenAICompletions } from "../chat_models.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 
 test("Test ChatOpenAI Generate", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -86,7 +86,7 @@ test("Test ChatOpenAI invoke to unknown model fails with proper error", async ()
 
 test("Test ChatOpenAI Generate throws when one of the calls fails", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -112,7 +112,7 @@ test("Test ChatOpenAI tokenUsage", async () => {
     };
 
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       maxTokens: 10,
       callbackManager: CallbackManager.fromHandlers({
         async handleLLMEnd(output: LLMResult) {
@@ -145,7 +145,7 @@ test("Test ChatOpenAI tokenUsage with a batch", async () => {
 
     const model = new ChatOpenAI({
       temperature: 0,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       callbackManager: CallbackManager.fromHandlers({
         async handleLLMEnd(output: LLMResult) {
           tokenUsage = output.llmOutput?.tokenUsage;
@@ -175,7 +175,7 @@ test("Test ChatOpenAI in streaming mode", async () => {
     let streamedCompletion = "";
 
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxTokens: 10,
       callbacks: [
@@ -213,7 +213,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
     ];
 
     const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxTokens: 10,
       n: 2,
@@ -243,7 +243,7 @@ test("Test ChatOpenAI in streaming mode with n > 1 and multiple prompts", async 
 
 test("Test ChatOpenAI prompt value", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
   });
@@ -341,7 +341,7 @@ test("Test OpenAI with signal in call options", async () => {
 test("Test OpenAI with signal in call options and node adapter", async () => {
   const model = new ChatOpenAI({
     maxTokens: 5,
-    modelName: "gpt-3.5-turbo-instruct",
+    model: "gpt-3.5-turbo-instruct",
   });
   const controller = new AbortController();
   await expect(() => {
@@ -394,7 +394,7 @@ test("getNumTokensFromMessages gpt-3.5-turbo-0301 model for sample input", async
 
   const chat = new ChatOpenAI({
     openAIApiKey: "dummy",
-    modelName: "gpt-3.5-turbo-0301",
+    model: "gpt-3.5-turbo-0301",
   });
 
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
@@ -407,7 +407,7 @@ test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
 
   const chat = new ChatOpenAI({
     openAIApiKey: "dummy",
-    modelName: "gpt-4-0314",
+    model: "gpt-4-0314",
   });
 
   const { totalCount } = await chat.getNumTokensFromMessages(messages);
@@ -416,7 +416,7 @@ test("getNumTokensFromMessages gpt-4-0314 model for sample input", async () => {
 });
 
 test("Test OpenAI with specific roles in ChatMessage", async () => {
-  const chat = new ChatOpenAI({ modelName: "gpt-3.5-turbo", maxTokens: 10 });
+  const chat = new ChatOpenAI({ model: "gpt-3.5-turbo", maxTokens: 10 });
   const system_message = new ChatMessage(
     "You are to chat with a user.",
     "system"
@@ -429,7 +429,7 @@ test("Test OpenAI with specific roles in ChatMessage", async () => {
 });
 
 test("Test ChatOpenAI stream method", async () => {
-  const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+  const model = new ChatOpenAI({ maxTokens: 50, model: "gpt-3.5-turbo" });
   const stream = await model.stream("Print hello world.");
   const chunks = [];
   for await (const chunk of stream) {
@@ -443,7 +443,7 @@ test("Test ChatOpenAI stream method with abort", async () => {
   await expect(async () => {
     const model = new ChatOpenAI({
       maxTokens: 100,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
     });
     const stream = await model.stream(
       "How is your day going? Be extremely verbose.",
@@ -460,7 +460,7 @@ test("Test ChatOpenAI stream method with abort", async () => {
 });
 
 test("Test ChatOpenAI stream method with early break", async () => {
-  const model = new ChatOpenAI({ maxTokens: 50, modelName: "gpt-3.5-turbo" });
+  const model = new ChatOpenAI({ maxTokens: 50, model: "gpt-3.5-turbo" });
   const stream = await model.stream(
     "How is your day going? Be extremely verbose."
   );
@@ -480,7 +480,7 @@ test("Test ChatOpenAI stream method, timeout error thrown from SDK", async () =>
   await expect(async () => {
     const model = new ChatOpenAI({
       maxTokens: 50,
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       timeout: 1,
       maxRetries: 0,
     });
@@ -504,7 +504,7 @@ test("Function calling with streaming", async () => {
   try {
     let finalResult: BaseMessage | undefined;
     const modelForFunctionCalling = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       temperature: 0,
       callbacks: [
         {
@@ -572,7 +572,7 @@ test("ChatOpenAI can cache generations", async () => {
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 10,
     n: 2,
     cache: memoryCache,
@@ -600,7 +600,7 @@ test("ChatOpenAI can write and read cached generations", async () => {
   const updateSpy = jest.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 100,
     n: 1,
     cache: memoryCache,
@@ -638,7 +638,7 @@ test("ChatOpenAI should not reuse cache if function call args have changed", asy
   const updateSpy = jest.spyOn(memoryCache, "update");
 
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     maxTokens: 100,
     n: 1,
     cache: memoryCache,
@@ -816,7 +816,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
     const question = "What is the color of the night sky?";
 
     const streamingModel = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: true,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -840,7 +840,7 @@ test("Test ChatOpenAI token usage reporting for streaming calls", async () => {
     });
 
     const nonStreamingModel = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+      model: "gpt-3.5-turbo",
       streaming: false,
       maxRetries: 10,
       maxConcurrency: 10,
@@ -1218,7 +1218,7 @@ test("Can stream o1 requests", async () => {
 test("Allows developer messages with o1", async () => {
   const model = new ChatOpenAI({
     model: "o1",
-    reasoningEffort: "low",
+    reasoning: { effort: "low" },
   });
   const res = await model.invoke([
     {
@@ -1236,7 +1236,7 @@ test("Allows developer messages with o1", async () => {
 test("Works with maxCompletionTokens with o3", async () => {
   const model = new ChatOpenAI({
     model: "o3-mini",
-    reasoningEffort: "low",
+    reasoning: { effort: "low" },
     maxCompletionTokens: 100,
   });
   const res = await model.invoke([
@@ -1253,9 +1253,9 @@ test("Works with maxCompletionTokens with o3", async () => {
   expect(res.content).toEqual("testing");
 });
 
-test.skip("Allow overriding", async () => {
-  class ChatDeepSeek extends ChatOpenAI {
-    protected override _convertOpenAIDeltaToBaseMessageChunk(
+test.skip("Allow overriding completions", async () => {
+  class ChatDeepSeek extends ChatOpenAICompletions {
+    protected override _convertCompletionsDeltaToBaseMessageChunk(
       delta: Record<string, any>,
       rawResponse: ChatCompletionChunk,
       defaultRole?:
@@ -1266,7 +1266,7 @@ test.skip("Allow overriding", async () => {
         | "assistant"
         | "tool"
     ) {
-      const messageChunk = super._convertOpenAIDeltaToBaseMessageChunk(
+      const messageChunk = super._convertCompletionsDeltaToBaseMessageChunk(
         delta,
         rawResponse,
         defaultRole
@@ -1276,15 +1276,14 @@ test.skip("Allow overriding", async () => {
       return messageChunk;
     }
 
-    protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+    protected override _convertCompletionsMessageToBaseMessage(
       message: ChatCompletionMessage,
       rawResponse: ChatCompletion
     ) {
-      const langChainMessage =
-        super._convertOpenAIChatCompletionMessageToBaseMessage(
-          message,
-          rawResponse
-        );
+      const langChainMessage = super._convertCompletionsMessageToBaseMessage(
+        message,
+        rawResponse
+      );
       langChainMessage.additional_kwargs.reasoning_content = (
         message as any
       ).reasoning_content;

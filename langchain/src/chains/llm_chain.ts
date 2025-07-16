@@ -83,7 +83,7 @@ function _getLanguageModel(llmLike: RunnableInterface): BaseLanguageModel {
  * import { ChatOpenAI } from "@langchain/openai";
  *
  * const prompt = ChatPromptTemplate.fromTemplate("Tell me a {adjective} joke");
- * const llm = new ChatOpenAI();
+ * const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const chain = prompt.pipe(llm);
  *
  * const response = await chain.invoke({ adjective: "funny" });

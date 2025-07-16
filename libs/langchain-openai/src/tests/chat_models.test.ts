@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { load } from "@langchain/core/load";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 import { ChatOpenAI } from "../chat_models.js";
 
@@ -270,4 +271,11 @@ test("Test OpenAI serialization doesn't pass along extra params", async () => {
   expect(JSON.stringify(chat)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
   );
+
+  const loadedChat = await load<ChatOpenAI>(JSON.stringify(chat), {
+    secretsMap: { OPENAI_API_KEY: "test-key" },
+    importMap: { chat_models__openai: { ChatOpenAI } },
+  });
+
+  expect(loadedChat.model).toEqual("o3-mini");
 });

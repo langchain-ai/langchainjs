@@ -20,6 +20,7 @@ import type {
   GoogleAIAPIConfig,
   AnthropicAPIConfig,
   GeminiAPIConfig,
+  GoogleModelParams,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -405,7 +406,7 @@ export abstract class GoogleAIConnection<
 
   abstract formatData(
     input: InputType,
-    parameters: GoogleAIModelRequestParams
+    parameters: GoogleModelParams
   ): Promise<unknown>;
 
   async request(

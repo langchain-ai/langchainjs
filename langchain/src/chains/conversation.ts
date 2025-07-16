@@ -15,7 +15,7 @@ AI:`;
  * extends the {@link LLMChain} class.
  * @example
  * ```typescript
- * const model = new ChatOpenAI({});
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const chain = new ConversationChain({ llm: model });
  *
  * // Sending a greeting to the conversation chain
