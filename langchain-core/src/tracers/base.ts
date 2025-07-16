@@ -21,7 +21,7 @@ export type RunType = string;
 export interface Run extends BaseRun {
   // some optional fields are always present here
   id: string;
-  start_time: number;
+  start_time: number | string;
   execution_order: number;
   // some additional fields that don't exist in sdk runs
   child_runs: this[];
@@ -67,7 +67,7 @@ function convertRunToRunTree(run?: Run, parentRun?: Run): RunTree | undefined {
       runtime: getRuntimeEnvironmentSync(),
     },
     tracingEnabled: false,
-  });
+  } as any);
 }
 
 export interface AgentRun extends Run {
@@ -85,17 +85,21 @@ function stripNonAlphanumeric(input: string) {
   return input.replace(/[-:.]/g, "");
 }
 
-function convertToDottedOrderFormat(
-  epoch: number,
+export function convertToDottedOrderFormat(
+  epoch: number | string,
   runId: string,
-  executionOrder: number
+  executionOrder = 1
 ) {
+  // Date only has millisecond precision, so we use the microseconds to break
+  // possible ties, avoiding incorrect run order
   const paddedOrder = executionOrder.toFixed(0).slice(0, 3).padStart(3, "0");
-  return (
-    stripNonAlphanumeric(
-      `${new Date(epoch).toISOString().slice(0, -1)}${paddedOrder}Z`
-    ) + runId
-  );
+  const microsecondPrecisionDatestring = `${new Date(epoch)
+    .toISOString()
+    .slice(0, -1)}${paddedOrder}Z`;
+  return {
+    dottedOrder: stripNonAlphanumeric(microsecondPrecisionDatestring) + runId,
+    microsecondPrecisionDatestring,
+  };
 }
 
 export function isBaseTracer(x: BaseCallbackHandler): x is BaseTracer {
@@ -147,11 +151,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   _addRunToRunMap(run: Run) {
-    const currentDottedOrder = convertToDottedOrderFormat(
-      run.start_time,
-      run.id,
-      run.execution_order
-    );
+    const { dottedOrder: currentDottedOrder, microsecondPrecisionDatestring } =
+      convertToDottedOrderFormat(run.start_time, run.id, run.execution_order);
     const storedRun = { ...run };
     const parentRun = this.getRunById(storedRun.parent_run_id);
     if (storedRun.parent_run_id !== undefined) {
@@ -167,6 +168,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
             parentRun.dotted_order,
             currentDottedOrder,
           ].join(".");
+          storedRun.start_time = microsecondPrecisionDatestring;
         } else {
           // This can happen naturally for callbacks added within a run
           // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
@@ -180,6 +182,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     } else {
       storedRun.trace_id = storedRun.id;
       storedRun.dotted_order = currentDottedOrder;
+      storedRun.start_time = microsecondPrecisionDatestring;
     }
     if (this.usesRunTreeMap) {
       const runTree = convertRunToRunTree(storedRun, parentRun);

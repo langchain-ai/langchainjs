@@ -8446,7 +8446,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    langsmith: ^0.3.33
+    langsmith: ^0.3.45
     ml-matrix: ^6.10.4
     mustache: ^4.2.0
     p-queue: ^6.6.2
@@ -27986,6 +27986,35 @@ __metadata:
     openai:
       optional: true
   checksum: 45970dbc711d3c84b1603d26291b9164ca6daf6d802f151af6c3ccdbfb84068be390366dbb15319a158ccf50e7e9f161c55abe84bce2730f93962888b33e6269
+  languageName: node
+  linkType: hard
+
+"langsmith@npm:^0.3.45":
+  version: 0.3.45
+  resolution: "langsmith@npm:0.3.45"
+  dependencies:
+    "@types/uuid": ^10.0.0
+    chalk: ^4.1.2
+    console-table-printer: ^2.12.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    semver: ^7.6.3
+    uuid: ^10.0.0
+  peerDependencies:
+    "@opentelemetry/api": "*"
+    "@opentelemetry/exporter-trace-otlp-proto": "*"
+    "@opentelemetry/sdk-trace-base": "*"
+    openai: "*"
+  peerDependenciesMeta:
+    "@opentelemetry/api":
+      optional: true
+    "@opentelemetry/exporter-trace-otlp-proto":
+      optional: true
+    "@opentelemetry/sdk-trace-base":
+      optional: true
+    openai:
+      optional: true
+  checksum: c93c9bd14a76902fb5ba21470c2d23faf91d547321b59e62d1c21ce71b7123b69cd5b4e97225fc76c09fa9e8dacd088e7ab797018cc39740b7fc584476ea8930
   languageName: node
   linkType: hard
 
