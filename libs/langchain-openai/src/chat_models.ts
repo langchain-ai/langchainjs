@@ -637,6 +637,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
 
+  protected defaultOptions: CallOptions;
+
   _llmType() {
     return "openai";
   }
@@ -936,6 +938,14 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       ),
       ...kwargs,
     } as Partial<CallOptions>);
+  }
+
+  override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
+    return super.stream(input, { ...this.defaultOptions, ...options });
+  }
+
+  override async invoke(input: BaseLanguageModelInput, options?: CallOptions) {
+    return super.invoke(input, { ...this.defaultOptions, ...options });
   }
 
   /** @ignore */
@@ -3297,8 +3307,24 @@ export class ChatOpenAI<
     return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
   }
 
+  override getLsParams(options: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = { ...this.defaultOptions, ...options };
+    if (this._useResponsesApi(options)) {
+      return this.responses.getLsParams(optionsWithDefaults);
+    }
+    return this.completions.getLsParams(optionsWithDefaults);
+  }
+
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = { ...this.defaultOptions, ...options };
+    if (this._useResponsesApi(options)) {
+      return this.responses.invocationParams(optionsWithDefaults);
+    }
+    return this.completions.invocationParams(optionsWithDefaults);
+  }
+
   /** @ignore */
-  async _generate(
+  override async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
@@ -3309,18 +3335,24 @@ export class ChatOpenAI<
     return this.completions._generate(messages, options, runManager);
   }
 
-  async *_streamResponseChunks(
+  override async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponsesApi(options)) {
-      yield* this.responses._streamResponseChunks(messages, options);
+      yield* this.responses._streamResponseChunks(messages, {
+        ...this.defaultOptions,
+        ...options,
+      });
       return;
     }
     yield* this.completions._streamResponseChunks(
       messages,
-      options,
+      {
+        ...this.defaultOptions,
+        ...options,
+      },
       runManager
     );
   }
@@ -3328,43 +3360,7 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    // FIXME: assigning additional config options to the inner chat classes this way
-    // is awkward, but it's the only way to preserve the original object identity
-    // and still thread config options, which is important since this class is a "proxy"
-    // for the inner chat classes. This will be fixed in a later version of langchain
-    // when the core runnable interface is improved (0.4) to support this out of the box.
-    const bindChatOpenAIConfig = <
-      TClass extends BaseChatOpenAI<BaseChatOpenAICallOptions>
-    >(
-      cls: TClass,
-      config: Partial<CallOptions>
-    ): TClass => {
-      const oldGenerate = cls._generate;
-      const oldStreamResponseChunks = cls._streamResponseChunks;
-
-      return Object.assign(cls, {
-        _generate(messages, options, runManager) {
-          return oldGenerate.call(
-            cls,
-            messages,
-            { ...options, ...config },
-            runManager
-          );
-        },
-        _streamResponseChunks(messages, options, runManager) {
-          return oldStreamResponseChunks.call(
-            cls,
-            messages,
-            { ...options, ...config },
-            runManager
-          );
-        },
-      } as Partial<TClass>);
-    };
-
-    this.responses = bindChatOpenAIConfig(this.responses, config);
-    this.completions = bindChatOpenAIConfig(this.completions, config);
-    // Proxy chat class is also bound for `_useResponsesApi`,
-    return bindChatOpenAIConfig(this, config);
+    this.defaultOptions = { ...this.defaultOptions, ...config };
+    return this;
   }
 }
