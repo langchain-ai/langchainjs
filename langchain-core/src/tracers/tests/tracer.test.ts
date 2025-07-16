@@ -6,7 +6,6 @@ import * as uuid from "uuid";
 import { Client } from "langsmith";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
-import { Run } from "../base.js";
 import { HumanMessage } from "../../messages/index.js";
 import { FakeTracer } from "../../utils/testing/index.js";
 import { setDefaultLangChainClientSingleton } from "../../singletons/tracer.js";
