@@ -871,7 +871,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       | undefined;
   }
 
-  protected _getCallOptions(
+  protected _combineCallOptions(
     additionalOptions?: this["ParsedCallOptions"]
   ): this["ParsedCallOptions"] {
     return {
@@ -950,11 +950,17 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
   }
 
   override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
-    return super.stream(input, this._getCallOptions(options) as CallOptions);
+    return super.stream(
+      input,
+      this._combineCallOptions(options) as CallOptions
+    );
   }
 
   override async invoke(input: BaseLanguageModelInput, options?: CallOptions) {
-    return super.invoke(input, this._getCallOptions(options) as CallOptions);
+    return super.invoke(
+      input,
+      this._combineCallOptions(options) as CallOptions
+    );
   }
 
   /** @ignore */
@@ -3317,7 +3323,7 @@ export class ChatOpenAI<
   }
 
   override getLsParams(options: this["ParsedCallOptions"]) {
-    const optionsWithDefaults = this._getCallOptions(options);
+    const optionsWithDefaults = this._combineCallOptions(options);
     if (this._useResponsesApi(options)) {
       return this.responses.getLsParams(optionsWithDefaults);
     }
@@ -3325,7 +3331,7 @@ export class ChatOpenAI<
   }
 
   override invocationParams(options?: this["ParsedCallOptions"]) {
-    const optionsWithDefaults = this._getCallOptions(options);
+    const optionsWithDefaults = this._combineCallOptions(options);
     if (this._useResponsesApi(options)) {
       return this.responses.invocationParams(optionsWithDefaults);
     }
@@ -3352,13 +3358,13 @@ export class ChatOpenAI<
     if (this._useResponsesApi(options)) {
       yield* this.responses._streamResponseChunks(
         messages,
-        this._getCallOptions(options)
+        this._combineCallOptions(options)
       );
       return;
     }
     yield* this.completions._streamResponseChunks(
       messages,
-      this._getCallOptions(options),
+      this._combineCallOptions(options),
       runManager
     );
   }
