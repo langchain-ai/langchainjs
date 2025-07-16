@@ -67,7 +67,7 @@ function convertRunToRunTree(run?: Run, parentRun?: Run): RunTree | undefined {
       runtime: getRuntimeEnvironmentSync(),
     },
     tracingEnabled: false,
-  } as any);
+  });
 }
 
 export interface AgentRun extends Run {
