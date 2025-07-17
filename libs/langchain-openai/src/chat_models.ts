@@ -1200,10 +1200,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
     }
 
     if (method === "jsonMode") {
-      let outputFormatSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
-        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
