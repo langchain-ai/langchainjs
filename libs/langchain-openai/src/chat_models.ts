@@ -880,7 +880,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
     };
   }
 
-  protected _getClientOptions(
+  /** @internal */
+  _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): OpenAICoreRequestOptions {
     if (!this.client) {
@@ -3307,6 +3308,9 @@ export class ChatOpenAI<
 
     this.responses = new ChatOpenAIResponses(fields);
     this.completions = new ChatOpenAICompletions(fields);
+    // Override `_getClientOptions` so sub classes of ChatOpenAI use the same client config
+    this.responses._getClientOptions = this._getClientOptions;
+    this.completions._getClientOptions = this._getClientOptions;
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
