@@ -1207,11 +1207,12 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
           kwargs: { method: "json_mode" },
-          schema: outputFormatSchema,
+          schema: { title: name ?? "extract", ...asJsonSchema },
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
@@ -1221,6 +1222,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
         schema,
         strict: config?.strict,
       };
+      const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
@@ -1229,9 +1231,10 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
           schema: {
-            ...openaiJsonSchemaParams,
-            schema: toJsonSchema(openaiJsonSchemaParams.schema),
-          } as any,
+            title: openaiJsonSchemaParams.name,
+            description: openaiJsonSchemaParams.description,
+            ...asJsonSchema,
+          },
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -1271,7 +1274,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
           },
           ls_structured_output_format: {
             kwargs: { method: "function_calling" },
-            schema: asJsonSchema,
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -1298,6 +1301,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             parameters: schema,
           };
         }
+        const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
           tools: [
             {
@@ -1313,7 +1317,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
           },
           ls_structured_output_format: {
             kwargs: { method: "function_calling" },
-            schema: toJsonSchema(schema),
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
