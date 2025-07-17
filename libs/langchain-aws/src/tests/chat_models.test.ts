@@ -108,7 +108,7 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
-      name: "cache checkpoints",
+      name: "prompt caching",
       input: [
         new SystemMessage({
           content: [
@@ -134,7 +134,13 @@ describe("convertToConverseMessages", () => {
           ],
         }),
         new AIMessage({
-          content: "",
+          content: [
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+          ],
           tool_calls: [
             {
               name: "retrieverTool",
@@ -147,7 +153,12 @@ describe("convertToConverseMessages", () => {
         }),
         new ToolMessage({
           tool_call_id: "123_retriever_tool",
-          content: "The weather in Berkeley, CA is 70 degrees and sunny.",
+          content: [
+            {
+              type: "text",
+              text: "The weather in Berkeley, CA is 70 degrees and sunny.",
+            },
+          ],
         }),
       ],
       output: {
@@ -168,6 +179,11 @@ describe("convertToConverseMessages", () => {
           {
             role: "assistant",
             content: [
+              {
+                cachePoint: {
+                  type: "default",
+                },
+              },
               {
                 toolUse: {
                   name: "retrieverTool",

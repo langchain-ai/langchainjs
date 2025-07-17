@@ -51,6 +51,19 @@ import {
   MessageContentReasoningBlockRedacted,
 } from "./types.js";
 
+function isDefaultCachePoint(block: unknown): boolean {
+  return (
+    typeof block === "object" &&
+    block !== null &&
+    "cachePoint" in block &&
+    (block as any).cachePoint &&
+    typeof (block as any).cachePoint === "object" &&
+    (block as any).cachePoint !== null &&
+    "type" in (block as any).cachePoint &&
+    (block as any).cachePoint.type === "default"
+  );
+}
+
 const standardContentBlockConverter: StandardContentBlockConverter<{
   text: ContentBlock.TextMember;
   image: ContentBlock.ImageMember;
@@ -310,13 +323,7 @@ function convertLangChainContentBlockToConverseContentBlock<
     };
   }
 
-  if (
-    typeof block === "object" &&
-    "cachePoint" in block &&
-    block.cachePoint &&
-    typeof block.cachePoint === "object" &&
-    block.cachePoint.type === "default"
-  ) {
+  if (isDefaultCachePoint(block)) {
     return {
       cachePoint: {
         type: "default",
@@ -343,12 +350,7 @@ function convertSystemMessageToConverseMessage(
         contentBlocks.push({
           text: block.text,
         });
-      } else if (
-        "cachePoint" in block &&
-        block.cachePoint &&
-        typeof block.cachePoint === "object" &&
-        block.cachePoint.type === "default"
-      ) {
+      } else if (isDefaultCachePoint(block)) {
         contentBlocks.push({
           cachePoint: {
             type: "default",
@@ -385,6 +387,12 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
           reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
             block as MessageContentReasoningBlock
           ),
+        };
+      } else if (isDefaultCachePoint(block)) {
+        return {
+          cachePoint: {
+            type: "default",
+          },
         };
       } else {
         const blockValues = Object.fromEntries(
