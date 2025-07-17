@@ -24,13 +24,14 @@ test("Test vectorstore", async () => {
   let connection: oracledb.Connection | undefined;
   try {
     connection = await pool.getConnection();
+    await connection.execute(" drop table if exists embeddings");
 
     const embedder = new OracleEmbeddings(connection, pref);
 
     const dbConfig: OracleDBVSStoreArgs = {
       client: pool,
       tableName: "embeddings",
-      distanceStrategy: "DOT_PRODUCT",
+      distanceStrategy: "DOT",
       query: "What are salient features of oracledb",
     };
 
@@ -88,18 +89,19 @@ test("Test vectorstore addDocuments", async () => {
   let connection: oracledb.Connection | undefined;
   try {
     connection = await pool.getConnection();
+    await connection.execute(" drop table if exists embeddings");
 
     const embedder = new OracleEmbeddings(connection, pref);
 
     const dbConfig: OracleDBVSStoreArgs = {
       client: pool,
       tableName: "embeddings",
-      distanceStrategy: "DOT_PRODUCT",
+      distanceStrategy: "DOT",
       query: "What are salient features of oracledb",
     };
 
     const store = new OracleVS(embedder, dbConfig);
-
+    await store.initialize();
     await store.addDocuments([
       { pageContent: "hello", metadata: { id: String(1), a: 2 } },
       { pageContent: "car", metadata: { id: String(2), a: 1 } },

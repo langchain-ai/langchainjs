@@ -1,4 +1,4 @@
-import * as oracledb from "oracledb";
+import oracledb from "oracledb";
 import { createHash } from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -22,10 +22,10 @@ export interface OracleDBVSStoreArgs {
 
 export type DistanceStrategy =
   | "COSINE"
-  | "DOT_PRODUCT"
-  | "EUCLIDEAN_DISTANCE"
-  | "MANHATTAN_DISTANCE"
-  | "HAMMING_DISTANCE"
+  | "DOT"
+  | "EUCLIDEAN"
+  | "MANHATTAN"
+  | "HAMMING"
   | "EUCLIDEAN_SQUARED";
 
 type AddDocumentOptions = Record<string, any>;
@@ -47,10 +47,12 @@ function handleError(error: unknown): never {
       case "ValidationError":
         throw new Error("Operation failed due to a validation error.");
       default:
-        throw new Error("An unexpected error occurred during the operation.");
+        throw new Error(
+          `An unexpected error occurred during the operation. ${error}`
+        );
     }
   }
-  throw new Error("An unknown and unexpected error occurred.");
+  throw new Error(`An unknown and unexpected error occurred. ${error}`);
 }
 
 // Type guard to check if the client is an oracledb.Pool
@@ -396,11 +398,10 @@ export class OracleVS extends VectorStore {
       }
       const sql = `INSERT INTO ${this.tableName} (id, embedding, text, metadata )
                VALUES (:id, :embedding, :text, :metadata)`;
-
       const options = {
         bindDefs: {
-          id: { type: oracledb.DB_TYPE_RAW, maxSize: 24 },
-          text: { type: oracledb.CLOB, maxSize: 10000000 },
+          id: { type: oracledb.BUFFER, maxSize: 24 },
+          text: { type: oracledb.STRING, maxSize: 10000000 },
           metadata: { type: oracledb.DB_TYPE_JSON },
           embedding: { type: oracledb.DB_TYPE_VECTOR },
         },
@@ -408,7 +409,6 @@ export class OracleVS extends VectorStore {
       };
 
       const result = await connection.executeMany(sql, binds, options);
-      console.log(result);
 
       // Commit once all inserts are queued up
       await connection.commit();
@@ -659,10 +659,8 @@ export class OracleVS extends VectorStore {
       const vss = new OracleVS(embeddings, dbConfig);
       await vss.initialize();
 
-      // Use Promise.all to wait for all embedQuery promises to resolve
-      const vectors = await Promise.all(
-        documents.map((document) => embeddings.embedQuery(document.pageContent))
-      );
+      const texts = documents.map(({ pageContent }) => pageContent);
+      const vectors = await embeddings.embedDocuments(texts);
 
       // Assuming a method exists to handle adding texts and metadata appropriately
       await vss.addVectors(vectors, documents);

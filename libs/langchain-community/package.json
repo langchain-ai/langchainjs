@@ -1205,6 +1205,15 @@
       "import": "./embeddings/ollama.js",
       "require": "./embeddings/ollama.cjs"
     },
+    "./embeddings/oracle": {
+      "types": {
+        "import": "./embeddings/oracle.d.ts",
+        "require": "./embeddings/oracle.d.cts",
+        "default": "./embeddings/oracle.d.ts"
+      },
+      "import": "./embeddings/oracle.js",
+      "require": "./embeddings/oracle.cjs"
+    },
     "./embeddings/premai": {
       "types": {
         "import": "./embeddings/premai.d.ts",
@@ -1735,6 +1744,15 @@
       },
       "import": "./vectorstores/opensearch.js",
       "require": "./vectorstores/opensearch.cjs"
+    },
+    "./vectorstores/oraclevs": {
+      "types": {
+        "import": "./vectorstores/oraclevs.d.ts",
+        "require": "./vectorstores/oraclevs.d.cts",
+        "default": "./vectorstores/oraclevs.d.ts"
+      },
+      "import": "./vectorstores/oraclevs.js",
+      "require": "./vectorstores/oraclevs.cjs"
     },
     "./vectorstores/pgvector": {
       "types": {
@@ -3185,6 +3203,15 @@
       "import": "./document_loaders/fs/openai_whisper_audio.js",
       "require": "./document_loaders/fs/openai_whisper_audio.cjs"
     },
+    "./document_loaders/fs/oracle": {
+      "types": {
+        "import": "./document_loaders/fs/oracle.d.ts",
+        "require": "./document_loaders/fs/oracle.d.cts",
+        "default": "./document_loaders/fs/oracle.d.ts"
+      },
+      "import": "./document_loaders/fs/oracle.js",
+      "require": "./document_loaders/fs/oracle.cjs"
+    },
     "./document_loaders/fs/pptx": {
       "types": {
         "import": "./document_loaders/fs/pptx.d.ts",
@@ -3220,6 +3247,15 @@
       },
       "import": "./utils/cassandra.js",
       "require": "./utils/cassandra.cjs"
+    },
+    "./utils/oracle": {
+      "types": {
+        "import": "./utils/oracle.d.ts",
+        "require": "./utils/oracle.d.cts",
+        "default": "./utils/oracle.d.ts"
+      },
+      "import": "./utils/oracle.js",
+      "require": "./utils/oracle.cjs"
     },
     "./experimental/callbacks/handlers/datadog": {
       "types": {
@@ -3505,6 +3541,10 @@
     "embeddings/ollama.js",
     "embeddings/ollama.d.ts",
     "embeddings/ollama.d.cts",
+    "embeddings/oracle.cjs",
+    "embeddings/oracle.js",
+    "embeddings/oracle.d.ts",
+    "embeddings/oracle.d.cts",
     "embeddings/premai.cjs",
     "embeddings/premai.js",
     "embeddings/premai.d.ts",
@@ -3741,6 +3781,10 @@
     "vectorstores/opensearch.js",
     "vectorstores/opensearch.d.ts",
     "vectorstores/opensearch.d.cts",
+    "vectorstores/oraclevs.cjs",
+    "vectorstores/oraclevs.js",
+    "vectorstores/oraclevs.d.ts",
+    "vectorstores/oraclevs.d.cts",
     "vectorstores/pgvector.cjs",
     "vectorstores/pgvector.js",
     "vectorstores/pgvector.d.ts",
@@ -4385,6 +4429,10 @@
     "document_loaders/fs/openai_whisper_audio.js",
     "document_loaders/fs/openai_whisper_audio.d.ts",
     "document_loaders/fs/openai_whisper_audio.d.cts",
+    "document_loaders/fs/oracle.cjs",
+    "document_loaders/fs/oracle.js",
+    "document_loaders/fs/oracle.d.ts",
+    "document_loaders/fs/oracle.d.cts",
     "document_loaders/fs/pptx.cjs",
     "document_loaders/fs/pptx.js",
     "document_loaders/fs/pptx.d.ts",
@@ -4401,6 +4449,10 @@
     "utils/cassandra.js",
     "utils/cassandra.d.ts",
     "utils/cassandra.d.cts",
+    "utils/oracle.cjs",
+    "utils/oracle.js",
+    "utils/oracle.d.ts",
+    "utils/oracle.d.cts",
     "experimental/callbacks/handlers/datadog.cjs",
     "experimental/callbacks/handlers/datadog.js",
     "experimental/callbacks/handlers/datadog.d.ts",
