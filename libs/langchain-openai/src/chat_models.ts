@@ -1160,12 +1160,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
-    // ):
-    // | Runnable<BaseLanguageModelInput, RunOutput>
-    // | Runnable<
-    //     BaseLanguageModelInput,
-    //     { raw: BaseMessage; parsed: RunOutput }
-    //   > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
@@ -1216,24 +1210,28 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
+          kwargs: { method: "json_mode" },
           schema: outputFormatSchema,
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
+      const openaiJsonSchemaParams = {
+        name: name ?? "extract",
+        description: getSchemaDescription(schema),
+        schema,
+        strict: config?.strict,
+      };
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
-          json_schema: {
-            name: name ?? "extract",
-            description: getSchemaDescription(schema),
-            schema,
-            strict: config?.strict,
-          },
+          json_schema: openaiJsonSchemaParams,
         },
         ls_structured_output_format: {
-          kwargs: { method: "jsonSchema" },
-          schema: toJsonSchema(schema),
+          kwargs: { method: "json_schema" },
+          schema: {
+            ...openaiJsonSchemaParams,
+            schema: toJsonSchema(openaiJsonSchemaParams.schema),
+          } as any,
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -1272,7 +1270,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
+            kwargs: { method: "function_calling" },
             schema: asJsonSchema,
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
@@ -1314,7 +1312,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
+            kwargs: { method: "function_calling" },
             schema: toJsonSchema(schema),
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
