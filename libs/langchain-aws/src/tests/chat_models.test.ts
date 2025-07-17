@@ -121,7 +121,7 @@ describe("convertToConverseMessages", () => {
             },
             {
               type: "text",
-              text: "Answer the user's question using the provided tool.",
+              text: "Answer the user's questions using your own knowledge or provided tool.",
             },
           ],
         }),
@@ -129,7 +129,7 @@ describe("convertToConverseMessages", () => {
           content: [
             {
               type: "text",
-              text: "What's the weather like today in Berkeley, CA?",
+              text: "What is the capital of France?",
             },
             {
               cachePoint: {
@@ -138,34 +138,24 @@ describe("convertToConverseMessages", () => {
             },
             {
               type: "text",
-              text: "Use weather.com to check.",
+              text: "And what is the capital of Germany?",
             },
           ],
         }),
         new AIMessage({
           content: [
             {
+              type: "text",
+              text: "Sure! The capital of France is Paris.",
+            },
+            {
               cachePoint: {
                 type: "default",
               },
             },
-          ],
-          tool_calls: [
-            {
-              name: "retrieverTool",
-              args: {
-                url: "https://weather.com",
-              },
-              id: "123_retriever_tool",
-            },
-          ],
-        }),
-        new ToolMessage({
-          tool_call_id: "123_retriever_tool",
-          content: [
             {
               type: "text",
-              text: "The weather in Berkeley, CA is 70 degrees and sunny.",
+              text: "The capital of Germany is Berlin.",
             },
           ],
         }),
@@ -176,7 +166,7 @@ describe("convertToConverseMessages", () => {
             role: BedrockConversationRole.USER,
             content: [
               {
-                text: "What's the weather like today in Berkeley, CA?",
+                text: "What is the capital of France?",
               },
               {
                 cachePoint: {
@@ -184,7 +174,7 @@ describe("convertToConverseMessages", () => {
                 },
               },
               {
-                text: "Use weather.com to check.",
+                text: "And what is the capital of Germany?",
               },
             ],
           },
@@ -192,33 +182,15 @@ describe("convertToConverseMessages", () => {
             role: BedrockConversationRole.ASSISTANT,
             content: [
               {
+                text: "Sure! The capital of France is Paris.",
+              },
+              {
                 cachePoint: {
                   type: "default",
                 },
               },
               {
-                toolUse: {
-                  name: "retrieverTool",
-                  toolUseId: "123_retriever_tool",
-                  input: {
-                    url: "https://weather.com",
-                  },
-                },
-              },
-            ],
-          },
-          {
-            role: BedrockConversationRole.USER,
-            content: [
-              {
-                toolResult: {
-                  toolUseId: "123_retriever_tool",
-                  content: [
-                    {
-                      text: "The weather in Berkeley, CA is 70 degrees and sunny.",
-                    },
-                  ],
-                },
+                text: "The capital of Germany is Berlin.",
               },
             ],
           },
@@ -233,7 +205,7 @@ describe("convertToConverseMessages", () => {
             },
           },
           {
-            text: "Answer the user's question using the provided tool.",
+            text: "Answer the user's questions using your own knowledge or provided tool.",
           },
         ],
       },
