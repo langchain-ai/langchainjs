@@ -2785,7 +2785,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aws-sdk/types@npm:3.840.0, @aws-sdk/types@npm:^3.840.0":
+"@aws-sdk/types@npm:3.840.0":
   version: 3.840.0
   resolution: "@aws-sdk/types@npm:3.840.0"
   dependencies:
@@ -7955,7 +7955,7 @@ __metadata:
     "@aws-sdk/client-bedrock-runtime": ^3.840.0
     "@aws-sdk/client-kendra": ^3.750.0
     "@aws-sdk/credential-provider-node": ^3.750.0
-    "@aws-sdk/types": ^3.840.0
+    "@aws-sdk/types": ^3.734.0
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
