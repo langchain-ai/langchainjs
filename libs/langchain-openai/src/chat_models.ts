@@ -78,10 +78,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import {
-  JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -1160,12 +1157,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
-    // ):
-    // | Runnable<BaseLanguageModelInput, RunOutput>
-    // | Runnable<
-    //     BaseLanguageModelInput,
-    //     { raw: BaseMessage; parsed: RunOutput }
-    //   > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
@@ -1206,34 +1197,39 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
     }
 
     if (method === "jsonMode") {
-      let outputFormatSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
-        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
-          schema: outputFormatSchema,
+          kwargs: { method: "json_mode" },
+          schema: { title: name ?? "extract", ...asJsonSchema },
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
+      const openaiJsonSchemaParams = {
+        name: name ?? "extract",
+        description: getSchemaDescription(schema),
+        schema,
+        strict: config?.strict,
+      };
+      const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
-          json_schema: {
-            name: name ?? "extract",
-            description: getSchemaDescription(schema),
-            schema,
-            strict: config?.strict,
-          },
+          json_schema: openaiJsonSchemaParams,
         },
         ls_structured_output_format: {
-          kwargs: { method: "jsonSchema" },
-          schema: toJsonSchema(schema),
+          kwargs: { method: "json_schema" },
+          schema: {
+            title: openaiJsonSchemaParams.name,
+            description: openaiJsonSchemaParams.description,
+            ...asJsonSchema,
+          },
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -1272,8 +1268,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
-            schema: asJsonSchema,
+            kwargs: { method: "function_calling" },
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -1300,6 +1296,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             parameters: schema,
           };
         }
+        const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
           tools: [
             {
@@ -1314,8 +1311,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
-            schema: toJsonSchema(schema),
+            kwargs: { method: "function_calling" },
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),

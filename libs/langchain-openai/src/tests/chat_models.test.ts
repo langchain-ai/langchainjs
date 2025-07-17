@@ -323,8 +323,11 @@ test("OpenAI runs with structured output contain structured output options", asy
   expect(extra).toMatchObject({
     options: {
       ls_structured_output_format: {
-        kwargs: { method: "jsonSchema" },
-        schema: toJsonSchema(weatherSchema),
+        kwargs: { method: "json_schema" },
+        schema: {
+          title: "get_current_weather",
+          ...toJsonSchema(weatherSchema),
+        },
       },
     },
   });
