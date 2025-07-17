@@ -279,3 +279,53 @@ test("Test OpenAI serialization doesn't pass along extra params", async () => {
 
   expect(loadedChat.model).toEqual("o3-mini");
 });
+
+test("OpenAI runs with structured output contain structured output options", async () => {
+  const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+  mockFetch.mockImplementation((url, options) => {
+    // Store the request details for later inspection
+    mockFetch.mock.calls.push([url, options]);
+
+    // Return a mock response
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+  });
+
+  const weatherSchema = z.object({
+    location: z.string().describe("The location to get the weather for"),
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-2024-08-06",
+    configuration: {
+      fetch: mockFetch,
+    },
+  }).withStructuredOutput(weatherSchema, {
+    name: "get_current_weather",
+    method: "jsonSchema",
+  });
+
+  let extra;
+  // This will fail since we're not returning a valid response in our mocked fetch function.
+  await expect(
+    model.invoke("What's the weather like?", {
+      callbacks: [
+        {
+          handleLLMStart: (_1, _2, _3, _4, extraParams) => {
+            extra = extraParams;
+          },
+        },
+      ],
+    })
+  ).rejects.toThrow();
+  expect(extra).toMatchObject({
+    options: {
+      ls_structured_output_format: {
+        kwargs: { method: "jsonSchema" },
+        schema: toJsonSchema(weatherSchema),
+      },
+    },
+  });
+});
