@@ -118,6 +118,10 @@ describe("convertToConverseMessages", () => {
                 type: "default",
               },
             },
+            {
+              type: "text",
+              text: "Answer the user's question using the provided tool.",
+            },
           ],
         }),
         new HumanMessage({
@@ -219,6 +223,9 @@ describe("convertToConverseMessages", () => {
             cachePoint: {
               type: "default",
             },
+          },
+          {
+            text: "Answer the user's question using the provided tool.",
           },
         ],
       },
