@@ -7,9 +7,10 @@ import {
   BaseMessage,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import type {
-  Message as BedrockMessage,
-  SystemContentBlock as BedrockSystemContentBlock,
+import {
+  ConversationRole as BedrockConversationRole,
+  type Message as BedrockMessage,
+  type SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod";
 import { describe, expect, test } from "@jest/globals";
@@ -63,7 +64,7 @@ describe("convertToConverseMessages", () => {
       output: {
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
@@ -71,7 +72,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -85,7 +86,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -128,12 +129,16 @@ describe("convertToConverseMessages", () => {
           content: [
             {
               type: "text",
-              text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
+              text: "What's the weather like today in Berkeley, CA?",
             },
             {
               cachePoint: {
                 type: "default",
               },
+            },
+            {
+              type: "text",
+              text: "Use weather.com to check.",
             },
           ],
         }),
@@ -168,20 +173,23 @@ describe("convertToConverseMessages", () => {
       output: {
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
-                text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
+                text: "What's the weather like today in Berkeley, CA?",
               },
               {
                 cachePoint: {
                   type: "default",
                 },
               },
+              {
+                text: "Use weather.com to check.",
+              },
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 cachePoint: {
@@ -200,7 +208,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -303,7 +311,7 @@ describe("convertToConverseMessages", () => {
         ],
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use weather.com to check.",
@@ -311,7 +319,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -334,7 +342,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -359,7 +367,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use meteofrance.com to check.",
@@ -367,7 +375,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -390,7 +398,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
