@@ -1,11 +1,17 @@
 import { OpenAI } from "@langchain/openai";
 
+// Using callbacks to track token usage - useful for chains, agents, or multiple calls
 const llm = new OpenAI({
   model: "gpt-3.5-turbo-instruct",
   callbacks: [
     {
       handleLLMEnd(output) {
-        console.log(JSON.stringify(output, null, 2));
+        // Extract token usage from the callback output
+        const tokenUsage = output.llmOutput?.tokenUsage;
+        console.log("Token usage from callback:", tokenUsage);
+        
+        // You can also access the full output if needed
+        // console.log("Full output:", JSON.stringify(output, null, 2));
       },
     },
   ],
@@ -14,24 +20,9 @@ const llm = new OpenAI({
 await llm.invoke("Tell me a joke.");
 
 /*
-  {
-    "generations": [
-      [
-        {
-          "text": "\n\nWhy don't scientists trust atoms?\n\nBecause they make up everything.",
-          "generationInfo": {
-            "finishReason": "stop",
-            "logprobs": null
-          }
-        }
-      ]
-    ],
-    "llmOutput": {
-      "tokenUsage": {
-        "completionTokens": 14,
-        "promptTokens": 5,
-        "totalTokens": 19
-      }
-    }
+  Token usage from callback: {
+    completionTokens: 14,
+    promptTokens: 5,
+    totalTokens: 19
   }
 */
