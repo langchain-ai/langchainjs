@@ -286,9 +286,10 @@ export class AIMessageChunk extends BaseMessageChunk {
       for (const [id, chunks] of Object.entries(groupedToolCallChunk)) {
         let parsedArgs = {};
         const name = chunks[0]?.name ?? "";
-        const argStr = chunks.map((c) => c.args || "").join("");
+        const joinedArgs = chunks.map((c) => c.args || "").join("");
+        const argsStr = joinedArgs.length ? joinedArgs : "{}";
         try {
-          parsedArgs = parsePartialJson(argStr);
+          parsedArgs = parsePartialJson(argsStr);
           if (
             parsedArgs === null ||
             typeof parsedArgs !== "object" ||
@@ -305,7 +306,7 @@ export class AIMessageChunk extends BaseMessageChunk {
         } catch (e) {
           invalidToolCalls.push({
             name,
-            args: argStr,
+            args: argsStr,
             id,
             error: "Malformed args.",
             type: "invalid_tool_call",

@@ -413,6 +413,57 @@ describe("Complex AIMessageChunk concat", () => {
       },
     ]);
   });
+
+  it("concatenates tool call chunks with no args", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        id: "0",
+        name: "foo",
+        type: "tool_call_chunk",
+      },
+    ];
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "0",
+        name: "foo",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks with empty string args", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        id: "0",
+        name: "foo",
+        type: "tool_call_chunk",
+        args: "",
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "0",
+        name: "foo",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
 });
 
 describe("Message like coercion", () => {
