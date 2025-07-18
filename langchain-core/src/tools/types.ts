@@ -72,6 +72,10 @@ export interface ToolParams extends BaseLangChainParams {
    */
   responseFormat?: ResponseFormat;
   /**
+   * Default config object for the tool runnable.
+   */
+  defaultConfig?: ToolRunnableConfig;
+  /**
    * Whether to show full details in the thrown parsing errors.
    *
    * @default false
