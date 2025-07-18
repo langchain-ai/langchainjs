@@ -10,6 +10,7 @@ import {
 } from "../callbacks/manager.js";
 import { BaseLangChain } from "../language_models/base.js";
 import {
+  mergeConfigs,
   ensureConfig,
   patchConfig,
   pickRunnableConfigKeys,
@@ -124,12 +125,18 @@ export abstract class StructuredTool<
    */
   responseFormat?: ResponseFormat = "content";
 
+  /**
+   * Default config object for the tool runnable.
+   */
+  defaultConfig?: ToolRunnableConfig;
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
 
     this.verboseParsingErrors =
       fields?.verboseParsingErrors ?? this.verboseParsingErrors;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
+    this.defaultConfig = fields?.defaultConfig ?? this.defaultConfig;
   }
 
   protected abstract _call(
@@ -156,7 +163,9 @@ export abstract class StructuredTool<
       ToolCall
     >;
 
-    let enrichedConfig: ToolRunnableConfig = ensureConfig(config);
+    let enrichedConfig: ToolRunnableConfig = ensureConfig(
+      mergeConfigs(this.defaultConfig, config)
+    );
     if (_isToolCall(input)) {
       toolInput = input.args as Exclude<
         StructuredToolCallInput<SchemaT, SchemaInputT>,
