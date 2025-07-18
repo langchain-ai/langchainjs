@@ -1,0 +1,113 @@
+---
+sidebar_label: FalkorDB
+---
+
+# FalkorDB
+
+[FalkorDB](https://www.falkordb.com/) is a blazing fast graph database used as the knowledge graph alongside LangChain.
+
+This guide will help you get started with FalkorDB graph chains in LangChain.
+
+## Installation
+
+FalkorDB integration is available in the `@langchain/community` package.
+
+```bash npm2yarn
+npm install @langchain/community
+```
+
+## Setup
+
+To use FalkorDB with LangChain, you'll need to have FalkorDB running. The easiest way is using Docker:
+
+```bash
+docker run -p 6379:6379 -it --rm falkordb/falkordb:latest
+```
+
+## Usage
+
+Here's how to use FalkorDB with LangChain for graph-based question answering:
+
+```typescript
+import { FalkorDBGraph } from "@langchain/community/graphs/falkordb";
+import { OpenAI } from "@langchain/openai";
+import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
+
+// Initialize FalkorDB connection
+const graph = await FalkorDBGraph.initialize({
+  host: "localhost",
+  port: 6379,
+  graph: "movies" // Your graph name
+});
+
+// Set up the language model
+const model = new OpenAI({ temperature: 0 });
+
+// Create and populate the graph with some data
+await graph.query(
+  "CREATE (a:Actor {name:'Bruce Willis'})" +
+  "-[:ACTED_IN]->(:Movie {title: 'Pulp Fiction'})"
+);
+
+// Refresh the graph schema
+await graph.refreshSchema();
+
+// Create a graph QA chain
+const chain = GraphCypherQAChain.fromLLM({
+  llm: model,
+  graph,
+});
+
+// Ask questions about your graph
+const response = await chain.run("Who played in Pulp Fiction?");
+console.log(response);
+// Output: Bruce Willis played in Pulp Fiction.
+```
+
+## Configuration Options
+
+The `FalkorDBGraph.initialize()` method accepts the following configuration options:
+
+- `host`: The hostname of your FalkorDB instance (default: "localhost")
+- `port`: The port number (default: 6379)
+- `graph`: The name of your graph database
+- `enhancedSchema`: Enable enhanced schema details (default: false)
+- `username`: Optional username for authentication
+- `password`: Optional password for authentication
+
+### Alternative Configuration
+
+You can also use the legacy URL format for backward compatibility:
+
+```typescript
+const graph = await FalkorDBGraph.initialize({
+  url: "redis://localhost:6379",
+  graph: "movies"
+});
+```
+
+## Advanced Usage
+
+### Custom Cypher Queries
+
+You can execute custom Cypher queries directly:
+
+```typescript
+// Execute a custom query
+const result = await graph.query(
+  "MATCH (a:Actor)-[:ACTED_IN]->(m:Movie) RETURN a.name, m.title"
+);
+console.log(result);
+```
+
+### Schema Information
+
+FalkorDB automatically tracks your graph schema:
+
+```typescript
+// Get the current schema
+console.log(graph.getSchema());
+
+// Refresh schema after making changes
+await graph.refreshSchema();
+```
