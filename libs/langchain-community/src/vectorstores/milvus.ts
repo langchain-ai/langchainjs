@@ -217,18 +217,15 @@ export class Milvus extends VectorStore {
    * Adds documents to the Milvus database.
    * @param documents Array of Document instances to be added to the database.
    * @param options Optional parameter that can include specific IDs for the documents.
-   * @returns Promise resolving to void.
+   * @returns Promise resolving to the response from the insert or upsert operation.
    */
   async addDocuments(
     documents: Document[],
     options?: { ids?: string[] }
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
-    await this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents,
-      options
-    );
+    // Return the response from addVectors (which is the insert/upsert response)
+    return await this.addVectors(await this.embeddings.embedDocuments(texts), documents, options);
   }
 
   /**
@@ -236,7 +233,7 @@ export class Milvus extends VectorStore {
    * @param vectors Array of vectors to be added to the database.
    * @param documents Array of Document instances associated with the vectors.
    * @param options Optional parameter that can include specific IDs for the documents.
-   * @returns Promise resolving to void.
+   * @returns Promise resolving to the response from the insert or upsert operation.
    */
   async addVectors(
     vectors: number[][],
@@ -306,6 +303,7 @@ export class Milvus extends VectorStore {
     if (this.partitionName !== undefined) {
       params.partition_name = this.partitionName;
     }
+    // Return the response from insert or upsert
     const insertResp = this.autoId
       ? await this.client.insert(params)
       : await this.client.upsert(params);
@@ -318,6 +316,7 @@ export class Milvus extends VectorStore {
       );
     }
     await this.client.flushSync({ collection_names: [this.collectionName] });
+    return insertResp; // Return the response to the caller
   }
 
   /**
