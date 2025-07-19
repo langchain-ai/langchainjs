@@ -328,6 +328,39 @@ Similarly, when calling tools on the `microphone` MCP server, the following `out
 
 ## Tool Timeout Configuration
 
+### Using `defaultToolTimeout`
+
+You can configure a global timeout for all tools by setting the `defaultToolTimeout` field in the client params. You can include a `defaultToolTimeout` field in the server config to set the timeout for all tools for that server, or globally for the entire client by setting it in the top-level config.
+
+This timeout will be used as the default timeout for all tools unless overridden by a tool-specific timeout.
+
+```typescript
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "data-processor": {
+      command: "python",
+      args: ["data_server.py"],
+      defaultToolTimeout: 30000, // timeout will be 30 seconds
+    },
+    "image-processor": {
+      transport: "stdio",
+      command: "node",
+      args: ["image_server.js"],
+      // timeout will be 10 seconds (set in the top-level config)
+    },
+  },
+  defaultToolTimeout: 10000, // 10 seconds
+});
+
+const tools = await client.getTools();
+const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
+
+// Will timeout after 30 seconds (defaultToolTimeout)
+const result = await slowTool.invoke({ dataset: "huge_file.csv" });
+```
+
+### Using `withConfig`
+
 MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
 
 ```typescript
