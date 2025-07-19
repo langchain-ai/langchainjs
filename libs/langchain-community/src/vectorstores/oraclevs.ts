@@ -55,11 +55,10 @@ function handleError(error: unknown): never {
   throw new Error(`An unknown and unexpected error occurred. ${error}`);
 }
 
-// Type guard to check if the client is an oracledb.Pool
-function isConnectionOrPool(
+function isPool(
   client: oracledb.Connection | oracledb.Pool
 ): client is oracledb.Pool {
-  return (client as oracledb.Pool).getConnection !== undefined;
+  return "getConnection" in client;
 }
 
 export async function createTable(
@@ -315,7 +314,7 @@ export class OracleVS extends VectorStore {
 
   public async getConnection(): Promise<oracledb.Connection> {
     try {
-      if (isConnectionOrPool(this.client)) {
+      if (isPool(this.client)) {
         return await (this.client as oracledb.Pool).getConnection();
       }
       return this.client as oracledb.Connection;
@@ -328,7 +327,7 @@ export class OracleVS extends VectorStore {
   public async retConnection(connection: oracledb.Connection): Promise<void> {
     try {
       // If the client is a pool, close the connection (return it to the pool)
-      if (isConnectionOrPool(this.client)) {
+      if (isPool(this.client)) {
         await connection.close();
       }
     } catch (error) {
@@ -391,7 +390,7 @@ export class OracleVS extends VectorStore {
         const bind: any = {
           id: idBuffer,
           text: doc.pageContent.toString(),
-          metadata: JSON.stringify(doc.metadata),
+          metadata: doc.metadata,
           embedding: new Float32Array(vectors[index]),
         };
         binds.push(bind);
@@ -456,28 +455,29 @@ export class OracleVS extends VectorStore {
 
     try {
       const convertedEmbedding = new Float32Array(query);
+      const bindValues: any = [convertedEmbedding];
 
-      const sqlQuery = `
+      let sqlQuery = `
       SELECT id, 
         text,
         metadata,
         vector_distance(embedding, :embedding, ${this.distanceStrategy}) as distance,
         embedding
-      FROM ${this.tableName}
-      ORDER BY distance
-      FETCH APPROX FIRST ${k} ROWS ONLY `;
+      FROM ${this.tableName} `;
+      if (filter) {
+        sqlQuery += " WHERE JSON_EQUAL(metadata, :filter)";
+        bindValues.push({ type: oracledb.DB_TYPE_JSON, val: filter });
+      }
+      sqlQuery += " ORDER BY distance FETCH APPROX FIRST :k ROWS ONLY ";
+      bindValues.push(k);
 
       // Execute the query
       connection = await this.getConnection();
-      const resultSet = await connection.execute(
-        sqlQuery,
-        [convertedEmbedding],
-        {
-          fetchInfo: {
-            TEXT: { type: oracledb.STRING },
-          },
-        } as unknown as oracledb.ExecuteOptions
-      );
+      const resultSet = await connection.execute(sqlQuery, bindValues, {
+        fetchInfo: {
+          TEXT: { type: oracledb.STRING },
+        },
+      } as unknown as oracledb.ExecuteOptions);
 
       if (Array.isArray(resultSet.rows) && resultSet.rows.length > 0) {
         const rows = resultSet.rows as unknown[][];
@@ -488,24 +488,12 @@ export class OracleVS extends VectorStore {
           const metadata = row[2] as Metadata;
           const distance = row[3] as number;
           const embedding = row[4] as any;
-          if (
-            filter &&
-            Object.entries(filter).every(
-              ([key, value]) => metadata[key] === value
-            )
-          ) {
-            const document = new Document({
-              pageContent: text || "",
-              metadata: metadata || {},
-            });
-            docsScoresAndEmbeddings.push([document, distance, embedding]);
-          } else if (!filter) {
-            const document = new Document({
-              pageContent: text || "",
-              metadata: metadata || {},
-            });
-            docsScoresAndEmbeddings.push([document, distance, embedding]);
-          }
+
+          const document = new Document({
+            pageContent: text || "",
+            metadata: metadata || {},
+          });
+          docsScoresAndEmbeddings.push([document, distance, embedding]);
         }
       } else {
         // Throw an exception if no rows are found
@@ -668,6 +656,17 @@ export class OracleVS extends VectorStore {
       return vss;
     } catch (error: unknown) {
       handleError(error);
+    }
+  }
+
+  /**
+   *
+   * @returns Promise that resolves when all connections
+   * inside the pool are terminated.
+   */
+  async end(): Promise<void> {
+    if (isPool(this.client)) {
+      await this.client?.close();
     }
   }
 }
