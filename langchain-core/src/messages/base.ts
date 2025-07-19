@@ -419,6 +419,11 @@ export function _mergeDicts(
         // Do not merge 'type' fields
         continue;
       }
+      // Special case: preserve the first non-empty value for audio.id field
+      // This prevents audio ID duplication when streaming audio chunks
+      if (key === "id" && merged[key].startsWith("audio_")) {
+        continue;
+      }
       merged[key] += value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
