@@ -5,6 +5,7 @@ import { env } from "node:process";
 import { OracleEmbeddings } from "../../embeddings/oracle.js";
 import {
   createIndex,
+  DistanceStrategy,
   type OracleDBVSStoreArgs,
   OracleVS,
 } from "../oraclevs.js";
@@ -50,7 +51,7 @@ describe("OracleVectorStore", () => {
       const dbConfig: OracleDBVSStoreArgs = {
         client: pool,
         tableName,
-        distanceStrategy: "DOT",
+        distanceStrategy: DistanceStrategy.DOT_PRODUCT,
         query: "What are salient features of oracledb",
       };
 
@@ -97,7 +98,7 @@ describe("OracleVectorStore", () => {
     const dbConfig: OracleDBVSStoreArgs = {
       client: pool,
       tableName,
-      distanceStrategy: "DOT",
+      distanceStrategy: DistanceStrategy.DOT_PRODUCT,
       query: "What are salient features of oracledb",
     };
 

@@ -20,13 +20,17 @@ export interface OracleDBVSStoreArgs {
   filter?: Metadata;
 }
 
+export const DistanceStrategy = {
+  COSINE: "COSINE",
+  DOT_PRODUCT: "DOT",
+  EUCLIDEAN: "EUCLIDEAN",
+  MANHATTAN: "MANHATTAN",
+  HAMMING: "HAMMING",
+  EUCLIDEAN_SQUARED: "EUCLIDEAN_SQUARED",
+} as const;
+
 export type DistanceStrategy =
-  | "COSINE"
-  | "DOT"
-  | "EUCLIDEAN"
-  | "MANHATTAN"
-  | "HAMMING"
-  | "EUCLIDEAN_SQUARED";
+  (typeof DistanceStrategy)[keyof typeof DistanceStrategy];
 
 type AddDocumentOptions = Record<string, any>;
 
@@ -269,7 +273,7 @@ export class OracleVS extends VectorStore {
 
   readonly tableName: string;
 
-  readonly distanceStrategy: DistanceStrategy = "COSINE";
+  readonly distanceStrategy: DistanceStrategy = DistanceStrategy.COSINE;
 
   filter?: Metadata;
 
