@@ -493,6 +493,7 @@ export async function loadMcpTools(
     additionalToolNamePrefix,
     useStandardContentBlocks,
     outputHandling,
+    defaultToolTimeout,
   } = {
     ...defaultLoadMcpToolsOptions,
     ...(options ?? {}),
@@ -538,6 +539,9 @@ export async function loadMcpTools(
               schema: tool.inputSchema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
+              defaultConfig: defaultToolTimeout
+                ? { timeout: defaultToolTimeout }
+                : undefined,
               func: async (
                 args: Record<string, unknown>,
                 _runManager?: CallbackManagerForToolRun,
