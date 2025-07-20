@@ -448,7 +448,7 @@ export const clientConfigSchema = z
       .boolean()
       .describe("Whether to prefix tool names with the server name")
       .optional()
-      .default(true),
+      .default(false),
     /**
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).
@@ -459,7 +459,7 @@ export const clientConfigSchema = z
       .string()
       .describe("An additional prefix to add to the tool name")
       .optional()
-      .default("mcp"),
+      .default(""),
     /**
      * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
      * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.

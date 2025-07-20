@@ -460,17 +460,20 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          command,
-          args,
+        mcpServers: {
+          "stdio-server": {
+            command,
+            args,
+          },
+          "http-server": {
+            url: `${streamableHttpBaseUrl}/mcp`,
+          },
+          "sse-server": {
+            url: `${sseBaseUrl}/sse`,
+            transport: "sse",
+          },
         },
-        "http-server": {
-          url: `${streamableHttpBaseUrl}/mcp`,
-        },
-        "sse-server": {
-          url: `${sseBaseUrl}/sse`,
-          transport: "sse",
-        },
+        prefixToolNameWithServerName: true,
       });
 
       try {
@@ -505,13 +508,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
         await testServers.createHTTPServer("filter-http");
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          command,
-          args,
+        mcpServers: {
+          "stdio-server": {
+            command,
+            args,
+          },
+          "http-server": {
+            url: `${streamableHttpBaseUrl}/mcp`,
+          },
         },
-        "http-server": {
-          url: `${streamableHttpBaseUrl}/mcp`,
-        },
+        prefixToolNameWithServerName: true,
       });
 
       try {
