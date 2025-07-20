@@ -50,10 +50,10 @@ const client = new MultiServerMCPClient({
   // Global tool configuration options
   // Whether to throw on errors if a tool fails to load (optional, default: true)
   throwOnLoadError: true,
-  // Whether to prefix tool names with the server name (optional, default: true)
-  prefixToolNameWithServerName: true,
-  // Optional additional prefix for tool names (optional, default: "mcp")
-  additionalToolNamePrefix: "mcp",
+  // Whether to prefix tool names with the server name (optional, default: false)
+  prefixToolNameWithServerName: false,
+  // Optional additional prefix for tool names (optional, default: "")
+  additionalToolNamePrefix: "",
 
   // Use standardized content block format in tool outputs
   useStandardContentBlocks: true,
@@ -195,10 +195,10 @@ try {
     throwOnLoadError: true,
     // Whether to prefix tool names with the server name (optional, default: false)
     prefixToolNameWithServerName: false,
-    // Optional additional prefix for tool names (optional, default: "mcp")
-    additionalToolNamePrefix: "mcp",
-    // Use standardized content block format in tool outputs
-    useStandardContentBlocks: true,
+    // Optional additional prefix for tool names (optional, default: "")
+    additionalToolNamePrefix: "",
+    // Use standardized content block format in tool outputs (default: false)
+    useStandardContentBlocks: false,
   });
 
   // Create and run the agent
@@ -227,10 +227,11 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | Option                         | Type                                   | Default                                               | Description                                                                          |
 | ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                    |
-| `prefixToolNameWithServerName` | `boolean`                              | `true`                                                | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
-| `additionalToolNamePrefix`     | `string`                               | `"mcp"`                                               | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+| `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
+| `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
 | `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications       |
 | `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                      |
+| `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                      |
 
 ## Tool Output Mapping
 
