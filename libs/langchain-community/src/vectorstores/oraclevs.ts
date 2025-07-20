@@ -411,7 +411,7 @@ export class OracleVS extends VectorStore {
         autoCommit: false,
       };
 
-      const result = await connection.executeMany(sql, binds, options);
+      await connection.executeMany(sql, binds, options);
 
       // Commit once all inserts are queued up
       await connection.commit();

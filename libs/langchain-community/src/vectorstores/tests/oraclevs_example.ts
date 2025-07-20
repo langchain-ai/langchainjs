@@ -9,6 +9,7 @@ import type { Callbacks } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   createIndex,
+  DistanceStrategy,
   OracleVS,
   type OracleDBVSStoreArgs,
 } from "../oraclevs.js";
@@ -71,7 +72,7 @@ class TestsOracleVS {
     this.dbConfig = {
       client: this.client,
       tableName: "some_tablenm",
-      distanceStrategy: "DOT_PRODUCT",
+      distanceStrategy: DistanceStrategy.DOT_PRODUCT,
       query: "What are salient features of oracledb",
     };
 
