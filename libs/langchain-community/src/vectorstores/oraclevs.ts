@@ -468,7 +468,7 @@ export class OracleVS extends VectorStore {
         vector_distance(embedding, :embedding, ${this.distanceStrategy}) as distance,
         embedding
       FROM ${this.tableName} `;
-      if (filter) {
+      if (filter && Object.keys(filter).length > 0) {
         sqlQuery += " WHERE JSON_EQUAL(metadata, :filter)";
         bindValues.push({ type: oracledb.DB_TYPE_JSON, val: filter });
       }
@@ -503,10 +503,12 @@ export class OracleVS extends VectorStore {
         // Throw an exception if no rows are found
         throw new Error("No rows found.");
       }
-      return docsScoresAndEmbeddings;
     } finally {
-      if (connection) await connection.close();
+      if (connection) {
+        await connection.close();
+      }
     }
+    return docsScoresAndEmbeddings;
   }
 
   public async similaritySearchVectorWithScore(
