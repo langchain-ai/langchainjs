@@ -10,7 +10,8 @@
     "langchain-core",
     "libs/*",
     "examples",
-    "docs/*"
+    "docs/*",
+    "internal/*"
   ],
   "repository": {
     "type": "git",
@@ -53,15 +54,15 @@
     "lint-staged": "^13.1.1",
     "prettier": "^2.8.3",
     "semver": "^7.5.4",
-    "turbo": "^1.13.3",
-    "typescript": "~5.1.6"
+    "turbo": "^2.5.4",
+    "typescript": "~5.8.3"
   },
   "resolutions": {
     "dpdm@^3.12.0": "patch:dpdm@npm%3A3.12.0#./.yarn/patches/dpdm-npm-3.12.0-0dfdd8e3b8.patch",
     "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch",
     "voy-search@0.6.2": "patch:voy-search@npm%3A0.6.2#./.yarn/patches/voy-search-npm-0.6.2-d4aca30a0e.patch",
     "protobufjs": "^7.2.5",
-    "zod": "3.23.8"
+    "zod": "^3.25.32"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

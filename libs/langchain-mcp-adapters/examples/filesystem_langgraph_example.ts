@@ -48,15 +48,18 @@ export async function runExample(client?: MultiServerMCPClient) {
     client =
       client ??
       new MultiServerMCPClient({
-        filesystem: {
-          transport: "stdio",
-          command: "npx",
-          args: [
-            "-y",
-            "@modelcontextprotocol/server-filesystem",
-            "./examples/filesystem_test", // This directory needs to exist
-          ],
+        mcpServers: {
+          filesystem: {
+            transport: "stdio" as const,
+            command: "npx",
+            args: [
+              "-y",
+              "@modelcontextprotocol/server-filesystem",
+              "./examples/filesystem_test", // This directory needs to exist
+            ],
+          },
         },
+        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");
@@ -85,7 +88,7 @@ For file writing operations, format the content properly based on the file type.
 For reading multiple files, you can use the read_multiple_files tool.`;
 
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
       temperature: 0,
     }).bindTools(mcpTools);
 

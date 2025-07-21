@@ -22,6 +22,7 @@ import {
   isDataContentBlock,
   convertToProviderContentBlock,
   parseBase64DataUrl,
+  UsageMetadata,
 } from "@langchain/core/messages";
 import {
   ToolCall,
@@ -205,13 +206,27 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
     return newAIMessageChunk(ret);
   }
 
-  function messageToGenerationInfo(message: AnthropicResponseMessage) {
+  function messageToUsageMetadata(
+    message: AnthropicResponseMessage
+  ): UsageMetadata {
     const usage = message?.usage;
-    const usageMetadata: Record<string, number> = {
-      input_tokens: usage?.input_tokens ?? 0,
-      output_tokens: usage?.output_tokens ?? 0,
-      total_tokens: (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
+    const inputTokens = usage?.input_tokens ?? 0;
+    const outputTokens = usage?.output_tokens ?? 0;
+    const usageMetadata: UsageMetadata = {
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      total_tokens: inputTokens + outputTokens,
+      input_token_details: {
+        cache_read: usage?.cache_read_input_tokens ?? 0,
+        cache_creation: usage?.cache_creation_input_tokens ?? 0,
+      },
     };
+    return usageMetadata;
+  }
+
+  function messageToGenerationInfo(message: AnthropicResponseMessage) {
+    const usageMetadata = messageToUsageMetadata(message);
+
     return {
       usage_metadata: usageMetadata,
       finish_reason: message.stop_reason,

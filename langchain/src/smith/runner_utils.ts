@@ -568,7 +568,8 @@ const applyEvaluators = async ({
         return {
           execution_time:
             run?.end_time && run.start_time
-              ? run.end_time - run.start_time
+              ? new Date(run.end_time).getTime() -
+                new Date(run.start_time).getTime()
               : undefined,
           feedback: evaluatorResults.map((evalResult) =>
             evalResult.status === "fulfilled"

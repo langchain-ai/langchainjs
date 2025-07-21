@@ -1,0 +1,153 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LangChainTracer payload snapshots for run create and update 1`] = `
+{
+  "attachments": undefined,
+  "child_runs": [],
+  "dotted_order": Any<String>,
+  "end_time": undefined,
+  "error": undefined,
+  "events": ArrayContaining [
+    ObjectContaining {
+      "time": Any<String>,
+    },
+  ],
+  "extra": {
+    "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
+  },
+  "id": Any<String>,
+  "inputs": {
+    "input": "test input",
+  },
+  "name": "RunnableLambda",
+  "outputs": undefined,
+  "parent_run_id": undefined,
+  "reference_example_id": undefined,
+  "run_type": "chain",
+  "serialized": {
+    "id": [
+      "langchain_core",
+      "runnables",
+      "RunnableLambda",
+    ],
+    "lc": 1,
+    "type": "not_implemented",
+  },
+  "session_name": Any<String>,
+  "start_time": Any<String>,
+  "tags": [],
+  "trace_id": Any<String>,
+}
+`;
+
+exports[`LangChainTracer payload snapshots for run create and update 2`] = `
+{
+  "attachments": undefined,
+  "child_runs": [],
+  "dotted_order": Any<String>,
+  "end_time": undefined,
+  "error": undefined,
+  "events": ArrayContaining [
+    ObjectContaining {
+      "time": Any<String>,
+    },
+  ],
+  "extra": {
+    "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
+  },
+  "id": Any<String>,
+  "inputs": {
+    "input": "test input",
+  },
+  "name": "RunnableLambda",
+  "outputs": undefined,
+  "parent_run_id": Any<String>,
+  "reference_example_id": undefined,
+  "run_type": "chain",
+  "serialized": {
+    "id": [
+      "langchain_core",
+      "runnables",
+      "RunnableLambda",
+    ],
+    "lc": 1,
+    "type": "not_implemented",
+  },
+  "session_name": Any<String>,
+  "start_time": Any<String>,
+  "tags": [],
+  "trace_id": Any<String>,
+}
+`;
+
+exports[`LangChainTracer payload snapshots for run create and update 3`] = `
+{
+  "attachments": undefined,
+  "dotted_order": Any<String>,
+  "end_time": Any<Number>,
+  "error": undefined,
+  "events": ArrayContaining [
+    ObjectContaining {
+      "time": Any<String>,
+    },
+  ],
+  "extra": {
+    "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
+  },
+  "inputs": {
+    "input": "test input",
+  },
+  "outputs": {
+    "output": "processed: test input",
+  },
+  "parent_run_id": Any<String>,
+  "reference_example_id": undefined,
+  "session_name": Any<String>,
+  "tags": [],
+  "trace_id": Any<String>,
+}
+`;
+
+exports[`LangChainTracer payload snapshots for run create and update 4`] = `
+{
+  "attachments": undefined,
+  "dotted_order": Any<String>,
+  "end_time": Any<Number>,
+  "error": undefined,
+  "events": ArrayContaining [
+    ObjectContaining {
+      "time": Any<String>,
+    },
+  ],
+  "extra": {
+    "metadata": {},
+    "runtime": {
+      "library": "langchain-js",
+      "runtime": "node",
+    },
+  },
+  "inputs": {
+    "input": "test input",
+  },
+  "outputs": {
+    "output": "parent: processed: test input",
+  },
+  "parent_run_id": undefined,
+  "reference_example_id": undefined,
+  "session_name": Any<String>,
+  "tags": [],
+  "trace_id": Any<String>,
+}
+`;

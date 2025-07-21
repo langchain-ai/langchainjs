@@ -8,6 +8,7 @@ import {
   BytesOutputParser,
   StringOutputParser,
 } from "@langchain/core/output_parsers";
+import { tool } from "@langchain/core/tools";
 import { ChatOllama } from "../chat_models.js";
 
 test("test invoke", async () => {
@@ -50,6 +51,26 @@ test("test streaming call", async () => {
   });
   const stream = await ollama.stream(
     `Translate "I love programming" into German.`
+  );
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("test streaming call with tools", async () => {
+  const ollama = new ChatOllama({
+    maxRetries: 1,
+    model: "llama3.2",
+  }).bindTools([
+    tool((input) => JSON.stringify(input), {
+      name: "GetWeather",
+      description: "Get the current weather in a given location",
+    }),
+  ]);
+  const stream = await ollama.stream(
+    `Use the GetWeather tool to get the weather in San Francisco.`
   );
   const chunks = [];
   for await (const chunk of stream) {

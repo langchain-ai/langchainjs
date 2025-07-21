@@ -23,10 +23,12 @@ test("HuggingFaceTransformersEmbeddings", async () => {
   expect(await store.similaritySearch(texts[4], 2)).toMatchInlineSnapshot(`
     [
       Document {
+        "id": undefined,
         "metadata": {},
         "pageContent": "1 + 1 = 2",
       },
       Document {
+        "id": undefined,
         "metadata": {},
         "pageContent": "1 + 1 = 3",
       },

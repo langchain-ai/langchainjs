@@ -4,20 +4,21 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+} from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
-import { z } from "zod";
-import {
-  ChatOpenAI,
-  ChatOpenAIStructuredOutputMethodOptions,
-} from "../chat_models.js";
+import { InteropZodType } from "@langchain/core/utils/types";
+import { ChatOpenAI } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
   AzureOpenAIInput,
   OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
+import { normalizeHeaders } from "../utils/headers.js";
 
 export type { AzureOpenAIInput };
 
@@ -362,7 +363,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
- * const logprobsLlm = new ChatOpenAI({ logprobs: true });
+ * const logprobsLlm = new ChatOpenAI({ model: "gpt-4o-mini", logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
@@ -541,7 +542,10 @@ export class AzureChatOpenAI extends ChatOpenAI {
     return params;
   }
 
-  protected _getClientOptions(options: OpenAICoreRequestOptions | undefined) {
+  /** @internal */
+  _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
     if (!this.client) {
       const openAIEndpointConfig: OpenAIEndpointConfig = {
         azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
@@ -575,12 +579,12 @@ export class AzureChatOpenAI extends ChatOpenAI {
         env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
       }
 
-      const specifiedUserAgent = params.defaultHeaders?.["User-Agent"];
+      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
       params.defaultHeaders = {
         ...params.defaultHeaders,
-        "User-Agent": `langchainjs-azure-openai/2.0.0 (${env})${
-          specifiedUserAgent ? ` ${specifiedUserAgent}` : ""
-        }`,
+        "User-Agent": defaultHeaders["User-Agent"]
+          ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
+          : `langchainjs-azure-openai/2.0.0 (${env})`,
       };
 
       this.client = new AzureOpenAIClient({
@@ -669,10 +673,10 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -680,10 +684,10 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -691,10 +695,10 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -704,10 +708,10 @@ export class AzureChatOpenAI extends ChatOpenAI {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

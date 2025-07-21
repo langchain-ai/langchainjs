@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
   HumanMessage,
@@ -11,6 +11,7 @@ import {
   StandardTextBlock,
   SystemMessage,
   ToolMessage,
+  type MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
@@ -136,13 +137,13 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     questions: z.array(questionSchema).describe("Array of question objects"),
   });
 
-  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
     arrSchemaKeys.find((key) => key === "additionalProperties")
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    zodToJsonSchema(questionSchema)
+    toJsonSchema(questionSchema)
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
@@ -162,7 +163,7 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    zodToJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema)
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(
@@ -866,4 +867,95 @@ test("convertMessageContentToParts: should handle ToolMessage correctly (includi
   ).toThrow(
     'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.'
   );
+});
+
+test("convertMessageContentToParts: correctly handles ToolMessage with array content", () => {
+  const isMultimodalModel = true;
+  const toolCallId = "tool_call_array_content_123";
+  const toolName = "test_tool_array_content";
+  const smallBase64Image =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  const previousAiMessage = new AIMessage({
+    content: "",
+    tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
+  });
+
+  const toolMessageContentArray: MessageContentComplex[] = [
+    { type: "text", text: "Tool response text." },
+    {
+      type: "image_url",
+      image_url: `data:image/png;base64,${smallBase64Image}`,
+    },
+  ];
+
+  const toolMessage = new ToolMessage({
+    content: toolMessageContentArray,
+    tool_call_id: toolCallId,
+  });
+
+  const parts = convertMessageContentToParts(toolMessage, isMultimodalModel, [
+    previousAiMessage,
+  ]);
+
+  expect(parts).toEqual([
+    {
+      functionResponse: {
+        name: toolName,
+        response: {
+          result: [
+            { text: "Tool response text." },
+            { inlineData: { mimeType: "image/png", data: smallBase64Image } },
+          ],
+        },
+      },
+    },
+  ]);
+});
+
+test("convertMessageContentToParts: correctly handles ToolMessage with array content and status error", () => {
+  const isMultimodalModel = true;
+  const toolCallId = "tool_call_array_error_123";
+  const toolName = "test_tool_array_error";
+  const smallBase64Image =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  const previousAiMessage = new AIMessage({
+    content: "",
+    tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
+  });
+
+  const toolMessageContentArray: MessageContentComplex[] = [
+    { type: "text", text: "Tool error details text." },
+    {
+      type: "image_url",
+      image_url: `data:image/png;base64,${smallBase64Image}`,
+    },
+  ];
+
+  const toolMessage = new ToolMessage({
+    content: toolMessageContentArray,
+    tool_call_id: toolCallId,
+    status: "error",
+  });
+
+  const parts = convertMessageContentToParts(toolMessage, isMultimodalModel, [
+    previousAiMessage,
+  ]);
+
+  expect(parts).toEqual([
+    {
+      functionResponse: {
+        name: toolName,
+        response: {
+          error: {
+            details: [
+              { text: "Tool error details text." },
+              { inlineData: { mimeType: "image/png", data: smallBase64Image } },
+            ],
+          },
+        },
+      },
+    },
+  ]);
 });

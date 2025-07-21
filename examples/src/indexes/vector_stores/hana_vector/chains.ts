@@ -38,7 +38,7 @@ const args: HanaDBArgs = {
 const vectorStore = new HanaDB(embeddings, args);
 await vectorStore.initialize();
 // Use the store as part of a chain, under the premise that "test_fromDocs" exists and contains the chunked docs.
-const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+const model = new ChatOpenAI({ model: "gpt-3.5-turbo-1106" });
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
   [
     "system",

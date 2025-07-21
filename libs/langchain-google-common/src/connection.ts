@@ -20,6 +20,7 @@ import type {
   GoogleAIAPIConfig,
   AnthropicAPIConfig,
   GeminiAPIConfig,
+  GoogleModelParams,
 } from "./types.js";
 import {
   GoogleAbstractedClient,
@@ -349,7 +350,11 @@ export abstract class GoogleAIConnection<
   get computedLocation(): string {
     switch (this.apiName) {
       case "google":
-        return super.computedLocation;
+        if (this.modelName.startsWith("gemini-2.5-flash-lite")) {
+          return "global";
+        } else {
+          return super.computedLocation;
+        }
       case "anthropic":
         return "us-east5";
       default:
@@ -401,7 +406,7 @@ export abstract class GoogleAIConnection<
 
   abstract formatData(
     input: InputType,
-    parameters: GoogleAIModelRequestParams
+    parameters: GoogleModelParams
   ): Promise<unknown>;
 
   async request(

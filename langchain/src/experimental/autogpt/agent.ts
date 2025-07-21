@@ -38,7 +38,7 @@ export interface AutoGPTInput {
  * @example
  * ```typescript
  * const autogpt = AutoGPT.fromLLMAndTools(
- *   new ChatOpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   [
  *     new ReadFileTool({ store: new InMemoryFileStore() }),
  *     new WriteFileTool({ store: new InMemoryFileStore() }),

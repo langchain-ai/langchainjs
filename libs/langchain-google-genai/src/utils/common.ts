@@ -345,14 +345,32 @@ export function convertMessageContentToParts(
         `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
       );
     }
+
+    const result = Array.isArray(message.content)
+      ? (message.content
+          .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+          .filter((p) => p !== undefined) as Part[])
+      : message.content;
+
+    if (message.status === "error") {
+      return [
+        {
+          functionResponse: {
+            name: messageName,
+            // The API expects an object with an `error` field if the function call fails.
+            // `error` must be a valid object (not a string or array), so we wrap `message.content` here
+            response: { error: { details: result } },
+          },
+        },
+      ];
+    }
+
     return [
       {
         functionResponse: {
           name: messageName,
-          response:
-            typeof message.content === "string"
-              ? { result: message.content }
-              : message.content,
+          // again, can't have a string or array value for `response`, so we wrap it as an object here
+          response: { result },
         },
       },
     ];
@@ -482,10 +500,18 @@ export function mapGenerateContentResultToChatResult(
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  let content: MessageContent;
-  if (candidateContent?.parts.length === 1 && candidateContent.parts[0].text) {
+  let content: MessageContent | undefined;
+
+  if (
+    Array.isArray(candidateContent?.parts) &&
+    candidateContent.parts.length === 1 &&
+    candidateContent.parts[0].text
+  ) {
     content = candidateContent.parts[0].text;
-  } else {
+  } else if (
+    Array.isArray(candidateContent?.parts) &&
+    candidateContent.parts.length > 0
+  ) {
     content = candidateContent.parts.map((p) => {
       if ("text" in p) {
         return {
@@ -505,19 +531,25 @@ export function mapGenerateContentResultToChatResult(
       }
       return p;
     });
+  } else {
+    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    content = [];
   }
 
   let text = "";
   if (typeof content === "string") {
     text = content;
-  } else if ("text" in content[0]) {
-    text = content[0].text;
+  } else if (Array.isArray(content) && content.length > 0) {
+    const block = content.find((b) => "text" in b) as
+      | { text: string }
+      | undefined;
+    text = block?.text ?? text;
   }
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
-      content,
+      content: content ?? "",
       tool_calls: functionCalls?.map((fc) => {
         return {
           ...fc,
@@ -561,11 +593,11 @@ export function convertResponseContentToChatGenerationChunk(
   let content: MessageContent | undefined;
   // Checks if some parts do not have text. If false, it means that the content is a string.
   if (
-    candidateContent?.parts &&
+    Array.isArray(candidateContent?.parts) &&
     candidateContent.parts.every((p) => "text" in p)
   ) {
     content = candidateContent.parts.map((p) => p.text).join("");
-  } else if (candidateContent.parts) {
+  } else if (Array.isArray(candidateContent?.parts)) {
     content = candidateContent.parts.map((p) => {
       if ("text" in p) {
         return {
@@ -585,13 +617,19 @@ export function convertResponseContentToChatGenerationChunk(
       }
       return p;
     });
+  } else {
+    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    content = [];
   }
 
   let text = "";
   if (content && typeof content === "string") {
     text = content;
-  } else if (content && typeof content === "object" && "text" in content[0]) {
-    text = content[0].text;
+  } else if (Array.isArray(content)) {
+    const block = content.find((b) => "text" in b) as
+      | { text: string }
+      | undefined;
+    text = block?.text ?? "";
   }
 
   const toolCallChunks: ToolCallChunk[] = [];
