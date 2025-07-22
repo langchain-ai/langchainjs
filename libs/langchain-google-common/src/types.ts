@@ -350,8 +350,8 @@ export interface GoogleAIModelParams extends GoogleModelParams {
 
   /**
    * Custom metadata labels to associate with the request.
-   * Only supported on Vertex AI (Google Cloud Platform).
    * Labels are key-value pairs where both keys and values must be strings.
+   * Supported on both Vertex AI and Gemini API platforms.
    *
    * Example:
    * ```typescript
