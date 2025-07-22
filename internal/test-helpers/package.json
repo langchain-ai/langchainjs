@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "name": "@langchain/test-helpers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "eslint --cache --ext .ts,.js src/",
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier --write \"src\"",
+    "format:check": "prettier --check \"src\""
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@jest/globals": "^30.0.5"
+  },
+  "peerDependencies": {
+    "vitest": "^3.2.4"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
