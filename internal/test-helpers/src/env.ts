@@ -79,7 +79,7 @@ export const env = {
     variables: Record<string, string | typeof passthrough | undefined>,
     options: UseVariablesOptions = { replace: false }
   ) {
-    const originalEnv = Object.assign({}, process.env);
+    const originalEnv = { ...process.env };
 
     const newEnv = Object.assign(
       // If replacing, set all existing environment variables to undefined
