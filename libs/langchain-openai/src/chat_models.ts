@@ -78,10 +78,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import {
-  JsonSchema7Type,
-  toJsonSchema,
-} from "@langchain/core/utils/json_schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -637,6 +634,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
 
+  protected defaultOptions: CallOptions;
+
   _llmType() {
     return "openai";
   }
@@ -869,7 +868,17 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       | undefined;
   }
 
-  protected _getClientOptions(
+  protected _combineCallOptions(
+    additionalOptions?: this["ParsedCallOptions"]
+  ): this["ParsedCallOptions"] {
+    return {
+      ...this.defaultOptions,
+      ...(additionalOptions ?? {}),
+    };
+  }
+
+  /** @internal */
+  _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): OpenAICoreRequestOptions {
     if (!this.client) {
@@ -936,6 +945,20 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       ),
       ...kwargs,
     } as Partial<CallOptions>);
+  }
+
+  override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
+    return super.stream(
+      input,
+      this._combineCallOptions(options) as CallOptions
+    );
+  }
+
+  override async invoke(input: BaseLanguageModelInput, options?: CallOptions) {
+    return super.invoke(
+      input,
+      this._combineCallOptions(options) as CallOptions
+    );
   }
 
   /** @ignore */
@@ -1134,12 +1157,6 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
-    // ):
-    // | Runnable<BaseLanguageModelInput, RunOutput>
-    // | Runnable<
-    //     BaseLanguageModelInput,
-    //     { raw: BaseMessage; parsed: RunOutput }
-    //   > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let schema: InteropZodType<RunOutput> | Record<string, any>;
     let name;
@@ -1180,34 +1197,39 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
     }
 
     if (method === "jsonMode") {
-      let outputFormatSchema: JsonSchema7Type | undefined;
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
-        outputFormatSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
       }
+      const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
         response_format: { type: "json_object" },
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
-          schema: outputFormatSchema,
+          kwargs: { method: "json_mode" },
+          schema: { title: name ?? "extract", ...asJsonSchema },
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
+      const openaiJsonSchemaParams = {
+        name: name ?? "extract",
+        description: getSchemaDescription(schema),
+        schema,
+        strict: config?.strict,
+      };
+      const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
         response_format: {
           type: "json_schema",
-          json_schema: {
-            name: name ?? "extract",
-            description: getSchemaDescription(schema),
-            schema,
-            strict: config?.strict,
-          },
+          json_schema: openaiJsonSchemaParams,
         },
         ls_structured_output_format: {
-          kwargs: { method: "jsonSchema" },
-          schema: toJsonSchema(schema),
+          kwargs: { method: "json_schema" },
+          schema: {
+            title: openaiJsonSchemaParams.name,
+            description: openaiJsonSchemaParams.description,
+            ...asJsonSchema,
+          },
         },
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
@@ -1246,8 +1268,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
-            schema: asJsonSchema,
+            kwargs: { method: "function_calling" },
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -1274,6 +1296,7 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             parameters: schema,
           };
         }
+        const asJsonSchema = toJsonSchema(schema);
         llm = this.withConfig({
           tools: [
             {
@@ -1288,8 +1311,8 @@ abstract class BaseChatOpenAI<CallOptions extends BaseChatOpenAICallOptions>
             },
           },
           ls_structured_output_format: {
-            kwargs: { method: "functionCalling" },
-            schema: toJsonSchema(schema),
+            kwargs: { method: "function_calling" },
+            schema: { title: functionName, ...asJsonSchema },
           },
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
@@ -3282,6 +3305,9 @@ export class ChatOpenAI<
 
     this.responses = new ChatOpenAIResponses(fields);
     this.completions = new ChatOpenAICompletions(fields);
+    // Override `_getClientOptions` so sub classes of ChatOpenAI use the same client config
+    this.responses._getClientOptions = this._getClientOptions;
+    this.completions._getClientOptions = this._getClientOptions;
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
@@ -3297,8 +3323,24 @@ export class ChatOpenAI<
     return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
   }
 
+  override getLsParams(options: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = this._combineCallOptions(options);
+    if (this._useResponsesApi(options)) {
+      return this.responses.getLsParams(optionsWithDefaults);
+    }
+    return this.completions.getLsParams(optionsWithDefaults);
+  }
+
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = this._combineCallOptions(options);
+    if (this._useResponsesApi(options)) {
+      return this.responses.invocationParams(optionsWithDefaults);
+    }
+    return this.completions.invocationParams(optionsWithDefaults);
+  }
+
   /** @ignore */
-  async _generate(
+  override async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
@@ -3309,18 +3351,21 @@ export class ChatOpenAI<
     return this.completions._generate(messages, options, runManager);
   }
 
-  async *_streamResponseChunks(
+  override async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     if (this._useResponsesApi(options)) {
-      yield* this.responses._streamResponseChunks(messages, options);
+      yield* this.responses._streamResponseChunks(
+        messages,
+        this._combineCallOptions(options)
+      );
       return;
     }
     yield* this.completions._streamResponseChunks(
       messages,
-      options,
+      this._combineCallOptions(options),
       runManager
     );
   }
@@ -3328,43 +3373,7 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    // FIXME: assigning additional config options to the inner chat classes this way
-    // is awkward, but it's the only way to preserve the original object identity
-    // and still thread config options, which is important since this class is a "proxy"
-    // for the inner chat classes. This will be fixed in a later version of langchain
-    // when the core runnable interface is improved (0.4) to support this out of the box.
-    const bindChatOpenAIConfig = <
-      TClass extends BaseChatOpenAI<BaseChatOpenAICallOptions>
-    >(
-      cls: TClass,
-      config: Partial<CallOptions>
-    ): TClass => {
-      const oldGenerate = cls._generate;
-      const oldStreamResponseChunks = cls._streamResponseChunks;
-
-      return Object.assign(cls, {
-        _generate(messages, options, runManager) {
-          return oldGenerate.call(
-            cls,
-            messages,
-            { ...options, ...config },
-            runManager
-          );
-        },
-        _streamResponseChunks(messages, options, runManager) {
-          return oldStreamResponseChunks.call(
-            cls,
-            messages,
-            { ...options, ...config },
-            runManager
-          );
-        },
-      } as Partial<TClass>);
-    };
-
-    this.responses = bindChatOpenAIConfig(this.responses, config);
-    this.completions = bindChatOpenAIConfig(this.completions, config);
-    // Proxy chat class is also bound for `_useResponsesApi`,
-    return bindChatOpenAIConfig(this, config);
+    this.defaultOptions = { ...this.defaultOptions, ...config };
+    return this;
   }
 }

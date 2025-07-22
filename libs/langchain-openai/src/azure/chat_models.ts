@@ -542,7 +542,8 @@ export class AzureChatOpenAI extends ChatOpenAI {
     return params;
   }
 
-  protected _getClientOptions(
+  /** @internal */
+  _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
   ): OpenAICoreRequestOptions {
     if (!this.client) {
