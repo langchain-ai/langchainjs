@@ -536,12 +536,12 @@ const testGeminiModelNames = [
     apiVersion: "v1",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    modelName: "gemini-2.5-flash-lite",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    modelName: "gemini-2.5-flash-lite",
     platformType: "gcp",
     apiVersion: "v1",
   },
@@ -1725,12 +1725,12 @@ describe.each(testTtsModelNames)(
 
 const testReasoningModelNames = [
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    modelName: "gemini-2.5-flash-lite",
     platformType: "gai",
     apiVersion: "v1beta",
   },
   {
-    modelName: "gemini-2.5-flash-lite-preview-06-17",
+    modelName: "gemini-2.5-flash-lite",
     platformType: "gcp",
     apiVersion: "v1",
   },
