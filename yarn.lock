@@ -9514,7 +9514,6 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
-    "@langchain/test-helpers": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.14.0
@@ -9759,7 +9758,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/test-helpers@workspace:*, @langchain/test-helpers@workspace:internal/test-helpers":
+"@langchain/test-helpers@workspace:internal/test-helpers":
   version: 0.0.0-use.local
   resolution: "@langchain/test-helpers@workspace:internal/test-helpers"
   dependencies:
