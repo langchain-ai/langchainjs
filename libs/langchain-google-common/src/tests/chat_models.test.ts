@@ -355,7 +355,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     });
   });
 
-  test("labels - included on Google AI Studio (gai)", async () => {
+  test("labels - excluded on Google AI Studio (gai)", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -379,11 +379,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
     const { data } = record.opts;
-    expect(data.labels).toBeDefined();
-    expect(data.labels).toEqual({
-      team: "research",
-      component: "frontend",
-    });
+    expect(data.labels).not.toBeDefined();
   });
 
   test("labels - passed via invoke options on Vertex AI", async () => {
@@ -397,38 +393,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     const model = new ChatGoogle({
       authOptions,
       platformType: "gcp",
-    });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
-    await model.invoke(messages, {
-      labels: {
-        session: "test-session",
-        user: "test-user",
-      },
-    });
-
-    expect(record.opts).toBeDefined();
-    expect(record.opts.data).toBeDefined();
-    const { data } = record.opts;
-    expect(data.labels).toBeDefined();
-    expect(data.labels).toEqual({
-      session: "test-session",
-      user: "test-user",
-    });
-  });
-
-  test("labels - passed via invoke options on Google AI Studio (gai)", async () => {
-    const record: Record<string, any> = {};
-    const projectId = mockId();
-    const authOptions: MockClientAuthInfo = {
-      record,
-      projectId,
-      resultFile: "chat-1-mock.json",
-    };
-    const model = new ChatGoogle({
-      authOptions,
-      platformType: "gai",
     });
     const messages: BaseMessageLike[] = [
       new HumanMessage("Hello"),

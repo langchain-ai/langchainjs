@@ -480,8 +480,14 @@ export abstract class AbstractGoogleLLMConnection<
     input: MessageType,
     parameters: GoogleAIModelRequestParams
   ): Promise<unknown> {
-    // Labels are now supported on both Vertex AI and Gemini API platforms
-    return this.api.formatData(input, parameters);
+    // Filter out labels for non-Vertex AI platforms (labels are only supported on Vertex AI)
+    let filteredParameters = parameters;
+    if (parameters.labels && this.platform !== "gcp") {
+      const { labels, ...paramsWithoutLabels } = parameters;
+      filteredParameters = paramsWithoutLabels;
+    }
+
+    return this.api.formatData(input, filteredParameters);
   }
 }
 
