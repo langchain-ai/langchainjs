@@ -339,9 +339,7 @@ describe("Mock ChatGoogle - Gemini", () => {
         environment: "production",
       },
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
@@ -371,9 +369,7 @@ describe("Mock ChatGoogle - Gemini", () => {
         component: "frontend",
       },
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
@@ -394,9 +390,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
       platformType: "gcp",
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages, {
       labels: {
         session: "test-session",
@@ -430,9 +424,7 @@ describe("Mock ChatGoogle - Gemini", () => {
         environment: "dev",
       },
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages, {
       labels: {
         environment: "production",
@@ -462,9 +454,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions,
       platformType: "gcp",
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
@@ -486,9 +476,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       platformType: "gcp",
       labels: {},
     });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Hello"),
-    ];
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
     await model.invoke(messages);
 
     expect(record.opts).toBeDefined();
