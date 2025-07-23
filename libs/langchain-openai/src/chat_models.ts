@@ -1208,7 +1208,7 @@ export abstract class BaseChatOpenAI<
       );
     }
 
-    method = this._getStructuredOutputMethod(config ?? {});
+    method = this._getStructuredOutputMethod({ ...config, method });
 
     if (method === "jsonMode") {
       if (isInteropZodSchema(schema)) {
