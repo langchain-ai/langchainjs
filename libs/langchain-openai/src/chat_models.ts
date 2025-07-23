@@ -3312,11 +3312,11 @@ export class ChatOpenAI<
     return [...super.lc_serializable_keys, "useResponsesApi"];
   }
 
-  constructor(fields: ChatOpenAIFields) {
+  constructor(fields?: ChatOpenAIFields) {
     super(fields);
-    this.useResponsesApi = fields.useResponsesApi ?? false;
-    this.responses = fields.responses ?? new ChatOpenAIResponses(fields);
-    this.completions = fields.completions ?? new ChatOpenAICompletions(fields);
+    this.useResponsesApi = fields?.useResponsesApi ?? false;
+    this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
+    this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
