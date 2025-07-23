@@ -2745,113 +2745,16 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
    * only when required in order to fulfill the request.
    */
   useResponsesApi?: boolean;
-}
-
-export interface ProxyChatOpenAIFields extends BaseChatOpenAIFields {
-  /** The completions chat instance */
+  /**
+   * The completions chat instance
+   * @internal
+   */
   completions: ChatOpenAICompletions;
-  /** The responses chat instance */
+  /**
+   * The responses chat instance
+   * @internal
+   */
   responses: ChatOpenAIResponses;
-  /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
-   */
-  useResponsesApi?: boolean;
-}
-
-export abstract class ProxyChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
-  >
-  extends BaseChatOpenAI<CallOptions>
-  implements Partial<OpenAIChatInput>
-{
-  /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
-   */
-  useResponsesApi: boolean = false;
-
-  protected declare responses: ChatOpenAIResponses;
-
-  protected declare completions: ChatOpenAICompletions;
-
-  get lc_serializable_keys(): string[] {
-    return [...super.lc_serializable_keys, "useResponsesApi"];
-  }
-
-  constructor(fields: ProxyChatOpenAIFields) {
-    super(fields);
-    this.useResponsesApi = fields.useResponsesApi ?? false;
-    this.responses = fields.responses;
-    this.completions = fields.completions;
-  }
-
-  protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
-    const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
-    const hasResponsesOnlyKwargs =
-      options?.previous_response_id != null ||
-      options?.text != null ||
-      options?.truncation != null ||
-      options?.include != null ||
-      options?.reasoning?.summary != null ||
-      this.reasoning?.summary != null;
-
-    return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
-  }
-
-  override getLsParams(options: this["ParsedCallOptions"]) {
-    const optionsWithDefaults = this._combineCallOptions(options);
-    if (this._useResponsesApi(options)) {
-      return this.responses.getLsParams(optionsWithDefaults);
-    }
-    return this.completions.getLsParams(optionsWithDefaults);
-  }
-
-  override invocationParams(options?: this["ParsedCallOptions"]) {
-    const optionsWithDefaults = this._combineCallOptions(options);
-    if (this._useResponsesApi(options)) {
-      return this.responses.invocationParams(optionsWithDefaults);
-    }
-    return this.completions.invocationParams(optionsWithDefaults);
-  }
-
-  /** @ignore */
-  override async _generate(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    if (this._useResponsesApi(options)) {
-      return this.responses._generate(messages, options);
-    }
-    return this.completions._generate(messages, options, runManager);
-  }
-
-  override async *_streamResponseChunks(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
-    if (this._useResponsesApi(options)) {
-      yield* this.responses._streamResponseChunks(
-        messages,
-        this._combineCallOptions(options)
-      );
-      return;
-    }
-    yield* this.completions._streamResponseChunks(
-      messages,
-      this._combineCallOptions(options),
-      runManager
-    );
-  }
-
-  override withConfig(
-    config: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    this.defaultOptions = { ...this.defaultOptions, ...config };
-    return this;
-  }
 }
 
 /**
@@ -3394,12 +3297,92 @@ export abstract class ProxyChatOpenAI<
  */
 export class ChatOpenAI<
   CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
-> extends ProxyChatOpenAI<CallOptions> {
-  constructor(fields?: ChatOpenAIFields) {
-    super({
-      ...fields,
-      completions: new ChatOpenAICompletions(fields),
-      responses: new ChatOpenAIResponses(fields),
-    });
+> extends BaseChatOpenAI<CallOptions> {
+  /**
+   * Whether to use the responses API for all requests. If `false` the responses API will be used
+   * only when required in order to fulfill the request.
+   */
+  useResponsesApi: boolean = false;
+
+  protected responses: ChatOpenAIResponses;
+
+  protected completions: ChatOpenAICompletions;
+
+  get lc_serializable_keys(): string[] {
+    return [...super.lc_serializable_keys, "useResponsesApi"];
+  }
+
+  constructor(fields: ChatOpenAIFields) {
+    super(fields);
+    this.useResponsesApi = fields.useResponsesApi ?? false;
+    this.responses = fields.responses ?? new ChatOpenAIResponses(fields);
+    this.completions = fields.completions ?? new ChatOpenAICompletions(fields);
+  }
+
+  protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
+    const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
+    const hasResponsesOnlyKwargs =
+      options?.previous_response_id != null ||
+      options?.text != null ||
+      options?.truncation != null ||
+      options?.include != null ||
+      options?.reasoning?.summary != null ||
+      this.reasoning?.summary != null;
+
+    return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
+  }
+
+  override getLsParams(options: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = this._combineCallOptions(options);
+    if (this._useResponsesApi(options)) {
+      return this.responses.getLsParams(optionsWithDefaults);
+    }
+    return this.completions.getLsParams(optionsWithDefaults);
+  }
+
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    const optionsWithDefaults = this._combineCallOptions(options);
+    if (this._useResponsesApi(options)) {
+      return this.responses.invocationParams(optionsWithDefaults);
+    }
+    return this.completions.invocationParams(optionsWithDefaults);
+  }
+
+  /** @ignore */
+  override async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    if (this._useResponsesApi(options)) {
+      return this.responses._generate(messages, options);
+    }
+    return this.completions._generate(messages, options, runManager);
+  }
+
+  override async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    if (this._useResponsesApi(options)) {
+      yield* this.responses._streamResponseChunks(
+        messages,
+        this._combineCallOptions(options)
+      );
+      return;
+    }
+    yield* this.completions._streamResponseChunks(
+      messages,
+      this._combineCallOptions(options),
+      runManager
+    );
+  }
+
+  override withConfig(
+    config: Partial<CallOptions>
+  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    this.defaultOptions = { ...this.defaultOptions, ...config };
+    return this;
   }
 }

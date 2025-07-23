@@ -5,12 +5,12 @@ import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
+  ChatOpenAI,
   ChatOpenAICallOptions,
   ChatOpenAICompletions,
   ChatOpenAICompletionsCallOptions,
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
-  ProxyChatOpenAI,
 } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
@@ -769,7 +769,7 @@ class AzureChatOpenAICompletions<
 export class AzureChatOpenAI<
     CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
   >
-  extends ProxyChatOpenAI<CallOptions>
+  extends ChatOpenAI<CallOptions>
   implements Partial<AzureOpenAIChatInput>
 {
   azureOpenAIApiVersion?: string;
@@ -813,10 +813,6 @@ export class AzureChatOpenAI<
     params.ls_provider = "azure";
     return params;
   }
-
-  protected declare responses: AzureChatOpenAIResponses;
-
-  protected declare completions: AzureChatOpenAICompletions;
 
   constructor(fields?: AzureChatOpenAIFields) {
     super({
