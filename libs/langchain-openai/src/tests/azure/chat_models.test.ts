@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-process-env */
-import { helpers } from "@langchain/test-helpers";
+import { env } from "../utils.js";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 
 beforeEach(() => {
@@ -14,7 +14,7 @@ beforeEach(() => {
 });
 
 // FIXME: when we have `AZURE_OPENAI_ENDPOINT` in the env, it overrides `azureOpenAIEndpoint` options
-helpers.env.useVariable("AZURE_OPENAI_ENDPOINT", undefined);
+env.useVariable("AZURE_OPENAI_ENDPOINT", undefined);
 
 test("Test Azure OpenAI serialization from azure endpoint", async () => {
   const chat = new AzureChatOpenAI({
