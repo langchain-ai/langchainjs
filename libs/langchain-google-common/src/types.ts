@@ -349,6 +349,24 @@ export interface GoogleAIModelParams extends GoogleModelParams {
   responseModalities?: GoogleAIModelModality[];
 
   /**
+   * Custom metadata labels to associate with the request.
+   * Only supported on Vertex AI (Google Cloud Platform).
+   * Labels are key-value pairs where both keys and values must be strings.
+   *
+   * Example:
+   * ```typescript
+   * {
+   *   labels: {
+   *     "team": "research",
+   *     "component": "frontend",
+   *     "environment": "production"
+   *   }
+   * }
+   * ```
+   */
+  labels?: Record<string, string>;
+
+  /**
    * Speech generation configuration.
    * You can use either Google's definition of the speech configuration,
    * or a simplified version we've defined (which can be as simple
@@ -710,6 +728,11 @@ export interface GeminiRequest {
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
   cachedContent?: string;
+
+  /**
+   * Custom metadata labels to associate with the API call.
+   */
+  labels?: Record<string, string>;
 }
 
 export interface GeminiResponseCandidate {
