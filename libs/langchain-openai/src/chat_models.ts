@@ -2749,12 +2749,12 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
    * The completions chat instance
    * @internal
    */
-  completions: ChatOpenAICompletions;
+  completions?: ChatOpenAICompletions;
   /**
    * The responses chat instance
    * @internal
    */
-  responses: ChatOpenAIResponses;
+  responses?: ChatOpenAIResponses;
 }
 
 /**
