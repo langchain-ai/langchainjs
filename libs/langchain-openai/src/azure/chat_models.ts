@@ -2,6 +2,7 @@ import { AzureOpenAI as AzureOpenAIClient } from "openai";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Serialized } from "@langchain/core/load/serializable";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import { StructuredOutputMethodOptions } from "@langchain/core/language_models/base";
 import {
   BaseChatOpenAI,
   BaseChatOpenAIFields,
@@ -821,6 +822,20 @@ export class AzureChatOpenAI<
       responses: new AzureChatOpenAIResponses(fields),
     });
     _constructAzureFields.call(this, fields);
+  }
+
+  /** @internal */
+  override _getStructuredOutputMethod(
+    config: StructuredOutputMethodOptions<boolean>
+  ): string {
+    const ensuredConfig = { ...config };
+    // Not all Azure gpt-4o deployments models support jsonSchema yet
+    if (this.model.startsWith("gpt-4o")) {
+      if (ensuredConfig?.method === undefined) {
+        return "functionCalling";
+      }
+    }
+    return super._getStructuredOutputMethod(ensuredConfig);
   }
 
   override toJSON() {

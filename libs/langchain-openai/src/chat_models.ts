@@ -1116,6 +1116,28 @@ export abstract class BaseChatOpenAI<
     return tokens;
   }
 
+  /** @internal */
+  protected _getStructuredOutputMethod(
+    config: StructuredOutputMethodOptions<boolean>
+  ): string {
+    const ensuredConfig = { ...config };
+    if (
+      !this.model.startsWith("gpt-3") &&
+      !this.model.startsWith("gpt-4-") &&
+      this.model !== "gpt-4"
+    ) {
+      if (ensuredConfig?.method === undefined) {
+        ensuredConfig.method = "jsonSchema";
+      }
+    } else if (ensuredConfig.method === "jsonSchema") {
+      console.warn(
+        `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
+      );
+      ensuredConfig.method = "functionCalling";
+    }
+    return ensuredConfig.method ?? "functionCalling";
+  }
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
@@ -1186,19 +1208,7 @@ export abstract class BaseChatOpenAI<
       );
     }
 
-    if (
-      !this.model.startsWith("gpt-3") &&
-      !this.model.startsWith("gpt-4-") &&
-      this.model !== "gpt-4"
-    ) {
-      if (method === undefined) {
-        method = "jsonSchema";
-      }
-    } else if (method === "jsonSchema") {
-      console.warn(
-        `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
-      );
-    }
+    method = this._getStructuredOutputMethod(config ?? {});
 
     if (method === "jsonMode") {
       if (isInteropZodSchema(schema)) {
