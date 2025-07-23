@@ -1,5 +1,9 @@
 import { test, expect } from "@jest/globals";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  AIMessage,
+  MessageContent,
+} from "@langchain/core/messages";
 import { ChatAnthropic } from "../chat_models.js";
 
 const model = new ChatAnthropic({
@@ -18,10 +22,12 @@ test("Web search single turn", async () => {
     new HumanMessage("What is Claude Shannon's birth date?"),
   ]);
 
+  const content = Array.isArray(result.content) ? result.content : [];
   expect(result).toBeInstanceOf(AIMessage);
-  expect(
-    result.tool_calls?.find((tc) => tc.name === "web_search")
-  ).toBeTruthy();
+  expect(content.some((block) => block.type === "server_tool_use")).toBe(true);
+  expect(content.some((block) => block.type === "web_search_tool_result")).toBe(
+    true
+  );
 }, 30000);
 
 test("Web search multi-turn conversation", async () => {
