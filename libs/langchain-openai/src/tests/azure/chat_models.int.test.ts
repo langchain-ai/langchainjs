@@ -3,7 +3,6 @@
 
 import { test, jest, expect } from "@jest/globals";
 import { z } from "zod";
-import { helpers } from "@langchain/test-helpers";
 import {
   BaseMessage,
   ChatMessage,
@@ -27,6 +26,7 @@ import {
   getBearerTokenProvider,
 } from "@azure/identity";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
+import { env } from "../utils.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -969,7 +969,7 @@ test("Test Azure ChatOpenAI withStructuredOutput", async () => {
 
 describe("Does initialize with constructor options", () => {
   // make sure no variables are set
-  helpers.env.useVariables({}, { replace: true });
+  env.useVariables({}, { replace: true });
 
   const azureOpenAIKey = process.env.AZURE_OPENAI_API_KEY;
   const azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
