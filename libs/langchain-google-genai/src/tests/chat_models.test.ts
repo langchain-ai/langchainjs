@@ -233,6 +233,20 @@ test("convertMessageContentToParts: correctly handles standard text content bloc
   expect(parts).toEqual([{ text: "This is a test message" }]);
 });
 
+test("convertMessageContentToParts: correctly handles empty text content block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardTextBlock] = [
+    {
+      text: "",
+      type: "text",
+      source_type: "text",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([{ text: "" }]);
+});
+
 test("convertMessageContentToParts: correctly handles http url standard image block", () => {
   const isMultimodalModel = true;
   const content: [StandardImageBlock] = [
