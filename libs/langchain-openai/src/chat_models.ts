@@ -1119,7 +1119,7 @@ export abstract class BaseChatOpenAI<
   /** @internal */
   protected _getStructuredOutputMethod(
     config: StructuredOutputMethodOptions<boolean>
-  ): string {
+  ) {
     const ensuredConfig = { ...config };
     if (
       !this.model.startsWith("gpt-3") &&
@@ -1127,15 +1127,14 @@ export abstract class BaseChatOpenAI<
       this.model !== "gpt-4"
     ) {
       if (ensuredConfig?.method === undefined) {
-        ensuredConfig.method = "jsonSchema";
+        return "jsonSchema";
       }
     } else if (ensuredConfig.method === "jsonSchema") {
       console.warn(
         `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
       );
-      ensuredConfig.method = "functionCalling";
     }
-    return ensuredConfig.method ?? "functionCalling";
+    return ensuredConfig.method;
   }
 
   withStructuredOutput<

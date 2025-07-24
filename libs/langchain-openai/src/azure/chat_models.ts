@@ -827,7 +827,7 @@ export class AzureChatOpenAI<
   /** @internal */
   override _getStructuredOutputMethod(
     config: StructuredOutputMethodOptions<boolean>
-  ): string {
+  ) {
     const ensuredConfig = { ...config };
     // Not all Azure gpt-4o deployments models support jsonSchema yet
     if (this.model.startsWith("gpt-4o")) {
