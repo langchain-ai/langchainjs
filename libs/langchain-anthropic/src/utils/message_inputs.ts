@@ -488,7 +488,7 @@ function _formatContent(message: BaseMessage) {
         throw new Error("Unsupported message content format");
       }
     });
-    return contentBlocks.filter((block) => Object.keys(block).length > 0);
+    return contentBlocks;
   }
 }
 
