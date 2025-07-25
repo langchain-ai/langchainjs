@@ -21,26 +21,26 @@ export type TavilySearchParamsBase = {
    *
    * @default "basic"
    */
-  search_depth?: "basic" | "advanced";
+  searchDepth?: "basic" | "advanced";
 
   /**
    * The number of {@link TavilySearchResult.content} chunks to retrieve from each source.
    * Each chunk's length is maximum 500 characters. Available only when
-   * {@link TavilySearchParams.search_depth} is advanced.
+   * {@link TavilySearchParams.searchDepth} is advanced.
    *
    * @default 3
    */
-  chunks_per_source?: number;
+  chunksPerSource?: number;
   /**
    * The maximum number of search results to return.
    *
    * @default 5
    */
-  max_results?: number;
+  maxResults?: number;
   /**
    * The time range of the search.
    */
-  time_range?: "day" | "week" | "month" | "year";
+  timeRange?: "day" | "week" | "month" | "year";
   /**
    * Number of days back from the current date to include. Available only if topic is news.
    */
@@ -51,7 +51,7 @@ export type TavilySearchParamsBase = {
    *
    * @default false
    */
-  include_answer?: boolean | "basic" | "advanced";
+  includeAnswer?: boolean | "basic" | "advanced";
   /**
    * Include the cleaned and parsed HTML content of each search result.
    * "markdown" returns search result content in markdown format.
@@ -60,22 +60,44 @@ export type TavilySearchParamsBase = {
    *
    * @default false
    */
-  include_raw_content?: boolean | "markdown" | "text";
+  includeRawContent?: boolean | "markdown" | "text";
   /**
    * A list of domains to specifically include in the search results.
    */
-  include_domains?: string[];
+  includeDomains?: string[];
   /**
    * A list of domains to specifically exclude from the search results.
    */
-  exclude_domains?: string[];
+  excludeDomains?: string[];
 
   /**
    * Whether to include the favicon URL for each result.
    *
    * @default false
    */
-  include_favicon?: boolean;
+  includeFavicon?: boolean;
+
+  /**
+   * The country to search in. MUST be the full country name in lowercase
+   * like "united states" or "united kingdom".
+   *
+   * @default undefined
+   */
+  country?: string;
+
+  /**
+   * The start date of the search.
+   *
+   * @default undefined
+   */
+  startDate?: string;
+
+  /**
+   * The end date of the search.
+   *
+   * @default undefined
+   */
+  endDate?: string;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
@@ -84,26 +106,26 @@ export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
    *
    * @default false
    */
-  include_images?: boolean;
+  includeImages?: boolean;
   /**
-   * When {@link TavilySearchParams.include_images} is true, also add a descriptive text for each
+   * When {@link TavilySearchParams.includeImages} is true, also add a descriptive text for each
    * image.
    *
    * @default false
    */
-  include_image_descriptions?: false;
+  includeImageDescriptions?: boolean;
 };
 
 export type TavilySearchParamsWithImageDescriptions = TavilySearchParamsBase & {
   /**
    * Also perform an image search and include the results in the response.
    */
-  include_images?: true;
+  includeImages?: boolean;
   /**
-   * When {@link TavilySearchParams.include_images} is true, also add a descriptive text for each
+   * When {@link TavilySearchParams.includeImages} is true, also add a descriptive text for each
    * image.
    */
-  include_image_descriptions?: true;
+  includeImageDescriptions?: true;
 };
 
 export type TavilySearchParams =
@@ -126,7 +148,7 @@ export type TavilyExtractParams = {
    *
    * @default false
    */
-  include_images?: boolean;
+  includeImages?: boolean;
   /**
    * The depth of the extraction process. `"advanced"` extraction retrieves more data, including
    * tables and embedded content, with higher success but may increase latency. The cost for
@@ -134,14 +156,14 @@ export type TavilyExtractParams = {
    *
    * @default "basic"
    */
-  extract_depth?: "basic" | "advanced";
+  extractDepth?: "basic" | "advanced";
 
   /**
    * Whether to include the favicon URL for each result.
    *
    * @default false
    */
-  include_favicon?: boolean;
+  includeFavicon?: boolean;
 
   /**
    * The format of the extracted web page content.
@@ -283,7 +305,7 @@ export type TavilyCrawlParams = {
    *
    * @default false
    */
-  include_favicon?: boolean;
+  includeFavicon?: boolean;
 } & Record<string, unknown>;
 
 /**
@@ -297,9 +319,9 @@ export type TavilyExtractResult = {
   /**
    * The full content extracted from the page.
    */
-  raw_content: string;
+  rawContent: string;
   /**
-   * This is only available if {@link TavilyExtractParams.include_images} is set to `true`. A list
+   * This is only available if {@link TavilyExtractParams.includeImages} is set to `true`. A list
    * of image URLs extracted from the page.
    */
   images: string[];
@@ -374,7 +396,7 @@ export type TavilyBaseSearchResponse = {
   query: string;
   /**
    * A short answer to the user's query, generated by an LLM. Included in the response only if
-   * {@link TavilySearchParams.include_answer} is requested (i.e., set to `true`, `"basic"`, or
+   * {@link TavilySearchParams.includeAnswer} is requested (i.e., set to `true`, `"basic"`, or
    * `"advanced"`).
    */
   answer?: string;
@@ -391,12 +413,12 @@ export type TavilyBaseSearchResponse = {
 
 /**
  * The shape of the response from the Tavily Search API when
- * {@link TavilySearchParams.include_image_descriptions} is true.
+ * {@link TavilySearchParams.includeImageDescriptions} is true.
  */
 export type TavilySearchResponseWithImageDescriptions =
   TavilyBaseSearchResponse & {
     /**
-     * List of query-related images. If {@link TavilySearchParams.include_image_descriptions} is
+     * List of query-related images. If {@link TavilySearchParams.includeImageDescriptions} is
      * `true`, each item will be an object with `url` and `description` properties. Otherwise, each
      * item will be a string containing the URL of the image.
      */
@@ -414,11 +436,11 @@ export type TavilySearchResponseWithImageDescriptions =
 
 /**
  * The shape of the response from the Tavily Search API when
- * {@link TavilySearchParams.include_image_descriptions} is `false` or unspecified.
+ * {@link TavilySearchParams.includeImageDescriptions} is `false` or unspecified.
  */
 export type TavilySearchResponseWithSimpleImages = TavilyBaseSearchResponse & {
   /**
-   * List of query-related images. If {@link TavilySearchParams.include_image_descriptions} is
+   * List of query-related images. If {@link TavilySearchParams.includeImageDescriptions} is
    * `true`, each item will be an object with `url` and `description` properties. Otherwise, each
    * item will be a string containing the URL of the image.
    */
