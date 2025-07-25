@@ -279,12 +279,14 @@ export type ProviderFormatTypes<
   TextFormat = unknown,
   ImageFormat = unknown,
   AudioFormat = unknown,
-  FileFormat = unknown
+  FileFormat = unknown,
+  VideoFormat = unknown
 > = {
   text: TextFormat;
   image: ImageFormat;
   audio: AudioFormat;
   file: FileFormat;
+  video: VideoFormat;
 };
 
 /**
