@@ -382,6 +382,10 @@ vectorstores/couchbase.cjs
 vectorstores/couchbase.js
 vectorstores/couchbase.d.ts
 vectorstores/couchbase.d.cts
+vectorstores/couchbase_search.cjs
+vectorstores/couchbase_search.js
+vectorstores/couchbase_search.d.ts
+vectorstores/couchbase_search.d.cts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
