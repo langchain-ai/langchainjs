@@ -64,8 +64,8 @@ export type Message<
     $StandardMessageComplex,
     TComplex
   >["content"]]: {
-    readonly type: TMessageType;
-    readonly content: Array<
+    type: TMessageType;
+    content: Array<
       $MergeMessageComplex<
         $StandardMessageComplex,
         TComplex

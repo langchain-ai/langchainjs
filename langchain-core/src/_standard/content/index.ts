@@ -112,9 +112,3 @@ export declare namespace ContentBlock {
     | Tools.Standard
     | Multimodal.Standard;
 }
-
-// Why are citations an array and not a single object? (like anthropic)?
-// Whats the difference between call_id and id in the tool content block?
-// Are fileId's in code interpreter output content block provider specific?
-// Thought signatures are a google specific thing, right?
-// For multi-modal, is mimeType + base64 mutually exclusive from fileId?
