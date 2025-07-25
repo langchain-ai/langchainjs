@@ -23,7 +23,7 @@ export declare namespace ToolContentBlocks {
     /**
      * The result of the tool call
      */
-    call_id: string;
+    callId: string;
   }
 
   /** Content block for a built-in web search tool call. */
