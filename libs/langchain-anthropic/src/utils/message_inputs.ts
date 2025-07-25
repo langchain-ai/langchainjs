@@ -463,6 +463,16 @@ function _formatContent(content: MessageContent) {
           ...(cacheControl ? { cache_control: cacheControl } : {}),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
+      } else if (
+        "functionCall" in contentPart &&
+        contentPart.functionCall &&
+        typeof contentPart.functionCall === "object"
+      ) {
+        // Google GenAI models include a `functionCall` object inside content. We should ignore it as Anthropic will not support it.
+        return {
+          type: "text",
+          text: "",
+        };
       } else {
         throw new Error("Unsupported message content format");
       }
