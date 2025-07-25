@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-webauth",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "description": "Web-based authentication support for Google services",
   "type": "module",
   "engines": {
