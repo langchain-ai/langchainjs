@@ -43,11 +43,6 @@ export declare namespace ContentBlock {
     citedText?: string;
   }
 
-  // this might not be needed
-  interface NonStandardAnnotation extends ContentBlock {}
-
-  type Annotation = Citation | NonStandardAnnotation;
-
   /** Content block for text */
   interface TextContentBlock extends ContentBlock {
     /**
@@ -67,7 +62,7 @@ export declare namespace ContentBlock {
     /**
      * Cited and other annotations
      */
-    annotations?: Annotation[];
+    annotations?: Citation[];
   }
 
   /** Content block for reasoning output */

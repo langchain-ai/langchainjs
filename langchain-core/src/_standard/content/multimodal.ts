@@ -74,6 +74,7 @@ export declare namespace MultimodalContentBlocks {
      */
     base64?: string;
   }
+
   /** Content block for audio data */
   export interface AudioContentBlock extends DataContentBlock {
     /**
@@ -103,6 +104,7 @@ export declare namespace MultimodalContentBlocks {
      */
     base64?: string;
   }
+
   /** Content block for plain text data */
   export interface PlainTextContentBlock extends DataContentBlock {
     /**
@@ -144,6 +146,7 @@ export declare namespace MultimodalContentBlocks {
      */
     context?: string;
   }
+
   /** Content block for file data */
   export interface FileContentBlock extends DataContentBlock {
     /**

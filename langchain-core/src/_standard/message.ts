@@ -12,6 +12,13 @@ export interface $MessageComplex {
   readonly content: {
     [key: string]: ContentBlock | undefined;
   };
+  readonly responseMetadata: {
+    provider?: string;
+    [key: string]: unknown;
+  };
+  readonly usageMetadata: {
+    [key: string]: unknown;
+  };
 }
 
 export type $MergeDiscriminatedUnion<
@@ -24,10 +31,10 @@ export type $MergeDiscriminatedUnion<
     : Extract<B, Record<Key, T>>;
 }[A[Key] | B[Key]];
 
-export type $MergeMessageComplex<
+export interface $MergeMessageComplex<
   A extends $MessageComplex,
   B extends $MessageComplex
-> = {
+> {
   content: {
     [K in keyof (A["content"] & B["content"])]: NonNullable<
       K extends keyof A["content"] & keyof B["content"]
@@ -41,12 +48,14 @@ export type $MergeMessageComplex<
         : B["content"][K]
     >;
   };
-};
+  responseMetadata: B["responseMetadata"];
+  usageMetadata: B["usageMetadata"];
+}
 
 export interface $StandardMessageComplex extends $MessageComplex {
   content: {
     user: ContentBlock.Standard;
-    assistant: ContentBlock.Standard;
+    ai: ContentBlock.Standard;
     tool: ContentBlock.Standard;
     system: ContentBlock.Standard;
   };
@@ -59,44 +68,38 @@ export interface $StandardMessageComplex extends $MessageComplex {
   };
 }
 
-type $NormalizedMessageComplex<TComplex extends $MessageComplex> =
+export type $NormalizedMessageComplex<TComplex extends $MessageComplex> =
   TComplex extends $StandardMessageComplex
-    ? // hot path for perf reasons
-      TComplex
+    ? TComplex
     : $MergeMessageComplex<$StandardMessageComplex, TComplex>;
 
-type $BaseMessageShape<
-  TComplex extends $MessageComplex,
-  TRole extends keyof TComplex["content"] = keyof TComplex["content"]
+// this works
+export type BaseMessage<
+  TComplex extends $MessageComplex = $StandardMessageComplex,
+  TRole extends keyof $NormalizedMessageComplex<TComplex>["content"] = keyof $NormalizedMessageComplex<TComplex>["content"]
 > = {
-  [TMessageType in keyof TComplex["content"]]: {
+  [TMessageType in TRole]: {
     type: TMessageType;
-    content: Array<TComplex["content"][TMessageType]>;
+    content: Array<
+      $NormalizedMessageComplex<TComplex>["content"][TMessageType]
+    >;
     responseMetadata: TComplex["responseMetadata"];
     usageMetadata: TComplex["usageMetadata"];
-    // TBD: how do we source this from content blocks without having a getter? (since these are just normal interface types? maybe proxies?)
-    // Also TBD: these need to be using the type from the message complex content (where the content block is defined with type="tool_call")
-    // toolCalls?: ContentBlock.Tools.ToolCallContentBlock[];
   };
 }[TRole];
 
-type BaseMessage<
-  TRole extends keyof $NormalizedMessageComplex<TComplex>["content"],
-  TComplex extends $MessageComplex = $StandardMessageComplex
-> = $BaseMessageShape<$NormalizedMessageComplex<TComplex>, TRole>;
-
 export type AIMessage<
   TComplex extends $MessageComplex = $StandardMessageComplex
-> = BaseMessage<"ai", TComplex>;
+> = BaseMessage<TComplex, "ai">;
 
 export type HumanMessage<
   TComplex extends $MessageComplex = $StandardMessageComplex
-> = BaseMessage<"user", TComplex>;
+> = BaseMessage<TComplex, "user">;
 
 export type SystemMessage<
   TComplex extends $MessageComplex = $StandardMessageComplex
-> = BaseMessage<"system", TComplex>;
+> = BaseMessage<TComplex, "system">;
 
 export type ToolMessage<
   TComplex extends $MessageComplex = $StandardMessageComplex
-> = BaseMessage<"tool", TComplex>;
+> = BaseMessage<TComplex, "tool">;
