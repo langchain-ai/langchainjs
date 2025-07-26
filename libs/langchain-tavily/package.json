@@ -1,6 +1,6 @@
 {
   "name": "@langchain/tavily",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "Tavily integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -17,7 +17,7 @@
     "build": "yarn turbo:command build:internal --filter=@langchain/tavily",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "peerDependencies": {
-    "@langchain/core": ">=0.3.39 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -44,7 +44,7 @@
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "dotenv": "^16.3.1",
-    "dpdm": "^3.12.0",
+    "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -57,7 +57,7 @@
     "release-it": "^15.10.1",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "~5.8.3"
   },
   "publishConfig": {
     "access": "public"
@@ -82,6 +82,6 @@
     "index.d.cts"
   ],
   "dependencies": {
-    "zod": "^3.24.2"
+    "zod": "^3.25.32"
   }
 }

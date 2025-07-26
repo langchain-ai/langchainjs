@@ -1,4 +1,8 @@
-import neo4j from "neo4j-driver";
+import neo4j, {
+  type Driver as Neo4jDriver,
+  type Record as Neo4jRecord,
+  type Path as Neo4jPath,
+} from "neo4j-driver";
 import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
@@ -53,7 +57,7 @@ const DEFAULT_NODE_EMBEDDING_PROPERTY = "embedding";
  * @link See https://js.langchain.com/docs/security for more information.
  */
 export class Neo4jVectorStore extends VectorStore {
-  private driver: neo4j.Driver;
+  private driver: Neo4jDriver;
 
   private database: string;
 
@@ -763,7 +767,7 @@ export class Neo4jVectorStore extends VectorStore {
   }
 }
 
-function toObjects(records: neo4j.Record[]) {
+function toObjects(records: Neo4jRecord[]) {
   const recordValues: Record<string, Any>[] = records.map((record) => {
     const rObj = record.toObject();
     const out: { [key: string]: Any } = {};
@@ -813,7 +817,7 @@ function extractFromNeoObjects(obj: Any) {
   return obj;
 }
 
-function extractPathForRows(path: neo4j.Path) {
+function extractPathForRows(path: Neo4jPath) {
   let { segments } = path;
   // Zero length path. No relationship, end === start
   if (!Array.isArray(path.segments) || path.segments.length < 1) {

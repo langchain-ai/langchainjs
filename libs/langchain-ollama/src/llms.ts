@@ -3,6 +3,8 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { GenerationChunk } from "@langchain/core/outputs";
 import type { StringWithAutocomplete } from "@langchain/core/utils/types";
 import { LLM, type BaseLLMParams } from "@langchain/core/language_models/llms";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore CJS type resolution workaround
 import { Ollama as OllamaClient } from "ollama/browser";
 import { OllamaCamelCaseOptions } from "./types.js";
 
@@ -29,7 +31,13 @@ export interface OllamaInput extends BaseLLMParams, OllamaCamelCaseOptions {
   /**
    * Optional HTTP Headers to include in the request.
    */
-  headers?: Headers;
+  headers?: Headers | Record<string, string>;
+
+  /**
+   * The fetch function to use.
+   * @default fetch
+   */
+  fetch?: typeof fetch;
 }
 
 /**
@@ -135,6 +143,7 @@ export class Ollama extends LLM<OllamaCallOptions> implements OllamaInput {
       ? fields?.baseUrl.slice(0, -1)
       : fields?.baseUrl ?? this.baseUrl;
     this.client = new OllamaClient({
+      fetch: fields?.fetch,
       host: this.baseUrl,
       headers: fields?.headers,
     });

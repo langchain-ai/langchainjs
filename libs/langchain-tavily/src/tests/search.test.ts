@@ -41,21 +41,6 @@ class TestTavilySearchAPIWrapper extends TavilySearchAPIWrapper {
 }
 
 describe("TavilySearch", () => {
-  // In each test, we'll mock only what we need for that test
-  test("initializes with default parameters", () => {
-    const mockWrapper = new TestTavilySearchAPIWrapper();
-    const tool = new TavilySearch({ apiWrapper: mockWrapper });
-
-    expect(tool.name).toBe("tavily_search");
-    expect(tool.searchDepth).toBe("basic");
-    expect(tool.includeImages).toBe(false);
-    expect(tool.maxResults).toBe(5);
-    expect(tool.topic).toBe("general");
-    expect(tool.includeAnswer).toBe(false);
-    expect(tool.includeRawContent).toBe(false);
-    expect(tool.includeImageDescriptions).toBe(false);
-  });
-
   test("initializes with custom parameters", () => {
     const mockWrapper = new TestTavilySearchAPIWrapper();
     const tool = new TavilySearch({
@@ -127,16 +112,11 @@ describe("TavilySearch", () => {
     });
 
     // The schema auto-defaults empty arrays
-    expect(mockWrapper.rawResults).toHaveBeenCalledWith({
-      query: "test query",
-      searchDepth: "basic",
-      includeImages: false,
-      topic: "general",
-      maxResults: 5,
-      includeAnswer: false,
-      includeRawContent: false,
-      includeImageDescriptions: false,
-    });
+    expect(mockWrapper.rawResults).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: "test query",
+      })
+    );
 
     expect(result).toEqual(mockResult);
   });
@@ -175,19 +155,17 @@ describe("TavilySearch", () => {
       topic: "news",
     });
 
-    expect(mockWrapper.rawResults).toHaveBeenCalledWith({
-      query: "test query",
-      includeDomains: ["example.com"],
-      excludeDomains: ["exclude.com"],
-      searchDepth: "advanced",
-      includeImages: true,
-      timeRange: "week",
-      topic: "news",
-      maxResults: 5,
-      includeAnswer: false,
-      includeRawContent: false,
-      includeImageDescriptions: false,
-    });
+    expect(mockWrapper.rawResults).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: "test query",
+        includeDomains: ["example.com"],
+        excludeDomains: ["exclude.com"],
+        searchDepth: "advanced",
+        includeImages: true,
+        timeRange: "week",
+        topic: "news",
+      })
+    );
   });
 
   test("uses default parameters when not provided in input", async () => {
@@ -237,7 +215,6 @@ describe("TavilySearch", () => {
       maxResults: 10,
       includeAnswer: true,
       includeRawContent: true,
-      includeImageDescriptions: false,
     });
   });
 

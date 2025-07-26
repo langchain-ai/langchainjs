@@ -19,7 +19,9 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-const llm = new ChatOpenAI();
+const llm = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 /**
  * Create the first prompt template used for getting the SQL query.
@@ -58,7 +60,7 @@ const sqlQueryChain = RunnableSequence.from([
     question: (input: { question: string }) => input.question,
   },
   prompt,
-  llm.bind({ stop: ["\nSQLResult:"] }),
+  llm.withConfig({ stop: ["\nSQLResult:"] }),
   new StringOutputParser(),
 ]);
 

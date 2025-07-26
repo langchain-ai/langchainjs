@@ -36,8 +36,11 @@ import {
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import type { z } from "zod";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InferInteropZodOutput,
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   BaseLLMOutputParser,
   JsonOutputParser,
@@ -135,7 +138,7 @@ export interface GoogleGenerativeAIChatInput
    * Top-k changes how the model selects tokens for output.
    *
    * A top-k of 1 means the selected token is the most probable among
-   * all tokens in the model’s vocabulary (also called greedy decoding),
+   * all tokens in the model's vocabulary (also called greedy decoding),
    * while a top-k of 3 means that the next token is selected from
    * among the 3 most probable tokens (using temperature).
    *
@@ -212,13 +215,12 @@ export interface GoogleGenerativeAIChatInput
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_google_genai.GoogleGenerativeAIChatCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
- *   tools: [...],
  * });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
@@ -773,7 +775,10 @@ export class ChatGoogleGenerativeAI
     AIMessageChunk,
     GoogleGenerativeAIChatCallOptions
   > {
-    return this.bind({ tools: convertToolsToGenAI(tools)?.tools, ...kwargs });
+    return this.withConfig({
+      tools: convertToolsToGenAI(tools)?.tools,
+      ...kwargs,
+    });
   }
 
   invocationParams(
@@ -869,9 +874,12 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    await runManager?.handleLLMNewToken(
-      generationResult.generations[0].text ?? ""
-    );
+    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
+    if (generationResult.generations?.length > 0) {
+      await runManager?.handleLLMNewToken(
+        generationResult.generations[0]?.text ?? ""
+      );
+    }
     return generationResult;
   }
 
@@ -977,7 +985,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -988,7 +996,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -999,7 +1007,7 @@ export class ChatGoogleGenerativeAI
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1010,7 +1018,8 @@ export class ChatGoogleGenerativeAI
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1025,7 +1034,7 @@ export class ChatGoogleGenerativeAI
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
       let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
-      if (isZodSchema(schema)) {
+      if (isInteropZodSchema(schema)) {
         const jsonSchema = schemaToGenerativeAIParameters(schema);
         tools = [
           {
@@ -1040,7 +1049,7 @@ export class ChatGoogleGenerativeAI
           },
         ];
         outputParser = new GoogleGenerativeAIToolsOutputParser<
-          z.infer<typeof schema>
+          InferInteropZodOutput<typeof schema>
         >({
           returnSingle: true,
           keyName: functionName,
@@ -1077,13 +1086,12 @@ export class ChatGoogleGenerativeAI
           keyName: functionName,
         });
       }
-      llm = this.bind({
-        tools,
-        tool_choice: functionName,
+      llm = this.bindTools(tools).withConfig({
+        allowedFunctionNames: [functionName],
       });
     } else {
       const jsonSchema = schemaToGenerativeAIParameters(schema);
-      llm = this.bind({
+      llm = this.withConfig({
         responseSchema: jsonSchema as Schema,
       });
       outputParser = new JsonOutputParser();

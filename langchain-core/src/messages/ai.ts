@@ -21,17 +21,41 @@ export type AIMessageFields = BaseMessageFields & {
   usage_metadata?: UsageMetadata;
 };
 
+export type ModalitiesTokenDetails = {
+  /**
+   * Text tokens.
+   * Does not need to be reported, but some models will do so.
+   */
+  text?: number;
+
+  /**
+   * Image (non-video) tokens.
+   */
+  image?: number;
+
+  /**
+   * Audio tokens.
+   */
+  audio?: number;
+
+  /**
+   * Video tokens.
+   */
+  video?: number;
+
+  /**
+   * Document tokens.
+   * e.g. PDF
+   */
+  document?: number;
+};
+
 /**
  * Breakdown of input token counts.
  *
  * Does not *need* to sum to full input token count. Does *not* need to have all keys.
  */
-export type InputTokenDetails = {
-  /**
-   * Audio input tokens.
-   */
-  audio?: number;
-
+export type InputTokenDetails = ModalitiesTokenDetails & {
   /**
    * Input tokens that were cached and there was a cache hit.
    *
@@ -53,12 +77,7 @@ export type InputTokenDetails = {
  *
  * Does *not* need to sum to full output token count. Does *not* need to have all keys.
  */
-export type OutputTokenDetails = {
-  /**
-   * Audio output tokens
-   */
-  audio?: number;
-
+export type OutputTokenDetails = ModalitiesTokenDetails & {
   /**
    * Reasoning output tokens.
    *
@@ -252,12 +271,25 @@ export class AIMessageChunk extends BaseMessageChunk {
             : undefined,
       };
     } else {
+      const groupedToolCallChunk = fields.tool_call_chunks.reduce(
+        (acc, chunk) => {
+          if (!chunk.id) return acc;
+          acc[chunk.id] = acc[chunk.id] ?? [];
+          acc[chunk.id].push(chunk);
+          return acc;
+        },
+        {} as Record<string, ToolCallChunk[]>
+      );
+
       const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
-      for (const toolCallChunk of fields.tool_call_chunks) {
+      for (const [id, chunks] of Object.entries(groupedToolCallChunk)) {
         let parsedArgs = {};
+        const name = chunks[0]?.name ?? "";
+        const joinedArgs = chunks.map((c) => c.args || "").join("");
+        const argsStr = joinedArgs.length ? joinedArgs : "{}";
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          parsedArgs = parsePartialJson(argsStr);
           if (
             parsedArgs === null ||
             typeof parsedArgs !== "object" ||
@@ -266,16 +298,16 @@ export class AIMessageChunk extends BaseMessageChunk {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({
-            name: toolCallChunk.name ?? "",
+            name,
             args: parsedArgs,
-            id: toolCallChunk.id,
+            id,
             type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
-            name: toolCallChunk.name,
-            args: toolCallChunk.args,
-            id: toolCallChunk.id,
+            name,
+            args: argsStr,
+            id,
             error: "Malformed args.",
             type: "invalid_tool_call",
           });

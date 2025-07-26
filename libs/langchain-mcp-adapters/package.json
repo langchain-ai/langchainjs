@@ -1,0 +1,111 @@
+{
+  "name": "@langchain/mcp-adapters",
+  "version": "0.6.0",
+  "description": "LangChain.js adapters for Model Context Protocol (MCP)",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "type": "module",
+  "packageManager": "yarn@3.5.1",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git"
+  },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/",
+  "bugs": {
+    "url": "https://github.com/langchain-ai/langchainjs/issues"
+  },
+  "scripts": {
+    "build": "run-s \"build:main\" \"build:examples\"",
+    "build:main": "yarn lc_build --create-entrypoints --pre --tree-shaking",
+    "build:examples": "tsc -p tsconfig.examples.json",
+    "clean": "rm -rf dist/ dist-cjs/ .turbo/",
+    "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
+    "format:check": "prettier --config .prettierrc --check \"src\" \"examples/**/*.ts\"",
+    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/ examples/",
+    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
+    "prepack": "yarn build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "langchain",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "tools"
+  ],
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "debug": "^4.4.0",
+    "zod": "^3.24.2"
+  },
+  "peerDependencies": {
+    "@langchain/core": "^0.3.66"
+  },
+  "optionalDependencies": {
+    "extended-eventsource": "^1.x"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@langchain/core": "workspace:*",
+    "@langchain/langgraph": "^0.2.62",
+    "@langchain/openai": "workspace:*",
+    "@langchain/scripts": "workspace:*",
+    "@tsconfig/recommended": "^1.0.8",
+    "@types/debug": "^4.1.12",
+    "@types/express": "^5",
+    "@types/node": "^22.13.10",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "@vitest/coverage-v8": "^3.1.1",
+    "dotenv": "^16.4.7",
+    "dpdm": "^3.14.0",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-vitest": "^0.5.4",
+    "eventsource": "^3.0.6",
+    "express": "^5.1.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.3",
+    "release-it": "^17.6.0",
+    "rollup": "^4.39.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.29.0",
+    "vitest": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "index.cjs",
+    "index.js",
+    "index.d.ts",
+    "index.d.cts"
+  ]
+}

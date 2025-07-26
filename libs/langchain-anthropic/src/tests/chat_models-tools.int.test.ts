@@ -11,7 +11,7 @@ import {
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
@@ -203,9 +203,7 @@ test("Can bind & invoke StructuredTools", async () => {
 });
 
 test("Can bind & invoke AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
-  });
+  const modelWithTools = model.bindTools([anthropicTool]);
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
@@ -232,8 +230,7 @@ test("Can bind & invoke AnthropicTools", async () => {
 });
 
 test("Can bind & stream AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -303,8 +300,7 @@ test("stream events with no tool calls has string message content", async () => 
 });
 
 test("stream events with tool calls has raw message content", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -370,7 +366,7 @@ test("withStructuredOutput with AnthropicTool", async () => {
 });
 
 test("withStructuredOutput JSON Schema only", async () => {
-  const jsonSchema = zodToJsonSchema(zodSchema);
+  const jsonSchema = toJsonSchema(zodSchema);
   const modelWithTools = model.withStructuredOutput<{ location: string }>(
     jsonSchema,
     {
@@ -456,7 +452,7 @@ test("bindTools accepts openai formatted tool", async () => {
       name: "get_weather",
       description:
         "Get the weather of a specific location and return the temperature in Celsius.",
-      parameters: zodToJsonSchema(zodSchema),
+      parameters: toJsonSchema(zodSchema),
     },
   };
   const modelWithTools = model.bindTools([openaiTool]);
@@ -590,7 +586,7 @@ test("streaming with structured output", async () => {
   }
   expect(typeof finalChunk).toEqual("object");
   const stream2 = await model
-    .withStructuredOutput(zodToJsonSchema(zodSchema))
+    .withStructuredOutput(toJsonSchema(zodSchema))
     .stream("weather in london");
   // Currently, streaming yields a single chunk
   let finalChunk2;
@@ -611,13 +607,13 @@ test("Can bound and invoke different tool types", async () => {
     function: {
       name: "get_weather_oai",
       description: "Get the weather of a specific location.",
-      parameters: zodToJsonSchema(zodSchema),
+      parameters: toJsonSchema(zodSchema),
     },
   };
   const anthropicTool = {
     name: "get_weather_ant",
     description: "Get the weather of a specific location.",
-    input_schema: zodToJsonSchema(zodSchema),
+    input_schema: toJsonSchema(zodSchema),
   };
   const tools = [langchainTool, openaiTool, anthropicTool];
   const modelWithTools = model.bindTools(tools);

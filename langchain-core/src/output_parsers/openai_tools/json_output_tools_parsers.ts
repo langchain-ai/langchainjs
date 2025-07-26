@@ -1,4 +1,5 @@
-import { z } from "zod";
+import type * as z3 from "zod/v3";
+import type * as z4 from "zod/v4/core";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
@@ -8,6 +9,10 @@ import {
   BaseCumulativeTransformOutputParserInput,
 } from "../transform.js";
 import { isAIMessage } from "../../messages/ai.js";
+import {
+  type InteropZodType,
+  interopSafeParseAsync,
+} from "../../utils/types/zod.js";
 
 export type ParsedToolCall = {
   id?: string;
@@ -196,14 +201,31 @@ export class JsonOutputToolsParser<
   }
 }
 
+type JsonOutputKeyToolsParserParamsBase = {
+  keyName: string;
+  returnSingle?: boolean;
+} & JsonOutputToolsParserParams;
+
+type JsonOutputKeyToolsParserParamsV3<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> = { zodSchema?: z3.ZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+
+type JsonOutputKeyToolsParserParamsV4<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
+
+export type JsonOutputKeyToolsParserParamsInterop<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>
+> = { zodSchema?: InteropZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+
+// Use Zod 3 for backwards compatibility
 export type JsonOutputKeyToolsParserParams<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
-> = {
-  keyName: string;
-  returnSingle?: boolean;
-  zodSchema?: z.ZodType<T>;
-} & JsonOutputToolsParserParams;
+> = JsonOutputKeyToolsParserParamsV3<T>;
 
 /**
  * Class for parsing the output of a tool-calling LLM into a JSON object if you are
@@ -229,9 +251,20 @@ export class JsonOutputKeyToolsParser<
   /** Whether to return only the first tool call. */
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
-  constructor(params: JsonOutputKeyToolsParserParams<T>) {
+  constructor(params: JsonOutputKeyToolsParserParamsV3<T>);
+
+  constructor(params: JsonOutputKeyToolsParserParamsV4<T>);
+
+  constructor(params: JsonOutputKeyToolsParserParamsInterop<T>);
+
+  constructor(
+    params:
+      | JsonOutputKeyToolsParserParamsV3<T>
+      | JsonOutputKeyToolsParserParamsV4<T>
+      | JsonOutputKeyToolsParserParamsInterop<T>
+  ) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
@@ -242,7 +275,7 @@ export class JsonOutputKeyToolsParser<
     if (this.zodSchema === undefined) {
       return result as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(result);
+    const zodParsedResult = await interopSafeParseAsync(this.zodSchema, result);
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -251,7 +284,7 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error?.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }

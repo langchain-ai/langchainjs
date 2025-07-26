@@ -41,7 +41,7 @@ export async function pull<T extends Runnable>(
         modelClass = (await import("@langchain/anthropic")).ChatAnthropic;
       } else if (modelName === "ChatAzureOpenAI") {
         modelClass = (await import("@langchain/openai")).AzureChatOpenAI;
-      } else if (modelName === "ChatGoogleVertexAI") {
+      } else if (modelName === "ChatVertexAI") {
         modelClass = (await import("@langchain/google-vertexai")).ChatVertexAI;
       } else if (modelName === "ChatGoogleGenerativeAI") {
         modelClass = (await import("@langchain/google-genai"))

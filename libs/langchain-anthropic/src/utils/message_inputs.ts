@@ -2,44 +2,80 @@
  * This util file contains functions for converting LangChain messages to Anthropic messages.
  */
 import {
-  BaseMessage,
-  SystemMessage,
+  type BaseMessage,
+  type SystemMessage,
   HumanMessage,
-  AIMessage,
-  ToolMessage,
-  MessageContent,
+  type AIMessage,
+  type ToolMessage,
+  type MessageContent,
   isAIMessage,
+  type StandardContentBlockConverter,
+  type StandardTextBlock,
+  type StandardImageBlock,
+  type StandardFileBlock,
+  MessageContentComplex,
+  isDataContentBlock,
+  convertToProviderContentBlock,
+  parseBase64DataUrl,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
   AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
   AnthropicTextBlockParam,
-  AnthropicToolResponse,
   AnthropicToolResultBlockParam,
   AnthropicToolUseBlockParam,
   AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
+  AnthropicServerToolUseBlockParam,
+  AnthropicWebSearchToolResultBlockParam,
+  isAnthropicImageBlockParam,
+  AnthropicSearchResultBlockParam,
+  AnthropicToolResponse,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
-  const regex = /^data:(image\/.+);base64,(.+)$/;
-  const match = imageUrl.match(regex);
-  if (match === null) {
+  const parsed = parseBase64DataUrl({ dataUrl: imageUrl });
+  if (parsed) {
+    return {
+      type: "base64",
+      media_type: parsed.mime_type,
+      data: parsed.data,
+    };
+  }
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(imageUrl);
+  } catch {
     throw new Error(
       [
-        "Anthropic only supports base64-encoded images currently.",
+        `Malformed image URL: ${JSON.stringify(
+          imageUrl
+        )}. Content blocks of type 'image_url' must be a valid http, https, or base64-encoded data URL.`,
         "Example: data:image/png;base64,/9j/4AAQSk...",
+        "Example: https://example.com/image.jpg",
       ].join("\n\n")
     );
   }
-  return {
-    type: "base64",
-    media_type: match[1] ?? "",
-    data: match[2] ?? "",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
+
+  if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+    return {
+      type: "url",
+      url: imageUrl,
+    };
+  }
+
+  throw new Error(
+    [
+      `Invalid image URL protocol: ${JSON.stringify(
+        parsedUrl.protocol
+      )}. Anthropic only supports images as http, https, or base64-encoded data URLs on 'image_url' content blocks.`,
+      "Example: data:image/png;base64,/9j/4AAQSk...",
+      "Example: https://example.com/image.jpg",
+    ].join("\n\n")
+  );
 }
 
 function _ensureMessageContents(
@@ -58,7 +94,7 @@ function _ensureMessageContents(
           previousMessage.content[0].type === "tool_result"
         ) {
           // If the previous message was a tool result, we merge this tool message into it.
-          previousMessage.content.push({
+          (previousMessage.content as MessageContentComplex[]).push({
             type: "tool_result",
             content: message.content,
             tool_use_id: (message as ToolMessage).tool_call_id,
@@ -83,7 +119,10 @@ function _ensureMessageContents(
             content: [
               {
                 type: "tool_result",
-                content: _formatContent(message.content),
+                // rare case: message.content could be undefined
+                ...(message.content != null
+                  ? { content: _formatContent(message.content) }
+                  : {}),
                 tool_use_id: (message as ToolMessage).tool_call_id,
               },
             ],
@@ -111,14 +150,224 @@ export function _convertLangChainToolCallToAnthropic(
   };
 }
 
+const standardContentBlockConverter: StandardContentBlockConverter<{
+  text: AnthropicTextBlockParam;
+  image: AnthropicImageBlockParam;
+  file: AnthropicDocumentBlockParam;
+}> = {
+  providerName: "anthropic",
+
+  fromStandardTextBlock(block: StandardTextBlock): AnthropicTextBlockParam {
+    return {
+      type: "text",
+      text: block.text,
+      ...("citations" in (block.metadata ?? {})
+        ? { citations: block.metadata!.citations }
+        : {}),
+      ...("cache_control" in (block.metadata ?? {})
+        ? { cache_control: block.metadata!.cache_control }
+        : {}),
+    } as AnthropicTextBlockParam;
+  },
+
+  fromStandardImageBlock(block: StandardImageBlock): AnthropicImageBlockParam {
+    if (block.source_type === "url") {
+      const data = parseBase64DataUrl({
+        dataUrl: block.url,
+        asTypedArray: false,
+      });
+      if (data) {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: data.data,
+            media_type: data.mime_type,
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      } else {
+        return {
+          type: "image",
+          source: {
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      }
+    } else {
+      if (block.source_type === "base64") {
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            data: block.data,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+        } as AnthropicImageBlockParam;
+      } else {
+        throw new Error(`Unsupported image source type: ${block.source_type}`);
+      }
+    }
+  },
+
+  fromStandardFileBlock(block: StandardFileBlock): AnthropicDocumentBlockParam {
+    const mime_type = (block.mime_type ?? "").split(";")[0];
+
+    if (block.source_type === "url") {
+      if (mime_type === "application/pdf" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "url",
+            url: block.url,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      }
+      throw new Error(
+        `Unsupported file mime type for file url source: ${block.mime_type}`
+      );
+    } else if (block.source_type === "text") {
+      if (mime_type === "text/plain" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "text",
+            data: block.text,
+            media_type: block.mime_type ?? "",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else {
+        throw new Error(
+          `Unsupported file mime type for file text source: ${block.mime_type}`
+        );
+      }
+    } else if (block.source_type === "base64") {
+      if (mime_type === "application/pdf" || mime_type === "") {
+        return {
+          type: "document",
+          source: {
+            type: "base64",
+            data: block.data,
+            media_type: "application/pdf",
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else if (
+        ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+          mime_type
+        )
+      ) {
+        return {
+          type: "document",
+          source: {
+            type: "content",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  data: block.data,
+                  media_type: mime_type as
+                    | "image/jpeg"
+                    | "image/png"
+                    | "image/gif"
+                    | "image/webp",
+                },
+              },
+            ],
+          },
+          ...("cache_control" in (block.metadata ?? {})
+            ? { cache_control: block.metadata!.cache_control }
+            : {}),
+          ...("citations" in (block.metadata ?? {})
+            ? { citations: block.metadata!.citations }
+            : {}),
+          ...("context" in (block.metadata ?? {})
+            ? { context: block.metadata!.context }
+            : {}),
+          ...("title" in (block.metadata ?? {})
+            ? { title: block.metadata!.title }
+            : {}),
+        } as AnthropicDocumentBlockParam;
+      } else {
+        throw new Error(
+          `Unsupported file mime type for file base64 source: ${block.mime_type}`
+        );
+      }
+    } else {
+      throw new Error(`Unsupported file source type: ${block.source_type}`);
+    }
+  },
+};
+
 function _formatContent(content: MessageContent) {
-  const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
+  const toolTypes = [
+    "tool_use",
+    "tool_result",
+    "input_json_delta",
+    "server_tool_use",
+    "web_search_tool_result",
+    "web_search_result",
+  ];
   const textTypes = ["text", "text_delta"];
 
   if (typeof content === "string") {
     return content;
   } else {
     const contentBlocks = content.map((contentPart) => {
+      if (isDataContentBlock(contentPart)) {
+        return convertToProviderContentBlock(
+          contentPart,
+          standardContentBlockConverter
+        );
+      }
+
       const cacheControl =
         "cache_control" in contentPart ? contentPart.cache_control : undefined;
 
@@ -134,6 +383,8 @@ function _formatContent(content: MessageContent) {
           source,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
+      } else if (isAnthropicImageBlockParam(contentPart)) {
+        return contentPart;
       } else if (contentPart.type === "document") {
         // PDF
         return {
@@ -155,6 +406,20 @@ function _formatContent(content: MessageContent) {
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
         return block;
+      } else if (contentPart.type === "search_result") {
+        const block: AnthropicSearchResultBlockParam = {
+          type: "search_result" as const, // Explicitly setting the type as "search_result"
+          title: contentPart.title,
+          source: contentPart.source,
+          ...("cache_control" in contentPart && contentPart.cache_control
+            ? { cache_control: contentPart.cache_control }
+            : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
+          content: contentPart.content,
+        };
+        return block;
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
         "text" in contentPart
@@ -164,6 +429,9 @@ function _formatContent(content: MessageContent) {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -258,7 +526,8 @@ export function _convertMessagesToAnthropicPayload(
           content.find(
             (contentPart) =>
               (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta") &&
+                contentPart.type === "input_json_delta" ||
+                contentPart.type === "server_tool_use") &&
               contentPart.id === toolCall.id
           )
         );
@@ -304,6 +573,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicDocumentBlockParam
           | AnthropicThinkingBlockParam
           | AnthropicRedactedThinkingBlockParam
+          | AnthropicServerToolUseBlockParam
+          | AnthropicWebSearchToolResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -313,6 +584,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicDocumentBlockParam
     | AnthropicThinkingBlockParam
     | AnthropicRedactedThinkingBlockParam
+    | AnthropicServerToolUseBlockParam
+    | AnthropicWebSearchToolResultBlockParam
   > => {
     if (typeof content === "string") {
       return [

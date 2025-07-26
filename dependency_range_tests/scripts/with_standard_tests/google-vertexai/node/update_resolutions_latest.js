@@ -8,4 +8,8 @@ if (currentPackageJson.devDependencies["@langchain/core"]) {
   currentPackageJson.peerDependencies["@langchain/core"] = "latest";
 }
 
+if (currentPackageJson.dependencies["@langchain/google-gauth"]) {
+  delete currentPackageJson.dependencies["@langchain/google-gauth"];
+}
+
 fs.writeFileSync(communityPackageJsonPath, JSON.stringify(currentPackageJson, null, 2));

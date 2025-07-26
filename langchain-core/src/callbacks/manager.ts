@@ -606,7 +606,7 @@ export class CallbackManagerForToolRun
  *
  * // Example of using LLMChain with OpenAI and a simple prompt
  * const chain = new LLMChain({
- *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 }),
  *   prompt,
  * });
  *
@@ -1209,6 +1209,7 @@ export class CallbackManager
       } else {
         callbackManager = inheritableHandlers;
       }
+
       callbackManager = callbackManager.copy(
         Array.isArray(localHandlers)
           ? localHandlers.map(ensureHandler)

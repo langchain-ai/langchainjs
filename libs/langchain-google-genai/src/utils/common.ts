@@ -5,8 +5,10 @@ import {
   type FunctionDeclarationsTool as GoogleGenerativeAIFunctionDeclarationsTool,
   type FunctionDeclaration as GenerativeAIFunctionDeclaration,
   POSSIBLE_ROLES,
-  FunctionResponsePart,
   FunctionCallPart,
+  TextPart,
+  FileDataPart,
+  InlineDataPart,
 } from "@google/generative-ai";
 import {
   AIMessage,
@@ -21,6 +23,10 @@ import {
   isAIMessage,
   isBaseMessage,
   isToolMessage,
+  StandardContentBlockConverter,
+  parseBase64DataUrl,
+  convertToProviderContentBlock,
+  isDataContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -116,35 +122,221 @@ function inferToolNameFromPreviousMessages(
     })?.name;
 }
 
+function _getStandardContentBlockConverter(isMultimodalModel: boolean) {
+  const standardContentBlockConverter: StandardContentBlockConverter<{
+    text: TextPart;
+    image: FileDataPart | InlineDataPart;
+    audio: FileDataPart | InlineDataPart;
+    file: FileDataPart | InlineDataPart | TextPart;
+  }> = {
+    providerName: "Google Gemini",
+
+    fromStandardTextBlock(block) {
+      return {
+        text: block.text,
+      };
+    },
+
+    fromStandardImageBlock(block): FileDataPart | InlineDataPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support images");
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardAudioBlock(block): FileDataPart | InlineDataPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support audio");
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+
+    fromStandardFileBlock(block): FileDataPart | InlineDataPart | TextPart {
+      if (!isMultimodalModel) {
+        throw new Error("This model does not support files");
+      }
+      if (block.source_type === "text") {
+        return {
+          text: block.text,
+        };
+      }
+      if (block.source_type === "url") {
+        const data = parseBase64DataUrl({ dataUrl: block.url });
+        if (data) {
+          return {
+            inlineData: {
+              mimeType: data.mime_type,
+              data: data.data,
+            },
+          };
+        } else {
+          return {
+            fileData: {
+              mimeType: block.mime_type ?? "",
+              fileUri: block.url,
+            },
+          };
+        }
+      }
+
+      if (block.source_type === "base64") {
+        return {
+          inlineData: {
+            mimeType: block.mime_type ?? "",
+            data: block.data,
+          },
+        };
+      }
+      throw new Error(`Unsupported source type: ${block.source_type}`);
+    },
+  };
+  return standardContentBlockConverter;
+}
+
+function _convertLangChainContentToPart(
+  content: MessageContentComplex,
+  isMultimodalModel: boolean
+): Part | undefined {
+  if (isDataContentBlock(content)) {
+    return convertToProviderContentBlock(
+      content,
+      _getStandardContentBlockConverter(isMultimodalModel)
+    );
+  }
+
+  if (content.type === "text") {
+    return { text: content.text };
+  } else if (content.type === "executableCode") {
+    return { executableCode: content.executableCode };
+  } else if (content.type === "codeExecutionResult") {
+    return { codeExecutionResult: content.codeExecutionResult };
+  } else if (content.type === "image_url") {
+    if (!isMultimodalModel) {
+      throw new Error(`This model does not support images`);
+    }
+    let source;
+    if (typeof content.image_url === "string") {
+      source = content.image_url;
+    } else if (
+      typeof content.image_url === "object" &&
+      "url" in content.image_url
+    ) {
+      source = content.image_url.url;
+    } else {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+    const [dm, data] = source.split(",");
+    if (!dm.startsWith("data:")) {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+
+    const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
+    if (encoding !== "base64") {
+      throw new Error("Please provide image as base64 encoded data URL");
+    }
+
+    return {
+      inlineData: {
+        data,
+        mimeType,
+      },
+    };
+  } else if (content.type === "media") {
+    return messageContentMedia(content);
+  } else if (content.type === "tool_use") {
+    return {
+      functionCall: {
+        name: content.name,
+        args: content.input,
+      },
+    };
+  } else if (
+    content.type?.includes("/") &&
+    // Ensure it's a single slash.
+    content.type.split("/").length === 2 &&
+    "data" in content &&
+    typeof content.data === "string"
+  ) {
+    return {
+      inlineData: {
+        mimeType: content.type,
+        data: content.data,
+      },
+    };
+  } else if ("functionCall" in content) {
+    // No action needed here — function calls will be added later from message.tool_calls
+    return undefined;
+  } else {
+    if ("type" in content) {
+      throw new Error(`Unknown content type ${content.type}`);
+    } else {
+      throw new Error(`Unknown content ${JSON.stringify(content)}`);
+    }
+  }
+}
+
 export function convertMessageContentToParts(
   message: BaseMessage,
   isMultimodalModel: boolean,
   previousMessages: BaseMessage[]
 ): Part[] {
-  if (
-    typeof message.content === "string" &&
-    message.content !== "" &&
-    !isToolMessage(message)
-  ) {
-    return [{ text: message.content }];
-  }
-
-  let functionCalls: FunctionCallPart[] = [];
-  let functionResponses: FunctionResponsePart[] = [];
-  let messageParts: Part[] = [];
-
-  if (
-    "tool_calls" in message &&
-    Array.isArray(message.tool_calls) &&
-    message.tool_calls.length > 0
-  ) {
-    functionCalls = message.tool_calls.map((tc) => ({
-      functionCall: {
-        name: tc.name,
-        args: tc.args,
-      },
-    }));
-  } else if (isToolMessage(message) && message.content) {
+  if (isToolMessage(message)) {
     const messageName =
       message.name ??
       inferToolNameFromPreviousMessages(message, previousMessages);
@@ -153,89 +345,64 @@ export function convertMessageContentToParts(
         `Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "${message.id}" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.`
       );
     }
-    functionResponses = [
+
+    const result = Array.isArray(message.content)
+      ? (message.content
+          .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+          .filter((p) => p !== undefined) as Part[])
+      : message.content;
+
+    if (message.status === "error") {
+      return [
+        {
+          functionResponse: {
+            name: messageName,
+            // The API expects an object with an `error` field if the function call fails.
+            // `error` must be a valid object (not a string or array), so we wrap `message.content` here
+            response: { error: { details: result } },
+          },
+        },
+      ];
+    }
+
+    return [
       {
         functionResponse: {
           name: messageName,
-          response:
-            typeof message.content === "string"
-              ? { result: message.content }
-              : message.content,
+          // again, can't have a string or array value for `response`, so we wrap it as an object here
+          response: { result },
         },
       },
     ];
-  } else if (Array.isArray(message.content)) {
-    messageParts = message.content.map((c) => {
-      if (c.type === "text") {
-        return {
-          text: c.text,
-        };
-      } else if (c.type === "executableCode") {
-        return {
-          executableCode: c.executableCode,
-        };
-      } else if (c.type === "codeExecutionResult") {
-        return {
-          codeExecutionResult: c.codeExecutionResult,
-        };
-      }
+  }
 
-      if (c.type === "image_url") {
-        if (!isMultimodalModel) {
-          throw new Error(`This model does not support images`);
-        }
-        let source;
-        if (typeof c.image_url === "string") {
-          source = c.image_url;
-        } else if (typeof c.image_url === "object" && "url" in c.image_url) {
-          source = c.image_url.url;
-        } else {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
-        const [dm, data] = source.split(",");
-        if (!dm.startsWith("data:")) {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
+  let functionCalls: FunctionCallPart[] = [];
+  const messageParts: Part[] = [];
 
-        const [mimeType, encoding] = dm.replace(/^data:/, "").split(";");
-        if (encoding !== "base64") {
-          throw new Error("Please provide image as base64 encoded data URL");
-        }
+  if (typeof message.content === "string" && message.content) {
+    messageParts.push({ text: message.content });
+  }
 
-        return {
-          inlineData: {
-            data,
-            mimeType,
-          },
-        };
-      } else if (c.type === "media") {
-        return messageContentMedia(c);
-      } else if (c.type === "tool_use") {
-        return {
-          functionCall: {
-            name: c.name,
-            args: c.input,
-          },
-        };
-      } else if (
-        c.type?.includes("/") &&
-        // Ensure it's a single slash.
-        c.type.split("/").length === 2 &&
-        "data" in c &&
-        typeof c.data === "string"
-      ) {
-        return {
-          inlineData: {
-            mimeType: c.type,
-            data: c.data,
-          },
-        };
-      }
-      throw new Error(`Unknown content type ${(c as { type: string }).type}`);
+  if (Array.isArray(message.content)) {
+    messageParts.push(
+      ...(message.content
+        .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+        .filter((p) => p !== undefined) as Part[])
+    );
+  }
+
+  if (isAIMessage(message) && message.tool_calls?.length) {
+    functionCalls = message.tool_calls.map((tc) => {
+      return {
+        functionCall: {
+          name: tc.name,
+          args: tc.args,
+        },
+      };
     });
   }
 
-  return [...messageParts, ...functionCalls, ...functionResponses];
+  return [...messageParts, ...functionCalls];
 }
 
 export function convertBaseMessagesToContent(
@@ -333,10 +500,18 @@ export function mapGenerateContentResultToChatResult(
   const functionCalls = response.functionCalls();
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  let content: MessageContent;
-  if (candidateContent?.parts.length === 1 && candidateContent.parts[0].text) {
+  let content: MessageContent | undefined;
+
+  if (
+    Array.isArray(candidateContent?.parts) &&
+    candidateContent.parts.length === 1 &&
+    candidateContent.parts[0].text
+  ) {
     content = candidateContent.parts[0].text;
-  } else {
+  } else if (
+    Array.isArray(candidateContent?.parts) &&
+    candidateContent.parts.length > 0
+  ) {
     content = candidateContent.parts.map((p) => {
       if ("text" in p) {
         return {
@@ -356,19 +531,25 @@ export function mapGenerateContentResultToChatResult(
       }
       return p;
     });
+  } else {
+    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    content = [];
   }
 
   let text = "";
   if (typeof content === "string") {
     text = content;
-  } else if ("text" in content[0]) {
-    text = content[0].text;
+  } else if (Array.isArray(content) && content.length > 0) {
+    const block = content.find((b) => "text" in b) as
+      | { text: string }
+      | undefined;
+    text = block?.text ?? text;
   }
 
   const generation: ChatGeneration = {
     text,
     message: new AIMessage({
-      content,
+      content: content ?? "",
       tool_calls: functionCalls?.map((fc) => {
         return {
           ...fc,
@@ -412,11 +593,11 @@ export function convertResponseContentToChatGenerationChunk(
   let content: MessageContent | undefined;
   // Checks if some parts do not have text. If false, it means that the content is a string.
   if (
-    candidateContent?.parts &&
+    Array.isArray(candidateContent?.parts) &&
     candidateContent.parts.every((p) => "text" in p)
   ) {
     content = candidateContent.parts.map((p) => p.text).join("");
-  } else if (candidateContent.parts) {
+  } else if (Array.isArray(candidateContent?.parts)) {
     content = candidateContent.parts.map((p) => {
       if ("text" in p) {
         return {
@@ -436,13 +617,19 @@ export function convertResponseContentToChatGenerationChunk(
       }
       return p;
     });
+  } else {
+    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    content = [];
   }
 
   let text = "";
   if (content && typeof content === "string") {
     text = content;
-  } else if (content && typeof content === "object" && "text" in content[0]) {
-    text = content[0].text;
+  } else if (Array.isArray(content)) {
+    const block = content.find((b) => "text" in b) as
+      | { text: string }
+      | undefined;
+    text = block?.text ?? "";
   }
 
   const toolCallChunks: ToolCallChunk[] = [];

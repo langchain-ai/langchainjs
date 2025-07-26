@@ -6,7 +6,7 @@
     "target": "ES2021",
     "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "ES2020",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,

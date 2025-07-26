@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0.9,
   apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.OPENAI_API_KEY
 });
@@ -58,7 +59,7 @@ AIMessage {
 const jsonModeModel = new ChatOpenAI({
   model: "gpt-4-1106-preview",
   maxTokens: 128,
-}).bind({
+}).withConfig({
   response_format: {
     type: "json_object",
   },

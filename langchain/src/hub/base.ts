@@ -106,7 +106,7 @@ export function generateModelImportMap(
       importMapKey = "chat_models__anthropic";
     } else if (modelLcName === "ChatAzureOpenAI") {
       importMapKey = "chat_models__openai";
-    } else if (modelLcName === "ChatGoogleVertexAI") {
+    } else if (modelLcName === "ChatVertexAI") {
       importMapKey = "chat_models__vertexai";
     } else if (modelLcName === "ChatGoogleGenerativeAI") {
       importMapKey = "chat_models__google_genai";

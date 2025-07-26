@@ -13,6 +13,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 export interface TypeORMVectorStoreArgs {
   postgresConnectionOptions: DataSourceOptions;
   tableName?: string;
+  schemaName?: string;
   filter?: Metadata;
   verbose?: boolean;
 }
@@ -38,6 +39,8 @@ export class TypeORMVectorStore extends VectorStore {
 
   tableName: string;
 
+  schemaName?: string;
+
   documentEntity: EntitySchema;
 
   filter?: Metadata;
@@ -56,6 +59,7 @@ export class TypeORMVectorStore extends VectorStore {
   ) {
     super(embeddings, fields);
     this.tableName = fields.tableName || defaultDocumentTableName;
+    this.schemaName = fields.schemaName;
     this.filter = fields.filter;
 
     const TypeORMDocumentEntity = new EntitySchema<TypeORMVectorStoreDocument>({
@@ -85,9 +89,7 @@ export class TypeORMVectorStore extends VectorStore {
     this.documentEntity = TypeORMDocumentEntity;
 
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      fields.verbose ??
-      false;
+      fields.verbose ?? getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true";
   }
 
   /**
@@ -214,18 +216,20 @@ export class TypeORMVectorStore extends VectorStore {
    */
   async ensureTableInDatabase(): Promise<void> {
     await this.appDataSource.query("CREATE EXTENSION IF NOT EXISTS vector;");
-    await this.appDataSource.query(
-      'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-    );
-
     await this.appDataSource.query(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS ${this.getTablePath()} (
+        "id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
         "pageContent" text,
         metadata jsonb,
         embedding vector
       );
     `);
+  }
+
+  private getTablePath() {
+    if (!this.schemaName) return this.tableName;
+
+    return `"${this.schemaName}"."${this.tableName}"`;
   }
 
   /**

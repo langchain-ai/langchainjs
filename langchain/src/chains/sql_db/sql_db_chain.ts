@@ -269,7 +269,7 @@ const difference = (setA: Set<string>, setB: Set<string>) =>
  * const db = await SqlDatabase.fromDataSourceParams({
  *   appDataSource: datasource,
  * });
- * const llm = new ChatOpenAI({ temperature: 0 });
+ * const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
  * const chain = await createSqlQueryChain({
  *   llm,
  *   db,
@@ -330,7 +330,7 @@ export async function createSqlQueryChain({
       return newInputs;
     },
     promptToUse,
-    llm.bind({ stop: ["\nSQLResult:"] }),
+    llm.withConfig({ stop: ["\nSQLResult:"] }),
     new StringOutputParser(),
     strip,
   ]);

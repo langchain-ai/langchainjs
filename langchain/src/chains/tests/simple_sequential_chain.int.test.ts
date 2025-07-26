@@ -46,7 +46,7 @@ test("Test SimpleSequentialChain example usage", async () => {
 
 test("Test SimpleSequentialChain example usage", async () => {
   // This is an LLMChain to write a synopsis given a title of a play.
-  const llm = new ChatOpenAI({ temperature: 0 });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const template = `You are a playwright. Given the title of play, it is your job to write a synopsis for that title.
     
      {history}
@@ -63,7 +63,7 @@ test("Test SimpleSequentialChain example usage", async () => {
   });
 
   // This is an LLMChain to write a review of a play given a synopsis.
-  const reviewLLM = new ChatOpenAI({ temperature: 0 });
+  const reviewLLM = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const reviewTemplate = `You are a play critic from the New York Times. Given the synopsis of play, it is your job to write a review for that play.
     
      Play Synopsis:

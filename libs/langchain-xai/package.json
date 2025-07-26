@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "xAI integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -17,7 +17,7 @@
     "build": "yarn turbo:command build:internal --filter=@langchain/xai",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
@@ -35,11 +35,10 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": "^0.5.5",
-    "zod": "^3.24.2"
+    "@langchain/openai": "^0.6.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -54,7 +53,7 @@
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "dotenv": "^16.3.1",
-    "dpdm": "^3.12.0",
+    "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -67,8 +66,8 @@
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0",
-    "zod-to-json-schema": "^3.23.1"
+    "typescript": "~5.8.3",
+    "zod": "^3.25.32"
   },
   "publishConfig": {
     "access": "public"

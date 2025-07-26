@@ -1,5 +1,9 @@
-import type { Client, LangSmithTracingClientInterface } from "langsmith";
-import { RunTree } from "langsmith/run_trees";
+import {
+  type Client,
+  type LangSmithTracingClientInterface,
+  getDefaultProjectName,
+} from "langsmith";
+import { RunTree, type RunTreeConfig } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
 import {
@@ -8,7 +12,6 @@ import {
   RunUpdate as BaseRunUpdate,
   KVMap,
 } from "langsmith/schemas";
-import { getEnvironmentVariable, getRuntimeEnvironment } from "../utils/env.js";
 import { BaseTracer } from "./base.js";
 import { BaseCallbackHandlerInput } from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
@@ -37,6 +40,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
   client?: LangSmithTracingClientInterface;
+  replicas?: RunTreeConfig["replicas"];
 }
 
 export class LangChainTracer
@@ -51,14 +55,16 @@ export class LangChainTracer
 
   client: LangSmithTracingClientInterface;
 
+  replicas?: RunTreeConfig["replicas"];
+
+  usesRunTreeMap = true;
+
   constructor(fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client } = fields;
+    const { exampleId, projectName, client, replicas } = fields;
 
-    this.projectName =
-      projectName ??
-      getEnvironmentVariable("LANGCHAIN_PROJECT") ??
-      getEnvironmentVariable("LANGCHAIN_SESSION");
+    this.projectName = projectName ?? getDefaultProjectName();
+    this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
 
@@ -68,50 +74,20 @@ export class LangChainTracer
     }
   }
 
-  private async _convertToCreate(
-    run: Run,
-    example_id: string | undefined = undefined
-  ): Promise<RunCreate> {
-    return {
-      ...run,
-      extra: {
-        ...run.extra,
-        runtime: await getRuntimeEnvironment(),
-      },
-      child_runs: undefined,
-      session_name: this.projectName,
-      reference_example_id: run.parent_run_id ? undefined : example_id,
-    };
-  }
-
   protected async persistRun(_run: Run): Promise<void> {}
 
   async onRunCreate(run: Run): Promise<void> {
-    const persistedRun: RunCreate2 = await this._convertToCreate(
-      run,
-      this.exampleId
-    );
-    await this.client.createRun(persistedRun);
+    const runTree = this.getRunTreeWithTracingConfig(run.id);
+    await runTree?.postRun();
   }
 
   async onRunUpdate(run: Run): Promise<void> {
-    const runUpdate: RunUpdate = {
-      end_time: run.end_time,
-      error: run.error,
-      outputs: run.outputs,
-      events: run.events,
-      inputs: run.inputs,
-      trace_id: run.trace_id,
-      dotted_order: run.dotted_order,
-      parent_run_id: run.parent_run_id,
-      extra: run.extra,
-      session_name: this.projectName,
-    };
-    await this.client.updateRun(run.id, runUpdate);
+    const runTree = this.getRunTreeWithTracingConfig(run.id);
+    await runTree?.patchRun();
   }
 
   getRun(id: string): Run | undefined {
-    return this.runMap.get(id);
+    return this.runTreeMap.get(id);
   }
 
   updateFromRunTree(runTree: RunTree) {
@@ -132,67 +108,43 @@ export class LangChainTracer
       if (!current || visited.has(current.id)) continue;
       visited.add(current.id);
 
-      // @ts-expect-error Types of property 'events' are incompatible.
-      this.runMap.set(current.id, current);
+      this.runTreeMap.set(current.id, current);
       if (current.child_runs) {
         queue.push(...current.child_runs);
       }
     }
 
     this.client = runTree.client ?? this.client;
+    this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
   }
 
-  convertToRunTree(id: string): RunTree | undefined {
-    const runTreeMap: Record<string, RunTree> = {};
-    const runTreeList: [id: string, dotted_order: string | undefined][] = [];
-    for (const [id, run] of this.runMap) {
-      // by converting the run map to a run tree, we are doing a copy
-      // thus, any mutation performed on the run tree will not be reflected
-      // back in the run map
-      // TODO: Stop using `this.runMap` in favour of LangSmith's `RunTree`
-      const runTree = new RunTree({
-        ...run,
-        child_runs: [],
-        parent_run: undefined,
+  getRunTreeWithTracingConfig(id: string): RunTree | undefined {
+    const runTree = this.runTreeMap.get(id);
+    if (!runTree) return undefined;
 
-        // inherited properties
-        client: this.client as Client,
-        project_name: this.projectName,
-        reference_example_id: this.exampleId,
-        tracingEnabled: true,
-      });
-
-      runTreeMap[id] = runTree;
-      runTreeList.push([id, run.dotted_order]);
-    }
-
-    runTreeList.sort((a, b) => {
-      if (!a[1] || !b[1]) return 0;
-      return a[1].localeCompare(b[1]);
+    return new RunTree({
+      ...runTree,
+      client: this.client as Client,
+      project_name: this.projectName,
+      replicas: this.replicas,
+      reference_example_id: this.exampleId,
+      tracingEnabled: true,
     });
-
-    for (const [id] of runTreeList) {
-      const run = this.runMap.get(id);
-      const runTree = runTreeMap[id];
-      if (!run || !runTree) continue;
-
-      if (run.parent_run_id) {
-        const parentRunTree = runTreeMap[run.parent_run_id];
-        if (parentRunTree) {
-          parentRunTree.child_runs.push(runTree);
-          runTree.parent_run = parentRunTree;
-        }
-      }
-    }
-
-    return runTreeMap[id];
   }
 
   static getTraceableRunTree(): RunTree | undefined {
     try {
-      return getCurrentRunTree();
+      return (
+        // The type cast here provides forward compatibility. Old versions of LangSmith will just
+        // ignore the permitAbsentRunTree arg.
+        (
+          getCurrentRunTree as (
+            permitAbsentRunTree: boolean
+          ) => ReturnType<typeof getCurrentRunTree> | undefined
+        )(true)
+      );
     } catch {
       return undefined;
     }

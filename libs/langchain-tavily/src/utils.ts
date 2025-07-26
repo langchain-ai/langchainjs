@@ -53,11 +53,14 @@ export type TavilySearchParamsBase = {
    */
   include_answer?: boolean | "basic" | "advanced";
   /**
-   * Whether to include the raw content of the search results.
+   * Include the cleaned and parsed HTML content of each search result.
+   * "markdown" returns search result content in markdown format.
+   * "text" returns the plain text from the results and may increase latency.
+   * If true, defaults to "markdown"
    *
    * @default false
    */
-  include_raw_content?: boolean;
+  include_raw_content?: boolean | "markdown" | "text";
   /**
    * A list of domains to specifically include in the search results.
    */
@@ -66,6 +69,13 @@ export type TavilySearchParamsBase = {
    * A list of domains to specifically exclude from the search results.
    */
   exclude_domains?: string[];
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
@@ -125,6 +135,155 @@ export type TavilyExtractParams = {
    * @default "basic"
    */
   extract_depth?: "basic" | "advanced";
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
+
+  /**
+   * The format of the extracted web page content.
+   * "markdown" returns content in markdown format.
+   * "text" returns plain text and may increase latency.
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
+} & Record<string, unknown>;
+
+/**
+ * The parameters for the Tavily Search API.
+ */
+export type ExtractDepth = "basic" | "advanced";
+export type CrawlCategory =
+  | "Documentation"
+  | "Blog"
+  | "Blogs"
+  | "Community"
+  | "About"
+  | "Contact"
+  | "Privacy"
+  | "Terms"
+  | "Status"
+  | "Pricing"
+  | "Enterprise"
+  | "Careers"
+  | "E-Commerce"
+  | "Authentication"
+  | "Developer"
+  | "Developers"
+  | "Solutions"
+  | "Partners"
+  | "Downloads"
+  | "Media"
+  | "Events"
+  | "People";
+export type TavilyCrawlParams = {
+  /**
+   * The URL to start crawling from.
+   *
+   * Example: "https://example.com"
+   */
+  url: string;
+
+  /**
+   * Natural language instructions to guide the crawler
+   *
+   * @default undefined
+   */
+  instructions?: string;
+
+  /**
+   * The depth of the extractions. It can be "basic" or "advanced".
+   *
+   */
+  extractDepth?: ExtractDepth;
+
+  /**
+   * The format of the respose. It can be "markdown" or "text"
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
+
+  /**
+   * The maximum number of hops from the starting URL.
+   *
+   * @default 3
+   */
+  maxDepth?: number;
+
+  /**
+   * The maximum number of pages to crawl per level.
+   *
+   * @default 50
+   */
+  maxBreadth?: number;
+
+  /**
+   * The maximum number of pages to crawl.
+   *
+   * @default 100
+   */
+  limit?: number;
+
+  /**
+   * Only crawl URLs containing these categories.
+   *
+   * @default undefined
+   */
+  categories?: CrawlCategory[];
+
+  /**
+   * Only crawl URLs containing these paths.
+   *
+   * @default undefined
+   */
+  selectPaths?: string[];
+
+  /**
+   * Only crawl these domains.
+   *
+   * @default undefined
+   */
+  selectDomains?: string[];
+
+  /**
+   * Exclude these paths.
+   *
+   * @default undefined
+   */
+  excludePaths?: string[];
+
+  /**
+   * Exclude these domains.
+   *
+   * @default undefined
+   */
+  excludeDomains?: string[];
+
+  /**
+   * Allow crawling external domains.
+   *
+   * @default undefined
+   */
+  allowExternal?: boolean;
+
+  /**
+   * Include images in the crawl results.
+   *
+   * @default false
+   */
+  includeImages?: boolean;
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  include_favicon?: boolean;
 } & Record<string, unknown>;
 
 /**
@@ -222,6 +381,7 @@ export type TavilyBaseSearchResponse = {
   /**
    * The results from the search.
    */
+  auto_parameters?: Partial<TavilySearchParams>;
   results: TavilySearchResult[];
   /**
    * The response time of the search.
@@ -265,6 +425,118 @@ export type TavilySearchResponseWithSimpleImages = TavilyBaseSearchResponse & {
   images?: string[];
 };
 
+export type TavilyCrawlResponse = {
+  /**
+   * The base URL that was crawled.
+   */
+  base_url: string;
+  /**
+   * The results of the crawl.
+   */
+  results: TavilyExtractResult[];
+  /**
+   * The response time of the crawl.
+   */
+  response_time: number;
+} & Record<string, unknown>;
+
+/**
+ * The parameters for the Tavily Map API.
+ */
+export type TavilyMapParams = {
+  /**
+   * The URL to start mapping from.
+   *
+   * Example: "https://example.com"
+   */
+  url: string;
+
+  /**
+   * Natural language instructions to guide the crawler
+   *
+   * @default undefined
+   */
+  instructions?: string;
+
+  /**
+   * The maximum number of hops from the starting URL.
+   *
+   * @default 3
+   */
+  maxDepth?: number;
+
+  /**
+   * The maximum number of pages to crawl per level.
+   *
+   * @default 50
+   */
+  maxBreadth?: number;
+
+  /**
+   * The maximum number of pages to crawl.
+   *
+   * @default 100
+   */
+  limit?: number;
+
+  /**
+   * Only crawl URLs containing these categories.
+   *
+   * @default undefined
+   */
+  categories?: CrawlCategory[];
+
+  /**
+   * Only crawl URLs containing these paths.
+   *
+   * @default undefined
+   */
+  selectPaths?: string[];
+
+  /**
+   * Only crawl these domains.
+   *
+   * @default undefined
+   */
+  selectDomains?: string[];
+
+  /**
+   * Exclude these paths.
+   *
+   * @default undefined
+   */
+  excludePaths?: string[];
+
+  /**
+   * Exclude these domains.
+   *
+   * @default undefined
+   */
+  excludeDomains?: string[];
+
+  /**
+   * Allow crawling external domains.
+   *
+   * @default undefined
+   */
+  allowExternal?: boolean;
+} & Record<string, unknown>;
+
+export type TavilyMapResponse = {
+  /**
+   * The base URL that was mapped.
+   */
+  base_url: string;
+  /**
+   * The results of the map operation - array of URL strings.
+   */
+  results: string[];
+  /**
+   * The response time of the map operation.
+   */
+  response_time: number;
+} & Record<string, unknown>;
+
 export type TavilySearchResponse =
   | TavilySearchResponseWithImageDescriptions
   | TavilySearchResponseWithSimpleImages;
@@ -275,11 +547,13 @@ export type TavilySearchResponse =
 abstract class BaseTavilyAPIWrapper {
   tavilyApiKey?: string;
 
+  apiBaseUrl?: string;
+
   /**
    * Constructs a new instance of the BaseTavilyAPIWrapper.
    * @param fields The fields used to initialize the wrapper.
    */
-  constructor(fields: { tavilyApiKey?: string }) {
+  constructor(fields: { tavilyApiKey?: string; apiBaseUrl?: string }) {
     const apiKey =
       fields.tavilyApiKey ?? getEnvironmentVariable("TAVILY_API_KEY");
     if (!apiKey) {
@@ -288,51 +562,33 @@ abstract class BaseTavilyAPIWrapper {
       );
     }
     this.tavilyApiKey = apiKey;
+    this.apiBaseUrl = fields.apiBaseUrl ?? TAVILY_BASE_URL;
   }
-
-  /**
-   * Maps from camelCase parameter names to snake_case API parameter names
-   */
-  protected readonly camelToSnakeMap: Record<
-    keyof TavilySearchParams | keyof TavilyExtractParams,
-    string
-  > = {
-    query: "query",
-    topic: "topic",
-    searchDepth: "search_depth",
-    chunksPerSource: "chunks_per_source",
-    maxResults: "max_results",
-    timeRange: "time_range",
-    days: "days",
-    includeAnswer: "include_answer",
-    includeRawContent: "include_raw_content",
-    includeDomains: "include_domains",
-    excludeDomains: "exclude_domains",
-    includeImages: "include_images",
-    includeImageDescriptions: "include_image_descriptions",
-    urls: "urls",
-    extractDepth: "extract_depth",
-  };
 
   /**
    * Converts camelCase keys to snake_case for API compatibility
    * @param params The parameters with camelCase keys
-   * @returns The parameters with snake_case keys
+   * @returns The parameters with snake_case keys only
    */
   protected convertCamelToSnakeCase(
-    params: Record<
-      keyof TavilySearchParams | keyof TavilyExtractParams,
-      unknown
-    >
-  ) {
-    return Object.entries(params).reduce((result, [key, value]) => {
+    params: Record<string, unknown>
+  ): Record<string, unknown> {
+    const result: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(params)) {
       if (value === undefined) {
-        return result;
+        continue;
       }
-      // Use explicit mapping for known keys, fall back to generic default key
-      const newKey = this.camelToSnakeMap[key] || key;
-      return { ...result, [newKey]: value };
-    }, {} as Record<keyof TavilySearchParams | keyof TavilyExtractParams, unknown>);
+      // Convert camelCase key to snake_case
+      // Handle potential leading capital letter first
+      let newKey = key.replace(/^[A-Z]/, (letter) => letter.toLowerCase());
+      // Then handle subsequent capital letters
+      newKey = newKey.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+
+      result[newKey] = value;
+    }
+
+    return result;
   }
 }
 
@@ -362,7 +618,7 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     // Convert camelCase to snake_case for API compatibility
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/search`, {
+    const response = await fetch(`${this.apiBaseUrl}/search`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),
@@ -398,7 +654,73 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
 
     const apiParams = this.convertCamelToSnakeCase(params);
 
-    const response = await fetch(`${TAVILY_BASE_URL}/extract`, {
+    const response = await fetch(`${this.apiBaseUrl}/extract`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(apiParams),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail?.error || "Unknown error";
+      throw new Error(`Error ${response.status}: ${errorMessage}`);
+    }
+
+    return response.json();
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Crawl API. Primarily used for testing.
+ */
+export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
+  /**
+   * Crawls a list of URLs using the Tavily Crawl API.
+   * @param params The parameters for the crawl. See {@link TavilyCrawlParams}.
+   * @returns The raw response body from the Tavily Crawl API. See {@link TavilyCrawlResponse}.
+   */
+  async rawResults(params: TavilyCrawlParams): Promise<TavilyCrawlResponse> {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const apiParams = this.convertCamelToSnakeCase(params);
+
+    const response = await fetch(`${this.apiBaseUrl}/crawl`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(apiParams),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail?.error || "Unknown error";
+      throw new Error(`Error ${response.status}: ${errorMessage}`);
+    }
+
+    return response.json();
+  }
+}
+
+/**
+ * A wrapper that encapsulates access to the Tavily Map API. Primarily used for testing.
+ */
+export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
+  /**
+   * Maps a URL using the Tavily Map API.
+   * @param params The parameters for the map. See {@link TavilyMapParams}.
+   * @returns The raw response body from the Tavily Map API. See {@link TavilyMapResponse}.
+   */
+  async rawResults(params: TavilyMapParams): Promise<TavilyMapResponse> {
+    const headers = {
+      Authorization: `Bearer ${this.tavilyApiKey}`,
+      "Content-Type": "application/json",
+    };
+
+    const apiParams = this.convertCamelToSnakeCase(params);
+
+    const response = await fetch(`${this.apiBaseUrl}/map`, {
       method: "POST",
       headers,
       body: JSON.stringify(apiParams),

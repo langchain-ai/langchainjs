@@ -15,7 +15,7 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
 /** Define your chat model */
 const model = new ChatOpenAI({ model: "gpt-4" });
 /** Bind a stop token to the model */
-const modelWithStop = model.bind({
+const modelWithStop = model.withConfig({
   stop: ["\nObservation"],
 });
 /** Define your list of tools */

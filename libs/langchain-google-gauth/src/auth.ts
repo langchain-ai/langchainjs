@@ -2,8 +2,8 @@ import { Readable } from "stream";
 import {
   AbstractStream,
   ensureAuthOptionScopes,
-  GoogleAbstractedClient,
   GoogleAbstractedClientOps,
+  GoogleAbstractedFetchClient,
   GoogleConnectionParams,
   JsonStream,
   SseJsonStream,
@@ -64,16 +64,24 @@ export class NodeSseJsonStream extends NodeAbstractStream {
   }
 }
 
-export class GAuthClient implements GoogleAbstractedClient {
+export class GAuthClient extends GoogleAbstractedFetchClient {
   gauth: GoogleAuth;
 
   constructor(fields?: GoogleConnectionParams<GoogleAuthOptions>) {
+    super();
     const options = ensureAuthOptionScopes<GoogleAuthOptions>(
       fields?.authOptions,
       "scopes",
       fields?.platformType
     );
     this.gauth = new GoogleAuth(options);
+    this._fetch = async (...args) => {
+      const url = args[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const opts: any = args[1] ?? {};
+      opts.responseType = "stream";
+      return await this.gauth.fetch(url, opts);
+    };
   }
 
   get clientType(): string {
@@ -85,20 +93,6 @@ export class GAuthClient implements GoogleAbstractedClient {
   }
 
   async request(opts: GoogleAbstractedClientOps): Promise<unknown> {
-    const ret = await this.gauth.request(opts);
-    const [contentType] = ret?.headers?.["content-type"]?.split(/;/) ?? [""];
-    if (opts.responseType !== "stream") {
-      return ret;
-    } else if (contentType === "text/event-stream") {
-      return {
-        ...ret,
-        data: new NodeSseJsonStream(ret.data),
-      };
-    } else {
-      return {
-        ...ret,
-        data: new NodeJsonStream(ret.data),
-      };
-    }
+    return this._request(opts?.url, opts, {});
   }
 }

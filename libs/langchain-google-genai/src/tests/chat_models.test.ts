@@ -1,12 +1,17 @@
 import { test } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
   HumanMessage,
+  StandardAudioBlock,
+  StandardFileBlock,
+  StandardImageBlock,
+  StandardTextBlock,
   SystemMessage,
   ToolMessage,
+  type MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
@@ -132,13 +137,13 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
     questions: z.array(questionSchema).describe("Array of question objects"),
   });
 
-  const parsedSchemaArr = removeAdditionalProperties(zodToJsonSchema(schema));
+  const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
     arrSchemaKeys.find((key) => key === "additionalProperties")
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    zodToJsonSchema(questionSchema)
+    toJsonSchema(questionSchema)
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
@@ -158,7 +163,7 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    zodToJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema)
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(
@@ -210,6 +215,258 @@ test("convertMessageContentToParts correctly handles message types", () => {
         name: "get_current_weather",
         response: { result: "{ weather: '28 °C', location: 'New York, NY' }" },
       },
+    },
+  ]);
+});
+
+test("convertMessageContentToParts: correctly handles standard text content block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardTextBlock] = [
+    {
+      text: "This is a test message",
+      type: "text",
+      source_type: "text",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([{ text: "This is a test message" }]);
+});
+
+test("convertMessageContentToParts: correctly handles http url standard image block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardImageBlock] = [
+    {
+      type: "image",
+      source_type: "url",
+      url: "https://example.com/image.jpg",
+      mime_type: "image/jpeg",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      fileData: {
+        mimeType: "image/jpeg",
+        fileUri: "https://example.com/image.jpg",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support images");
+});
+
+test("convertMessageContentToParts: correctly handles base64 standard image block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardImageBlock] = [
+    {
+      type: "image",
+      source_type: "base64",
+      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      mime_type: "image/png",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "image/png",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support images");
+});
+
+test("convertMessageContentToParts: correctly handles base64 data url standard image block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardImageBlock] = [
+    {
+      type: "image",
+      source_type: "url",
+      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "image/png",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support images");
+});
+
+test("convertMessageContentToParts: correctly handles base64 standard audio block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardAudioBlock] = [
+    {
+      type: "audio",
+      source_type: "base64",
+      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      mime_type: "audio/mpeg",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "audio/mpeg",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+});
+
+test("convertMessageContentToParts: correctly handles base64 data url standard audio block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardAudioBlock] = [
+    {
+      type: "audio",
+      source_type: "url",
+      url: "data:audio/mpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "audio/mpeg",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support audio");
+});
+
+test("convertMessageContentToParts: correctly handles http url standard audio block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardAudioBlock] = [
+    {
+      type: "audio",
+      source_type: "url",
+      url: "https://example.com/audio.mp3",
+      mime_type: "audio/mpeg",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      fileData: {
+        mimeType: "audio/mpeg",
+        fileUri: "https://example.com/audio.mp3",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support audio");
+});
+
+test("convertMessageContentToParts: correctly handles base64 standard file block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardFileBlock] = [
+    {
+      type: "file",
+      source_type: "base64",
+      data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      mime_type: "application/pdf",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support files");
+});
+
+test("convertMessageContentToParts: correctly handles http url standard file block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardFileBlock] = [
+    {
+      type: "file",
+      source_type: "url",
+      url: "https://example.com/file.pdf",
+      mime_type: "application/pdf",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      fileData: {
+        mimeType: "application/pdf",
+        fileUri: "https://example.com/file.pdf",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support files");
+});
+
+test("convertMessageContentToParts: correctly handles base64 data url standard file block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardFileBlock] = [
+    {
+      type: "file",
+      source_type: "url",
+      url: "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      inlineData: {
+        mimeType: "application/pdf",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      },
+    },
+  ]);
+  expect(() =>
+    convertMessageContentToParts(message, false /* not multimodal */, [])
+  ).toThrowError("This model does not support files");
+});
+
+test("convertMessageContentToParts: correctly handles text standard file block", () => {
+  const isMultimodalModel = true;
+  const content: [StandardFileBlock] = [
+    {
+      type: "file",
+      source_type: "text",
+      text: "This is a test file",
+      mime_type: "text/plain",
+    },
+  ];
+  const message = new HumanMessage({ content });
+  const parts = convertMessageContentToParts(message, isMultimodalModel, []);
+  expect(parts).toEqual([
+    {
+      text: "This is a test file",
     },
   ]);
 });
@@ -453,6 +710,252 @@ test("Input has no system message and multiple user messages, convert system mes
     {
       role: "user",
       parts: [{ text: "How about next week?" }],
+    },
+  ]);
+});
+
+test("convertMessageContentToParts: should handle AIMessage with mixed content and tool_calls, and HumanMessage with mixed content", () => {
+  const isMultimodalModel = true;
+  const base64ImageData =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="; // 1x1 black pixel
+
+  const aiMessageWithString = new AIMessage({
+    content: "This is the AI text response.",
+    tool_calls: [
+      { name: "get_weather", args: { location: "London" }, id: "tool_123" },
+    ],
+  });
+  const expectedPartsAiString = [
+    { text: "This is the AI text response." },
+    { functionCall: { name: "get_weather", args: { location: "London" } } },
+  ];
+  expect(
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+  ).toEqual(expectedPartsAiString);
+
+  const aiMessageWithArray = new AIMessage({
+    content: [
+      { type: "text", text: "AI sees this image:" },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${base64ImageData}`,
+      },
+    ],
+    tool_calls: [{ name: "describe_image", args: {}, id: "tool_789" }],
+  });
+  const expectedPartsAiArray = [
+    { text: "AI sees this image:" },
+    { inlineData: { mimeType: "image/png", data: base64ImageData } },
+    { functionCall: { name: "describe_image", args: {} } },
+  ];
+  expect(
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+  ).toEqual(expectedPartsAiArray);
+
+  const humanMessageWithArray = new HumanMessage({
+    content: [
+      { type: "text", text: "User sees this image:" },
+      {
+        type: "image_url",
+        image_url: `data:image/png;base64,${base64ImageData}`,
+      },
+    ],
+  });
+  const expectedPartsHumanArray = [
+    { text: "User sees this image:" },
+    { inlineData: { mimeType: "image/png", data: base64ImageData } },
+  ];
+  expect(
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+  ).toEqual(expectedPartsHumanArray);
+});
+
+test("convertMessageContentToParts: should handle messages with content only (no tool_calls)", () => {
+  const isMultimodalModel = true;
+
+  const aiMessageWithString = new AIMessage({
+    content: "Just an AI text response.",
+  });
+  const expectedPartsAiString = [{ text: "Just an AI text response." }];
+  expect(
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+  ).toEqual(expectedPartsAiString);
+
+  const humanMessageWithString = new HumanMessage({
+    content: "Just a human text input.",
+  });
+  const expectedPartsHumanString = [{ text: "Just a human text input." }];
+  expect(
+    convertMessageContentToParts(humanMessageWithString, isMultimodalModel, [])
+  ).toEqual(expectedPartsHumanString);
+
+  const aiMessageWithArray = new AIMessage({
+    content: [
+      { type: "text", text: "AI array part 1." },
+      { type: "text", text: "AI array part 2." },
+    ],
+  });
+  const expectedPartsAiArray = [
+    { text: "AI array part 1." },
+    { text: "AI array part 2." },
+  ];
+  expect(
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+  ).toEqual(expectedPartsAiArray);
+
+  const humanMessageWithArray = new HumanMessage({
+    content: [
+      { type: "text", text: "Human array part 1." },
+      { type: "text", text: "Human array part 2." },
+    ],
+  });
+  const expectedPartsHumanArray = [
+    { text: "Human array part 1." },
+    { text: "Human array part 2." },
+  ];
+  expect(
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+  ).toEqual(expectedPartsHumanArray);
+});
+
+test("convertMessageContentToParts: should handle AIMessage with tool_calls only (empty content)", () => {
+  const isMultimodalModel = true;
+
+  const messageWithEmptyString = new AIMessage({
+    content: "",
+    tool_calls: [{ name: "get_time", args: {}, id: "tool_abc" }],
+  });
+  const expectedParts = [{ functionCall: { name: "get_time", args: {} } }];
+  expect(
+    convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, [])
+  ).toEqual(expectedParts);
+});
+
+test("convertMessageContentToParts: should handle ToolMessage correctly (including name inference and errors)", () => {
+  const isMultimodalModel = true;
+
+  const previousAiMessage = new AIMessage({
+    content: "",
+    tool_calls: [
+      { name: "get_weather", args: { location: "London" }, id: "tool_123" },
+    ],
+  });
+  const toolMessageSuccess = new ToolMessage({
+    content: '{"temperature": "15C", "conditions": "Cloudy"}',
+    tool_call_id: "tool_123",
+  });
+  const expectedPartsSuccess = [
+    {
+      functionResponse: {
+        name: "get_weather",
+        response: { result: '{"temperature": "15C", "conditions": "Cloudy"}' },
+      },
+    },
+  ];
+  expect(
+    convertMessageContentToParts(toolMessageSuccess, isMultimodalModel, [
+      previousAiMessage,
+    ])
+  ).toEqual(expectedPartsSuccess);
+
+  const toolMessageError = new ToolMessage({
+    content: "Some result",
+    tool_call_id: "unknown_tool_id",
+  });
+  expect(() =>
+    convertMessageContentToParts(toolMessageError, isMultimodalModel, [])
+  ).toThrow(
+    'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.'
+  );
+});
+
+test("convertMessageContentToParts: correctly handles ToolMessage with array content", () => {
+  const isMultimodalModel = true;
+  const toolCallId = "tool_call_array_content_123";
+  const toolName = "test_tool_array_content";
+  const smallBase64Image =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  const previousAiMessage = new AIMessage({
+    content: "",
+    tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
+  });
+
+  const toolMessageContentArray: MessageContentComplex[] = [
+    { type: "text", text: "Tool response text." },
+    {
+      type: "image_url",
+      image_url: `data:image/png;base64,${smallBase64Image}`,
+    },
+  ];
+
+  const toolMessage = new ToolMessage({
+    content: toolMessageContentArray,
+    tool_call_id: toolCallId,
+  });
+
+  const parts = convertMessageContentToParts(toolMessage, isMultimodalModel, [
+    previousAiMessage,
+  ]);
+
+  expect(parts).toEqual([
+    {
+      functionResponse: {
+        name: toolName,
+        response: {
+          result: [
+            { text: "Tool response text." },
+            { inlineData: { mimeType: "image/png", data: smallBase64Image } },
+          ],
+        },
+      },
+    },
+  ]);
+});
+
+test("convertMessageContentToParts: correctly handles ToolMessage with array content and status error", () => {
+  const isMultimodalModel = true;
+  const toolCallId = "tool_call_array_error_123";
+  const toolName = "test_tool_array_error";
+  const smallBase64Image =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  const previousAiMessage = new AIMessage({
+    content: "",
+    tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
+  });
+
+  const toolMessageContentArray: MessageContentComplex[] = [
+    { type: "text", text: "Tool error details text." },
+    {
+      type: "image_url",
+      image_url: `data:image/png;base64,${smallBase64Image}`,
+    },
+  ];
+
+  const toolMessage = new ToolMessage({
+    content: toolMessageContentArray,
+    tool_call_id: toolCallId,
+    status: "error",
+  });
+
+  const parts = convertMessageContentToParts(toolMessage, isMultimodalModel, [
+    previousAiMessage,
+  ]);
+
+  expect(parts).toEqual([
+    {
+      functionResponse: {
+        name: toolName,
+        response: {
+          error: {
+            details: [
+              { text: "Tool error details text." },
+              { inlineData: { mimeType: "image/png", data: smallBase64Image } },
+            ],
+          },
+        },
+      },
     },
   ]);
 });

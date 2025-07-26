@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
@@ -59,6 +59,13 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
+import {
+  getSchemaDescription,
+  InferInteropZodOutput,
+  interopParseAsync,
+  InteropZodType,
+  isSimpleStringZodSchema,
+} from "../utils/types/zod.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -145,6 +152,8 @@ export abstract class Runnable<
    * Bind arguments to a Runnable, returning a new Runnable.
    * @param kwargs
    * @returns A new RunnableBinding that, when invoked, will apply the bound args.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
    */
   bind(
     kwargs: Partial<CallOptions>
@@ -156,6 +165,8 @@ export abstract class Runnable<
   /**
    * Return a new Runnable that maps a list of inputs to a list of outputs,
    * by calling invoke() with each input.
+   *
+   * @deprecated This will be removed in the next breaking release.
    */
   map(): Runnable<RunInput[], RunOutput[], CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -164,7 +175,8 @@ export abstract class Runnable<
 
   /**
    * Add retry logic to an existing runnable.
-   * @param kwargs
+   * @param fields.stopAfterAttempt The number of attempts to retry.
+   * @param fields.onFailedAttempt A function that is called when a retry fails.
    * @returns A new RunnableRetry that, when invoked, will retry according to the parameters.
    */
   withRetry(fields?: {
@@ -187,7 +199,7 @@ export abstract class Runnable<
    * @returns A new RunnableBinding with a config matching what's passed.
    */
   withConfig(
-    config: RunnableConfig
+    config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
@@ -919,8 +931,10 @@ export abstract class Runnable<
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
+      let signal;
+      let listener: (() => void) | null = null;
+
       try {
-        let signal;
         if (options?.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
@@ -933,13 +947,12 @@ export abstract class Runnable<
             // Fallback for Node 18 and below - just use the provided signal
             signal = options.signal;
             // Ensure we still abort our controller when the parent signal aborts
-            options.signal.addEventListener(
-              "abort",
-              () => {
-                abortController.abort();
-              },
-              { once: true }
-            );
+
+            listener = () => {
+              abortController.abort();
+            };
+
+            options.signal.addEventListener("abort", listener, { once: true });
           }
         } else {
           signal = abortController.signal;
@@ -959,6 +972,10 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
+
+        if (signal && listener) {
+          signal.removeEventListener("abort", listener);
+        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
@@ -1196,8 +1213,8 @@ export abstract class Runnable<
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<T>;
-  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
+    schema: InteropZodType<T>;
+  }): RunnableToolLike<InteropZodType<T | ToolCall>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
@@ -1208,13 +1225,19 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
+  /**
+   * @deprecated use {@link config} instead
+   */
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
-  configFactories?: Array<(config: RunnableConfig) => RunnableConfig>;
+  configFactories?: Array<
+    (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
+  >;
 };
 
 /**
- * A runnable that delegates calls to another runnable with a set of kwargs.
+ * Wraps a runnable and applies partial config upon invocation.
+ *
  * @example
  * ```typescript
  * import {
@@ -1304,11 +1327,21 @@ export class RunnableBinding<
     );
   }
 
+  /**
+   * Binds the runnable with the specified arguments.
+   * @param kwargs The arguments to bind the runnable with.
+   * @returns A new instance of the `RunnableBinding` class that is bound with the specified arguments.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
+   */
   bind(
     kwargs: Partial<CallOptions>
   ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
+    return new (this.constructor as {
+      new (
+        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
+      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
+    })({
       bound: this.bound,
       kwargs: { ...this.kwargs, ...kwargs },
       config: this.config,
@@ -1316,10 +1349,13 @@ export class RunnableBinding<
   }
 
   withConfig(
-    config: RunnableConfig
+    config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
+    return new (this.constructor as {
+      new (
+        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
+      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
+    })({
       bound: this.bound,
       kwargs: this.kwargs,
       config: { ...this.config, ...config },
@@ -1330,11 +1366,13 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new (this.constructor as any)({
-      bound: this.bound.withRetry(fields),
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new RunnableRetry({
+      bound: this.bound,
       kwargs: this.kwargs,
       config: this.config,
+      maxAttemptNumber: fields?.stopAfterAttempt,
+      ...fields,
     });
   }
 
@@ -1521,6 +1559,8 @@ export class RunnableBinding<
  *
  * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
  * ```
+ *
+ * @deprecated This will be removed in the next breaking release.
  */
 export class RunnableEach<
   RunInputItem,
@@ -1548,6 +1588,8 @@ export class RunnableEach<
    * Binds the runnable with the specified arguments.
    * @param kwargs The arguments to bind the runnable with.
    * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
+   *
+   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
    */
   bind(kwargs: Partial<CallOptions>) {
     return new RunnableEach({
@@ -1845,7 +1887,7 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
  * const promptTemplate = PromptTemplate.fromTemplate(
  *   "Tell me a joke about {topic}",
  * );
- * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
+ * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({ model: "gpt-4o-mini" })]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
  */
@@ -3289,7 +3331,9 @@ export class RunnablePick<
       const picked = this.keys
         .map((key) => [key, input[key]])
         .filter((v) => v[1] !== undefined);
-      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+      return picked.length === 0
+        ? (undefined as RunOutput)
+        : Object.fromEntries(picked);
     }
   }
 
@@ -3340,9 +3384,12 @@ export class RunnablePick<
 }
 
 export interface RunnableToolLikeArgs<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
+> extends Omit<
+    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
+    "config"
+  > {
   name: string;
 
   description?: string;
@@ -3353,9 +3400,9 @@ export interface RunnableToolLikeArgs<
 }
 
 export class RunnableToolLike<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
+> extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
   name: string;
 
   description?: string;
@@ -3364,12 +3411,15 @@ export class RunnableToolLike<
 
   constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
     const sequence = RunnableSequence.from([
-      RunnableLambda.from(async (input) => {
-        let toolInput: z.TypeOf<RunInput>;
+      RunnableLambda.from<
+        InferInteropZodOutput<RunInput> | ToolCall,
+        InferInteropZodOutput<RunInput>
+      >(async (input) => {
+        let toolInput: InferInteropZodOutput<RunInput>;
 
         if (_isToolCall(input)) {
           try {
-            toolInput = await this.schema.parseAsync(input.args);
+            toolInput = await interopParseAsync(this.schema, input.args);
           } catch (e) {
             throw new ToolInputParsingException(
               `Received tool input did not match expected schema`,
@@ -3409,34 +3459,34 @@ export class RunnableToolLike<
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
- * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
- * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+ * @param {InteropZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+ * @returns {RunnableToolLike<InteropZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
 export function convertRunnableToTool<RunInput, RunOutput>(
   runnable: Runnable<RunInput, RunOutput>,
   fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<RunInput>;
+    schema: InteropZodType<RunInput>;
   }
-): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
+): RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
-  const description = fields.description ?? fields.schema?.description;
+  const description = fields.description ?? getSchemaDescription(fields.schema);
 
-  if (fields.schema.constructor === z.ZodString) {
-    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
-      name,
-      description,
-      schema: z
-        .object({
-          input: z.string(),
-        })
-        .transform((input) => input.input) as z.ZodType,
-      bound: runnable,
-    });
+  if (isSimpleStringZodSchema(fields.schema)) {
+    return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(
+      {
+        name,
+        description,
+        schema: z
+          .object({ input: z.string() })
+          .transform((input) => input.input) as InteropZodType,
+        bound: runnable,
+      }
+    );
   }
 
-  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+  return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>({
     name,
     description,
     schema: fields.schema,

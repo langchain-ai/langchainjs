@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 
-const model = new ChatOpenAI({ temperature: 1 });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 1 });
 const controller = new AbortController();
 
 // Call `controller.abort()` somewhere to cancel the request.

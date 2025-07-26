@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "0.3.49",
+  "version": "0.3.66",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -18,7 +18,7 @@
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "prepack": "yarn build",
@@ -38,12 +38,12 @@
     "camelcase": "6",
     "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
-    "langsmith": "^0.3.16",
+    "langsmith": "^0.3.46",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "zod": "^3.22.4",
+    "zod": "^3.25.32",
     "zod-to-json-schema": "^3.22.3"
   },
   "devDependencies": {
@@ -53,7 +53,7 @@
     "@swc/jest": "^0.2.29",
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
-    "dpdm": "^3.12.0",
+    "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -68,7 +68,7 @@
     "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
-    "typescript": "~5.1.6",
+    "typescript": "~5.8.3",
     "web-streams-polyfill": "^4.0.0"
   },
   "publishConfig": {
@@ -557,6 +557,24 @@
       "import": "./utils/hash.js",
       "require": "./utils/hash.cjs"
     },
+    "./utils/hash/insecure": {
+      "types": {
+        "import": "./utils/hash/insecure.d.ts",
+        "require": "./utils/hash/insecure.d.cts",
+        "default": "./utils/hash/insecure.d.ts"
+      },
+      "import": "./utils/hash/insecure.js",
+      "require": "./utils/hash/insecure.cjs"
+    },
+    "./utils/hash/sha256": {
+      "types": {
+        "import": "./utils/hash/sha256.d.ts",
+        "require": "./utils/hash/sha256.d.cts",
+        "default": "./utils/hash/sha256.d.ts"
+      },
+      "import": "./utils/hash/sha256.js",
+      "require": "./utils/hash/sha256.cjs"
+    },
     "./utils/json_patch": {
       "types": {
         "import": "./utils/json_patch.d.ts",
@@ -841,6 +859,14 @@
     "utils/hash.js",
     "utils/hash.d.ts",
     "utils/hash.d.cts",
+    "utils/hash/insecure.cjs",
+    "utils/hash/insecure.js",
+    "utils/hash/insecure.d.ts",
+    "utils/hash/insecure.d.cts",
+    "utils/hash/sha256.cjs",
+    "utils/hash/sha256.js",
+    "utils/hash/sha256.d.ts",
+    "utils/hash/sha256.d.cts",
     "utils/json_patch.cjs",
     "utils/json_patch.js",
     "utils/json_patch.d.ts",

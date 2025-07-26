@@ -1,9 +1,12 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, describe } from "@jest/globals";
 import { z } from "zod";
+import { z as z4 } from "zod/v4";
 
 import {
   DynamicStructuredTool,
+  StructuredToolParams,
   ToolInputParsingException,
+  isStructuredToolParams,
   tool,
 } from "../index.js";
 import { ToolMessage } from "../../messages/tool.js";
@@ -52,6 +55,34 @@ test("Tool works if responseFormat is content_and_artifact and returns a tuple",
 
   expect(toolResult).not.toBeInstanceOf(ToolMessage);
   expect(toolResult).toBe("msg_content");
+});
+
+test("ToolMessage content coerces to empty string when tool returns undefined", async () => {
+  const weatherSchema = z.object({
+    location: z.string(),
+  });
+
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const weatherTool = tool(
+    () => {
+      return undefined;
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+    }
+  );
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult).toHaveProperty("content", "");
 });
 
 test("Does not return tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with no id is passed in", async () => {
@@ -156,7 +187,7 @@ test("Tool can accept single string input", async () => {
     type: "tool_call",
   } as const;
 
-  const stringTool = tool<z.ZodString>(
+  const stringTool = tool(
     (input: string, config): string => {
       expect(config).toMatchObject({ configurable: { foo: "bar" } });
       if (config.configurable.usesToolCall) {
@@ -261,6 +292,35 @@ test("Tool declared with JSON schema", async () => {
   expect(dstClassWeatherToolCalls).toBe(1);
 });
 
+test("Tool declared with zod v4 schema", async () => {
+  const weatherSchema = z4.object({
+    location: z4.string(),
+  });
+
+  const weatherTool = tool(
+    (_) => {
+      return "Sunny";
+    },
+    {
+      name: "weather",
+      schema: weatherSchema,
+    }
+  );
+
+  const result = await weatherTool.invoke({
+    location: "San Francisco",
+  });
+  expect(result).toBe("Sunny");
+
+  await expect(
+    // unfortunately this can't be type checked, but we do validate the schema
+    weatherTool.invoke({
+      // @ts-expect-error Invalid argument
+      somethingSilly: true,
+    })
+  ).rejects.toThrow(ToolInputParsingException);
+});
+
 test("Tool input typing is enforced", async () => {
   const weatherSchema = z.object({
     location: z.string(),
@@ -354,4 +414,36 @@ Details: [
     "message": "Expected string, received number"
   }
 ]`);
+});
+
+describe("isStructuredToolParams", () => {
+  test("returns true for a tool with a zod schema", () => {
+    const zodToolParams: StructuredToolParams = {
+      name: "test",
+      schema: z.string(),
+    };
+    expect(isStructuredToolParams(zodToolParams)).toBe(true);
+  });
+  test("returns true for a tool with a zod v4 schema", () => {
+    const zodToolParams: StructuredToolParams = {
+      name: "test",
+      schema: z4.string(),
+    };
+    expect(isStructuredToolParams(zodToolParams)).toBe(true);
+  });
+  test("returns true for a tool with a json schema", () => {
+    const jsonToolParams: StructuredToolParams = {
+      name: "test",
+      schema: { type: "string", description: "test" },
+    };
+    expect(isStructuredToolParams(jsonToolParams)).toBe(true);
+  });
+  test("returns false for a tool with an invalid schema", () => {
+    const nonStructuredToolParams: StructuredToolParams = {
+      name: "test",
+      // @ts-expect-error Testing non-structured schema
+      schema: "not a schema",
+    };
+    expect(isStructuredToolParams(nonStructuredToolParams)).toBe(false);
+  });
 });

@@ -24,7 +24,7 @@ test.skip("should respond with the proper schema", async () => {
   const retriever = vectorStore.asRetriever();
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-4",
+    model: "gpt-4",
   });
   const chain = new ViolationOfExpectationsChain({
     llm,

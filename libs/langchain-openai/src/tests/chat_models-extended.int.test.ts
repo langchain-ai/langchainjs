@@ -8,9 +8,9 @@ import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).bind({
+  }).withConfig({
     response_format: {
       type: "json_object",
     },
@@ -24,10 +24,10 @@ test("Test ChatOpenAI JSON mode", async () => {
 
 test("Test ChatOpenAI seed", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
-  }).bind({
+  }).withConfig({
     seed: 123454930394983,
   });
   const message = new HumanMessage("Say something random!");
@@ -58,10 +58,10 @@ test("Test ChatOpenAI seed", async () => {
 
 test("Test ChatOpenAI tool calling", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -81,8 +81,10 @@ test("Test ChatOpenAI tool calling", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -102,7 +104,7 @@ test("Test ChatOpenAI tool calling", async () => {
 test("Test ChatOpenAI streaming logprobs", async () => {
   const model = new ChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     streaming: true,
     logprobs: true,
   });
@@ -114,7 +116,7 @@ test("Test ChatOpenAI streaming logprobs", async () => {
 test("Test ChatOpenAI with search preview model", async () => {
   const model = new ChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-4o-search-preview",
+    model: "gpt-4o-search-preview",
   });
   const res = await model.invoke("Print hello world.");
   expect(res.content).toBeDefined();
@@ -135,10 +137,10 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     }
   }
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -158,8 +160,10 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -199,10 +203,10 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
 
 test("Test ChatOpenAI tool calling with streaming", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 256,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -222,8 +226,10 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const stream = await chat.stream([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
   ]);
@@ -248,10 +254,10 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 1,
     cache: memoryCache,
-  }).bind({
+  }).withConfig({
     response_format: {
       type: "json_object",
     },
@@ -276,10 +282,10 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 1,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -299,8 +305,10 @@ test("Few shotting with tool calls", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -328,7 +336,7 @@ test("Few shotting with tool calls", async () => {
 
 test("Test ChatOpenAI with raw response", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     __includeRawResponse: true,
   });
@@ -339,7 +347,7 @@ test("Test ChatOpenAI with raw response", async () => {
 
 test("Test ChatOpenAI with raw response", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     __includeRawResponse: true,
   });

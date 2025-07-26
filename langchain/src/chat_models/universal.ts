@@ -141,6 +141,8 @@ async function _initChatModelHelper(
         return new ChatXAI({ model, ...passedParams });
       }
       case "fireworks": {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Can not install as a proper dependency due to circular dependency
         const { ChatFireworks } = await import(
           // We can not 'expect-error' because if you explicitly build `@langchain/community`
           // this import will be able to be resolved, thus there will be no error. However
@@ -152,6 +154,8 @@ async function _initChatModelHelper(
         return new ChatFireworks({ model, ...passedParams });
       }
       case "together": {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Can not install as a proper dependency due to circular dependency
         const { ChatTogetherAI } = await import(
           // We can not 'expect-error' because if you explicitly build `@langchain/community`
           // this import will be able to be resolved, thus there will be no error. However
@@ -764,9 +768,10 @@ export async function initChatModel<
  *   temperature: 0,
  * });
  *
- * const configurableModelWithTools = configurableModel.bind({
- *   tools: [getWeatherTool, getPopulationTool],
- * });
+ * const configurableModelWithTools = configurableModel.bindTools([
+ *   getWeatherTool,
+ *   getPopulationTool,
+ * ]);
  *
  * const configurableToolResult = await configurableModelWithTools.invoke(
  *   "Which city is hotter today and which is bigger: LA or NY?",

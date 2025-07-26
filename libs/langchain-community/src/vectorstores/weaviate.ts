@@ -1,9 +1,12 @@
 import * as uuid from "uuid";
-import type {
+// import type { WeaviateClient, WeaviateObject, Filters } from "weaviate-client";
+import {
+  configure,
+  type DataObject,
+  type FilterValue,
   WeaviateClient,
-  WeaviateObject,
-  WhereFilter,
-} from "weaviate-ts-client";
+  type WeaviateField,
+} from "weaviate-client";
 import {
   MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -11,51 +14,52 @@ import {
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
+import { flattenObjectForWeaviate, WeaviateLibArgs } from "@langchain/weaviate";
 
 // Note this function is not generic, it is designed specifically for Weaviate
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
  */
-export const flattenObjectForWeaviate = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>
-) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const flattenedObject: Record<string, any> = {};
+// export const flattenObjectForWeaviate = (
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   obj: Record<string, any>
+// ) => {
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const flattenedObject: Record<string, any> = {};
 
-  for (const key in obj) {
-    if (!Object.hasOwn(obj, key)) {
-      continue;
-    }
-    const value = obj[key];
-    if (typeof obj[key] === "object" && !Array.isArray(value)) {
-      const recursiveResult = flattenObjectForWeaviate(value);
+//   for (const key in obj) {
+//     if (!Object.hasOwn(obj, key)) {
+//       continue;
+//     }
+//     const value = obj[key];
+//     if (typeof obj[key] === "object" && !Array.isArray(value)) {
+//       const recursiveResult = flattenObjectForWeaviate(value);
 
-      for (const deepKey in recursiveResult) {
-        if (Object.hasOwn(obj, key)) {
-          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
-        }
-      }
-    } else if (Array.isArray(value)) {
-      if (value.length === 0) {
-        flattenedObject[key] = value;
-      } else if (
-        typeof value[0] !== "object" &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value.every((el: any) => typeof el === typeof value[0])
-      ) {
-        // Weaviate only supports arrays of primitive types,
-        // where all elements are of the same type
-        flattenedObject[key] = value;
-      }
-    } else {
-      flattenedObject[key] = value;
-    }
-  }
+//       for (const deepKey in recursiveResult) {
+//         if (Object.hasOwn(obj, key)) {
+//           flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+//         }
+//       }
+//     } else if (Array.isArray(value)) {
+//       if (value.length === 0) {
+//         flattenedObject[key] = value;
+//       } else if (
+//         typeof value[0] !== "object" &&
+//         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//         value.every((el: any) => typeof el === typeof value[0])
+//       ) {
+//         // Weaviate only supports arrays of primitive types,
+//         // where all elements are of the same type
+//         flattenedObject[key] = value;
+//       }
+//     } else {
+//       flattenedObject[key] = value;
+//     }
+//   }
 
-  return flattenedObject;
-};
+//   return flattenedObject;
+// };
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
@@ -64,21 +68,21 @@ export const flattenObjectForWeaviate = (
  * of the `WeaviateStore` class. It includes the Weaviate client, the name
  * of the class in Weaviate, and optional keys for text and metadata.
  */
-export interface WeaviateLibArgs {
-  client: WeaviateClient;
-  /**
-   * The name of the class in Weaviate. Must start with a capital letter.
-   */
-  indexName: string;
-  textKey?: string;
-  metadataKeys?: string[];
-  tenant?: string;
-}
+// export interface WeaviateLibArgs {
+//   client: WeaviateClient;
+//   /**
+//    * The name of the class in Weaviate. Must start with a capital letter.
+//    */
+//   indexName: string;
+//   textKey?: string;
+//   metadataKeys?: string[];
+//   tenant?: string;
+// }
 
-interface ResultRow {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+// interface ResultRow {
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   [key: string]: any;
+// }
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
@@ -86,10 +90,10 @@ interface ResultRow {
  * Interface that defines a filter for querying data from Weaviate. It
  * includes a distance and a `WhereFilter`.
  */
-export interface WeaviateFilter {
-  distance?: number;
-  where: WhereFilter;
-}
+// export interface WeaviateFilter {
+//   distance?: number;
+//   where: Filters;
+// }
 
 /**
  * @deprecated Prefer the `@langchain/weaviate` package.
@@ -99,7 +103,7 @@ export interface WeaviateFilter {
  * deleting data, and performing similarity searches.
  */
 export class WeaviateStore extends VectorStore {
-  declare FilterType: WeaviateFilter;
+  declare FilterType: FilterValue;
 
   private client: WeaviateClient;
 
@@ -119,7 +123,7 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
-    this.indexName = args.indexName;
+    this.indexName = args.indexName || "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;
@@ -144,6 +148,32 @@ export class WeaviateStore extends VectorStore {
     }
   }
 
+  static async initialize(
+    embeddings: EmbeddingsInterface,
+    config: WeaviateLibArgs & { dimensions?: number }
+  ): Promise<WeaviateStore> {
+    const weaviateStore = new this(embeddings, config);
+    const collection = await weaviateStore.client.collections.exists(
+      weaviateStore.indexName
+    );
+    if (!collection) {
+      if (config.tenant) {
+        await weaviateStore.client.collections.create({
+          name: weaviateStore.indexName,
+          multiTenancy: configure.multiTenancy({
+            enabled: true,
+            autoTenantCreation: true,
+          }),
+        });
+      } else {
+        await weaviateStore.client.collections.create({
+          name: weaviateStore.indexName,
+        });
+      }
+    }
+    return weaviateStore;
+  }
+
   /**
    * Method to add vectors and corresponding documents to the Weaviate
    * index.
@@ -158,18 +188,19 @@ export class WeaviateStore extends VectorStore {
     options?: { ids?: string[] }
   ) {
     const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
-    const batch: WeaviateObject[] = documents.map((document, index) => {
+    const batch: DataObject<undefined>[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
           "Document inserted to Weaviate vectorstore should not have `id` in their metadata."
         );
 
-      const flattenedMetadata = flattenObjectForWeaviate(document.metadata);
+      const flattenedMetadata = flattenObjectForWeaviate(
+        document.metadata
+      ) as Record<string, WeaviateField>;
       return {
-        ...(this.tenant ? { tenant: this.tenant } : {}),
-        class: this.indexName,
         id: documentIds[index],
-        vector: vectors[index],
+        vectors: vectors[index],
+        references: {},
         properties: {
           [this.textKey]: document.pageContent,
           ...flattenedMetadata,
@@ -178,30 +209,29 @@ export class WeaviateStore extends VectorStore {
     });
 
     try {
-      const responses = await this.client.batch
-        .objectsBatcher()
-        .withObjects(...batch)
-        .do();
-      // if storing vectors fails, we need to know why
-      const errorMessages: string[] = [];
-      responses.forEach((response) => {
-        if (response?.result?.errors?.error) {
-          errorMessages.push(
-            ...response.result.errors.error.map(
-              (err) =>
-                err.message ??
-                "!! Unfortunately no error message was presented in the API response !!"
-            )
-          );
-        }
-      });
-      if (errorMessages.length > 0) {
-        throw new Error(errorMessages.join("\n"));
+      const collection = this.client.collections.get(this.indexName);
+      let response;
+      if (this.tenant) {
+        response = await collection
+          .withTenant(this.tenant)
+          .data.insertMany(batch);
+      } else {
+        response = await collection.data.insertMany(batch);
       }
-    } catch (e) {
-      throw Error(`Error adding vectors: ${e}`);
+      console.log(
+        `Successfully imported batch of ${
+          Object.values(response.uuids).length
+        } items`
+      );
+      if (response.hasErrors) {
+        console.log("this the error", response.errors);
+        throw new Error("Error in batch import!");
+      }
+      return Object.values(response.uuids);
+    } catch (error) {
+      console.error("Error importing batch:", error);
+      throw error;
     }
-    return documentIds;
   }
 
   /**
@@ -228,34 +258,26 @@ export class WeaviateStore extends VectorStore {
    */
   async delete(params: {
     ids?: string[];
-    filter?: WeaviateFilter;
+    filter?: FilterValue;
   }): Promise<void> {
     const { ids, filter } = params;
-
+    const collection = this.client.collections.get(this.indexName);
     if (ids && ids.length > 0) {
-      for (const id of ids) {
-        let deleter = this.client.data
-          .deleter()
-          .withClassName(this.indexName)
-          .withId(id);
-
-        if (this.tenant) {
-          deleter = deleter.withTenant(this.tenant);
-        }
-
-        await deleter.do();
+      if (this.tenant) {
+        await collection
+          .withTenant(this.tenant)
+          .data.deleteMany(collection.filter.byId().containsAny(ids));
+      } else {
+        await collection.data.deleteMany(
+          collection.filter.byId().containsAny(ids)
+        );
       }
     } else if (filter) {
-      let batchDeleter = this.client.batch
-        .objectsBatchDeleter()
-        .withClassName(this.indexName)
-        .withWhere(filter.where);
-
       if (this.tenant) {
-        batchDeleter = batchDeleter.withTenant(this.tenant);
+        await collection.withTenant(this.tenant).data.deleteMany(filter);
+      } else {
+        await collection.data.deleteMany(filter);
       }
-
-      await batchDeleter.do();
     } else {
       throw new Error(
         `This method requires either "ids" or "filter" to be set in the input object`
@@ -275,7 +297,7 @@ export class WeaviateStore extends VectorStore {
   async similaritySearchVectorWithScore(
     query: number[],
     k: number,
-    filter?: WeaviateFilter
+    filter?: FilterValue
   ): Promise<[Document, number][]> {
     const resultsWithEmbedding =
       await this.similaritySearchVectorWithScoreAndEmbedding(query, k, filter);
@@ -297,47 +319,50 @@ export class WeaviateStore extends VectorStore {
   async similaritySearchVectorWithScoreAndEmbedding(
     query: number[],
     k: number,
-    filter?: WeaviateFilter
-  ): Promise<[Document, number, number[]][]> {
+    filter?: FilterValue
+  ): Promise<[Document, number, number, number[]][]> {
     try {
-      let builder = this.client.graphql
-        .get()
-        .withClassName(this.indexName)
-        .withFields(
-          `${this.queryAttrs.join(" ")} _additional { distance vector }`
-        )
-        .withNearVector({
-          vector: query,
-          distance: filter?.distance,
-        })
-        .withLimit(k);
-
+      const collection = this.client.collections.get(this.indexName);
+      let result;
       if (this.tenant) {
-        builder = builder.withTenant(this.tenant);
+        result = await collection
+          .withTenant(this.tenant)
+          .query.nearVector(query, {
+            filters: filter,
+            limit: k,
+            returnMetadata: ["distance", "score"],
+          });
+      } else {
+        result = await collection.query.nearVector(query, {
+          filters: filter,
+          limit: k,
+          includeVector: true,
+          returnMetadata: ["distance", "score"],
+        });
       }
 
-      if (filter?.where) {
-        builder = builder.withWhere(filter.where);
-      }
+      const documents: [Document, number, number, number[]][] = [];
 
-      const result = await builder.do();
-
-      const documents: [Document, number, number[]][] = [];
-      for (const data of result.data.Get[this.indexName]) {
-        const { [this.textKey]: text, _additional, ...rest }: ResultRow = data;
+      for (const data of result.objects) {
+        const { properties = {}, metadata = {} } = data ?? {};
+        const { [this.textKey]: text, ...rest } = properties;
 
         documents.push([
           new Document({
-            pageContent: text,
-            metadata: rest,
+            pageContent: String(text ?? ""),
+            metadata: {
+              ...rest,
+            },
+            id: data.uuid,
           }),
-          _additional.distance,
-          _additional.vector,
+          metadata?.distance ?? 0,
+          metadata?.score ?? 0,
+          Object.values(data.vectors)[0],
         ]);
       }
       return documents;
     } catch (e) {
-      throw Error(`'Error in similaritySearch' ${e}`);
+      throw Error(`Error in similaritySearch ${e}`);
     }
   }
 
@@ -363,14 +388,14 @@ export class WeaviateStore extends VectorStore {
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
     const queryEmbedding: number[] = await this.embeddings.embedQuery(query);
-    const allResults: [Document, number, number[]][] =
+    const allResults: [Document, number, number, number[]][] =
       await this.similaritySearchVectorWithScoreAndEmbedding(
         queryEmbedding,
         fetchK,
         filter
       );
     const embeddingList = allResults.map(
-      ([_doc, _score, embedding]) => embedding
+      ([_doc, _distance, _score, embedding]) => embedding
     );
     const mmrIndexes = maximalMarginalRelevance(
       queryEmbedding,
@@ -424,7 +449,7 @@ export class WeaviateStore extends VectorStore {
     embeddings: EmbeddingsInterface,
     args: WeaviateLibArgs
   ): Promise<WeaviateStore> {
-    const instance = new this(embeddings, args);
+    const instance = await this.initialize(embeddings, args);
     await instance.addDocuments(docs);
     return instance;
   }

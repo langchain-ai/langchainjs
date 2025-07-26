@@ -3,9 +3,11 @@ import { PromptTemplate } from "@langchain/core/prompts";
 
 const prompt = PromptTemplate.fromTemplate(`Tell me a joke about {subject}`);
 
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
-const chain = prompt.pipe(model.bind({ stop: ["\n"] }));
+const chain = prompt.pipe(model.withConfig({ stop: ["\n"] }));
 
 const result = await chain.invoke({ subject: "bears" });
 

@@ -69,6 +69,12 @@ const config = {
         },
       }),
     }),
+    [
+      "@docusaurus/plugin-google-tag-manager",
+      {
+        containerId: "GTM-NN9LVH7S",
+      },
+    ],
   ],
 
   presets: [
@@ -135,9 +141,13 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://jobs.ashbyhq.com/langchain/05efa205-8560-43fd-bfcc-3f7697561cfb?utm_source=https%3A%2F%2Fjs.langchain.com%2F&utm_campaign=langchainjs_docs" target="_blank">Join our team!</a></strong>',
+          '<strong>Our <a href="https://academy.langchain.com/courses/ambient-agents/?utm_medium=internal&utm_source=docs&utm_campaign=q2-2025_ambient-agents_co" target="_blank">Building Ambient Agents with LangGraph</a> course is now available on LangChain Academy!</strong>',
         backgroundColor: "#d0c9fe",
       },
       prism: {
@@ -268,6 +278,10 @@ const config = {
             title: "Community",
             items: [
               {
+                label: "LangChain Forum",
+                href: "https://forum.langchain.com/",
+              },
+              {
                 label: "Twitter",
                 href: "https://twitter.com/LangChainAI",
               },
@@ -316,14 +330,7 @@ const config = {
       },
     }),
 
-  scripts: [
-    baseUrl + "js/google_analytics.js",
-    baseUrl + "js/job_link.js",
-    {
-      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
-      async: true,
-    },
-  ],
+  scripts: [baseUrl + "js/job_link.js"],
 
   customFields: {
     supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,
