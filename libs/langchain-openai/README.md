@@ -53,7 +53,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  modelName: "gpt-4-1106-preview",
+  model: "gpt-4-1106-preview",
 });
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
@@ -65,7 +65,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  modelName: "gpt-4-1106-preview",
+  model: "gpt-4-1106-preview",
 });
 const response = await model.stream(new HumanMessage("Hello world!"));
 ```

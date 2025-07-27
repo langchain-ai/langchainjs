@@ -1220,7 +1220,7 @@ describe("Citations", () => {
       model: citationsModelName,
       clientOptions: {
         defaultHeaders: {
-          "anthropic-beta": "search-results-2025-01-01",
+          "anthropic-beta": "search-results-2025-06-09",
         },
       },
     }).bindTools([ragTool]);

@@ -199,6 +199,42 @@ export const oAuthClientProviderSchema = z.custom<OAuthClientProvider>(
   }
 );
 
+export const baseConfigSchema = z.object({
+  /**
+   * Defines where to place each tool output type in the LangChain ToolMessage.
+   *
+   * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
+   * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
+   * to `content` or `artifact`.
+   *
+   * @default {
+   *   "text": "content",
+   *   "image": "content",
+   *   "audio": "content",
+   *   "resource": "artifact"
+   * }
+   *
+   * Items in the `content` field will be used as input context for the LLM, while the artifact field is
+   * used for capturing tool output that won't be shown to the model, to be used in some later workflow
+   * step.
+   *
+   * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
+   * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
+   * the output in a code execution environment. In this case, you would set the output handling for the
+   * `resource` type to `artifact` (its default value), and then upon initialization of your code
+   * execution environment, you would look through your message history for `ToolMessage`s with the
+   * `artifact` field set to `resource`, and use the `content` field during initialization of the
+   * environment.
+   */
+  outputHandling: outputHandlingSchema.optional(),
+
+  /**
+   * Default timeout in milliseconds for tool execution. Must be greater than 0.
+   * If not specified, tools will use their own configured timeout values.
+   */
+  defaultToolTimeout: z.number().min(1).optional(),
+});
+
 /**
  * Stdio transport restart configuration
  */
@@ -297,34 +333,8 @@ export const stdioConnectionSchema = z
      * Additional restart settings
      */
     restart: stdioRestartSchema.optional(),
-    /**
-     * Defines where to place each tool output type in the LangChain ToolMessage.
-     *
-     * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
-     * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
-     * to `content` or `artifact`.
-     *
-     * @default {
-     *   "text": "content",
-     *   "image": "content",
-     *   "audio": "content",
-     *   "resource": "artifact"
-     * }
-     *
-     * Items in the `content` field will be used as input context for the LLM, while the artifact field is
-     * used for capturing tool output that won't be shown to the model, to be used in some later workflow
-     * step.
-     *
-     * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
-     * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
-     * the output in a code execution environment. In this case, you would set the output handling for the
-     * `resource` type to `artifact` (its default value), and then upon initialization of your code
-     * execution environment, you would look through your message history for `ToolMessage`s with the
-     * `artifact` field set to `resource`, and use the `content` field during initialization of the
-     * environment.
-     */
-    outputHandling: outputHandlingSchema.optional(),
   })
+  .and(baseConfigSchema)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -396,35 +406,8 @@ export const streamableHttpConnectionSchema = z
      * @default true
      */
     automaticSSEFallback: z.boolean().optional().default(true),
-
-    /**
-     * Defines where to place each tool output type in the LangChain ToolMessage.
-     *
-     * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
-     * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
-     * to `content` or `artifact`.
-     *
-     * @default {
-     *   "text": "content",
-     *   "image": "content",
-     *   "audio": "content",
-     *   "resource": "artifact"
-     * }
-     *
-     * Items in the `content` field will be used as input context for the LLM, while the artifact field is
-     * used for capturing tool output that won't be shown to the model, to be used in some later workflow
-     * step.
-     *
-     * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
-     * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
-     * the output in a code execution environment. In this case, you would set the output handling for the
-     * `resource` type to `artifact` (its default value), and then upon initialization of your code
-     * execution environment, you would look through your message history for `ToolMessage`s with the
-     * `artifact` field set to `resource`, and use the `content` field during initialization of the
-     * environment.
-     */
-    outputHandling: outputHandlingSchema.optional(),
   })
+  .and(baseConfigSchema)
   .describe("Configuration for streamable HTTP transport connection");
 
 /**
@@ -465,7 +448,7 @@ export const clientConfigSchema = z
       .boolean()
       .describe("Whether to prefix tool names with the server name")
       .optional()
-      .default(true),
+      .default(false),
     /**
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).
@@ -476,7 +459,7 @@ export const clientConfigSchema = z
       .string()
       .describe("An additional prefix to add to the tool name")
       .optional()
-      .default("mcp"),
+      .default(""),
     /**
      * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
      * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
@@ -497,41 +480,8 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
-
-    /**
-     * Defines where to place each tool output type in the LangChain ToolMessage. Can be overridden on a
-     * per-server basis.
-     *
-     * Can be set to `content` or `artifact` to send all tool output into the ToolMessage.content or
-     * ToolMessage.artifact array, respectively, or you can assign an object that maps each content type
-     * to `content` or `artifact`.
-     *
-     * @default {
-     *   "text": "content",
-     *   "image": "content",
-     *   "audio": "content",
-     *   "resource": "artifact"
-     * }
-     *
-     * Items in the `content` field will be used as input context for the LLM, while the artifact field is
-     * used for capturing tool output that won't be shown to the model, to be used in some later workflow
-     * step.
-     *
-     * For example, imagine that you have a SQL query tool that can return huge result sets. Rather than
-     * sending these large outputs directly to the model, perhaps you want the model to be able to inspect
-     * the output in a code execution environment. In this case, you would set the output handling for the
-     * `resource` type to `artifact` (its default value), and then upon initialization of your code
-     * execution environment, you would look through your message history for `ToolMessage`s with the
-     * `artifact` field set to `resource`, and use the `content` field during initialization of the
-     * environment.
-     */
-    outputHandling: outputHandlingSchema.optional().default({
-      text: "content",
-      image: "content",
-      audio: "content",
-      resource: "artifact",
-    }),
   })
+  .and(baseConfigSchema)
   .describe("Configuration for the MCP client");
 
 /**
@@ -631,6 +581,12 @@ export type LoadMcpToolsOptions = {
    * }
    */
   outputHandling?: OutputHandling;
+
+  /**
+   * Default timeout in milliseconds for tool execution. Must be greater than 0.
+   * If not specified, tools will use their own configured timeout values.
+   */
+  defaultToolTimeout?: number;
 };
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/community",
-  "version": "0.3.48",
+  "version": "0.3.49",
   "description": "Third-party integrations for LangChain.js",
   "type": "module",
   "engines": {
@@ -35,14 +35,14 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/openai": ">=0.2.0 <0.6.0",
+    "@langchain/openai": ">=0.2.0 <0.7.0",
     "@langchain/weaviate": "^0.2.0",
     "binary-extensions": "^2.2.0",
     "expr-eval": "^2.0.2",
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
-    "langsmith": "^0.3.33",
+    "langsmith": "^0.3.46",
     "uuid": "^10.0.0",
     "zod": "^3.25.32"
   },
@@ -50,7 +50,7 @@
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.749.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.840.0",
     "@aws-sdk/client-dynamodb": "^3.749.0",
     "@aws-sdk/client-kendra": "^3.749.0",
     "@aws-sdk/client-lambda": "^3.749.0",
