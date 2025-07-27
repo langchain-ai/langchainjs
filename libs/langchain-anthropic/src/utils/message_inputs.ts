@@ -355,7 +355,7 @@ function _formatContent(message: BaseMessage) {
     "web_search_result",
   ];
   const textTypes = ["text", "text_delta"];
-  const content = message.content;
+  const { content } = message;
 
   if (typeof content === "string") {
     return content;
