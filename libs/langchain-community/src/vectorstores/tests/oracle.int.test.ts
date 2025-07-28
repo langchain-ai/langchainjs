@@ -8,6 +8,7 @@ import {
   DistanceStrategy,
   type OracleDBVSStoreArgs,
   OracleVS,
+  dropTablePurge,
 } from "../oraclevs.js";
 
 describe("OracleVectorStore", () => {
@@ -34,11 +35,11 @@ describe("OracleVectorStore", () => {
 
   beforeEach(async () => {
     // Drop table for the next test.
-    await connection?.execute(`drop table if exists ${tableName}`);
-    // await oraclevs?.end();
+    await dropTablePurge(connection as oracledb.Connection, tableName);
   });
 
   afterAll(async () => {
+    await dropTablePurge(connection as oracledb.Connection, tableName);
     await connection?.close();
     await pool.close();
   });

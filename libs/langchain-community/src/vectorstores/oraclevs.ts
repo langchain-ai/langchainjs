@@ -279,7 +279,7 @@ export async function dropTablePurge(
   tableName: string
 ): Promise<void> {
   try {
-    const ddl = `DROP TABLE IF EXISTS ${tableName} PURGE`;
+    const ddl = `DROP TABLE IF EXISTS ${quoteIdentifier(tableName)} PURGE`;
     await connection.execute(ddl);
   } catch (error: unknown) {
     handleError(error);
@@ -310,7 +310,7 @@ export class OracleVS extends VectorStore {
 
     try {
       this.client = dbConfig.client;
-      this.tableName = dbConfig.tableName;
+      this.tableName = quoteIdentifier(dbConfig.tableName);
       this.distanceStrategy =
         dbConfig.distanceStrategy ?? this.distanceStrategy;
       this.query = dbConfig.query;
