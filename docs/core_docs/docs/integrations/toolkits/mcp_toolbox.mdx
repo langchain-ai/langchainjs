@@ -62,7 +62,7 @@ const getTool = (toolboxTool) => tool(toolboxTool, {
     name: toolboxTool.getName(),
     description: toolboxTool.getDescription(),
     schema: toolboxTool.getParamSchema()
-  });
+});
 const tools = toolboxTools.map(getTool);
 
 const agent = createReactAgent({ llm: model, tools: tools });
