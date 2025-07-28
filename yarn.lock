@@ -6688,14 +6688,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.6.9":
-  version: 1.6.9
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.9"
+"@ibm-cloud/watsonx-ai@npm:1.6.10":
+  version: 1.6.10
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.10"
   dependencies:
     "@types/node": ^18.0.0
     extend: 3.0.2
     ibm-cloud-sdk-core: ^5.3.2
-  checksum: 119f7b3c8d3771ebff0dc3e078ad7774cbcbec2cb7c43dc21832e95af38dcacfe6f7504d023e5faff1b1cb2412d7da64688169edf75b91dbd4db3abb59015e2a
+  checksum: 8eb1d7b714918d51f9a3a6e21e37ccc5baac67807348969338d6caad5574c58a78d2f54bf43ce367b0fb2ae8bcd90e64d75762e42adfe920cb17e5d54cea1b24
   languageName: node
   linkType: hard
 
@@ -8268,7 +8268,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": ^1.6.9
+    "@ibm-cloud/watsonx-ai": 1.6.10
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -8452,7 +8452,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": "*"
+    "@ibm-cloud/watsonx-ai": 1.6.10
     "@lancedb/lancedb": ^0.12.0
     "@langchain/core": ">=0.3.58 <0.4.0"
     "@layerup/layerup-security": ^1.5.12
