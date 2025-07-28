@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-process-env */
 
 import { test, jest, expect } from "@jest/globals";
@@ -25,6 +26,7 @@ import {
   getBearerTokenProvider,
 } from "@azure/identity";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
+import { env } from "../utils.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -963,4 +965,57 @@ test("Test Azure ChatOpenAI withStructuredOutput", async () => {
   );
   const res = await model.invoke([message]);
   expect(res.sentiment).toBeDefined();
+});
+
+describe("Does initialize with constructor options", () => {
+  // make sure no variables are set
+  env.useVariables({}, { replace: true });
+
+  const azureOpenAIKey = process.env.AZURE_OPENAI_API_KEY;
+  const azureOpenAIApiVersion = process.env.AZURE_OPENAI_API_VERSION;
+  const azureOpenAIApiInstanceName = process.env.AZURE_OPENAI_API_INSTANCE_NAME;
+  const azureOpenAIApiDeploymentName =
+    process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME;
+
+  // https://github.com/langchain-ai/langchainjs/issues/8547
+  test("when using `azureADTokenProvider`", async () => {
+    const chat = new AzureChatOpenAI({
+      model: "gpt-4o-mini",
+      azureOpenAIApiVersion,
+      azureOpenAIApiInstanceName,
+      azureOpenAIApiDeploymentName,
+      azureADTokenProvider: () => Promise.resolve(azureOpenAIKey ?? ""),
+    });
+
+    const message = new HumanMessage("Hello!");
+    const res = await chat.invoke([message]);
+    expect(res).toBeDefined();
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8544
+  test("when using `apiKey`", async () => {
+    const chat = new AzureChatOpenAI({
+      apiKey: azureOpenAIKey,
+      azureOpenAIApiDeploymentName,
+      azureOpenAIApiInstanceName,
+      azureOpenAIApiVersion,
+      model: "gpt-4o-mini",
+    });
+    const message = new HumanMessage("Hello!");
+    const res = await chat.invoke([message]);
+    expect(res).toBeDefined();
+  });
+
+  test("when using `azureOpenAIApiKey`", async () => {
+    const chat = new AzureChatOpenAI({
+      model: "gpt-4o-mini",
+      azureOpenAIApiKey: azureOpenAIKey,
+      azureOpenAIApiDeploymentName,
+      azureOpenAIApiInstanceName,
+      azureOpenAIApiVersion,
+    });
+    const message = new HumanMessage("Hello!");
+    const res = await chat.invoke([message]);
+    expect(res).toBeDefined();
+  });
 });

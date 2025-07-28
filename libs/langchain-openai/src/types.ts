@@ -199,7 +199,7 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
 }
 
-export declare interface AzureOpenAIInput {
+export interface AzureOpenAIInput {
   /**
    * API version to use when making requests to Azure OpenAI.
    */
@@ -264,6 +264,15 @@ export declare interface AzureOpenAIInput {
    * which will be invoked on every request.
    */
   azureADTokenProvider?: () => Promise<string>;
+}
+
+export interface AzureOpenAIChatInput
+  extends OpenAIChatInput,
+    AzureOpenAIInput {
+  openAIApiKey?: string;
+  openAIApiVersion?: string;
+  openAIBasePath?: string;
+  deploymentName?: string;
 }
 
 type ChatOpenAIResponseFormatJSONSchema = Omit<
