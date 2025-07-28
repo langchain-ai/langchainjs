@@ -44,7 +44,6 @@ import { ChatVertexAI } from "@langchain/google-vertexai"
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { tool } from "@langchain/core/tools";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { MemorySaver } from "@langchain/langgraph";
 
 const model = new ChatVertexAI({
   model: "gemini-2.0-flash",
