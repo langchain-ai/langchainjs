@@ -104,7 +104,14 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
 }
 
 function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
-  const builtinTools = ["web_search"];
+  const builtinTools = [
+    "web_search",
+    "bash",
+    "code_execution",
+    "computer",
+    "str_replace_editor",
+    "str_replace_based_edit_tool",
+  ];
   return (
     typeof tool === "object" &&
     tool !== null &&

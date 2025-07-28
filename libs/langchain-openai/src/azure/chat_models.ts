@@ -1,26 +1,359 @@
-import { type ClientOptions, AzureOpenAI as AzureOpenAIClient } from "openai";
-import {
-  LangSmithParams,
-  type BaseChatModelParams,
-} from "@langchain/core/language_models/chat_models";
+import { AzureOpenAI as AzureOpenAIClient } from "openai";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { BaseMessage } from "@langchain/core/messages";
-import { Runnable } from "@langchain/core/runnables";
-import { InteropZodType } from "@langchain/core/utils/types";
+import { Serialized } from "@langchain/core/load/serializable";
+import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import { StructuredOutputMethodOptions } from "@langchain/core/language_models/base";
 import {
+  BaseChatOpenAI,
+  BaseChatOpenAIFields,
   ChatOpenAI,
-  ChatOpenAIStructuredOutputMethodOptions,
+  ChatOpenAICallOptions,
+  ChatOpenAICompletions,
+  ChatOpenAICompletionsCallOptions,
+  ChatOpenAIResponses,
+  ChatOpenAIResponsesCallOptions,
 } from "../chat_models.js";
 import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
 import {
+  AzureOpenAIChatInput,
   AzureOpenAIInput,
-  OpenAIChatInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
 import { normalizeHeaders } from "../utils/headers.js";
 
 export type { AzureOpenAIInput };
+
+const AZURE_ALIASES = {
+  openAIApiKey: "openai_api_key",
+  openAIApiVersion: "openai_api_version",
+  openAIBasePath: "openai_api_base",
+  deploymentName: "deployment_name",
+  azureOpenAIEndpoint: "azure_endpoint",
+  azureOpenAIApiVersion: "openai_api_version",
+  azureOpenAIBasePath: "openai_api_base",
+  azureOpenAIApiDeploymentName: "deployment_name",
+};
+
+const AZURE_SECRETS = {
+  azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+};
+
+const AZURE_SERIALIZABLE_KEYS = [
+  "azureOpenAIApiKey",
+  "azureOpenAIApiVersion",
+  "azureOpenAIBasePath",
+  "azureOpenAIEndpoint",
+  "azureOpenAIApiInstanceName",
+  "azureOpenAIApiDeploymentName",
+  "deploymentName",
+  "openAIApiKey",
+  "openAIApiVersion",
+];
+
+function _constructAzureFields(
+  this: Partial<AzureOpenAIChatInput>,
+  fields?: AzureChatOpenAIFields
+) {
+  this.azureOpenAIApiKey =
+    fields?.azureOpenAIApiKey ??
+    fields?.openAIApiKey ??
+    fields?.apiKey ??
+    getEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+  this.azureOpenAIApiInstanceName =
+    fields?.azureOpenAIApiInstanceName ??
+    getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
+
+  this.azureOpenAIApiDeploymentName =
+    fields?.azureOpenAIApiDeploymentName ??
+    fields?.deploymentName ??
+    getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
+
+  this.azureOpenAIApiVersion =
+    fields?.azureOpenAIApiVersion ??
+    fields?.openAIApiVersion ??
+    getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
+
+  this.azureOpenAIBasePath =
+    fields?.azureOpenAIBasePath ??
+    getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
+
+  this.azureOpenAIEndpoint =
+    fields?.azureOpenAIEndpoint ??
+    getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
+  this.azureADTokenProvider = fields?.azureADTokenProvider;
+
+  if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
+    throw new Error("Azure OpenAI API key or Token Provider not found");
+  }
+}
+
+function _getAzureClientOptions(
+  this: BaseChatOpenAI<ChatOpenAICallOptions> & Partial<AzureOpenAIChatInput>,
+  options: OpenAICoreRequestOptions | undefined
+) {
+  if (!this.client) {
+    const openAIEndpointConfig: OpenAIEndpointConfig = {
+      azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+      azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
+      azureOpenAIApiKey: this.azureOpenAIApiKey,
+      azureOpenAIBasePath: this.azureOpenAIBasePath,
+      azureADTokenProvider: this.azureADTokenProvider,
+      baseURL: this.clientConfig.baseURL,
+      azureOpenAIEndpoint: this.azureOpenAIEndpoint,
+    };
+
+    const endpoint = getEndpoint(openAIEndpointConfig);
+
+    const params = {
+      ...this.clientConfig,
+      baseURL: endpoint,
+      timeout: this.timeout,
+      maxRetries: 0,
+    };
+
+    if (!this.azureADTokenProvider) {
+      params.apiKey = openAIEndpointConfig.azureOpenAIApiKey;
+    }
+
+    if (!params.baseURL) {
+      delete params.baseURL;
+    }
+
+    let env = getEnv();
+    if (env === "node" || env === "deno") {
+      env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
+    }
+
+    const defaultHeaders = normalizeHeaders(params.defaultHeaders);
+    params.defaultHeaders = {
+      ...params.defaultHeaders,
+      "User-Agent": defaultHeaders["User-Agent"]
+        ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
+        : `langchainjs-azure-openai/2.0.0 (${env})`,
+    };
+
+    this.client = new AzureOpenAIClient({
+      apiVersion: this.azureOpenAIApiVersion,
+      azureADTokenProvider: this.azureADTokenProvider,
+      deployment: this.azureOpenAIApiDeploymentName,
+      ...params,
+    });
+  }
+  const requestOptions = {
+    ...this.clientConfig,
+    ...options,
+  } as OpenAICoreRequestOptions;
+  if (this.azureOpenAIApiKey) {
+    requestOptions.headers = {
+      "api-key": this.azureOpenAIApiKey,
+      ...requestOptions.headers,
+    };
+    requestOptions.query = {
+      "api-version": this.azureOpenAIApiVersion,
+      ...requestOptions.query,
+    };
+  }
+  return requestOptions;
+}
+
+function _serializeAzureChat(
+  this: BaseChatOpenAI<ChatOpenAICallOptions> & Partial<AzureOpenAIChatInput>,
+  input: Serialized
+) {
+  const json = input;
+
+  function isRecord(obj: unknown): obj is Record<string, unknown> {
+    return typeof obj === "object" && obj != null;
+  }
+
+  if (isRecord(json) && isRecord(json.kwargs)) {
+    delete json.kwargs.azure_openai_base_path;
+    delete json.kwargs.azure_openai_api_deployment_name;
+    delete json.kwargs.azure_openai_api_key;
+    delete json.kwargs.azure_openai_api_version;
+    delete json.kwargs.azure_open_ai_base_path;
+
+    if (!json.kwargs.azure_endpoint && this.azureOpenAIEndpoint) {
+      json.kwargs.azure_endpoint = this.azureOpenAIEndpoint;
+    }
+    if (!json.kwargs.azure_endpoint && this.azureOpenAIBasePath) {
+      const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+      if (parts.length === 2 && parts[0].startsWith("http")) {
+        const [endpoint] = parts;
+        json.kwargs.azure_endpoint = endpoint;
+      }
+    }
+    if (!json.kwargs.azure_endpoint && this.azureOpenAIApiInstanceName) {
+      json.kwargs.azure_endpoint = `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/`;
+    }
+    if (!json.kwargs.deployment_name && this.azureOpenAIApiDeploymentName) {
+      json.kwargs.deployment_name = this.azureOpenAIApiDeploymentName;
+    }
+    if (!json.kwargs.deployment_name && this.azureOpenAIBasePath) {
+      const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
+      if (parts.length === 2) {
+        const [, deployment] = parts;
+        json.kwargs.deployment_name = deployment;
+      }
+    }
+
+    if (
+      json.kwargs.azure_endpoint &&
+      json.kwargs.deployment_name &&
+      json.kwargs.openai_api_base
+    ) {
+      delete json.kwargs.openai_api_base;
+    }
+    if (
+      json.kwargs.azure_openai_api_instance_name &&
+      json.kwargs.azure_endpoint
+    ) {
+      delete json.kwargs.azure_openai_api_instance_name;
+    }
+  }
+
+  return json;
+}
+
+interface AzureChatOpenAIFields
+  extends BaseChatOpenAIFields,
+    Partial<AzureOpenAIChatInput> {
+  /**
+   * Whether to use the responses API for all requests. If `false` the responses API will be used
+   * only when required in order to fulfill the request.
+   */
+  useResponsesApi?: boolean;
+}
+
+class AzureChatOpenAIResponses<
+    CallOptions extends ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions
+  >
+  extends ChatOpenAIResponses<CallOptions>
+  implements Partial<AzureOpenAIChatInput>
+{
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
+  azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
+
+  _llmType(): string {
+    return "azure_openai";
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      ...super.lc_aliases,
+      ...AZURE_ALIASES,
+    };
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      ...super.lc_secrets,
+      ...AZURE_SECRETS,
+    };
+  }
+
+  get lc_serializable_keys(): string[] {
+    return [...super.lc_serializable_keys, ...AZURE_SERIALIZABLE_KEYS];
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
+  }
+
+  constructor(fields?: AzureChatOpenAIFields) {
+    super(fields);
+    _constructAzureFields.call(this, fields);
+  }
+
+  override _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
+    return _getAzureClientOptions.call(this, options);
+  }
+
+  override toJSON() {
+    return _serializeAzureChat.call(this, super.toJSON());
+  }
+}
+
+class AzureChatOpenAICompletions<
+    CallOptions extends ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions
+  >
+  extends ChatOpenAICompletions<CallOptions>
+  implements Partial<AzureOpenAIChatInput>
+{
+  azureOpenAIApiVersion?: string;
+
+  azureOpenAIApiKey?: string;
+
+  azureADTokenProvider?: () => Promise<string>;
+
+  azureOpenAIApiInstanceName?: string;
+
+  azureOpenAIApiDeploymentName?: string;
+
+  azureOpenAIBasePath?: string;
+
+  azureOpenAIEndpoint?: string;
+
+  _llmType(): string {
+    return "azure_openai";
+  }
+
+  get lc_aliases(): Record<string, string> {
+    return {
+      ...super.lc_aliases,
+      ...AZURE_ALIASES,
+    };
+  }
+
+  get lc_secrets(): { [key: string]: string } | undefined {
+    return {
+      ...super.lc_secrets,
+      ...AZURE_SECRETS,
+    };
+  }
+
+  get lc_serializable_keys(): string[] {
+    return [...super.lc_serializable_keys, ...AZURE_SERIALIZABLE_KEYS];
+  }
+
+  getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
+    const params = super.getLsParams(options);
+    params.ls_provider = "azure";
+    return params;
+  }
+
+  constructor(fields?: AzureChatOpenAIFields) {
+    super(fields);
+    _constructAzureFields.call(this, fields);
+  }
+
+  override _getClientOptions(
+    options: OpenAICoreRequestOptions | undefined
+  ): OpenAICoreRequestOptions {
+    return _getAzureClientOptions.call(this, options);
+  }
+
+  override toJSON() {
+    return _serializeAzureChat.call(this, super.toJSON());
+  }
+}
 
 /**
  * Azure OpenAI chat model integration.
@@ -363,7 +696,7 @@ export type { AzureOpenAIInput };
  * <summary><strong>Logprobs</strong></summary>
  *
  * ```typescript
- * const logprobsLlm = new ChatOpenAI({ logprobs: true });
+ * const logprobsLlm = new ChatOpenAI({ model: "gpt-4o-mini", logprobs: true });
  * const aiMsgForLogprobs = await logprobsLlm.invoke(input);
  * console.log(aiMsgForLogprobs.response_metadata.logprobs);
  * ```
@@ -434,7 +767,12 @@ export type { AzureOpenAIInput };
  * ```
  * </details>
  */
-export class AzureChatOpenAI extends ChatOpenAI {
+export class AzureChatOpenAI<
+    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions
+  >
+  extends ChatOpenAI<CallOptions>
+  implements Partial<AzureOpenAIChatInput>
+{
   azureOpenAIApiVersion?: string;
 
   azureOpenAIApiKey?: string;
@@ -456,84 +794,19 @@ export class AzureChatOpenAI extends ChatOpenAI {
   get lc_aliases(): Record<string, string> {
     return {
       ...super.lc_aliases,
-      openAIApiKey: "openai_api_key",
-      openAIApiVersion: "openai_api_version",
-      openAIBasePath: "openai_api_base",
-      deploymentName: "deployment_name",
-      azureOpenAIEndpoint: "azure_endpoint",
-      azureOpenAIApiVersion: "openai_api_version",
-      azureOpenAIBasePath: "openai_api_base",
-      azureOpenAIApiDeploymentName: "deployment_name",
+      ...AZURE_ALIASES,
     };
   }
 
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       ...super.lc_secrets,
-      azureOpenAIApiKey: "AZURE_OPENAI_API_KEY",
+      ...AZURE_SECRETS,
     };
   }
 
   get lc_serializable_keys(): string[] {
-    return [
-      ...super.lc_serializable_keys,
-      "azureOpenAIApiKey",
-      "azureOpenAIApiVersion",
-      "azureOpenAIBasePath",
-      "azureOpenAIEndpoint",
-      "azureOpenAIApiInstanceName",
-      "azureOpenAIApiDeploymentName",
-      "deploymentName",
-      "openAIApiKey",
-      "openAIApiVersion",
-    ];
-  }
-
-  constructor(
-    fields?: Partial<OpenAIChatInput> &
-      Partial<AzureOpenAIInput> & {
-        openAIApiKey?: string;
-        openAIApiVersion?: string;
-        openAIBasePath?: string;
-        deploymentName?: string;
-      } & BaseChatModelParams & {
-        configuration?: ClientOptions;
-      }
-  ) {
-    super(fields);
-    this.azureOpenAIApiKey =
-      fields?.azureOpenAIApiKey ??
-      fields?.openAIApiKey ??
-      fields?.apiKey ??
-      getEnvironmentVariable("AZURE_OPENAI_API_KEY");
-
-    this.azureOpenAIApiInstanceName =
-      fields?.azureOpenAIApiInstanceName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
-
-    this.azureOpenAIApiDeploymentName =
-      fields?.azureOpenAIApiDeploymentName ??
-      fields?.deploymentName ??
-      getEnvironmentVariable("AZURE_OPENAI_API_DEPLOYMENT_NAME");
-
-    this.azureOpenAIApiVersion =
-      fields?.azureOpenAIApiVersion ??
-      fields?.openAIApiVersion ??
-      getEnvironmentVariable("AZURE_OPENAI_API_VERSION");
-
-    this.azureOpenAIBasePath =
-      fields?.azureOpenAIBasePath ??
-      getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
-
-    this.azureOpenAIEndpoint =
-      fields?.azureOpenAIEndpoint ??
-      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-
-    this.azureADTokenProvider = fields?.azureADTokenProvider;
-
-    if (!this.azureOpenAIApiKey && !this.apiKey && !this.azureADTokenProvider) {
-      throw new Error("Azure OpenAI API key or Token Provider not found");
-    }
+    return [...super.lc_serializable_keys, ...AZURE_SERIALIZABLE_KEYS];
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -542,188 +815,30 @@ export class AzureChatOpenAI extends ChatOpenAI {
     return params;
   }
 
-  protected _getClientOptions(
-    options: OpenAICoreRequestOptions | undefined
-  ): OpenAICoreRequestOptions {
-    if (!this.client) {
-      const openAIEndpointConfig: OpenAIEndpointConfig = {
-        azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
-        azureOpenAIApiInstanceName: this.azureOpenAIApiInstanceName,
-        azureOpenAIApiKey: this.azureOpenAIApiKey,
-        azureOpenAIBasePath: this.azureOpenAIBasePath,
-        azureADTokenProvider: this.azureADTokenProvider,
-        baseURL: this.clientConfig.baseURL,
-        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
-      };
-
-      const endpoint = getEndpoint(openAIEndpointConfig);
-
-      const params = {
-        ...this.clientConfig,
-        baseURL: endpoint,
-        timeout: this.timeout,
-        maxRetries: 0,
-      };
-
-      if (!this.azureADTokenProvider) {
-        params.apiKey = openAIEndpointConfig.azureOpenAIApiKey;
-      }
-
-      if (!params.baseURL) {
-        delete params.baseURL;
-      }
-
-      let env = getEnv();
-      if (env === "node" || env === "deno") {
-        env = `(${env}/${process.version}; ${process.platform}; ${process.arch})`;
-      }
-
-      const defaultHeaders = normalizeHeaders(params.defaultHeaders);
-      params.defaultHeaders = {
-        ...params.defaultHeaders,
-        "User-Agent": defaultHeaders["User-Agent"]
-          ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
-          : `langchainjs-azure-openai/2.0.0 (${env})`,
-      };
-
-      this.client = new AzureOpenAIClient({
-        apiVersion: this.azureOpenAIApiVersion,
-        azureADTokenProvider: this.azureADTokenProvider,
-        deployment: this.azureOpenAIApiDeploymentName,
-        ...params,
-      });
-    }
-    const requestOptions = {
-      ...this.clientConfig,
-      ...options,
-    } as OpenAICoreRequestOptions;
-    if (this.azureOpenAIApiKey) {
-      requestOptions.headers = {
-        "api-key": this.azureOpenAIApiKey,
-        ...requestOptions.headers,
-      };
-      requestOptions.query = {
-        "api-version": this.azureOpenAIApiVersion,
-        ...requestOptions.query,
-      };
-    }
-    return requestOptions;
+  constructor(fields?: AzureChatOpenAIFields) {
+    super({
+      ...fields,
+      completions: new AzureChatOpenAICompletions(fields),
+      responses: new AzureChatOpenAIResponses(fields),
+    });
+    _constructAzureFields.call(this, fields);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toJSON(): any {
-    const json = super.toJSON() as unknown;
-
-    function isRecord(obj: unknown): obj is Record<string, unknown> {
-      return typeof obj === "object" && obj != null;
-    }
-
-    if (isRecord(json) && isRecord(json.kwargs)) {
-      delete json.kwargs.azure_openai_base_path;
-      delete json.kwargs.azure_openai_api_deployment_name;
-      delete json.kwargs.azure_openai_api_key;
-      delete json.kwargs.azure_openai_api_version;
-      delete json.kwargs.azure_open_ai_base_path;
-
-      if (!json.kwargs.azure_endpoint && this.azureOpenAIEndpoint) {
-        json.kwargs.azure_endpoint = this.azureOpenAIEndpoint;
-      }
-      if (!json.kwargs.azure_endpoint && this.azureOpenAIBasePath) {
-        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
-        if (parts.length === 2 && parts[0].startsWith("http")) {
-          const [endpoint] = parts;
-          json.kwargs.azure_endpoint = endpoint;
-        }
-      }
-      if (!json.kwargs.azure_endpoint && this.azureOpenAIApiInstanceName) {
-        json.kwargs.azure_endpoint = `https://${this.azureOpenAIApiInstanceName}.openai.azure.com/`;
-      }
-      if (!json.kwargs.deployment_name && this.azureOpenAIApiDeploymentName) {
-        json.kwargs.deployment_name = this.azureOpenAIApiDeploymentName;
-      }
-      if (!json.kwargs.deployment_name && this.azureOpenAIBasePath) {
-        const parts = this.azureOpenAIBasePath.split("/openai/deployments/");
-        if (parts.length === 2) {
-          const [, deployment] = parts;
-          json.kwargs.deployment_name = deployment;
-        }
-      }
-
-      if (
-        json.kwargs.azure_endpoint &&
-        json.kwargs.deployment_name &&
-        json.kwargs.openai_api_base
-      ) {
-        delete json.kwargs.openai_api_base;
-      }
-      if (
-        json.kwargs.azure_openai_api_instance_name &&
-        json.kwargs.azure_endpoint
-      ) {
-        delete json.kwargs.azure_openai_api_instance_name;
-      }
-    }
-
-    return json;
-  }
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+  /** @internal */
+  override _getStructuredOutputMethod(
+    config: StructuredOutputMethodOptions<boolean>
+  ) {
     const ensuredConfig = { ...config };
     // Not all Azure gpt-4o deployments models support jsonSchema yet
     if (this.model.startsWith("gpt-4o")) {
       if (ensuredConfig?.method === undefined) {
-        ensuredConfig.method = "functionCalling";
+        return "functionCalling";
       }
     }
-    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
+    return super._getStructuredOutputMethod(ensuredConfig);
+  }
+
+  override toJSON() {
+    return _serializeAzureChat.call(this, super.toJSON());
   }
 }

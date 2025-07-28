@@ -324,6 +324,75 @@ describe("MultiServerMCPClient", () => {
     test("should handle empty tool lists correctly", async () => {
       // Mock implementation similar to above
     });
+
+    describe("should apply tool name prefixes correctly", () => {
+      test("when prefixToolNameWithServerName is true", async () => {
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "test-server": {
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+            },
+          },
+          prefixToolNameWithServerName: true,
+        });
+        const tools = await client.getTools();
+
+        expect(tools.length).toBe(2);
+        expect(tools[0].name).toBe("test-server__tool1");
+        expect(tools[1].name).toBe("test-server__tool2");
+      });
+      test("when additionalToolNamePrefix is set", async () => {
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "test-server": {
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+            },
+          },
+          additionalToolNamePrefix: "mcp",
+        });
+        const tools = await client.getTools();
+
+        expect(tools.length).toBe(2);
+        expect(tools[0].name).toBe("mcp__tool1");
+        expect(tools[1].name).toBe("mcp__tool2");
+      });
+      test("with both server name and additional prefix when set", async () => {
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "test-server": {
+              transport: "stdio",
+              command: "python",
+              args: ["./script.py"],
+            },
+          },
+          prefixToolNameWithServerName: true,
+          additionalToolNamePrefix: "mcp",
+        });
+        const tools = await client.getTools();
+
+        expect(tools.length).toBe(2);
+        expect(tools[0].name).toBe("mcp__test-server__tool1");
+        expect(tools[1].name).toBe("mcp__test-server__tool2");
+      });
+      test("shouldn't apply prefixes by default", async () => {
+        const client = new MultiServerMCPClient({
+          "test-server": {
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+          },
+        });
+        const tools = await client.getTools();
+
+        expect(tools.length).toBe(2);
+        expect(tools[0].name).toBe("tool1");
+        expect(tools[1].name).toBe("tool2");
+      });
+    });
   });
 
   // Cleanup Handling tests

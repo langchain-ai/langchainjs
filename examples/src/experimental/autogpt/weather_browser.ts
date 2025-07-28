@@ -20,7 +20,7 @@ const tools = [
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
 
 const autogpt = AutoGPT.fromLLMAndTools(
-  new ChatOpenAI({ temperature: 0 }),
+  new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
   tools,
   {
     memory: vectorStore.asRetriever(),

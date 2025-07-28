@@ -118,7 +118,7 @@ test("Test apply", async () => {
 });
 
 test("Test LLMChain with ChatOpenAI", async () => {
-  const model = new ChatOpenAI({ temperature: 0.9 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 });
   const template = "What is a good name for a company that makes {product}?";
   const prompt = new PromptTemplate({ template, inputVariables: ["product"] });
   const humanMessagePrompt = new HumanMessagePromptTemplate(prompt);
@@ -133,7 +133,7 @@ test("Test LLMChain with ChatOpenAI", async () => {
 });
 
 test("Test passing a runnable to an LLMChain", async () => {
-  const model = new ChatOpenAI({ modelName: "gpt-3.5-turbo-1106" });
+  const model = new ChatOpenAI({ model: "gpt-3.5-turbo-1106" });
   const runnableModel = model.withConfig({
     response_format: {
       type: "json_object",

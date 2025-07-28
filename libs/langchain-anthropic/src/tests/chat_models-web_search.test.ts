@@ -57,14 +57,7 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
   expect(result[0].message).toEqual(
     new AIMessage({
       content: anthropicResponse,
-      tool_calls: [
-        {
-          name: "web_search",
-          args: { query: "Claude Shannon birth date" },
-          id: "toolu_01ABC123",
-          type: "tool_call",
-        },
-      ],
+      tool_calls: [],
       additional_kwargs: { id: "msg_01ABC123" },
       response_metadata: { id: "msg_01ABC123" },
       id: "msg_01ABC123",
@@ -95,20 +88,7 @@ test("Web Search Tool - Only web_search server tools extracted", () => {
   expect(result[0].message).toEqual(
     new AIMessage({
       content: anthropicResponse,
-      tool_calls: [
-        {
-          name: "web_search",
-          args: { query: "latest AI developments" },
-          id: "toolu_web_001",
-          type: "tool_call",
-        },
-        {
-          name: "web_search",
-          args: { query: "machine learning trends 2024" },
-          id: "toolu_web_002",
-          type: "tool_call",
-        },
-      ],
+      tool_calls: [],
       additional_kwargs: {},
       response_metadata: {},
       id: undefined,

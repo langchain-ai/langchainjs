@@ -56,7 +56,7 @@ export function createMetadataTagger(
   schema: JsonSchema7ObjectType,
   options: TaggingChainOptions & { llm?: ChatOpenAI }
 ) {
-  const { llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }), ...rest } =
+  const { llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }), ...rest } =
     options;
   const taggingChain = createTaggingChain(schema, llm, rest);
   return new MetadataTagger({ taggingChain });

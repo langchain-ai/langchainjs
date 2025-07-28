@@ -30,7 +30,7 @@ test("Can parse JSON with text in front of it", async () => {
   ];
 
   const p = StructuredChatOutputParserWithRetries.fromLLM(
-    new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" }),
+    new ChatOpenAI({ temperature: 0, model: "gpt-3.5-turbo" }),
     {
       toolNames: ["blogpost"],
     }

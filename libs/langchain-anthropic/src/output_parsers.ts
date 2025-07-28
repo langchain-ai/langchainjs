@@ -113,17 +113,6 @@ export function extractToolCalls(content: Record<string, any>[]) {
         id: block.id,
         type: "tool_call",
       });
-    } else if (
-      block.type === "server_tool_use" &&
-      block.name === "web_search"
-    ) {
-      // Handle Anthropic built-in web search tool
-      toolCalls.push({
-        name: block.name,
-        args: block.input,
-        id: block.id,
-        type: "tool_call",
-      });
     }
   }
 

@@ -61,7 +61,7 @@ async function runExample() {
 
     // Initialize the LLM
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-3.5-turbo",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-3.5-turbo",
       temperature: 0,
     });
 

@@ -60,7 +60,11 @@ const chatPrompt = ChatPromptTemplate.fromMessages([
   HumanMessagePromptTemplate.fromTemplate("{input}"),
 ]);
 
-const model = new ChatOpenAI({ temperature: 0.9, verbose: true });
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0.9,
+  verbose: true,
+});
 const chain = new ConversationChain({
   llm: model,
   memory: chatPromptMemory,
