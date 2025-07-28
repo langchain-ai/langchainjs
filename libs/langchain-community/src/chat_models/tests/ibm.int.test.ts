@@ -89,6 +89,36 @@ describe.each(models)("Tests for chat %s", (model) => {
       const res = await service.invoke(messages);
       expect(res).toBeInstanceOf(AIMessage);
     });
+
+    test.only("Invoke with maxTokens", async () => {
+      const service = new ChatWatsonx({
+        model,
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+      });
+      const messages = [
+        new SystemMessage("Translate the following from English into Italian"),
+        new HumanMessage("hi!"),
+      ];
+      const res = await service.invoke(messages);
+      expect(res).toBeInstanceOf(AIMessage);
+    });
+
+    test.only("Invoke with maxCompletionTokens override maxTokens", async () => {
+      const service = new ChatWatsonx({
+        model,
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        maxTokens: 5,
+        maxCompletionTokens: 10,
+      });
+      const messages = [new HumanMessage("What is AI?")];
+      const res = await service.invoke(messages);
+      expect(res).toBeInstanceOf(AIMessage);
+      expect(res.usage_metadata?.output_tokens).toBe(10);
+    });
     test("Invoke with output parser", async () => {
       const service = new ChatWatsonx({
         model,

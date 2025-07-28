@@ -6057,15 +6057,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.4"
+"@ibm-cloud/watsonx-ai@npm:^1.6.9":
+  version: 1.6.9
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.9"
   dependencies:
-    "@langchain/textsplitters": ^0.1.0
     "@types/node": ^18.0.0
     extend: 3.0.2
     ibm-cloud-sdk-core: ^5.3.2
-  checksum: 995638aa134dd54da3694bdc20aab6563a87fb4fcdf5a88e5fe48ca4505c44954bc398f9a82904ef5091db61fa1ebc7b0f17c2a241227f8f37f4b94f202d46d3
+  checksum: 119f7b3c8d3771ebff0dc3e078ad7774cbcbec2cb7c43dc21832e95af38dcacfe6f7504d023e5faff1b1cb2412d7da64688169edf75b91dbd4db3abb59015e2a
   languageName: node
   linkType: hard
 
@@ -7478,7 +7477,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": ^1.6.4
+    "@ibm-cloud/watsonx-ai": ^1.6.9
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -8967,7 +8966,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@^0.1.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
