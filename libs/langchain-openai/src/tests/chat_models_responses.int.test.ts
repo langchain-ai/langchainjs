@@ -765,4 +765,54 @@ describe("reasoning summaries", () => {
 
     expect(response).toBeDefined();
   });
+
+  test("useResponsesApi=true should emit handleLLMNewToken events during streaming", async () => {
+    // This test demonstrates that when useResponsesApi=true is enabled,
+    // the ChatOpenAI class properly passes the runManager parameter to
+    // ChatOpenAIResponses._streamResponseChunks, allowing handleLLMNewToken
+    // events to be emitted during streaming.
+
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      useResponsesApi: true,
+    });
+
+    const messages = [new HumanMessage("Say 'Hello world' in 3 words.")];
+
+    // Track handleLLMNewToken events
+    let newTokenEvents: string[] = [];
+    let handleLLMNewTokenCalled = false;
+
+    const stream = model.streamEvents(messages, {
+      version: "v2",
+      callbacks: [
+        {
+          handleLLMNewToken(token: string) {
+            handleLLMNewTokenCalled = true;
+            newTokenEvents.push(token);
+          },
+        },
+      ],
+    });
+
+    // Collect all events
+    const events = [];
+    for await (const event of stream) {
+      events.push(event);
+    }
+
+    // Verify that handleLLMNewToken was called with individual tokens
+    expect(handleLLMNewTokenCalled).toBe(true);
+    expect(newTokenEvents.length).toBeGreaterThan(0);
+
+    // Verify we have streaming events
+    const streamingEvents = events.filter(event => event.event === "on_chat_model_stream");
+    expect(streamingEvents.length).toBeGreaterThan(0);
+
+    // Verify we have the start and end events
+    const startEvents = events.filter(event => event.event === "on_chat_model_start");
+    const endEvents = events.filter(event => event.event === "on_chat_model_end");
+    expect(startEvents.length).toBeGreaterThan(0);
+    expect(endEvents.length).toBeGreaterThan(0);
+  });
 });
