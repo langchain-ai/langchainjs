@@ -1,6 +1,5 @@
 import oracledb from "oracledb";
 import { createHash } from "crypto";
-import { v4 as uuidv4 } from "uuid";
 import {
   type MaxMarginalRelevanceSearchOptions,
   VectorStore,
@@ -65,6 +64,25 @@ function isPool(
   return "getConnection" in client;
 }
 
+function quoteIdentifier(identifier: string) {
+  const name = identifier.trim();
+
+  const validateRegex = /^(?:"[^"]+"|[^".]+)(?:\.(?:"[^"]+"|[^".]+))*$/;
+  if (!validateRegex.test(name)) {
+    throw new Error(`Identifier name ${identifier} is not valid.`);
+  }
+
+  // extracts parts of the identifier with quoted and unquoted.
+  const matchRegex = /"([^"]+)"|([^".]+)/g;
+  const groups = [];
+
+  for (const match of name.matchAll(matchRegex)) {
+    groups.push(match[1] || match[2]);
+  }
+  const quotedParts = groups.map((g) => `"${g}"`);
+  return quotedParts.join(".");
+}
+
 export async function createTable(
   connection: oracledb.Connection,
   tableName: string,
@@ -81,7 +99,7 @@ export async function createTable(
     const ddlBody = Object.entries(colsDict)
       .map(([colName, colType]) => `${colName} ${colType}`)
       .join(", ");
-    const ddl = `CREATE TABLE IF NOT EXISTS ${tableName}
+    const ddl = `CREATE TABLE IF NOT EXISTS ${quoteIdentifier(tableName)}
                    (
                        ${ddlBody}
                    )`;
@@ -92,7 +110,7 @@ export async function createTable(
 }
 
 function _getIndexName(baseName: string): string {
-  const uniqueId = uuidv4().replace(/-/g, "");
+  const uniqueId = crypto.randomUUID().replace(/-/g, "");
   return `${baseName}_${uniqueId}`;
 }
 
@@ -150,7 +168,9 @@ async function createHNSWIndex(
     }
 
     const idxName = config.idxName;
-    const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${idxName} 
+    const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
+      idxName
+    )}
                               ON ${oraclevs.tableName}(embedding) 
                               ORGANIZATION INMEMORY NEIGHBOR GRAPH`;
     const accuracyPart = config.accuracy
@@ -224,7 +244,9 @@ async function createIVFIndex(
 
     // Base SQL statement
     const idxName = config.idxName;
-    const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${idxName} 
+    const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
+      idxName
+    )}
                               ON ${oraclevs.tableName}(embedding) 
                               ORGANIZATION NEIGHBOR PARTITIONS`;
 
@@ -356,7 +378,7 @@ export class OracleVS extends VectorStore {
       throw new Error("Vectors input null. Nothing to add...");
     }
 
-    let ids: string[] = options?.ids;
+    const ids: string[] = options?.ids;
     let connection: oracledb.Connection | null = null;
 
     try {
@@ -366,34 +388,31 @@ export class OracleVS extends VectorStore {
           "The number of ids must match the number of vectors provided."
         );
       }
-      if (!ids) {
-        ids = [];
-        documents.forEach((doc, _index) => {
-          if (doc.metadata?.id) {
-            ids.push(doc.metadata.id);
-            /* throw new Error(
-              `Missing ID in document metadata at index ${index}.`
-            ); */
-          }
-          // ids.push(doc.metadata.id);
-        });
-      }
 
       connection = await this.getConnection();
       const binds = [];
       for (let index = 0; index < documents.length; index += 1) {
         const doc = documents[index];
-        const sourceId = doc.metadata.id ?? uuidv4();
-        const processedId = createHash("sha256")
-          .update(sourceId)
-          .digest("hex")
-          .substring(0, 16)
-          .toUpperCase();
+        let processedId;
+        if (ids) {
+          processedId = createHash("sha256")
+            .update(ids[index])
+            .digest("hex")
+            .substring(0, 16)
+            .toUpperCase();
+        } else {
+          const sourceId = doc.metadata.id ?? crypto.randomUUID();
+          processedId = createHash("sha256")
+            .update(sourceId)
+            .digest("hex")
+            .substring(0, 16)
+            .toUpperCase();
+        }
         const idBuffer = Buffer.from(processedId, "hex");
 
         const bind: any = {
           id: idBuffer,
-          text: doc.pageContent.toString(),
+          text: doc.pageContent,
           metadata: doc.metadata,
           embedding: new Float32Array(vectors[index]),
         };
