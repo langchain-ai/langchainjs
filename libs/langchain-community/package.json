@@ -122,10 +122,12 @@
     "@types/jsdom": "^21.1.1",
     "@types/jsonwebtoken": "^9",
     "@types/lodash": "^4",
+    "@types/mime-types": "^2.1.4",
     "@types/mozilla-readability": "^0.2.1",
     "@types/pdf-parse": "^1.1.1",
     "@types/pg": "^8.11.0",
     "@types/pg-copy-streams": "^1.2.2",
+    "@types/unzipper": "^0",
     "@types/uuid": "^9",
     "@types/word-extractor": "^1",
     "@types/ws": "^8",
@@ -191,6 +193,7 @@
     "mammoth": "^1.6.0",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",
+    "mime-types": "^3.0.1",
     "mongodb": "^6.17.0",
     "mysql2": "^3.9.8",
     "neo4j-driver": "^5.17.0",
@@ -217,6 +220,7 @@
     "typeorm": "^0.3.20",
     "typescript": "~5.8.3",
     "typesense": "^1.5.3",
+    "unzipper": "^0.12.3",
     "usearch": "^2.17.1",
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
@@ -3086,6 +3090,15 @@
       "import": "./document_loaders/web/youtube.js",
       "require": "./document_loaders/web/youtube.cjs"
     },
+    "./document_loaders/web/polaris_ai_datainsight": {
+      "types": {
+        "import": "./document_loaders/web/polaris_ai_datainsight.d.ts",
+        "require": "./document_loaders/web/polaris_ai_datainsight.d.cts",
+        "default": "./document_loaders/web/polaris_ai_datainsight.d.ts"
+      },
+      "import": "./document_loaders/web/polaris_ai_datainsight.js",
+      "require": "./document_loaders/web/polaris_ai_datainsight.cjs"
+    },
     "./document_loaders/fs/chatgpt": {
       "types": {
         "import": "./document_loaders/fs/chatgpt.d.ts",
@@ -4336,6 +4349,10 @@
     "document_loaders/web/youtube.js",
     "document_loaders/web/youtube.d.ts",
     "document_loaders/web/youtube.d.cts",
+    "document_loaders/web/polaris_ai_datainsight.cjs",
+    "document_loaders/web/polaris_ai_datainsight.js",
+    "document_loaders/web/polaris_ai_datainsight.d.ts",
+    "document_loaders/web/polaris_ai_datainsight.d.cts",
     "document_loaders/fs/chatgpt.cjs",
     "document_loaders/fs/chatgpt.js",
     "document_loaders/fs/chatgpt.d.ts",
