@@ -322,6 +322,169 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
   });
 
+  test("labels - included on Vertex AI (gcp)", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      labels: {
+        team: "research",
+        component: "frontend",
+        environment: "production",
+      },
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).toBeDefined();
+    expect(data.labels).toEqual({
+      team: "research",
+      component: "frontend",
+      environment: "production",
+    });
+  });
+
+  test("labels - excluded on Google AI Studio (gai)", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gai",
+      labels: {
+        team: "research",
+        component: "frontend",
+      },
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).not.toBeDefined();
+  });
+
+  test("labels - passed via invoke options on Vertex AI", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages, {
+      labels: {
+        session: "test-session",
+        user: "test-user",
+      },
+    });
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).toBeDefined();
+    expect(data.labels).toEqual({
+      session: "test-session",
+      user: "test-user",
+    });
+  });
+
+  test("labels - invoke options override model labels on Vertex AI", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      labels: {
+        team: "research",
+        environment: "dev",
+      },
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages, {
+      labels: {
+        environment: "production",
+        session: "override-session",
+      },
+    });
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).toBeDefined();
+    expect(data.labels).toEqual({
+      environment: "production",
+      session: "override-session",
+    });
+  });
+
+  test("labels - no labels sent when not provided", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).not.toBeDefined();
+  });
+
+  test("labels - empty labels object not sent", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      labels: {},
+    });
+    const messages: BaseMessageLike[] = [new HumanMessage("Hello")];
+    await model.invoke(messages);
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+    expect(data.labels).not.toBeDefined();
+  });
+
   test("1. Basic request format", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

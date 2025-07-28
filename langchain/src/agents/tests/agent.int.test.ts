@@ -15,7 +15,7 @@ import { WebBrowser } from "../../tools/webbrowser.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 
 test("Pass runnable to agent executor", async () => {
-  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const model = new ChatOpenAI({ temperature: 0, model: "gpt-3.5-turbo" });
   const tools: Tool[] = [
     new SerpAPI(undefined, {
       location: "Austin,Texas,United States",
@@ -57,7 +57,7 @@ test("Pass runnable to agent executor", async () => {
 });
 
 test("Custom output parser", async () => {
-  const model = new ChatOpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const model = new ChatOpenAI({ temperature: 0, model: "gpt-3.5-turbo" });
   const tools: Tool[] = [
     new SerpAPI(undefined, {
       location: "Austin,Texas,United States",
@@ -127,12 +127,12 @@ test("Custom output parser", async () => {
 test("Add a fallback method", async () => {
   // Model should always fail since the model name passed does not exist.
   const modelBase = new ChatOpenAI({
-    modelName: "fake-model",
+    model: "fake-model",
     temperature: 10,
   });
 
   const modelLarge = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-16k",
+    model: "gpt-3.5-turbo-16k",
     temperature: 0.6,
   });
 
@@ -268,7 +268,7 @@ test("Run tool web-browser", async () => {
 test("Agent can stream", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-1106-preview",
+    model: "gpt-4-1106-preview",
     streaming: true,
   });
   const tools = [
@@ -320,7 +320,7 @@ test("Agent can stream", async () => {
 test("Agent can stream with chat messages", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
-    modelName: "gpt-4-1106-preview",
+    model: "gpt-4-1106-preview",
     streaming: true,
   });
   const tools = [

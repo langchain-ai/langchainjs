@@ -13,9 +13,18 @@ export interface TavilyExtractInput {
   urls: string[];
   extractDepth?: ExtractDepth;
   includeImages?: boolean;
+  format?: "markdown" | "text";
+  includeFavicon?: boolean;
 }
 
 export type TavilyExtractAPIRetrieverFields = ToolParams & {
+  /**
+   * The base URL to be used for the Tavily Extract API.
+   *
+   *
+   */
+  apiBaseUrl?: string;
+
   /**
    * The API key used for authentication with the Tavily Search API.
    *
@@ -34,6 +43,20 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeImages?: boolean;
+
+  /**
+   * The format of the respose. It can be "markdown" or "text"
+   *
+   * @default "markdown"
+   */
+  format?: "markdown" | "text";
+
+  /**
+   * Whether to include the favicon URL for each result.
+   *
+   * @default false
+   */
+  includeFavicon?: boolean;
 
   /**
    * The name of the tool.
@@ -128,9 +151,15 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
   override schema = inputSchema;
 
-  extractDepthDefault: ExtractDepth;
+  apiBaseUrl?: string;
 
-  includeImagesDefault: boolean;
+  extractDepth?: ExtractDepth;
+
+  includeImages?: boolean;
+
+  format?: "markdown" | "text";
+
+  includeFavicon?: boolean;
 
   private apiWrapper: TavilyExtractAPIWrapper;
 
@@ -147,16 +176,22 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
 
     if (params.apiWrapper) {
       this.apiWrapper = params.apiWrapper;
-    } else if (params.tavilyApiKey) {
-      this.apiWrapper = new TavilyExtractAPIWrapper({
-        tavilyApiKey: params.tavilyApiKey,
-      });
     } else {
-      this.apiWrapper = new TavilyExtractAPIWrapper({});
+      const apiWrapperParams: { tavilyApiKey?: string; apiBaseUrl?: string } =
+        {};
+      if (params.tavilyApiKey) {
+        apiWrapperParams.tavilyApiKey = params.tavilyApiKey;
+      }
+      if (params.apiBaseUrl) {
+        apiWrapperParams.apiBaseUrl = params.apiBaseUrl;
+      }
+      this.apiWrapper = new TavilyExtractAPIWrapper(apiWrapperParams);
     }
 
-    this.extractDepthDefault = params.extractDepth ?? "basic";
-    this.includeImagesDefault = params.includeImages ?? false;
+    this.extractDepth = params.extractDepth;
+    this.includeImages = params.includeImages;
+    this.format = params.format;
+    this.includeFavicon = params.includeFavicon;
   }
 
   async _call(
@@ -166,13 +201,15 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     try {
       const { urls, extractDepth, includeImages } = input;
 
-      const effectiveExtractDepth = extractDepth ?? this.extractDepthDefault;
-      const effectiveIncludeImages = includeImages ?? this.includeImagesDefault;
+      const effectiveExtractDepth = this.extractDepth ?? extractDepth;
+      const effectiveIncludeImages = this.includeImages ?? includeImages;
 
       const rawResults = await this.apiWrapper.rawResults({
         urls,
         extractDepth: effectiveExtractDepth,
         includeImages: effectiveIncludeImages,
+        format: this.format,
+        includeFavicon: this.includeFavicon,
       });
 
       if (
@@ -188,6 +225,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         const searchParams = {
           extractDepth: effectiveExtractDepth,
           includeImages: effectiveIncludeImages,
+          format: this.format,
+          includeFavicon: this.includeFavicon,
         };
         const suggestions = generateSuggestions(searchParams);
 

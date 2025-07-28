@@ -177,14 +177,6 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 
   /**
-   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
-   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
-   *
-   * @deprecated Use the {@link reasoning} object instead.
-   */
-  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
-
-  /**
    * Options for reasoning models.
    *
    * Note that some options, like reasoning summaries, are only available when using the responses
@@ -207,7 +199,7 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
 }
 
-export declare interface AzureOpenAIInput {
+export interface AzureOpenAIInput {
   /**
    * API version to use when making requests to Azure OpenAI.
    */
@@ -272,6 +264,15 @@ export declare interface AzureOpenAIInput {
    * which will be invoked on every request.
    */
   azureADTokenProvider?: () => Promise<string>;
+}
+
+export interface AzureOpenAIChatInput
+  extends OpenAIChatInput,
+    AzureOpenAIInput {
+  openAIApiKey?: string;
+  openAIApiVersion?: string;
+  openAIBasePath?: string;
+  deploymentName?: string;
 }
 
 type ChatOpenAIResponseFormatJSONSchema = Omit<
