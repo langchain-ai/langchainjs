@@ -141,6 +141,10 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
       announcementBar: {
         content:
           '<strong>Our <a href="https://academy.langchain.com/courses/ambient-agents/?utm_medium=internal&utm_source=docs&utm_campaign=q2-2025_ambient-agents_co" target="_blank">Building Ambient Agents with LangGraph</a> course is now available on LangChain Academy!</strong>',
@@ -273,6 +277,10 @@ const config = {
           {
             title: "Community",
             items: [
+              {
+                label: "LangChain Forum",
+                href: "https://forum.langchain.com/",
+              },
               {
                 label: "Twitter",
                 href: "https://twitter.com/LangChainAI",

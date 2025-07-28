@@ -93,7 +93,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",
@@ -123,7 +123,7 @@ test.each(["true", "false"])(
     expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -248,7 +248,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",
@@ -278,7 +278,7 @@ test.each(["true", "false"])(
     expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -401,7 +401,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "RunnableLambda",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",
@@ -420,7 +420,7 @@ test.each(["true", "false"])(
     expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -539,7 +539,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -567,7 +567,7 @@ test.each(["true", "false"])(
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",
@@ -692,7 +692,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -720,7 +720,7 @@ test.each(["true", "false"])(
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",
@@ -852,7 +852,7 @@ test.each(["true", "false"])(
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
       name: "aiGreet",
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
@@ -880,7 +880,7 @@ test.each(["true", "false"])(
       id: secondCallParams.id,
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
-      start_time: expect.any(Number),
+      start_time: expect.any(String),
       serialized: {
         lc: 1,
         type: "not_implemented",

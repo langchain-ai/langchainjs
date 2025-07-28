@@ -6,10 +6,7 @@ import type {
   ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
-import {
-  DynamicStructuredTool,
-  type StructuredToolInterface,
-} from "@langchain/core/tools";
+import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   Base64ContentBlock,
   DataContentBlock,
@@ -489,13 +486,14 @@ export async function loadMcpTools(
   serverName: string,
   client: Client,
   options?: LoadMcpToolsOptions
-): Promise<StructuredToolInterface[]> {
+): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
     useStandardContentBlocks,
     outputHandling,
+    defaultToolTimeout,
   } = {
     ...defaultLoadMcpToolsOptions,
     ...(options ?? {}),
@@ -541,6 +539,9 @@ export async function loadMcpTools(
               schema: tool.inputSchema,
               responseFormat: "content_and_artifact",
               metadata: { annotations: tool.annotations },
+              defaultConfig: defaultToolTimeout
+                ? { timeout: defaultToolTimeout }
+                : undefined,
               func: async (
                 args: Record<string, unknown>,
                 _runManager?: CallbackManagerForToolRun,
@@ -568,5 +569,5 @@ export async function loadMcpTools(
           }
         })
     )
-  ).filter(Boolean) as StructuredToolInterface[];
+  ).filter(Boolean) as DynamicStructuredTool[];
 }

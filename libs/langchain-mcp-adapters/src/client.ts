@@ -12,7 +12,7 @@ import {
   type StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type { StructuredToolInterface } from "@langchain/core/tools";
+import type { DynamicStructuredTool } from "@langchain/core/tools";
 import debug from "debug";
 import { z } from "zod";
 import { loadMcpTools } from "./tools.js";
@@ -115,7 +115,7 @@ function isResolvedStreamableHTTPConnection(
 export class MultiServerMCPClient {
   private _clients: Record<string, Client> = {};
 
-  private _serverNameToTools: Record<string, StructuredToolInterface[]> = {};
+  private _serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
 
   private _connections?: Record<string, ResolvedConnection>;
 
@@ -170,6 +170,9 @@ export class MultiServerMCPClient {
         parsedServerConfig.outputHandling,
         serverConfig.outputHandling
       );
+      const defaultToolTimeout =
+        parsedServerConfig.defaultToolTimeout ??
+        serverConfig.defaultToolTimeout;
 
       this._loadToolsOptions[serverName] = {
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
@@ -178,6 +181,7 @@ export class MultiServerMCPClient {
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
+        ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
       };
     }
 
@@ -194,7 +198,7 @@ export class MultiServerMCPClient {
    * @throws {MCPClientError} If initialization fails
    */
   async initializeConnections(): Promise<
-    Record<string, StructuredToolInterface[]>
+    Record<string, DynamicStructuredTool[]>
   > {
     if (!this._connections || Object.keys(this._connections).length === 0) {
       throw new MCPClientError("No connections to initialize");
@@ -241,7 +245,7 @@ export class MultiServerMCPClient {
    *                 If not provided, returns tools from all servers.
    * @returns A flattened array of tools from the specified servers (or all servers)
    */
-  async getTools(...servers: string[]): Promise<StructuredToolInterface[]> {
+  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]> {
     await this.initializeConnections();
     if (servers.length === 0) {
       return this._getAllToolsAsFlatArray();
@@ -890,8 +894,8 @@ export class MultiServerMCPClient {
    *
    * @returns A flattened array of all tools
    */
-  private _getAllToolsAsFlatArray(): StructuredToolInterface[] {
-    const allTools: StructuredToolInterface[] = [];
+  private _getAllToolsAsFlatArray(): DynamicStructuredTool[] {
+    const allTools: DynamicStructuredTool[] = [];
     for (const tools of Object.values(this._serverNameToTools)) {
       allTools.push(...tools);
     }
@@ -904,10 +908,8 @@ export class MultiServerMCPClient {
    * @param serverNames - Names of servers to get tools from
    * @returns A flattened array of tools from the specified servers
    */
-  private _getToolsFromServers(
-    serverNames: string[]
-  ): StructuredToolInterface[] {
-    const allTools: StructuredToolInterface[] = [];
+  private _getToolsFromServers(serverNames: string[]): DynamicStructuredTool[] {
+    const allTools: DynamicStructuredTool[] = [];
     for (const serverName of serverNames) {
       const tools = this._serverNameToTools[serverName];
       if (tools) {

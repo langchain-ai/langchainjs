@@ -123,7 +123,7 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
-    this.indexName = args.indexName;
+    this.indexName = args.indexName || "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;

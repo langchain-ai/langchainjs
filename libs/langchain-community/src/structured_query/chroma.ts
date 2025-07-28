@@ -14,7 +14,7 @@ import { Chroma } from "../vectorstores/chroma.js";
  * ```typescript
  * const chromaTranslator = new ChromaTranslator();
  * const selfQueryRetriever = new SelfQueryRetriever({
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   vectorStore: new Chroma(),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: [],

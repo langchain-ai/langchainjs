@@ -9,6 +9,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 
 /* Initialize the LLM & set streaming to true */
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   streaming: true,
 });
 /* Load in the file we want to do question answering over */
