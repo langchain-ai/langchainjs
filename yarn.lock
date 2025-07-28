@@ -9586,7 +9586,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@qdrant/js-client-rest": ^1.9.0
+    "@qdrant/js-client-rest": ^1.15.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -11320,6 +11320,19 @@ __metadata:
   bin:
     browsers: lib/cjs/main-cli.js
   checksum: dbfae1f0a3cb5ee07711eb0247d5f61039989094858989cede3f86bfef59224c72df17a1b898266e5ba7c6a7032ab647c59ad3df8f76771ef65d8974a3f93f19
+  languageName: node
+  linkType: hard
+
+"@qdrant/js-client-rest@npm:^1.15.0":
+  version: 1.15.0
+  resolution: "@qdrant/js-client-rest@npm:1.15.0"
+  dependencies:
+    "@qdrant/openapi-typescript-fetch": 1.2.6
+    "@sevinf/maybe": 0.5.0
+    undici: ^6.0.0
+  peerDependencies:
+    typescript: ">=4.7"
+  checksum: edc691c08d7a95a579922b9e472586cd6d823410f0fc873874f15df202b2ce077a0dd9ef9dbdb51eeb3e2f5ff83d49bc0c09ba35402cc233eb9b6f08b807f2f2
   languageName: node
   linkType: hard
 
@@ -38758,6 +38771,13 @@ __metadata:
   dependencies:
     "@fastify/busboy": ^2.0.0
   checksum: a402d699a602a8feee1c0f78267467c8ffcbd7682267fec7a1307fd11554a32976a2307bf1cc8bf6ef7a667654336592fbd66d675df20ce28357536fb55a3a7d
+  languageName: node
+  linkType: hard
+
+"undici@npm:^6.0.0":
+  version: 6.21.3
+  resolution: "undici@npm:6.21.3"
+  checksum: a2af0601deece36acbcc11ef722f36ad3c1e035d3065b9fbb36987487f7b69904046fa95c18f228a872ca45441f156fcaacd948fc920b0a97d0c1ab78ea63c04
   languageName: node
   linkType: hard
 
