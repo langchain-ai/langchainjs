@@ -40,12 +40,16 @@ Once you’re Toolbox server is configured and up and running, you can load tool
 from your server using ADK:
 
 ```javascript
-import {ToolboxClient} from '@toolbox-sdk/core';
-import { genkit, z } from 'genkit';
+import { ChatVertexAI } from "@langchain/google-vertexai"
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { tool } from "@langchain/core/tools";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MemorySaver } from "@langchain/langgraph";
 
-const ai = genkit({
-   plugins: [googleAI()],
-   model: googleAI.model('gemini-1.5-pro'),
+const model = new ChatVertexAI({
+  model: "gemini-2.0-flash",
+  temperature: 0,
+  maxRetries: 2,
 });
 
 // Replace with your Toolbox Server URL
@@ -54,20 +58,17 @@ const URL = 'https://127.0.0.1:5000';
 let client = ToolboxClient(URL);
 toolboxTools = await client.loadToolset('toolsetName');
 
-const getGenkitTool = (toolboxTool) => ai.defineTool({
-   name: toolboxTool.getName(),
-   description: toolboxTool.getDescription(),
-   inputSchema: toolboxTool.getParams(),Expand commentComment on line R57ResolvedCode has comments. Press enter to view.
-},
-toolboxTool,
-);
+const getTool = (toolboxTool) => tool(toolboxTool, {
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+  });
+const tools = toolboxTools.map(getTool);
 
-const tools = toolboxTools.map(getGenkitTool);
-
-await ai.generate({
-   prompt: 'Ask some question.',
-   tools: tools,
-});
+const agent = createReactAgent({ llm: model, tools: [addNumbers] });
+let inputs = { messages: [{ role: "user", content: Some query" }] };
+let response = await agent.invoke(inputs);
+console.log(response);
 ```
 
 ### Advanced Toolbox Features
