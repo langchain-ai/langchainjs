@@ -17,7 +17,7 @@ export interface ClickHouseLibArgs {
   username: string;
   password: string;
   indexType?: string;
-  indexParam?: Record<string, number>;
+  indexParam?: string | Record<string, number>;
   indexQueryParams?: Record<string, string>;
   columnMap?: ColumnMap;
   database?: string;
@@ -226,9 +226,11 @@ export class ClickHouseStore extends VectorStore {
     const dim = dimension ?? (await this.embeddings.embedQuery("test")).length;
 
     const indexParamStr = this.indexParam
-      ? Object.entries(this.indexParam)
-          .map(([key, value]) => `'${key}', ${value}`)
-          .join(", ")
+      ? typeof this.indexParam === "string"
+        ? this.indexParam
+        : Object.entries(this.indexParam)
+            .map(([key, value]) => `'${key}', ${value}`)
+            .join(", ")
       : "";
 
     const query = `
