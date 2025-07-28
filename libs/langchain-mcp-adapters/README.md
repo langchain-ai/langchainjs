@@ -50,11 +50,11 @@ const client = new MultiServerMCPClient({
   // Global tool configuration options
   // Whether to throw on errors if a tool fails to load (optional, default: true)
   throwOnLoadError: true,
-  // Whether to prefix tool names with the server name (optional, default: true)
-  prefixToolNameWithServerName: true,
-  // Optional additional prefix for tool names (optional, default: "mcp")
-  additionalToolNamePrefix: "mcp",
-  
+  // Whether to prefix tool names with the server name (optional, default: false)
+  prefixToolNameWithServerName: false,
+  // Optional additional prefix for tool names (optional, default: "")
+  additionalToolNamePrefix: "",
+
   // Use standardized content block format in tool outputs
   useStandardContentBlocks: true,
 
@@ -124,7 +124,7 @@ const tools = await client.getTools();
 
 // Create an OpenAI model
 const model = new ChatOpenAI({
-  modelName: "gpt-4o",
+  model: "gpt-4o-mini",
   temperature: 0,
 });
 
@@ -163,7 +163,6 @@ npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langch
 export OPENAI_API_KEY=<your_api_key>
 ```
 
-
 ```ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -172,7 +171,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { loadMcpTools } from "@langchain/mcp-adapters";
 
 // Initialize the ChatOpenAI model
-const model = new ChatOpenAI({ modelName: "gpt-4" });
+const model = new ChatOpenAI({ model: "gpt-4" });
 
 // Automatically starts and connects to a MCP reference server
 const transport = new StdioClientTransport({
@@ -196,10 +195,10 @@ try {
     throwOnLoadError: true,
     // Whether to prefix tool names with the server name (optional, default: false)
     prefixToolNameWithServerName: false,
-    // Optional additional prefix for tool names (optional, default: "mcp")
-    additionalToolNamePrefix: "mcp",
-    // Use standardized content block format in tool outputs
-    useStandardContentBlocks: true,
+    // Optional additional prefix for tool names (optional, default: "")
+    additionalToolNamePrefix: "",
+    // Use standardized content block format in tool outputs (default: false)
+    useStandardContentBlocks: false,
   });
 
   // Create and run the agent
@@ -216,7 +215,6 @@ try {
 }
 ```
 
-
 For more detailed examples, see the [examples](./examples) directory.
 
 ## Tool Configuration Options
@@ -226,13 +224,14 @@ For more detailed examples, see the [examples](./examples) directory.
 
 When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
 
-| Option                         | Type    | Default | Description                                                                           |
-| ------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------- |
-| `throwOnLoadError`             | `boolean` | `true`  | Whether to throw an error if a tool fails to load                                     |
-| `prefixToolNameWithServerName` | `boolean` | `true`  | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`)  |
-| `additionalToolNamePrefix`     | `string`  | `"mcp"`   | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)         |
-| `useStandardContentBlocks`     | `boolean` | `false` | See [Tool Output Mapping](#tool-output-mapping); set true for new applications        |
-| `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping) |
+| Option                         | Type                                   | Default                                               | Description                                                                          |
+| ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                    |
+| `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`) |
+| `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)        |
+| `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications       |
+| `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                      |
+| `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                      |
 
 ## Tool Output Mapping
 
@@ -247,8 +246,7 @@ The `useStandardContentBlocks` field determines how individual MCP content block
 
 In `@langchain/core` version 0.3.48 we created a new set of content block types that offer a standardized structure for multimodal inputs. As you might guess from the name, the `useStandardContentBlocks` setting determines whether `@langchain/mcp-adapters` converts tool outputs to this format. For backward compatibility with older versions of `@langchain/mcp-adapters`, it also determines whether tool message artifacts are converted. See the conversion rules below for more info.
 
-> [!IMPORTANT]
-> `ToolMessage.content` and `ToolMessage.artifact` will always be arrays of content block objects as described by the rules below, except in one special case. When the `outputHandling` option routes `text` output to the `ToolMessage.content` field and the only content block produced by a tool call is a `text` block, `ToolMessage.content` will be a `string` containing the text content produced by the tool.
+> [!IMPORTANT] > `ToolMessage.content` and `ToolMessage.artifact` will always be arrays of content block objects as described by the rules below, except in one special case. When the `outputHandling` option routes `text` output to the `ToolMessage.content` field and the only content block produced by a tool call is a `text` block, `ToolMessage.content` will be a `string` containing the text content produced by the tool.
 
 **When `useStandardContentBlocks` is `true` (recommended for new applications):**
 
@@ -256,7 +254,6 @@ In `@langchain/core` version 0.3.48 we created a new set of content block types 
 - **Images**: Returned as base64 [`StandardImageBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardImageBlock.html) objects.
 - **Audio**: Returned as base64 [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
 - **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
-
 
 **When `useStandardContentBlocks` is `false` (default for backward compatibility):**
 
@@ -268,7 +265,7 @@ In `@langchain/core` version 0.3.48 we created a new set of content block types 
   - **Images**: Returned as [`MessageContentImageUrl`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentImageUrl.html) objects with base64 data URLs (`data:image/png;base64,<data>`)
   - **Audio**: Returned as [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
   - **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
-  
+
 ### Determining Which Tool Outputs will be Visible to the LLM
 
 The `outputHandling` option allows you to determine which tool output types are assigned to `ToolMessage.content`, and which are assigned to `ToolMessage.artifact`. Data in [`ToolMessage.content`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#content) is used as input context when the LLM is invoked, while [`ToolMessage.artifact`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#artifact) is not.
@@ -332,21 +329,54 @@ Similarly, when calling tools on the `microphone` MCP server, the following `out
 
 ## Tool Timeout Configuration
 
+### Using `defaultToolTimeout`
+
+You can configure a global timeout for all tools by setting the `defaultToolTimeout` field in the client params. You can include a `defaultToolTimeout` field in the server config to set the timeout for all tools for that server, or globally for the entire client by setting it in the top-level config.
+
+This timeout will be used as the default timeout for all tools unless overridden by a tool-specific timeout.
+
+```typescript
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    "data-processor": {
+      command: "python",
+      args: ["data_server.py"],
+      defaultToolTimeout: 30000, // timeout will be 30 seconds
+    },
+    "image-processor": {
+      transport: "stdio",
+      command: "node",
+      args: ["image_server.js"],
+      // timeout will be 10 seconds (set in the top-level config)
+    },
+  },
+  defaultToolTimeout: 10000, // 10 seconds
+});
+
+const tools = await client.getTools();
+const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
+
+// Will timeout after 30 seconds (defaultToolTimeout)
+const result = await slowTool.invoke({ dataset: "huge_file.csv" });
+```
+
+### Using `withConfig`
+
 MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
 
 ```typescript
 const client = new MultiServerMCPClient({
   mcpServers: {
-    'data-processor': {
-      command: 'python',
-      args: ['data_server.py']
+    "data-processor": {
+      command: "python",
+      args: ["data_server.py"],
     },
   },
   useStandardContentBlocks: true,
 });
 
 const tools = await client.getTools();
-const slowTool = tools.find(t => t.name.includes('process_large_dataset'));
+const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
 // You can use withConfig to set tool-specific timeouts before handing
 // the tool off to a LangGraph ToolNode or some other part of your
@@ -354,31 +384,29 @@ const slowTool = tools.find(t => t.name.includes('process_large_dataset'));
 const slowToolWithTimeout = slowTool.withConfig({ timeout: 300000 }); // 5 min timeout
 
 // This invocation will respect the 5 minute timeout
-const result = await slowToolWithTimeout.invoke(
-  { dataset: 'huge_file.csv' },
-);
+const result = await slowToolWithTimeout.invoke({ dataset: "huge_file.csv" });
 
 // or you can invoke directly without withConfig
 const directResult = await slowTool.invoke(
-  { dataset: 'huge_file.csv' },
+  { dataset: "huge_file.csv" },
   { timeout: 300000 }
 );
 
 // Quick timeout for fast operations
 const quickResult = await fastTool.invoke(
-  { query: 'simple_lookup' },
+  { query: "simple_lookup" },
   { timeout: 5000 } // 5 seconds
 );
 
 // Default timeout (60 seconds from MCP SDK) when no config provided
-const normalResult = await tool.invoke({ input: 'normal_processing' });
+const normalResult = await tool.invoke({ input: "normal_processing" });
 ```
 
 Timeouts can be configured using the following `RunnableConfig` fields:
 
-| Parameter | Type | Default | Description |
-| --------- | ---- | ------- | ----------- |
-| `timeout` | number | 60000 | Timeout in milliseconds for the tool call |
+| Parameter | Type        | Default   | Description                                                   |
+| --------- | ----------- | --------- | ------------------------------------------------------------- |
+| `timeout` | number      | 60000     | Timeout in milliseconds for the tool call                     |
 | `signal`  | AbortSignal | undefined | An AbortSignal that, when asserted, will cancel the tool call |
 
 ## OAuth 2.0 Authentication
@@ -393,13 +421,19 @@ New in v0.4.6.
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 
 class MyOAuthProvider implements OAuthClientProvider {
-  constructor(private config: {
-    redirectUrl: string;
-    clientMetadata: OAuthClientMetadata;
-  }) {}
+  constructor(
+    private config: {
+      redirectUrl: string;
+      clientMetadata: OAuthClientMetadata;
+    }
+  ) {}
 
-  get redirectUrl() { return this.config.redirectUrl; }
-  get clientMetadata() { return this.config.clientMetadata; }
+  get redirectUrl() {
+    return this.config.redirectUrl;
+  }
+  get clientMetadata() {
+    return this.config.clientMetadata;
+  }
 
   // Implement token storage (localStorage, database, etc.)
   tokens(): OAuthTokens | undefined {
@@ -424,9 +458,9 @@ const client = new MultiServerMCPClient({
         clientMetadata: {
           redirect_uris: ["https://myapp.com/oauth/callback"],
           client_name: "My MCP Client",
-          scope: "mcp:read mcp:write"
-        }
-      })
+          scope: "mcp:read mcp:write",
+        },
+      }),
     },
   },
   useStandardContentBlocks: true,
@@ -438,20 +472,20 @@ const client = new MultiServerMCPClient({
 The `authProvider` automatically handles:
 
 - ✅ **Token Refresh**: Automatically refreshes expired access tokens using refresh tokens
-- ✅ **401 Error Recovery**: Automatically retries requests after successful authentication  
+- ✅ **401 Error Recovery**: Automatically retries requests after successful authentication
 - ✅ **PKCE Security**: Uses Proof Key for Code Exchange for enhanced security
 - ✅ **Standards Compliance**: Follows OAuth 2.0 and RFC 6750 specifications
 - ✅ **Transport Compatibility**: Works with both StreamableHTTP and SSE transports
 
 ### OAuth vs Manual Headers
 
-| Aspect | OAuth Provider | Manual Headers |
-|--------|----------------|----------------|
-| **Token Refresh** | ✅ Automatic | ❌ Manual implementation required |
-| **401 Handling** | ✅ Automatic retry | ❌ Manual error handling required |
-| **Security** | ✅ PKCE, secure flows | ⚠️ Depends on implementation |
-| **Standards** | ✅ RFC 6750 compliant | ⚠️ Requires manual compliance |
-| **Complexity** | ✅ Simple configuration | ❌ Complex implementation |
+| Aspect            | OAuth Provider          | Manual Headers                    |
+| ----------------- | ----------------------- | --------------------------------- |
+| **Token Refresh** | ✅ Automatic            | ❌ Manual implementation required |
+| **401 Handling**  | ✅ Automatic retry      | ❌ Manual error handling required |
+| **Security**      | ✅ PKCE, secure flows   | ⚠️ Depends on implementation      |
+| **Standards**     | ✅ RFC 6750 compliant   | ⚠️ Requires manual compliance     |
+| **Complexity**    | ✅ Simple configuration | ❌ Complex implementation         |
 
 **Recommendation**: Use `authProvider` for production OAuth servers, and `headers` only for simple token-based auth or debugging.
 

@@ -5,6 +5,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 
 // We can pass in a list of CallbackHandlers to the LLM constructor to get callbacks for various events.
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   callbacks: [
     {
       handleLLMStart: async (llm: Serialized, prompts: string[]) => {

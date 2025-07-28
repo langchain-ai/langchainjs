@@ -9,8 +9,16 @@ import {
   convertToOpenAITool,
 } from "@langchain/core/utils/function_calling";
 import { ToolDefinition } from "@langchain/core/language_models/base";
-import { isInteropZodSchema } from "@langchain/core/utils/types";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+  isZodSchemaV3,
+  isZodSchemaV4,
+} from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4/core";
+import { ResponseFormatJSONSchema } from "openai/resources";
+import { zodResponseFormat } from "openai/helpers/zod";
 import { addLangChainErrorFields } from "./errors.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,4 +90,64 @@ export function formatToOpenAIToolChoice(
   } else {
     return toolChoice;
   }
+}
+
+// inlined from openai/lib/parser.ts
+function makeParseableResponseFormat<ParsedT>(
+  response_format: ResponseFormatJSONSchema,
+  parser: (content: string) => ParsedT
+) {
+  const obj = { ...response_format };
+
+  Object.defineProperties(obj, {
+    $brand: {
+      value: "auto-parseable-response-format",
+      enumerable: false,
+    },
+    $parseRaw: {
+      value: parser,
+      enumerable: false,
+    },
+  });
+
+  return obj;
+}
+
+export function interopZodResponseFormat(
+  zodSchema: InteropZodType,
+  name: string,
+  props: Omit<ResponseFormatJSONSchema.JSONSchema, "schema" | "strict" | "name">
+) {
+  if (isZodSchemaV3(zodSchema)) {
+    return zodResponseFormat(zodSchema, name, props);
+  }
+  if (isZodSchemaV4(zodSchema)) {
+    return makeParseableResponseFormat(
+      {
+        type: "json_schema",
+        json_schema: {
+          ...props,
+          name,
+          strict: true,
+          schema: toJSONSchemaV4(zodSchema, {
+            cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
+            reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
+            override(ctx) {
+              ctx.jsonSchema.title = name; // equivalent to `name` property
+              // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
+              // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
+            },
+            /// property equivalents from native `zodResponseFormat` fn
+            // openaiStrictMode: true,
+            // name,
+            // nameStrategy: 'duplicate-ref',
+            // $refStrategy: 'extract-to-root',
+            // nullableStrategy: 'property',
+          }),
+        },
+      },
+      (content) => parseV4(zodSchema, JSON.parse(content))
+    );
+  }
+  throw new Error("Unsupported schema response format");
 }

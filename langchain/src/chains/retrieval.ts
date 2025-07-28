@@ -60,7 +60,7 @@ function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
  * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
  *
  * const retrievalQAChatPrompt = await pull("langchain-ai/retrieval-qa-chat");
- * const llm = new ChatOpenAI({});
+ * const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const retriever = ...
  * const combineDocsChain = await createStuffDocumentsChain(...);
  * const retrievalChain = await createRetrievalChain({

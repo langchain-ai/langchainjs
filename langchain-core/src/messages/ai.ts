@@ -271,12 +271,25 @@ export class AIMessageChunk extends BaseMessageChunk {
             : undefined,
       };
     } else {
+      const groupedToolCallChunk = fields.tool_call_chunks.reduce(
+        (acc, chunk) => {
+          if (!chunk.id) return acc;
+          acc[chunk.id] = acc[chunk.id] ?? [];
+          acc[chunk.id].push(chunk);
+          return acc;
+        },
+        {} as Record<string, ToolCallChunk[]>
+      );
+
       const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
-      for (const toolCallChunk of fields.tool_call_chunks) {
+      for (const [id, chunks] of Object.entries(groupedToolCallChunk)) {
         let parsedArgs = {};
+        const name = chunks[0]?.name ?? "";
+        const joinedArgs = chunks.map((c) => c.args || "").join("");
+        const argsStr = joinedArgs.length ? joinedArgs : "{}";
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          parsedArgs = parsePartialJson(argsStr);
           if (
             parsedArgs === null ||
             typeof parsedArgs !== "object" ||
@@ -285,16 +298,16 @@ export class AIMessageChunk extends BaseMessageChunk {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({
-            name: toolCallChunk.name ?? "",
+            name,
             args: parsedArgs,
-            id: toolCallChunk.id,
+            id,
             type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
-            name: toolCallChunk.name,
-            args: toolCallChunk.args,
-            id: toolCallChunk.id,
+            name,
+            args: argsStr,
+            id,
             error: "Malformed args.",
             type: "invalid_tool_call",
           });

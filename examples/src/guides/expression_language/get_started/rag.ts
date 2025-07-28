@@ -27,7 +27,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   ],
   ["human", "{question}"],
 ]);
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const outputParser = new StringOutputParser();
 
 const setupAndRetrieval = RunnableMap.from({

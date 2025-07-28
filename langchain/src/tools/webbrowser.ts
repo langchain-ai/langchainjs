@@ -176,7 +176,7 @@ export interface WebBrowserArgs extends ToolParams {
  * @example
  * ```typescript
  * const browser = new WebBrowser({
- *   model: new ChatOpenAI({ temperature: 0 }),
+ *   model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   embeddings: new OpenAIEmbeddings({}),
  * });
  * const result = await browser.invoke("https:exampleurl.com");

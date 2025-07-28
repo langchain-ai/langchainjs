@@ -56,12 +56,12 @@ export interface SequentialChainInput extends ChainInputs {
  * const overallChain = new SequentialChain({
  *   chains: [
  *     new LLMChain({
- *       llm: new ChatOpenAI({ temperature: 0 }),
+ *       llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *       prompt: promptTemplate,
  *       outputKey: "synopsis",
  *     }),
  *     new LLMChain({
- *       llm: new OpenAI({ temperature: 0 }),
+ *       llm: new OpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *       prompt: reviewPromptTemplate,
  *       outputKey: "review",
  *     }),

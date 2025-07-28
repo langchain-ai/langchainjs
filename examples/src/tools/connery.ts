@@ -27,7 +27,7 @@ const manualRunResult = await sendEmailAction.invoke({
 console.log(manualRunResult);
 
 // Run the action using the OpenAI Functions agent.
-const llm = new ChatOpenAI({ temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const agent = await initializeAgentExecutorWithOptions([sendEmailAction], llm, {
   agentType: "openai-functions",
   verbose: true,
