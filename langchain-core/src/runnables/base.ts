@@ -2800,9 +2800,9 @@ export class RunnableLambda<
  * );
  *
  * // Invoke the sequence with a single age input
- * const res = sequence.invoke(25);
+ * const res = await sequence.invoke(25);
  *
- * // { years_to_fifty: 25, years_to_hundred: 75 }
+ * // { years_to_fifty: 20, years_to_hundred: 70 }
  * ```
  */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}

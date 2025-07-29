@@ -6688,15 +6688,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.4"
+"@ibm-cloud/watsonx-ai@npm:^1.6.10":
+  version: 1.6.10
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.10"
   dependencies:
-    "@langchain/textsplitters": ^0.1.0
     "@types/node": ^18.0.0
     extend: 3.0.2
     ibm-cloud-sdk-core: ^5.3.2
-  checksum: 995638aa134dd54da3694bdc20aab6563a87fb4fcdf5a88e5fe48ca4505c44954bc398f9a82904ef5091db61fa1ebc7b0f17c2a241227f8f37f4b94f202d46d3
+  checksum: 8eb1d7b714918d51f9a3a6e21e37ccc5baac67807348969338d6caad5574c58a78d2f54bf43ce367b0fb2ae8bcd90e64d75762e42adfe920cb17e5d54cea1b24
   languageName: node
   linkType: hard
 
@@ -8269,7 +8268,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": ^1.6.4
+    "@ibm-cloud/watsonx-ai": ^1.6.10
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -9775,7 +9774,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@^0.1.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -14925,7 +14924,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.0.0, @types/node@npm:^18.11.18, @types/node@npm:^18.19.80":
+"@types/node@npm:^18.0.0":
+  version: 18.19.120
+  resolution: "@types/node@npm:18.19.120"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: d38430484d1de03a754ae192b28e76588b69036a4ff0f134eefdaca40a2b423536ebdb2c6eb3b460b7d78061c459fc5a4d2d593c01e77f78d5391715b3d0c179
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.18, @types/node@npm:^18.19.80":
   version: 18.19.110
   resolution: "@types/node@npm:18.19.110"
   dependencies:
@@ -17298,6 +17306,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: e901dc1730bdcd769839b3d93ae6d6457a53d79b19a0eb623ebfea333441259ab51e63ca118baa47a5156567401466ac739f31087b4ee5e6770ab2e227484538
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "axios@npm:1.11.0"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.4
+    proxy-from-env: ^1.1.0
+  checksum: 0a33dc600b588bfd3111b198d5985527ed89f722817455d7cdb66c1d055e5f8859cc2bebb7320888957fc8458ebe77d5f83af02af9cd260217c91c4e92b6dfb6
   languageName: node
   linkType: hard
 
@@ -24255,6 +24274,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "form-data@npm:4.0.4"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    es-set-tostringtag: ^2.1.0
+    hasown: ^2.0.2
+    mime-types: ^2.1.12
+  checksum: 9b7788836df9fa5a6999e0c02515b001946b2a868cfe53f026c69e2c537a2ff9fbfb8e9d2b678744628f3dc7a2d6e14e4e45dfaf68aa6239727f0bdb8ce0abf2
+  languageName: node
+  linkType: hard
+
 "formdata-node@npm:^4.3.2":
   version: 4.4.1
   resolution: "formdata-node@npm:4.4.1"
@@ -25890,7 +25922,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ibm-cloud-sdk-core@npm:^5.0.2, ibm-cloud-sdk-core@npm:^5.3.2":
+"ibm-cloud-sdk-core@npm:^5.0.2":
   version: 5.3.2
   resolution: "ibm-cloud-sdk-core@npm:5.3.2"
   dependencies:
@@ -25910,6 +25942,29 @@ __metadata:
     retry-axios: ^2.6.0
     tough-cookie: ^4.1.3
   checksum: b5c85a946d7ad6882a17ed6a01bdbbd5a645ff63daaa721b6641970dd9ac5e76bcb3279d66a9d8537ed38a111d6f9d175a571526667dab601ea61f41ab51cbdf
+  languageName: node
+  linkType: hard
+
+"ibm-cloud-sdk-core@npm:^5.3.2":
+  version: 5.4.2
+  resolution: "ibm-cloud-sdk-core@npm:5.4.2"
+  dependencies:
+    "@types/debug": ^4.1.12
+    "@types/node": ^18.19.80
+    "@types/tough-cookie": ^4.0.0
+    axios: ^1.11.0
+    camelcase: ^6.3.0
+    debug: ^4.3.4
+    dotenv: ^16.4.5
+    extend: 3.0.2
+    file-type: 16.5.4
+    form-data: ^4.0.4
+    isstream: 0.1.2
+    jsonwebtoken: ^9.0.2
+    mime-types: 2.1.35
+    retry-axios: ^2.6.0
+    tough-cookie: ^4.1.3
+  checksum: e79501cd817a4e01ed10eec4495f5b3f71b4b505d2b7e0c1fa4aae467add68b0ed8faa0b80d70e839c15ab9e92875be44178cec78e06642c8b5ab6f4d7cad2bd
   languageName: node
   linkType: hard
 
