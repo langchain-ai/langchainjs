@@ -3,7 +3,7 @@ import { Tools as ToolsContentBlock } from "./tools.js";
 import { Multimodal as MultimodalContentBlock } from "./multimodal.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
-export declare namespace Messages {
+export declare namespace ContentBlock {
   /** Content block for citation */
   interface Citation extends BaseContentBlock {
     /**
@@ -103,7 +103,7 @@ export declare namespace Messages {
 
   export import Tools = ToolsContentBlock;
   export import Multimodal = MultimodalContentBlock;
-  export type ContentBlock =
+  export type Types =
     | Text
     | Reasoning
     | Tools.ContentBlock
