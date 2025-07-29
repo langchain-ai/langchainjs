@@ -41,6 +41,18 @@ if (openaiMessage.type === "user") {
   }
 }
 
+const file: ContentBlock.Multimodal.File = {
+  type: "file",
+  fileId: "123",
+  // uncommenting this will cause a type error
+  // url: "asddas",
+  mimeType: "image/png",
+  metadata: {
+    width: 100,
+    height: 100,
+  },
+};
+
 function normalReturn(): BaseMessage {
   return {
     type: "user",
