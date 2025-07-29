@@ -30,7 +30,7 @@ test("test deep seek model with think=false", async () => {
   expect(responseContent.length).toBeGreaterThan(1);
 });
 
-test("test deep seek model with think=true", async () => {
+test("test deep seek model with think=true (default)", async () => {
   const ollama = new ChatOllama({
     model: "deepseek-r1:32b",
     maxRetries: 1,
