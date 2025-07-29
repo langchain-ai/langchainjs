@@ -64,7 +64,7 @@ const getTool = (toolboxTool) => tool(toolboxTool, {
 });
 const tools = toolboxTools.map(getTool);
 
-const agent = createReactAgent({ llm: model, tools: tools });
+const agent = createReactAgent({ llm: model, tools });
 let inputs = { messages: [{ role: "user", content: Some query" }] };
 let response = await agent.invoke(inputs);
 console.log(response);
