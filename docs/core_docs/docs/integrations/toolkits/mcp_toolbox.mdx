@@ -52,7 +52,7 @@ const model = new ChatVertexAI({
 });
 
 // Replace with your Toolbox Server URL
-const URL = 'https://127.0.0.1:5000';
+const URL = 'http://127.0.0.1:5000';
 
 let client = ToolboxClient(URL);
 toolboxTools = await client.loadToolset('toolsetName');
@@ -73,7 +73,7 @@ console.log(response);
 ### Advanced Toolbox Features
 
 Toolbox has a variety of features to make developing Gen AI tools for databases.
-For more information, read more about the following features:
+For more information, read more about the following:
 
 - [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
 - [Authorized Invocations](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations): restrict access to use a tool based on the users Auth token
