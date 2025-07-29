@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/azure-openai": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
