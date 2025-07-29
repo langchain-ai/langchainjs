@@ -1,4 +1,4 @@
-import { ContentBlock } from "./content/index.js";
+import * as Tools from "./content/tools.js";
 import { BaseMessage, $MessageComplex } from "./message.js";
 
 // Example usage with OpenAI special content blocks
@@ -62,14 +62,14 @@ if (normalMessage.type === "user") {
 
 // Test with multiple tool call interfaces
 
-interface ToolCallA extends ContentBlock.Tools.ToolCallContentBlock {
+interface ToolCallA extends Tools.ToolCallContentBlock {
   name: "tool_a";
   args: {
     bar: string;
   };
 }
 
-interface ToolCallB extends ContentBlock.Tools.ToolCallContentBlock {
+interface ToolCallB extends Tools.ToolCallContentBlock {
   name: "tool_b";
   args: {
     foo: string;
