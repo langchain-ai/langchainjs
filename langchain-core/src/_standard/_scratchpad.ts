@@ -41,6 +41,7 @@ if (openaiMessage.type === "user") {
   }
 }
 
+// @ts-expect-error - demo
 const file: ContentBlock.Multimodal.File = {
   type: "file",
   fileId: "123",
