@@ -1,3 +1,4 @@
+import type { ContentBlock as BaseContentBlock } from "./content/base.js";
 import type { ContentBlock } from "./content/index.js";
 
 export type $MessageType =
@@ -10,7 +11,7 @@ export type $MessageType =
 
 export interface $MessageComplex {
   readonly content: {
-    [key: string]: unknown;
+    [key: string]: BaseContentBlock | undefined;
   };
   readonly responseMetadata: {
     provider?: string;

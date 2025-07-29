@@ -2,10 +2,31 @@ import { ContentBlock as BaseContentBlock } from "./base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
-  type DataRecord =
-    | { fileId: string; url?: never; data?: never }
-    | { fileId?: never; url: string; data?: never }
-    | { fileId?: never; url?: never; data: string | Uint8Array };
+  type DataRecordFileId = {
+    /**
+     * ID of the image file. e.g. from the OpenAI file api
+     */
+    fileId: string;
+    url?: never;
+    data?: never;
+  };
+  type DataRecordUrl = {
+    fileId?: never;
+    /**
+     * URL of the data file
+     */
+    url: string;
+    data?: never;
+  };
+  type DataRecordData = {
+    fileId?: never;
+    url?: never;
+    /**
+     * Base64 encoded string or binary data of the data
+     */
+    data: string | Uint8Array;
+  };
+  type DataRecord = DataRecordFileId | DataRecordUrl | DataRecordData;
 
   /** Content block for multimodal data */
   export type Data<
