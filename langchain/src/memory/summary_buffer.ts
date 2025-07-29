@@ -28,7 +28,7 @@ export interface ConversationSummaryBufferMemoryInput
  * ```typescript
  * // Initialize the memory with a specific model and token limit
  * const memory = new ConversationSummaryBufferMemory({
- *   llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-instruct", temperature: 0 }),
+ *   llm: new ChatOpenAI({ model: "gpt-3.5-turbo-instruct", temperature: 0 }),
  *   maxTokenLimit: 10,
  * });
  *
@@ -51,7 +51,7 @@ export interface ConversationSummaryBufferMemoryInput
  *
  * // Initialize the conversation chain with the model, memory, and prompt
  * const chain = new ConversationChain({
- *   llm: new ChatOpenAI({ temperature: 0.9, verbose: true }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9, verbose: true }),
  *   memory: memory,
  *   prompt: chatPrompt,
  * });

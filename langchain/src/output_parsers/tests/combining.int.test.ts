@@ -30,7 +30,7 @@ test("CombiningOutputParser", async () => {
     partialVariables: { format_instructions: formatInstructions },
   });
 
-  const model = new ChatOpenAI({ temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
   const input = await prompt.format({
     question: "What is the capital of France?",

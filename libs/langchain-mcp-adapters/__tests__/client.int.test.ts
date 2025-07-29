@@ -460,17 +460,20 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          command,
-          args,
+        mcpServers: {
+          "stdio-server": {
+            command,
+            args,
+          },
+          "http-server": {
+            url: `${streamableHttpBaseUrl}/mcp`,
+          },
+          "sse-server": {
+            url: `${sseBaseUrl}/sse`,
+            transport: "sse",
+          },
         },
-        "http-server": {
-          url: `${streamableHttpBaseUrl}/mcp`,
-        },
-        "sse-server": {
-          url: `${sseBaseUrl}/sse`,
-          transport: "sse",
-        },
+        prefixToolNameWithServerName: true,
       });
 
       try {
@@ -505,13 +508,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
         await testServers.createHTTPServer("filter-http");
 
       const client = new MultiServerMCPClient({
-        "stdio-server": {
-          command,
-          args,
+        mcpServers: {
+          "stdio-server": {
+            command,
+            args,
+          },
+          "http-server": {
+            url: `${streamableHttpBaseUrl}/mcp`,
+          },
         },
-        "http-server": {
-          url: `${streamableHttpBaseUrl}/mcp`,
-        },
+        prefixToolNameWithServerName: true,
       });
 
       try {
@@ -1315,6 +1321,102 @@ describe("MultiServerMCPClient Integration Tests", () => {
         }
       }
     );
+
+    it.each(["http", "sse"] as const)(
+      "%s should respect defaultToolTimeout for tool calls",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            defaultToolTimeout: 1000,
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          // Test with a timeout less than the server's configured timeout (should succeed)
+          const result = await testTool!.invoke({ sleepMsec: 100 });
+          expect(result).toContain("done");
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should throw timeout error when tool call exceeds configured timeout from server options",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          "timeout-server": {
+            transport,
+            url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            defaultToolTimeout: 5, // 5 milliseconds
+          },
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          await expect(
+            testTool!.invoke({ sleepMsec: 1000 })
+          ).rejects.toThrowError(
+            /TimeoutError: The operation was aborted due to timeout/
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it.each(["http", "sse"] as const)(
+      "%s should throw timeout error when tool call exceeds configured timeout from constructor options",
+      async (transport) => {
+        const { baseUrl } = await testServers.createHTTPServer("timeout-test", {
+          disableStreamableHttp: transport === "sse",
+          supportSSEFallback: transport === "sse",
+        });
+
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "timeout-server": {
+              transport,
+              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
+            },
+          },
+          defaultToolTimeout: 5, // 5 milliseconds
+        });
+
+        try {
+          const tools = await client.getTools();
+          const testTool = tools.find((t) => t.name.includes("sleep_tool"));
+          expect(testTool).toBeDefined();
+
+          await expect(
+            testTool!.invoke({ sleepMsec: 100 })
+          ).rejects.toThrowError(
+            /TimeoutError: The operation was aborted due to timeout/
+          );
+        } finally {
+          await client.close();
+        }
+      }
+    );
   });
 
   describe("Multimodal Content Handling (including Audio)", () => {
@@ -1614,7 +1716,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(imgArtifact).toEqual([]);
 
           const imgContentArray = imgContentResult as MessageContentComplex[];
-          
+
           expect(imgContentArray).toHaveLength(2);
           expect(imgContentArray).toEqual(
             expect.arrayContaining([
@@ -1633,7 +1735,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContentResult, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          
+
           if (typeof resContentResult === "string") {
             expect(resContentResult).toContain(resourceToolInput.args.input);
           } else {
@@ -1671,7 +1773,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           disableStreamableHttp: transport === "sse",
           supportSSEFallback: transport === "sse",
         });
-        
+
         const client = new MultiServerMCPClient({
           mcpServers: {
             [serverName]: {
@@ -1691,7 +1793,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: imgContent, artifact: imgArtifact } =
             await imageTool.invoke(imageToolInput);
-          
+
           expect(imgContent).toEqual([]);
           expect(imgArtifact).toHaveLength(2);
           expect(imgArtifact).toEqual(
@@ -1703,7 +1805,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
               expect.objectContaining({
                 type: "image",
                 data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-                mimeType: "image/png"
+                mimeType: "image/png",
               }),
             ])
           );
@@ -1738,7 +1840,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
               expect.objectContaining({
                 type: "audio",
                 data: "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA",
-                mimeType: "audio/wav"
+                mimeType: "audio/wav",
               }),
             ])
           );
@@ -1864,13 +1966,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
             );
           }
           expect(imgArtifact).toHaveLength(1);
-          expect(imgArtifact[0]).toEqual(
-            {
-              type: "image",
-              data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-              mimeType: "image/png"
-            }
-          );
+          expect(imgArtifact[0]).toEqual({
+            type: "image",
+            data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+            mimeType: "image/png",
+          });
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);

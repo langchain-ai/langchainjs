@@ -7,7 +7,7 @@ import {
   type ChatOpenAICallOptions,
   type OpenAIChatInput,
   type OpenAICoreRequestOptions,
-  ChatOpenAI,
+  ChatOpenAICompletions,
 } from "@langchain/openai";
 
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -447,7 +447,7 @@ export type ChatFireworksCallOptions = Partial<
  *
  * <br />
  */
-export class ChatFireworks extends ChatOpenAI<ChatFireworksCallOptions> {
+export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOptions> {
   static lc_name() {
     return "ChatFireworks";
   }

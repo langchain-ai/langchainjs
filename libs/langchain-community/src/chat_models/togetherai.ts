@@ -7,7 +7,7 @@ import {
   type ChatOpenAICallOptions,
   type OpenAIChatInput,
   type OpenAICoreRequestOptions,
-  ChatOpenAI,
+  ChatOpenAICompletions,
 } from "@langchain/openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
@@ -410,7 +410,7 @@ export interface ChatTogetherAIInput
  *
  * <br />
  */
-export class ChatTogetherAI extends ChatOpenAI<ChatTogetherAICallOptions> {
+export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOptions> {
   static lc_name() {
     return "ChatTogetherAI";
   }

@@ -33,7 +33,7 @@ export type GenerativeAgentConfig = {
  * const tommie: GenerativeAgent = new GenerativeAgent(
  *   new OpenAI({ temperature: 0.9, maxTokens: 1500 }),
  *   new GenerativeAgentMemory(
- *     new ChatOpenAI(),
+ *     new ChatOpenAI({ model: "gpt-4o-mini" }),
  *     new TimeWeightedVectorStoreRetriever({
  *       vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
  *       otherScoreKeys: ["importance"],

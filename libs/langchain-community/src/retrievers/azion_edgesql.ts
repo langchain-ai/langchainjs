@@ -121,7 +121,7 @@ export interface AzionRetrieverArgs extends BaseRetrieverInput {
  * ```ts
  * // Initialize embeddings and chat model
  * const embeddings = new OpenAIEmbeddings();
- * const chatModel = new ChatOpenAI();
+ * const chatModel = new ChatOpenAI({ model: "gpt-4o-mini" });
  *
  * // Create retriever with hybrid search
  * const retriever = new AzionRetriever(embeddings, chatModel, {

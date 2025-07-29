@@ -9,7 +9,9 @@ export const run = async () => {
     llm: new ChatOpenAI({ model: "gpt-3.5-turbo", temperature: 0 }),
   });
 
-  const model = new ChatOpenAI();
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+  });
   const prompt =
     PromptTemplate.fromTemplate(`The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 

@@ -1887,7 +1887,7 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
  * const promptTemplate = PromptTemplate.fromTemplate(
  *   "Tell me a joke about {topic}",
  * );
- * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
+ * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({ model: "gpt-4o-mini" })]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
  */
@@ -2800,9 +2800,9 @@ export class RunnableLambda<
  * );
  *
  * // Invoke the sequence with a single age input
- * const res = sequence.invoke(25);
+ * const res = await sequence.invoke(25);
  *
- * // { years_to_fifty: 25, years_to_hundred: 75 }
+ * // { years_to_fifty: 20, years_to_hundred: 70 }
  * ```
  */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}

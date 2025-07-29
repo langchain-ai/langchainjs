@@ -52,6 +52,7 @@ export const run = async () => {
 
   // You can restrict callbacks to a particular object by passing it upon creation
   const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
     temperature: 0,
     callbacks: [handler2], // this will issue handler2 callbacks related to this model
     streaming: true, // needed to enable streaming, which enables handleLLMNewToken

@@ -1,8 +1,6 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
 import { ZodError } from "zod";
-import type {
-  Connection,
-} from "../src/types.js";
+import type { Connection } from "../src/types.js";
 
 import "./mocks.js";
 
@@ -346,16 +344,16 @@ describe("MultiServerMCPClient", () => {
       });
 
       const conf = client.config;
-      expect(conf.additionalToolNamePrefix).toBe("mcp");
-      expect(conf.prefixToolNameWithServerName).toBe(true);
+      expect(conf.additionalToolNamePrefix).toBe("");
+      expect(conf.prefixToolNameWithServerName).toBe(false);
 
       await client.initializeConnections();
       const tools = await client.getTools();
 
       // Should have 2 tools
       expect(tools.length).toBe(2);
-      expect(tools[0].name).toBe("mcp__server1__tool1");
-      expect(tools[1].name).toBe("mcp__server1__tool2");
+      expect(tools[0].name).toBe("tool1");
+      expect(tools[1].name).toBe("tool2");
     });
 
     test("should get tools from a specific server", async () => {
