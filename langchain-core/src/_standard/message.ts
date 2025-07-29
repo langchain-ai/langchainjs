@@ -1,4 +1,4 @@
-import type { StandardContentBlock } from "./content/index.js";
+import type { Messages } from "./content/index.js";
 
 export type $MessageType =
   | "ai"
@@ -54,10 +54,10 @@ export interface $MergeMessageComplex<
 
 export interface $StandardMessageComplex {
   content: {
-    user: StandardContentBlock;
-    ai: StandardContentBlock;
-    tool: StandardContentBlock;
-    system: StandardContentBlock;
+    user: Messages.ContentBlock;
+    ai: Messages.ContentBlock;
+    tool: Messages.ContentBlock;
+    system: Messages.ContentBlock;
   };
   responseMetadata: {
     provider?: string;
