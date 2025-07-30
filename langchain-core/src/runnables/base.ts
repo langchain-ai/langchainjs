@@ -1490,6 +1490,31 @@ export class RunnableBinding<
     return IterableReadableStream.fromAsyncGenerator(generator());
   }
 
+  /**
+   * Bind tool-like objects to this runnable.
+   * @param tools A list of tool definitions to bind.
+   * @param kwargs Any additional parameters to bind.
+   * @returns A new Runnable with tools bound.
+   */
+  bindTools?(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    tools: any[],
+    kwargs?: Partial<CallOptions>
+  ): Runnable<RunInput, RunOutput, CallOptions> {
+    if (
+      this.bound &&
+      "bindTools" in this.bound &&
+      typeof this.bound.bindTools === "function"
+    ) {
+      return this.bound.bindTools(tools, {
+        ...this.config,
+        ...this.kwargs,
+        ...kwargs,
+      });
+    }
+    throw new Error("The underlying runnable does not support bindTools.");
+  }
+
   static isRunnableBinding(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     thing: any

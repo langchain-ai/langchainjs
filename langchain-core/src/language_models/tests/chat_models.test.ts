@@ -9,6 +9,11 @@ import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { tool } from "../../tools/index.js";
+import type {
+  BaseChatModelCallOptions,
+  BindToolsInput,
+} from "../chat_models.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -411,5 +416,54 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   console.log(JSON.stringify(model));
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
+  );
+});
+
+test("bindTools preserves config when chained with withConfig", async () => {
+  class FakeChatModelWithBindTools extends FakeChatModel {
+    override bindTools(
+      tools: BindToolsInput[],
+      kwargs?: Partial<BaseChatModelCallOptions>
+    ) {
+      return this.withConfig({
+        tools,
+        ...kwargs,
+      } as Partial<BaseChatModelCallOptions>);
+    }
+  }
+
+  const model = new FakeChatModelWithBindTools({});
+
+  const echoTool = tool((input) => String(input), {
+    name: "echo",
+    description: "Echos the input",
+    schema: z.string(),
+  });
+
+  const config = {
+    stop: ["stop"],
+  };
+
+  const tools = [echoTool];
+
+  // Here's the important part - both should produce the same result
+  const modelWithConfig = model.withConfig(config);
+  // Check if bindTools exists on the configured model
+  if (!("bindTools" in modelWithConfig)) {
+    throw new Error("bindTools not available on configured model");
+  }
+  const configuredBoundModel = (modelWithConfig as FakeChatModelWithBindTools).bindTools(tools);
+  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
+
+  const configuredBoundModelResult = await configuredBoundModel.invoke(
+    "Any arbitrary input"
+  );
+  const boundConfiguredModelResult = await boundConfiguredModel.invoke(
+    "Any arbitrary input"
+  );
+
+  // Both results should be equal
+  expect(configuredBoundModelResult.content).toEqual(
+    boundConfiguredModelResult.content
   );
 });
