@@ -464,6 +464,59 @@ describe("Complex AIMessageChunk concat", () => {
       },
     ]);
   });
+
+  it("concatenates tool call chunks without IDs", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: "get_current_time",
+        type: "tool_call_chunk",
+        index: 0,
+        // no `id` provided
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "fallback-0", // Should get fallback ID
+        name: "get_current_time",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks without IDs and no index", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: "get_current_time",
+        type: "tool_call_chunk",
+        // no `id` or `index` provided
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "fallback-0", // Should get fallback ID with index 0
+        name: "get_current_time",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
 });
 
 describe("Message like coercion", () => {
