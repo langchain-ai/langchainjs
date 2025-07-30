@@ -8287,7 +8287,7 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@playwright/test": ^1.48.2
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.8.2
+    "@qdrant/js-client-rest": ^1.15.0
     "@raycast/api": ^1.83.1
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -8466,7 +8466,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.8.2
+    "@qdrant/js-client-rest": ^1.15.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -11332,19 +11332,6 @@ __metadata:
   peerDependencies:
     typescript: ">=4.7"
   checksum: edc691c08d7a95a579922b9e472586cd6d823410f0fc873874f15df202b2ce077a0dd9ef9dbdb51eeb3e2f5ff83d49bc0c09ba35402cc233eb9b6f08b807f2f2
-  languageName: node
-  linkType: hard
-
-"@qdrant/js-client-rest@npm:^1.8.2, @qdrant/js-client-rest@npm:^1.9.0":
-  version: 1.9.0
-  resolution: "@qdrant/js-client-rest@npm:1.9.0"
-  dependencies:
-    "@qdrant/openapi-typescript-fetch": 1.2.6
-    "@sevinf/maybe": 0.5.0
-    undici: ~5.28.4
-  peerDependencies:
-    typescript: ">=4.7"
-  checksum: 3ac6526a961f85e96eaa0cd17059cafcca208c7aaa6df96fa99caab75c53c79903eafa611be99b52732970f4bef65d93922537916194fe0b9edf0f256e42fa9a
   languageName: node
   linkType: hard
 
@@ -23247,7 +23234,7 @@ __metadata:
     "@pinecone-database/pinecone": ^5.0.2
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
-    "@qdrant/js-client-rest": ^1.9.0
+    "@qdrant/js-client-rest": ^1.15.0
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.45.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -38863,7 +38850,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^5.19.1, undici@npm:^5.22.1, undici@npm:^5.28.5, undici@npm:~5.28.4":
+"undici@npm:^5.19.1, undici@npm:^5.22.1, undici@npm:^5.28.5":
   version: 5.28.5
   resolution: "undici@npm:5.28.5"
   dependencies:
