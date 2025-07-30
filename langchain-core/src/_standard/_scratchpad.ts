@@ -41,6 +41,19 @@ if (openaiMessage.type === "user") {
   }
 }
 
+// @ts-expect-error - demo
+const file: ContentBlock.Multimodal.File = {
+  type: "file",
+  fileId: "123",
+  // uncommenting this will cause a type error
+  // url: "asddas",
+  mimeType: "image/png",
+  metadata: {
+    width: 100,
+    height: 100,
+  },
+};
+
 function normalReturn(): BaseMessage {
   return {
     type: "user",
@@ -62,14 +75,14 @@ if (normalMessage.type === "user") {
 
 // Test with multiple tool call interfaces
 
-interface ToolCallA extends ContentBlock.Tools.ToolCallContentBlock {
+interface ToolCallA extends ContentBlock.Tools.ToolCall {
   name: "tool_a";
   args: {
     bar: string;
   };
 }
 
-interface ToolCallB extends ContentBlock.Tools.ToolCallContentBlock {
+interface ToolCallB extends ContentBlock.Tools.ToolCall {
   name: "tool_b";
   args: {
     foo: string;

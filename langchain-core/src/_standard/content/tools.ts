@@ -1,9 +1,9 @@
-import { ContentBlock } from "./index.js";
+import { ContentBlock as BaseContentBlock } from "./base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
-export declare namespace ToolContentBlocks {
+export declare namespace Tools {
   /** Content block for a tool call */
-  export interface ToolCallContentBlock extends ContentBlock {
+  export interface ToolCall extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -29,7 +29,7 @@ export declare namespace ToolContentBlocks {
   }
 
   /** Content block for a built-in web search tool call. */
-  export interface SearchCallContentBlock extends ContentBlock {
+  export interface SearchCall extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -47,7 +47,7 @@ export declare namespace ToolContentBlocks {
   }
 
   /** Content block for the result of a built-in search tool call */
-  export interface SearchResultContentBlock extends ContentBlock {
+  export interface SearchResult extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -65,7 +65,7 @@ export declare namespace ToolContentBlocks {
   }
 
   /** Content block for a built-in code interpreter tool call. */
-  export interface CodeInterpreterCallContentBlock extends ContentBlock {
+  export interface CodeInterpreterCall extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -87,7 +87,7 @@ export declare namespace ToolContentBlocks {
   }
 
   /** Content block for the output of a singular code interpreter tool call */
-  export interface CodeInterpreterOutput extends ContentBlock {
+  export interface CodeInterpreterOutput extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -118,7 +118,7 @@ export declare namespace ToolContentBlocks {
   }
 
   /** Content block for the result of a code interpreter tool call */
-  export interface CodeInterpreterResultContentBlock extends ContentBlock {
+  export interface CodeInterpreterResult extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -135,11 +135,11 @@ export declare namespace ToolContentBlocks {
     output: CodeInterpreterOutput[];
   }
 
-  export type Standard =
-    | ToolCallContentBlock
-    | SearchCallContentBlock
-    | SearchResultContentBlock
-    | CodeInterpreterCallContentBlock
+  export type ContentBlock =
+    | ToolCall
+    | SearchCall
+    | SearchResult
+    | CodeInterpreterCall
     | CodeInterpreterOutput
-    | CodeInterpreterResultContentBlock;
+    | CodeInterpreterResult;
 }

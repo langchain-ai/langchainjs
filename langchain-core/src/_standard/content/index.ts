@@ -1,14 +1,11 @@
-import { ToolContentBlocks } from "./tools.js";
-import { MultimodalContentBlocks } from "./multimodal.js";
-
-export interface ContentBlock {
-  readonly type: string;
-}
+import { ContentBlock as BaseContentBlock } from "./base.js";
+import { Tools as ToolsContentBlock } from "./tools.js";
+import { Multimodal as MultimodalContentBlock } from "./multimodal.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace ContentBlock {
   /** Content block for citation */
-  interface Citation extends ContentBlock {
+  interface Citation extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -44,7 +41,7 @@ export declare namespace ContentBlock {
   }
 
   /** Content block for text */
-  interface TextContentBlock extends ContentBlock {
+  interface Text extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -66,7 +63,7 @@ export declare namespace ContentBlock {
   }
 
   /** Content block for reasoning output */
-  interface ReasoningContentBlock extends ContentBlock {
+  interface Reasoning extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -104,12 +101,11 @@ export declare namespace ContentBlock {
     signature?: string;
   }
 
-  export import Tools = ToolContentBlocks;
-  export import Multimodal = MultimodalContentBlocks;
-
-  export type Standard =
-    | TextContentBlock
-    | ReasoningContentBlock
-    | Tools.Standard
-    | Multimodal.Standard;
+  export import Tools = ToolsContentBlock;
+  export import Multimodal = MultimodalContentBlock;
+  export type Types =
+    | Text
+    | Reasoning
+    | Tools.ContentBlock
+    | Multimodal.ContentBlock;
 }

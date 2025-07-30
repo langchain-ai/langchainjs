@@ -1,4 +1,5 @@
-import { ContentBlock } from "./content/index.js";
+import type { ContentBlock as BaseContentBlock } from "./content/base.js";
+import type { ContentBlock } from "./content/index.js";
 
 export type $MessageType =
   | "ai"
@@ -10,7 +11,7 @@ export type $MessageType =
 
 export interface $MessageComplex {
   readonly content: {
-    [key: string]: ContentBlock | undefined;
+    [key: string]: BaseContentBlock | undefined;
   };
   readonly responseMetadata: {
     provider?: string;
@@ -39,8 +40,8 @@ export interface $MergeMessageComplex<
     [K in keyof (A["content"] & B["content"])]: NonNullable<
       K extends keyof A["content"] & keyof B["content"]
         ? $MergeDiscriminatedUnion<
-            NonNullable<A["content"][K]>,
-            NonNullable<B["content"][K]>,
+            NonNullable<A["content"][K]> & Record<"type", PropertyKey>,
+            NonNullable<B["content"][K]> & Record<"type", PropertyKey>,
             "type"
           >
         : K extends keyof A["content"]
@@ -52,12 +53,12 @@ export interface $MergeMessageComplex<
   usageMetadata: B["usageMetadata"];
 }
 
-export interface $StandardMessageComplex extends $MessageComplex {
+export interface $StandardMessageComplex {
   content: {
-    user: ContentBlock.Standard;
-    ai: ContentBlock.Standard;
-    tool: ContentBlock.Standard;
-    system: ContentBlock.Standard;
+    user: ContentBlock.Types;
+    ai: ContentBlock.Types;
+    tool: ContentBlock.Types;
+    system: ContentBlock.Types;
   };
   responseMetadata: {
     provider?: string;
