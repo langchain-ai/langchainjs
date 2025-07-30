@@ -103,3 +103,23 @@ export declare namespace Multimodal {
 
   export type ContentBlock = Image | Video | Audio | PlainText | File;
 }
+
+export function isMultimodalContentBlock(
+  content_block: unknown
+): content_block is Multimodal.ContentBlock {
+  if (typeof content_block !== "object" || content_block === null) {
+    return false;
+  }
+
+  if (!("type" in content_block) || typeof content_block.type !== "string") {
+    return false;
+  }
+
+  return (
+    content_block.type === "image" ||
+    content_block.type === "video" ||
+    content_block.type === "audio" ||
+    content_block.type === "text-plain" ||
+    content_block.type === "file"
+  );
+}

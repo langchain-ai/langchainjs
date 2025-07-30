@@ -109,3 +109,5 @@ export declare namespace ContentBlock {
     | Tools.ContentBlock
     | Multimodal.ContentBlock;
 }
+
+export { isMultimodalContentBlock } from "./multimodal.js";
