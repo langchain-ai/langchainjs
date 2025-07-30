@@ -39,6 +39,7 @@ export declare namespace Tools {
     callId: string;
     /**
      * The result of the tool call
+     * ToDo: maybe this should be content?
      */
     result: unknown;
   }
@@ -152,6 +153,7 @@ export declare namespace Tools {
 
   export type ContentBlock =
     | ToolCall
+    | ToolResult
     | SearchCall
     | SearchResult
     | CodeInterpreterCall

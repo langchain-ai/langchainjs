@@ -104,3 +104,21 @@ export type SystemMessage<
 export type ToolMessage<
   TComplex extends $MessageComplex = $StandardMessageComplex
 > = BaseMessage<TComplex, "tool">;
+
+export function isAIMessage(message: BaseMessage): message is AIMessage {
+  return message.type === "ai";
+}
+
+export function isHumanMessage(message: BaseMessage): message is HumanMessage {
+  return message.type === "user";
+}
+
+export function isSystemMessage(
+  message: BaseMessage
+): message is SystemMessage {
+  return message.type === "system";
+}
+
+export function isToolMessage(message: BaseMessage): message is ToolMessage {
+  return message.type === "tool";
+}
