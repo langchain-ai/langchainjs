@@ -44,7 +44,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test esbuild exports
@@ -65,7 +65,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test esm exports
@@ -86,7 +86,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test cjs exports
@@ -107,7 +107,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test cf exports
@@ -128,7 +128,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test vercel exports
@@ -149,7 +149,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test vite exports
@@ -170,7 +170,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain --filter=@langchain/anthropic --filter=@langchain/community --filter=@langchain/openai
+        run: yarn build langchain @langchain/anthropic @langchain/community @langchain/openai
         shell: bash
 
       - name: Test compiling exports with tsc

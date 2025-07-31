@@ -9,7 +9,11 @@ import { lcSecretsPlugin } from "./plugins/lc-secrets.js";
 import { importConstantsPlugin } from "./plugins/import-constants.js";
 import { importMapPlugin } from "./plugins/import-map.js";
 import { findWorkspacePackages } from "./utils.js";
-import { extraImportMapEntries, optionalEntrypoints } from "./constants.js";
+import {
+  extraImportMapEntries,
+  optionalEntrypoints,
+  deprecatedOmitFromImportMap,
+} from "./constants.js";
 import type { CompilePackageOptions } from "./types.js";
 
 const __dirname = fileURLToPath(import.meta.url);
@@ -123,6 +127,10 @@ async function buildProject(
           packageInfo: pkg,
           // Add extra import map entries for langchain package
           extraImportMapEntries: extraImportMapEntries[pkg.name!] || [],
+          // Exclude deprecated entrypoints from import map
+          // or imports that would cause circular dependencies
+          deprecatedOmitFromImportMap:
+            deprecatedOmitFromImportMap[pkg.name!] || [],
         }),
       ]
     : [];

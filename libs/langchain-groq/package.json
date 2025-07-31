@@ -62,7 +62,8 @@
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "zod": "^4.0.14"
   },
   "publishConfig": {
     "access": "public"

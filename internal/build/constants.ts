@@ -32,6 +32,13 @@ export const optionalEntrypoints: Record<string, string[]> = {
   ],
 };
 
+export const deprecatedOmitFromImportMap: Record<string, string[]> = {
+  langchain: [
+    "hub",
+    "hub/node",
+  ],
+};
+
 export const extraImportMapEntries: Record<
   string,
   {
