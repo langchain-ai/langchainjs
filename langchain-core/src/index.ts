@@ -1,9 +1,4 @@
-export * from './agents.js'
-export * from './chat_history.js'
-export * from './context.js'
-export * from './embeddings.js'
-export * from './memory.js'
-export * from './outputs.js'
-export * from './prompt_values.js'
-export * from './stores.js'
-export * from './vectorstores.js'
+console.warn(
+  `[WARNING]: The root "langchain" entrypoint is empty. Please use a specific entrypoint instead.`
+);
+export {};

@@ -88,13 +88,13 @@ export async function formatWithPrettier(
   try {
     // Get prettier config for the file
     const prettierConfig = await prettier.resolveConfig(filePath);
-    
+
     // Format the code with TypeScript parser
     const formatted = await prettier.format(code, {
       ...prettierConfig,
       parser: "typescript",
     });
-    
+
     return formatted;
   } catch (error) {
     console.warn("⚠️ Failed to format code with prettier:", error);

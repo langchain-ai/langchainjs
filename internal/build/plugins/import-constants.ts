@@ -98,7 +98,11 @@ export function importConstantsPlugin(
           console.log(
             `📋 Found ${optionalEntrypoints.length} optional entrypoints`
           );
-          await generateImportConstants(opts.packagePath, optionalEntrypoints, opts);
+          await generateImportConstants(
+            opts.packagePath,
+            optionalEntrypoints,
+            opts
+          );
         }
       } catch (error) {
         console.warn("⚠️ Import constants generation failed:", error);
