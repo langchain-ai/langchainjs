@@ -5,7 +5,8 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "yarn quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "yarn clean && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "_____": "skip build as we migrate to new docs",
+    "build": "exit 0 && yarn clean && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:vercel": "yarn clean && bash ./scripts/vercel_build.sh && yarn quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",

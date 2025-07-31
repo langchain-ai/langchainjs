@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/textsplitters
+yarn build @langchain/textsplitters
 ```
 
 ### Run tests

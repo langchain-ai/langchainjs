@@ -293,7 +293,7 @@ and in generated documentation.
 ##### Note: you only need to follow these steps if you are building the docs site locally
 
 1. [Quarto](https://quarto.org/) - package that converts Jupyter notebooks (`.ipynb` files) into `.mdx` files for serving in Docusaurus.
-2. `yarn build --filter=core_docs` - It's as simple as that! (or you can simply run `yarn build` from `docs/core_docs/`)
+2. `yarn build core_docs` - It's as simple as that! (or you can simply run `yarn build` from `docs/core_docs/`)
 
 All notebooks are converted to `.md` files and automatically gitignored. If you would like to create a non notebook doc, it must be a `.mdx` file.
 

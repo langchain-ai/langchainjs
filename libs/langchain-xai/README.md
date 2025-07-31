@@ -50,7 +50,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/xai
+yarn build @langchain/xai
 ```
 
 ### Run tests

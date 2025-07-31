@@ -16,7 +16,7 @@ TODO: add setup instructions for Ollama locally
 import { ChatOllama } from "@langchain/ollama";
 
 const model = new ChatOllama({
-  model: "llama3",  // Default value.
+  model: "llama3", // Default value.
 });
 
 const result = await model.invoke(["human", "Hello, how are you?"]);
@@ -41,7 +41,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/ollama
+yarn build @langchain/ollama
 ```
 
 ### Run tests

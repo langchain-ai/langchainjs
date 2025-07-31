@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/pinecone
+yarn build @langchain/pinecone
 ```
 
 ### Run tests

@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/cloudflare
+yarn build @langchain/cloudflare
 ```
 
 ### Run tests

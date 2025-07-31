@@ -15,7 +15,7 @@ Generate integration documentation using the CLI.
 1. Build the CLI:
 
 ```bash
-yarn build --filter=@langchain/scripts
+yarn build @langchain/scripts
 ```
 
 2. Run the CLI:

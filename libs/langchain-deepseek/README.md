@@ -54,7 +54,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/deepseek
+yarn build @langchain/deepseek
 ```
 
 ### Run tests

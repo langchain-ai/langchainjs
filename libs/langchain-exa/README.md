@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/exa
+yarn build @langchain/exa
 ```
 
 ### Run tests

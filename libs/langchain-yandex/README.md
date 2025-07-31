@@ -9,6 +9,7 @@ npm install @langchain/yandex @langchain/core
 ```
 
 ## Setup your environment
+
 First, you should [create a service account](https://cloud.yandex.com/en/docs/iam/operations/sa/create) with the `ai.languageModels.user` role.
 
 Next, you have two authentication options:
@@ -63,9 +64,7 @@ import { YandexGPTEmbeddings } from "@langchain/yandex";
 const model = new YandexGPTEmbeddings({});
 
 /* Embed queries */
-const res = await model.embedQuery(
-  "This is a test document."
-);
+const res = await model.embedQuery("This is a test document.");
 /* Embed documents */
 const documentRes = await model.embedDocuments(["This is a test document."]);
 ```
@@ -89,7 +88,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/yandex
+yarn build @langchain/yandex
 ```
 
 ### Run tests
