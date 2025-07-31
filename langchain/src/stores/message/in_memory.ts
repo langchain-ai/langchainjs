@@ -1,4 +1,1 @@
-export {
-  InMemoryChatMessageHistory,
-  ChatMessageHistory,
-} from "@langchain/core/chat_history";
+export { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";

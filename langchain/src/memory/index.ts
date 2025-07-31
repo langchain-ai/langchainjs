@@ -7,7 +7,7 @@ export {
   type MemoryVariables,
 } from "@langchain/core/memory";
 export { getBufferString } from "@langchain/core/messages";
-export { ChatMessageHistory } from "@langchain/core/chat_history";
+export { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
 
 export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
