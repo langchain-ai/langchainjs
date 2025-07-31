@@ -319,7 +319,7 @@ export type TavilyExtractResult = {
   /**
    * The full content extracted from the page.
    */
-  rawContent: string;
+  raw_content: string;
   /**
    * This is only available if {@link TavilyExtractParams.includeImages} is set to `true`. A list
    * of image URLs extracted from the page.
