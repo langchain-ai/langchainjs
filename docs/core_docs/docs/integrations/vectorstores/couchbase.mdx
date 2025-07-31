@@ -144,11 +144,11 @@ For more details on how to create a search index with support for Vector fields,
 - [Couchbase Capella](https://docs.couchbase.com/cloud/search/create-search-indexes.html)
 - [Couchbase Server](https://docs.couchbase.com/server/current/search/create-search-indexes.html)
 
-For using this vector store, CouchbaseVectorStoreArgs needs to be configured.
+For using this vector store, CouchbaseSearchVectorStoreArgs needs to be configured.
 textKey and embeddingKey are optional fields, required if you want to use specific keys
 
 ```typescript
-const couchbaseConfig: CouchbaseVectorStoreArgs = {
+const couchbaseConfig: CouchbaseSearchVectorStoreArgs = {
   cluster: couchbaseClient,
   bucketName: "testing",
   scopeName: "_default",
@@ -164,7 +164,7 @@ const couchbaseConfig: CouchbaseVectorStoreArgs = {
 We create the vector store object with the cluster information and the search index name.
 
 ```typescript
-const store = await CouchbaseVectorStore.initialize(
+const store = await CouchbaseSearchVectorStore.initialize(
   embeddings, // embeddings object to create embeddings from text
   couchbaseConfig
 );
@@ -183,9 +183,9 @@ At the end, it also shows how to get similarity score
 ```ts
 import { OpenAIEmbeddings } from "@langchain/openai";
 import {
-  CouchbaseVectorStoreArgs,
-  CouchbaseVectorStore,
-} from "@langchain/community/vectorstores/couchbase";
+  CouchbaseSearchVectorStoreArgs,
+  CouchbaseSearchVectorStore,
+} from "@langchain/community/vectorstores/couchbase_search";
 import { Cluster } from "couchbase";
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "@langchain/textsplitters";
@@ -215,7 +215,7 @@ const embeddings = new OpenAIEmbeddings({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const couchbaseConfig: CouchbaseVectorStoreArgs = {
+const couchbaseConfig: CouchbaseSearchVectorStoreArgs = {
   cluster: couchbaseClient,
   bucketName: "testing",
   scopeName: "_default",
@@ -225,7 +225,7 @@ const couchbaseConfig: CouchbaseVectorStoreArgs = {
   embeddingKey: "embedding",
 };
 
-const store = await CouchbaseVectorStore.fromDocuments(
+const store = await CouchbaseSearchVectorStore.fromDocuments(
   docs,
   embeddings,
   couchbaseConfig
@@ -291,7 +291,7 @@ for (let i = 0; i < docs.length; i += 1) {
   docs[i].metadata.author = ["John Doe", "Jane Doe"][i % 2];
 }
 
-const store = await CouchbaseVectorStore.fromDocuments(
+const store = await CouchbaseSearchVectorStore.fromDocuments(
   docs,
   embeddings,
   couchbaseConfig
@@ -405,9 +405,9 @@ Please refer to the documentation for more details on the available query method
 
 # Frequently Asked Questions
 
-## Question: Should I create the Search index before creating the CouchbaseVectorStore object?
+## Question: Should I create the Search index before creating the CouchbaseSearchVectorStore object?
 
-Yes, currently you need to create the Search index before creating the `CouchbaseVectorStore` object.
+Yes, currently you need to create the Search index before creating the `CouchbaseSearchVectorStore` object.
 
 ## Question: I am not seeing all the fields that I specified in my search results.
 
