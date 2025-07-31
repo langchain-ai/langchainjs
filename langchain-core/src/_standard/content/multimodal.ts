@@ -1,4 +1,5 @@
 import { ContentBlock as BaseContentBlock } from "./base.js";
+import { isMessageWithType } from "../message.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
@@ -102,4 +103,17 @@ export declare namespace Multimodal {
   };
 
   export type ContentBlock = Image | Video | Audio | PlainText | File;
+}
+
+export function isMultimodalContentBlock(
+  contentBlock: unknown
+): contentBlock is Multimodal.ContentBlock {
+  return (
+    isMessageWithType(contentBlock) &&
+    (contentBlock.type === "image" ||
+      contentBlock.type === "video" ||
+      contentBlock.type === "audio" ||
+      contentBlock.type === "text-plain" ||
+      contentBlock.type === "file")
+  );
 }

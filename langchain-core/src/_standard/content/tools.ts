@@ -28,6 +28,22 @@ export declare namespace Tools {
     callId: string;
   }
 
+  export interface ToolCallResult extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "tool_call_result";
+    /**
+     * The result of the tool call
+     */
+    callId: string;
+    /**
+     * The result of the tool call
+     * ToDo: maybe this should be content?
+     */
+    result: unknown;
+  }
+
   /** Content block for a built-in web search tool call. */
   export interface SearchCall extends BaseContentBlock {
     /**
@@ -137,6 +153,7 @@ export declare namespace Tools {
 
   export type ContentBlock =
     | ToolCall
+    | ToolCallResult
     | SearchCall
     | SearchResult
     | CodeInterpreterCall
