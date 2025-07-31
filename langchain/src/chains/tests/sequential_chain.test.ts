@@ -3,7 +3,7 @@ import { BaseLLM } from "@langchain/core/language_models/llms";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { LLMResult } from "@langchain/core/outputs";
-import { ChatMessageHistory } from "../../stores/message/in_memory.js";
+import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
 import { LLMChain } from "../llm_chain.js";
 import { SequentialChain } from "../sequential_chain.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";

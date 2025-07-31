@@ -1,6 +1,6 @@
 import {
   BaseChatMessageHistory,
-  ChatMessageHistory,
+  InMemoryChatMessageHistory as ChatMessageHistory,
 } from "@langchain/core/chat_history";
 import {
   BaseMemory,

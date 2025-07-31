@@ -1,6 +1,6 @@
 import { AzureOpenAI as AzureOpenAIClient } from "openai";
 import { getEnv, getEnvironmentVariable } from "@langchain/core/utils/env";
-import { Serialized } from "@langchain/core/load/serializable";
+import type { Serialized } from "@langchain/core/load/serializable";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import { StructuredOutputMethodOptions } from "@langchain/core/language_models/base";
 import {
@@ -286,7 +286,7 @@ class AzureChatOpenAIResponses<
     return _getAzureClientOptions.call(this, options);
   }
 
-  override toJSON() {
+  override toJSON(): Serialized {
     return _serializeAzureChat.call(this, super.toJSON());
   }
 }
@@ -350,7 +350,7 @@ class AzureChatOpenAICompletions<
     return _getAzureClientOptions.call(this, options);
   }
 
-  override toJSON() {
+  override toJSON(): Serialized {
     return _serializeAzureChat.call(this, super.toJSON());
   }
 }
@@ -838,7 +838,7 @@ export class AzureChatOpenAI<
     return super._getStructuredOutputMethod(ensuredConfig);
   }
 
-  override toJSON() {
+  override toJSON(): Serialized {
     return _serializeAzureChat.call(this, super.toJSON());
   }
 }

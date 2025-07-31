@@ -10,7 +10,6 @@ services:
     working_dir: /app
     volumes:
       - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
@@ -22,7 +21,6 @@ services:
     working_dir: /app
     volumes:
       - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 
