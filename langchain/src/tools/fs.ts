@@ -10,6 +10,11 @@ interface ReadFileParams extends ToolParams {
   store: BaseFileStore;
 }
 
+const readSchema = z.object({
+  file_path: z.string().describe("name of file"),
+});
+type ReadToolSchema = typeof readSchema;
+
 /**
  * Class for reading files from the disk. Extends the StructuredTool
  * class.
@@ -19,9 +24,7 @@ export class ReadFileTool extends StructuredTool {
     return "ReadFileTool";
   }
 
-  schema = z.object({
-    file_path: z.string().describe("name of file"),
-  });
+  schema = readSchema;
 
   name = "read_file";
 
@@ -35,7 +38,7 @@ export class ReadFileTool extends StructuredTool {
     this.store = store;
   }
 
-  async _call({ file_path }: InferInteropZodOutput<typeof this.schema>) {
+  async _call({ file_path }: InferInteropZodOutput<ReadToolSchema>) {
     return await this.store.readFile(file_path);
   }
 }
@@ -47,6 +50,12 @@ interface WriteFileParams extends ToolParams {
   store: BaseFileStore;
 }
 
+const writeSchema = z.object({
+  file_path: z.string().describe("name of file"),
+  text: z.string().describe("text to write to file"),
+});
+type WriteToolSchema = typeof writeSchema;
+
 /**
  * Class for writing data to files on the disk. Extends the StructuredTool
  * class.
@@ -56,10 +65,7 @@ export class WriteFileTool extends StructuredTool {
     return "WriteFileTool";
   }
 
-  schema = z.object({
-    file_path: z.string().describe("name of file"),
-    text: z.string().describe("text to write to file"),
-  });
+  schema = writeSchema;
 
   name = "write_file";
 
@@ -73,7 +79,7 @@ export class WriteFileTool extends StructuredTool {
     this.store = store;
   }
 
-  async _call({ file_path, text }: InferInteropZodOutput<typeof this.schema>) {
+  async _call({ file_path, text }: InferInteropZodOutput<WriteToolSchema>) {
     await this.store.writeFile(file_path, text);
     return "File written to successfully.";
   }

@@ -3,8 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "target": "ES2021",
+    "lib": ["ES2022", "ES2022.Object", "DOM"],
+    "target": "ES2022",
     "module": "nodenext"
   },
   "include": ["src/**/*"]
