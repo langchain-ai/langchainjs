@@ -106,8 +106,8 @@ class PatchedVectorStore extends MongoDBAtlasVectorSearch {
 function getEmbeddings() {
   if (process.env.AZURE_OPENAI_API_KEY) {
     return new AzureOpenAIEmbeddings({
-      model: 'text-embedding-3-small',
-      azureOpenAIApiDeploymentName: 'openai/deployments/text-embedding-3-small'
+      model: "text-embedding-3-small",
+      azureOpenAIApiDeploymentName: "openai/deployments/text-embedding-3-small",
     });
   }
   return new OpenAIEmbeddings();
@@ -861,11 +861,9 @@ describe("Static Methods", () => {
         new Document({ pageContent: "doc2", metadata: { source: "source2" } }),
       ];
 
-      await MongoDBAtlasVectorSearch.fromDocuments(
-        documents,
-        getEmbeddings(),
-        { collection }
-      );
+      await MongoDBAtlasVectorSearch.fromDocuments(documents, getEmbeddings(), {
+        collection,
+      });
 
       const results = await collection
         .find({}, { projection: { _id: 0, text: 1, embedding: 1 } })
@@ -884,11 +882,10 @@ describe("Static Methods", () => {
         new Document({ pageContent: "doc2", metadata: { source: "source2" } }),
       ];
 
-      await MongoDBAtlasVectorSearch.fromDocuments(
-        documents,
-        getEmbeddings(),
-        { collection, ids: ["custom1", "custom2"] }
-      );
+      await MongoDBAtlasVectorSearch.fromDocuments(documents, getEmbeddings(), {
+        collection,
+        ids: ["custom1", "custom2"],
+      });
 
       const results = await collection
         .find({}, { projection: { _id: 1, text: 1 } })
