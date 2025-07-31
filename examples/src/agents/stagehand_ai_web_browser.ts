@@ -18,7 +18,7 @@ async function main() {
 
   // Initialize the model
   const model = new ChatOpenAI({
-    modelName: "gpt-4",
+    model: "gpt-4",
     temperature: 0,
   });
 
