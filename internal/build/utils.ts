@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
+import prettier from "prettier";
 import type { PackageJson } from "type-fest";
 
 import type { CompilePackageOptions } from "./types.js";
@@ -65,9 +66,39 @@ export async function findWorkspacePackages(
           }
         } catch {
           /* ignore */
+          return null;
         }
       })
     )
   ).filter(Boolean) as WorkspacePackage[];
   return workspaces;
+}
+
+/**
+ * Format TypeScript code using prettier with the project's configuration
+ *
+ * @param code - The TypeScript code to format
+ * @param filePath - The file path for context (used to find prettier config)
+ * @returns The formatted code
+ */
+export async function formatWithPrettier(
+  code: string,
+  filePath: string
+): Promise<string> {
+  try {
+    // Get prettier config for the file
+    const prettierConfig = await prettier.resolveConfig(filePath);
+    
+    // Format the code with TypeScript parser
+    const formatted = await prettier.format(code, {
+      ...prettierConfig,
+      parser: "typescript",
+    });
+    
+    return formatted;
+  } catch (error) {
+    console.warn("⚠️ Failed to format code with prettier:", error);
+    // Return the original code if formatting fails
+    return code;
+  }
 }
