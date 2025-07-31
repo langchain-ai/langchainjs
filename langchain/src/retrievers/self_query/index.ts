@@ -16,7 +16,10 @@ import {
 } from "../../chains/query_constructor/index.js";
 
 export { BaseTranslator } from "@langchain/core/structured_query";
-export { BasicTranslator, FunctionalTranslator } from "@langchain/core/structured_query";
+export {
+  BasicTranslator,
+  FunctionalTranslator,
+} from "@langchain/core/structured_query";
 
 /**
  * Interface for the arguments required to create a SelfQueryRetriever

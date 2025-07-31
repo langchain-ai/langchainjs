@@ -1,8 +1,18 @@
 import { GRAMMAR } from "./grammar/parser_grammar.js";
 import type {
-  ExpressionNode, Program, ExpressionStatement, CallExpression, StringLiteral, NumericLiteral,
-  BooleanLiteral, Identifier, ObjectExpression, ArrayExpression, PropertyAssignment, MemberExpression,
-  ParseFunction
+  ExpressionNode,
+  Program,
+  ExpressionStatement,
+  CallExpression,
+  StringLiteral,
+  NumericLiteral,
+  BooleanLiteral,
+  Identifier,
+  ObjectExpression,
+  ArrayExpression,
+  PropertyAssignment,
+  MemberExpression,
+  ParseFunction,
 } from "../../types/expression-parser.js";
 
 /**

@@ -93,7 +93,7 @@ Each package must have a properly configured `exports` field that includes an `i
   "name": "@langchain/example",
   "exports": {
     ".": {
-      "input": "./src/index.ts",       // ← Required: Source file for this entrypoint
+      "input": "./src/index.ts", // ← Required: Source file for this entrypoint
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"

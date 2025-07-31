@@ -70,16 +70,16 @@ module.exports = {
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
-    'jest/no-focused-tests': 'error',
+    "jest/no-focused-tests": "error",
     "arrow-body-style": 0,
     "prefer-destructuring": 0,
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };

@@ -66,10 +66,10 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };

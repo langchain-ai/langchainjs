@@ -3,11 +3,5 @@
   "compilerOptions": {
     "declaration": false
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "docs",
-    "**/tests",
-    "bin/"
-  ]
+  "exclude": ["node_modules", "dist", "docs", "**/tests", "bin/"]
 }

@@ -4,7 +4,7 @@ import { ToolDefinition } from "@langchain/core/language_models/base";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import {
   convertToOpenAITool as formatToOpenAITool,
-  isLangChainTool
+  isLangChainTool,
 } from "@langchain/core/utils/function_calling";
 
 /**

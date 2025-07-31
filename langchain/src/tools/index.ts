@@ -5,8 +5,8 @@ export {
   type DynamicStructuredToolInput,
   type Tool,
   type ToolParams,
-  type StructuredTool
-} from '@langchain/core/tools'
+  type StructuredTool,
+} from "@langchain/core/tools";
 
 export { ChainTool, type ChainToolInput } from "./chain.js";
 export {

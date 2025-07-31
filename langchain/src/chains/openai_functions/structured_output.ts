@@ -163,7 +163,13 @@ export class FunctionCallStructuredOutputParser<
  */
 export function createStructuredOutputChain<
   T extends InteropZodObject = InteropZodObject
->(input: StructuredOutputChainInput<T>): LLMChain<any, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk> | ChatOpenAI<BaseFunctionCallOptions>> {
+>(
+  input: StructuredOutputChainInput<T>
+): LLMChain<
+  any,
+  | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
+  | ChatOpenAI<BaseFunctionCallOptions>
+> {
   const {
     outputSchema,
     llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 }),
@@ -203,8 +209,12 @@ export function createStructuredOutputChain<
 /** @deprecated Use {@link https://api.js.langchain.com/functions/langchain.chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
 export function createStructuredOutputChainFromZod<T extends InteropZodObject>(
   zodSchema: T,
-  input: Omit<StructuredOutputChainInput<T>, "outputSchema">,
-): LLMChain<any, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk> | ChatOpenAI<BaseFunctionCallOptions>> {
+  input: Omit<StructuredOutputChainInput<T>, "outputSchema">
+): LLMChain<
+  any,
+  | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
+  | ChatOpenAI<BaseFunctionCallOptions>
+> {
   return createStructuredOutputChain<T>({
     ...input,
     outputSchema: toJsonSchema(zodSchema),

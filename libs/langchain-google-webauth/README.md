@@ -8,16 +8,14 @@ in an environment variable.
 If you are running this on the Google Cloud Platform, or in a way
 where service account credentials can be stored on a file system,
 consider using the @langchain/google-gauth
-package *instead*. You do not need to use both packages. See the
+package _instead_. You do not need to use both packages. See the
 section on **Authorization** below.
-
 
 ## Installation
 
 ```bash
 $ yarn add @langchain/google-webauth
 ```
-
 
 ## Authorization
 
@@ -37,4 +35,3 @@ credentials from the first of the following that apply:
    `GOOGLE_WEB_CREDENTIALS`
 5. The Service Account credentials that are saved directly into the
    `GOOGLE_VERTEX_AI_WEB_CREDENTIALS` (deprecated)
-

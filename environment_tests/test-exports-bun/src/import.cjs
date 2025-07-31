@@ -13,7 +13,9 @@ async function test() {
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 
-  const vs = new MemoryVectorStore(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }));
+  const vs = new MemoryVectorStore(
+    new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" })
+  );
 
   await vs.addVectors(
     [

@@ -1,4 +1,4 @@
-# @langchain/azure-dynamic-sessions 
+# @langchain/azure-dynamic-sessions
 
 This package contains the [Azure Container Apps dynamic sessions](https://learn.microsoft.com/azure/container-apps/sessions) tool integration.
 

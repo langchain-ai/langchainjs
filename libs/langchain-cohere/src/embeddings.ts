@@ -145,9 +145,7 @@ export class CohereEmbeddings
     }
   }
 
-  async embed(
-    request: EmbedRequest
-  ): Promise<number[]> {
+  async embed(request: EmbedRequest): Promise<number[]> {
     const { embeddings } = await this.embeddingWithRetry(request);
     if ("float" in embeddings && embeddings.float) {
       return embeddings.float[0];

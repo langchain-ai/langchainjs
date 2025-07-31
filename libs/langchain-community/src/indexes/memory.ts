@@ -1,4 +1,8 @@
-import { ListKeyOptions, RecordManager, UpdateOptions } from "@langchain/core/indexing";
+import {
+  ListKeyOptions,
+  RecordManager,
+  UpdateOptions,
+} from "@langchain/core/indexing";
 
 interface MemoryRecord {
   updatedAt: number;

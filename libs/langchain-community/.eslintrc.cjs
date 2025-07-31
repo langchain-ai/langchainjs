@@ -64,14 +64,14 @@ module.exports = {
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
     "arrow-body-style": 0,
-    "prefer-destructuring": 0
+    "prefer-destructuring": 0,
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };
