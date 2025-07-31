@@ -12,9 +12,9 @@ This guide assumes familiarity with the following concepts:
 
 :::
 
-This notebook goes over how to track your token usage for specific LLM calls. This is only implemented by some providers, including OpenAI.
+This notebook goes over how to track your token usage for specific LLM calls. This is only implemented by some providers, including OpenAI. There are two main approaches: accessing token usage directly from the result, or using callbacks.
 
-Here's an example of tracking token usage for a single LLM call via a callback:
+## Direct access via `result.llmOutput.tokenUsage`
 
 import CodeBlock from "@theme/CodeBlock";
 import Example from "@examples/models/llm/token_usage_tracking.ts";
@@ -27,12 +27,39 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 npm install @langchain/openai @langchain/core
 ```
 
+The recommended approach is to access token usage directly from the `LLMResult` object returned by the `generate()` method. This provides immediate access to token usage information without requiring callbacks:
+
+import DirectExample from "@examples/models/llm/token_usage_tracking_direct.ts";
+
+<CodeBlock language="typescript">{DirectExample}</CodeBlock>
+
+The token usage information is available in the `llmOutput.tokenUsage` field and includes:
+- `completionTokens`: Number of tokens used in the generated completion
+- `promptTokens`: Number of tokens used in the input prompt  
+- `totalTokens`: Total number of tokens used (prompt + completion)
+
+:::info LLMs vs Chat Models
+
+Note that LLMs use the `llmOutput.tokenUsage` structure shown above, while chat models use a different approach with `usage_metadata` on `AIMessage` objects. For chat model token usage tracking, see the [chat model token usage guide](/docs/how_to/chat_token_usage_tracking).
+
+:::
+
+## Alternative: Using callbacks
+
+You can also track token usage using callbacks, which is useful when the LLM is called within chains or agents:
+
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
-If this model is passed to a chain or agent that calls it multiple times, it will log an output each time.
+This callback approach is particularly useful when:
+- The LLM is used within chains or agents that call it multiple times
+- You want to track token usage across multiple LLM calls
+- You need to perform additional processing on each token usage event
+
+If this model is passed to a chain or agent that calls it multiple times, the callback will be triggered each time, allowing you to track cumulative usage.
 
 ## Next steps
 
 You've now seen how to get token usage for supported LLM providers.
 
 Next, check out the other how-to guides in this section, like [how to implement your own custom LLM](/docs/how_to/custom_llm).
+
