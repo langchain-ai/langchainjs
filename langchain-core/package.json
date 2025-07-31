@@ -94,7 +94,7 @@
       },
       "import": {
         "types": "./dist/index.d.ts",
-        "default": "./dist/index.ts"
+        "default": "./dist/index.js"
       },
       "input": "./src/index.ts"
     },
@@ -105,7 +105,7 @@
       },
       "import": {
         "types": "./dist/agents.d.ts",
-        "default": "./dist/agents.ts"
+        "default": "./dist/agents.js"
       },
       "input": "./src/agents.ts"
     },
@@ -171,7 +171,7 @@
       },
       "import": {
         "types": "./dist/callbacks/promises.d.ts",
-        "default": "./dist/callbacks/promises.ts"
+        "default": "./dist/callbacks/promises.js"
       },
       "input": "./src/callbacks/promises.ts"
     },
@@ -182,7 +182,7 @@
       },
       "import": {
         "types": "./dist/chat_history.d.ts",
-        "default": "./dist/chat_history.ts"
+        "default": "./dist/chat_history.js"
       },
       "input": "./src/chat_history.ts"
     },
@@ -193,7 +193,7 @@
       },
       "import": {
         "types": "./dist/context.d.ts",
-        "default": "./dist/context.ts"
+        "default": "./dist/context.js"
       },
       "input": "./src/context.ts"
     },

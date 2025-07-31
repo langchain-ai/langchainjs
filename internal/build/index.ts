@@ -143,7 +143,7 @@ async function buildProject(
     sourcemap,
     unbundle: true,
     platform: "node",
-    target: "es2020",
+    target: "es2022",
     outDir: "./dist",
     format: ["esm", "cjs"],
     watch,
