@@ -13,8 +13,7 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "yarn turbo:command build:internal --filter=@langchain/azure-openai",
-    "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
+    "build": "yarn build @langchain/azure-openai",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
