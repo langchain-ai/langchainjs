@@ -6748,7 +6748,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
+"@langchain/anthropic@*, @langchain/anthropic@workspace:*, @langchain/anthropic@workspace:libs/langchain-anthropic":
   version: 0.0.0-use.local
   resolution: "@langchain/anthropic@workspace:libs/langchain-anthropic"
   dependencies:
@@ -7048,7 +7048,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
+"@langchain/cohere@*, @langchain/cohere@workspace:*, @langchain/cohere@workspace:libs/langchain-cohere":
   version: 0.0.0-use.local
   resolution: "@langchain/cohere@workspace:libs/langchain-cohere"
   dependencies:
@@ -27217,8 +27217,8 @@ __metadata:
   dependencies:
     "@faker-js/faker": ^7.6.0
     "@jest/globals": ^29.5.0
-    "@langchain/anthropic": "workspace:*"
-    "@langchain/cohere": "workspace:*"
+    "@langchain/anthropic": "*"
+    "@langchain/cohere": "*"
     "@langchain/core": "workspace:*"
     "@langchain/openai": ">=0.1.0 <0.7.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
