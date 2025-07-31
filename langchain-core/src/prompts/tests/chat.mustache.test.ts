@@ -180,3 +180,22 @@ test("Mustache image template with nested props", async () => {
 
   expect(template.inputVariables.sort()).toEqual(["agent", "messages"]);
 });
+
+test("with ChatPromptTemplate", async () => {
+  const samplePrompt = "Hey {{name}}, {{#isTrue}}how are {{myvar}}?{{/isTrue}}";
+
+  const sampleVariables = {
+    name: "John",
+    isTrue: true,
+    myvar: "you", // <-- this is not included in the inputVariables
+  };
+
+  const expectedResult = "Hey John, how are you?";
+  const prompt = ChatPromptTemplate.fromMessages([["system", samplePrompt]], {
+    templateFormat: "mustache",
+  });
+  expect(prompt.inputVariables).toEqual(["name", "isTrue", "myvar"]);
+  expect(await prompt.format(sampleVariables)).toBe(
+    `System: ${expectedResult}`
+  );
+});
