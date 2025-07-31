@@ -172,25 +172,5 @@ export const extraImportMapEntries: Record<
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
     },
-    {
-      modules: ["*"],
-      alias: ["text_splitter"],
-      path: "@langchain/textsplitters",
-    },
-    {
-      modules: ["*"],
-      alias: ["document_loaders", "base"],
-      path: "@langchain/core/document_loaders/base",
-    },
-    {
-      modules: ["*"],
-      alias: ["util", "math"],
-      path: "@langchain/core/utils/math",
-    },
-    {
-      modules: ["*"],
-      alias: ["runnables", "remote"],
-      path: "@langchain/core/runnables/remote",
-    },
   ],
 };

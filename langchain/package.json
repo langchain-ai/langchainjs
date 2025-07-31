@@ -209,6 +209,28 @@
       },
       "input": "./src/index.ts"
     },
+    "./load": {
+      "import": {
+        "types": "./dist/load/index.d.ts",
+        "default": "./dist/load/index.js"
+      },
+      "require": {
+        "types": "./dist/load/index.d.cts",
+        "default": "./dist/load/index.cjs"
+      },
+      "input": "./src/load/index.ts"
+    },
+    "./load/serializable": {
+      "import": {
+        "types": "./dist/load/serializable.d.ts",
+        "default": "./dist/load/serializable.js"
+      },
+      "require": {
+        "types": "./dist/load/serializable.d.cts",
+        "default": "./dist/load/serializable.cjs"
+      },
+      "input": "./src/load/serializable.ts"
+    },
     "./agents": {
       "import": {
         "types": "./dist/agents/index.d.ts",
@@ -484,6 +506,17 @@
       },
       "input": "./src/chains/query_constructor/index.ts"
     },
+    "./chains/query_constructor/ir": {
+      "import": {
+        "types": "./dist/chains/query_constructor/ir.d.ts",
+        "default": "./dist/chains/query_constructor/ir.js"
+      },
+      "require": {
+        "types": "./dist/chains/query_constructor/ir.d.cts",
+        "default": "./dist/chains/query_constructor/ir.cjs"
+      },
+      "input": "./src/chains/query_constructor/ir.ts"
+    },
     "./chains/retrieval": {
       "import": {
         "types": "./dist/chains/retrieval.d.ts",
@@ -539,6 +572,17 @@
       },
       "input": "./src/embeddings/cache_backed.ts"
     },
+    "./embeddings/fake": {
+      "import": {
+        "types": "./dist/embeddings/fake.d.ts",
+        "default": "./dist/embeddings/fake.js"
+      },
+      "require": {
+        "types": "./dist/embeddings/fake.d.cts",
+        "default": "./dist/embeddings/fake.cjs"
+      },
+      "input": "./src/embeddings/fake.ts"
+    },
     "./vectorstores/memory": {
       "import": {
         "types": "./dist/vectorstores/memory.d.ts",
@@ -549,6 +593,17 @@
         "default": "./dist/vectorstores/memory.cjs"
       },
       "input": "./src/vectorstores/memory.ts"
+    },
+    "./text_splitter": {
+      "import": {
+        "types": "./dist/text_splitter.d.ts",
+        "default": "./dist/text_splitter.js"
+      },
+      "require": {
+        "types": "./dist/text_splitter.d.cts",
+        "default": "./dist/text_splitter.cjs"
+      },
+      "input": "./src/text_splitter.ts"
     },
     "./memory": {
       "import": {
@@ -582,6 +637,17 @@
         "default": "./dist/document.cjs"
       },
       "input": "./src/document.ts"
+    },
+    "./document_loaders/base": {
+      "import": {
+        "types": "./dist/document_loaders/base.d.ts",
+        "default": "./dist/document_loaders/base.js"
+      },
+      "require": {
+        "types": "./dist/document_loaders/base.d.cts",
+        "default": "./dist/document_loaders/base.cjs"
+      },
+      "input": "./src/document_loaders/base.ts"
     },
     "./document_loaders/fs/buffer": {
       "import": {
@@ -979,6 +1045,17 @@
       },
       "input": "./src/util/document.ts"
     },
+    "./util/math": {
+      "import": {
+        "types": "./dist/util/math.d.ts",
+        "default": "./dist/util/math.js"
+      },
+      "require": {
+        "types": "./dist/util/math.d.cts",
+        "default": "./dist/util/math.cjs"
+      },
+      "input": "./src/util/math.ts"
+    },
     "./util/time": {
       "import": {
         "types": "./dist/util/time.d.ts",
@@ -1121,6 +1198,17 @@
         "default": "./dist/smith/index.cjs"
       },
       "input": "./src/smith/index.ts"
+    },
+    "./runnables/remote": {
+      "import": {
+        "types": "./dist/runnables/remote.d.ts",
+        "default": "./dist/runnables/remote.js"
+      },
+      "require": {
+        "types": "./dist/runnables/remote.d.cts",
+        "default": "./dist/runnables/remote.cjs"
+      },
+      "input": "./src/runnables/remote.ts"
     },
     "./indexes": {
       "import": {
