@@ -18,6 +18,7 @@
     "unplugin-unused": "^0.5.1"
   },
   "optionalDependencies": {
+    "@esbuild/win32-x64": "*",
     "@rolldown/binding-darwin-arm64": "*",
     "@rolldown/binding-darwin-x64": "*",
     "@rolldown/binding-linux-arm64-gnu": "*",

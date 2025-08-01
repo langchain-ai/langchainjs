@@ -4048,6 +4048,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@esbuild/win32-x64@npm:*, @esbuild/win32-x64@npm:0.25.8":
+  version: 0.25.8
+  resolution: "@esbuild/win32-x64@npm:0.25.8"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
 "@esbuild/win32-x64@npm:0.18.20":
   version: 0.18.20
   resolution: "@esbuild/win32-x64@npm:0.18.20"
@@ -4058,13 +4065,6 @@ __metadata:
 "@esbuild/win32-x64@npm:0.25.4":
   version: 0.25.4
   resolution: "@esbuild/win32-x64@npm:0.25.4"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@esbuild/win32-x64@npm:0.25.8":
-  version: 0.25.8
-  resolution: "@esbuild/win32-x64@npm:0.25.8"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -5850,6 +5850,7 @@ __metadata:
   resolution: "@langchain/build@workspace:internal/build"
   dependencies:
     "@arethetypeswrong/core": ^0.18.2
+    "@esbuild/win32-x64": "*"
     "@rolldown/binding-darwin-arm64": "*"
     "@rolldown/binding-darwin-x64": "*"
     "@rolldown/binding-linux-arm64-gnu": "*"
@@ -5869,6 +5870,8 @@ __metadata:
     type-fest: ^4.41.0
     unplugin-unused: ^0.5.1
   dependenciesMeta:
+    "@esbuild/win32-x64":
+      optional: true
     "@rolldown/binding-darwin-arm64":
       optional: true
     "@rolldown/binding-darwin-x64":
