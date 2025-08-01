@@ -26,7 +26,7 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
   NODE_VERSION: "20.x"
 
-# Run a separate job for each check in the docker-compose file,
+# Run a separate job for each check` in the docker-compose file,
 # so that they run in parallel instead of overwhelming the default 2 CPU runner.
 jobs:
   exports-esbuild:
@@ -176,20 +176,20 @@ jobs:
       - name: Test compiling exports with tsc
         run: docker compose -f environment_tests/docker-compose.yml run test-exports-tsc
 
-  # exports-bun:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Use Node.js ${{ env.NODE_VERSION }}
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #         cache: "yarn"
-  #     - name: Install dependencies
-  #       run: yarn install --immutable
-  #     - name: Build
-  #       run: yarn workspace langchain build
-  #       shell: bash
+  exports-bun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build
+        run: yarn workspace langchain build
+        shell: bash
 
-  #     - name: Test bun exports
-  #       run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun
+      - name: Test bun exports
+        run: docker compose -f environment_tests/docker-compose.yml run test-exports-bun

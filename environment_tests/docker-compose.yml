@@ -147,17 +147,24 @@ services:
       - ../libs/langchain-ollama:/langchain-ollama
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
-  # test-exports-bun:
-  #   image: oven/bun
-  #   working_dir: /app
-  #   volumes:
-  #     - ../environment_tests/test-exports-bun:/package
-  #     - ../environment_tests/scripts:/scripts
-  #     - ../langchain:/langchain-workspace
-  #     - ../langchain-core:/langchain-core
-  #     - ../libs/langchain-community:/langchain-community-workspace
-  #     - ../libs/langchain-anthropic:/langchain-anthropic-workspace
-  #   command: bash /scripts/docker-bun-ci-entrypoint.sh
+  test-exports-bun:
+    image: oven/bun
+    working_dir: /app
+    volumes:
+      - ../yarn.lock:/root/yarn.lock
+      - ../.yarnrc.yml:/root/.yarnrc.yml
+      - ../.yarn:/root/.yarn
+      - ../environment_tests/test-exports-bun:/package
+      - ../environment_tests/scripts:/scripts
+      - ../langchain:/langchain
+      - ../langchain-core:/langchain-core
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/langchain-anthropic:/langchain-anthropic
+      - ../libs/langchain-openai:/langchain-openai
+      - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
+    command: bash /scripts/docker-bun-ci-entrypoint.sh
   success:
     image: alpine:3.14
     command: echo "Success"
