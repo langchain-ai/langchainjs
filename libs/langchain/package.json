@@ -656,17 +656,6 @@
       },
       "input": "./src/sql_db.ts"
     },
-    "./callbacks": {
-      "import": {
-        "types": "./dist/callbacks/index.d.ts",
-        "default": "./dist/callbacks/index.js"
-      },
-      "require": {
-        "types": "./dist/callbacks/index.d.cts",
-        "default": "./dist/callbacks/index.cjs"
-      },
-      "input": "./src/callbacks/index.ts"
-    },
     "./output_parsers": {
       "import": {
         "types": "./dist/output_parsers/index.d.ts",
