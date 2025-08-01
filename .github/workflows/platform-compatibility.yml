@@ -40,11 +40,4 @@ jobs:
       - name: Install dependencies for @langchain/build
         run: cd ./internal/build && yarn workspaces focus
       - name: Build `@langchain/core`
-        run: |
-          cd ./langchain-core
-
-          # install @tsconfig/recommended locally using npm to avoid workspace resolution
-          npm install @tsconfig/recommended --no-package-lock --no-save
-
-          # build @langchain/core
-          yarn build
+        run: cd ./langchain-core && yarn build
