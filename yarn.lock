@@ -5850,6 +5850,7 @@ __metadata:
   resolution: "@langchain/build@workspace:internal/build"
   dependencies:
     "@arethetypeswrong/core": ^0.18.2
+    "@tsconfig/recommended": ^1.0.10
     "@typescript/native-preview": ^7.0.0-dev.20250730.1
     prettier: ^3.6.2
     publint: ^0.3.12
@@ -6549,7 +6550,6 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
-    "@tsconfig/recommended": ^1.0.2
     "@types/decamelize": ^1.2.0
     "@types/mustache": ^4
     ansi-styles: ^5.0.0
@@ -10893,7 +10893,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/recommended@npm:^1.0.2, @tsconfig/recommended@npm:^1.0.3, @tsconfig/recommended@npm:^1.0.8":
+"@tsconfig/recommended@npm:^1.0.10, @tsconfig/recommended@npm:^1.0.2, @tsconfig/recommended@npm:^1.0.3, @tsconfig/recommended@npm:^1.0.8":
   version: 1.0.10
   resolution: "@tsconfig/recommended@npm:1.0.10"
   checksum: f79184fc035b6440cb416af816a86287d94b608f97129b66cd5de48cc89c0678101a5732f6f06319d85efa71ff75c24e646164052418b37e917791f28a041af2
