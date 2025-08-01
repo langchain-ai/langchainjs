@@ -1,10 +1,10 @@
 import { ChainValues } from "@langchain/core/utils/types";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { BaseChain, ChainInputs } from "./base.js";
 import {
   TextSplitter,
   RecursiveCharacterTextSplitter,
-} from "../text_splitter.js";
+} from "@langchain/textsplitters";
+import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedAnalyzeDocumentChain } from "./serde.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

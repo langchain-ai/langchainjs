@@ -3,7 +3,7 @@ name: Standard Tests (Integration)
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: "0 13 * * *"
 
 jobs:
   standard-tests:
@@ -11,18 +11,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [anthropic, cohere, google-genai, groq, mistralai, aws, google-vertexai-web]
+        package:
+          [
+            anthropic,
+            cohere,
+            google-genai,
+            groq,
+            mistralai,
+            aws,
+            google-vertexai-web,
+          ]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Run integration tests for ${{ matrix.package }}
-        run: yarn turbo test:integration --filter=@langchain/${{ matrix.package }}
+        run: yarn turbo test:integration --filter @langchain/${{ matrix.package }}
         env:
           ANTHROPIC_API_KEY: ${{ matrix.package == 'anthropic' && secrets.ANTHROPIC_API_KEY || '' }}
           COHERE_API_KEY: ${{ matrix.package == 'cohere' && secrets.COHERE_API_KEY || '' }}
@@ -41,15 +50,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/openai`
-        run: yarn build --filter=@langchain/openai
+        run: yarn build --filter @langchain/openai
       - name: Run integration tests for ChatOpenAI
         run: yarn workspace @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models_responses.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts src/tests/chat_models_responses.standard.int.test.ts
         env:
@@ -59,15 +68,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/openai`
-        run: yarn build --filter=@langchain/openai
+        run: yarn build --filter @langchain/openai
       - name: Run integration tests for `@langchain/openai` AzureChatOpenAI
         run: yarn workspace @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts src/tests/azure/chat_models.int.test.ts
         env:
@@ -80,15 +89,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/community`
-        run: yarn build --filter=@langchain/community
+        run: yarn build --filter @langchain/community
       - name: Run standard tests (integration) for `@langchain/community` BedrockChat
         run: yarn workspace @langchain/community test:single src/chat_models/tests/chatbedrock.standard.int.test.ts
         env:
@@ -100,15 +109,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build
       - name: Build `@langchain/community`
-        run: yarn build --filter=@langchain/community
+        run: yarn build --filter @langchain/community
       - name: Run standard tests (integration) for `@langchain/community` ChatFireworks
         run: yarn workspace @langchain/community test:single src/chat_models/tests/chatfireworks.standard.int.test.ts
         env:

@@ -5,7 +5,8 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "yarn quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
-    "build": "yarn clean && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "_____": "skip build as we migrate to new docs",
+    "build": "exit 0 && yarn clean && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "build:vercel": "yarn clean && bash ./scripts/vercel_build.sh && yarn quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
@@ -51,7 +52,6 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.2",
     "@langchain/langgraph": "^0.2.34",
-    "@langchain/scripts": "workspace:*",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@swc/core": "^1.3.62",
     "@types/cookie": "^0",

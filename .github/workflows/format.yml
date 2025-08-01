@@ -4,10 +4,9 @@ name: Format
 
 on:
   pull_request:
-    paths_ignore:
-      - '.github/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+    paths-ignore:
+      - ".github/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -25,10 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version-file: ".nvmrc"
           cache: "yarn"
       - name: Install dependencies
         run: yarn install --immutable --mode=skip-build

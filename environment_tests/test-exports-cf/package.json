@@ -12,9 +12,13 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
+    "cheerio": "^1.1.2",
+    "handlebars": "^4.7.8",
     "langchain": "workspace:*",
     "wrangler": "^3.19.0",
     "vitest": "0.34.3",
+    "typeorm": "^0.3.25",
+    "reflect-metadata": "^0.1.13",
     "typescript": "^5.0.3"
   },
   "private": true,

@@ -9,6 +9,10 @@ import { StringLiteralHandler } from "./string_literal_handler.js";
 import { IdentifierHandler } from "./identifier_handler.js";
 import { MemberExpressionHandler } from "./member_expression_handler.js";
 import { ParsedType } from "./types.js";
+import type {
+  ExpressionNode,
+  CallExpression,
+} from "../../types/expression-parser.js";
 
 const handlers = [
   ArrayLiteralExpressionHandler,

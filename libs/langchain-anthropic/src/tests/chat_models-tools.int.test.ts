@@ -25,17 +25,20 @@ const zodSchema = z
     "Get the weather of a specific location and return the temperature in Celsius."
   );
 
+const weatherToolSchema = z.object({
+  location: z.string().describe("The name of city to get the weather for."),
+});
+type WeatherToolSchema = z.infer<typeof weatherToolSchema>;
+
 class WeatherTool extends StructuredTool {
-  schema = z.object({
-    location: z.string().describe("The name of city to get the weather for."),
-  });
+  schema = weatherToolSchema;
 
   description =
     "Get the weather of a specific location and return the temperature in Celsius.";
 
   name = "get_weather";
 
-  async _call(input: z.infer<typeof this.schema>) {
+  async _call(input: WeatherToolSchema) {
     return `The weather in ${input.location} is 25°C`;
   }
 }

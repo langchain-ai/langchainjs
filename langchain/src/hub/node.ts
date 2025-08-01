@@ -6,6 +6,7 @@ import {
   generateOptionalImportMap,
 } from "./base.js";
 import { load } from "../load/index.js";
+import { getChatModelByClassName } from "../chat_models/universal.js";
 
 // TODO: Make this the default, add web entrypoint in next breaking release
 
@@ -35,27 +36,14 @@ export async function pull<T extends Runnable>(
     if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
       const modelName =
         promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
-      if (modelName === "ChatOpenAI") {
-        modelClass = (await import("@langchain/openai")).ChatOpenAI;
-      } else if (modelName === "ChatAnthropic") {
-        modelClass = (await import("@langchain/anthropic")).ChatAnthropic;
-      } else if (modelName === "ChatAzureOpenAI") {
-        modelClass = (await import("@langchain/openai")).AzureChatOpenAI;
-      } else if (modelName === "ChatVertexAI") {
-        modelClass = (await import("@langchain/google-vertexai")).ChatVertexAI;
-      } else if (modelName === "ChatGoogleGenerativeAI") {
-        modelClass = (await import("@langchain/google-genai"))
-          .ChatGoogleGenerativeAI;
-      } else if (modelName === "ChatBedrockConverse") {
-        modelClass = (await import("@langchain/aws")).ChatBedrockConverse;
-      } else if (modelName === "ChatMistral") {
-        modelClass = (await import("@langchain/mistralai")).ChatMistralAI;
-      } else if (modelName === "ChatGroq") {
-        modelClass = (await import("@langchain/groq")).ChatGroq;
-      } else if (modelName !== undefined) {
-        console.warn(
-          `Received unknown model name from prompt hub: "${modelName}"`
-        );
+
+      if (modelName) {
+        modelClass = await getChatModelByClassName(modelName);
+        if (!modelClass) {
+          console.warn(
+            `Received unknown model name from prompt hub: "${modelName}"`
+          );
+        }
       }
     }
   }

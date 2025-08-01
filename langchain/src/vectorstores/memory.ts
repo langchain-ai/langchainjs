@@ -4,8 +4,8 @@ import {
 } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { Document, DocumentInterface } from "@langchain/core/documents";
+import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { cosine } from "../util/ml-distance/similarities.js";
-import { maximalMarginalRelevance } from "../util/math.js";
 
 /**
  * Interface representing a vector in memory. It includes the content

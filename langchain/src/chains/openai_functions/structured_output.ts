@@ -10,6 +10,7 @@ import {
   OutputParserException,
 } from "@langchain/core/output_parsers";
 import { ChatGeneration } from "@langchain/core/outputs";
+import { AIMessageChunk } from "@langchain/core/messages";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
@@ -162,7 +163,13 @@ export class FunctionCallStructuredOutputParser<
  */
 export function createStructuredOutputChain<
   T extends InteropZodObject = InteropZodObject
->(input: StructuredOutputChainInput<T>) {
+>(
+  input: StructuredOutputChainInput<T>
+): LLMChain<
+  any,
+  | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
+  | ChatOpenAI<BaseFunctionCallOptions>
+> {
   const {
     outputSchema,
     llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 }),
@@ -203,7 +210,11 @@ export function createStructuredOutputChain<
 export function createStructuredOutputChainFromZod<T extends InteropZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">
-) {
+): LLMChain<
+  any,
+  | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
+  | ChatOpenAI<BaseFunctionCallOptions>
+> {
   return createStructuredOutputChain<T>({
     ...input,
     outputSchema: toJsonSchema(zodSchema),

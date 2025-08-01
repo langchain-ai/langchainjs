@@ -1,22 +1,22 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
-import axiosMod, { AxiosRequestConfig, AxiosStatic } from "axios";
+
 import * as cheerio from "cheerio";
 import {
   CallbackManager,
   CallbackManagerForToolRun,
 } from "@langchain/core/callbacks/manager";
-import { isNode } from "@langchain/core/utils/env";
+
 import { Tool, ToolParams } from "@langchain/core/tools";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RecursiveCharacterTextSplitter,
   TextSplitter,
-} from "../text_splitter.js";
+} from "@langchain/textsplitters";
 import { MemoryVectorStore } from "../vectorstores/memory.js";
-import fetchAdapter from "../util/axios-fetch-adapter.js";
+
 import { formatDocumentsAsString } from "../util/document.js";
 
 export const parseInputs = (inputs: string): [string, string] => {
@@ -79,15 +79,7 @@ export const getText = (
   return text.trim().replace(/\n+/g, " ");
 };
 
-const getHtml = async (
-  baseUrl: string,
-  h: Headers,
-  config: AxiosRequestConfig
-) => {
-  const axios = (
-    "default" in axiosMod ? axiosMod.default : axiosMod
-  ) as AxiosStatic;
-
+const getHtml = async (baseUrl: string, h: Headers, config: RequestConfig) => {
   const domain = new URL(baseUrl).hostname;
 
   const headers = { ...h };
@@ -97,13 +89,27 @@ const getHtml = async (
 
   let htmlResponse;
   try {
-    htmlResponse = await axios.get(baseUrl, {
-      ...config,
+    const fetchOptions: RequestInit = {
+      method: "GET",
       headers,
-    });
+      credentials: config.withCredentials ? "include" : "same-origin",
+      ...config,
+    };
+
+    htmlResponse = await fetch(baseUrl, fetchOptions);
+
+    if (!htmlResponse.ok) {
+      throw new Error(`http response ${htmlResponse.status}`);
+    }
   } catch (e) {
-    if (axios.isAxiosError(e) && e.response && e.response.status) {
-      throw new Error(`http response ${e.response.status}`);
+    if (
+      e &&
+      typeof e === "object" &&
+      "message" in e &&
+      typeof e.message === "string" &&
+      e.message.includes("http response")
+    ) {
+      throw e;
     }
     throw e;
   }
@@ -116,7 +122,7 @@ const getHtml = async (
     "text/plain",
   ];
 
-  const contentType = htmlResponse.headers["content-type"];
+  const contentType = htmlResponse.headers.get("content-type") || "";
   const contentTypeArray = contentType.split(";");
   if (
     contentTypeArray[0] &&
@@ -124,7 +130,7 @@ const getHtml = async (
   ) {
     throw new Error("returned page was not utf8");
   }
-  return htmlResponse.data;
+  return htmlResponse.text();
 };
 
 const DEFAULT_HEADERS = {
@@ -148,6 +154,13 @@ const DEFAULT_HEADERS = {
 type Headers = Record<string, any>;
 
 /**
+ * Configuration options for fetch requests, similar to axios config but for fetch
+ */
+export interface RequestConfig extends Omit<RequestInit, "headers"> {
+  withCredentials?: boolean;
+}
+
+/**
  * Defines the arguments that can be passed to the WebBrowser constructor.
  * It extends the ToolParams interface and includes properties for a
  * language model, embeddings, HTTP headers, an Axios configuration, a
@@ -160,7 +173,7 @@ export interface WebBrowserArgs extends ToolParams {
 
   headers?: Headers;
 
-  axiosConfig?: Omit<AxiosRequestConfig, "url">;
+  requestConfig?: RequestConfig;
 
   /** @deprecated */
   callbackManager?: CallbackManager;
@@ -170,8 +183,8 @@ export interface WebBrowserArgs extends ToolParams {
 
 /**
  * A class designed to interact with web pages, either to extract
- * information from them or to summarize their content. It uses the axios
- * library to send HTTP requests and the cheerio library to parse the
+ * information from them or to summarize their content. It uses the native
+ * fetch API to send HTTP requests and the cheerio library to parse the
  * returned HTML.
  * @example
  * ```typescript
@@ -197,7 +210,7 @@ export class WebBrowser extends Tool {
 
   private headers: Headers;
 
-  private axiosConfig: Omit<AxiosRequestConfig, "url">;
+  private requestConfig: RequestConfig;
 
   private textSplitter: TextSplitter;
 
@@ -205,7 +218,7 @@ export class WebBrowser extends Tool {
     model,
     headers,
     embeddings,
-    axiosConfig,
+    requestConfig,
     textSplitter,
   }: WebBrowserArgs) {
     super(...arguments);
@@ -213,10 +226,9 @@ export class WebBrowser extends Tool {
     this.model = model;
     this.embeddings = embeddings;
     this.headers = headers ?? DEFAULT_HEADERS;
-    this.axiosConfig = {
+    this.requestConfig = {
       withCredentials: true,
-      adapter: isNode() ? undefined : fetchAdapter,
-      ...axiosConfig,
+      ...requestConfig,
     };
     this.textSplitter =
       textSplitter ??
@@ -233,7 +245,7 @@ export class WebBrowser extends Tool {
 
     let text;
     try {
-      const html = await getHtml(baseUrl, this.headers, this.axiosConfig);
+      const html = await getHtml(baseUrl, this.headers, this.requestConfig);
       text = getText(html, baseUrl, doSummary);
     } catch (e) {
       if (e) {

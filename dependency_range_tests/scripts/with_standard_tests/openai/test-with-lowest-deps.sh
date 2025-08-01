@@ -35,7 +35,7 @@ yarn
 cd "$monorepo_openai_dir"
 
 # Read the @langchain/core version from peerDependencies
-core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
+core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
 
 # Install @langchain/core at the specified version
 yarn add @langchain/core@$core_version

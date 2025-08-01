@@ -21,7 +21,7 @@ export {
   createVectorStoreAgent,
   createVectorStoreRouterAgent,
 } from "./toolkits/index.js";
-export { Toolkit } from "./toolkits/base.js";
+export { type BaseToolkit as Toolkit } from "@langchain/core/tools";
 export {
   ChatAgent,
   type ChatAgentInput,

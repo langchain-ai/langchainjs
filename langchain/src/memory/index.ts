@@ -1,13 +1,15 @@
-export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
-  BaseMemory,
   getInputValue,
   getOutputValue,
-  getBufferString,
+  BaseMemory,
   type InputValues,
   type OutputValues,
   type MemoryVariables,
-} from "./base.js";
+} from "@langchain/core/memory";
+export { getBufferString } from "@langchain/core/messages";
+export { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
+
+export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   ConversationSummaryMemory,
   type ConversationSummaryMemoryInput,
@@ -19,7 +21,6 @@ export {
   type BufferWindowMemoryInput,
 } from "./buffer_window_memory.js";
 export { BaseChatMemory, type BaseChatMemoryInput } from "./chat_memory.js";
-export { ChatMessageHistory } from "../stores/message/in_memory.js";
 export {
   VectorStoreRetrieverMemory,
   type VectorStoreRetrieverMemoryParams,

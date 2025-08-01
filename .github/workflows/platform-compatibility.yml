@@ -7,11 +7,10 @@ on:
   pull_request:
     # Only run this workflow if the following directories have changed.
     paths:
-      - 'langchain/**'
-      - 'langchain-core/**'
-      - 'libs/**'
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
-
+      - "langchain/**"
+      - "langchain-core/**"
+      - "libs/**"
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,
 # cancel the earlier run in favor of the next run.
@@ -31,14 +30,12 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: ".nvmrc"
           cache: "yarn"
-      - name: Install dependencies
-        run: cd ./langchain-core && yarn workspaces focus
-      - name: Build @langchain/scripts
-        run: cd ./libs/langchain-scripts && yarn build:internal
+      - name: Install dependencies for build and core workspaces
+        run: yarn workspaces focus @langchain/build @langchain/core
       - name: Build `@langchain/core`
-        run: cd ./langchain-core && yarn build:internal
+        run: cd ./langchain-core && yarn build

@@ -1,7 +1,6 @@
 import { test, expect, describe } from "@jest/globals";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { WebBrowser } from "../webbrowser.js";
-import fetchAdapter from "../../util/axios-fetch-adapter.js";
 
 describe("webbrowser Test suite", () => {
   test("get word of the day", async () => {
@@ -16,15 +15,15 @@ describe("webbrowser Test suite", () => {
     expect(result).toContain("Word of the Day:");
   });
 
-  test("get a summary of the page when empty request with fetch adapter", async () => {
+  test("get a summary of the page when empty request with native fetch", async () => {
     const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({
       model,
       embeddings,
-      axiosConfig: {
-        adapter: fetchAdapter,
+      requestConfig: {
+        withCredentials: true,
       },
     });
     const result = await browser.call(

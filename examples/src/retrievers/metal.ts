@@ -3,9 +3,8 @@ import Metal from "@getmetal/metal-sdk";
 import { MetalRetriever } from "@langchain/community/retrievers/metal";
 
 export const run = async () => {
-  const MetalSDK = Metal;
-
-  const client = new MetalSDK(
+  // @ts-expect-error invalid constructor interface
+  const client = new Metal(
     process.env.METAL_API_KEY!,
     process.env.METAL_CLIENT_ID!,
     process.env.METAL_INDEX_ID

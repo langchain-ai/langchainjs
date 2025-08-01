@@ -1,7 +1,7 @@
 version: "3"
 services:
   test-exports-esbuild:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -22,7 +22,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-esm:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -43,7 +43,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-tsc:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -64,7 +64,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cjs:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -85,7 +85,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-cf:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -106,7 +106,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vercel:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -127,7 +127,7 @@ services:
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
   test-exports-vite:
-    image: node:18
+    image: node:20
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -147,17 +147,24 @@ services:
       - ../libs/langchain-ollama:/langchain-ollama
       - ../libs/langchain-google-gauth:/langchain-google-gauth
     command: bash /scripts/docker-ci-entrypoint.sh
-  # test-exports-bun:
-  #   image: oven/bun
-  #   working_dir: /app
-  #   volumes:
-  #     - ../environment_tests/test-exports-bun:/package
-  #     - ../environment_tests/scripts:/scripts
-  #     - ../langchain:/langchain-workspace
-  #     - ../langchain-core:/langchain-core
-  #     - ../libs/langchain-community:/langchain-community-workspace
-  #     - ../libs/langchain-anthropic:/langchain-anthropic-workspace
-  #   command: bash /scripts/docker-bun-ci-entrypoint.sh
+  test-exports-bun:
+    image: oven/bun
+    working_dir: /app
+    volumes:
+      - ../yarn.lock:/root/yarn.lock
+      - ../.yarnrc.yml:/root/.yarnrc.yml
+      - ../.yarn:/root/.yarn
+      - ../environment_tests/test-exports-bun:/package
+      - ../environment_tests/scripts:/scripts
+      - ../langchain:/langchain
+      - ../langchain-core:/langchain-core
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/langchain-anthropic:/langchain-anthropic
+      - ../libs/langchain-openai:/langchain-openai
+      - ../libs/langchain-cohere:/langchain-cohere
+      - ../libs/langchain-ollama:/langchain-ollama
+      - ../libs/langchain-google-gauth:/langchain-google-gauth
+    command: bash /scripts/docker-bun-ci-entrypoint.sh
   success:
     image: alpine:3.14
     command: echo "Success"
@@ -176,5 +183,5 @@ services:
         condition: service_completed_successfully
       test-exports-vite:
         condition: service_completed_successfully
-      # test-exports-bun:
-      #   condition: service_completed_successfully
+      test-exports-bun:
+        condition: service_completed_successfully

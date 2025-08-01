@@ -15,19 +15,22 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { StructuredTool } from "@langchain/core/tools";
 import { ChatVertexAI } from "../chat_models.js";
 
+const weatherToolSchema = z.object({
+  locations: z
+    .array(z.object({ name: z.string() }))
+    .describe("The name of cities to get the weather for."),
+});
+type WeatherToolSchema = z.infer<typeof weatherToolSchema>;
+
 class WeatherTool extends StructuredTool {
-  schema = z.object({
-    locations: z
-      .array(z.object({ name: z.string() }))
-      .describe("The name of cities to get the weather for."),
-  });
+  schema = weatherToolSchema;
 
   description =
     "Get the weather of a specific location and return the temperature in Celsius.";
 
   name = "get_weather";
 
-  async _call(input: z.infer<typeof this.schema>) {
+  async _call(input: WeatherToolSchema) {
     // console.log(`WeatherTool called with input: ${input}`);
     return `The weather in ${JSON.stringify(input.locations)} is 25°C`;
   }

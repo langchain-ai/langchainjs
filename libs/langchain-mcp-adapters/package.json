@@ -2,8 +2,8 @@
   "name": "@langchain/mcp-adapters",
   "version": "0.6.0",
   "description": "LangChain.js adapters for Model Context Protocol (MCP)",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "author": "LangChain",
+  "license": "MIT",
   "type": "module",
   "packageManager": "yarn@3.5.1",
   "repository": {
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "run-s \"build:main\" \"build:examples\"",
-    "build:main": "yarn lc_build --create-entrypoints --pre --tree-shaking",
+    "build:main": "yarn workspace @langchain/build build @langchain/mcp-adapters",
     "build:examples": "tsc -p tsconfig.examples.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
@@ -25,7 +25,6 @@
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/ examples/",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
-    "prepack": "yarn build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
@@ -37,8 +36,6 @@
     "ai",
     "tools"
   ],
-  "author": "LangChain",
-  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "debug": "^4.4.0",
@@ -55,7 +52,6 @@
     "@langchain/core": "workspace:*",
     "@langchain/langgraph": "^0.2.62",
     "@langchain/openai": "workspace:*",
-    "@langchain/scripts": "workspace:*",
     "@tsconfig/recommended": "^1.0.8",
     "@types/debug": "^4.1.12",
     "@types/express": "^5",
@@ -89,23 +85,23 @@
   "directories": {
     "example": "examples"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": {
-        "import": "./index.d.ts",
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "import": "./index.js",
-      "require": "./index.cjs"
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "input": "./src/index.ts"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/",
-    "index.cjs",
-    "index.js",
-    "index.d.ts",
-    "index.d.cts"
+    "dist/"
   ]
 }

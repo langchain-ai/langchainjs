@@ -22,7 +22,7 @@ cd /app
 node /updater_script/update_resolutions_lowest.js
 
 # Read the @langchain/core version from peerDependencies
-core_version=$(node -p "require('./package.json').peerDependencies['@langchain/core']")
+core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
 
 yarn
 yarn add @langchain/core@$core_version

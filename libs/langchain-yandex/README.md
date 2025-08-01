@@ -9,6 +9,7 @@ npm install @langchain/yandex @langchain/core
 ```
 
 ## Setup your environment
+
 First, you should [create a service account](https://cloud.yandex.com/en/docs/iam/operations/sa/create) with the `ai.languageModels.user` role.
 
 Next, you have two authentication options:
@@ -63,9 +64,7 @@ import { YandexGPTEmbeddings } from "@langchain/yandex";
 const model = new YandexGPTEmbeddings({});
 
 /* Embed queries */
-const res = await model.embedQuery(
-  "This is a test document."
-);
+const res = await model.embedQuery("This is a test document.");
 /* Embed documents */
 const documentRes = await model.embedDocuments(["This is a test document."]);
 ```
@@ -89,7 +88,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/yandex
+yarn build --filter @langchain/yandex
 ```
 
 ### Run tests
@@ -111,4 +110,4 @@ yarn lint && yarn format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `entrypoints` field in the `config` variable located inside `langchain.config.js` and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.

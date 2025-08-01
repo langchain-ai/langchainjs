@@ -2,6 +2,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { InteropZodObject } from "@langchain/core/utils/types";
+import type { AIMessageChunk } from "@langchain/core/messages";
 import {
   type JsonSchema7ObjectType,
   toJsonSchema,
@@ -57,7 +58,7 @@ Passage:
 export function createExtractionChain(
   schema: FunctionParameters,
   llm: BaseChatModel<BaseFunctionCallOptions>
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   const functions = getExtractionFunctions(schema);
   const prompt = PromptTemplate.fromTemplate(_EXTRACTION_TEMPLATE);
   const outputParser = new JsonKeyOutputFunctionsParser({ attrName: "info" });
@@ -82,7 +83,7 @@ export function createExtractionChainFromZod(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>
-) {
+): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {
   return createExtractionChain(
     toJsonSchema(schema) as JsonSchema7ObjectType,
     llm

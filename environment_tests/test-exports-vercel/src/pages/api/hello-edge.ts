@@ -1,7 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 
-// import all entrypoints to test, do not do this in your own app
-import "../../entrypoints.js";
+// Note: NOT importing all entrypoints for Edge Runtime since many LangChain modules
+// use Node.js APIs that are not available in Edge Runtime (fs, path, etc.)
+// This is expected behavior - Edge Runtime has limited Node.js API support
 
 // Import a few things we'll use to test the exports
 import { LLMChain } from "langchain/chains";

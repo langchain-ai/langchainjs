@@ -27,7 +27,7 @@ export * from "langchain/text_splitter";
 export * from "langchain/memory";
 export * from "langchain/memory/chat_memory";
 export * from "langchain/document";
-export * from "langchain/document_loaders/base";
+// export * from "langchain/document_loaders/base"; // Disabled for browser compatibility - pulls in fs modules
 export * from "langchain/document_transformers/openai_functions";
 export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
@@ -45,16 +45,16 @@ export * from "langchain/retrievers/score_threshold";
 export * from "langchain/retrievers/matryoshka_retriever";
 export * from "langchain/stores/doc/base";
 export * from "langchain/stores/doc/in_memory";
-export * from "langchain/stores/file/in_memory";
+// export * from "langchain/stores/file/in_memory"; // Disabled for browser compatibility
 export * from "langchain/stores/message/in_memory";
 export * from "langchain/storage/encoder_backed";
 export * from "langchain/storage/in_memory";
 export * from "langchain/util/document";
 export * from "langchain/util/math";
 export * from "langchain/util/time";
-export * from "langchain/experimental/autogpt";
-export * from "langchain/experimental/openai_assistant";
-export * from "langchain/experimental/openai_files";
+// export * from "langchain/experimental/autogpt"; // Disabled for browser compatibility
+// export * from "langchain/experimental/openai_assistant"; // Disabled for browser compatibility
+// export * from "langchain/experimental/openai_files"; // Disabled for browser compatibility
 export * from "langchain/experimental/babyagi";
 export * from "langchain/experimental/generative_agents";
 export * from "langchain/experimental/plan_and_execute";

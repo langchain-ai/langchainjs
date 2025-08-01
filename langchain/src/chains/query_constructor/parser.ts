@@ -6,7 +6,7 @@ import {
   Operation,
   Operator,
   Operators,
-} from "./ir.js";
+} from "@langchain/core/structured_query";
 import {
   CallExpressionType,
   ExpressionParser,
