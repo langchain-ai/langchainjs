@@ -27,6 +27,7 @@ export async function findWorkspacePackages(
   opts: CompilePackageOptions
 ) {
   const result = await execAsync("yarn workspaces list --json");
+  console.log("DEBUG", result.stdout);
   const workspaces = (
     await Promise.all(
       result.stdout.split("\n").map(async (line) => {
