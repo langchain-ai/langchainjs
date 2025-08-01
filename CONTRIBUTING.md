@@ -100,12 +100,12 @@ If you have a Twitter account you would like us to mention, please let us know i
 
 The release script can be executed only while on a fresh `main` branch, with no un-committed changes, from the package root. If working from a fork of the repository, make sure to sync the forked `main` branch with the upstream `main` branch first.
 
-You can invoke the script by calling `yarn release`. If new dependencies have been added to the integration package, install them first (i.e. run `yarn`, then `yarn release`).
+You can invoke the script by calling `pnpm release`. If new dependencies have been added to the integration package, install them first (i.e. run `pnpm install`, then `pnpm release`).
 
 There are three parameters which can be passed to this script, one required and two optional.
 
 - **Required**: `<workspace name>`. eg: `@langchain/core` The name of the package to release. Can be found in the `name` value of the package's `package.json`
-- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run yarn install, commit & push to new branch. Generally, this is not necessary.
+- **Optional**: `--bump-deps` eg `--bump-deps` Will find all packages in the repo which depend on this workspace and checkout a new branch, update the dep version, run pnpm install, commit & push to new branch. Generally, this is not necessary.
 - **Optional**: `--tag <tag>` eg `--tag beta` Add a tag to the NPM release. Useful if you want to push a release candidate.
 
 This script automatically bumps the package version, creates a new release branch with the changes, pushes the branch to GitHub, uses `release-it` to automatically release to NPM, and more depending on the flags passed.
@@ -116,14 +116,14 @@ Halfway through this script, you'll be prompted to enter an NPM OTP (typically f
 
 Docker must be running if releasing one of `langchain`, `@langchain/core` or `@langchain/community`. These packages run LangChain's export tests, which run inside docker containers.
 
-Full example: `yarn release @langchain/core`.
+Full example: `pnpm release @langchain/core`.
 
 ### 🛠️ Tooling
 
 This project uses the following tools, which are worth getting familiar
 with if you plan to contribute:
 
-- **[yarn](https://yarnpkg.com/) (v3.4.1)** - dependency management
+- **[pnpm](https://pnpm.io/) (v10.14.0)** - dependency management
 - **[eslint](https://eslint.org/)** - enforcing standard lint rules
 - **[prettier](https://prettier.io/)** - enforcing standard code formatting
 - **[jest](https://jestjs.io/)** - testing code
@@ -163,15 +163,15 @@ cd libs/langchain-community
 To get started, you will need to install the dependencies for the project. To do so, run:
 
 ```bash
-yarn
+pnpm install
 ```
 
 Then, you will need to switch directories into `langchain-core` and build core by running:
 
 ```bash
 cd ../../langchain-core
-yarn
-yarn build
+pnpm install
+pnpm build
 ```
 
 ### Linting
@@ -180,7 +180,7 @@ We use [eslint](https://eslint.org/) to enforce standard lint rules.
 To run the linter, run:
 
 ```bash
-yarn lint
+pnpm lint
 ```
 
 ### Formatting
@@ -189,13 +189,13 @@ We use [prettier](https://prettier.io) to enforce code formatting style.
 To run the formatter, run:
 
 ```bash
-yarn format
+pnpm format
 ```
 
 To just check for formatting differences, without fixing them, run:
 
 ```bash
-yarn format:check
+pnpm format:check
 ```
 
 ### Testing
@@ -211,7 +211,7 @@ Unit tests should be called `*.test.ts`.
 To run only unit tests, run:
 
 ```bash
-yarn test
+pnpm test
 ```
 
 #### Running a single test
@@ -219,7 +219,7 @@ yarn test
 To run a single test, run the following from within a workspace:
 
 ```bash
-yarn test:single /path/to/yourtest.test.ts
+pnpm test:single /path/to/yourtest.test.ts
 ```
 
 This is useful for developing individual features.
@@ -232,10 +232,10 @@ Integration tests should be called `*.int.test.ts`.
 Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` or `libs/langchain-community/.env` file
 like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
 
-We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
+We generally recommend only running integration tests with `pnpm test:single`, but if you want to run all integration tests, run:
 
 ```bash
-yarn test:integration
+pnpm test:integration
 ```
 
 ### Building
@@ -243,7 +243,7 @@ yarn test:integration
 To build the project, run:
 
 ```bash
-yarn build
+pnpm build
 ```
 
 ### Adding an Entrypoint
@@ -293,7 +293,7 @@ and in generated documentation.
 ##### Note: you only need to follow these steps if you are building the docs site locally
 
 1. [Quarto](https://quarto.org/) - package that converts Jupyter notebooks (`.ipynb` files) into `.mdx` files for serving in Docusaurus.
-2. `yarn build --filter=core_docs` - It's as simple as that! (or you can simply run `yarn build` from `docs/core_docs/`)
+2. `pnpm build --filter=core_docs` - It's as simple as that! (or you can simply run `pnpm build` from `docs/core_docs/`)
 
 All notebooks are converted to `.md` files and automatically gitignored. If you would like to create a non notebook doc, it must be a `.mdx` file.
 
@@ -334,25 +334,25 @@ most helpful kind of documentation.
 
 Examples can be added in the `examples/src` directory, e.g.
 `examples/src/path/to/example`. This
-example can then be invoked with `yarn example path/to/example` at the top
+example can then be invoked with `pnpm example path/to/example` at the top
 level of the repo.
 
 To run examples that require an environment variable, you'll need to add a `.env` file under `examples/.env`.
 
 ### Build Documentation Locally
 
-To generate and view the documentation locally, change to the project root and run `yarn` to ensure dependencies get installed
+To generate and view the documentation locally, change to the project root and run `pnpm install` to ensure dependencies get installed
 in both the `docs/` and `examples/` workspaces:
 
 ```bash
 cd ..
-yarn
+pnpm install
 ```
 
 Then run:
 
 ```bash
-yarn docs
+pnpm docs
 ```
 
 ## Advanced
@@ -362,5 +362,5 @@ yarn docs
 To run the environment tests with Docker, run the following command from the project root:
 
 ```bash
-yarn test:exports:docker
+pnpm test:exports:docker
 ```

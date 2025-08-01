@@ -128,7 +128,7 @@ https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src
 
 ### Linting and formatting
 
-As with all contributions, make sure you run `yarn lint` and `yarn format` so that everything conforms to our established style.
+As with all contributions, make sure you run `pnpm lint` and `pnpm format` so that everything conforms to our established style.
 
 ### Separate integration packages
 

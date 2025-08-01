@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "typedoc:build": "npx typedoc --options typedoc.json",
-    "build:scripts": "node ./scripts/create-entrypoints.js && yarn typedoc:build && node ./scripts/update-typedoc-css.js",
-    "build": "yarn clean && yarn build:scripts && next build",
-    "start": "yarn build && next start -p 3001",
+    "build:scripts": "node ./scripts/create-entrypoints.js && pnpm typedoc:build && node ./scripts/update-typedoc-css.js",
+    "build": "pnpm clean && pnpm build:scripts && next build",
+    "start": "pnpm build && next start -p 3001",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx}\"",

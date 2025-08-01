@@ -1,9 +1,6 @@
 {
   "name": "test-exports-vercel",
   "version": "0.1.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "scripts": {
     "dev": "next dev",

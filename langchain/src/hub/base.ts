@@ -26,7 +26,7 @@ export async function basePush(
     readme?: string;
     tags?: string[];
   }
-) {
+): Promise<string> {
   const client = new Client(options);
   const payloadOptions = {
     object: runnable,

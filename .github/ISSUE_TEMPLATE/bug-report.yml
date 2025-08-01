@@ -6,9 +6,9 @@ body:
     attributes:
       value: |
         Thank you for taking the time to file a bug report. 
-        
+
         Use this to report BUGS in LangChain.js. For usage questions, feature requests and general design questions, please use the [LangChain Forum](https://forum.langchain.com/).
-        
+
         Relevant links to check before filing a bug report to see if your issue has already been reported, fixed or
         if there's another way to solve your problem:
 
@@ -45,11 +45,11 @@ body:
       label: Example Code
       description: |
         Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
-        
+
         If a maintainer can copy it, run it, and see it right away, there's a much higher chance that you'll be able to get help.
-        
+
         **Important!** 
-        
+
         * Use code tags (e.g., ```typescript ... ```) to correctly [format your code](https://help.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks#syntax-highlighting).
         * INCLUDE the language label (e.g. `typescript`) after the first three backticks to enable syntax highlighting. (e.g., ```typescript rather than ```).
         * Reduce your code to the minimum required to reproduce the issue if possible. This makes it much easier for others to help you.
@@ -57,7 +57,7 @@ body:
 
       placeholder: |
         The following code: 
-        
+
         ```typescript
         import { RunnableLambda } from "@langchain/core/runnables"
 
@@ -98,18 +98,18 @@ body:
       label: System Info
       description: |
         Please share your system info with us. 
-        
-        "yarn info langchain" 
+
+        "pnpm info langchain" 
         platform (windows / linux / mac)
         Node version
-        yarn version
+        pnpm --version
       placeholder: |
-        "yarn info langchain"
+        "pnpm info langchain"
         platform
         Node version
-        yarn version
-        
+        pnpm --version
+
         These will only surface LangChain.js packages, don't forget to include any other relevant
-        packages you're using (if you're not sure what's relevant, you can paste the entire output of `yarn info`).
+        packages you're using (if you're not sure what's relevant, you can paste the entire output of `pnpm info`).
     validations:
       required: true

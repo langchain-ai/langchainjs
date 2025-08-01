@@ -19,19 +19,18 @@ cp "$original_updater_script_dir"/* "$updater_script_dir/"
 
 # Install deps (e.g semver) for the updater script
 cd "$updater_script_dir"
-yarn
+pnpm install --production
 # Run the updater script
 node "update_resolutions_lowest.js"
 
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-touch yarn.lock
-yarn
+pnpm install --production
 
 # Navigate into `@langchain/package` to build and run tests
 # We need to run inside the package directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_vertexai_dir"
 
-yarn test
+pnpm test

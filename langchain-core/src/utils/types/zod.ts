@@ -542,7 +542,7 @@ export function interopZodObjectPartial<T extends InteropZodObject>(
  */
 export function interopZodObjectStrict<T extends InteropZodObject>(
   schema: T,
-  recursive: boolean = false
+  recursive = false
 ): InteropZodObject {
   if (isZodSchemaV3(schema)) {
     // TODO: v3 schemas aren't recursively handled here
@@ -609,7 +609,7 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
  */
 export function interopZodObjectPassthrough<T extends InteropZodObject>(
   schema: T,
-  recursive: boolean = false
+  recursive = false
 ): InteropZodObject {
   if (isZodObjectV3(schema)) {
     // TODO: v3 schemas aren't recursively handled here
@@ -723,7 +723,7 @@ function isZodTransformV4(schema: InteropZodType): schema is z4.$ZodPipe {
  */
 export function interopZodTransformInputSchema(
   schema: InteropZodType,
-  recursive: boolean = false
+  recursive = false
 ): InteropZodType {
   // Zod v3: ._def.schema is the input schema for ZodEffects (transform)
   if (isZodSchemaV3(schema)) {

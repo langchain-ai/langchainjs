@@ -49,16 +49,11 @@ has_content ../langchain && cp -r ../langchain/!(node_modules) ./libs/langchain
 ! has_content ../langchain-google-gauth && find . -name "package.json" -exec sed -i 's/"@langchain\/google-gauth": "workspace:\*"/"@langchain\/google-gauth": "*"/g' {} \;
 ! has_content ../langchain && find . -name "package.json" -exec sed -i 's/"langchain": "workspace:\*"/"langchain": "^0.3.30"/g' {} \;
 
-# copy cache
-mkdir -p ./.yarn
-cp -r ../root/.yarn/!(berry|cache) ./.yarn
-cp ../root/yarn.lock ../root/.yarnrc.yml .
-
-yarn plugin import workspace-tools
-yarn workspaces focus --production
+# Install production dependencies with pnpm
+pnpm install --prod
 
 # Check the build command completes successfully
-yarn build
+pnpm build
 
 # Check the test command completes successfully
-yarn test
+pnpm test

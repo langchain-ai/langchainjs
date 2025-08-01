@@ -86,7 +86,7 @@ test("RunnablePassthrough can transform a function as constructor args", async (
 
 test("RunnablePassthrough can invoke a function and pass through config", async () => {
   let wasCalled = false;
-  let addOneResult: number = 0;
+  let addOneResult = 0;
   const addOne = (input: number, config?: RunnableConfig) => {
     wasCalled = true;
     if (

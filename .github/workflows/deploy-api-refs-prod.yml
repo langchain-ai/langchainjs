@@ -1,7 +1,7 @@
 name: Deploy API Refs Prod
 
 on:
-  workflow_dispatch:  # Allows triggering the workflow manually in GitHub UI
+  workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
   push:
     branches: ["main", "v0.2"]
 
@@ -24,15 +24,22 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_DOCS_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       - name: Install dependencies
-        run: yarn install --immutable --mode=skip-build
+        run: pnpm install --frozen-lockfile
       - name: Build All Projects
-        run: yarn turbo:command build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
+        run: pnpm build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: |
           if [ ${{ github.ref }} = 'refs/heads/main' ]; then

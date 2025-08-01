@@ -67,7 +67,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     return invoke(chatModel, input, stream);
   }
 
-  async invokeWithCacheReadInput(stream: boolean = false): Promise<AIMessage> {
+  async invokeWithCacheReadInput(stream = false): Promise<AIMessage> {
     const readme = readFileSync(join(REPO_ROOT_DIR, "README.md"), "utf-8");
 
     const input = `What's langchain? Here's the langchain README:

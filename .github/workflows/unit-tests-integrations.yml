@@ -90,16 +90,18 @@ jobs:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
         # Running `test:unit:ci` from root will build first, however debugging
         # in CI is easier if we separate the build step from the test step.
       - name: Build '@langchain/${{ matrix.package }}' package
-        run: yarn build --filter @langchain/${{ matrix.package }}
+        run: pnpm build --filter @langchain/${{ matrix.package }}
       - name: Test '@langchain/${{ matrix.package }}' package
-        run: yarn test:unit:ci --filter @langchain/${{ matrix.package }}
+        run: pnpm test:unit:ci --filter @langchain/${{ matrix.package }}

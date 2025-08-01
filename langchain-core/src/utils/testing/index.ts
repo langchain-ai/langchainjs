@@ -217,7 +217,7 @@ export class FakeChatModel extends BaseChatModel {
 }
 
 export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModelCallOptions> {
-  sleep: number = 50;
+  sleep = 50;
 
   responses: BaseMessage[] = [];
 

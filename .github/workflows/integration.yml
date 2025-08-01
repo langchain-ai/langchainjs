@@ -18,12 +18,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies
-        run: yarn install --immutable
-      - run: yarn run ci
-      - run: yarn workspace langchain run test:integration
+        run: pnpm install --frozen-lockfile
+      - run: pnpm run ci
+      - run: pnpm --filter langchain run test:integration

@@ -88,7 +88,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter @langchain/yandex
+pnpm build --filter @langchain/yandex
 ```
 
 ### Run tests

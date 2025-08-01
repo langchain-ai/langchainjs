@@ -1,9 +1,6 @@
 {
   "name": "test-exports-vite",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "type": "module",
   "scripts": {
