@@ -63,10 +63,10 @@ jobs:
             if echo "$changed_files" | grep -q "$package"; then
               echo "Package $package found in changed files."
               if [ "$first_entry" = true ]; then
-              matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"18\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+              matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
               first_entry=false
             else
-              matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"18\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+              matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
             fi
             fi
           done

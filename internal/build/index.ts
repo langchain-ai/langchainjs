@@ -42,9 +42,14 @@ async function buildProject(
     ([exp]) => !extname(exp)
   ) as [string, PackageJson.ExportConditions][];
   const entry = input.map(([, { input }]) => input).filter(Boolean) as string[];
-  const clean = !opts.skipClean;
   const watch = opts.watch ?? false;
   const sourcemap = !opts.skipSourcemap;
+
+  /**
+   * don't clean if user passes `--skipClean` or if `--noEmit` is enabled
+   * as we don't want to clean previous builds if we're not emitting anything
+   */
+  const clean = !opts.skipClean && !opts.noEmit;
 
   /**
    * generate type declarations if not disabled
