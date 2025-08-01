@@ -498,50 +498,61 @@ describe("tool_choice works for supported models", () => {
     );
   });
 
-  it("should bind tool_choice when using WSO with supported models", async () => {
-    // Claude 3 should NOT throw is using WSO & it should have `tool_choice` bound.
-    const claude3Model = new ChatBedrockConverse({
-      ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
-      // We are not passing the `supportsToolChoiceValues` arg here as
-      // it should be inferred from the model name.
-    });
-    const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
-      name: tool.name,
-    });
-    expect(claude3ModelWSO).toBeDefined();
-    const claude3ModelWSOAsJSON = claude3ModelWSO.toJSON();
-    if (!("kwargs" in claude3ModelWSOAsJSON)) {
-      throw new Error("kwargs not found in claude3ModelWSOAsJSON");
+  it.each([
+    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+  ])(
+    "should bind tool_choice when using WSO with model that supports tool choice: %s",
+    (model) => {
+      // Claude 3 should NOT throw is using WSO & it should have `tool_choice` bound.
+      const claude3Model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model,
+        // We are not passing the `supportsToolChoiceValues` arg here as
+        // it should be inferred from the model name.
+      });
+      const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
+        name: tool.name,
+      });
+      expect(claude3ModelWSO).toBeDefined();
+      const claude3ModelWSOAsJSON = claude3ModelWSO.toJSON();
+      if (!("kwargs" in claude3ModelWSOAsJSON)) {
+        throw new Error("kwargs not found in claude3ModelWSOAsJSON");
+      }
+      expect(claude3ModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
+        "tool_choice"
+      );
+      expect(claude3ModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
+        tool.name
+      );
     }
-    expect(claude3ModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
-      "tool_choice"
-    );
-    expect(claude3ModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
-      tool.name
-    );
+  );
 
-    // Mistral (not mistral large) should NOT throw is using WSO
-    const mistralModel = new ChatBedrockConverse({
-      ...baseConstructorArgs,
-      model: "mistral.mistral-large-2407-v1:0",
-      // We are not passing the `supportsToolChoiceValues` arg here as
-      // it should be inferred from the model name.
-    });
-    const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
-      name: tool.name,
-    });
-    expect(mistralModelWSO).toBeDefined();
-    const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
-    if (!("kwargs" in mistralModelWSOAsJSON)) {
-      throw new Error("kwargs not found in mistralModelWSOAsJSON");
+  it.each(["mistral.mistral-large-2407-v1:0"])(
+    "should bind tool_choice when using WSO with model that doesn't support tool choice: %s",
+    (model) => {
+      // Mistral (not mistral large) should NOT throw is using WSO
+      const mistralModel = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model,
+        // We are not passing the `supportsToolChoiceValues` arg here as
+        // it should be inferred from the model name.
+      });
+      const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
+        name: tool.name,
+      });
+      expect(mistralModelWSO).toBeDefined();
+      const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
+      if (!("kwargs" in mistralModelWSOAsJSON)) {
+        throw new Error("kwargs not found in mistralModelWSOAsJSON");
+      }
+      expect(mistralModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
+        "tool_choice"
+      );
+      // Mistral large only supports "auto" and "any" for tool_choice, not the actual tool name
+      expect(mistralModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
+        "any"
+      );
     }
-    expect(mistralModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
-      "tool_choice"
-    );
-    // Mistral large only supports "auto" and "any" for tool_choice, not the actual tool name
-    expect(mistralModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
-      "any"
-    );
-  });
+  );
 });

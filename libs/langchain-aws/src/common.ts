@@ -961,3 +961,20 @@ export function concatenateLangchainReasoningBlocks(
   }
   return concatenatedBlocks;
 }
+
+export function supportedToolChoiceValuesForModel(
+  model: string
+): Array<"auto" | "any" | "tool"> | undefined {
+  if (
+    model.includes("claude-3") ||
+    model.includes("claude-4") ||
+    model.includes("claude-opus-4") ||
+    model.includes("claude-sonnet-4")
+  ) {
+    return ["auto", "any", "tool"];
+  }
+  if (model.includes("mistral-large")) {
+    return ["auto", "any"];
+  }
+  return undefined;
+}

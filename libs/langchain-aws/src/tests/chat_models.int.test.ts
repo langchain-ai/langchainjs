@@ -286,6 +286,7 @@ test("Test ChatBedrockConverse can stream tools", async () => {
 test("Test ChatBedrockConverse tool_choice works", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
+    model: "us.anthropic.claude-sonnet-4-20250514-v1:0",
   });
   const tools = [
     tool(
