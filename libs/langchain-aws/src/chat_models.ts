@@ -50,6 +50,7 @@ import {
   handleConverseStreamMetadata,
   handleConverseStreamContentBlockStart,
   BedrockConverseToolChoice,
+  supportedToolChoiceValuesForModel,
 } from "./common.js";
 import {
   ChatBedrockConverseToolType,
@@ -732,13 +733,9 @@ export class ChatBedrockConverse
     this.performanceConfig = rest?.performanceConfig;
 
     if (rest?.supportsToolChoiceValues === undefined) {
-      if (this.model.includes("claude-3")) {
-        this.supportsToolChoiceValues = ["auto", "any", "tool"];
-      } else if (this.model.includes("mistral-large")) {
-        this.supportsToolChoiceValues = ["auto", "any"];
-      } else {
-        this.supportsToolChoiceValues = undefined;
-      }
+      this.supportsToolChoiceValues = supportedToolChoiceValuesForModel(
+        this.model
+      );
     } else {
       this.supportsToolChoiceValues = rest.supportsToolChoiceValues;
     }
