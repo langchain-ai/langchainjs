@@ -27,7 +27,6 @@ export async function findWorkspacePackages(
   opts: CompilePackageOptions
 ) {
   const result = await execAsync("yarn workspaces list --json");
-  console.log("DEBUG", result.stdout);
   const workspaces = (
     await Promise.all(
       result.stdout.split("\n").map(async (line) => {
@@ -52,6 +51,8 @@ export async function findWorkspacePackages(
             }
           }
 
+          console.log("DEBUG", pkg.name);
+
           /**
            * compile package if no query is provided or the package name matches the query
            */
@@ -65,7 +66,8 @@ export async function findWorkspacePackages(
               path: resolve(rootDir, workspace.location),
             };
           }
-        } catch {
+        } catch (error) {
+          console.error("Error importing package:", error);
           /* ignore */
           return null;
         }
