@@ -183,5 +183,5 @@ services:
         condition: service_completed_successfully
       test-exports-vite:
         condition: service_completed_successfully
-      # test-exports-bun:
-      #   condition: service_completed_successfully
+      test-exports-bun:
+        condition: service_completed_successfully

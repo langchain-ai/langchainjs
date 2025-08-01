@@ -1,5 +1,5 @@
 import type { DataSource, DataSourceOptions } from "typeorm";
-import { PromptTemplate } from "@langchain/core/prompts";
+import type { PromptTemplate } from "@langchain/core/prompts";
 import {
   DEFAULT_SQL_DATABASE_PROMPT,
   SQL_SAP_HANA_PROMPT,

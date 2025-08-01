@@ -7,89 +7,80 @@ export CI=true
 # enable extended globbing for omitting build artifacts
 shopt -s extglob
 
-# avoid copying build artifacts from the host
+# Function to replace workspace dependencies with either links or published versions
+replace_workspace_deps() {
+    local file="$1"
+    local use_links="$2"
+    
+    if [ "$use_links" = true ]; then
+        echo "Replacing workspace dependencies with links in $file"
+        sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": "link:@langchain\/core"/g' "$file"
+        sed -i 's/"langchain": "workspace:\*"/"langchain": "link:langchain"/g' "$file"
+    else
+        echo "Replacing workspace dependencies with published versions in $file"
+        sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": ">=0.3.58 <0.4.0"/g' "$file"
+        sed -i 's/"langchain": "workspace:\*"/"langchain": "^0.3.30"/g' "$file"
+    fi
+    
+    # Always use published versions for other @langchain/* packages (not available in Docker context)
+    sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "*"/g' "$file"
+    sed -i 's/"@langchain\/cohere": "workspace:\*"/"@langchain\/cohere": "*"/g' "$file"
+    sed -i 's/"@langchain\/openai": "workspace:\*"/"@langchain\/openai": "*"/g' "$file"
+    sed -i 's/"@langchain\/community": "workspace:\*"/"@langchain\/community": "*"/g' "$file"
+}
+
+# Function to copy and link a package
+link_package() {
+    local source_dir="$1"
+    local copy_dir="$2"
+    local package_name="$3"
+    
+    rm -rf "$copy_dir"
+    mkdir "$copy_dir"
+    
+    if [ "$(ls -A "$source_dir" 2>/dev/null)" ]; then
+        cp -r "$source_dir"/!(node_modules|build|.next|.turbo) "$copy_dir"
+        cd "$copy_dir"
+        bun link
+        bun install --no-save --ignore-scripts
+        echo "Successfully linked $package_name"
+        return 0
+    else
+        echo "Warning: $source_dir is empty, skipping $package_name"
+        return 1
+    fi
+}
+
+# Copy the test package files
 cp -r ../package/!(node_modules|dist|dist-cjs|dist-esm|build|.next|.turbo) .
 
-rm -rf ../langchain-core-copy
-mkdir ../langchain-core-copy
-# Check if langchain-core has content before copying
-if [ "$(ls -A ../langchain-core)" ]; then
-    cp -r ../langchain-core/!(node_modules|build|.next|.turbo) ../langchain-core-copy
-else
-    echo "Warning: ../langchain-core is empty, skipping copy"
-fi
-
-rm -rf ../langchain-copy
-mkdir ../langchain-copy
-# Check if langchain has content before copying
-if [ "$(ls -A ../langchain)" ]; then
-    cp -r ../langchain/!(node_modules|build|.next|.turbo) ../langchain-copy
-else
-    echo "Warning: ../langchain is empty, skipping copy"
-fi
-
-# Track whether packages were successfully linked
+# Track whether core packages were successfully linked
 LANGCHAIN_CORE_LINKED=false
 LANGCHAIN_LINKED=false
 
-# Link the package locally
-if [ -f ../langchain-core-copy/package.json ]; then
-    cd ../langchain-core-copy
-    bun link
-    # Reinstall deps with bun because bun doesn't install deps of linked deps
-    bun install --no-save --ignore-scripts
+# Link @langchain/core
+if link_package "../langchain-core" "../langchain-core-copy" "@langchain/core"; then
     LANGCHAIN_CORE_LINKED=true
-else
-    echo "Warning: No package.json found in langchain-core-copy, skipping bun link"
 fi
 
-# Link the package locally
-if [ -f ../langchain-copy/package.json ]; then
-    cd ../langchain-copy
-    # Only modify the core dependency if core was actually linked
+# Link langchain (and update its @langchain/core dependency if needed)
+if link_package "../langchain" "../langchain-copy" "langchain"; then
     if [ "$LANGCHAIN_CORE_LINKED" = true ]; then
         echo "Updating langchain to use linked @langchain/core"
-        sed -i 's/"@langchain\/core": "[^\"]*"/"@langchain\/core": "link:@langchain\/core"/g' package.json
+        sed -i 's/"@langchain\/core": "[^\"]*"/"@langchain\/core": "link:@langchain\/core"/g' ../langchain-copy/package.json
+        cd ../langchain-copy
+        bun install --no-save --ignore-scripts
     else
-        echo "Replacing workspace dependencies with published versions"
-        sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": ">=0.3.58 <0.4.0"/g' package.json
-        # Replace other common workspace dependencies
-        sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "*"/g' package.json
-        sed -i 's/"@langchain\/cohere": "workspace:\*"/"@langchain\/cohere": "*"/g' package.json
-        sed -i 's/"@langchain\/openai": "workspace:\*"/"@langchain\/openai": "*"/g' package.json
-        sed -i 's/"@langchain\/community": "workspace:\*"/"@langchain\/community": "*"/g' package.json
+        replace_workspace_deps "../langchain-copy/package.json" false
+        cd ../langchain-copy
+        bun install --no-save --ignore-scripts
     fi
-    bun link
-    # Reinstall deps with bun because bun doesn't install deps of linked deps
-    bun install --no-save --ignore-scripts
     LANGCHAIN_LINKED=true
-else
-    echo "Warning: No package.json found in langchain-copy, skipping bun link"
 fi
 
+# Prepare the test app
 cd ../app
-
-# Replace the workspace dependency with the local copy, and install all others
-if [ "$LANGCHAIN_CORE_LINKED" = true ]; then
-    echo "Replacing @langchain/core workspace dependency with link"
-    sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": "link:@langchain\/core"/g' package.json
-else
-    echo "Replacing @langchain/core workspace dependency with published version"
-    sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": ">=0.3.58 <0.4.0"/g' package.json
-    # Replace other common workspace dependencies in app
-    sed -i 's/"@langchain\/anthropic": "workspace:\*"/"@langchain\/anthropic": "*"/g' package.json
-    sed -i 's/"@langchain\/cohere": "workspace:\*"/"@langchain\/cohere": "*"/g' package.json
-    sed -i 's/"@langchain\/openai": "workspace:\*"/"@langchain\/openai": "*"/g' package.json
-    sed -i 's/"@langchain\/community": "workspace:\*"/"@langchain\/community": "*"/g' package.json
-fi
-
-if [ "$LANGCHAIN_LINKED" = true ]; then
-    echo "Replacing langchain workspace dependency with link"
-    sed -i 's/"langchain": "workspace:\*"/"langchain": "link:langchain"/g' package.json
-else
-    echo "Replacing langchain workspace dependency with published version"
-    sed -i 's/"langchain": "workspace:\*"/"langchain": "^0.3.30"/g' package.json
-fi
+replace_workspace_deps "package.json" "$LANGCHAIN_LINKED"
 
 bun install --no-save --ignore-scripts
 
