@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
@@ -35,9 +36,10 @@ export async function findWorkspacePackages(
           if (workspace.location === ".") {
             return null;
           }
-          const pkg = await import(
-            resolve(rootDir, workspace.location, "package.json")
-          );
+          const pkgPath = resolve(rootDir, workspace.location, "package.json");
+          const pkg = JSON.parse(
+            await readFile(pkgPath, "utf-8")
+          ) as PackageJson;
 
           /**
            * skip package if it matches any exclude pattern
@@ -51,15 +53,13 @@ export async function findWorkspacePackages(
             }
           }
 
-          console.log("DEBUG", pkg.name);
-
           /**
            * compile package if no query is provided or the package name matches the query
            */
           if (
             !opts.packageQuery ||
             opts.packageQuery.length === 0 ||
-            opts.packageQuery.includes(pkg.name)
+            (pkg.name && opts.packageQuery.includes(pkg.name))
           ) {
             return {
               pkg,
@@ -67,7 +67,10 @@ export async function findWorkspacePackages(
             };
           }
         } catch (error) {
-          console.error("Error importing package:", error);
+          console.error(
+            `Error loading package.json for package: ${line}`,
+            error
+          );
           /* ignore */
           return null;
         }
