@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"
 monorepo_community_dir="/app/monorepo/libs/langchain-community"
@@ -26,13 +28,12 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-touch yarn.lock
-yarn
+pnpm install --prod
 
 # Navigate into `@langchain/community` to build and run tests
 # We need to run inside the community directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_community_dir"
 
-yarn add @langchain/core
-yarn test
+pnpm add @langchain/core
+pnpm test

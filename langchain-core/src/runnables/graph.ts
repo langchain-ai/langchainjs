@@ -155,7 +155,7 @@ export class Graph {
    * Add all nodes and edges from another graph.
    * Note this doesn't check for duplicates, nor does it connect the graphs.
    */
-  extend(graph: Graph, prefix: string = "") {
+  extend(graph: Graph, prefix = "") {
     let finalPrefix = prefix;
     const nodeIds = Object.values(graph.nodes).map((node) => node.id);
     if (nodeIds.every(isUuid)) {

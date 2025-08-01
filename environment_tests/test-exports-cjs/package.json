@@ -1,9 +1,6 @@
 {
   "name": "test-exports-cjs",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "description": "CJS Tests for the things exported by the langchain package",
   "main": "./index.mjs",

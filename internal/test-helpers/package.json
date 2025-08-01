@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "lint": "eslint --cache --ext .ts,.js src/",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },

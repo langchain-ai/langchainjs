@@ -27,7 +27,7 @@ yarn build
 Or from the repo root:
 
 ```bash
-yarn build --filter @langchain/cloudflare
+pnpm build --filter @langchain/cloudflare
 ```
 
 ### Run tests
@@ -36,8 +36,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ yarn test
-$ yarn test:int
+$ pnpm test
+$ pnpm test:int
 ```
 
 ### Lint & Format
@@ -45,7 +45,7 @@ $ yarn test:int
 Run the linter & formatter to ensure your code is up to standard:
 
 ```bash
-yarn lint && yarn format
+pnpm lint && pnpm format
 ```
 
 ### Adding new entrypoints

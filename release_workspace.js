@@ -132,12 +132,12 @@ function updateDependencies(
  * passing the new version as an argument, along with other
  * release-it args.
  *
- * @param {string} packageDirectory The directory to run yarn release in.
+ * @param {string} packageDirectory The directory to run pnpm release in.
  * @param {string} npm2FACode The 2FA code for NPM.
  * @param {string | undefined} tag An optional tag to publish to.
  * @returns {Promise<void>}
  */
-async function runYarnRelease(packageDirectory, npm2FACode, tag) {
+async function runPnpmRelease(packageDirectory, npm2FACode, tag) {
   return new Promise((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
@@ -149,15 +149,15 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
       ".release-it.json",
     ];
 
-    console.log(`Running command: "yarn ${args.join(" ")}"`);
+    console.log(`Running command: "pnpm ${args.join(" ")}"`);
 
     // Use 'inherit' for stdio to allow direct CLI interaction
-    const yarnReleaseProcess = spawn("yarn", args, {
+    const pnpmReleaseProcess = spawn("pnpm", args, {
       stdio: "inherit",
       cwd: workingDirectory,
     });
 
-    yarnReleaseProcess.on("close", (code) => {
+    pnpmReleaseProcess.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
@@ -165,7 +165,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
       }
     });
 
-    yarnReleaseProcess.on("error", (err) => {
+    pnpmReleaseProcess.on("error", (err) => {
       reject(`Failed to start process: ${err.message}`);
     });
   });
@@ -173,7 +173,7 @@ async function runYarnRelease(packageDirectory, npm2FACode, tag) {
 
 /**
  * Finds all `package.json`'s which contain the input workspace as a dependency.
- * Then, updates the dependency to the new version, runs yarn install and
+ * Then, updates the dependency to the new version, runs pnpm install and
  * commits the changes.
  *
  * @param {string} workspaceName The name of the workspace to bump dependencies for.
@@ -274,13 +274,13 @@ Workspaces:
       workspaceName,
       updatedWorkspaceVersion
     );
-    console.log("Updated package.json's! Running yarn install.");
+    console.log("Updated package.json's! Running pnpm install.");
 
     try {
-      execSyncWithErrorHandling(`yarn install`);
+      execSyncWithErrorHandling(`pnpm install`);
     } catch (_) {
       console.log(
-        "Yarn install failed. Likely because NPM has not finished publishing the new version. Continuing."
+        "pnpm install failed. Likely because NPM has not finished publishing the new version. Continuing."
       );
     }
 
@@ -462,7 +462,7 @@ async function main() {
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
   execSyncWithErrorHandling(
-    `yarn turbo:command run --filter ${options.workspace} build lint test --concurrency 1`
+    `pnpm --filter ${options.workspace} build lint test --concurrency 1`
   );
   console.log("Successfully ran build, lint, and tests.");
 

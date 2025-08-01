@@ -1,9 +1,6 @@
 {
   "name": "test-exports-cf",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0"
   },

@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"
 monorepo_anthropic_dir="/app/monorepo/libs/langchain-anthropic"
@@ -20,6 +22,7 @@ bash /scripts/with_standard_tests/shared.sh anthropic
 mkdir -p "$updater_script_dir"
 cp "$original_updater_script_dir"/* "$updater_script_dir/"
 cd "$updater_script_dir"
+
 # Update any workspace dep to the latest version since not all workspaces are
 # available in the test enviroment.
 node "update_workspace_deps.js"
@@ -27,13 +30,12 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-touch yarn.lock
-yarn
+pnpm install --prod
 
 # Navigate into `@langchain/anthropic` to build and run tests
 # We need to run inside the anthropic directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_anthropic_dir"
 
-yarn add @langchain/core
-yarn test
+pnpm add @langchain/core
+pnpm test
