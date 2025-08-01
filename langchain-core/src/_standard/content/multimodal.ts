@@ -117,3 +117,17 @@ export function isMultimodalContentBlock(
       contentBlock.type === "file")
   );
 }
+
+/**
+ * Check if the `ContentBlock` has base64 encoded data.
+ * @param content_block - The content block to check.
+ * @returns True if the content block has base64 encoded data, false otherwise.
+ */
+export function isMultimodalBase64ContentBlock(
+  content_block: unknown
+): content_block is Multimodal.ContentBlock & { data: string } {
+  if (typeof content_block === "string" && content_block.startsWith("data:")) {
+    return true;
+  }
+  return false;
+}

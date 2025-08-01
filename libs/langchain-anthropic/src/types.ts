@@ -30,6 +30,8 @@ export type AnthropicToolChoice =
   | string;
 export type ChatAnthropicToolType = Anthropic.Messages.Tool | BindToolsInput;
 
+export type AnthropicCacheControlEphemeral =
+  Anthropic.Beta.BetaCacheControlEphemeral;
 export type AnthropicTextBlockParam = Anthropic.Messages.TextBlockParam;
 export type AnthropicImageBlockParam = Anthropic.Messages.ImageBlockParam;
 export type AnthropicToolUseBlockParam = Anthropic.Messages.ToolUseBlockParam;

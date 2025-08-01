@@ -16,7 +16,12 @@
   },
   "editor.formatOnSave": true,
   "files.exclude": {
-    "**/.turbo": true
+    "**/.turbo": true,
+    "langchain-core/*.cjs": true,
+    "langchain-core/*.d.cts": true,
+    "langchain-core/*.js": true,
+    "langchain-core/*.mjs": true,
+    "langchain-core/*.d.ts": true
   },
   "search.exclude": {
     "**/node_modules": true,

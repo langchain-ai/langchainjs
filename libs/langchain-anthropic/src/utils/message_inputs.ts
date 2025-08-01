@@ -34,7 +34,7 @@ import {
   AnthropicToolResponse,
 } from "../types.js";
 
-function _formatImage(imageUrl: string) {
+export function _formatImage(imageUrl: string) {
   const parsed = parseBase64DataUrl({ dataUrl: imageUrl });
   if (parsed) {
     return {
