@@ -26,6 +26,7 @@
     "@rolldown/binding-linux-x64-musl": "*",
     "@rolldown/binding-win32-arm64-msvc": "*",
     "@rolldown/binding-win32-ia32-msvc": "*",
-    "@rolldown/binding-win32-x64-msvc": "*"
+    "@rolldown/binding-win32-x64-msvc": "*",
+    "@swc/core-win32-x64-msvc": "*"
   }
 }

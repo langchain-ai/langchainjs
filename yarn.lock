@@ -5859,6 +5859,7 @@ __metadata:
     "@rolldown/binding-win32-arm64-msvc": "*"
     "@rolldown/binding-win32-ia32-msvc": "*"
     "@rolldown/binding-win32-x64-msvc": "*"
+    "@swc/core-win32-x64-msvc": "*"
     "@tsconfig/recommended": ^1.0.10
     "@typescript/native-preview": ^7.0.0-dev.20250730.1
     prettier: ^3.6.2
@@ -5885,6 +5886,8 @@ __metadata:
     "@rolldown/binding-win32-ia32-msvc":
       optional: true
     "@rolldown/binding-win32-x64-msvc":
+      optional: true
+    "@swc/core-win32-x64-msvc":
       optional: true
   languageName: unknown
   linkType: soft
@@ -10741,7 +10744,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.13.3":
+"@swc/core-win32-x64-msvc@npm:*, @swc/core-win32-x64-msvc@npm:1.13.3":
   version: 1.13.3
   resolution: "@swc/core-win32-x64-msvc@npm:1.13.3"
   conditions: os=win32 & cpu=x64
