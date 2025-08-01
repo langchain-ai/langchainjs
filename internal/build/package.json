@@ -18,11 +18,14 @@
     "unplugin-unused": "^0.5.1"
   },
   "optionalDependencies": {
-    "@rolldown/binding-win32-x64-gnu": "*",
-    "@rolldown/binding-win32-x64-msvc": "*",
     "@rolldown/binding-darwin-arm64": "*",
     "@rolldown/binding-darwin-x64": "*",
-    "@rolldown/binding-linux-arm64": "*",
-    "@rolldown/binding-linux-x64": "*"
+    "@rolldown/binding-linux-arm64-gnu": "*",
+    "@rolldown/binding-linux-arm64-musl": "*",
+    "@rolldown/binding-linux-x64-gnu": "*",
+    "@rolldown/binding-linux-x64-musl": "*",
+    "@rolldown/binding-win32-arm64-msvc": "*",
+    "@rolldown/binding-win32-ia32-msvc": "*",
+    "@rolldown/binding-win32-x64-msvc": "*"
   }
 }
