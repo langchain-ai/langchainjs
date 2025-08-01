@@ -1140,17 +1140,6 @@
       },
       "input": "./src/runnables/remote.ts"
     },
-    "./indexes": {
-      "import": {
-        "types": "./dist/indexes/index.d.ts",
-        "default": "./dist/indexes/index.js"
-      },
-      "require": {
-        "types": "./dist/indexes/index.d.cts",
-        "default": "./dist/indexes/index.cjs"
-      },
-      "input": "./src/indexes/index.ts"
-    },
     "./schema/query_constructor": {
       "import": {
         "types": "./dist/schema/query_constructor.d.ts",
