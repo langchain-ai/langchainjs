@@ -1489,7 +1489,8 @@ export class ChatOpenAIResponses<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
@@ -1521,7 +1522,7 @@ export class ChatOpenAIResponses<
         { signal: options?.signal, ...options?.options }
       );
 
-      return {
+      const result = {
         generations: [
           {
             text: data.output_text,
@@ -1539,12 +1540,21 @@ export class ChatOpenAIResponses<
             : undefined,
         },
       };
+
+      // Emit handleLLMEnd event for non-streaming responses
+      await runManager?.handleLLMEnd({
+        generations: [result.generations],
+        llmOutput: result.llmOutput,
+      });
+
+      return result;
     }
   }
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamIterable = await this.completionWithRetry(
       {
@@ -1558,7 +1568,26 @@ export class ChatOpenAIResponses<
     for await (const data of streamIterable) {
       const chunk = this._convertResponsesDeltaToBaseMessageChunk(data);
       if (chunk == null) continue;
+
+      // Get the content as string from the chunk's text property
+      const content = chunk.text || "";
+
       yield chunk;
+
+      // Emit handleLLMNewToken event for streaming
+      if (content.length > 0) {
+        await runManager?.handleLLMNewToken(
+          content,
+          {
+            prompt: options.promptIndex ?? 0,
+            completion: 0,
+          },
+          undefined,
+          undefined,
+          undefined,
+          { chunk }
+        );
+      }
     }
   }
 
@@ -3377,7 +3406,8 @@ export class ChatOpenAI<
     if (this._useResponsesApi(options)) {
       yield* this.responses._streamResponseChunks(
         messages,
-        this._combineCallOptions(options)
+        this._combineCallOptions(options),
+        runManager
       );
       return;
     }
