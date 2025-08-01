@@ -57,18 +57,8 @@ describe("OracleVectorStore", () => {
       };
 
       const docs = [];
-      docs.push(
-        new Document({
-          pageContent: "I like soccer.",
-          metadata: { id: String(1) },
-        })
-      );
-      docs.push(
-        new Document({
-          pageContent: "I love Stephen King.",
-          metadata: { id: String(2) },
-        })
-      );
+      docs.push(new Document({ pageContent: "I like soccer." }));
+      docs.push(new Document({ pageContent: "I love Stephen King." }));
 
       oraclevs = await OracleVS.fromDocuments(docs, embedder, dbConfig);
 
@@ -84,10 +74,10 @@ describe("OracleVectorStore", () => {
       );
       const matches = await oraclevs.similaritySearchVectorWithScore(
         embedding,
-        5
+        1
       );
 
-      expect(matches.length).toBeGreaterThanOrEqual(1);
+      expect(matches).toHaveLength(1);
     } finally {
       if (connection) {
         await connection?.close();
@@ -106,23 +96,19 @@ describe("OracleVectorStore", () => {
     oraclevs = new OracleVS(embedder, dbConfig);
     await oraclevs.initialize();
     await oraclevs.addDocuments([
-      { pageContent: "hello", metadata: { id: String(1), a: 2 } },
-      { pageContent: "car", metadata: { id: String(2), a: 1 } },
-      { pageContent: "adjective", metadata: { id: String(3), a: 1 } },
-      { pageContent: "hi", metadata: { id: String(4), a: 1 } },
+      { pageContent: "hello", metadata: { a: 2 } },
+      { pageContent: "car", metadata: { a: 1 } },
+      { pageContent: "adjective", metadata: { a: 1 } },
+      { pageContent: "hi", metadata: { a: 1 } },
     ]);
 
     const results1 = await oraclevs.similaritySearch("hello!", 1);
-
     expect(results1).toHaveLength(1);
-    /*
     expect(results1).toEqual([
-      new Document({ metadata: { id: String(1), a: 2 }, pageContent: "hello" }),
+      new Document({ metadata: { a: 2 }, pageContent: "hello" }),
     ]);
-    */
 
     const results2 = await oraclevs.similaritySearchWithScore("hello!", 1, {
-      id: "1",
       a: 2,
     });
     expect(results2).toHaveLength(1);
