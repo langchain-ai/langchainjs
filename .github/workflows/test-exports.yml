@@ -31,12 +31,10 @@ env:
 jobs:
   exports-esbuild:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -44,7 +42,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test esbuild exports
@@ -52,12 +50,10 @@ jobs:
 
   exports-esm:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -65,7 +61,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test esm exports
@@ -73,12 +69,10 @@ jobs:
 
   exports-cjs:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -86,7 +80,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test cjs exports
@@ -94,12 +88,10 @@ jobs:
 
   exports-cf:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -107,7 +99,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test cf exports
@@ -115,12 +107,10 @@ jobs:
 
   exports-vercel:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -128,7 +118,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test vercel exports
@@ -136,12 +126,10 @@ jobs:
 
   exports-vite:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -149,7 +137,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test vite exports
@@ -157,12 +145,10 @@ jobs:
 
   exports-tsc:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
@@ -170,7 +156,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build dependencies
-        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai
+        run: yarn build langchain @langchain/core @langchain/anthropic @langchain/community @langchain/openai @langchain/ollama @langchain/google-gauth
         shell: bash
 
       - name: Test compiling exports with tsc
@@ -181,7 +167,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "yarn"
