@@ -35,9 +35,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "yarn"
-      - name: Install dependencies for `@langchain/core`
-        run: yarn workspaces focus @langchain/core
-      - name: Install dependencies for `@langchain/build`
-        run: yarn workspaces foreach --include @langchain/build --topological-dev run install
+      - name: Install dependencies for build and core workspaces
+        run: yarn workspaces focus @langchain/build @langchain/core
       - name: Build `@langchain/core`
-        run: yarn workspace @langchain/core build
+        run: cd ./langchain-core && yarn build

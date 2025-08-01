@@ -16,5 +16,13 @@
     "tsx": "^4.20.3",
     "type-fest": "^4.41.0",
     "unplugin-unused": "^0.5.1"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-win32-x64-gnu": "*",
+    "@rolldown/binding-win32-x64-msvc": "*",
+    "@rolldown/binding-darwin-arm64": "*",
+    "@rolldown/binding-darwin-x64": "*",
+    "@rolldown/binding-linux-arm64": "*",
+    "@rolldown/binding-linux-x64": "*"
   }
 }
