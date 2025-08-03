@@ -52,15 +52,15 @@ import {
 } from "./types.js";
 
 function isDefaultCachePoint(block: unknown): boolean {
-  return (
+  return Boolean(
     typeof block === "object" &&
-    block !== null &&
-    "cachePoint" in block &&
-    (block as any).cachePoint &&
-    typeof (block as any).cachePoint === "object" &&
-    (block as any).cachePoint !== null &&
-    "type" in (block as any).cachePoint &&
-    (block as any).cachePoint.type === "default"
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
   );
 }
 
