@@ -14,7 +14,7 @@ To help you ship LangChain apps to production faster, check out [LangSmith](http
 
 You can use npm, pnpm, or yarn to install LangChain.js
 
-`npm install -S langchain` or `pnpm add langchain` or `yarn add langchain`
+`npm install -S langchain` or `pnpm install langchain` or `yarn add langchain`
 
 ## 🌐 Supported Environments
 

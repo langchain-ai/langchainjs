@@ -170,7 +170,7 @@ export class PuppeteerWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install puppeteer as a dependency with, e.g. `yarn add puppeteer`"
+        "Please install puppeteer as a dependency with, e.g. `pnpm install puppeteer`"
       );
     }
   }

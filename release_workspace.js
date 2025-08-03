@@ -473,7 +473,7 @@ async function main() {
   const preReleaseVersion = getWorkspaceVersion(matchingWorkspace.dir);
 
   // Run `release-it` on workspace
-  await runYarnRelease(matchingWorkspace.dir, npm2FACode, options.tag);
+  await runPnpmRelease(matchingWorkspace.dir, npm2FACode, options.tag);
 
   const hasStaged = hasStagedChanges();
   const hasUnCommitted = hasUncommittedChanges();

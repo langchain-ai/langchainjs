@@ -9,7 +9,7 @@ import { FirestoreChatMessageHistory } from "../message/firestore.js";
 const sessionId = Date.now().toString();
 
 // firebase emulators:start --only firestore --project your-project-id
-// FIRESTORE_EMULATOR_HOST="localhost:8080" yarn test:single -- firestore.int.test.ts
+// FIRESTORE_EMULATOR_HOST="localhost:8080" pnpm test:single -- firestore.int.test.ts
 
 test.skip("Test firestore message history store", async () => {
   const messageHistory = new FirestoreChatMessageHistory({

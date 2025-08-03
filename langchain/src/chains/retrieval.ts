@@ -52,7 +52,7 @@ function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
  *     containing at least `context` and `answer` keys.
  * @example
  * ```typescript
- * // yarn add langchain @langchain/openai
+ * // pnpm add langchain @langchain/openai
  *
  * import { ChatOpenAI } from "@langchain/openai";
  * import { pull } from "langchain/hub";

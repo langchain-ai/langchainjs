@@ -153,7 +153,7 @@ export class Replicate extends LLM implements ReplicateInput {
       return { Replicate };
     } catch (e) {
       throw new Error(
-        "Please install replicate as a dependency with, e.g. `yarn add replicate`"
+        "Please install replicate as a dependency with, e.g. `pnpm install replicate`"
       );
     }
   }

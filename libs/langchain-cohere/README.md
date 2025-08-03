@@ -90,13 +90,13 @@ To develop the `@langchain/cohere` package, you'll need to follow these instruct
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
@@ -125,4 +125,4 @@ pnpm lint && pnpm format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.

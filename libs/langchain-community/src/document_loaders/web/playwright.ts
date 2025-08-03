@@ -112,7 +112,7 @@ export class PlaywrightWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install playwright as a dependency with, e.g. `yarn add playwright`"
+        "Please install playwright as a dependency with, e.g. `pnpm install playwright`"
       );
     }
   }

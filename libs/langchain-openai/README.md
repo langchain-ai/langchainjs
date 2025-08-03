@@ -34,7 +34,7 @@ You can do so by adding appropriate fields to your project's `package.json` like
 }
 ```
 
-The field you need depends on the package manager you're using, but we recommend adding a field for the common `yarn`, `npm`, and `pnpm` to maximize compatibility.
+The field you need depends on the package manager you're using, but we recommend adding a field for the common `pnpm`, `npm`, and `pnpm` to maximize compatibility.
 
 ## Chat Models
 
@@ -90,13 +90,13 @@ To develop the OpenAI package, you'll need to follow these instructions:
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
@@ -125,4 +125,4 @@ pnpm lint && pnpm format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.

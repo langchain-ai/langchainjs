@@ -6,7 +6,7 @@ import {
   SageMakerLLMContentHandler,
 } from "../sagemaker_endpoint.js";
 
-// yarn test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
+// pnpm test:single /{path_to}/langchain/src/llms/tests/sagemaker.int.test.ts
 describe.skip("Test SageMaker LLM", () => {
   test("without streaming", async () => {
     interface ResponseJsonInterface {

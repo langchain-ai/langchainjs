@@ -139,19 +139,19 @@ To develop the Azure OpenAI package, you'll need to follow these instructions:
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/azure-openai
+pnpm build --filter=@langchain/azure-openai
 ```
 
 ### Run tests
@@ -174,4 +174,4 @@ pnpm lint && pnpm format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to `scripts/create-entrypoints.js` and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to `scripts/create-entrypoints.js` and run `pnpm build` to generate the new entrypoint.

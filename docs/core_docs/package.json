@@ -6,8 +6,8 @@
     "docusaurus": "docusaurus",
     "start": "pnpm quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "_____": "skip build as we migrate to new docs",
-    "build": "exit 0 && yarn clean && pnpm quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:vercel": "yarn clean && bash ./scripts/vercel_build.sh && pnpm quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build": "exit 0 && pnpm clean && pnpm quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:vercel": "pnpm clean && bash ./scripts/vercel_build.sh && pnpm quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -89,9 +89,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "resolutions": {
-    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
   },
   "engines": {
     "node": ">=18"

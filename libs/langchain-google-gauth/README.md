@@ -15,7 +15,7 @@ section on **Authorization** below.
 ## Installation
 
 ```bash
-$ yarn add @langchain/google-gauth
+$ pnpm install @langchain/google-gauth
 ```
 
 

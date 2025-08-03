@@ -39,7 +39,7 @@ export type CreateHistoryAwareRetrieverParams = {
  * The Runnable output is a list of Documents
  * @example
  * ```typescript
- * // yarn add langchain @langchain/openai
+ * // pnpm add langchain @langchain/openai
  *
  * import { ChatOpenAI } from "@langchain/openai";
  * import { pull } from "langchain/hub";

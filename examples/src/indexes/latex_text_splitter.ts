@@ -8,7 +8,7 @@ const text = `\\begin{document}
 
 \\begin{verbatim}
 Hopefully this code block isn't split
-yarn add langchain
+pnpm add langchain
 \\end{verbatim}
 
 As an open source project in a rapidly developing field, we are extremely open to contributions.
@@ -38,7 +38,7 @@ console.log(output);
     Document {
       pageContent: '\\begin{verbatim}\n' +
         "Hopefully this code block isn't split\n" +
-        'yarn add langchain\n' +
+        'pnpm add langchain\n' +
         '\\end{verbatim}',
       metadata: { loc: [Object] }
     },

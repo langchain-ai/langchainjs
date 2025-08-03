@@ -1,5 +1,5 @@
 {
-  "buildCommand": "yarn build:vercel",
+  "buildCommand": "pnpm build:vercel",
   "outputDirectory": "build",
   "trailingSlash": true,
   "rewrites": [

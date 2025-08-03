@@ -43,13 +43,13 @@ To develop the MongoDB package, you'll need to follow these instructions:
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
@@ -64,15 +64,15 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ yarn test
-$ yarn test:int
+$ pnpm test
+$ pnpm test:int
 ```
 
 The tests in this package require an instance of MongoDB Atlas running, either running locally or as a remote Atlas cluster. A URI pointing to
 an existing Atlas cluster can be provided to the tests by specifying the `MONGODB_ATLAS_URI` environment variable:
 
 ```bash
-MONGODB_ATLAS_URI='<atlas URI>' yarn test:int
+MONGODB_ATLAS_URI='<atlas URI>' pnpm test:int
 ```
 
 If running against a remote Atlas cluster, the user must have readWrite permissions on the `langchain` database.
@@ -84,9 +84,9 @@ If no `MONGODB_ATLAS_URI` is provided, the test suite will attempt to launch an 
 Run the linter & formatter to ensure your code is up to standard:
 
 ```bash
-yarn lint && yarn format
+pnpm lint && pnpm format
 ```
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.

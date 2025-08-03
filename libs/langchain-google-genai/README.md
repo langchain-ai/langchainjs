@@ -64,7 +64,7 @@ const response = await model.invoke(new HumanMessage("Hello world!"));
 Gemini vision model supports image inputs when providing a single chat message. Example:
 
 ```bash npm2yarn
-npm install @langchain/core
+pnpm install @langchain/core
 ```
 
 ```typescript
@@ -126,13 +126,13 @@ To develop the Google GenAI package, you'll need to follow these instructions:
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
@@ -161,4 +161,4 @@ pnpm lint && pnpm format
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.

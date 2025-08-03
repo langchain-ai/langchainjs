@@ -43,9 +43,6 @@ const updateJsonFile = (relativePath, updateFunction) => {
   fs.writeFileSync(relativePath, JSON.stringify(res, null, 2) + "\n");
 };
 
-const workspacesListBreakStr = `"}
-{"`;
-const workspacesListJoinStr = `"},{"`;
 const BLACKLISTED_WORKSPACES = [
   "@langchain/azure-openai",
   "@langchain/google-gauth",
@@ -55,21 +52,21 @@ const BLACKLISTED_WORKSPACES = [
 /**
  * @returns {Array<string>} An array of paths to all workspaces in the monorepo.
  */
-function getYarnWorkspaces() {
-  const stdout = execSync("yarn workspaces list --json");
-  const workspaces = JSON.parse(
-    `[${stdout
-      .toString()
-      .split(workspacesListBreakStr)
-      .join(workspacesListJoinStr)}]`
-  );
+function getPnpmWorkspaces() {
+  // We are in langchainjs/docs/api_refs/scripts, so we go up to langchainjs
+  const projectRoot = path.resolve(process.cwd(), "../../../");
+  const stdout = execSync("pnpm m ls --json", { cwd: projectRoot });
+  const workspaces = JSON.parse(stdout.toString());
   const cleanedWorkspaces = workspaces.filter(
     (ws) =>
-      ws.name === "langchain" ||
-      (ws.name.startsWith("@langchain/") &&
-        !BLACKLISTED_WORKSPACES.find((blacklisted) => ws.name === blacklisted))
+      (ws.name === "langchain" ||
+        ws.name.startsWith("@langchain/")) &&
+      !BLACKLISTED_WORKSPACES.find((blacklisted) => ws.name === blacklisted)
   );
-  return cleanedWorkspaces.map((ws) => `../../${ws.location}`);
+  // The paths in entryPoints need to be relative to the typedoc.json file
+  // which is in langchainjs/docs/api_refs/
+  const typedocJsonDir = path.resolve(process.cwd(), "..");
+  return cleanedWorkspaces.map((ws) => path.relative(typedocJsonDir, ws.path));
 }
 
 async function main() {
@@ -144,11 +141,11 @@ async function main() {
     fs.writeFileSync("./typedoc.json", "{}\n");
   }
 
-  const yarnWorkspaces = getYarnWorkspaces();
+  const pnpmWorkspaces = getPnpmWorkspaces();
 
   updateJsonFile("./typedoc.json", () => ({
     ...BASE_TYPEDOC_CONFIG,
-    entryPoints: yarnWorkspaces,
+    entryPoints: pnpmWorkspaces,
   }));
 }
 

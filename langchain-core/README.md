@@ -8,7 +8,7 @@ chat models, vectorstores, retrievers, and runnables.
 ## 💾 Quick Install
 
 ```bash
-$ yarn add @langchain/core
+$ pnpm install @langchain/core
 ```
 
 ## 🤔 What is this?
@@ -21,7 +21,7 @@ The benefit of having these abstractions is that any provider can implement the 
 For example, you can install other provider-specific packages like this:
 
 ```bash
-$ yarn add @langchain/openai
+$ pnpm install @langchain/openai
 ```
 
 And use them as follows:
@@ -135,7 +135,7 @@ Because all used packages must share the same version of core, packages should n
 This recommendation will change to a caret once a major version (1.x.x) release has occurred.
 
 We suggest making all packages cross-compatible with ESM and CJS using a build step like the one in
-[@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic), then running `yarn build` before running `npm publish`.
+[@langchain/anthropic](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-anthropic), then running `pnpm build` before running `npm publish`.
 
 We will be exploring how to make this process easier in the future.
 

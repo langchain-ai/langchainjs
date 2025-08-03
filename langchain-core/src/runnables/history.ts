@@ -42,7 +42,7 @@ export interface RunnableWithMessageHistoryInputs<RunInput, RunOutput>
  * the chain input.
  * @example
  * ```typescript
- * // yarn add @langchain/anthropic @langchain/community @upstash/redis
+ * // pnpm install @langchain/anthropic @langchain/community @upstash/redis
  *
  * import {
  *   ChatPromptTemplate,
