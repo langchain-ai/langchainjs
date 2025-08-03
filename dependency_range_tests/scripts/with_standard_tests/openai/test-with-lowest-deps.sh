@@ -5,7 +5,7 @@ set -euxo pipefail
 export CI=true
 
 monorepo_dir="/app/monorepo"
-monorepo_openai_dir="/app/monorepo/libs/langchain-openai"
+monorepo_openai_dir="/app/monorepo/libs/providers/langchain-openai"
 updater_script_dir="/app/updater_script"
 updater_script_dir="/app/updater_script"
 original_updater_script_dir="/scripts/with_standard_tests/openai/node"

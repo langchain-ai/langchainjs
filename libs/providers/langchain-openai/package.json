@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-openai/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-openai/",
   "scripts": {
     "build": "pnpm --filter @langchain/build build @langchain/openai",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",

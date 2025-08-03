@@ -31,7 +31,7 @@ try {
       at OpenAI.makeStatusError (/Users/jacoblee/langchain/langchainjs/node_modules/openai/src/core.ts:371:21)
       at OpenAI.makeRequest (/Users/jacoblee/langchain/langchainjs/node_modules/openai/src/core.ts:429:24)
       at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-      at async file:///Users/jacoblee/langchain/langchainjs/libs/langchain-openai/dist/chat_models.js:646:29
+      at async file:///Users/jacoblee/langchain/langchainjs/libs/providers/langchain-openai/dist/chat_models.js:646:29
       at RetryOperation._fn (/Users/jacoblee/langchain/langchainjs/node_modules/p-retry/index.js:50:12) {
     status: 401,
 */

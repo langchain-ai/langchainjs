@@ -83,7 +83,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
   openai-lowest-deps:
@@ -98,7 +98,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 

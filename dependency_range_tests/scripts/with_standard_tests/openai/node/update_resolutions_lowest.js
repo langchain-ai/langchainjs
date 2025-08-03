@@ -2,7 +2,7 @@ const fs = require("fs");
 const semver = require("semver");
 
 const communityPackageJsonPath =
-  "/app/monorepo/libs/langchain-openai/package.json";
+  "/app/monorepo/libs/providers/langchain-openai/package.json";
 
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)

@@ -8,7 +8,7 @@ corepack enable
 
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"
-monorepo_openai_dir="/app/monorepo/libs/langchain-openai"
+monorepo_openai_dir="/app/monorepo/libs/providers/langchain-openai"
 
 # Updater script will not live inside the monorepo
 updater_script_dir="/app/updater_script"
