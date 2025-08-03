@@ -6,7 +6,7 @@ This directory contains examples demonstrating how to use the `@langchain/mcp-ad
 
 ```bash
 # Build all examples
-yarn build:examples
+pnpm build:examples
 
 # Run specific example
 cd examples && npx -y tsx firecrawl_custom_config_example.ts

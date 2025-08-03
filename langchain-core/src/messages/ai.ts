@@ -169,8 +169,8 @@ export class AIMessage extends BaseMessage {
           [
             "New LangChain packages are available that more efficiently handle",
             "tool calling.\n\nPlease upgrade your packages to versions that set",
-            "message tool calls. e.g., `yarn add @langchain/anthropic`,",
-            "yarn add @langchain/openai`, etc.",
+            "message tool calls. e.g., `pnpm install @langchain/anthropic`,",
+            "pnpm install @langchain/openai`, etc.",
           ].join(" ")
         );
       }

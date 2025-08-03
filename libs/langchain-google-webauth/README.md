@@ -15,7 +15,7 @@ section on **Authorization** below.
 ## Installation
 
 ```bash
-$ yarn add @langchain/google-webauth
+$ pnpm install @langchain/google-webauth
 ```
 
 

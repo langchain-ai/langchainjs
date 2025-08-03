@@ -8,7 +8,7 @@ import {
 
 describe("StringOutputParser", () => {
   test("string input", async () => {
-    const msg: string = "hello";
+    const msg = "hello";
     const parser = new StringOutputParser();
     const result = await parser.invoke(msg);
     expect(result).toEqual("hello");

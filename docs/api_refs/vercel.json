@@ -1,5 +1,5 @@
 {
-  "buildCommand": "yarn build",
+  "buildCommand": "pnpm build",
   "trailingSlash": false,
   "redirects": [
     {

@@ -9,7 +9,7 @@ This build system is designed to handle the complex requirements of LangChain's 
 ### Key Features
 
 - 🚀 **Fast Compilation**: Uses [tsdown](https://github.com/privatenumber/tsdown) for high-performance TypeScript bundling with Rolldown
-- 📦 **Monorepo Aware**: Automatically discovers and builds all non-private packages in yarn workspaces
+- 📦 **Monorepo Aware**: Automatically discovers and builds all non-private packages in pnpm workspaces
 - 🔍 **Secret Management**: Built-in scanning and validation of LangChain's `lc_secrets` patterns
 - 📝 **Type Generation**: Generates both ESM and CommonJS outputs with TypeScript declarations
 - ✅ **Quality Checks**: Integrated type checking with [arethetypeswrong](https://github.com/arethetypeswrong/arethetypeswrong), [publint](https://github.com/bluwy/publint), and unused dependency detection
@@ -42,7 +42,6 @@ infra/build/
 
 - **[tsdown](https://github.com/privatenumber/tsdown)** - Fast TypeScript bundler with Rolldown
 - **[TypeScript Compiler API](https://github.com/microsoft/TypeScript)** - For source code analysis and type checking
-- **[yarn workspaces](https://yarnpkg.com/features/workspaces)** - For monorepo package discovery
 - **[unplugin-unused](https://github.com/unplugin/unplugin-unused)** - For unused dependency detection
 - **Node.js built-ins** - File system operations and process management
 
@@ -52,27 +51,27 @@ infra/build/
 
 ```bash
 # Get help
-yarn build:new --help
+pnpm build:new --help
 
 # Build all packages in the workspace
-yarn build:new
+pnpm build:new
 
 # Build with watch mode for development
-yarn build:new --watch
+pnpm build:new --watch
 
 # Build specific packages
-yarn build:new @langchain/core
-yarn build:new @langchain/core langchain @langchain/openai
+pnpm build:new @langchain/core
+pnpm build:new @langchain/core langchain @langchain/openai
 
 # Exclude packages from build
-yarn build:new --exclude @langchain/community
-yarn build:new -e @langchain/aws -e @langchain/openai
+pnpm build:new --exclude @langchain/community
+pnpm build:new -e @langchain/aws -e @langchain/openai
 
 # Skip various build steps
-yarn build:new --no-emit          # Skip type declarations
-yarn build:new --skip-unused      # Skip unused dependency check
-yarn build:new --skip-clean       # Skip cleaning build directory
-yarn build:new --skip-sourcemap   # Skip sourcemap generation
+pnpm build:new --no-emit          # Skip type declarations
+pnpm build:new --skip-unused      # Skip unused dependency check
+pnpm build:new --skip-clean       # Skip cleaning build directory
+pnpm build:new --skip-sourcemap   # Skip sourcemap generation
 ```
 
 ## Development

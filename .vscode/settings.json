@@ -23,7 +23,7 @@
     "**/dist": true,
     "**/dist-cjs": true,
     "**/.turbo": true,
-    "**/yarn.lock": true
+    "**/pnpm-lock.yaml": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
   "editor.defaultFormatter": "esbenp.prettier-vscode",

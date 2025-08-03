@@ -2,9 +2,6 @@
   "name": "test-exports-tsc",
   "version": "0.0.0",
   "type": "module",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "description": "TSC Tests for the things exported by the langchain package",
   "main": "./index.mjs",

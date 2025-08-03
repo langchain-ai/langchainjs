@@ -150,7 +150,7 @@ export class CheerioWebBaseLoader
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Please install cheerio as a dependency with, e.g. `yarn add cheerio`"
+        "Please install cheerio as a dependency with, e.g. `pnpm install cheerio`"
       );
     }
   }

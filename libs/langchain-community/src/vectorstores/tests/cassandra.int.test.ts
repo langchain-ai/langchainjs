@@ -45,7 +45,7 @@ const noPartitionConfig = {
 //   1. switch "describe.skip(" to "describe("
 //   2. Export OPENAI_API_KEY, ASTRA_DB_ENDPOINT, and ASTRA_TOKEN
 //   3. cd langchainjs/libs/langchain-community
-//   4. yarn test:single src/vectorstores/tests/cassandra.int.test.ts
+//   4. pnpm test:single src/vectorstores/tests/cassandra.int.test.ts
 // Once manual testing is complete, re-instate the ".skip"
 describe("CassandraStore - no explicit partition key", () => {
   beforeAll(async () => {

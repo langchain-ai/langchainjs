@@ -1,9 +1,6 @@
 {
   "name": "test-exports-esm",
   "version": "0.0.0",
-  "workspaces": [
-    "libs/*"
-  ],
   "private": true,
   "description": "Tests for the things exported by the langchain package",
   "main": "./index.mjs",

@@ -30,12 +30,14 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "yarn"
+          cache: "pnpm"
       - name: Install dependencies for build and core workspaces
-        run: yarn workspaces focus @langchain/build @langchain/core
+        run: pnpm install --filter @langchain/build --filter @langchain/core
       - name: Build `@langchain/core`
-        run: cd ./langchain-core && yarn build
+        run: cd ./langchain-core && pnpm build

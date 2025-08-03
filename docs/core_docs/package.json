@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "yarn quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
+    "start": "pnpm quarto && rimraf ./docs/api && NODE_OPTIONS=--max-old-space-size=7168 docusaurus start",
     "_____": "skip build as we migrate to new docs",
-    "build": "exit 0 && yarn clean && yarn quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
-    "build:vercel": "yarn clean && bash ./scripts/vercel_build.sh && yarn quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build": "exit 0 && pnpm clean && pnpm quarto && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
+    "build:vercel": "pnpm clean && bash ./scripts/vercel_build.sh && pnpm quarto:vercel && rimraf ./build && NODE_OPTIONS=--max-old-space-size=7168 DOCUSAURUS_SSR_CONCURRENCY=4 docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -15,20 +15,20 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint": "yarn lint:eslint",
-    "lint:fix": "yarn lint --fix",
+    "lint": "pnpm lint:eslint",
+    "lint:fix": "pnpm lint --fix",
     "precommit": "lint-staged",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx}\"",
     "clean": "rm -rf .docusaurus/ .turbo/ .build/",
     "quarto": "quarto render docs/ && node ./scripts/quarto-build.js && python3 ./scripts/append_related_links.py ./docs",
     "quarto:vercel": "node ./scripts/quarto-build.js && python3 ./scripts/append_related_links.py ./docs",
-    "gen": "yarn gen:supabase",
+    "gen": "pnpm gen:supabase",
     "gen:supabase": "npx supabase gen types typescript --project-id 'xsqpnijvmbodcxyapnyq' --schema public > ./src/supabase.d.ts",
     "broken-links": "node ./scripts/check-broken-links.js",
-    "check:broken-links": "yarn quarto && yarn broken-links",
-    "check:broken-links:ci": "yarn quarto:vercel && yarn broken-links",
-    "validate": "yarn notebook_validate"
+    "check:broken-links": "pnpm quarto && pnpm broken-links",
+    "check:broken-links:ci": "pnpm quarto:vercel && pnpm broken-links",
+    "validate": "pnpm notebook_validate"
   },
   "dependencies": {
     "@docusaurus/core": "2.4.3",
@@ -77,7 +77,7 @@
     "typescript": "~5.1.6",
     "yaml-loader": "^0.8.0"
   },
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "pnpm@10.14.0",
   "browserslist": {
     "production": [
       ">0.5%",
@@ -89,9 +89,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "resolutions": {
-    "typedoc-plugin-markdown@next": "patch:typedoc-plugin-markdown@npm%3A4.0.0-next.6#./.yarn/patches/typedoc-plugin-markdown-npm-4.0.0-next.6-96b4b47746.patch"
   },
   "engines": {
     "node": ">=18"

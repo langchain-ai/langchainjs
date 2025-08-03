@@ -15,7 +15,7 @@ section on **Authorization** below.
 ## Installation
 
 ```bash
-$ yarn add @langchain/google-vertexai-web
+$ pnpm install @langchain/google-vertexai-web
 ```
 
 

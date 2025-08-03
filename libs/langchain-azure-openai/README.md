@@ -6,7 +6,7 @@
 
 This package contains the Azure SDK for OpenAI LangChain.js integrations.
 
-It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library. 
+It provides Azure OpenAI support through the [Azure SDK for OpenAI](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/openai/openai) library.
 
 ## Installation
 
@@ -96,7 +96,8 @@ const embeddings = new AzureOpenAIEmbeddings({
   // if not provided.
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_API_ENDPOINT,
   azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
-  azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
+  azureOpenAIApiDeploymentName:
+    process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
 });
 const res = await embeddings.embedQuery("Hello world");
 ```
@@ -138,19 +139,19 @@ To develop the Azure OpenAI package, you'll need to follow these instructions:
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
 
 ```bash
-yarn build --filter=@langchain/azure-openai
+pnpm build --filter=@langchain/azure-openai
 ```
 
 ### Run tests
@@ -159,8 +160,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ yarn test
-$ yarn test:int
+$ pnpm test
+$ pnpm test:int
 ```
 
 ### Lint & Format
@@ -168,9 +169,9 @@ $ yarn test:int
 Run the linter & formatter to ensure your code is up to standard:
 
 ```bash
-yarn lint && yarn format
+pnpm lint && pnpm format
 ```
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to `scripts/create-entrypoints.js` and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to `scripts/create-entrypoints.js` and run `pnpm build` to generate the new entrypoint.

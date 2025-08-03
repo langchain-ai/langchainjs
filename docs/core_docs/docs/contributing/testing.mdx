@@ -15,7 +15,7 @@ Unit tests should be called `*.test.ts`.
 To run only unit tests, run:
 
 ```bash
-yarn test
+pnpm test
 ```
 
 ### Running a single test
@@ -23,7 +23,7 @@ yarn test
 To run a single test, run the following from within a workspace:
 
 ```bash
-yarn test:single /path/to/yourtest.test.ts
+pnpm test:single /path/to/yourtest.test.ts
 ```
 
 This is useful for developing individual features.
@@ -36,8 +36,8 @@ Integration tests should be called `*.int.test.ts`.
 Note that most integration tests require credentials or other setup. You will likely need to set up a `langchain/.env` or `libs/langchain-community/.env` file
 like the example [here](https://github.com/langchain-ai/langchainjs/blob/main/langchain/.env.example).
 
-We generally recommend only running integration tests with `yarn test:single`, but if you want to run all integration tests, run:
+We generally recommend only running integration tests with `pnpm test:single`, but if you want to run all integration tests, run:
 
 ```bash
-yarn test:integration
+pnpm test:integration
 ```

@@ -58,19 +58,19 @@ To develop the `@langchain/weaviate` package, you'll need to follow these instru
 ### Install dependencies
 
 ```bash
-yarn install
+pnpm install
 ```
 
 ### Build the package
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Or from the repo root:
 
 ```bash
-yarn build --filter @langchain/weaviate
+pnpm build --filter @langchain/weaviate
 ```
 
 ### Run tests
@@ -79,8 +79,8 @@ Test files should live within a `tests/` file in the `src/` folder. Unit tests s
 end in `.int.test.ts`:
 
 ```bash
-$ yarn test
-$ yarn test:int
+$ pnpm test
+$ pnpm test:int
 ```
 
 ### Lint & Format
@@ -88,9 +88,9 @@ $ yarn test:int
 Run the linter & formatter to ensure your code is up to standard:
 
 ```bash
-yarn lint && yarn format
+pnpm lint && pnpm format
 ```
 
 ### Adding new entrypoints
 
-If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `yarn build` to generate the new entrypoint.
+If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.

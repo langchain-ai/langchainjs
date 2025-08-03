@@ -5,7 +5,7 @@
   "author": "LangChain",
   "license": "MIT",
   "type": "module",
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "pnpm@10.14.0",
   "repository": {
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
@@ -16,15 +16,15 @@
   },
   "scripts": {
     "build": "run-s \"build:main\" \"build:examples\"",
-    "build:main": "yarn workspace @langchain/build build @langchain/mcp-adapters",
+    "build:main": "pnpm --filter @langchain/build build @langchain/mcp-adapters",
     "build:examples": "tsc -p tsconfig.examples.json",
     "clean": "rm -rf dist/ dist-cjs/ .turbo/",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"examples/**/*.ts\"",
     "format:check": "prettier --config .prettierrc --check \"src\" \"examples/**/*.ts\"",
-    "lint": "yarn lint:eslint && yarn lint:dpdm",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/ examples/",
-    "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"

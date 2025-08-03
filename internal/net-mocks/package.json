@@ -7,7 +7,7 @@
   "scripts": {
     "test:int": "vitest run --config=example/vitest.config.ts",
     "lint": "eslint --cache --ext .ts,.js src/",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "pnpm lint --fix",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },

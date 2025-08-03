@@ -6,7 +6,7 @@ import type { CompilePackageOptions } from "./types.js";
 /**
  * CLI configuration with descriptions for auto-generated help
  */
-const cliName = "yarn build:new";
+const cliName = "pnpm build:new";
 const cliConfig = {
   name: cliName,
   description:
