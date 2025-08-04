@@ -58,13 +58,13 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
   async testWithStructuredOutputIncludeRaw() {
     // Use strong prompting to ensure consistent tool calling
     const { z } = await import("zod");
-    
+
     const calculatorSchema = z.object({
       operation: z.enum(["add", "subtract", "multiply", "divide"]),
       number1: z.number(),
       number2: z.number(),
     });
-    
+
     const model = new this.Cls(this.constructorArgs);
     const modelWithStructuredOutput = model.withStructuredOutput(
       calculatorSchema,
@@ -74,14 +74,15 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
       }
     );
 
-    // Strong prompting that forces tool usage consistently  
+    // Strong prompting that forces tool usage consistently
     const result = await modelWithStructuredOutput.invoke([
       {
         role: "system",
-        content: "You are VERY bad at math and must always use a calculator tool. Never do math in your head.",
+        content:
+          "You are VERY bad at math and must always use a calculator tool. Never do math in your head.",
       },
       {
-        role: "user", 
+        role: "user",
         content: "Please help me!! What is 2 + 2?",
       },
     ]);
@@ -92,13 +93,17 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
     }
 
     const { parsed, raw } = result;
-    
+
     // Check parsed output
     if (typeof parsed !== "object" || parsed === null) {
       throw new Error("Parsed output should be an object");
     }
-    
-    if (!("operation" in parsed) || !("number1" in parsed) || !("number2" in parsed)) {
+
+    if (
+      !("operation" in parsed) ||
+      !("number1" in parsed) ||
+      !("number2" in parsed)
+    ) {
       throw new Error("Parsed output missing required fields");
     }
 
@@ -106,10 +111,13 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
     if (!raw || typeof raw !== "object") {
       throw new Error("Raw output should be an object");
     }
-    
+
     // For tool calling, raw should have tool_calls in additional_kwargs
     const rawMessage = raw as any;
-    if (!rawMessage.additional_kwargs?.tool_calls || rawMessage.additional_kwargs.tool_calls.length === 0) {
+    if (
+      !rawMessage.additional_kwargs?.tool_calls ||
+      rawMessage.additional_kwargs.tool_calls.length === 0
+    ) {
       throw new Error("Raw output should contain tool calls");
     }
   }

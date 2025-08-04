@@ -1384,16 +1384,18 @@ export class ChatGroq extends BaseChatModel<
         outputParser = new JsonOutputParser<RunOutput>();
         outputSchema = schema as JsonSchema7Type;
       }
-      
+
       // Use Groq's structured outputs when we have a complete schema
-      const responseFormat = outputSchema ? {
-        type: "json_schema" as const,
-        json_schema: {
-          name: functionName,
-          schema: outputSchema
-        }
-      } : { type: "json_object" as const };
-      
+      const responseFormat = outputSchema
+        ? {
+            type: "json_schema" as const,
+            json_schema: {
+              name: functionName,
+              schema: outputSchema,
+            },
+          }
+        : { type: "json_object" as const };
+
       llm = this.withConfig({
         response_format: responseFormat,
         ls_structured_output_format: {
