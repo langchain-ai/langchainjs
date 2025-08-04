@@ -17,7 +17,7 @@ cp -r /scripts/langchain/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|
 
 cd /updater_script
 
-pnpm install
+pnpm install --prod
 
 cd /app
 
