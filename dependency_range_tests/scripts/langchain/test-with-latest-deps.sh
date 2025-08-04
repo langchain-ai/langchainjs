@@ -17,14 +17,14 @@ cp -r /scripts/langchain/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|
 
 cd /updater_script
 
-pnpm install --production
+pnpm install --prod
 
 cd /app
 
 corepack enable
 node /updater_script/update_resolutions_latest.js
 
-pnpm install --production
+pnpm install
 pnpm add @langchain/core
 
 # Check the test command completes successfully

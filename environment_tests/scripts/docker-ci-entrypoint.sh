@@ -15,14 +15,14 @@ if [ -f ../package/.eslintrc.json ]; then
   cp ../package/.eslintrc.json .
 fi
 
-mkdir -p ./libs/langchain-core/
-mkdir -p ./libs/langchain-openai/
-mkdir -p ./libs/langchain-anthropic/
-mkdir -p ./libs/langchain-community/
-mkdir -p ./libs/langchain-cohere/
-mkdir -p ./libs/langchain-ollama/
-mkdir -p ./libs/langchain-google-gauth/
 mkdir -p ./libs/langchain/
+mkdir -p ./libs/langchain-core/
+mkdir -p ./libs/langchain-community/
+mkdir -p ./libs/providers/langchain-openai/
+mkdir -p ./libs/providers/langchain-anthropic/
+mkdir -p ./libs/providers/langchain-cohere/
+mkdir -p ./libs/providers/langchain-ollama/
+mkdir -p ./libs/providers/langchain-google-gauth/
 
 # Helper function to check if directory exists and has content  
 has_content() {
@@ -30,14 +30,14 @@ has_content() {
 }
 
 # Copy package contents, but only if directories have content
-has_content ../langchain-core && cp -r ../langchain-core/!(node_modules) ./libs/langchain-core
-has_content ../langchain-openai && cp -r ../langchain-openai/!(node_modules) ./libs/langchain-openai
-has_content ../langchain-anthropic && cp -r ../langchain-anthropic/!(node_modules) ./libs/langchain-anthropic
-has_content ../langchain-community && cp -r ../langchain-community/!(node_modules) ./libs/langchain-community
-has_content ../langchain-cohere && cp -r ../langchain-cohere/!(node_modules) ./libs/langchain-cohere
-has_content ../langchain-ollama && cp -r ../langchain-ollama/!(node_modules) ./libs/langchain-ollama
-has_content ../langchain-google-gauth && cp -r ../langchain-google-gauth/!(node_modules) ./libs/langchain-google-gauth
 has_content ../langchain && cp -r ../langchain/!(node_modules) ./libs/langchain
+has_content ../langchain-core && cp -r ../langchain-core/!(node_modules) ./libs/langchain-core
+has_content ../langchain-openai && cp -r ../langchain-openai/!(node_modules) ./libs/providers/langchain-openai
+has_content ../langchain-anthropic && cp -r ../langchain-anthropic/!(node_modules) ./libs/providers/langchain-anthropic
+has_content ../langchain-community && cp -r ../langchain-community/!(node_modules) ./libs/langchain-community
+has_content ../langchain-cohere && cp -r ../langchain-cohere/!(node_modules) ./libs/providers/langchain-cohere
+has_content ../langchain-ollama && cp -r ../langchain-ollama/!(node_modules) ./libs/providers/langchain-ollama
+has_content ../langchain-google-gauth && cp -r ../langchain-google-gauth/!(node_modules) ./libs/providers/langchain-google-gauth
 
 # Replace workspace dependencies with published versions for missing packages
 ! has_content ../langchain-core && find . -name "package.json" -exec sed -i 's/"@langchain\/core": "workspace:\*"/"@langchain\/core": ">=0.3.58 <0.4.0"/g' {} \;

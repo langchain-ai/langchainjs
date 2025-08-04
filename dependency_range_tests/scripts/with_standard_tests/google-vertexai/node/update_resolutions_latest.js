@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const communityPackageJsonPath =
-  "/app/monorepo/libs/langchain-google-vertexai/package.json";
+  "/app/monorepo/libs/providers/langchain-google-vertexai/package.json";
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)
 );

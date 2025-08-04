@@ -2,7 +2,7 @@ const fs = require("fs");
 const semver = require("semver");
 
 const communityPackageJsonPath =
-  "/app/monorepo/libs/langchain-anthropic/package.json";
+  "/app/monorepo/libs/providers/langchain-anthropic/package.json";
 
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)

@@ -4,11 +4,11 @@ on:
   pull_request:
     # Only run workflow if files in these directories are changed
     paths:
-      - "langchain/**"
-      - "langchain-core/**"
-      - "libs/langchain-anthropic/**"
+      - "libs/langchain/**"
+      - "libs/langchain-core/**"
       - "libs/langchain-community/**"
-      - "libs/langchain-openai/**"
+      - "libs/providers/langchain-anthropic/**"
+      - "libs/providers/langchain-openai/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,

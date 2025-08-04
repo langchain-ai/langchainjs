@@ -21,7 +21,7 @@ We aim to keep the same core APIs between the Python and JS versions of LangChai
 
 ### Want to add a specific integration?
 
-LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-redis/src/caches.ts)), and more.
+LangChain supports several different types of integrations with third-party providers and frameworks, including LLM providers (e.g. [OpenAI](https://github.com/langchain-ai/langchainjs/blob/main/libs/providers/langchain-openai/src/chat_models.ts)), vector stores (e.g. [FAISS](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/vectorstores/faiss.ts), document loaders (e.g. [Apify](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-community/src/document_loaders/web/apify_dataset.ts)) persistent message history stores (e.g. [Redis](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-redis/src/caches.ts)), and more.
 
 We welcome such contributions, but ask that you read our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns to consider before opening a pull request.
 

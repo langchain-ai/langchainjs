@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const communityPackageJsonPath =
-  "/app/monorepo/libs/langchain-cohere/package.json";
+  "/app/monorepo/libs/providers/langchain-cohere/package.json";
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)
 );
