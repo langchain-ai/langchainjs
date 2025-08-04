@@ -64,7 +64,6 @@ export * as retrievers__score_threshold from "../retrievers/score_threshold.js";
 export * as retrievers__self_query from "../retrievers/self_query/index.js";
 export * as retrievers__self_query__functional from "../retrievers/self_query/functional.js";
 export * as retrievers__matryoshka_retriever from "../retrievers/matryoshka_retriever.js";
-export * as cache__file_system from "../cache/file_system.js";
 export * as stores__doc__base from "../stores/doc/base.js";
 export * as stores__doc__in_memory from "../stores/doc/in_memory.js";
 export * as stores__file__in_memory from "../stores/file/in_memory.js";
