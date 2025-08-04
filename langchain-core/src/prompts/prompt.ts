@@ -102,7 +102,7 @@ export type ExtractedFStringParams<
  *
  * @example
  * ```ts
- * import { PromptTemplate } from "langchain/prompts";
+ * import { PromptTemplate } from "@langchain/core/prompts";
  *
  * const prompt = new PromptTemplate({
  *   inputVariables: ["foo"],
