@@ -35,7 +35,8 @@ pnpm install
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_community_dir"
 
-# Install @langchain/core at the specified version
+# Clean and reinstall to avoid dependency conflicts
+pnpm install --no-frozen-lockfile
 pnpm add @langchain/core
 
 # Approve builds for transient dependencies 

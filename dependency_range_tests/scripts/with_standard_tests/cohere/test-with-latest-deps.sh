@@ -35,5 +35,7 @@ pnpm install --prod
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_cohere_dir"
 
+# Clean and reinstall to avoid dependency conflicts
+pnpm install --no-frozen-lockfile
 pnpm add @langchain/core
 pnpm test
