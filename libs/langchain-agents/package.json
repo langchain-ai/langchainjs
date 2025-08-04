@@ -1,0 +1,70 @@
+{
+  "name": "@langchain/agents",
+  "version": "0.3.66",
+  "description": "LangChain.js Agents",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:langchain-ai/langchainjs.git"
+  },
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain-core/",
+  "scripts": {
+    "build": "pnpm --filter @langchain/build compile @langchain/agents",
+    "clean": "rm -rf .turbo dist/",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
+    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "release": "release-it --only-version --config .release-it.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
+  },
+  "author": "LangChain",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "agents",
+    "agentic",
+    "chain",
+    "prompt",
+    "prompt engineering",
+    "chatgpt",
+    "machine learning",
+    "ml",
+    "openai",
+    "embeddings",
+    "vectorstores"
+  ],
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "input": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/"
+  ]
+}
