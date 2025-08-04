@@ -30,7 +30,11 @@
   },
   "author": "LangChain",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@langchain/core": "workspace:*",
+    "@langchain/langgraph": "^0.4.2",
+    "@langchain/langgraph-checkpoint": "^0.1.0"
+  },
   "devDependencies": {},
   "publishConfig": {
     "access": "public"
