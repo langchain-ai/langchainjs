@@ -53,31 +53,7 @@
       "protobufjs": "^7.2.5",
       "zod": "^3.25.32",
       "rolldown": "1.0.0-beta.30"
-    },
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "@prisma/engines",
-      "@swc/core",
-      "better-sqlite3",
-      "bufferutil",
-      "closevector-hnswlib-node",
-      "couchbase",
-      "cpu-features",
-      "es5-ext",
-      "esbuild",
-      "faiss-node",
-      "grpc-tools",
-      "hnswlib-node",
-      "node-llama-cpp",
-      "onnxruntime-node",
-      "prisma",
-      "protobufjs",
-      "puppeteer",
-      "sharp",
-      "sqlite3",
-      "ssh2",
-      "usearch"
-    ]
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
