@@ -59,8 +59,7 @@ function getPnpmWorkspaces() {
   const workspaces = JSON.parse(stdout.toString());
   const cleanedWorkspaces = workspaces.filter(
     (ws) =>
-      (ws.name === "langchain" ||
-        ws.name.startsWith("@langchain/")) &&
+      (ws.name === "langchain" || ws.name.startsWith("@langchain/")) &&
       !BLACKLISTED_WORKSPACES.find((blacklisted) => ws.name === blacklisted)
   );
   // The paths in entryPoints need to be relative to the typedoc.json file
