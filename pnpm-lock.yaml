@@ -936,7 +936,17 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2
 
-  libs/langchain-agents: {}
+  libs/langchain-agents:
+    dependencies:
+      '@langchain/core':
+        specifier: workspace:*
+        version: link:../langchain-core
+      '@langchain/langgraph':
+        specifier: ^0.4.2
+        version: 0.4.2(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
+      '@langchain/langgraph-checkpoint':
+        specifier: ^0.1.0
+        version: 0.1.0(@langchain/core@libs+langchain-core)
 
   libs/langchain-community:
     dependencies:
@@ -7384,6 +7394,12 @@ packages:
     peerDependencies:
       '@langchain/core': '>=0.2.31 <0.4.0'
 
+  '@langchain/langgraph-checkpoint@0.1.0':
+    resolution: {integrity: sha512-7oY5b0VQSxcV3DgoHdXiCgBhEzml/ZjZfKNeuq6oZ3ggcdUICa/fzrIBbFju6gxPU8ly93s0OsjF4yURnHw70Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.2.31 <0.4.0'
+
   '@langchain/langgraph-sdk@0.0.105':
     resolution: {integrity: sha512-3DD1W1wnbP48807qq+5gY248mFcwwNGqKdmZt05P3zeLpfP5Sfm6ELzVvqHGpr+qumP0yGRZs/7qArYGXRRfcQ==}
     peerDependencies:
@@ -7403,6 +7419,16 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.36 <0.3.0 || >=0.3.40 < 0.4.0'
+      zod-to-json-schema: ^3.x
+    peerDependenciesMeta:
+      zod-to-json-schema:
+        optional: true
+
+  '@langchain/langgraph@0.4.2':
+    resolution: {integrity: sha512-QAxeBIjamn2T2hlqCi+qC8k3Bv/bE/j0VGA+qR+z8NizSbGeD2uftqAYIrk3YtYLWIwk0kIICKcmTz8dKIWzog==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.3.58 < 0.4.0'
       zod-to-json-schema: ^3.x
     peerDependenciesMeta:
       zod-to-json-schema:
@@ -24815,6 +24841,11 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
 
+  '@langchain/langgraph-checkpoint@0.1.0(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      uuid: 10.0.0
+
   '@langchain/langgraph-sdk@0.0.105(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
@@ -24830,6 +24861,19 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph-checkpoint': 0.0.18(@langchain/core@libs+langchain-core)
+      '@langchain/langgraph-sdk': 0.0.105(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
+      uuid: 10.0.0
+      zod: 3.25.76
+    optionalDependencies:
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
+  '@langchain/langgraph@0.4.2(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/langgraph-checkpoint': 0.1.0(@langchain/core@libs+langchain-core)
       '@langchain/langgraph-sdk': 0.0.105(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
       uuid: 10.0.0
       zod: 3.25.76
