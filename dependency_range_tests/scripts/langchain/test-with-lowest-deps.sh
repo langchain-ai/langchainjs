@@ -17,7 +17,7 @@ cp -r /scripts/langchain/node/!(node_modules|dist|dist-cjs|dist-esm|build|.next|
 
 cd /updater_script
 
-pnpm install --production
+pnpm install
 
 cd /app
 
@@ -26,7 +26,7 @@ node /updater_script/update_resolutions_lowest.js
 # Read the @langchain/core version from peerDependencies
 core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
 
-pnpm install --production
+pnpm install
 pnpm add @langchain/core@$core_version
 
 # Check the test command completes successfully

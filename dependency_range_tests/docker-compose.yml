@@ -115,7 +115,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
   anthropic-lowest-deps:
@@ -130,7 +130,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
 
@@ -147,7 +147,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
   google-vertexai-lowest-deps:
@@ -162,7 +162,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-google-vertexai:/libs/langchain-google-vertexai
+      - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-lowest-deps.sh
 
@@ -179,7 +179,7 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
   cohere-lowest-deps:
@@ -194,6 +194,6 @@ services:
       - ../turbo.json:/turbo.json
       - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-lowest-deps.sh

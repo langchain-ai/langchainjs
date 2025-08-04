@@ -152,7 +152,7 @@
     "d3-dsv": "^2.0.0",
     "datastore-core": "^9.2.9",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",

@@ -17,7 +17,7 @@ updater_script_dir="/app/updater_script"
 original_updater_script_dir="/scripts/with_standard_tests/openai/node"
 
 # Run the shared script to copy all necessary folders/files
-bash /scripts/with_standard_tests/shared.sh openai
+bash /scripts/with_standard_tests/shared.sh providers/langchain-openai
 
 mkdir -p "$updater_script_dir"
 cp "$original_updater_script_dir"/* "$updater_script_dir/"
@@ -28,12 +28,12 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install --prod
+pnpm install
 
 # Navigate into `@langchain/openai` to build and run tests
 # We need to run inside the openai directory so turbo repo does
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_openai_dir"
 
-pnpm add @langchain/core
+pnpm install @langchain/core
 pnpm test
