@@ -47,7 +47,6 @@ export * as document_loaders__fs__multi_file from "../document_loaders/fs/multi_
 export * as document_loaders__fs__text from "../document_loaders/fs/text.js";
 export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
 export * as sql_db from "../sql_db.js";
-export * as callbacks from "../callbacks/index.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as output_parsers__expression from "../output_parsers/expression.js";
 export * as retrievers__contextual_compression from "../retrievers/contextual_compression.js";
