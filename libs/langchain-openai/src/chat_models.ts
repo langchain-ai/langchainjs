@@ -1544,7 +1544,8 @@ export class ChatOpenAIResponses<
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamIterable = await this.completionWithRetry(
       {
@@ -1559,6 +1560,17 @@ export class ChatOpenAIResponses<
       const chunk = this._convertResponsesDeltaToBaseMessageChunk(data);
       if (chunk == null) continue;
       yield chunk;
+      await runManager?.handleLLMNewToken(
+        chunk.text || "",
+        {
+          prompt: options.promptIndex ?? 0,
+          completion: 0,
+        },
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
   }
 
@@ -3377,7 +3389,8 @@ export class ChatOpenAI<
     if (this._useResponsesApi(options)) {
       yield* this.responses._streamResponseChunks(
         messages,
-        this._combineCallOptions(options)
+        this._combineCallOptions(options),
+        runManager
       );
       return;
     }
