@@ -1490,7 +1490,6 @@ export class ChatOpenAIResponses<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
@@ -1522,7 +1521,7 @@ export class ChatOpenAIResponses<
         { signal: options?.signal, ...options?.options }
       );
 
-      const result = {
+      return {
         generations: [
           {
             text: data.output_text,
@@ -1540,14 +1539,6 @@ export class ChatOpenAIResponses<
             : undefined,
         },
       };
-
-      // Emit handleLLMEnd event for non-streaming responses
-      await runManager?.handleLLMEnd({
-        generations: [result.generations],
-        llmOutput: result.llmOutput,
-      });
-
-      return result;
     }
   }
 
@@ -1568,26 +1559,18 @@ export class ChatOpenAIResponses<
     for await (const data of streamIterable) {
       const chunk = this._convertResponsesDeltaToBaseMessageChunk(data);
       if (chunk == null) continue;
-
-      // Get the content as string from the chunk's text property
-      const content = chunk.text || "";
-
       yield chunk;
-
-      // Emit handleLLMNewToken event for streaming
-      if (content.length > 0) {
-        await runManager?.handleLLMNewToken(
-          content,
-          {
-            prompt: options.promptIndex ?? 0,
-            completion: 0,
-          },
-          undefined,
-          undefined,
-          undefined,
-          { chunk }
-        );
-      }
+      await runManager?.handleLLMNewToken(
+        chunk.text || "",
+        {
+          prompt: options.promptIndex ?? 0,
+          completion: 0,
+        },
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
   }
 
@@ -1621,7 +1604,7 @@ export class ChatOpenAIResponses<
         if (request.text?.format?.type === "json_schema" && !request.stream) {
           return await this.client.responses.parse(request, clientOptions);
         }
-        return await this.client.responses.create(request, clientOptions);
+        return await this.client.responses.create(request, clientOptions)
       } catch (e) {
         const error = wrapOpenAIClientError(e);
         throw error;

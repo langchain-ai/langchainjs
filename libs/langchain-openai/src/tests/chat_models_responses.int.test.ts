@@ -78,7 +78,7 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
 }
 
 test("Test with built-in web search", async () => {
-  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });  
 
   // Test invoking with web search
   const firstResponse = await llm.invoke(
@@ -765,7 +765,9 @@ describe("reasoning summaries", () => {
 
     expect(response).toBeDefined();
   });
+});
 
+ // https://github.com/langchain-ai/langchainjs/issues/8577
   test("useResponsesApi=true should emit handleLLMNewToken events during streaming", async () => {
     // This test demonstrates that when useResponsesApi=true is enabled,
     // the ChatOpenAI class properly passes the runManager parameter to
@@ -780,7 +782,7 @@ describe("reasoning summaries", () => {
     const messages = [new HumanMessage("Say 'Hello world' in 3 words.")];
 
     // Track handleLLMNewToken events
-    let newTokenEvents: string[] = [];
+    const newTokenEvents: string[] = [];
     let handleLLMNewTokenCalled = false;
 
     const stream = model.streamEvents(messages, {
@@ -815,4 +817,3 @@ describe("reasoning summaries", () => {
     expect(startEvents.length).toBeGreaterThan(0);
     expect(endEvents.length).toBeGreaterThan(0);
   });
-});
