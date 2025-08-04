@@ -39,7 +39,7 @@ async function main() {
      * Run Prettier on all generated .ipynb -> .mdx because we don't
      * currently have another way to format code written in notebooks.
      */
-    const command = `yarn prettier --write ${allRenames
+    const command = `pnpm prettier --write ${allRenames
       .filter((filename) => fs.existsSync(filename))
       .join(" ")}`;
     execSync(command);
