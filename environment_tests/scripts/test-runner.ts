@@ -393,9 +393,14 @@ class EnvironmentTestRunner {
    * Run the build for the test
    */
   private async runBuild(): Promise<void> {
+    // Skip build for Bun since it can run TypeScript directly
+    if (this.isBun) {
+      console.log("🔨 Skipping build for Bun (runs TypeScript directly)...");
+      return;
+    }
+
     console.log("🔨 Running build...");
-    const cmd = this.isBun ? "bun" : "pnpm";
-    await this.execCommand(cmd, ["run", "build"], this.testRoot);
+    await this.execCommand("pnpm", ["run", "build"], this.testRoot);
   }
 
   /**

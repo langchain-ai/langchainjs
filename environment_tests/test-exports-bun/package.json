@@ -12,7 +12,7 @@
     "test:cjs": "bun src/require.cjs",
     "test:cjs:import": "bun src/import.cjs",
     "test:entrypoints": "bun src/entrypoints.js",
-    "test:ts": "bun dist/index.js"
+    "test:ts": "bun src/index.ts"
   },
   "author": "LangChain",
   "license": "MIT",
