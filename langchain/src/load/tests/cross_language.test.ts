@@ -15,11 +15,6 @@ const IMPORTANT_IMPORTS = JSON.parse(
 );
 
 const CURRENT_KNOWN_FAILURES = [
-  "langchain/schema/agent/AgentAction",
-  "langchain/schema/agent/AgentFinish",
-  "langchain/schema/prompt_template/BasePromptTemplate",
-  "langchain/schema/agent/AgentActionMessageLog",
-  "langchain/schema/agent/OpenAIToolAgentAction",
   "langchain/prompts/chat/BaseMessagePromptTemplate",
   "langchain/schema/output/ChatGeneration",
   "langchain/schema/output/Generation",
@@ -33,7 +28,6 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain/chat_models/azure_openai/AzureChatOpenAI",
   "langchain/chat_models/google_palm/ChatGooglePalm",
   "langchain/chat_models/vertexai/ChatVertexAI",
-  "langchain/schema/prompt_template/BaseChatPromptTemplate",
   "langchain/prompts/few_shot_with_templates/FewShotPromptWithTemplates",
   "langchain/prompts/base/StringPromptTemplate",
   "langchain/prompts/chat/BaseStringMessagePromptTemplate",

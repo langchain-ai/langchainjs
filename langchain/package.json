@@ -1151,28 +1151,6 @@
       },
       "input": "./src/indexes/index.ts"
     },
-    "./schema/query_constructor": {
-      "import": {
-        "types": "./dist/schema/query_constructor.d.ts",
-        "default": "./dist/schema/query_constructor.js"
-      },
-      "require": {
-        "types": "./dist/schema/query_constructor.d.cts",
-        "default": "./dist/schema/query_constructor.cjs"
-      },
-      "input": "./src/schema/query_constructor.ts"
-    },
-    "./schema/prompt_template": {
-      "import": {
-        "types": "./dist/schema/prompt_template.d.ts",
-        "default": "./dist/schema/prompt_template.js"
-      },
-      "require": {
-        "types": "./dist/schema/prompt_template.d.cts",
-        "default": "./dist/schema/prompt_template.cjs"
-      },
-      "input": "./src/schema/prompt_template.ts"
-    },
     "./package.json": "./package.json"
   }
 }
