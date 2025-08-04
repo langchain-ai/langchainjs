@@ -11,15 +11,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-esbuild:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
     image: node:20
     environment:
@@ -31,15 +35,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-esm:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
     image: node:20
     environment:
@@ -51,15 +59,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-tsc:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
     image: node:20
     environment:
@@ -71,15 +83,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-cjs:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
     image: node:20
     environment:
@@ -91,15 +107,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-cf:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
     image: node:20
     environment:
@@ -111,15 +131,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-vercel:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
     image: node:20
     environment:
@@ -131,15 +155,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-vite:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-entrypoint.sh
   test-exports-bun:
     image: oven/bun
     working_dir: /app
@@ -148,15 +176,19 @@ services:
       - ../turbo.json:/turbo.json
       - ../environment_tests/test-exports-bun:/package
       - ../environment_tests/scripts:/scripts
-      - ../langchain:/langchain
-      - ../langchain-core:/langchain-core
-      - ../libs/langchain-community:/langchain-community
-      - ../libs/providers/langchain-anthropic:/langchain-anthropic
-      - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
-      - ../libs/providers/langchain-ollama:/langchain-ollama
-      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
-    command: bash /scripts/docker-bun-ci-entrypoint.sh
+      - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/langchain-core
+      - ../libs/provider/langchain-community:/langchain-community
+      - ../libs/provider/langchain-anthropic:/langchain-anthropic
+      - ../libs/provider/langchain-openai:/langchain-openai
+      - ../libs/provider/langchain-cohere:/langchain-cohere
+      - ../libs/provider/langchain-ollama:/langchain-ollama
+      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/provider/langchain-scripts:/langchain-scripts
+      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../internal/build:/langchain-build
+    command: bash /scripts/docker-bun-entrypoint.sh
   success:
     image: alpine:3.14
     command: echo "Success"

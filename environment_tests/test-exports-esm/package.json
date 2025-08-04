@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "npm run test:esm && npm run test:cjs && npm run test:cjs:import && npm run test:entrypoints && npm run test:ts",
+    "test": "pnpm run test:esm && pnpm run test:cjs && pnpm run test:cjs:import && pnpm run test:entrypoints && pnpm run test:ts",
     "test:esm": "node src/index.js",
     "test:cjs": "node src/require.cjs",
     "test:cjs:import": "node src/import.cjs",
