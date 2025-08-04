@@ -782,11 +782,11 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/openai':
-        specifier: '>=0.1.0 <0.7.0'
-        version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@langchain/textsplitters':
-        specifier: '>=0.0.0 <0.2.0'
-        version: 0.1.0(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../langchain-textsplitters
       js-tiktoken:
         specifier: ^1.0.12
         version: 1.0.20
@@ -822,11 +822,11 @@ importers:
         specifier: ^29.5.0
         version: 29.7.0
       '@langchain/anthropic':
-        specifier: '*'
-        version: 0.3.25(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-anthropic
       '@langchain/cohere':
-        specifier: '*'
-        version: 0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+        specifier: workspace:*
+        version: link:../providers/langchain-cohere
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
@@ -24848,6 +24848,7 @@ snapshots:
       '@anthropic-ai/sdk': 0.56.0
       '@langchain/core': link:libs/langchain-core
       fast-xml-parser: 4.5.3
+    optional: true
 
   '@langchain/aws@0.1.12(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -24868,6 +24869,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
       - encoding
+    optional: true
 
   '@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))':
     dependencies:
