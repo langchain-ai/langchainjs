@@ -169,7 +169,7 @@ async function createHNSWIndex(
       }
     }
 
-    const idxName = config.idxName;
+    const {idxName} = config;
     const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
       idxName
     )}
@@ -245,7 +245,7 @@ async function createIVFIndex(
     }
 
     // Base SQL statement
-    const idxName = config.idxName;
+    const {idxName} = config;
     const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
       idxName
     )}
@@ -667,7 +667,7 @@ export class OracleVS extends VectorStore {
     embeddings: EmbeddingsInterface,
     dbConfig: OracleDBVSStoreArgs
   ): Promise<OracleVS> {
-    const client = dbConfig.client;
+    const {client} = dbConfig;
     if (!client) throw new Error("client parameter is required...");
 
     try {

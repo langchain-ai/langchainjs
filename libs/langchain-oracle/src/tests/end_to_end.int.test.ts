@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
 import { Document } from "@langchain/core/documents";
