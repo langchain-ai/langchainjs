@@ -1093,8 +1093,8 @@ export default function NotFound() {
                 {canonical
                   ? "Page Moved"
                   : alternative
-                    ? "Page Removed"
-                    : "Page Not Found"}
+                  ? "Page Removed"
+                  : "Page Not Found"}
               </h1>
               {canonical ? (
                 <h3>
@@ -1132,8 +1132,8 @@ export default function NotFound() {
                 {canonical
                   ? "has moved."
                   : alternative
-                    ? "has been removed."
-                    : "is broken."}
+                  ? "has been removed."
+                  : "is broken."}
               </p>
             </div>
           </div>
