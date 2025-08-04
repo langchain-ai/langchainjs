@@ -13,7 +13,7 @@
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
   "scripts": {
-    "build": "pnpm --filter @langchain/build build @langchain/azure-openai",
+    "build": "pnpm --filter @langchain/build compile @langchain/azure-openai",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
