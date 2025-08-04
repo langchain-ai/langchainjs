@@ -28,4 +28,4 @@ pnpm install
 pnpm add @langchain/core
 
 # Check the test command completes successfully
-NODE_OPTIONS=--experimental-vm-modules pnpm run jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%
+pnpm run test
