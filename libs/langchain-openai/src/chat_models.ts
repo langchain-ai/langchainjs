@@ -1489,7 +1489,7 @@ export class ChatOpenAIResponses<
 
   async _generate(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    options: this["ParsedCallOptions"]
   ): Promise<ChatResult> {
     const invocationParams = this.invocationParams(options);
     if (invocationParams.stream) {
@@ -1604,7 +1604,7 @@ export class ChatOpenAIResponses<
         if (request.text?.format?.type === "json_schema" && !request.stream) {
           return await this.client.responses.parse(request, clientOptions);
         }
-        return await this.client.responses.create(request, clientOptions)
+        return await this.client.responses.create(request, clientOptions);
       } catch (e) {
         const error = wrapOpenAIClientError(e);
         throw error;
