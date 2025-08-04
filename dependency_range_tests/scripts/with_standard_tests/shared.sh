@@ -1,7 +1,29 @@
 #!/usr/bin/env bash
 
 # Extract the package name from the first argument
-package_dir=$1
+package_name=$1
+
+# Map short names to full package names
+case "$package_name" in
+  "community")
+    package_dir="langchain-community"
+    ;;
+  "openai")
+    package_dir="langchain-openai"
+    ;;
+  "anthropic")
+    package_dir="langchain-anthropic"
+    ;;
+  "cohere")
+    package_dir="langchain-cohere"
+    ;;
+  "google-vertexai")
+    package_dir="langchain-google-vertexai"
+    ;;
+  *)
+    package_dir="langchain-$package_name"
+    ;;
+esac
 
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"
