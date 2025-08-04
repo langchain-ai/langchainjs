@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "compile": "NODE_OPTIONS=\"--max-old-space-size=8192\" tsx cli.ts"
+    "compile": "tsx cli.ts"
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
