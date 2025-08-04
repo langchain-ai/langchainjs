@@ -21,6 +21,7 @@
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^18.15.11",
     "cheerio": "^1.1.2",
     "esbuild": "^0.17.18",
     "handlebars": "^4.7.8",
@@ -29,7 +30,6 @@
     "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
     "prettier": "^2.8.3"
   }
 }
