@@ -936,6 +936,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2
 
+  libs/langchain-agents: {}
+
   libs/langchain-community:
     dependencies:
       '@langchain/openai':
