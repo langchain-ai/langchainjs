@@ -1,5 +1,5 @@
 import { PostgresRecordManager } from "@langchain/community/indexes/postgres";
-import { index } from "langchain/indexes";
+import { index } from "@langchain/core/indexing";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { PoolConfig } from "pg";
 import { OpenAIEmbeddings } from "@langchain/openai";
