@@ -7,9 +7,10 @@ import {
   BaseMessage,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import type {
-  Message as BedrockMessage,
-  SystemContentBlock as BedrockSystemContentBlock,
+import {
+  ConversationRole as BedrockConversationRole,
+  type Message as BedrockMessage,
+  type SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod";
 import { describe, expect, test } from "@jest/globals";
@@ -63,7 +64,7 @@ describe("convertToConverseMessages", () => {
       output: {
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
@@ -71,7 +72,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -85,7 +86,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -103,6 +104,108 @@ describe("convertToConverseMessages", () => {
         converseSystem: [
           {
             text: "You're an advanced AI assistant.",
+          },
+        ],
+      },
+    },
+    {
+      name: "prompt caching",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "Answer the user's questions using your own knowledge or provided tool.",
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is the capital of France?",
+            },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "And what is the capital of Germany?",
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "Sure! The capital of France is Paris.",
+            },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "The capital of Germany is Berlin.",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is the capital of France?",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
+              },
+              {
+                text: "And what is the capital of Germany?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Sure! The capital of France is Paris.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
+              },
+              {
+                text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+            },
+          },
+          {
+            text: "Answer the user's questions using your own knowledge or provided tool.",
           },
         ],
       },
@@ -180,7 +283,7 @@ describe("convertToConverseMessages", () => {
         ],
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use weather.com to check.",
@@ -188,7 +291,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -211,7 +314,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -236,7 +339,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use meteofrance.com to check.",
@@ -244,7 +347,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -267,7 +370,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
