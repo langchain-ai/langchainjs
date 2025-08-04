@@ -832,17 +832,6 @@
       },
       "input": "./src/retrievers/matryoshka_retriever.ts"
     },
-    "./cache/file_system": {
-      "import": {
-        "types": "./dist/cache/file_system.d.ts",
-        "default": "./dist/cache/file_system.js"
-      },
-      "require": {
-        "types": "./dist/cache/file_system.d.cts",
-        "default": "./dist/cache/file_system.cjs"
-      },
-      "input": "./src/cache/file_system.ts"
-    },
     "./stores/doc/base": {
       "import": {
         "types": "./dist/stores/doc/base.d.ts",
