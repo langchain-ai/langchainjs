@@ -189,6 +189,8 @@ export interface $MessageStructure {
   readonly properties?: Partial<{
     [key in $MessageType]: Record<string, unknown>;
   }>;
+
+  [STANDARD_MESSAGE_STRUCTURE_TYPE]?: never;
 }
 
 /**
@@ -313,9 +315,14 @@ export type $MessageStructureTypes<TStructure extends $MessageStructure> =
  *
  * This is also the message structure that's used when a message structure is not provided.
  */
-export interface $StandardMessageStructure extends $MessageStructure {
+
+const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
+  "langchain.message.std-structure"
+);
+
+export type $StandardMessageStructure = $MessageStructure & {
   /** @internal Discriminator to give TS a hint when evaluating if a type is a standard message structure */
-  __STANDARD_MESSAGE_STRUCTURE: never;
+  [STANDARD_MESSAGE_STRUCTURE_TYPE]: never;
   contentBlocks: {
     /** Text content for AI messages */
     ai: ContentBlock.Text;
@@ -345,7 +352,7 @@ export interface $StandardMessageStructure extends $MessageStructure {
       };
     };
   };
-}
+};
 
 /**
  * Takes a message structure type T and normalizes it by merging it with the standard message structure.
