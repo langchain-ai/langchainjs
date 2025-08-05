@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent } from "../index";
+import { createReactAgent } from "../index.js";
 
 describe("createReactAgent Integration Tests", () => {
   it("should work with Anthropic and return structured response", async () => {
@@ -91,6 +91,7 @@ describe("createReactAgent Integration Tests", () => {
         preHookMessageCount = state.messages.length;
 
         // Modify the query
+        // eslint-disable-next-line no-param-reassign
         state.messages[state.messages.length - 1].content =
           "What is 15 multiplied by 8?";
 
