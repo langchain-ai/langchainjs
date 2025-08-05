@@ -134,6 +134,7 @@ export const config = {
     "vectorstores/cloudflare_vectorize": "vectorstores/cloudflare_vectorize",
     "vectorstores/convex": "vectorstores/convex",
     "vectorstores/couchbase": "vectorstores/couchbase",
+    "vectorstores/couchbase_search": "vectorstores/couchbase_search",
     "vectorstores/elasticsearch": "vectorstores/elasticsearch",
     "vectorstores/faiss": "vectorstores/faiss",
     "vectorstores/googlevertexai": "vectorstores/googlevertexai",
