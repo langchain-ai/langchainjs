@@ -189,8 +189,6 @@ export interface $MessageStructure {
   readonly properties?: Partial<{
     [key in $MessageType]: Record<string, unknown>;
   }>;
-
-  [STANDARD_MESSAGE_STRUCTURE_TYPE]?: never;
 }
 
 /**

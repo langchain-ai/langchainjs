@@ -1,4 +1,4 @@
-import { ContentBlock as BaseContentBlock } from "./index.js";
+import { BaseContentBlock } from "./base.js";
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
