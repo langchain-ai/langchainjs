@@ -1,7 +1,38 @@
 #!/usr/bin/env bash
 
 # Extract the package name from the first argument
-package_dir=$1
+package_path=$1
+
+# Check if this is a provider package or a regular package
+if [[ "$package_path" == providers/* ]]; then
+  # For provider packages, use the full path as-is
+  package_dir="$package_path"
+  # Extract just the package name for monorepo directory structure
+  package_name=$(basename "$package_path")
+else
+  # For regular packages, apply the mapping
+  package_name="$package_path"
+  case "$package_name" in
+    "community")
+      package_dir="langchain-community"
+      ;;
+    "openai")
+      package_dir="langchain-openai"
+      ;;
+    "anthropic")
+      package_dir="langchain-anthropic"
+      ;;
+    "cohere")
+      package_dir="langchain-cohere"
+      ;;
+    "google-vertexai")
+      package_dir="langchain-google-vertexai"
+      ;;
+    *)
+      package_dir="langchain-$package_name"
+      ;;
+  esac
+fi
 
 # New monorepo directory paths
 monorepo_dir="/app/monorepo"

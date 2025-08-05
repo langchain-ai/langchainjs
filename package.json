@@ -11,10 +11,11 @@
   },
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "turbo build --filter=\"!test-exports-*\" --filter=\"!@langchain/build\"",
+    "build": "turbo build --filter=\"!test-exports-*\" --filter=\"!@langchain/build\" --filter=\"!api_refs\" --filter=\"!core_docs\"",
     "clean": "turbo clean",
     "format": "turbo format --concurrency=50",
     "format:check": "turbo format:check --concurrency=50",
+    "format:check:fix": "turbo format:check --concurrency=50 -- --write",
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
     "test": "pnpm test:unit && pnpm test:exports:docker",

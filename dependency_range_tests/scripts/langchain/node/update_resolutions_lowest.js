@@ -20,32 +20,58 @@ if (
   };
 }
 
-if (currentPackageJson.devDependencies?.["@langchain/core"]) {
-  delete currentPackageJson.devDependencies["@langchain/core"];
+// Convert workspace dependencies to peer dependencies since they don't exist in the test environment
+if (currentPackageJson.devDependencies) {
+  for (const [depName, depVersion] of Object.entries(
+    currentPackageJson.devDependencies
+  )) {
+    if (depVersion.includes("workspace:")) {
+      delete currentPackageJson.devDependencies[depName];
+    }
+  }
+}
+
+if (currentPackageJson.dependencies) {
+  for (const [depName, depVersion] of Object.entries(
+    currentPackageJson.dependencies
+  )) {
+    if (depVersion.includes("workspace:")) {
+      // Convert workspace dependencies to peer dependencies
+      if (!currentPackageJson.peerDependencies) {
+        currentPackageJson.peerDependencies = {};
+      }
+      currentPackageJson.peerDependencies[depName] = "*";
+      delete currentPackageJson.dependencies[depName];
+    }
+  }
 }
 
 if (
-  currentPackageJson.dependencies?.["@langchain/openai"] &&
-  !currentPackageJson.dependencies["@langchain/openai"].includes("rc")
+  currentPackageJson.peerDependencies?.["@langchain/openai"] &&
+  !currentPackageJson.peerDependencies["@langchain/openai"].includes("rc") &&
+  currentPackageJson.peerDependencies["@langchain/openai"] !== "*"
 ) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/openai"]
+    currentPackageJson.peerDependencies["@langchain/openai"]
   ).version;
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/openai": minVersion,
   };
 }
 
 if (
-  currentPackageJson.dependencies?.["@langchain/textsplitters"] &&
-  !currentPackageJson.dependencies["@langchain/textsplitters"].includes("rc")
+  currentPackageJson.peerDependencies?.["@langchain/textsplitters"] &&
+  !currentPackageJson.peerDependencies["@langchain/textsplitters"].includes(
+    "rc"
+  ) &&
+  currentPackageJson.peerDependencies["@langchain/textsplitters"] !== "*"
 ) {
   const minVersion = semver.minVersion(
-    currentPackageJson.dependencies["@langchain/textsplitters"]
+    currentPackageJson.peerDependencies["@langchain/textsplitters"]
   ).version;
-  currentPackageJson.dependencies = {
-    ...currentPackageJson.dependencies,
+  currentPackageJson.peerDependencies = {
+    ...currentPackageJson.peerDependencies,
     "@langchain/textsplitters": minVersion,
   };
 }

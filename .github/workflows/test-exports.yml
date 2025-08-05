@@ -53,6 +53,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/textsplitters
         shell: bash
 
       - name: Test esbuild exports
@@ -82,6 +83,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test esm exports
@@ -111,6 +113,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test cjs exports
@@ -140,6 +143,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test cf exports
@@ -169,6 +173,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test vercel exports
@@ -198,6 +203,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test vite exports
@@ -227,6 +233,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+
         shell: bash
 
       - name: Test compiling exports with tsc

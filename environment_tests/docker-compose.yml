@@ -1,4 +1,3 @@
-version: "3"
 services:
   test-exports-esbuild:
     image: node:20
@@ -13,15 +12,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
@@ -37,15 +36,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
@@ -61,15 +60,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
@@ -85,15 +84,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
@@ -109,15 +108,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
@@ -133,15 +132,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
@@ -157,15 +156,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-entrypoint.sh
   test-exports-bun:
@@ -178,15 +177,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/provider/langchain-community:/langchain-community
-      - ../libs/provider/langchain-anthropic:/langchain-anthropic
-      - ../libs/provider/langchain-openai:/langchain-openai
-      - ../libs/provider/langchain-cohere:/langchain-cohere
-      - ../libs/provider/langchain-ollama:/langchain-ollama
-      - ../libs/provider/langchain-google-gauth:/langchain-google-gauth
-      - ../libs/provider/langchain-standard-tests:/langchain-standard-tests
-      - ../libs/provider/langchain-scripts:/langchain-scripts
-      - ../libs/provider/langchain-textsplitters:/langchain-textsplitters
+      - ../libs/langchain-community:/langchain-community
+      - ../libs/providers/langchain-anthropic:/langchain-anthropic
+      - ../libs/providers/langchain-openai:/langchain-openai
+      - ../libs/providers/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-ollama:/langchain-ollama
+      - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/langchain-standard-tests:/langchain-standard-tests
+      - ../libs/langchain-scripts:/langchain-scripts
+      - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
     command: bash /scripts/docker-bun-entrypoint.sh
   success:

@@ -36,5 +36,7 @@ pnpm install
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_vertexai_dir"
 
-pnpm install @langchain/core @langchain/google-gauth
+# Clean and reinstall to avoid dependency conflicts
+pnpm install --no-frozen-lockfile
+pnpm add @langchain/core @langchain/google-gauth
 pnpm test

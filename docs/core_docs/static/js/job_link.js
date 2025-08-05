@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   const jobLink = document.getElementById("js_job_link");
   if (jobLink) {
     const jobUrl = new URL(jobLink.href);

@@ -46,7 +46,6 @@ const config = {
           alias: {
             "@examples": examplesPath,
             "@mdx_components": mdxComponentsPath,
-            react: path.resolve("../../node_modules/react"),
           },
         },
         module: {

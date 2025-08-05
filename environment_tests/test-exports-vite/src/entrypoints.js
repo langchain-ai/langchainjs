@@ -29,7 +29,6 @@ export * from "langchain/memory/chat_memory";
 export * from "langchain/document";
 // export * from "langchain/document_loaders/base"; // Disabled for browser compatibility - pulls in fs modules
 export * from "langchain/document_transformers/openai_functions";
-export * from "langchain/callbacks";
 export * from "langchain/output_parsers";
 export * from "langchain/retrievers/contextual_compression";
 export * from "langchain/retrievers/document_compressors";

@@ -35,5 +35,7 @@ pnpm install
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_openai_dir"
 
-pnpm install @langchain/core
+# Clean and reinstall to avoid dependency conflicts
+pnpm install --no-frozen-lockfile
+pnpm add @langchain/core
 pnpm test
