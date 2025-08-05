@@ -1108,6 +1108,7 @@ describe("createReactAgent", () => {
             index: this.index,
             structuredResponse: this.structuredResponse,
           });
+          // eslint-disable-next-line dot-notation
           baseModel["tools"] = [...this["tools"], ...tools];
 
           // Return a RunnableBinding wrapping the model

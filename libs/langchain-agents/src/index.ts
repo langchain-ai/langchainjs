@@ -47,8 +47,10 @@ import { ToolNode } from "./ToolNode.js";
 import { withAgentName } from "./withAgentName.js";
 
 export interface AgentState<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  StructuredResponseType extends Record<string, any> = Record<string, any>
+  StructuredResponseType extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >
 > {
   messages: BaseMessage[];
   // TODO: This won't be set until we
@@ -63,8 +65,12 @@ const PROMPT_RUNNABLE_NAME = "prompt";
 
 function _getPromptRunnable(
   prompt?: Prompt
-): Runnable<any, any, RunnableConfig<Record<string, any>>> {
-  let promptRunnable: Runnable<any, any, RunnableConfig<Record<string, any>>>;
+): Runnable<unknown, unknown, RunnableConfig<Record<string, unknown>>> {
+  let promptRunnable: Runnable<
+    unknown,
+    unknown,
+    RunnableConfig<Record<string, unknown>>
+  >;
 
   if (prompt == null) {
     promptRunnable = RunnableLambda.from(
