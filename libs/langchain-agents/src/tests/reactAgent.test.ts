@@ -1255,4 +1255,68 @@ describe("createReactAgent", () => {
     expect(toolMessage._getType()).toBe("tool");
     expect(toolMessage.content).toBe("Normal result: test_normal");
   });
+
+  it("should work with includeAgentName: 'inline'", async () => {
+    // Create a fake model that returns a message with a name
+    class FakeModelWithName extends FakeToolCallingModel {
+      async _generate(
+        messages: BaseMessage[],
+        _options?: this["ParsedCallOptions"],
+        _runManager?: CallbackManagerForLLMRun
+      ): Promise<ChatResult> {
+        const lastMessage = messages[messages.length - 1];
+        let content = lastMessage.content as string;
+
+        // Handle prompt concatenation
+        if (messages.length > 1) {
+          const parts = messages
+            .map((m) => m.content as string)
+            .filter(Boolean);
+          content = parts.join("-");
+        }
+
+        const messageId = this.index.toString();
+
+        // Move to next set of tool calls for subsequent invocations
+        this.index = (this.index + 1) % Math.max(1, this.toolCalls.length);
+
+        const message = new AIMessage({
+          content,
+          id: messageId,
+          name: "test-agent", // Set agent name
+        });
+
+        return {
+          generations: [
+            {
+              text: content,
+              message,
+            },
+          ],
+          llmOutput: {},
+        };
+      }
+    }
+
+    const model = new FakeModelWithName();
+
+    const agent = createReactAgent({
+      llm: model,
+      tools: [],
+      name: "test-agent",
+      includeAgentName: "inline",
+    });
+
+    const inputs = [new HumanMessage("Hello agent")];
+    const response = await agent.invoke({ messages: inputs });
+
+    // Verify that the agent was created and works
+    expect(response.messages).toHaveLength(2);
+    expect(response.messages[0]).toEqual(inputs[0]);
+
+    // Check that the AI message was processed through withAgentName
+    const aiMessage = response.messages[1] as AIMessage;
+    expect(aiMessage.content).toBe("Hello agent");
+    expect(aiMessage.name).toBe("test-agent");
+  });
 });
