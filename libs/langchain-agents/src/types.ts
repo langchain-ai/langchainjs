@@ -99,16 +99,6 @@ export type CreateReactAgentParams<
   tools: ToolNode | (ServerTool | ClientTool)[];
 
   /**
-   * @deprecated Use prompt instead.
-   */
-  messageModifier?: Prompt;
-
-  /**
-   * @deprecated Use prompt instead.
-   */
-  stateModifier?: Prompt;
-
-  /**
    * An optional prompt for the LLM. This takes full graph state BEFORE the LLM is called and prepares the input to LLM.
    *
    * Can take a few different forms:
@@ -163,12 +153,11 @@ export type CreateReactAgentParams<
   name?: string;
 
   /**
-     * Use to specify how to expose the agent name to the underlying supervisor LLM.
-  
-        - undefined: Relies on the LLM provider {@link AIMessage#name}. Currently, only OpenAI supports this.
-        - `"inline"`: Add the agent name directly into the content field of the {@link AIMessage} using XML-style tags.
-            Example: `"How can I help you"` -> `"<name>agent_name</name><content>How can I help you?</content>"`
-     */
+   * Use to specify how to expose the agent name to the underlying supervisor LLM.
+   * - `undefined`: Relies on the LLM provider {@link AIMessage#name}. Currently, only OpenAI supports this.
+   * - `"inline"`: Add the agent name directly into the content field of the {@link AIMessage} using XML-style tags.
+   *      Example: `"How can I help you"` -> `"<name>agent_name</name><content>How can I help you?</content>"`
+   */
   includeAgentName?: "inline" | undefined;
 
   /**

@@ -7,9 +7,7 @@ import {
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
 import {
-  MessagesAnnotation,
   isGraphInterrupt,
-  END,
   isCommand,
   Command,
   Send,
@@ -141,7 +139,6 @@ export type ToolNodeOptions = {
  * // Returns the messages in the state at each step of execution
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ToolNode<T = any> extends RunnableCallable<T, T> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
@@ -154,12 +151,15 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
     options?: ToolNodeOptions
   ) {
     const { name, tags, handleToolErrors } = options ?? {};
-    super({ name, tags, func: (input, config) => this.run(input, config) });
+    super({
+      name,
+      tags,
+      func: (input, config) => this.run(input, config as RunnableConfig),
+    });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected async run(input: any, config: RunnableConfig): Promise<T> {
     const message = Array.isArray(input)
       ? input[input.length - 1]
@@ -256,22 +256,5 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
     }
 
     return combinedOutputs as T;
-  }
-}
-
-export function toolsCondition(
-  state: BaseMessage[] | typeof MessagesAnnotation.State
-): "tools" | typeof END {
-  const message = Array.isArray(state)
-    ? state[state.length - 1]
-    : state.messages[state.messages.length - 1];
-
-  if (
-    "tool_calls" in message &&
-    ((message as AIMessage).tool_calls?.length ?? 0) > 0
-  ) {
-    return "tools";
-  } else {
-    return END;
   }
 }

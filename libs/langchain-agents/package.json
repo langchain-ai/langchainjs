@@ -21,10 +21,8 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "release": "release-it --only-version --config .release-it.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
@@ -35,7 +33,19 @@
     "@langchain/langgraph": "^0.4.2",
     "@langchain/langgraph-checkpoint": "^0.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "dpdm": "^3.14.0",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.3",
+    "vitest": "^3.2.4",
+    "zod": "^3.25.32"
+  },
   "publishConfig": {
     "access": "public"
   },

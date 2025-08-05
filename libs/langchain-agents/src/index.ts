@@ -13,7 +13,6 @@ import {
 import {
   Runnable,
   RunnableConfig,
-  RunnableInterface,
   RunnableLambda,
   RunnableSequence,
   RunnableBinding,
@@ -45,7 +44,7 @@ import type {
 } from "./types.js";
 import { PreHookAnnotation } from "./PreHookAnnotation.js";
 import { ToolNode } from "./ToolNode.js";
-import { withAgentName } from "./utils.js";
+import { withAgentName } from "./withAgentName.js";
 
 export interface AgentState<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,37 +59,12 @@ export interface AgentState<
   structuredResponse: StructuredResponseType;
 }
 
-function _convertMessageModifierToPrompt(messageModifier: Prompt): Prompt {
-  // Handle string or SystemMessage
-  if (
-    typeof messageModifier === "string" ||
-    (isBaseMessage(messageModifier) && messageModifier._getType() === "system")
-  ) {
-    return messageModifier;
-  }
-
-  // Handle callable function
-  if (typeof messageModifier === "function") {
-    return async (state: typeof MessagesAnnotation.State) =>
-      messageModifier(state, {});
-  }
-
-  // Handle Runnable
-  if (Runnable.isRunnable(messageModifier)) {
-    return RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).pipe(messageModifier);
-  }
-
-  throw new Error(
-    `Unexpected type for messageModifier: ${typeof messageModifier}`
-  );
-}
-
 const PROMPT_RUNNABLE_NAME = "prompt";
 
-function _getPromptRunnable(prompt?: Prompt): RunnableInterface {
-  let promptRunnable: RunnableInterface;
+function _getPromptRunnable(
+  prompt?: Prompt
+): Runnable<any, any, RunnableConfig<Record<string, any>>> {
+  let promptRunnable: Runnable<any, any, RunnableConfig<Record<string, any>>>;
 
   if (prompt == null) {
     promptRunnable = RunnableLambda.from(
@@ -124,31 +98,6 @@ function isClientTool(tool: ClientTool | ServerTool): tool is ClientTool {
   return Runnable.isRunnable(tool);
 }
 
-function _getPrompt(
-  prompt?: Prompt,
-  stateModifier?: CreateReactAgentParams["stateModifier"],
-  messageModifier?: CreateReactAgentParams["messageModifier"]
-) {
-  // Check if multiple modifiers exist
-  const definedCount = [prompt, stateModifier, messageModifier].filter(
-    (x) => x != null
-  ).length;
-  if (definedCount > 1) {
-    throw new Error(
-      "Expected only one of prompt, stateModifier, or messageModifier, got multiple values"
-    );
-  }
-
-  let finalPrompt = prompt;
-  if (stateModifier != null) {
-    finalPrompt = stateModifier;
-  } else if (messageModifier != null) {
-    finalPrompt = _convertMessageModifierToPrompt(messageModifier);
-  }
-
-  return _getPromptRunnable(finalPrompt);
-}
-
 function _isBaseChatModel(model: LanguageModelLike): model is BaseChatModel {
   return (
     "invoke" in model &&
@@ -179,7 +128,7 @@ function _isChatModelWithBindTools(
   return "bindTools" in llm && typeof llm.bindTools === "function";
 }
 
-export async function _shouldBindTools(
+async function _shouldBindTools(
   llm: LanguageModelLike,
   tools: (ClientTool | ServerTool)[]
 ): Promise<boolean> {
@@ -323,7 +272,7 @@ const _simpleBindTools = (
   return null;
 };
 
-export async function _bindTools(
+async function _bindTools(
   llm: LanguageModelLike,
   toolClasses: (ClientTool | ServerTool)[]
 ): Promise<RunnableLike | null> {
@@ -359,7 +308,7 @@ export async function _bindTools(
   throw new Error(`llm ${llm} must define bindTools method.`);
 }
 
-export async function _getModel(
+async function _getModel(
   llm: LanguageModelLike | ConfigurableModelInterface
 ): Promise<BaseChatModel> {
   // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
@@ -478,8 +427,6 @@ export function createReactAgent<
   const {
     llm,
     tools,
-    messageModifier,
-    stateModifier,
     prompt,
     stateSchema,
     checkpointSaver,
@@ -522,11 +469,7 @@ export function createReactAgent<
       modelWithTools = llm;
     }
 
-    const promptRunnable = _getPrompt(
-      prompt,
-      stateModifier,
-      messageModifier
-    ) as Runnable;
+    const promptRunnable = _getPromptRunnable(prompt);
 
     const modelRunnable =
       includeAgentName === "inline"
@@ -744,3 +687,5 @@ export function createReactAgent<
     name,
   });
 }
+
+export * from "./types.js";
