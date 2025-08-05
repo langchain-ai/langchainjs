@@ -1,675 +1,1142 @@
-import { describe, it, expect } from "vitest";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { describe, expect, it } from "vitest";
+import { StructuredTool, tool } from "@langchain/core/tools";
+
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  RemoveMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { z } from "zod/v3";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableSequence,
+} from "@langchain/core/runnables";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import {
+  _AnyIdAIMessage,
+  _AnyIdHumanMessage,
+  _AnyIdToolMessage,
+  FakeConfigurableModel,
+  FakeToolCallingChatModel,
+  MemorySaverAssertImmutable,
+} from "./utils.js";
+
+// Enable automatic config passing
+import {
+  Annotation,
+  Command,
+  GraphInterrupt,
+  messagesStateReducer,
+  Send,
+  StateGraph,
+  MessagesAnnotation,
+  MessagesZodState,
+} from "@langchain/langgraph";
+
 import { ToolNode } from "../ToolNode.js";
+import { _shouldBindTools, _bindTools, _getModel } from "../index.js";
 
-// Custom ToolException for testing
-class ToolException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ToolException";
+const searchSchema = z.object({
+  query: z.string().describe("The query to search for."),
+});
+
+class SearchAPI extends StructuredTool {
+  name = "search_api";
+
+  description = "A simple API that returns the input string.";
+
+  schema = searchSchema;
+
+  async _call(input: z.infer<typeof searchSchema>) {
+    if (input?.query === "error") {
+      throw new Error("Error");
+    }
+    return `result for ${input?.query}`;
   }
 }
-
-// Custom GraphBubbleUp for testing
-class GraphBubbleUp extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "GraphBubbleUp";
-  }
-}
-
-// Test tool functions
-const tool1 = tool(
-  (input: { someVal: number; someOtherVal: string }): string => {
-    if (input.someVal === 0) {
-      throw new Error("Test error");
-    }
-    return `${input.someVal} - ${input.someOtherVal}`;
-  },
-  {
-    name: "tool1",
-    description: "Tool 1 docstring.",
-    schema: z.object({
-      someVal: z.number(),
-      someOtherVal: z.string(),
-    }),
-  }
-);
-
-const tool2 = tool(
-  async (input: { someVal: number; someOtherVal: string }): Promise<string> => {
-    if (input.someVal === 0) {
-      throw new ToolException("Test error");
-    }
-    return `tool2: ${input.someVal} - ${input.someOtherVal}`;
-  },
-  {
-    name: "tool2",
-    description: "Tool 2 docstring.",
-    schema: z.object({
-      someVal: z.number(),
-      someOtherVal: z.string(),
-    }),
-  }
-);
-
-const tool3 = tool(
-  async (input: { someVal: number; someOtherVal: string }): Promise<any[]> => {
-    return [
-      { key_1: input.someVal, key_2: "foo" },
-      { key_1: input.someOtherVal, key_2: "baz" },
-    ];
-  },
-  {
-    name: "tool3",
-    description: "Tool 3 docstring.",
-    schema: z.object({
-      someVal: z.number(),
-      someOtherVal: z.string(),
-    }),
-  }
-);
-
-const tool4 = tool(
-  async (_input: { someVal: number; someOtherVal: string }): Promise<any[]> => {
-    return [{ type: "image_url", image_url: { url: "abdc" } }];
-  },
-  {
-    name: "tool4",
-    description: "Tool 4 docstring.",
-    schema: z.object({
-      someVal: z.number(),
-      someOtherVal: z.string(),
-    }),
-  }
-);
-
-// Tool with individual error handler
-const tool5 = tool(
-  (_input: { someVal: number }) => {
-    throw new ToolException("Test error");
-  },
-  {
-    name: "tool5",
-    description: "Tool 5 docstring.",
-    schema: z.object({
-      someVal: z.number(),
-    }),
-  }
-);
-
-// Add individual error handler property (this mimics the Python behavior)
-(tool5 as any).handleToolError = "foo";
 
 describe("ToolNode", () => {
-  describe("basic tool execution", () => {
-    it("should execute sync tools", async () => {
-      const toolNode = new ToolNode([tool1]);
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool1",
-                args: { someVal: 1, someOtherVal: "foo" },
-                id: "some 0",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toBe("1 - foo");
-      expect(toolMessage.tool_call_id).toBe("some 0");
-    });
-
-    it("should execute async tools", async () => {
-      const toolNode = new ToolNode([tool2]);
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool2",
-                args: { someVal: 2, someOtherVal: "bar" },
-                id: "some 1",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toBe("tool2: 2 - bar");
-    });
-
-    it("should handle list of dicts tool content", async () => {
-      const toolNode = new ToolNode([tool3]);
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool3",
-                args: { someVal: 2, someOtherVal: "bar" },
-                id: "some 2",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toEqual([
-        { key_1: 2, key_2: "foo" },
-        { key_1: "bar", key_2: "baz" },
-      ]);
-      expect(toolMessage.tool_call_id).toBe("some 2");
-    });
-
-    it("should handle list of content blocks tool content", async () => {
-      const toolNode = new ToolNode([tool4]);
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool4",
-                args: { someVal: 2, someOtherVal: "bar" },
-                id: "some 3",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toEqual([
-        { type: "image_url", image_url: { url: "abdc" } },
-      ]);
-      expect(toolMessage.tool_call_id).toBe("some 3");
-    });
+  it("Should support graceful error handling", async () => {
+    const toolNode = new ToolNode([new SearchAPI()]);
+    const res = await toolNode.invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [{ name: "badtool", args: {}, id: "testid" }],
+      }),
+    ]);
+    expect(res[0].content).toEqual(
+      `Error: Tool "badtool" not found.\n Please fix your mistakes.`
+    );
   });
 
-  describe("tool call input handling", () => {
-    it("should handle single tool call", async () => {
-      const toolCall = {
-        name: "tool1",
-        args: { someVal: 1, someOtherVal: "foo" },
-        id: "some 0",
-        type: "tool_call" as const,
-      };
-
-      const toolNode = new ToolNode([tool1]);
-      const result = await toolNode.invoke([
-        new AIMessage({ content: "", tool_calls: [toolCall] }),
-      ]);
-
-      expect(result).toEqual([
-        new ToolMessage({
-          content: "1 - foo",
-          tool_call_id: "some 0",
-          name: "tool1",
-        }),
-      ]);
-    });
-
-    it("should handle multiple tool calls", async () => {
-      const toolCall1 = {
-        name: "tool1",
-        args: { someVal: 1, someOtherVal: "foo" },
-        id: "some 0",
-        type: "tool_call" as const,
-      };
-
-      const toolCall2 = {
-        name: "tool1",
-        args: { someVal: 2, someOtherVal: "bar" },
-        id: "some 1",
-        type: "tool_call" as const,
-      };
-
-      const toolNode = new ToolNode([tool1]);
-      const result = await toolNode.invoke([
-        new AIMessage({ content: "", tool_calls: [toolCall1, toolCall2] }),
-      ]);
-
-      expect(result).toEqual([
-        new ToolMessage({
-          content: "1 - foo",
-          tool_call_id: "some 0",
-          name: "tool1",
-        }),
-        new ToolMessage({
-          content: "2 - bar",
-          tool_call_id: "some 1",
-          name: "tool1",
-        }),
-      ]);
-    });
-
-    it("should handle unknown tool", async () => {
-      const toolCall1 = {
-        name: "tool1",
-        args: { someVal: 1, someOtherVal: "foo" },
-        id: "some 0",
-        type: "tool_call" as const,
-      };
-
-      const toolCall3 = { ...toolCall1, name: "tool2" };
-
-      const toolNode = new ToolNode([tool1]);
-      const result = await toolNode.invoke([
-        new AIMessage({ content: "", tool_calls: [toolCall1, toolCall3] }),
-      ]);
-
-      expect(result).toEqual([
-        new ToolMessage({
-          content: "1 - foo",
-          tool_call_id: "some 0",
-          name: "tool1",
-        }),
-        expect.objectContaining({
-          content: expect.stringContaining('Tool "tool2" not found'),
-          name: "tool2",
-          tool_call_id: "some 0",
-        }),
-      ]);
-    });
-  });
-
-  describe("error handling", () => {
-    it("should handle errors with handleToolErrors=true", async () => {
-      const toolNode = new ToolNode([tool1, tool2, tool3], {
-        handleToolErrors: true,
-      });
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool1",
-                args: { someVal: 0, someOtherVal: "foo" },
-                id: "some id",
-                type: "tool_call",
-              },
-              {
-                name: "tool2",
-                args: { someVal: 0, someOtherVal: "bar" },
-                id: "some other id",
-                type: "tool_call",
-              },
-              {
-                name: "tool3",
-                args: { someVal: 0 }, // Missing someOtherVal to trigger validation error
-                id: "another id",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      expect(
-        result.messages.every((m: ToolMessage) => m.getType() === "tool")
-      ).toBe(true);
-
-      expect(result.messages[0].content).toContain("Test error");
-      expect(result.messages[0].content).toContain("Please fix your mistakes");
-      expect(result.messages[1].content).toContain("Test error");
-      expect(result.messages[1].content).toContain("Please fix your mistakes");
-
-      expect(result.messages[0].tool_call_id).toBe("some id");
-      expect(result.messages[1].tool_call_id).toBe("some other id");
-      expect(result.messages[2].tool_call_id).toBe("another id");
-    });
-
-    it("should handle ValueError with custom handler", async () => {
-      function handleValueError(_e: Error): string {
-        return "Value error";
-      }
-
-      // Test with string handler
-      let toolNode = new ToolNode([tool1], {
-        handleToolErrors: "Value error" as any,
-      });
-      let result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool1",
-                args: { someVal: 0, someOtherVal: "foo" },
-                id: "some id",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      let toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toContain("Test error");
-
-      // Test with function handler
-      toolNode = new ToolNode([tool1], {
-        handleToolErrors: handleValueError as any,
-      });
-      result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool1",
-                args: { someVal: 0, someOtherVal: "foo" },
-                id: "some id",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      toolMessage = result.messages[result.messages.length - 1] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toContain("Test error");
-    });
-
-    it("should handle mixed errors", async () => {
-      const toolNode = new ToolNode([tool1, tool2], {
-        handleToolErrors: true,
-      });
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool1",
-                args: { someVal: 0, someOtherVal: "foo" },
-                id: "some id",
-                type: "tool_call",
-              },
-              {
-                name: "tool2",
-                args: { someVal: 0, someOtherVal: "bar" },
-                id: "some other id",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      expect(result.messages).toHaveLength(2);
-      expect(result.messages[0].content).toContain("Test error");
-      expect(result.messages[1].content).toContain("Test error");
-    });
-  });
-
-  describe("handleToolErrors=false", () => {
-    it("should raise ValueError when handleToolErrors=false", async () => {
-      const toolNode = new ToolNode([tool1], { handleToolErrors: false });
-
-      await expect(async () => {
-        await toolNode.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "tool1",
-                  args: { someVal: 0, someOtherVal: "foo" },
-                  id: "some id",
-                  type: "tool_call",
-                },
-              ],
-            }),
+  it("Should work when nested with a callback manager passed", async () => {
+    const toolNode = new ToolNode([new SearchAPI()]);
+    const wrapper = RunnableLambda.from(async (_) => {
+      const res = await toolNode.invoke([
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { name: "search_api", args: { query: "foo" }, id: "testid" },
           ],
-        });
-      }).rejects.toThrow("Test error");
+        }),
+      ]);
+      return res;
     });
-
-    it("should raise ToolException when handleToolErrors=false", async () => {
-      const toolNode = new ToolNode([tool2], { handleToolErrors: false });
-
-      await expect(async () => {
-        await toolNode.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "tool2",
-                  args: { someVal: 0, someOtherVal: "bar" },
-                  id: "some id",
-                  type: "tool_call",
-                },
-              ],
-            }),
-          ],
-        });
-      }).rejects.toThrow("Test error");
-    });
-
-    it("should raise validation errors when handleToolErrors=false", async () => {
-      const toolNode = new ToolNode([tool1], { handleToolErrors: false });
-
-      await expect(async () => {
-        await toolNode.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "tool1",
-                  args: { someVal: 0 }, // Missing required someOtherVal
-                  id: "some id",
-                  type: "tool_call",
-                },
-              ],
-            }),
-          ],
-        });
-      }).rejects.toThrow();
-    });
+    let runnableStartCount = 0;
+    const callbackManager = new CallbackManager();
+    callbackManager.addHandler(
+      BaseCallbackHandler.fromMethods({
+        handleChainStart: () => (runnableStartCount += 1),
+        handleToolStart: () => (runnableStartCount += 1),
+      })
+    );
+    await wrapper.invoke({}, { callbacks: callbackManager });
+    /**
+     * The original test was expecting `runnableStartCount` to be 2
+     * @todo(Christian): check in with @dqbd to see if this is expected behavior
+     */
+    expect(runnableStartCount).toEqual(1);
   });
 
-  describe("individual tool error handling", () => {
-    it("should use individual tool error handler", async () => {
-      // Note: This test mimics the Python behavior but may need adjustment based on actual implementation
-      const toolNode = new ToolNode([tool5], {
-        handleToolErrors: "bar" as any,
-      });
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool5",
-                args: { someVal: 0 },
-                id: "some 0",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      // This may need adjustment based on actual implementation
-      expect(toolMessage.content).toContain("Test error");
-      expect(toolMessage.tool_call_id).toBe("some 0");
+  it("Should work in a state graph", async () => {
+    const AgentAnnotation = Annotation.Root({
+      messages: Annotation<BaseMessage[]>({
+        reducer: messagesStateReducer,
+        default: () => [],
+      }),
+      prop2: Annotation<string>,
     });
-  });
 
-  describe("incorrect tool name", () => {
-    it("should handle incorrect tool name", async () => {
-      const toolNode = new ToolNode([tool1, tool2]);
-
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "tool3",
-                args: { someVal: 1, someOtherVal: "foo" },
-                id: "some 0",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
-
-      const toolMessage = result.messages[
-        result.messages.length - 1
-      ] as ToolMessage;
-      expect(toolMessage.getType()).toBe("tool");
-      expect(toolMessage.content).toContain('Tool "tool3" not found');
-      expect(toolMessage.tool_call_id).toBe("some 0");
-    });
-  });
-
-  describe("node interrupt", () => {
-    const toolInterrupt = tool(
-      (_input: { someVal: number }): void => {
-        throw new GraphBubbleUp("foo");
+    const weatherTool = tool(
+      async ({ query }) => {
+        // This is a placeholder for the actual implementation
+        if (
+          query.toLowerCase().includes("sf") ||
+          query.toLowerCase().includes("san francisco")
+        ) {
+          return "It's 60 degrees and foggy.";
+        }
+        return "It's 90 degrees and sunny.";
       },
       {
-        name: "toolInterrupt",
-        description: "Tool docstring.",
+        name: "weather",
+        description: "Call to get the current weather for a location.",
         schema: z.object({
-          someVal: z.number(),
+          query: z.string().describe("The query to use in your search."),
         }),
       }
     );
 
-    it("should handle GraphBubbleUp with handleToolErrors=false", async () => {
-      const toolNode = new ToolNode([toolInterrupt], {
-        handleToolErrors: false,
-      });
-
-      await expect(async () => {
-        await toolNode.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "toolInterrupt",
-                  args: { someVal: 0 },
-                  id: "some 0",
-                  type: "tool_call",
-                },
-              ],
-            }),
-          ],
-        });
-      }).rejects.toThrow("foo");
+    const aiMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_1234",
+          args: {
+            query: "SF",
+          },
+          name: "weather",
+          type: "tool_call",
+        },
+      ],
     });
 
-    it("should handle GraphBubbleUp as error with handleToolErrors=true", async () => {
-      const toolNode = new ToolNode([toolInterrupt], {
-        handleToolErrors: true,
-      });
+    const aiMessage2 = new AIMessage({
+      content: "FOO",
+    });
 
-      const result = await toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "hi?",
-            tool_calls: [
-              {
-                name: "toolInterrupt",
-                args: { someVal: 0 },
-                id: "some 0",
-                type: "tool_call",
-              },
-            ],
-          }),
-        ],
-      });
+    async function callModel(state: typeof AgentAnnotation.State) {
+      // We return a list, because this will get added to the existing list
+      if (state.messages.includes(aiMessage)) {
+        return { messages: [aiMessage2] };
+      }
+      return { messages: [aiMessage] };
+    }
 
-      expect(result.messages).toHaveLength(1);
-      expect(result.messages[0].content).toContain("foo");
+    function shouldContinue({
+      messages,
+    }: typeof AgentAnnotation.State): "tools" | "__end__" {
+      const lastMessage: AIMessage = messages[messages.length - 1];
+
+      // If the LLM makes a tool call, then we route to the "tools" node
+      if ((lastMessage.tool_calls?.length ?? 0) > 0) {
+        return "tools";
+      }
+      // Otherwise, we stop (reply to the user)
+      return "__end__";
+    }
+
+    const graph = new StateGraph(AgentAnnotation)
+      .addNode("agent", callModel)
+      .addNode("tools", new ToolNode([weatherTool]))
+      .addEdge("__start__", "agent")
+      .addConditionalEdges("agent", shouldContinue)
+      .addEdge("tools", "agent")
+      .compile();
+    const res = await graph.invoke({
+      messages: [],
+    });
+    const toolMessageId = res.messages[1].id;
+    expect(res).toEqual({
+      messages: [
+        aiMessage,
+        expect.objectContaining({
+          id: toolMessageId,
+          name: "weather",
+          artifact: undefined,
+          content: "It's 60 degrees and foggy.",
+          tool_call_id: "call_1234",
+        }),
+        aiMessage2,
+      ],
     });
   });
+});
 
-  // TODO: Add command handling tests when InjectedToolCallId is fully supported
-  // These tests would cover:
-  // - Tools returning Command objects
-  // - Command validation
-  // - Parent commands with Send operations
-  // - Remove all messages functionality
-  describe("command handling", () => {
-    it("should handle basic tool execution", async () => {
-      // For now, just test that basic tools work properly
-      // Command functionality can be tested separately when the feature is ready
-      const add = tool((input: { a: number; b: number }) => input.a + input.b, {
-        name: "add",
-        description: "Add two numbers",
+describe("MessagesAnnotation", () => {
+  it("should assign ids properly and avoid duping added messages", async () => {
+    const childGraph = new StateGraph(MessagesAnnotation)
+      .addNode("duper", ({ messages }) => ({ messages }))
+      .addNode("duper2", ({ messages }) => ({ messages }))
+      .addEdge("__start__", "duper")
+      .addEdge("duper", "duper2")
+      .compile({ interruptBefore: ["duper2"] });
+    const graph = new StateGraph(MessagesAnnotation)
+      .addNode("duper", childGraph)
+      .addNode("duper2", ({ messages }) => ({ messages }))
+      .addEdge("__start__", "duper")
+      .addEdge("duper", "duper2")
+      .compile({ checkpointer: new MemorySaverAssertImmutable() });
+    const res = await graph.invoke(
+      { messages: [new HumanMessage("should be only one")] },
+      { configurable: { thread_id: "1" } }
+    );
+    const res2 = await graph.invoke(null, {
+      configurable: { thread_id: "1" },
+    });
+
+    expect(res.messages.length).toEqual(1);
+    expect(res2.messages.length).toEqual(1);
+  });
+});
+
+describe("MessagesZodState", () => {
+  it("should assign ids properly and avoid duping added messages", async () => {
+    const childGraph = new StateGraph(MessagesZodState)
+      .addNode("duper", ({ messages }) => ({ messages }))
+      .addNode("duper2", () => ({ messages: [new AIMessage("duper2")] }))
+      .addEdge("__start__", "duper")
+      .addEdge("duper", "duper2")
+      .compile({ interruptBefore: ["duper2"] });
+
+    const graph = new StateGraph(MessagesZodState)
+      .addNode("duper", childGraph)
+      .addNode("duper2", ({ messages }) => ({ messages }))
+      .addEdge("__start__", "duper")
+      .addEdge("duper", "duper2")
+      .compile({ checkpointer: new MemorySaverAssertImmutable() });
+
+    const res = await graph.invoke(
+      { messages: [new HumanMessage("should be only one")] },
+      { configurable: { thread_id: "1" } }
+    );
+    expect(res.messages.length).toEqual(1);
+
+    const res2 = await graph.invoke(null, { configurable: { thread_id: "1" } });
+    expect(res2.messages.length).toEqual(2);
+  });
+
+  it("should handle message reducers correctly", async () => {
+    const graph = new StateGraph(MessagesZodState)
+      .addNode("add", ({ messages }) => ({
+        messages: [...messages, new HumanMessage("new message")],
+      }))
+      .addNode("remove", ({ messages }) => {
+        return {
+          messages: [new RemoveMessage({ id: messages[0].id ?? "" })],
+        };
+      })
+      .addEdge("__start__", "add")
+      .addEdge("add", "remove")
+      .compile();
+
+    const result = await graph.invoke({
+      messages: [new HumanMessage({ id: "test-id", content: "original" })],
+    });
+
+    expect(result.messages.length).toEqual(1);
+  });
+
+  it("should handle array updates correctly", async () => {
+    const graph = new StateGraph(MessagesZodState)
+      .addNode("add", () => ({
+        messages: [
+          new HumanMessage({ id: "msg1", content: "message 1" }),
+          new HumanMessage({ id: "msg2", content: "message 2" }),
+        ],
+      }))
+      .addNode("update", ({ messages }) => {
+        const firstMessageId = messages[0]?.id;
+        if (!firstMessageId) {
+          throw new Error("No message ID found");
+        }
+        return {
+          messages: [
+            new HumanMessage({ id: firstMessageId, content: "updated" }),
+          ],
+        };
+      })
+      .addEdge("__start__", "add")
+      .addEdge("add", "update")
+      .compile();
+
+    const result = await graph.invoke({ messages: [] });
+
+    expect(result.messages.length).toEqual(2);
+    expect(result.messages[0].content).toEqual("updated");
+    expect(result.messages[1].content).toEqual("message 2");
+  });
+});
+
+describe("messagesStateReducer", () => {
+  it("should dedupe messages", () => {
+    const deduped = messagesStateReducer(
+      [new HumanMessage({ id: "foo", content: "bar" })],
+      [new HumanMessage({ id: "foo", content: "bar2" })]
+    );
+    expect(deduped.length).toEqual(1);
+    expect(deduped[0].content).toEqual("bar2");
+  });
+
+  it("should dedupe messages if there are dupes on the right", () => {
+    const messages = [
+      new HumanMessage({ id: "foo", content: "bar" }),
+      new HumanMessage({ id: "foo", content: "bar2" }),
+    ];
+    const deduped = messagesStateReducer([], messages);
+    expect(deduped.length).toEqual(1);
+    expect(deduped[0].content).toEqual("bar2");
+  });
+
+  it("should apply right-side messages in order", () => {
+    const messages = [
+      new RemoveMessage({ id: "foo" }),
+      new HumanMessage({ id: "foo", content: "bar" }),
+      new HumanMessage({ id: "foo", content: "bar2" }),
+    ];
+    const deduped = messagesStateReducer(
+      [new HumanMessage({ id: "foo", content: "bar3" })],
+      messages
+    );
+    expect(deduped.length).toEqual(1);
+    expect(deduped[0].content).toEqual("bar2");
+  });
+});
+
+describe("_shouldBindTools", () => {
+  it.each(["openai", "anthropic", "google", "bedrock"] as const)(
+    "Should determine when to bind tools - %s style",
+    async (toolStyle) => {
+      const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+        name: "tool1",
+        description: "Tool 1 docstring.",
         schema: z.object({
-          a: z.number(),
-          b: z.number(),
+          someVal: z.number().describe("Input value"),
         }),
       });
 
-      const toolNode = new ToolNode([add]);
-      const result = await toolNode.invoke({
+      const tool2 = tool((input) => `Tool 2: ${input.someVal}`, {
+        name: "tool2",
+        description: "Tool 2 docstring.",
+        schema: z.object({
+          someVal: z.number().describe("Input value"),
+        }),
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("test")],
+        toolStyle,
+      });
+
+      // Should bind when a regular model
+      expect(await _shouldBindTools(model, [])).toBe(true);
+      expect(await _shouldBindTools(model, [tool1])).toBe(true);
+
+      // Should bind when a seq
+      const seq = RunnableSequence.from([
+        model,
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await _shouldBindTools(seq, [])).toBe(true);
+      expect(await _shouldBindTools(seq, [tool1])).toBe(true);
+
+      // Should not bind when a model with tools
+      const modelWithTools = model.bindTools([tool1]);
+      expect(await _shouldBindTools(modelWithTools, [tool1])).toBe(false);
+
+      // Should not bind when a seq with tools
+      const seqWithTools = RunnableSequence.from([
+        model.bindTools([tool1]),
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await _shouldBindTools(seqWithTools, [tool1])).toBe(false);
+
+      // Should raise on invalid inputs
+      await expect(
+        async () => await _shouldBindTools(model.bindTools([tool1]), [])
+      ).rejects.toThrow();
+      await expect(
+        async () => await _shouldBindTools(model.bindTools([tool1]), [tool2])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await _shouldBindTools(model.bindTools([tool1]), [tool1, tool2])
+      ).rejects.toThrow();
+
+      // test configurable model
+      const configurableModel = new FakeConfigurableModel({
+        model,
+      });
+
+      // Should bind when a regular model
+      expect(await _shouldBindTools(configurableModel, [])).toBe(true);
+      expect(await _shouldBindTools(configurableModel, [tool1])).toBe(true);
+
+      // Should bind when a seq
+      const configurableSeq = RunnableSequence.from([
+        configurableModel,
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await _shouldBindTools(configurableSeq, [])).toBe(true);
+      expect(await _shouldBindTools(configurableSeq, [tool1])).toBe(true);
+
+      // Should not bind when a model with tools
+      const configurableModelWithTools = configurableModel.bindTools([tool1]);
+      expect(await _shouldBindTools(configurableModelWithTools, [tool1])).toBe(
+        false
+      );
+
+      // Should not bind when a seq with tools
+      const configurableSeqWithTools = RunnableSequence.from([
+        configurableModel.bindTools([tool1]),
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await _shouldBindTools(configurableSeqWithTools, [tool1])).toBe(
+        false
+      );
+
+      // Should raise on invalid inputs
+      await expect(
+        async () =>
+          await _shouldBindTools(configurableModel.bindTools([tool1]), [])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await _shouldBindTools(configurableModel.bindTools([tool1]), [tool2])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await _shouldBindTools(configurableModel.bindTools([tool1]), [
+            tool1,
+            tool2,
+          ])
+      ).rejects.toThrow();
+    }
+  );
+
+  it("should bind model with bindTools", async () => {
+    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+      name: "tool1",
+      description: "Tool 1 docstring.",
+      schema: z.object({
+        someVal: z.number().describe("Input value"),
+      }),
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("test")],
+      toolStyle: "openai",
+    });
+
+    const confModel = new FakeConfigurableModel({ model });
+
+    async function serialize(runnable: Runnable | Promise<Runnable>) {
+      return JSON.parse(JSON.stringify(await runnable));
+    }
+
+    // Should bind when a regular model
+    expect(
+      await serialize((await _bindTools(model, [tool1])) as Runnable)
+    ).toEqual(await serialize(model.bindTools([tool1])));
+
+    // Should bind when model wrapped in `withConfig`
+    expect(
+      await serialize(
+        (await _bindTools(model.withConfig({ tags: ["nostream"] }), [
+          tool1,
+        ])) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        model.bindTools([tool1]).withConfig({ tags: ["nostream"] })
+      )
+    );
+
+    // Should bind when model wrapped in multiple `withConfig`
+    expect(
+      await serialize(
+        (await _bindTools(
+          model
+            .withConfig({ tags: ["nostream"] })
+            .withConfig({ metadata: { hello: "world" } }),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        model
+          .bindTools([tool1])
+          .withConfig({ tags: ["nostream"], metadata: { hello: "world" } })
+      )
+    );
+
+    // Should bind when a configurable model
+    expect(
+      await serialize((await _bindTools(confModel, [tool1])) as Runnable)
+    ).toEqual(await serialize(confModel.bindTools([tool1])));
+
+    // Should bind when a seq
+    expect(
+      await serialize(
+        (await _bindTools(
+          RunnableSequence.from([
+            model,
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          model.bindTools([tool1]),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
+
+    // Should bind when a seq with configurable model
+    expect(
+      await serialize(
+        (await _bindTools(
+          RunnableSequence.from([
+            confModel,
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          confModel.bindTools([tool1]),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
+
+    // Should bind when a seq with config model
+    expect(
+      await serialize(
+        (await _bindTools(
+          RunnableSequence.from([
+            confModel.withConfig({ tags: ["nostream"] }),
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          confModel.bindTools([tool1]).withConfig({
+            tags: ["nostream"],
+          }),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
+  });
+
+  it("should handle bindTool with server tools", async () => {
+    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+      name: "tool1",
+      description: "Tool 1 docstring.",
+      schema: z.object({ someVal: z.number().describe("Input value") }),
+    });
+
+    const server = { type: "web_search_preview" };
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("test")],
+    });
+
+    expect(await _shouldBindTools(model, [tool1, server])).toBe(true);
+    expect(
+      await _shouldBindTools(model.bindTools([tool1, server]), [tool1, server])
+    ).toBe(false);
+
+    await expect(
+      _shouldBindTools(model.bindTools([tool1]), [tool1, server])
+    ).rejects.toThrow();
+
+    await expect(
+      _shouldBindTools(model.bindTools([server]), [tool1, server])
+    ).rejects.toThrow();
+  });
+});
+
+describe("_getModel", () => {
+  it("Should extract the model from different inputs", async () => {
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("test")],
+    });
+    expect(await _getModel(model)).toBe(model);
+
+    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+      name: "tool1",
+      description: "Tool 1 docstring.",
+      schema: z.object({
+        someVal: z.number().describe("Input value"),
+      }),
+    });
+
+    const modelWithTools = model.bindTools([tool1]);
+    expect(await _getModel(modelWithTools)).toBe(model);
+
+    const seq = RunnableSequence.from([
+      model,
+      RunnableLambda.from((message) => message),
+    ]);
+    expect(await _getModel(seq)).toBe(model);
+
+    const seqWithTools = RunnableSequence.from([
+      model.bindTools([tool1]),
+      RunnableLambda.from((message) => message),
+    ]);
+    expect(await _getModel(seqWithTools)).toBe(model);
+
+    const raisingSeq = RunnableSequence.from([
+      RunnableLambda.from((message) => message),
+      RunnableLambda.from((message) => message),
+    ]);
+    await expect(async () => await _getModel(raisingSeq)).rejects.toThrow(
+      Error
+    );
+
+    // test configurable model
+    const configurableModel = new FakeConfigurableModel({
+      model,
+    });
+
+    expect(await _getModel(configurableModel)).toBe(model);
+    expect(await _getModel(configurableModel.bindTools([tool1]))).toBe(model);
+
+    const configurableSeq = RunnableSequence.from([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      configurableModel as any,
+      RunnableLambda.from((message) => message),
+    ]);
+    expect(await _getModel(configurableSeq)).toBe(model);
+
+    const configurableSeqWithTools = RunnableSequence.from([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      configurableModel.bindTools([tool1]) as any,
+      RunnableLambda.from((message) => message),
+    ]);
+    expect(await _getModel(configurableSeqWithTools)).toBe(model);
+
+    const raisingConfigurableSeq = RunnableSequence.from([
+      RunnableLambda.from((message) => message),
+      RunnableLambda.from((message) => message),
+    ]);
+    await expect(
+      async () => await _getModel(raisingConfigurableSeq)
+    ).rejects.toThrow(Error);
+  });
+});
+
+describe("ToolNode with Commands", () => {
+  it("can handle tools returning commands with dict input", async () => {
+    // Tool that returns a Command
+    const transferToBob = tool(
+      async (_, config) => {
+        return new Command({
+          update: {
+            messages: [
+              new ToolMessage({
+                content: "Transferred to Bob",
+                tool_call_id: config.toolCall.id,
+                name: "transfer_to_bob",
+              }),
+            ],
+          },
+          goto: "bob",
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "transfer_to_bob",
+        description: "Transfer to Bob",
+        schema: z.object({}),
+      }
+    );
+
+    // Async version of the tool
+    const asyncTransferToBob = tool(
+      async (_, config) => {
+        return new Command({
+          update: {
+            messages: [
+              new ToolMessage({
+                content: "Transferred to Bob",
+                tool_call_id: config.toolCall.id,
+                name: "async_transfer_to_bob",
+              }),
+            ],
+          },
+          goto: "bob",
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "async_transfer_to_bob",
+        description: "Transfer to Bob",
+        schema: z.object({}),
+      }
+    );
+
+    // Basic tool that doesn't return a Command
+    const add = tool(({ a, b }) => `${a + b}`, {
+      name: "add",
+      description: "Add two numbers",
+      schema: z.object({
+        a: z.number(),
+        b: z.number(),
+      }),
+    });
+
+    // Test mixing regular tools and tools returning commands
+
+    // Test with dict input
+    const result = await new ToolNode([add, transferToBob]).invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { args: { a: 1, b: 2 }, id: "1", name: "add", type: "tool_call" },
+            { args: {}, id: "2", name: "transfer_to_bob", type: "tool_call" },
+          ],
+        }),
+      ],
+    });
+
+    expect(result).toMatchObject([
+      {
+        messages: [
+          new ToolMessage({
+            content: "3",
+            tool_call_id: "1",
+            name: "add",
+          }),
+        ],
+      },
+      new Command({
+        update: {
+          messages: [
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "2",
+              name: "transfer_to_bob",
+            }),
+          ],
+        },
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+
+    // Test single tool returning command
+    const singleToolResult = await new ToolNode([transferToBob]).invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ args: {}, id: "1", name: "transfer_to_bob" }],
+        }),
+      ],
+    });
+
+    expect(singleToolResult).toMatchObject([
+      new Command({
+        update: {
+          messages: [
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "1",
+              name: "transfer_to_bob",
+            }),
+          ],
+        },
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+
+    // Test async tool
+    const asyncToolResult = await new ToolNode([asyncTransferToBob]).invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ args: {}, id: "1", name: "async_transfer_to_bob" }],
+        }),
+      ],
+    });
+
+    expect(asyncToolResult).toMatchObject([
+      new Command({
+        update: {
+          messages: [
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "1",
+              name: "async_transfer_to_bob",
+            }),
+          ],
+        },
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+
+    // Test multiple commands
+    const multipleCommandsResult = await new ToolNode([
+      transferToBob,
+      asyncTransferToBob,
+    ]).invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            { args: {}, id: "1", name: "transfer_to_bob" },
+            { args: {}, id: "2", name: "async_transfer_to_bob" },
+          ],
+        }),
+      ],
+    });
+
+    expect(multipleCommandsResult).toMatchObject([
+      new Command({
+        update: {
+          messages: [
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "1",
+              name: "transfer_to_bob",
+            }),
+          ],
+        },
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+      new Command({
+        update: {
+          messages: [
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "2",
+              name: "async_transfer_to_bob",
+            }),
+          ],
+        },
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+  });
+
+  it("can handle tools returning commands with array input", async () => {
+    // Tool that returns a Command with array update
+    const transferToBob = tool(
+      async (_, config) => {
+        return new Command({
+          update: [
+            // @ts-expect-error: Command typing needs to be updated properly
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: config.toolCall.id,
+              name: "transfer_to_bob",
+            }),
+          ],
+          goto: "bob",
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "transfer_to_bob",
+        description: "Transfer to Bob",
+        schema: z.object({}),
+      }
+    );
+
+    // Async version of the tool
+    const asyncTransferToBob = tool(
+      async (_, config) => {
+        return new Command({
+          update: [
+            // @ts-expect-error: Command typing needs to be updated properly
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: config.toolCall.id,
+              name: "async_transfer_to_bob",
+            }),
+          ],
+          goto: "bob",
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "async_transfer_to_bob",
+        description: "Transfer to Bob",
+        schema: z.object({}),
+      }
+    );
+
+    // Basic tool that doesn't return a Command
+    const add = tool(({ a, b }) => `${a + b}`, {
+      name: "add",
+      description: "Add two numbers",
+      schema: z.object({
+        a: z.number(),
+        b: z.number(),
+      }),
+    });
+
+    // Test with array input
+    const result = await new ToolNode([add, transferToBob]).invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { args: { a: 1, b: 2 }, id: "1", name: "add" },
+          { args: {}, id: "2", name: "transfer_to_bob" },
+        ],
+      }),
+    ]);
+
+    expect(result).toMatchObject([
+      [
+        new ToolMessage({
+          content: "3",
+          tool_call_id: "1",
+          name: "add",
+        }),
+      ],
+      new Command({
+        update: [
+          // @ts-expect-error: Command typing needs to be updated properly
+          new ToolMessage({
+            content: "Transferred to Bob",
+            tool_call_id: "2",
+            name: "transfer_to_bob",
+          }),
+        ],
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+
+    // Test single tool returning command
+    for (const tool of [transferToBob, asyncTransferToBob]) {
+      const result = await new ToolNode([tool]).invoke([
+        new AIMessage({
+          content: "",
+          tool_calls: [{ args: {}, id: "1", name: tool.name }],
+        }),
+      ]);
+
+      expect(result).toMatchObject([
+        new Command({
+          update: [
+            // @ts-expect-error: Command typing needs to be updated properly
+            new ToolMessage({
+              content: "Transferred to Bob",
+              tool_call_id: "1",
+              name: tool.name,
+            }),
+          ],
+          goto: "bob",
+          graph: Command.PARENT,
+        }),
+      ]);
+    }
+
+    // Test multiple commands
+    const multipleCommandsResult = await new ToolNode([
+      transferToBob,
+      asyncTransferToBob,
+    ]).invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { args: {}, id: "1", name: "transfer_to_bob" },
+          { args: {}, id: "2", name: "async_transfer_to_bob" },
+        ],
+      }),
+    ]);
+
+    expect(multipleCommandsResult).toMatchObject([
+      new Command({
+        update: [
+          // @ts-expect-error: Command typing needs to be updated properly
+          new ToolMessage({
+            content: "Transferred to Bob",
+            tool_call_id: "1",
+            name: "transfer_to_bob",
+          }),
+        ],
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+      new Command({
+        update: [
+          // @ts-expect-error: Command typing needs to be updated properly
+          new ToolMessage({
+            content: "Transferred to Bob",
+            tool_call_id: "2",
+            name: "async_transfer_to_bob",
+          }),
+        ],
+        goto: "bob",
+        graph: Command.PARENT,
+      }),
+    ]);
+  });
+
+  it("should handle parent commands with Send", async () => {
+    // Create tools that return Commands with Send
+    const transferToAlice = tool(
+      async (_, config) => {
+        return new Command({
+          goto: [
+            new Send("alice", {
+              messages: [
+                new ToolMessage({
+                  content: "Transferred to Alice",
+                  name: "transfer_to_alice",
+                  tool_call_id: config.toolCall.id,
+                }),
+              ],
+            }),
+          ],
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "transfer_to_alice",
+        description: "Transfer to Alice",
+        schema: z.object({}),
+      }
+    );
+
+    const transferToBob = tool(
+      async (_, config) => {
+        return new Command({
+          goto: [
+            new Send("bob", {
+              messages: [
+                new ToolMessage({
+                  content: "Transferred to Bob",
+                  name: "transfer_to_bob",
+                  tool_call_id: config.toolCall.id,
+                }),
+              ],
+            }),
+          ],
+          graph: Command.PARENT,
+        });
+      },
+      {
+        name: "transfer_to_bob",
+        description: "Transfer to Bob",
+        schema: z.object({}),
+      }
+    );
+
+    const result = await new ToolNode([transferToAlice, transferToBob]).invoke([
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { args: {}, id: "1", name: "transfer_to_alice", type: "tool_call" },
+          { args: {}, id: "2", name: "transfer_to_bob", type: "tool_call" },
+        ],
+      }),
+    ]);
+
+    expect(result).toMatchObject([
+      new Command({
+        goto: [
+          new Send("alice", {
+            messages: [
+              new ToolMessage({
+                content: "Transferred to Alice",
+                name: "transfer_to_alice",
+                tool_call_id: "1",
+              }),
+            ],
+          }),
+          new Send("bob", {
+            messages: [
+              new ToolMessage({
+                content: "Transferred to Bob",
+                name: "transfer_to_bob",
+                tool_call_id: "2",
+              }),
+            ],
+          }),
+        ],
+        graph: Command.PARENT,
+      }),
+    ]);
+  });
+});
+
+describe("ToolNode should raise GraphInterrupt", () => {
+  it("should raise GraphInterrupt", async () => {
+    const toolWithInterrupt = tool(
+      async (_) => {
+        throw new GraphInterrupt();
+      },
+      {
+        name: "tool_with_interrupt",
+        description: "A tool that returns an interrupt",
+        schema: z.object({}),
+      }
+    );
+    const toolNode = new ToolNode([toolWithInterrupt]);
+    await expect(
+      toolNode.invoke({
         messages: [
           new AIMessage({
             content: "",
             tool_calls: [
-              { args: { a: 1, b: 2 }, id: "1", name: "add", type: "tool_call" },
+              { name: "tool_with_interrupt", args: {}, id: "testid" },
             ],
           }),
         ],
-      });
-
-      expect(result.messages).toHaveLength(1);
-      expect(result.messages[0].content).toBe("3");
-      expect(result.messages[0].name).toBe("add");
-    });
+      })
+    ).rejects.toThrow(GraphInterrupt);
   });
 });

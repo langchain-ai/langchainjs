@@ -6,12 +6,10 @@ import {
 } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
-import {
-  isGraphInterrupt,
-  isCommand,
-  Command,
-  Send,
-} from "@langchain/langgraph";
+import type { ToolCall } from "@langchain/core/messages/tool";
+import { MessagesAnnotation } from "@langchain/langgraph";
+import { isGraphInterrupt } from "@langchain/langgraph";
+import { END, isCommand, Command, Send } from "@langchain/langgraph";
 
 import { RunnableCallable } from "./RunnableCallable.js";
 import { isSend } from "./utils.js";
@@ -21,6 +19,20 @@ export type ToolNodeOptions = {
   tags?: string[];
   handleToolErrors?: boolean;
 };
+
+const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
+  Array.isArray(input);
+
+const isMessagesState = (
+  input: unknown
+): input is { messages: BaseMessage[] } =>
+  typeof input === "object" &&
+  input != null &&
+  "messages" in input &&
+  Array.isArray(input.messages);
+
+const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
+  typeof input === "object" && input != null && "lg_tool_call" in input;
 
 /**
  * A node that runs the tools requested in the last AIMessage. It can be used
@@ -139,6 +151,7 @@ export type ToolNodeOptions = {
  * // Returns the messages in the state at each step of execution
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ToolNode<T = any> extends RunnableCallable<T, T> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
@@ -160,58 +173,70 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
   }
 
-  protected async run(input: any, config: RunnableConfig): Promise<T> {
-    const message = Array.isArray(input)
-      ? input[input.length - 1]
-      : input.messages[input.messages.length - 1];
+  protected async runTool(
+    call: ToolCall,
+    config: RunnableConfig
+  ): Promise<ToolMessage | Command> {
+    const tool = this.tools.find((tool) => tool.name === call.name);
+    try {
+      if (tool === undefined) {
+        throw new Error(`Tool "${call.name}" not found.`);
+      }
+      const output = await tool.invoke({ ...call, type: "tool_call" }, config);
 
-    if (message?._getType() !== "ai") {
-      throw new Error("ToolNode only accepts AIMessages as input.");
+      if (
+        (isBaseMessage(output) && output.getType() === "tool") ||
+        isCommand(output)
+      ) {
+        return output as ToolMessage | Command;
+      }
+
+      return new ToolMessage({
+        name: tool.name,
+        content: typeof output === "string" ? output : JSON.stringify(output),
+        tool_call_id: call.id!,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      if (!this.handleToolErrors) throw e;
+
+      if (isGraphInterrupt(e)) {
+        // `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
+        // As such, they are not recoverable by the agent and shouldn't be fed
+        // back. Instead, re-throw these errors even when `handleToolErrors = true`.
+        throw e;
+      }
+
+      return new ToolMessage({
+        content: `Error: ${e.message}\n Please fix your mistakes.`,
+        name: call.name,
+        tool_call_id: call.id ?? "",
+      });
     }
+  }
 
-    const outputs = await Promise.all(
-      (message as AIMessage).tool_calls?.map(async (call) => {
-        const tool = this.tools.find((tool) => tool.name === call.name);
-        try {
-          if (tool === undefined) {
-            throw new Error(`Tool "${call.name}" not found.`);
-          }
-          const output = await tool.invoke(
-            { ...call, type: "tool_call" },
-            config
-          );
-          if (
-            (isBaseMessage(output) && output._getType() === "tool") ||
-            isCommand(output)
-          ) {
-            return output;
-          } else {
-            return new ToolMessage({
-              name: tool.name,
-              content:
-                typeof output === "string" ? output : JSON.stringify(output),
-              tool_call_id: call.id ?? "",
-            });
-          }
-        } catch (e: unknown) {
-          if (!this.handleToolErrors) {
-            throw e;
-          }
-          if (isGraphInterrupt(e)) {
-            // `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
-            // As such, they are not recoverable by the agent and shouldn't be fed
-            // back. Instead, re-throw these errors even when `handleToolErrors = true`.
-            throw e;
-          }
-          const error = e instanceof Error ? e : new Error(String(e));
-          return new ToolMessage({
-            content: `Error: ${error.message}\n Please fix your mistakes.`,
-            name: call.name,
-            tool_call_id: call.id ?? "",
-          });
-        }
-      }) ?? []
-    );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected async run(input: unknown, config: RunnableConfig): Promise<T> {
+    let outputs: (ToolMessage | Command)[];
+
+    if (isSendInput(input)) {
+      outputs = [await this.runTool(input.lg_tool_call, config)];
+    } else {
+      let message: AIMessage | undefined;
+      if (isBaseMessageArray(input)) {
+        message = input.at(-1);
+      } else if (isMessagesState(input)) {
+        message = input.messages.at(-1);
+      }
+
+      if (message?.getType() !== "ai") {
+        throw new Error("ToolNode only accepts AIMessages as input.");
+      }
+
+      outputs = await Promise.all(
+        message.tool_calls?.map((call) => this.runTool(call, config)) ?? []
+      );
+    }
 
     // Preserve existing behavior for non-command tool outputs for backwards compatibility
     if (!outputs.some(isCommand)) {
@@ -256,5 +281,23 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
     }
 
     return combinedOutputs as T;
+  }
+}
+
+export function toolsCondition(
+  state: BaseMessage[] | typeof MessagesAnnotation.State
+): "tools" | typeof END {
+  const message = Array.isArray(state)
+    ? state[state.length - 1]
+    : state.messages[state.messages.length - 1];
+
+  if (
+    message !== undefined &&
+    "tool_calls" in message &&
+    ((message as AIMessage).tool_calls?.length ?? 0) > 0
+  ) {
+    return "tools";
+  } else {
+    return END;
   }
 }

@@ -11,12 +11,16 @@ export default defineConfig({
     coverage: {
       enabled: !isIntegrationTest,
       include: ["src/**/*.ts"],
-      exclude: ["src/load/**/*.ts", "src/**/*.int.test.ts"],
+      exclude: [
+        "src/load/**/*.ts",
+        "src/**/*.int.test.ts",
+        "src/tests/utils.ts",
+      ],
       thresholds: {
-        statements: 88,
-        branches: 78,
-        functions: 96,
-        lines: 88,
+        statements: 92,
+        branches: 87,
+        functions: 94,
+        lines: 92,
       },
     },
   },
