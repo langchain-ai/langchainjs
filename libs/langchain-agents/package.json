@@ -23,6 +23,7 @@
     "release": "release-it --only-version --config .release-it.json",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
+    "test:integration": "VITEST_INTEGRATION=true vitest --run --testTimeout 100000",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",
+    "@langchain/anthropic": "workspace:*",
     "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
