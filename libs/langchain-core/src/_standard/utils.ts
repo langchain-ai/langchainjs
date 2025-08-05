@@ -1,135 +1,65 @@
-import { ProviderFormatTypes } from "../messages/content_blocks.js";
-import { ContentBlock } from "./content/index.js";
+/**
+ * Merges two types A and B, with B's properties taking precedence over A's properties.
+ * If B is undefined, returns A. If A is undefined, returns B.
+ * Otherwise, returns a type that includes all properties from A that don't exist in B,
+ * combined with all properties from B.
+ *
+ * @template A - The first type to merge
+ * @template B - The second type to merge, which takes precedence over A
+ */
+export type $Merge<A, B> = B extends undefined
+  ? A
+  : A extends undefined
+  ? B
+  : Omit<A, keyof B> & B;
 
 /**
- * Utility interface for converting between standard and provider-specific data content blocks, to be
- * used when implementing chat model providers.
+ * Merges two discriminated unions A and B based on a discriminator key (defaults to "type").
+ * For each possible value of the discriminator across both unions:
+ * - If B has a member with that discriminator value, use B's member
+ * - Otherwise use A's member with that discriminator value
+ * This effectively merges the unions while giving B's members precedence over A's members.
  *
- * Meant to be used with {@link convertToProviderContentBlock} and
- * {@link convertToStandardContentBlock} rather than being consumed directly.
+ * @template A - First discriminated union type that extends Record<Key, PropertyKey>
+ * @template B - Second discriminated union type that extends Record<Key, PropertyKey>
+ * @template Key - The discriminator key property, defaults to "type"
  */
-export interface StandardContentBlockConverter<
-  Formats extends Partial<ProviderFormatTypes>
-> {
-  /**
-   * The name of the provider type that corresponds to the provider-specific content block types
-   * that this converter supports.
-   */
-  providerName: string;
-
-  /**
-   * Convert from a standard image block to a provider's proprietary image block format.
-   * @param block - The standard image block to convert.
-   * @returns The provider image block.
-   */
-  fromStandardImageBlock?(
-    block: ContentBlock.Multimodal.Image
-  ): Formats["image"];
-
-  /**
-   * Convert from a standard audio block to a provider's proprietary audio block format.
-   * @param block - The standard audio block to convert.
-   * @returns The provider audio block.
-   */
-  fromStandardAudioBlock?(
-    block: ContentBlock.Multimodal.Audio
-  ): Formats["audio"];
-
-  /**
-   * Convert from a standard video block to a provider's proprietary video block format.
-   * @param block - The standard video block to convert.
-   * @returns The provider video block.
-   */
-  fromStandardVideoBlock?(
-    block: ContentBlock.Multimodal.Video
-  ): Formats["video"];
-
-  /**
-   * Convert from a standard file block to a provider's proprietary file block format.
-   * @param block - The standard file block to convert.
-   * @returns The provider file block.
-   */
-  fromStandardFileBlock?(block: ContentBlock.Multimodal.File): Formats["file"];
-
-  /**
-   * Convert from a standard text block to a provider's proprietary text block format.
-   * @param block - The standard text block to convert.
-   * @returns The provider text block.
-   */
-  fromStandardTextBlock?(
-    block: ContentBlock.Multimodal.PlainText
-  ): Formats["text"];
-}
+export type $MergeDiscriminatedUnion<
+  A extends Record<Key, PropertyKey>,
+  B extends Record<Key, PropertyKey>,
+  Key extends PropertyKey = "type"
+> = {
+  // Create a mapped type over all possible discriminator values from both A and B
+  [T in A[Key] | B[Key]]: [Extract<B, Record<Key, T>>] extends [never] // Check if B has a member with this discriminator value
+    ? // If B doesn't have this discriminator value, use A's member
+      Extract<A, Record<Key, T>>
+    : // If B does have this discriminator value, use B's member (B takes precedence)
+      Extract<B, Record<Key, T>>;
+  // Index into the mapped type with all possible discriminator values
+  // This converts the mapped type back into a union
+}[A[Key] | B[Key]];
 
 /**
- * Convert from a standard data content block to a provider's proprietary data content block format.
+ * Converts a union of types into an intersection of those types.
  *
- * Don't override this method. Instead, override the more specific conversion methods and use this
- * method unmodified.
- *
- * @param block - The standard data content block to convert.
- * @returns The provider data content block.
- * @throws An error if the standard data content block type is not supported.
+ * @template U - The union type to convert.
+ * @example
+ * type T = UnionToIntersection<{ a: string } | { b: number }>;
+ * // T is { a: string } & { b: number }
  */
-export function convertToProviderContentBlock<
-  Formats extends Partial<ProviderFormatTypes>
->(
-  block: ContentBlock.Multimodal.ContentBlock,
-  converter: StandardContentBlockConverter<Formats>
-): Formats[keyof Formats] {
-  if (block.type === "text-plain") {
-    if (!converter.fromStandardTextBlock) {
-      throw new Error(
-        `Converter for ${converter.providerName} does not implement \`fromStandardTextBlock\` method.`
-      );
-    }
-    return converter.fromStandardTextBlock(
-      block as ContentBlock.Multimodal.PlainText
-    );
-  }
-  if (block.type === "image") {
-    if (!converter.fromStandardImageBlock) {
-      throw new Error(
-        `Converter for ${converter.providerName} does not implement \`fromStandardImageBlock\` method.`
-      );
-    }
-    return converter.fromStandardImageBlock(
-      block as ContentBlock.Multimodal.Image
-    );
-  }
-  if (block.type === "audio") {
-    if (!converter.fromStandardAudioBlock) {
-      throw new Error(
-        `Converter for ${converter.providerName} does not implement \`fromStandardAudioBlock\` method.`
-      );
-    }
-    return converter.fromStandardAudioBlock(
-      block as ContentBlock.Multimodal.Audio
-    );
-  }
-  if (block.type === "video") {
-    if (!converter.fromStandardVideoBlock) {
-      throw new Error(
-        `Converter for ${converter.providerName} does not implement \`fromStandardVideoBlock\` method.`
-      );
-    }
-    return converter.fromStandardVideoBlock(
-      block as ContentBlock.Multimodal.Video
-    );
-  }
-  if (block.type === "file") {
-    if (!converter.fromStandardFileBlock) {
-      throw new Error(
-        `Converter for ${converter.providerName} does not implement \`fromStandardFileBlock\` method.`
-      );
-    }
-    return converter.fromStandardFileBlock(
-      block as ContentBlock.Multimodal.File
-    );
-  }
-  throw new Error(
-    `Unable to convert content block type '${
-      (block as { type?: string }).type || "unknown"
-    }' to provider-specific format: not recognized.`
-  );
-}
+export type $UnionToIntersection<U> = (
+  U extends any ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never;
+
+/**
+ * Picks a subset of a union type where the union returned matches up with keys
+ * that are passed into the second type argument, and merges them into a single type.
+ *
+ * @template TUnion - The union type to filter
+ * @template TKeys - The keys to filter by
+ */
+export type $PickUnion<TUnion, TKeys> = $UnionToIntersection<
+  TUnion extends TKeys ? TUnion : never
+>;
