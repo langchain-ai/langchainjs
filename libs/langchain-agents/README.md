@@ -379,7 +379,7 @@ The `params` object accepts the following properties:
 - **`includeAgentName`**: `"inline" | undefined`
 
   - Controls how agent name appears in responses
-  - `"inline"`: Adds XML-style tags like `<n>agent_name</n><content>response</content>`
+  - `"inline"`: Adds XML-style tags like `<name>agent_name</name><content>response</content>`
   - `undefined`: Uses LLM provider's native name support (OpenAI only)
 
 - **`preModelHook`**: `RunnableLike<State, Update, LangGraphRunnableConfig>`

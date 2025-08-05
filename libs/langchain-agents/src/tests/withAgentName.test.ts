@@ -280,7 +280,7 @@ describe("withAgentName", () => {
 
     it("should pass through non-AI messages unchanged", () => {
       const message = new HumanMessage({
-        content: "<n>test</name><content>Hello</content>",
+        content: "<name>test</name><content>Hello</content>",
       });
 
       const result = _removeInlineAgentName(message);
@@ -290,7 +290,7 @@ describe("withAgentName", () => {
 
     it("should handle malformed XML tags gracefully", () => {
       const message = new AIMessage({
-        content: "<n>test-agent</n>Hello without proper closing",
+        content: "<name>test-agent</name>Hello without proper closing",
       });
 
       const result = _removeInlineAgentName(message);
