@@ -401,12 +401,7 @@ CompiledStateGraph<
 >;
 ```
 
-A compiled LangGraph StateGraph that supports:
-
-- `.invoke(input, config?)`: Single execution
-- `.stream(input, config?)`: Streaming execution
-- `.astream(input, config?)`: Async streaming
-- All standard LangGraph patterns and configurations
+Read more about LangGraph's StateGraph in the [LangGraph documentation](https://langchain-ai.github.io/langgraphjs/reference/classes/langgraph.StateGraph.html).
 
 ## Examples
 
