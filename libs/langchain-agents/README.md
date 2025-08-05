@@ -243,24 +243,20 @@ const agent = createReactAgent({
   llm,
   tools: [getWeather],
   // Trim message history if it gets too long
-  preModelHook: new RunnableLambda({
-    func: (state) => {
-      if (state.messages.length > 20) {
-        return {
-          messages: state.messages.slice(-10), // Keep last 10 messages
-        };
-      }
-      return {};
-    },
-  }),
+  preModelHook: (state) => {
+    if (state.messages.length > 20) {
+      return {
+        messages: state.messages.slice(-10), // Keep last 10 messages
+      };
+    }
+    return {};
+  },
   // Validate responses
-  postModelHook: new RunnableLambda({
-    func: (state) => {
-      const lastMessage = state.messages[state.messages.length - 1];
-      console.log("Agent responded:", lastMessage.content);
-      return {};
-    },
-  }),
+  postModelHook: (state) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    console.log("Agent responded:", lastMessage.content);
+    return {};
+  },
 });
 ```
 

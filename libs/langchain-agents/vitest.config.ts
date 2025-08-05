@@ -1,12 +1,17 @@
 import { defineConfig } from "vitest/config";
 
+const isIntegrationTest = process.env.VITEST_INTEGRATION === "true";
+
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: isIntegrationTest
+      ? ["src/**/*.int.test.ts"]
+      : ["src/**/*.test.ts"],
+    exclude: isIntegrationTest ? [] : ["src/**/*.int.test.ts"],
     coverage: {
-      enabled: true,
+      enabled: !isIntegrationTest,
       include: ["src/**/*.ts"],
-      exclude: ["src/load/**/*.ts"],
+      exclude: ["src/load/**/*.ts", "src/**/*.int.test.ts"],
       thresholds: {
         statements: 88,
         branches: 78,
