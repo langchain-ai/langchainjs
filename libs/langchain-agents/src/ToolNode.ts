@@ -190,11 +190,10 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
               name: tool.name,
               content:
                 typeof output === "string" ? output : JSON.stringify(output),
-              tool_call_id: call.id!,
+              tool_call_id: call.id ?? "",
             });
           }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
+        } catch (e: unknown) {
           if (!this.handleToolErrors) {
             throw e;
           }
@@ -204,8 +203,9 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
             // back. Instead, re-throw these errors even when `handleToolErrors = true`.
             throw e;
           }
+          const error = e instanceof Error ? e : new Error(String(e));
           return new ToolMessage({
-            content: `Error: ${e.message}\n Please fix your mistakes.`,
+            content: `Error: ${error.message}\n Please fix your mistakes.`,
             name: call.name,
             tool_call_id: call.id ?? "",
           });
