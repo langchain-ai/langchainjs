@@ -20,8 +20,25 @@ if (
   };
 }
 
-if (currentPackageJson.devDependencies?.["@langchain/core"]) {
-  delete currentPackageJson.devDependencies["@langchain/core"];
+// Remove all workspace dependencies since they don't exist in the test environment
+if (currentPackageJson.devDependencies) {
+  for (const [depName, depVersion] of Object.entries(
+    currentPackageJson.devDependencies
+  )) {
+    if (depVersion.includes("workspace:")) {
+      delete currentPackageJson.devDependencies[depName];
+    }
+  }
+}
+
+if (currentPackageJson.dependencies) {
+  for (const [depName, depVersion] of Object.entries(
+    currentPackageJson.dependencies
+  )) {
+    if (depVersion.includes("workspace:")) {
+      delete currentPackageJson.dependencies[depName];
+    }
+  }
 }
 
 if (

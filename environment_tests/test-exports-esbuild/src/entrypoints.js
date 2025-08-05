@@ -29,7 +29,6 @@ import * as memory_chat_memory from "langchain/memory/chat_memory";
 import * as document from "langchain/document";
 import * as document_loaders_base from "langchain/document_loaders/base";
 import * as document_transformers_openai_functions from "langchain/document_transformers/openai_functions";
-import * as callbacks from "langchain/callbacks";
 import * as output_parsers from "langchain/output_parsers";
 import * as retrievers_contextual_compression from "langchain/retrievers/contextual_compression";
 import * as retrievers_document_compressors from "langchain/retrievers/document_compressors";
