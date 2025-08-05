@@ -1,15 +1,11 @@
+import { InteropZodObject, InteropZodType } from "@langchain/core/utils/types";
 import {
-  InteropZodObject,
-  InteropZodType,
-  InteropZodObjectShape,
-} from "@langchain/core/utils/types";
-import {
-  BaseChannel,
   LangGraphRunnableConfig,
   AnnotationRoot,
   MessagesAnnotation,
   START,
 } from "@langchain/langgraph";
+import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { SystemMessage, BaseMessageLike } from "@langchain/core/messages";
 import {
@@ -47,25 +43,6 @@ export type ReducedZodChannel<
   TReducerSchema extends InteropZodType
 > = T & {
   lg_reducer_schema: TReducerSchema;
-};
-
-/** @internal */
-export type InteropZodToStateDefinition<
-  T extends InteropZodObject,
-  TShape = InteropZodObjectShape<T>
-> = {
-  [key in keyof TShape]: TShape[key] extends ReducedZodChannel<
-    infer Schema,
-    infer ReducerSchema
-  >
-    ? Schema extends InteropZodType<infer V>
-      ? ReducerSchema extends InteropZodType<infer U>
-        ? BaseChannel<V, U>
-        : never
-      : never
-    : TShape[key] extends InteropZodType<infer V, infer U>
-    ? BaseChannel<V, U>
-    : never;
 };
 
 export type ServerTool = Record<string, unknown>;
