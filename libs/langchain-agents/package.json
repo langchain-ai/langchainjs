@@ -78,17 +78,6 @@
       },
       "input": "./src/index.ts"
     },
-    "./load": {
-      "require": {
-        "types": "./dist/load/index.d.cts",
-        "default": "./dist/load/index.cjs"
-      },
-      "import": {
-        "types": "./dist/load/index.d.ts",
-        "default": "./dist/load/index.js"
-      },
-      "input": "./src/load/index.ts"
-    },
     "./package.json": "./package.json"
   },
   "files": [
