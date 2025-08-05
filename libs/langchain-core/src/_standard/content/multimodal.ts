@@ -64,22 +64,22 @@ export declare namespace Multimodal {
     };
 
   /** Content block for image data */
-  export type ImageContentBlock = Data & {
+  export type Image = Data & {
     /** Type of the content block */
     readonly type: "image";
   };
   /** Content block for video data */
-  export type VideoContentBlock = Data & {
+  export type Video = Data & {
     /** Type of the content block */
     readonly type: "video";
   };
   /** Content block for audio data */
-  export type AudioContentBlock = Data & {
+  export type Audio = Data & {
     /** Type of the content block */
     readonly type: "audio";
   };
   /** Content block for plain text data */
-  export type PlainTextContentBlock = Data & {
+  export type PlainText = Data & {
     /** Type of the content block */
     readonly type: "text-plain";
     /**
@@ -97,7 +97,7 @@ export declare namespace Multimodal {
   };
 
   /** Content block for file data */
-  export type FileContentBlock = Data & {
+  export type File = Data & {
     /**
      * Non-descript multimodal content block
      *
@@ -106,10 +106,5 @@ export declare namespace Multimodal {
     readonly type: "file";
   };
 
-  export type ContentBlock =
-    | ImageContentBlock
-    | VideoContentBlock
-    | AudioContentBlock
-    | PlainTextContentBlock
-    | FileContentBlock;
+  export type ContentBlock = Image | Video | Audio | PlainText | File;
 }
