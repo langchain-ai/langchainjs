@@ -101,44 +101,51 @@ async function buildProject(
   };
 
   /**
-   * plugins to run, automatically disabled if watch is enabled
+   * plugins for serialization, automatically disabled if:
+   * - watch is enabled or
+   * - packages doesn't export a an "./load" entrypoint
    */
-  const plugins = !watch
-    ? [
-        lcSecretsPlugin({
-          // Enable/disable based on environment
-          enabled: process.env.SKIP_SECRET_SCANNING !== "true",
-          // Use lenient validation in development
-          strict: process.env.NODE_ENV === "production",
-          // package path for the secret map
-          packagePath: path,
-        }),
-        importConstantsPlugin({
-          // Enable/disable based on environment
-          enabled: process.env.SKIP_IMPORT_CONSTANTS !== "true",
-          // package path for reading package.json
-          packagePath: path,
-          // package info for reading package.json
-          packageInfo: pkg,
-          // Add optional entrypoints for langchain package
-          optionalEntrypoints: optionalEntrypoints[pkg.name!] || [],
-        }),
-        importMapPlugin({
-          // Enable/disable based on environment
-          enabled: process.env.SKIP_IMPORT_MAP !== "true",
-          // package path for the import map
-          packagePath: path,
-          // package info for reading entrypoints
-          packageInfo: pkg,
-          // Add extra import map entries for langchain package
-          extraImportMapEntries: extraImportMapEntries[pkg.name!] || [],
-          // Exclude deprecated entrypoints from import map
-          // or imports that would cause circular dependencies
-          deprecatedOmitFromImportMap:
-            deprecatedOmitFromImportMap[pkg.name!] || [],
-        }),
-      ]
-    : [];
+  const hasSerializationFeature =
+    typeof pkg.exports === "object" &&
+    !Array.isArray(pkg.exports) &&
+    !pkg.exports?.["./load"];
+  const plugins =
+    !watch && hasSerializationFeature
+      ? [
+          lcSecretsPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_SECRET_SCANNING !== "true",
+            // Use lenient validation in development
+            strict: process.env.NODE_ENV === "production",
+            // package path for the secret map
+            packagePath: path,
+          }),
+          importConstantsPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_IMPORT_CONSTANTS !== "true",
+            // package path for reading package.json
+            packagePath: path,
+            // package info for reading package.json
+            packageInfo: pkg,
+            // Add optional entrypoints for langchain package
+            optionalEntrypoints: optionalEntrypoints[pkg.name!] || [],
+          }),
+          importMapPlugin({
+            // Enable/disable based on environment
+            enabled: process.env.SKIP_IMPORT_MAP !== "true",
+            // package path for the import map
+            packagePath: path,
+            // package info for reading entrypoints
+            packageInfo: pkg,
+            // Add extra import map entries for langchain package
+            extraImportMapEntries: extraImportMapEntries[pkg.name!] || [],
+            // Exclude deprecated entrypoints from import map
+            // or imports that would cause circular dependencies
+            deprecatedOmitFromImportMap:
+              deprecatedOmitFromImportMap[pkg.name!] || [],
+          }),
+        ]
+      : [];
 
   await build({
     entry,
