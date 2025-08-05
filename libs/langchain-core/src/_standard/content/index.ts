@@ -19,7 +19,7 @@ export declare namespace ContentBlock {
   /**
    * Annotation for citing data from a document.
    */
-  interface Citation extends ContentBlock {
+  interface Citation {
     /**
      * Type of the content block
      */
@@ -37,13 +37,13 @@ export declare namespace ContentBlock {
     /**
      * Start index of the **response text** for which the annotation applies.
      *
-     * @see {TextContentBlock.text}
+     * @see {Text}
      */
     startIndex?: number;
     /**
      * End index of the **response text** for which the annotation applies.
      *
-     * @see {TextContentBlock.text}
+     * @see {Text}
      */
     endIndex?: number;
     /**
@@ -58,7 +58,7 @@ export declare namespace ContentBlock {
    * This typically represents the main text content of a message, such as the response
    * from a language model or the text of a user message.
    */
-  interface TextContentBlock extends ContentBlock {
+  interface Text extends ContentBlock {
     /**
      * Type of the content block
      */
@@ -80,7 +80,7 @@ export declare namespace ContentBlock {
   /**
    * Reasoning output from a LLM.
    */
-  interface ReasoningContentBlock extends ContentBlock {
+  interface Reasoning extends ContentBlock {
     /**
      * Type of the content block
      */
@@ -101,8 +101,8 @@ export declare namespace ContentBlock {
   export import Tools = ToolsContentBlock;
   export import Multimodal = MultimodalContentBlock;
   export type Standard =
-    | TextContentBlock
-    | ReasoningContentBlock
+    | Text
+    | Reasoning
     | Tools.ContentBlock
     | Multimodal.ContentBlock;
 }
