@@ -1462,3 +1462,15 @@ test("Can handle google function calling blocks in content", async () => {
   const res = await chat.invoke(messages);
   expect(res.content.length).toBeGreaterThan(1);
 });
+
+test("Can handle opus 4.1 without passing any args", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+  });
+
+  const response = await model.invoke(
+    "Please respond to this message simply with: Hello"
+  );
+
+  expect(response.content.length).toBeGreaterThan(0);
+});
