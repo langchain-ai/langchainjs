@@ -134,7 +134,7 @@ function _isChatModelWithBindTools(
   return "bindTools" in llm && typeof llm.bindTools === "function";
 }
 
-async function _shouldBindTools(
+export async function _shouldBindTools(
   llm: LanguageModelLike,
   tools: (ClientTool | ServerTool)[]
 ): Promise<boolean> {
@@ -278,10 +278,10 @@ const _simpleBindTools = (
   return null;
 };
 
-async function _bindTools(
+export async function _bindTools(
   llm: LanguageModelLike,
   toolClasses: (ClientTool | ServerTool)[]
-): Promise<RunnableLike | null> {
+): Promise<RunnableLike> {
   const model = _simpleBindTools(llm, toolClasses);
   if (model) return model;
 
@@ -314,7 +314,7 @@ async function _bindTools(
   throw new Error(`llm ${llm} must define bindTools method.`);
 }
 
-async function _getModel(
+export async function _getModel(
   llm: LanguageModelLike | ConfigurableModelInterface
 ): Promise<BaseChatModel> {
   // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
