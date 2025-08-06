@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { PromptTemplate } from "../prompt.js";
 import { parseTemplate } from "../template.js";
 

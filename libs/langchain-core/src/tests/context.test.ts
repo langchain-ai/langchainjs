@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { RunnableLambda } from "../runnables/base.js";
 import { getContextVariable, setContextVariable } from "../context.js";
 

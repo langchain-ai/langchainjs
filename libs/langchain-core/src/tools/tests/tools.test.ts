@@ -1,4 +1,4 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 import { z } from "zod";
 import { z as z4 } from "zod/v4";
 

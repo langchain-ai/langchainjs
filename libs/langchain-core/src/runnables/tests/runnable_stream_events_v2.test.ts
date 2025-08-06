@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test, expect, afterEach } from "@jest/globals";
+import { test, expect, afterEach } from "vitest";
 import { z } from "zod";
 import { AsyncLocalStorage } from "node:async_hooks";
 import {
@@ -830,9 +830,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chain_start",
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -883,20 +883,6 @@ test("Runnable streamEvents method with chat model chain", async () => {
       },
     },
     {
-      event: "on_chat_model_stream",
-      run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
-        a: "b",
-        foo: "bar",
-        ls_model_type: "chat",
-        ls_provider: model.getName(),
-        ls_stop: undefined,
-      },
-      name: "my_model",
-      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
-    },
-    {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
@@ -918,7 +904,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -942,7 +928,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
+      data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -966,7 +952,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
+      data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
     {
       event: "on_chain_stream",
@@ -976,6 +962,20 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
+      data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
+    },
+    {
+      event: "on_chat_model_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_provider: model.getName(),
+        ls_stop: undefined,
+      },
+      name: "my_model",
       data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
     {

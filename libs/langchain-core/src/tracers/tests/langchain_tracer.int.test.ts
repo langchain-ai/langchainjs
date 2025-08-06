@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import * as uuid from "uuid";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { LangChainTracer, Run } from "../tracer_langchain.js";
 import { Serialized } from "../../load/serializable.js";

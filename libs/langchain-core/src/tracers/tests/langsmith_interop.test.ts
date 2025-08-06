@@ -2,14 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable no-promise-executor-return */
 
-import {
-  jest,
-  test,
-  beforeEach,
-  afterEach,
-  afterAll,
-  expect,
-} from "@jest/globals";
+import { vi, test, beforeEach, afterEach, afterAll, expect } from "vitest";
 import { traceable } from "langsmith/traceable";
 import { Client } from "langsmith";
 
@@ -30,7 +23,7 @@ const client = new Client({
 const decoder = new TextDecoder();
 
 beforeEach(() => {
-  fetchMock = jest.spyOn(global, "fetch").mockImplementation(() =>
+  fetchMock = vi.spyOn(global, "fetch").mockImplementation(() =>
     Promise.resolve({
       ok: true,
       text: () => "",
@@ -44,7 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 afterAll(() => {

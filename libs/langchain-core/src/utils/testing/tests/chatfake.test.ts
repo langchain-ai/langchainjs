@@ -1,4 +1,4 @@
-import { describe, test, expect, jest } from "@jest/globals";
+import { describe, test, expect, vi } from "vitest";
 import { HumanMessage } from "../../../messages/index.js";
 import { StringOutputParser } from "../../../output_parsers/string.js";
 import { FakeListChatModel } from "../index.js";
@@ -65,7 +65,7 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
       sleep: 10,
     });
-    const sleepSpy = jest.spyOn(chat, "_sleep");
+    const sleepSpy = vi.spyOn(chat, "_sleep");
     const message = new HumanMessage("test message");
     await chat.invoke([message]);
 
@@ -118,7 +118,7 @@ describe("Test FakeListChatLLM", () => {
       responses: ["test response 1", "test response 2"],
       sleep: 10,
     });
-    const sleepSpy = jest.spyOn(chat, "_sleep");
+    const sleepSpy = vi.spyOn(chat, "_sleep");
     const chunks = [];
 
     const response = await chat

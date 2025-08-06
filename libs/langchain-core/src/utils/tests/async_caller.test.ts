@@ -1,9 +1,9 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { AsyncCaller } from "../async_caller.js";
 
 test("AsyncCaller passes on arguments and returns return value", async () => {
   const caller = new AsyncCaller({});
-  const callable = jest.fn((arg1, arg2) => Promise.resolve([arg2, arg1]));
+  const callable = vi.fn((arg1, arg2) => Promise.resolve([arg2, arg1]));
 
   const resultDirect = await callable(1, 2);
   const resultWrapped = await caller.call(callable, 1, 2);
@@ -16,7 +16,7 @@ test("AsyncCaller retries on failure", async () => {
   const caller = new AsyncCaller({});
 
   // A direct call throws an error.
-  let callable = jest
+  let callable = vi
     .fn<() => Promise<number[]>>()
     .mockRejectedValueOnce("error")
     .mockResolvedValueOnce([2, 1]);
@@ -24,7 +24,7 @@ test("AsyncCaller retries on failure", async () => {
   await expect(() => callable()).rejects.toEqual("error");
 
   // A wrapped call retries and succeeds.
-  callable = jest
+  callable = vi
     .fn<() => Promise<number[]>>()
     .mockRejectedValueOnce("error")
     .mockResolvedValueOnce([2, 1]);

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { HumanMessage } from "../../messages/index.js";
 import { applyPatch } from "../../utils/json_patch.js";
 import { RemoteRunnable } from "../remote.js";

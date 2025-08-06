@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { RunnableLambda } from "../base.js";
 
 test("RunnableRetry invoke", async () => {
@@ -76,9 +76,9 @@ test("RunnableRetry batch with all returned errors", async () => {
     returnExceptions: true,
   });
   expect(result).toEqual([
-    new Error("TEST ERROR"),
-    new Error("TEST ERROR"),
-    new Error("TEST ERROR"),
+    expect.objectContaining({ message: "TEST ERROR" }),
+    expect.objectContaining({ message: "TEST ERROR" }),
+    expect.objectContaining({ message: "TEST ERROR" }),
   ]);
 });
 

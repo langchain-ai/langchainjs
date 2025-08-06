@@ -1,11 +1,4 @@
-import {
-  it,
-  expect,
-  describe,
-  beforeEach,
-  afterEach,
-  jest,
-} from "@jest/globals";
+import { it, expect, describe, beforeEach, afterEach, vi } from "vitest";
 
 describe("insecureHash", () => {
   let originalConsoleWarn: typeof console.warn;
@@ -13,10 +6,10 @@ describe("insecureHash", () => {
   beforeEach(() => {
     // Save and mock console.warn
     originalConsoleWarn = console.warn;
-    console.warn = jest.fn(console.log);
+    console.warn = vi.fn(console.log);
     // Reset the hasLoggedWarning flag by re-importing the module
     // This is a workaround since hasLoggedWarning is module-scoped.
-    jest.resetModules();
+    vi.resetModules();
   });
 
   afterEach(() => {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect } from "vitest";
 import { calculateMaxTokens, getModelContextSize } from "../base.js";
 import { MessageContent } from "../../messages/base.js";
 import { FakeLLM } from "../../utils/testing/index.js";

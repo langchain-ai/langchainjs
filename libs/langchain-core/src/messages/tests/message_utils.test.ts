@@ -1,4 +1,4 @@
-import { it, describe, test, expect } from "@jest/globals";
+import { it, describe, test, expect } from "vitest";
 import { v4 } from "uuid";
 import {
   filterMessages,

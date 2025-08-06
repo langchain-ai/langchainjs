@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Document } from "../documents/document.js";
 
 test("Document should handle empty pageContent", () => {

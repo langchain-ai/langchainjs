@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { z as z4 } from "zod/v4";
 
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 
 import { OutputParserException } from "../base.js";
 import { StructuredOutputParser } from "../structured.js";

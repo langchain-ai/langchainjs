@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { getRuntimeEnvironment } from "../env.js";
 
 test("test getRuntimeEnvironment", async () => {

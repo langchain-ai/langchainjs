@@ -1,4 +1,4 @@
-import { describe, test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { RunnableSequence } from "../../runnables/base.js";
 import { RunnablePassthrough } from "../../runnables/passthrough.js";

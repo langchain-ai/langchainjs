@@ -1,5 +1,5 @@
 import "web-streams-polyfill/polyfill";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { FakeStreamingLLM } from "../testing/index.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
 

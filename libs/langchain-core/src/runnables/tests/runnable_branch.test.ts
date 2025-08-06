@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { RunnableBranch } from "../branch.js";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { MessageContentComplex } from "../../messages/base.js";
 import { InMemoryCache } from "../base.js";
 
