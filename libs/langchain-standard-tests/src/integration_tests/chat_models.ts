@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { expect as JestExpect } from "@jest/globals";
+import type { expect as VitestExpect } from "vitest";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
@@ -31,21 +32,6 @@ import {
 } from "../base.js";
 import { TestCallbackHandler } from "../utils.js";
 import { isMessageContentComplex } from "../utils/types.js";
-
-let expect: typeof JestExpect;
-
-try {
-  expect = (await import("@jest/globals")).expect;
-} catch {
-  try {
-    // @ts-expect-error Vitest is not a dependency of this package
-    expect = (await import("vitest")).expect;
-  } catch {
-    throw new Error("Could not load either Jest nor Vitest expect");
-  }
-}
-
-console.log("\n\n\nCHECHCHHCHC", expect);
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -158,6 +144,8 @@ export abstract class ChatModelIntegrationTests<
     >;
   } = { invoke: [], stream: [] };
 
+  expect: typeof JestExpect | typeof VitestExpect;
+
   constructor(
     fields: ChatModelIntegrationTestsFields<
       CallOptions,
@@ -192,14 +180,14 @@ export abstract class ChatModelIntegrationTests<
     const result = await chatModel.invoke("Hello", callOptions);
 
     // Verify that the result is defined
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
 
     // Check that the result is an instance of the expected response type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
     // Ensure the response content is a non-empty string
-    expect(typeof result.text).toBe("string");
-    expect(result.text).not.toBe("");
+    this.expect(typeof result.text).toBe("string");
+    this.expect(result.text).not.toBe("");
   }
 
   /**
@@ -224,15 +212,15 @@ export abstract class ChatModelIntegrationTests<
     // Stream the response for a simple "Hello" prompt
     for await (const token of await chatModel.stream("Hello", callOptions)) {
       chunkCount += 1;
-      expect(token).toBeDefined();
-      expect(token).toBeInstanceOf(AIMessageChunk);
-      expect(token.content).toBeDefined();
+      this.expect(token).toBeDefined();
+      this.expect(token).toBeInstanceOf(AIMessageChunk);
+      this.expect(token.content).toBeDefined();
 
       if (typeof token.content === "string") {
         numChars += token.content.length;
       } else if (Array.isArray(token.content)) {
         for (const part of token.content) {
-          expect(isMessageContentComplex(part)).toBe(true);
+          this.expect(isMessageContentComplex(part)).toBe(true);
           // We can still count this as received content.
           // Let's count text characters if available.
           if (part.type === "text") {
@@ -247,10 +235,10 @@ export abstract class ChatModelIntegrationTests<
     }
 
     // Ensure the stream actually produced at least one chunk.
-    expect(chunkCount).toBeGreaterThan(0);
+    this.expect(chunkCount).toBeGreaterThan(0);
 
     // Ensure that across all chunks, some content was actually received.
-    expect(numChars).toBeGreaterThan(0);
+    this.expect(numChars).toBeGreaterThan(0);
   }
 
   /**
@@ -273,25 +261,25 @@ export abstract class ChatModelIntegrationTests<
     const batchResults = await chatModel.batch(["Hello", "Hey"], callOptions);
 
     // Verify that results are returned
-    expect(batchResults).toBeDefined();
+    this.expect(batchResults).toBeDefined();
 
     // Check that the results are in array format
-    expect(Array.isArray(batchResults)).toBe(true);
+    this.expect(Array.isArray(batchResults)).toBe(true);
 
     // Ensure the number of results matches the number of inputs
-    expect(batchResults.length).toBe(2);
+    this.expect(batchResults.length).toBe(2);
 
     // Validate each result individually
     for (const result of batchResults) {
       // Check that the result is defined
-      expect(result).toBeDefined();
+      this.expect(result).toBeDefined();
 
       // Verify the result is of the expected type
-      expect(result).toBeInstanceOf(this.invokeResponseType);
+      this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
       // Ensure the response content is a non-empty string
-      expect(typeof result.text).toBe("string");
-      expect(result.text).not.toBe("");
+      this.expect(typeof result.text).toBe("string");
+      this.expect(result.text).not.toBe("");
     }
   }
 
@@ -324,13 +312,13 @@ export abstract class ChatModelIntegrationTests<
     }
 
     // It must have at least 3: on_chat_model_start, on_chat_model_stream, and on_chat_model_end
-    expect(events.length).toBeGreaterThanOrEqual(3);
+    this.expect(events.length).toBeGreaterThanOrEqual(3);
 
-    expect(events[0].event).toBe("on_chat_model_start");
-    expect(events[events.length - 1].event).toBe("on_chat_model_end");
+    this.expect(events[0].event).toBe("on_chat_model_start");
+    this.expect(events[events.length - 1].event).toBe("on_chat_model_end");
 
     const middleItem = events[Math.floor(events.length / 2)];
-    expect(middleItem.event).toBe("on_chat_model_stream");
+    this.expect(middleItem.event).toBe("on_chat_model_stream");
 
     // The last event should contain the final content via the `event.data.output` field
     const endContent = events[events.length - 1].data.output;
@@ -364,7 +352,7 @@ export abstract class ChatModelIntegrationTests<
       })
       .join("");
 
-    expect(endContentText).toBe(allChunksText);
+    this.expect(endContentText).toBe(allChunksText);
   }
 
   /**
@@ -394,14 +382,14 @@ export abstract class ChatModelIntegrationTests<
     const result = await chatModel.invoke(messages, callOptions);
 
     // Verify that the result is defined
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
 
     // Check that the result is an instance of the expected response type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
     // Ensure the response content is a non-empty string
-    expect(typeof result.text).toBe("string");
-    expect(result.text).not.toBe("");
+    this.expect(typeof result.text).toBe("string");
+    this.expect(result.text).not.toBe("");
   }
 
   /**
@@ -434,14 +422,14 @@ export abstract class ChatModelIntegrationTests<
     const result = await chatModel.invoke(messages, callOptions);
 
     // Verify that the result is defined
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
 
     // Check that the result is an instance of the expected response type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
     // Ensure the response content is a non-empty string
-    expect(typeof result.text).toBe("string");
-    expect(result.text).not.toBe("");
+    this.expect(typeof result.text).toBe("string");
+    this.expect(result.text).not.toBe("");
   }
 
   /**
@@ -466,10 +454,10 @@ export abstract class ChatModelIntegrationTests<
     const result = await chatModel.invoke("Hello", callOptions);
 
     // Verify that the result is defined
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
 
     // Check that the result is an instance of the expected response type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
     // Ensure that the result contains usage_metadata
     if (!("usage_metadata" in result)) {
@@ -480,26 +468,26 @@ export abstract class ChatModelIntegrationTests<
     const usageMetadata = result.usage_metadata as UsageMetadata;
 
     // Verify that usage metadata is defined
-    expect(usageMetadata).toBeDefined();
+    this.expect(usageMetadata).toBeDefined();
 
     // Check that input_tokens is a number
-    expect(typeof usageMetadata.input_tokens).toBe("number");
+    this.expect(typeof usageMetadata.input_tokens).toBe("number");
 
     // Check that output_tokens is a number
-    expect(typeof usageMetadata.output_tokens).toBe("number");
+    this.expect(typeof usageMetadata.output_tokens).toBe("number");
 
     // Check that total_tokens is a number
-    expect(typeof usageMetadata.total_tokens).toBe("number");
+    this.expect(typeof usageMetadata.total_tokens).toBe("number");
 
-    // Ensure model_name is in response_metadata and is a non-empty string
+    // Ensure model is in response_metadata and is a non-empty string
     if (!("response_metadata" in result)) {
       throw new Error("result is missing `response_metadata`");
     }
     const responseMetadata = result.response_metadata;
-    expect(responseMetadata).toBeDefined();
-    expect(responseMetadata.model_name).toBeDefined();
-    expect(typeof responseMetadata.model_name).toBe("string");
-    expect(responseMetadata.model_name).not.toBe("");
+    this.expect(responseMetadata).toBeDefined();
+    this.expect(responseMetadata.model).toBeDefined();
+    this.expect(typeof responseMetadata.model).toBe("string");
+    this.expect(responseMetadata.model).not.toBe("");
 
     // Test additional usage metadata details
     if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
@@ -589,12 +577,12 @@ export abstract class ChatModelIntegrationTests<
   }
 
   private assertAudioInputMetadata(msg: AIMessage) {
-    expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata?.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata?.input_token_details?.audio).toBe(
+    this.expect(msg.usage_metadata).toBeDefined();
+    this.expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    this.expect(typeof msg.usage_metadata?.input_token_details?.audio).toBe(
       "number"
     );
-    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+    this.expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
       Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
@@ -603,12 +591,12 @@ export abstract class ChatModelIntegrationTests<
   }
 
   private assertAudioOutputMetadata(msg: AIMessage) {
-    expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata?.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata?.output_token_details?.audio).toBe(
+    this.expect(msg.usage_metadata).toBeDefined();
+    this.expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    this.expect(typeof msg.usage_metadata?.output_token_details?.audio).toBe(
       "number"
     );
-    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+    this.expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
       Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
@@ -617,12 +605,12 @@ export abstract class ChatModelIntegrationTests<
   }
 
   private assertReasoningOutputMetadata(msg: AIMessage) {
-    expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata?.output_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata?.output_token_details?.reasoning).toBe(
-      "number"
-    );
-    expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
+    this.expect(msg.usage_metadata).toBeDefined();
+    this.expect(msg.usage_metadata?.output_token_details).toBeDefined();
+    this.expect(
+      typeof msg.usage_metadata?.output_token_details?.reasoning
+    ).toBe("number");
+    this.expect(msg.usage_metadata?.output_tokens).toBeGreaterThanOrEqual(
       Object.values(msg.usage_metadata?.output_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
@@ -631,12 +619,12 @@ export abstract class ChatModelIntegrationTests<
   }
 
   private assertCacheReadInputMetadata(msg: AIMessage) {
-    expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata?.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata?.input_token_details?.cache_read).toBe(
-      "number"
-    );
-    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+    this.expect(msg.usage_metadata).toBeDefined();
+    this.expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    this.expect(
+      typeof msg.usage_metadata?.input_token_details?.cache_read
+    ).toBe("number");
+    this.expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
       Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
@@ -645,12 +633,12 @@ export abstract class ChatModelIntegrationTests<
   }
 
   private assertCacheCreationInputMetadata(msg: AIMessage) {
-    expect(msg.usage_metadata).toBeDefined();
-    expect(msg.usage_metadata?.input_token_details).toBeDefined();
-    expect(typeof msg.usage_metadata?.input_token_details?.cache_creation).toBe(
-      "number"
-    );
-    expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
+    this.expect(msg.usage_metadata).toBeDefined();
+    this.expect(msg.usage_metadata?.input_token_details).toBeDefined();
+    this.expect(
+      typeof msg.usage_metadata?.input_token_details?.cache_creation
+    ).toBe("number");
+    this.expect(msg.usage_metadata?.input_tokens).toBeGreaterThanOrEqual(
       Object.values(msg.usage_metadata?.input_token_details ?? {}).reduce(
         (a, b) => (a ?? 0) + (b ?? 0),
         0
@@ -679,8 +667,8 @@ export abstract class ChatModelIntegrationTests<
     // Stream the response for a simple "Hello" prompt
     for await (const chunk of await chatModel.stream("Hello", callOptions)) {
       // Verify each chunk is defined and of the correct type
-      expect(chunk).toBeDefined();
-      expect(chunk).toBeInstanceOf(AIMessageChunk);
+      this.expect(chunk).toBeDefined();
+      this.expect(chunk).toBeInstanceOf(AIMessageChunk);
 
       // Concatenate chunks to get the final result
       if (!finalChunks) {
@@ -697,7 +685,7 @@ export abstract class ChatModelIntegrationTests<
 
     // Extract usage metadata from the final concatenated result
     const usageMetadata = finalChunks.usage_metadata;
-    expect(usageMetadata).toBeDefined();
+    this.expect(usageMetadata).toBeDefined();
 
     // Ensure usage metadata is present
     if (!usageMetadata) {
@@ -705,9 +693,9 @@ export abstract class ChatModelIntegrationTests<
     }
 
     // Verify that input_tokens, output_tokens, and total_tokens are numbers
-    expect(typeof usageMetadata.input_tokens).toBe("number");
-    expect(typeof usageMetadata.output_tokens).toBe("number");
-    expect(typeof usageMetadata.total_tokens).toBe("number");
+    this.expect(typeof usageMetadata.input_tokens).toBe("number");
+    this.expect(typeof usageMetadata.output_tokens).toBe("number");
+    this.expect(typeof usageMetadata.total_tokens).toBe("number");
 
     // Test additional usage metadata details
     if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
@@ -760,8 +748,8 @@ export abstract class ChatModelIntegrationTests<
     const model = new this.Cls(this.constructorArgs);
     const result = await model.invoke("hi", { ...callOptions, stop: ["you"] });
 
-    expect(result).toBeInstanceOf(this.invokeResponseType);
-    expect(result.content).toBeDefined();
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result.content).toBeDefined();
 
     // Test 2: Passing 'stop' as an initialization parameter to the model's constructor.
     const customModel = new this.Cls({
@@ -769,8 +757,8 @@ export abstract class ChatModelIntegrationTests<
       stop: ["you"],
     });
     const customResult = await customModel.invoke("hi", callOptions);
-    expect(customResult).toBeInstanceOf(this.invokeResponseType);
-    expect(customResult.content).toBeDefined();
+    this.expect(customResult).toBeInstanceOf(this.invokeResponseType);
+    this.expect(customResult.content).toBeDefined();
   }
 
   /**
@@ -803,19 +791,19 @@ export abstract class ChatModelIntegrationTests<
     const result: AIMessage = await modelWithTools.invoke(query, callOptions);
 
     // Validate the result of the tool call
-    expect(result).toBeDefined();
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeDefined();
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
 
     // Ensure only one tool call was made
-    expect(result.tool_calls).toBeDefined();
-    expect(result.tool_calls!.length).toBe(1);
+    this.expect(result.tool_calls).toBeDefined();
+    this.expect(result.tool_calls!.length).toBe(1);
 
     // Check the tool call details
     const toolCall = result.tool_calls![0];
-    expect(toolCall.name).toBe(functionName);
-    expect(toolCall.args).toEqual(functionArgs);
-    expect(toolCall.id).toBe(functionId);
-    expect(toolCall.type).toBe("tool_call");
+    this.expect(toolCall.name).toBe(functionName);
+    this.expect(toolCall.args).toEqual(functionArgs);
+    this.expect(toolCall.id).toBe(functionId);
+    this.expect(toolCall.type).toBe("tool_call");
   }
 
   /**
@@ -873,31 +861,31 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
+    this.expect(result.tool_calls?.[0]).toBeDefined();
     if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
     const { tool_calls } = result;
 
     // Check that only one tool call was made
-    expect(tool_calls).toHaveLength(1);
+    this.expect(tool_calls).toHaveLength(1);
 
     const toolCall = tool_calls[0];
 
     // Check that the correct tool was called
-    expect(toolCall.name).toBe("math_addition");
+    this.expect(toolCall.name).toBe("math_addition");
 
     // Verify that the tool call has the expected arguments
-    expect(toolCall.args).toEqual({
-      a: expect.any(String),
-      b: expect.any(String),
+    this.expect(toolCall.args).toEqual({
+      a: this.expect.any(Number),
+      b: this.expect.any(Number),
     }); // TODO: verify the values if possible? 1836281973 and 19973286
 
     // Verify call ID is present
-    expect(toolCall.id).toBeDefined();
+    this.expect(toolCall.id).toBeDefined();
 
     // Verify the tool call type is correct
-    expect(toolCall.type).toBe("tool_call");
+    this.expect(toolCall.type).toBe("tool_call");
   }
 
   /**
@@ -954,14 +942,14 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
+    this.expect(result.tool_calls?.[0]).toBeDefined();
     if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
     const { tool_calls } = result;
 
     // Check that the correct tool was called
-    expect(tool_calls[0].name).toBe("math_addition");
+    this.expect(tool_calls[0].name).toBe("math_addition");
   }
 
   /**
@@ -1032,8 +1020,8 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that the result is of the expected type and defined
-    expect(result).toBeInstanceOf(this.invokeResponseType);
-    expect(result.content).toBeDefined();
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result.content).toBeDefined();
   }
 
   /**
@@ -1107,8 +1095,8 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that the result is of the expected type and defined
-    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
-    expect(resultListContent.content).toBeDefined();
+    this.expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
+    this.expect(resultListContent.content).toBeDefined();
   }
 
   /**
@@ -1179,7 +1167,7 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that the result is of the expected type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result).toBeInstanceOf(this.invokeResponseType);
   }
 
   /**
@@ -1235,23 +1223,29 @@ export abstract class ChatModelIntegrationTests<
       callOptionsWithHandler
     );
 
+    console.log("result", handler.extraParams, handler);
+
     // Verify that the 'a' field is present and is a number
-    expect(result.a).toBeDefined();
-    expect(typeof result.a).toBe("number");
+    this.expect(result.a).toBeDefined();
+    this.expect(typeof result.a).toBe("number");
 
     // Verify that the 'b' field is present and is a number
-    expect(result.b).toBeDefined();
-    expect(typeof result.b).toBe("number");
+    this.expect(result.b).toBeDefined();
+    this.expect(typeof result.b).toBe("number");
 
     // Verify that details to describe the structured output
     // is emitted in tracing
-    expect(handler.extraParams).toEqual(
-      expect.objectContaining({
+    const structuredOutputFormat = (
+      handler.extraParams.options as {
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
-          schema: toJsonSchema(adderSchema),
-        },
-      })
+          kwargs: { method: string };
+          schema: any;
+        };
+      }
+    ).ls_structured_output_format;
+    this.expect(structuredOutputFormat?.kwargs?.method).toBe("functionCalling");
+    this.expect(structuredOutputFormat?.schema).toEqual(
+      toJsonSchema(adderSchema)
     );
   }
 
@@ -1312,25 +1306,29 @@ export abstract class ChatModelIntegrationTests<
     );
 
     // Verify that the raw output is of the expected type
-    expect(result.raw).toBeInstanceOf(this.invokeResponseType);
+    this.expect(result.raw).toBeInstanceOf(this.invokeResponseType);
 
     // Verify that the parsed 'a' field is present and is a number
-    expect(result.parsed.a).toBeDefined();
-    expect(typeof result.parsed.a).toBe("number");
+    this.expect(result.parsed.a).toBeDefined();
+    this.expect(typeof result.parsed.a).toBe("number");
 
     // Verify that the parsed 'b' field is present and is a number
-    expect(result.parsed.b).toBeDefined();
-    expect(typeof result.parsed.b).toBe("number");
+    this.expect(result.parsed.b).toBeDefined();
+    this.expect(typeof result.parsed.b).toBe("number");
 
     // Verify that details to describe the structured output
     // is emitted in tracing
-    expect(handler.extraParams).toEqual(
-      expect.objectContaining({
+    const structuredOutputFormat = (
+      handler.extraParams.options as {
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
-          schema: toJsonSchema(adderSchema),
-        },
-      })
+          kwargs: { method: string };
+          schema: any;
+        };
+      }
+    ).ls_structured_output_format;
+    this.expect(structuredOutputFormat?.kwargs?.method).toBe("functionCalling");
+    this.expect(structuredOutputFormat?.schema).toEqual(
+      toJsonSchema(adderSchema)
     );
   }
 
@@ -1380,12 +1378,12 @@ export abstract class ChatModelIntegrationTests<
     const cacheValue = await model.cache.lookup(prompt, llmKey);
 
     // Verify that the cache contains exactly one generation
-    expect(cacheValue !== null).toBeTruthy();
+    this.expect(cacheValue !== null).toBeTruthy();
     if (!cacheValue) return;
-    expect(cacheValue).toHaveLength(1);
+    this.expect(cacheValue).toHaveLength(1);
 
     // Ensure the cached value has the expected structure
-    expect("message" in cacheValue[0]).toBeTruthy();
+    this.expect("message" in cacheValue[0]).toBeTruthy();
     if (!("message" in cacheValue[0])) return;
     const cachedMessage = cacheValue[0].message as AIMessage;
 
@@ -1393,11 +1391,11 @@ export abstract class ChatModelIntegrationTests<
     const result = await model.invoke([humanMessage], callOptions);
 
     // Verify that the result matches the cached value
-    expect(result).toEqual(cachedMessage);
+    this.expect(result).toEqual(cachedMessage);
 
     // Ensure no additional cache entries were created
     const cacheValue2 = await model.cache.lookup(prompt, llmKey);
-    expect(cacheValue2).toEqual(cacheValue);
+    this.expect(cacheValue2).toEqual(cacheValue);
   }
 
   /**
@@ -1442,20 +1440,20 @@ export abstract class ChatModelIntegrationTests<
       }
     }
 
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
     if (!result) return;
 
     // Verify a tool was actually called.
     // We only check for the presence of the first tool call, not the exact number,
     // as some models might call the tool multiple times.
-    expect(result.tool_calls?.[0]).toBeDefined();
+    this.expect(result.tool_calls?.[0]).toBeDefined();
 
     // Verify usage metadata is present and contains expected fields
-    expect(result.usage_metadata).toBeDefined();
-    expect(result.usage_metadata?.input_tokens).toBeDefined();
-    expect(result.usage_metadata?.input_tokens).toBeGreaterThan(0);
-    expect(result.usage_metadata?.output_tokens).toBeDefined();
-    expect(result.usage_metadata?.output_tokens).toBeGreaterThan(0);
+    this.expect(result.usage_metadata).toBeDefined();
+    this.expect(result.usage_metadata?.input_tokens).toBeDefined();
+    this.expect(result.usage_metadata?.input_tokens).toBeGreaterThan(0);
+    this.expect(result.usage_metadata?.output_tokens).toBeDefined();
+    this.expect(result.usage_metadata?.output_tokens).toBeGreaterThan(0);
   }
 
   /**
@@ -1522,12 +1520,12 @@ export abstract class ChatModelIntegrationTests<
       callOptions
     );
 
-    expect(result.tool_calls?.[0]).toBeDefined();
+    this.expect(result.tool_calls?.[0]).toBeDefined();
     if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
     const { tool_calls } = result;
-    expect(tool_calls[0].name).toBe("get_current_weather");
+    this.expect(tool_calls[0].name).toBe("get_current_weather");
 
     // Add the model's response (including tool call) to the conversation
     messages.push(result);
@@ -1546,7 +1544,7 @@ export abstract class ChatModelIntegrationTests<
     const finalResult = await modelWithTools.invoke(messages, callOptions);
 
     // Verify that the model generated a non-empty response
-    expect(finalResult.content).not.toBe("");
+    this.expect(finalResult.content).not.toBe("");
   }
 
   /**
@@ -1616,17 +1614,17 @@ export abstract class ChatModelIntegrationTests<
       result = !result ? chunk : concat(result, chunk);
     }
 
-    expect(result).toBeDefined();
+    this.expect(result).toBeDefined();
     if (!result) return;
 
     // Verify that the streamed result contains a tool call
-    expect(result.tool_calls?.[0]).toBeDefined();
+    this.expect(result.tool_calls?.[0]).toBeDefined();
     if (!result.tool_calls?.[0]) {
       throw new Error("result.tool_calls is undefined");
     }
 
     const { tool_calls } = result;
-    expect(tool_calls[0].name).toBe("get_current_weather");
+    this.expect(tool_calls[0].name).toBe("get_current_weather");
 
     // Add the model's response (including tool call) to the conversation
     messages.push(result);
@@ -1649,11 +1647,11 @@ export abstract class ChatModelIntegrationTests<
       finalResult = !finalResult ? chunk : concat(finalResult, chunk);
     }
 
-    expect(finalResult).toBeDefined();
+    this.expect(finalResult).toBeDefined();
     if (!finalResult) return;
 
     // Verify that the model generated a non-empty streamed response
-    expect(finalResult.content).not.toBe("");
+    this.expect(finalResult.content).not.toBe("");
   }
 
   /**
@@ -1732,10 +1730,10 @@ Extraction path: {extractionPath}`,
     );
 
     // Verify that all expected fields are present and of the correct type
-    expect(result.decision).toBeDefined();
-    expect(result.explanation).toBeDefined();
-    expect(result.apiDetails).toBeDefined();
-    expect(typeof result.apiDetails === "object").toBeTruthy();
+    this.expect(result.decision).toBeDefined();
+    this.expect(result.explanation).toBeDefined();
+    this.expect(result.apiDetails).toBeDefined();
+    this.expect(typeof result.apiDetails === "object").toBeTruthy();
   }
 
   /**
@@ -1804,7 +1802,7 @@ Extraction path: {extractionPath}`,
         callOptions
       );
       // Model should call at least two tools. Using greater than or equal since it might call the current time tool multiple times.
-      expect(result.tool_calls?.length).toBeGreaterThanOrEqual(2);
+      this.expect(result.tool_calls?.length).toBeGreaterThanOrEqual(2);
       if (!result.tool_calls?.length) return;
 
       const weatherToolCalls = result.tool_calls.find(
@@ -1814,8 +1812,8 @@ Extraction path: {extractionPath}`,
         (tc) => tc.name === currentTimeTool.name
       );
 
-      expect(weatherToolCalls).toBeDefined();
-      expect(currentTimeToolCalls).toBeDefined();
+      this.expect(weatherToolCalls).toBeDefined();
+      this.expect(currentTimeToolCalls).toBeDefined();
       parallelToolCallsMessage = result;
     };
 
@@ -1833,12 +1831,12 @@ Extraction path: {extractionPath}`,
         finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
       }
 
-      expect(finalChunk).toBeDefined();
+      this.expect(finalChunk).toBeDefined();
       if (!finalChunk) return;
 
       // Model should call at least two tools. Do not penalize for calling more than two tools, as
       // long as it calls both the weather and current time tools.
-      expect(finalChunk.tool_calls?.length).toBeGreaterThanOrEqual(2);
+      this.expect(finalChunk.tool_calls?.length).toBeGreaterThanOrEqual(2);
       if (!finalChunk.tool_calls?.length) return;
 
       const weatherToolCalls = finalChunk.tool_calls.find(
@@ -1848,8 +1846,8 @@ Extraction path: {extractionPath}`,
         (tc) => tc.name === currentTimeTool.name
       );
 
-      expect(weatherToolCalls).toBeDefined();
-      expect(currentTimeToolCalls).toBeDefined();
+      this.expect(weatherToolCalls).toBeDefined();
+      this.expect(currentTimeToolCalls).toBeDefined();
     };
 
     /**
@@ -1914,16 +1912,16 @@ Extraction path: {extractionPath}`,
         callOptions
       );
       // The model should NOT call a tool given this message history.
-      expect(result.tool_calls ?? []).toHaveLength(0);
+      this.expect(result.tool_calls ?? []).toHaveLength(0);
 
       if (typeof result.content === "string") {
-        expect(result.content).not.toBe("");
+        this.expect(result.content).not.toBe("");
       } else {
-        expect(result.content.length).toBeGreaterThan(0);
+        this.expect(result.content.length).toBeGreaterThan(0);
         const textOrTextDeltaContent = result.content.find(
           (c) => c.type === "text" || c.type === "text_delta"
         );
-        expect(textOrTextDeltaContent).toBeDefined();
+        this.expect(textOrTextDeltaContent).toBeDefined();
       }
     };
 
@@ -1981,10 +1979,10 @@ Extraction path: {extractionPath}`,
     const result: AIMessage = await modelWithTools.invoke(prompt, callOptions);
 
     // Expect at least one tool call, allow multiple.
-    expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
+    this.expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
 
-    expect(result.tool_calls?.[0].name).toBe(tool.name);
-    expect(result.tool_calls?.[0].args).toHaveProperty("location");
+    this.expect(result.tool_calls?.[0].name).toBe(tool.name);
+    this.expect(result.tool_calls?.[0].args).toHaveProperty("location");
   }
 
   /**
@@ -2033,207 +2031,14 @@ Extraction path: {extractionPath}`,
     for await (const chunk of stream) {
       full = !full ? chunk : concat(full, chunk);
     }
-    expect(full).toBeDefined();
+    this.expect(full).toBeDefined();
     if (!full) return;
 
     // Expect at least one tool call, allow multiple.
-    expect(full.tool_calls?.length).toBeGreaterThanOrEqual(1);
+    this.expect(full.tool_calls?.length).toBeGreaterThanOrEqual(1);
 
-    expect(full.tool_calls?.[0].name).toBe(tool.name);
-    expect(full.tool_calls?.[0].args).toHaveProperty("location");
-  }
-
-  /**
-   * Run all unit tests for the chat model.
-   * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
-   * If a test fails, the error is logged to the console, and the test suite continues.
-   * @returns {boolean}
-   */
-  async runTests(): Promise<boolean> {
-    let allTestsPassed = true;
-
-    try {
-      await this.testInvoke();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testInvoke failed", e.message);
-    }
-
-    try {
-      await this.testStream();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStream failed", e.message);
-    }
-
-    try {
-      await this.testBatch();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testBatch failed", e.message);
-    }
-
-    try {
-      await this.testConversation();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testConversation failed", e.message);
-    }
-
-    try {
-      await this.testUsageMetadata();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testUsageMetadata failed", e.message);
-    }
-
-    try {
-      await this.testUsageMetadataStreaming();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testUsageMetadataStreaming failed", e.message);
-    }
-
-    try {
-      await this.testToolMessageHistoriesStringContent();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testToolMessageHistoriesStringContent failed", e.message);
-    }
-
-    try {
-      await this.testToolMessageHistoriesListContent();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testToolMessageHistoriesListContent failed", e.message);
-    }
-
-    try {
-      await this.testStructuredFewShotExamples();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStructuredFewShotExamples failed", e.message);
-    }
-
-    try {
-      await this.testWithStructuredOutput();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testWithStructuredOutput failed", e.message);
-    }
-
-    try {
-      await this.testWithStructuredOutputIncludeRaw();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testWithStructuredOutputIncludeRaw failed", e.message);
-    }
-
-    try {
-      await this.testBindToolsWithOpenAIFormattedTools();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testBindToolsWithOpenAIFormattedTools failed", e.message);
-    }
-
-    try {
-      await this.testBindToolsWithRunnableToolLike();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testBindToolsWithRunnableToolLike failed", e.message);
-    }
-
-    try {
-      await this.testCacheComplexMessageTypes();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testCacheComplexMessageTypes failed", e.message);
-    }
-
-    try {
-      await this.testStreamTokensWithToolCalls();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStreamTokensWithToolCalls failed", e.message);
-    }
-
-    try {
-      await this.testModelCanUseToolUseAIMessage();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testModelCanUseToolUseAIMessage failed", e.message);
-    }
-
-    try {
-      await this.testModelCanUseToolUseAIMessageWithStreaming();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error(
-        "testModelCanUseToolUseAIMessageWithStreaming failed",
-        e.message
-      );
-    }
-
-    try {
-      await this.testInvokeMoreComplexTools();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testInvokeMoreComplexTools failed", e.message);
-    }
-
-    try {
-      await this.testParallelToolCalling();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testParallelToolCalling failed", e.message);
-    }
-
-    try {
-      await this.testModelCanAcceptStructuredToolParamsSchema();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error(
-        "testModelCanAcceptStructuredToolParamsSchema failed",
-        e.message
-      );
-    }
-
-    try {
-      await this.testStreamTools();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStreamTools failed", e.message);
-    }
-
-    try {
-      await this.testStandardTextContentBlocks();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStandardTextContentBlocks failed", e.message);
-    }
-
-    try {
-      await this.testStandardImageContentBlocks();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStandardImageContentBlocks failed", e.message);
-    }
-
-    try {
-      await this.testStandardAudioContentBlocks();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStandardAudioContentBlocks failed", e.message);
-    }
-
-    try {
-      await this.testStandardFileContentBlocks();
-    } catch (e: any) {
-      allTestsPassed = false;
-      console.error("testStandardFileContentBlocks failed", e.message);
-    }
-
-    return allTestsPassed;
+    this.expect(full.tool_calls?.[0].name).toBe(tool.name);
+    this.expect(full.tool_calls?.[0].args).toHaveProperty("location");
   }
 
   /**
@@ -2261,8 +2066,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
   }
 
@@ -2293,8 +2098,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
     // dataUrl/base64
     if (support.includes("base64")) {
@@ -2309,8 +2114,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
 
     if (support.includes("dataUrl")) {
@@ -2324,8 +2129,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
   }
 
@@ -2355,8 +2160,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
     // base64
     if (support.includes("base64")) {
@@ -2371,8 +2176,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
     // dataUrl
     if (support.includes("dataUrl")) {
@@ -2387,8 +2192,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
   }
 
@@ -2419,8 +2224,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
     if (support.includes("url")) {
       const msg = new HumanMessage({
@@ -2435,8 +2240,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
     if (support.includes("text")) {
       const msg = new HumanMessage({
@@ -2450,8 +2255,8 @@ Extraction path: {extractionPath}`,
         ],
       });
       const result = await chatModel.invoke([msg], callOptions);
-      expect(result).toBeDefined();
-      expect(result.text).not.toBe("");
+      this.expect(result).toBeDefined();
+      this.expect(result.text).not.toBe("");
     }
   }
 }
