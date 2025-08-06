@@ -18,6 +18,7 @@ import { ChatResponse } from "oci-generativeaiinference/lib/response";
 export enum OciGenAiNewClientAuthType {
   ConfigFile,
   InstancePrincipal,
+  Session,
   Other,
 }
 
