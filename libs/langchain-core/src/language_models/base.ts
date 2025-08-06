@@ -1,6 +1,4 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
-import type { ZodType as ZodTypeV3 } from "zod/v3";
-import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 
 import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
@@ -26,6 +24,7 @@ import {
   InteropZodObject,
   InteropZodType,
 } from "../utils/types/zod.js";
+import { StandardSerializableSchemaV1 } from "../schema/index.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -564,10 +563,8 @@ export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
-    schema:
-      | ZodTypeV3<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    schema: StandardSerializableSchemaV1<RunOutput> | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
@@ -575,32 +572,8 @@ export abstract class BaseLanguageModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(
-    schema:
-      | ZodTypeV3<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput?<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    schema:
-      | ZodTypeV4<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    schema:
-      | ZodTypeV4<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    schema: StandardSerializableSchemaV1<RunOutput> | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
@@ -622,7 +595,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | InteropZodType<RunOutput>
+      | StandardSerializableSchemaV1<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
+    "@standard-schema/spec": "^1.0.0",
     "ansi-styles": "^5.0.0",
     "camelcase": "6",
     "decamelize": "1.2.0",
@@ -39,14 +40,18 @@
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
     "p-retry": "4",
-    "uuid": "^10.0.0",
-    "zod": "^3.25.32",
-    "zod-to-json-schema": "^3.22.3"
+    "uuid": "^10.0.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.25.0 || ^4.0.0",
+    "zod-to-json-schema": "^3.24.6"
   },
   "devDependencies": {
     "@types/decamelize": "^1.2.0",
+    "@types/json-schema": "^7.0.15",
     "@types/mustache": "^4",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
     "dotenv": "^17.2.1",
     "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
