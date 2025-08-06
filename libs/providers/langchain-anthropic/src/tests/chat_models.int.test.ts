@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect, test } from "@jest/globals";
+import { expect, test, describe } from "vitest";
 import * as fs from "fs/promises";
 import {
   AIMessage,

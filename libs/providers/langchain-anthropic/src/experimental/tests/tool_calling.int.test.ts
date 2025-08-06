@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
 import { z } from "zod";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseMessageChunk, HumanMessage } from "@langchain/core/messages";

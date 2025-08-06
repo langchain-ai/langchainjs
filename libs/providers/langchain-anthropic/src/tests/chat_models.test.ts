@@ -1,4 +1,4 @@
-import { jest, test } from "@jest/globals";
+import { vi, test } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -11,21 +11,18 @@ test("withStructuredOutput with output validation", async () => {
     temperature: 0,
     anthropicApiKey: "testing",
   });
-  jest
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .spyOn(model as any, "invoke")
-    .mockResolvedValue(
-      new AIMessage({
-        content: [
-          {
-            type: "tool_use",
-            id: "notreal",
-            name: "Extractor",
-            input: "Incorrect string tool call input",
-          },
-        ],
-      })
-    );
+  vi.spyOn(model as any, "invoke").mockResolvedValue(
+    new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "notreal",
+          name: "Extractor",
+          input: "Incorrect string tool call input",
+        },
+      ],
+    })
+  );
   const schema = z.object({
     alerts: z
       .array(
@@ -53,7 +50,7 @@ test("withStructuredOutput with output validation", async () => {
       Modification of Standard Authentication Module
       Suspicious Automator Workflows Execution
     `);
-  }).rejects.toThrowError(OutputParserException);
+  }).rejects.toThrow(OutputParserException);
 });
 
 test("withStructuredOutput with proper output", async () => {
@@ -62,7 +59,7 @@ test("withStructuredOutput with proper output", async () => {
     temperature: 0,
     anthropicApiKey: "testing",
   });
-  jest
+  vi
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .spyOn(model as any, "invoke")
     .mockResolvedValue(
@@ -96,8 +93,6 @@ test("withStructuredOutput with proper output", async () => {
     name: "Extractor",
   });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
-  // @ts-expect-error unused var
   const result = await modelWithStructuredOutput.invoke(`
     Enumeration of Kernel Modules via Proc
     Prompt for Credentials with OSASCRIPT
@@ -106,7 +101,9 @@ test("withStructuredOutput with proper output", async () => {
     Suspicious Automator Workflows Execution
   `);
 
-  // console.log(result);
+  expect(result).toEqual({
+    alerts: [{ description: "test", severity: "LOW" }],
+  });
 });
 
 test("Can properly format anthropic messages when given two tool results", async () => {
