@@ -23,7 +23,7 @@
     "release": "release-it --only-version --config .release-it.json",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
-    "test:integration": "VITEST_INTEGRATION=true vitest --run --testTimeout 100000",
+    "test:integration": "vitest --run --mode int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
