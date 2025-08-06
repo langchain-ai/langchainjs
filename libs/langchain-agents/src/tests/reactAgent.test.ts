@@ -1223,7 +1223,9 @@ describe("createReactAgent", () => {
   it("Works with tools that return content_and_artifact response format", async () => {
     class SearchAPIWithArtifact extends StructuredTool {
       name = "search_api";
+
       description = "A simple API that returns content with artifact.";
+
       schema = z.object({
         query: z.string().describe("The query to search for."),
       });

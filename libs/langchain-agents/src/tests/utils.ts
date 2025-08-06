@@ -433,7 +433,9 @@ export class FakeToolCallingModel extends BaseChatModel {
 
 export class SearchAPI extends StructuredTool {
   name = "search_api";
+
   description = "A simple API that returns the input string.";
+
   schema = z.object({
     query: z.string().describe("The query to search for."),
   });

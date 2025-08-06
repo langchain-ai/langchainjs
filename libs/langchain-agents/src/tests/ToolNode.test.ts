@@ -17,16 +17,6 @@ import {
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
-  _AnyIdAIMessage,
-  _AnyIdHumanMessage,
-  _AnyIdToolMessage,
-  FakeConfigurableModel,
-  FakeToolCallingChatModel,
-  MemorySaverAssertImmutable,
-} from "./utils.js";
-
-// Enable automatic config passing
-import {
   Annotation,
   Command,
   GraphInterrupt,
@@ -39,6 +29,14 @@ import {
 
 import { ToolNode } from "../ToolNode.js";
 import { _shouldBindTools, _bindTools, _getModel } from "../index.js";
+import {
+  _AnyIdAIMessage,
+  _AnyIdHumanMessage,
+  _AnyIdToolMessage,
+  FakeConfigurableModel,
+  FakeToolCallingChatModel,
+  MemorySaverAssertImmutable,
+} from "./utils.js";
 
 const searchSchema = z.object({
   query: z.string().describe("The query to search for."),
@@ -90,8 +88,12 @@ describe("ToolNode", () => {
     const callbackManager = new CallbackManager();
     callbackManager.addHandler(
       BaseCallbackHandler.fromMethods({
-        handleChainStart: () => (runnableStartCount += 1),
-        handleToolStart: () => (runnableStartCount += 1),
+        handleChainStart: () => {
+          runnableStartCount += 1;
+        },
+        handleToolStart: () => {
+          runnableStartCount += 1;
+        },
       })
     );
     await wrapper.invoke({}, { callbacks: callbackManager });
