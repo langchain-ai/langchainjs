@@ -87,7 +87,7 @@ const MATH_ADDITION_PROMPT = /* #__PURE__ */ ChatPromptTemplate.fromMessages([
   ["human", "What is the sum of 1836281973 and 19973286?"],
 ]);
 
-interface ChatModelIntegrationTestsFields<
+export interface ChatModelIntegrationTestsFields<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends BaseMessageChunk = BaseMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny
