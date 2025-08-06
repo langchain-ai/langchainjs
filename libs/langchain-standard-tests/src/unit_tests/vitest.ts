@@ -32,15 +32,18 @@ export abstract class ChatModelUnitTests<
    */
   runTests(testName = "ChatModelUnitTests") {
     describe(testName, () => {
-      test("testChatModelInit", () => this.testChatModelInit());
-      test("testChatModelInitApiKey", () => this.testChatModelInitApiKey());
-      test("testChatModelInitStreaming", () =>
+      test("should initialize chat model successfully", () =>
+        this.testChatModelInit());
+      test("should initialize chat model with API key", () =>
+        this.testChatModelInitApiKey());
+      test("should initialize chat model with streaming enabled", () =>
         this.testChatModelInitStreaming());
-      test("testChatModelWithBindTools", () =>
+      test("should bind tools when tool calling is supported", () =>
         this.testChatModelWithBindTools());
-      test("testChatModelWithStructuredOutput", () =>
+      test("should work with structured output when supported", () =>
         this.testChatModelWithStructuredOutput());
-      test("testStandardParams", () => this.testStandardParams());
+      test("should return standard LangSmith parameters", () =>
+        this.testStandardParams());
     });
   }
 }

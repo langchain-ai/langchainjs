@@ -34,47 +34,53 @@ export abstract class ChatModelIntegrationTests<
    */
   runTests(testName = "ChatModelIntegrationTests") {
     describe(testName, () => {
-      test("testInvoke", () => this.testInvoke());
-      test("testStream", () => this.testStream());
-      test("testBatch", () => this.testBatch());
-      test("testConversation", () => this.testConversation());
-      test("testUsageMetadata", () => this.testUsageMetadata());
-      test("testUsageMetadataStreaming", () =>
+      test("should invoke model and return valid response", () =>
+        this.testInvoke());
+      test("should stream response tokens successfully", () =>
+        this.testStream());
+      test("should process multiple inputs in batch", () => this.testBatch());
+      test("should handle multi-message conversation", () =>
+        this.testConversation());
+      test("should return usage metadata for invoke", () =>
+        this.testUsageMetadata());
+      test("should return usage metadata for streaming", () =>
         this.testUsageMetadataStreaming());
-      test("testToolMessageHistoriesStringContent", () =>
+      test("should handle tool message histories with string content", () =>
         this.testToolMessageHistoriesStringContent());
-      test("testToolMessageHistoriesListContent", () =>
+      test("should handle tool message histories with list content", () =>
         this.testToolMessageHistoriesListContent());
-      test("testStructuredFewShotExamples", () =>
+      test("should handle structured few shot examples", () =>
         this.testStructuredFewShotExamples());
-      test("testWithStructuredOutput", () => this.testWithStructuredOutput());
-      test("testWithStructuredOutputIncludeRaw", () =>
+      test("should work with structured output", () =>
+        this.testWithStructuredOutput());
+      test("should work with structured output including raw", () =>
         this.testWithStructuredOutputIncludeRaw());
-      test("testBindToolsWithOpenAIFormattedTools", () =>
+      test("should bind tools with OpenAI formatted tools", () =>
         this.testBindToolsWithOpenAIFormattedTools());
-      test("testBindToolsWithRunnableToolLike", () =>
+      test("should bind tools with runnable tool-like objects", () =>
         this.testBindToolsWithRunnableToolLike());
-      test("testCacheComplexMessageTypes", () =>
+      test("should cache complex message types", () =>
         this.testCacheComplexMessageTypes());
-      test("testStreamTokensWithToolCalls", () =>
+      test("should stream tokens with tool calls", () =>
         this.testStreamTokensWithToolCalls());
-      test("testModelCanUseToolUseAIMessage", () =>
+      test("should use tool use AI message in conversation", () =>
         this.testModelCanUseToolUseAIMessage());
-      test("testModelCanUseToolUseAIMessageWithStreaming", () =>
+      test("should use tool use AI message with streaming", () =>
         this.testModelCanUseToolUseAIMessageWithStreaming());
-      test("testInvokeMoreComplexTools", () =>
+      test("should invoke model with more complex tools", () =>
         this.testInvokeMoreComplexTools());
-      test("testParallelToolCalling", () => this.testParallelToolCalling());
-      test("testModelCanAcceptStructuredToolParamsSchema", () =>
+      test("should handle parallel tool calling", () =>
+        this.testParallelToolCalling());
+      test("should accept structured tool params schema", () =>
         this.testModelCanAcceptStructuredToolParamsSchema());
-      test("testStreamTools", () => this.testStreamTools());
-      test("testStandardTextContentBlocks", () =>
+      test("should stream tools successfully", () => this.testStreamTools());
+      test("should handle standard text content blocks", () =>
         this.testStandardTextContentBlocks());
-      test("testStandardImageContentBlocks", () =>
+      test("should handle standard image content blocks", () =>
         this.testStandardImageContentBlocks());
-      test("testStandardAudioContentBlocks", () =>
+      test("should handle standard audio content blocks", () =>
         this.testStandardAudioContentBlocks());
-      test("testStandardFileContentBlocks", () =>
+      test("should handle standard file content blocks", () =>
         this.testStandardFileContentBlocks());
     });
   }
