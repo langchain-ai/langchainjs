@@ -1,13 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  jest,
-  test,
-  expect,
-  describe,
-  beforeEach,
-  afterEach,
-} from "@jest/globals";
+import { vi, test, expect, describe, beforeEach, afterEach } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,
@@ -120,18 +113,16 @@ describe("RemoteRunnable", () => {
 
     const oldFetch = global.fetch;
 
-    global.fetch = jest
-      .fn()
-      .mockImplementation(async (url: any, init?: any) => {
-        if (!url.startsWith(BASE_URL)) return await oldFetch(url, init);
-        const { pathname } = new URL(url);
-        const resp: Response = new Response(returnDataByEndpoint[pathname]);
-        return resp;
-      }) as any;
+    global.fetch = vi.fn().mockImplementation(async (url: any, init?: any) => {
+      if (!url.startsWith(BASE_URL)) return await oldFetch(url, init);
+      const { pathname } = new URL(url);
+      const resp: Response = new Response(returnDataByEndpoint[pathname]);
+      return resp;
+    }) as any;
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("Invoke local langserve", async () => {

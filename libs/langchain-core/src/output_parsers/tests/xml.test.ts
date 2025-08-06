@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { XMLOutputParser } from "../xml.js";
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { RunnableLambda } from "../../runnables/base.js";
@@ -14,8 +14,8 @@ test("LangChainTracer payload snapshots for run create and update", async () => 
   );
 
   const mockClient = {
-    createRun: jest.fn(),
-    updateRun: jest.fn(),
+    createRun: vi.fn(),
+    updateRun: vi.fn(),
   } as any;
 
   const mockTracer = new LangChainTracer({ client: mockClient });

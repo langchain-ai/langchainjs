@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { PromptTemplate } from "../../prompts/prompt.js";
 import { FakeChatModel } from "../../utils/testing/index.js";
 import { RunnablePassthrough } from "../passthrough.js";

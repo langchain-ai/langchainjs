@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { v4 } from "uuid";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AsyncLocalStorageProviderSingleton } from "../index.js";

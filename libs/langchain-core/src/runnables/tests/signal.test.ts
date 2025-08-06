@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test, describe, expect } from "@jest/globals";
+import { test, describe, expect } from "vitest";
 import {
   Runnable,
   RunnableLambda,

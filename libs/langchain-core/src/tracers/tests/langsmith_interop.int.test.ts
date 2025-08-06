@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { traceable } from "langsmith/traceable";
 
 import { RunnableLambda } from "../../runnables/base.js";

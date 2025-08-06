@@ -2,7 +2,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { test, expect, afterEach } from "@jest/globals";
+import { test, expect, afterEach } from "vitest";
 import { z } from "zod";
 import {
   RunnableLambda,
@@ -726,20 +726,6 @@ test("Runnable streamEvents method with chat model chain", async () => {
       },
     },
     {
-      event: "on_llm_stream",
-      run_id: expect.any(String),
-      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
-        a: "b",
-        foo: "bar",
-        ls_model_type: "chat",
-        ls_provider: model.getName(),
-        ls_stop: undefined,
-      },
-      name: "my_model",
-      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
-    },
-    {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
@@ -761,7 +747,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {
       event: "on_chain_stream",
@@ -785,7 +771,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
     {
       event: "on_chain_stream",
@@ -809,7 +795,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
         ls_stop: undefined,
       },
       name: "my_model",
-      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
     {
       event: "on_chain_stream",
@@ -819,6 +805,20 @@ test("Runnable streamEvents method with chat model chain", async () => {
         foo: "bar",
       },
       name: "my_chain",
+      data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
+    },
+    {
+      event: "on_llm_stream",
+      run_id: expect.any(String),
+      tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
+      metadata: {
+        a: "b",
+        foo: "bar",
+        ls_model_type: "chat",
+        ls_provider: model.getName(),
+        ls_stop: undefined,
+      },
+      name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
     {

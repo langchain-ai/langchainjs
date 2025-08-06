@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-process-env */
-import { test, expect, jest, afterEach } from "@jest/globals";
+import { test, expect, vi, afterEach } from "vitest";
 import * as uuid from "uuid";
 import { Client } from "langsmith";
 import { Serialized } from "../../load/serializable.js";
@@ -14,7 +14,7 @@ import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 
 const _DATE = 1620000000000;
 
-Date.now = jest.fn(() => _DATE);
+Date.now = vi.fn(() => _DATE);
 
 afterEach(() => {
   setDefaultLangChainClientSingleton(new Client());
@@ -425,7 +425,7 @@ test("Test nested runs", async () => {
 test("Test tracer payload snapshots for run create and update", async () => {
   process.env.LANGSMITH_TRACING = "true";
   const client = new Client();
-  (client as any).multipartIngestRuns = jest.fn(async () => {
+  (client as any).multipartIngestRuns = vi.fn(async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     return Promise.resolve();
   });

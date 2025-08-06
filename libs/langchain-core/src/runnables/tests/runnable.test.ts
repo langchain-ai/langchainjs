@@ -5,7 +5,7 @@
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { jest, test, expect, describe } from "@jest/globals";
+import { vi, test, expect, describe } from "vitest";
 import { createChatMessageChunkEncoderStream } from "../../language_models/chat_models.js";
 import {
   BaseMessage,
@@ -344,8 +344,8 @@ test("Listeners work", async () => {
   });
   const chain = prompt.pipe(model);
 
-  const mockStart = jest.fn();
-  const mockEnd = jest.fn();
+  const mockStart = vi.fn();
+  const mockEnd = vi.fn();
 
   await chain
     .withListeners({
@@ -375,8 +375,8 @@ test("Listeners work with async handlers", async () => {
   });
   const chain = prompt.pipe(model);
 
-  const mockStart = jest.fn();
-  const mockEnd = jest.fn();
+  const mockStart = vi.fn();
+  const mockEnd = vi.fn();
 
   await chain
     .withListeners({
@@ -534,7 +534,7 @@ describe("runId config", () => {
   });
 
   test("batch", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const tracer = new SingleRunExtractor();
     const llm = new FakeChatModel({});

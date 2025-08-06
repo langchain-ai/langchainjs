@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
 import { RunnableLambda } from "../base.js";

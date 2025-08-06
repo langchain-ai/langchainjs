@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "@jest/globals";
+import { test, describe, it, expect } from "vitest";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
   HumanMessage,
