@@ -7,9 +7,14 @@ import {
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import { MessagesAnnotation } from "@langchain/langgraph";
-import { isGraphInterrupt } from "@langchain/langgraph";
-import { END, isCommand, Command, Send } from "@langchain/langgraph";
+import {
+  END,
+  isCommand,
+  Command,
+  Send,
+  isGraphInterrupt,
+  MessagesAnnotation,
+} from "@langchain/langgraph";
 
 import { RunnableCallable } from "./RunnableCallable.js";
 import { isSend } from "./utils.js";
@@ -21,7 +26,7 @@ export type ToolNodeOptions = {
 };
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
-  Array.isArray(input);
+  Array.isArray(input) && input.every(isBaseMessage);
 
 const isMessagesState = (
   input: unknown
@@ -29,7 +34,7 @@ const isMessagesState = (
   typeof input === "object" &&
   input != null &&
   "messages" in input &&
-  Array.isArray(input.messages);
+  isBaseMessageArray(input.messages);
 
 const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
   typeof input === "object" && input != null && "lg_tool_call" in input;
@@ -222,19 +227,40 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
     if (isSendInput(input)) {
       outputs = [await this.runTool(input.lg_tool_call, config)];
     } else {
-      let message: AIMessage | undefined;
+      let messages: BaseMessage[];
       if (isBaseMessageArray(input)) {
-        message = input.at(-1);
+        messages = input;
       } else if (isMessagesState(input)) {
-        message = input.messages.at(-1);
+        messages = input.messages;
+      } else {
+        throw new Error(
+          "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
+        );
       }
 
-      if (message?.getType() !== "ai") {
+      const toolMessageIds: Set<string> = new Set(
+        messages
+          .filter((msg) => msg.getType() === "tool")
+          .map((msg) => (msg as ToolMessage).tool_call_id)
+      );
+
+      let aiMessage: AIMessage | undefined;
+      for (let i = messages.length - 1; i >= 0; i -= 1) {
+        const message = messages[i];
+        if (message.getType() === "ai") {
+          aiMessage = message;
+          break;
+        }
+      }
+
+      if (aiMessage?.getType() !== "ai") {
         throw new Error("ToolNode only accepts AIMessages as input.");
       }
 
       outputs = await Promise.all(
-        message.tool_calls?.map((call) => this.runTool(call, config)) ?? []
+        aiMessage.tool_calls
+          ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
+          .map((call) => this.runTool(call, config)) ?? []
       );
     }
 
