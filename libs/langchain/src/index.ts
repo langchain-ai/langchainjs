@@ -30,3 +30,8 @@ export {
   setContextVariable,
   getContextVariable,
 } from "@langchain/core/context";
+
+/**
+ * LangChain Documents
+ */
+export { Document } from "@langchain/core/documents";

@@ -24,10 +24,14 @@ import { z } from "zod";
 
 const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 
-// Initialize vector store for long-term memory
+/**
+ * Initialize vector store for long-term memory
+ */
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());
 
-// Simulate adding historical user data and preferences to memory
+/**
+ * Simulate adding historical user data and preferences to memory
+ */
 await vectorStore.addDocuments([
   {
     pageContent:
@@ -160,7 +164,9 @@ const preferencelearningTool = tool(
       },
     ]);
 
-    // Check if this contradicts or updates existing preferences
+    /**
+     * Check if this contradicts or updates existing preferences
+     */
     const existingPreferences = await vectorStore.similaritySearch(
       input.observation,
       3,
@@ -198,7 +204,9 @@ This information will be used to personalize future interactions.`;
   }
 );
 
-// Create the agent with memory-aware tools
+/**
+ * Create the agent with memory-aware tools
+ */
 const agent = createReactAgent({
   llm,
   tools: [knowledgeRetrievalTool, preferencelearningTool],

@@ -22,7 +22,9 @@ import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-// Track model usage for cost analysis
+/**
+ * Track model usage for cost analysis
+ */
 interface ModelUsageStats {
   gpt4Calls: number;
   gpt4oMiniCalls: number;
