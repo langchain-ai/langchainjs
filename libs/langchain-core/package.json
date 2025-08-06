@@ -471,6 +471,17 @@
       },
       "input": "./src/retrievers/document_compressors/base.ts"
     },
+    "./schema": {
+      "require": {
+        "types": "./dist/schema/index.d.cts",
+        "default": "./dist/schema/index.cjs"
+      },
+      "import": {
+        "types": "./dist/schema/index.d.ts",
+        "default": "./dist/schema/index.js"
+      },
+      "input": "./src/schema/index.ts"
+    },
     "./singletons": {
       "require": {
         "types": "./dist/singletons/index.d.cts",
