@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test, expect } from "@jest/globals";
 import * as url from "node:url";
 import * as path from "node:path";
 import { Document } from "@langchain/core/documents";
@@ -12,6 +12,7 @@ import {
   DistanceStrategy,
   createIndex,
   OracleVS,
+  dropTablePurge,
 } from "../index.js";
 
 test("Test end-to-end", async () => {
@@ -25,6 +26,8 @@ test("Test end-to-end", async () => {
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/"
   );
+
+  const EMBEDDINGS_TABLE = "embeddings";
 
   const loaderPref = { dir: filePath };
   const splitterPref = { by: "words", max: 100, normalize: "all" };
@@ -46,7 +49,7 @@ test("Test end-to-end", async () => {
 
     const dbConfig = {
       client: pool,
-      tableName: "embeddings",
+      tableName: EMBEDDINGS_TABLE,
       distanceStrategy: DistanceStrategy.DOT_PRODUCT,
       query: "What are salient features of oracledb",
       embeddings: embedder,
@@ -86,6 +89,8 @@ test("Test end-to-end", async () => {
       }
     }
 
+    await dropTablePurge(connection as oracledb.Connection, EMBEDDINGS_TABLE);
+
     const oraclevs = await OracleVS.fromDocuments(
       total_chunks,
       embedder,
@@ -99,15 +104,27 @@ test("Test end-to-end", async () => {
       accuracy: 90,
     });
 
-    let matches = await oraclevs.similaritySearch("What is an attention mask?", 5);
-    console.log(matches);
+    let matches = await oraclevs.similaritySearch(
+      "What is an attention mask?",
+      5
+    );
+    expect(matches).toHaveLength(5);
+    expect(matches[0].metadata.summary).toContain("Transformer");
 
     matches = await oraclevs.similaritySearch("What is inattention?", 5);
-    console.log(matches);
+    expect(matches).toHaveLength(5);
+    expect(matches[0].metadata.summary).toContain(
+      "What is considered as Normal Attention Span?"
+    );
 
-    matches = await oraclevs.similaritySearch("software developer with experience in LLM's", 5);
-    console.log(matches);
+    matches = await oraclevs.similaritySearch(
+      "software developer with experience in LLM's",
+      5
+    );
+    expect(matches).toHaveLength(5);
+    expect(matches[0].metadata.summary).toContain("Jacob Lee Resume");
   } finally {
-    if (connection) await connection.release();
+    await connection?.close();
+    await pool.close();
   }
 });

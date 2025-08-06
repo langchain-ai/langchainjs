@@ -21,21 +21,21 @@ test("Test loading PDF from file", async () => {
   await connection.close();
 
   expect(docs.length).toBe(1);
-  expect(docs[0].pageContent).toContain("Attention");
-  expect(docs[0].pageContent).toContain("Is");
-  expect(docs[0].pageContent).toContain("All");
-  expect(docs[0].pageContent).toContain("You");
-  expect(docs[0].pageContent).toContain("Need");
+  expect(docs[0].pageContent).toContain("Transformer");
 });
 
 test("Test loading from directory", async () => {
+  const filePath = path.resolve(
+    path.dirname(url.fileURLToPath(import.meta.url)),
+    "./example_data"
+  );
   const connection = await oracledb.getConnection({
     user: process.env.ORACLE_USERNAME,
     password: process.env.ORACLE_PASSWORD,
     connectString: process.env.ORACLE_DSN,
   });
   const pref = {
-    dir: process.env.DEMO_DIRECTORY,
+    dir: filePath,
   };
   const loader = new OracleDocLoader(connection, pref);
   const docs = await loader.load();
