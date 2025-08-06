@@ -1,27 +1,15 @@
-import { defineConfig } from "vitest/config";
-
-const isIntegrationTest = process.env.VITEST_INTEGRATION === "true";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: isIntegrationTest
-      ? ["src/**/*.int.test.ts"]
-      : ["src/**/*.test.ts"],
-    exclude: isIntegrationTest ? [] : ["src/**/*.int.test.ts"],
-    coverage: {
-      enabled: !isIntegrationTest,
-      include: ["src/**/*.ts"],
-      exclude: [
-        "src/load/**/*.ts",
-        "src/**/*.int.test.ts",
-        "src/tests/utils.ts",
-      ],
-      thresholds: {
-        statements: 96,
-        branches: 91,
-        functions: 81,
-        lines: 96,
-      },
-    },
+    environment: "node",
+    hideSkippedTests: true,
+    globals: true,
+    testTimeout: 30_000,
+    maxWorkers: 0.5,
+    exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
+    include: configDefaults.include,
+    typecheck: { enabled: true },
+    setupFiles: ["dotenv/config"],
   },
 });

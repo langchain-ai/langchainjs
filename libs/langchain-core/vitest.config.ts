@@ -1,9 +1,13 @@
-import { configDefaults, defineConfig } from "vitest/config";
+import {
+  configDefaults,
+  defineConfig,
+  type UserConfigExport,
+} from "vitest/config";
 
 export default defineConfig((env) => {
-  /** @type {import("vitest/config").UserConfigExport} */
-  const common = {
+  const common: UserConfigExport = {
     test: {
+      environment: "node",
       hideSkippedTests: true,
       globals: true,
       testTimeout: 30_000,
@@ -22,17 +26,15 @@ export default defineConfig((env) => {
         exclude: configDefaults.exclude,
         include: ["**/*.int.test.ts"],
         name: "int",
-        environment: "node",
       },
-    };
+    } satisfies UserConfigExport;
   }
 
   return {
     test: {
       ...common.test,
-      environment: "node",
       include: configDefaults.include,
       typecheck: { enabled: true },
     },
-  };
+  } satisfies UserConfigExport;
 });
