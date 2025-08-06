@@ -64,5 +64,3 @@ const evaluation = require("langchain/evaluation");
 const smith = require("langchain/smith");
 const runnables_remote = require("langchain/runnables/remote");
 const indexes = require("langchain/indexes");
-const schema_query_constructor = require("langchain/schema/query_constructor");
-const schema_prompt_template = require("langchain/schema/prompt_template");

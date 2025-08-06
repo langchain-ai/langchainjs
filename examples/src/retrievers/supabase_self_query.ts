@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-import { AttributeInfo } from "langchain/schema/query_constructor";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";
 import { SupabaseTranslator } from "@langchain/community/structured_query/supabase";
@@ -53,7 +52,7 @@ const docs = [
  * We also provide a description of each attribute and the type of the attribute.
  * This is used to generate the query prompts.
  */
-const attributeInfo: AttributeInfo[] = [
+const attributeInfo = [
   {
     name: "genre",
     description: "The genre of the movie",
