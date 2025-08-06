@@ -206,6 +206,14 @@ utils/hash.cjs
 utils/hash.js
 utils/hash.d.ts
 utils/hash.d.cts
+utils/hash/insecure.cjs
+utils/hash/insecure.js
+utils/hash/insecure.d.ts
+utils/hash/insecure.d.cts
+utils/hash/sha256.cjs
+utils/hash/sha256.js
+utils/hash/sha256.d.ts
+utils/hash/sha256.d.cts
 utils/json_patch.cjs
 utils/json_patch.js
 utils/json_patch.d.ts

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
@@ -9,23 +8,23 @@ const schema = z.object({
   punchline: z.string().describe("The punchline to the joke"),
 });
 
-const modelParams = {
-  functions: [
-    {
-      name: "joke",
-      description: "A joke",
-      parameters: zodToJsonSchema(schema),
-    },
-  ],
-  function_call: { name: "joke" },
-};
-
 const prompt = ChatPromptTemplate.fromTemplate(
   `tell me a long joke about {foo}`
 );
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0,
-}).bind(modelParams);
+})
+  .bindTools([
+    {
+      name: "joke",
+      description: "A joke",
+      schema,
+    },
+  ])
+  .withConfig({
+    function_call: { name: "joke" },
+  });
 
 const chain = prompt
   .pipe(model)

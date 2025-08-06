@@ -3,8 +3,8 @@ import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatOllama, ChatOllamaCallOptions } from "../chat_models.js";
 
 const currentWeatherName = "get_current_weather";
@@ -103,7 +103,7 @@ class ChatOllamaStandardIntegrationTests extends ChatModelIntegrationTests<
         function: {
           name: currentWeatherName,
           description: currentWeatherDescription,
-          parameters: zodToJsonSchema(currentWeatherSchema),
+          parameters: toJsonSchema(currentWeatherSchema),
         },
       },
     ]);

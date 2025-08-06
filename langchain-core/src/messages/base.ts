@@ -12,7 +12,7 @@ export interface StoredMessageData {
   tool_call_id: string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
-  /** Response metadata. For example: response headers, logprobs, token counts. */
+  /** Response metadata. For example: response headers, logprobs, token counts, model name. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
   id?: string;
@@ -95,7 +95,7 @@ export type BaseMessageFields = {
     tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
-  /** Response metadata. For example: response headers, logprobs, token counts. */
+  /** Response metadata. For example: response headers, logprobs, token counts, model name. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
   /**
@@ -254,7 +254,7 @@ export abstract class BaseMessage
   /** Additional keyword arguments */
   additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
 
-  /** Response metadata. For example: response headers, logprobs, token counts. */
+  /** Response metadata. For example: response headers, logprobs, token counts, model name. */
   response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
 
   /**

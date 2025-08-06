@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 
-const chat = new ChatOpenAI({ temperature: 1 });
+const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 1 });
 
 const response = await chat.invoke(
   [

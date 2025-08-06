@@ -53,11 +53,14 @@ export async function runExample(client?: MultiServerMCPClient) {
     client =
       client ??
       new MultiServerMCPClient({
-        calculator: {
-          url: `http://localhost:3000/${
-            transportType === "sse" ? "sse" : "mcp"
-          }`,
+        mcpServers: {
+          calculator: {
+            url: `http://localhost:3000/${
+              transportType === "sse" ? "sse" : "mcp"
+            }`,
+          },
         },
+        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");
@@ -81,7 +84,7 @@ You have access to tools that can add, subtract, multiply, and divide numbers. U
 these tools to answer the user's questions.`;
 
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4o-mini",
       temperature: 0.7,
     }).bindTools(mcpTools);
 

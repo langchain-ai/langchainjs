@@ -137,7 +137,7 @@ export interface Mem0MemoryInput extends BaseChatMemoryInput {
  *
  * // Use with a chat model
  * const model = new ChatOpenAI({
- *   modelName: "gpt-3.5-turbo",
+ *   model: "gpt-3.5-turbo",
  *   temperature: 0,
  * });
  *

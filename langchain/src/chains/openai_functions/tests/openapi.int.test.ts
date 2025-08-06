@@ -102,7 +102,7 @@ test("OpenAPI chain with a provided full spec", async () => {
         },
       },
     },
-    { llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }) }
+    { llm: new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 }) }
   );
 
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
@@ -117,7 +117,7 @@ test("OpenAPI chain with yml spec from a URL", async () => {
   const chain = await createOpenAPIChain(
     "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml",
     {
-      llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
+      llm: new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 }),
     }
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
@@ -130,7 +130,7 @@ test("OpenAPI chain with yml spec from a URL with a path parameter", async () =>
   const chain = await createOpenAPIChain(
     "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml",
     {
-      llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
+      llm: new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 }),
     }
   );
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
@@ -141,7 +141,7 @@ test("OpenAPI chain with yml spec from a URL with a path parameter", async () =>
 
 test("OpenAPI chain with yml spec from a URL requiring a POST request", async () => {
   const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml", {
-    llm: new ChatOpenAI({ modelName: "gpt-4-0613", temperature: 0 }),
+    llm: new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 }),
   });
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var

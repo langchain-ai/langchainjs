@@ -3,7 +3,7 @@ import { initChatModel } from "langchain/chat_models/universal";
 const configurableModel = await initChatModel(undefined, { temperature: 0 });
 
 const gpt4Res = await configurableModel.invoke("what's your name", {
-  configurable: { model: "gpt-4o" },
+  configurable: { model: "gpt-4o-mini" },
 });
 console.log("gpt4Res: ", gpt4Res.content);
 /*

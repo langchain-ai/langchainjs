@@ -16,7 +16,9 @@ const text = fs.readFileSync("state_of_the_union.txt", "utf8");
 const query = "What did the president say about Justice Breyer?";
 
 // Initialize the LLM to use to answer the question.
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 // Chunk the text into documents.
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });

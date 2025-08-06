@@ -1,5 +1,4 @@
 import type { OpenAI as OpenAIClient } from "openai";
-import type { RequestOptions as _OpenAICoreRequestOptions } from "openai/core";
 import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
@@ -8,11 +7,18 @@ import type {
 
 import { TiktokenModel } from "js-tiktoken/lite";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
-import type { z } from "zod";
+import { InteropZodObject } from "@langchain/core/utils/types";
 
 // reexport this type from the included package so we can easily override and extend it if needed in the future
 // also makes it easier for folks to import this type without digging around into the dependent packages
 export type { TiktokenModel };
+
+/**
+ * @see https://platform.openai.com/docs/models
+ */
+export type OpenAIChatModelId =
+  | OpenAIClient.ChatModel
+  | (string & NonNullable<unknown>);
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
@@ -66,7 +72,7 @@ export declare interface OpenAIBaseInput {
   modelName: string;
 
   /** Model name to use */
-  model: string;
+  model: OpenAIChatModelId;
 
   /** Holds any additional parameters that are valid to pass to {@link
    * https://platform.openai.com/docs/api-reference/completions/create |
@@ -101,8 +107,7 @@ export declare interface OpenAIBaseInput {
   apiKey?: string;
 }
 
-export type OpenAICoreRequestOptions<Req = Record<string, unknown>> =
-  _OpenAICoreRequestOptions<Req>;
+export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
 
 export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
   /**
@@ -172,14 +177,6 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 
   /**
-   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
-   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
-   *
-   * @deprecated Use the {@link reasoning} object instead.
-   */
-  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
-
-  /**
    * Options for reasoning models.
    *
    * Note that some options, like reasoning summaries, are only available when using the responses
@@ -194,9 +191,15 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * @default false
    */
   zdrEnabled?: boolean;
+
+  /**
+   * Service tier to use for this request. Can be "auto", "default", or "flex" or "priority".
+   * Specifies the service tier for prioritization and latency optimization.
+   */
+  service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
 }
 
-export declare interface AzureOpenAIInput {
+export interface AzureOpenAIInput {
   /**
    * API version to use when making requests to Azure OpenAI.
    */
@@ -263,6 +266,15 @@ export declare interface AzureOpenAIInput {
   azureADTokenProvider?: () => Promise<string>;
 }
 
+export interface AzureOpenAIChatInput
+  extends OpenAIChatInput,
+    AzureOpenAIInput {
+  openAIApiKey?: string;
+  openAIApiVersion?: string;
+  openAIBasePath?: string;
+  deploymentName?: string;
+}
+
 type ChatOpenAIResponseFormatJSONSchema = Omit<
   ResponseFormatJSONSchema,
   "json_schema"
@@ -273,7 +285,7 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
      * or a Zod object.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    schema: Record<string, any> | z.ZodObject<any, any, any, any>;
+    schema: Record<string, any> | InteropZodObject;
   };
 };
 

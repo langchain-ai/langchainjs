@@ -1,6 +1,6 @@
 {
   "name": "@langchain/baidu-qianfan",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Baidu Qianfan integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -17,7 +17,7 @@
     "build": "yarn turbo:command build:internal --filter=@langchain/baidu-qianfan",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
@@ -32,7 +32,7 @@
   "license": "MIT",
   "dependencies": {
     "@baiducloud/qianfan": "^0.1.6",
-    "@langchain/openai": "^0.5.5",
+    "@langchain/openai": "^0.6.0",
     "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.5"
   },
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "@langchain/openai": "^0.5.5",
+    "@langchain/openai": "^0.6.0",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
@@ -51,7 +51,7 @@
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "dotenv": "^16.3.1",
-    "dpdm": "^3.12.0",
+    "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -64,7 +64,7 @@
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0"
+    "typescript": "~5.8.3"
   },
   "publishConfig": {
     "access": "public"

@@ -17,7 +17,7 @@
     "build": "yarn turbo:command build:internal --filter=@langchain/redis",
     "build:internal": "yarn lc_build --create-entrypoints --pre --tree-shaking",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:dpdm",
     "clean": "rm -rf .turbo dist/",
@@ -49,7 +49,7 @@
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "dotenv": "^16.3.1",
-    "dpdm": "^3.12.0",
+    "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -62,7 +62,7 @@
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
-    "typescript": "<5.2.0",
+    "typescript": "~5.8.3",
     "uuid": "^10.0.0"
   },
   "publishConfig": {

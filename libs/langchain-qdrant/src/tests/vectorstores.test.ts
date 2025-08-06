@@ -7,7 +7,7 @@ import { QdrantVectorStore } from "../vectorstores.js";
 test("QdrantVectorStore works", async () => {
   const client = {
     upsert: jest.fn(),
-    search: jest.fn<any>().mockResolvedValue([]),
+    query: jest.fn<any>().mockResolvedValue({ points: [] }),
     getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn(),
   };
@@ -39,7 +39,7 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
   // Mock Qdrant client
   const client = {
     upsert: jest.fn(),
-    search: jest.fn<any>().mockResolvedValue([]),
+    query: jest.fn<any>().mockResolvedValue({ points: [] }),
     getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn(),
   };
@@ -94,7 +94,7 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
   // Mock Qdrant client
   const client = {
     upsert: jest.fn(),
-    search: jest.fn<any>().mockResolvedValue([]),
+    query: jest.fn<any>().mockResolvedValue({ points: [] }),
     getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn(),
   };
@@ -173,7 +173,7 @@ test("QdrantVectorStore adds vectors with no custom payload", async () => {
   // Mock Qdrant client
   const client = {
     upsert: jest.fn(),
-    search: jest.fn<any>().mockResolvedValue([]),
+    query: jest.fn<any>().mockResolvedValue({ points: [] }),
     getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn(),
   };
@@ -213,7 +213,7 @@ test("QdrantVectorStore adds vectors with no custom payload", async () => {
 test("QdrantVectorStore MMR works", async () => {
   const client = {
     upsert: jest.fn(),
-    search: jest.fn<any>().mockResolvedValue([]),
+    query: jest.fn<any>().mockResolvedValue({ points: [] }),
     getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
     createCollection: jest.fn(),
   };
@@ -243,11 +243,17 @@ test("QdrantVectorStore MMR works", async () => {
     fetchK: 7,
   });
 
-  expect(client.search).toHaveBeenCalledTimes(1);
-  expect(client.search).toHaveBeenCalledWith("documents", {
+  expect(client.query).toHaveBeenCalledTimes(1);
+  expect(client.query).toHaveBeenCalledWith("documents", {
     filter: undefined,
-    limit: 7,
-    vector: [0.1, 0.2, 0.3, 0.4],
+    limit: 10,
+    query: {
+      nearest: [0.1, 0.2, 0.3, 0.4],
+      mmr: {
+        diversity: null,
+        candidates_limit: 7,
+      },
+    },
     with_payload: ["metadata", "content"],
     with_vector: true,
   });

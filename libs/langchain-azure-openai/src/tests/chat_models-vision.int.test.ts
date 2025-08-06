@@ -10,7 +10,7 @@ test("Test ChatOpenAI with a file", async () => {
   const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-4-vision-preview",
+    model: "gpt-4-vision-preview",
     maxTokens: 1024,
   });
   const message = new HumanMessage({
@@ -35,7 +35,7 @@ test("Test ChatOpenAI with a file", async () => {
 
 test("Test ChatOpenAI with a URL", async () => {
   const chat = new AzureChatOpenAI({
-    modelName: "gpt-4-vision-preview",
+    model: "gpt-4-vision-preview",
     maxTokens: 1024,
   });
   const message = new HumanMessage({

@@ -6,7 +6,7 @@ import {
   CloudPakForDataAuthenticator,
 } from "ibm-cloud-sdk-core";
 import {
-  JsonOutputKeyToolsParserParams,
+  JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -14,6 +14,10 @@ import { z } from "zod";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
+import {
+  InteropZodType,
+  interopSafeParseAsync,
+} from "@langchain/core/utils/types";
 import { WatsonxAuth, WatsonxInit } from "../types/ibm.js";
 
 export const authenticateAndSetInstance = ({
@@ -23,6 +27,7 @@ export const authenticateAndSetInstance = ({
   watsonxAIUsername,
   watsonxAIPassword,
   watsonxAIUrl,
+  disableSSL,
   version,
   serviceUrl,
 }: WatsonxAuth & Omit<WatsonxInit, "authenticator">): WatsonXAI | undefined => {
@@ -42,18 +47,23 @@ export const authenticateAndSetInstance = ({
         bearerToken: watsonxAIBearerToken,
       }),
     });
-  } else if (watsonxAIAuthType === "cp4d" && watsonxAIUrl) {
-    if (watsonxAIUsername && watsonxAIPassword && watsonxAIApikey)
+  } else if (watsonxAIAuthType === "cp4d") {
+    // cp4d auth requires username with either Password of ApiKey but not both.
+    if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
+      const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
       return WatsonXAI.newInstance({
         version,
         serviceUrl,
+        disableSslVerification: disableSSL,
         authenticator: new CloudPakForDataAuthenticator({
           username: watsonxAIUsername,
           password: watsonxAIPassword,
-          url: watsonxAIUrl,
+          url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
           apikey: watsonxAIApikey,
+          disableSslVerification: disableSSL,
         }),
       });
+    }
   } else
     return WatsonXAI.newInstance({
       version,
@@ -111,7 +121,7 @@ export function _convertToolCallIdToMistralCompatible(
 }
 
 interface WatsonxToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParams<T> {}
+  extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
 export class WatsonxToolsOutputParser<
   T extends Record<string, any> = Record<string, any>
@@ -128,7 +138,7 @@ export class WatsonxToolsOutputParser<
 
   returnSingle = false;
 
-  zodSchema?: z.ZodType<T>;
+  zodSchema?: InteropZodType<T>;
 
   latestCorrect?: ToolCall;
 
@@ -160,7 +170,10 @@ export class WatsonxToolsOutputParser<
     if (this.zodSchema === undefined) {
       return parsedResult as T;
     }
-    const zodParsedResult = await this.zodSchema.safeParseAsync(parsedResult);
+    const zodParsedResult = await interopSafeParseAsync(
+      this.zodSchema,
+      parsedResult
+    );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
     } else {
@@ -169,7 +182,7 @@ export class WatsonxToolsOutputParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error.errors)}`,
+        )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { load } from "@langchain/core/load";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";
 import { ChatOpenAI } from "../chat_models.js";
 
@@ -10,7 +11,7 @@ describe("strict tool calling", () => {
     function: {
       name: "get_current_weather",
       description: "Get the current weather in a location",
-      parameters: zodToJsonSchema(
+      parameters: toJsonSchema(
         z.object({
           location: z.string().describe("The location to get the weather for"),
         })
@@ -76,7 +77,7 @@ describe("strict tool calling", () => {
     }
   });
 
-  it("Can accept strict as a call arg via .bind", async () => {
+  it("Can accept strict as a call arg via .withConfig", async () => {
     const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
     mockFetch.mockImplementation((url, options) => {
       // Store the request details for later inspection
@@ -98,7 +99,7 @@ describe("strict tool calling", () => {
       maxRetries: 0,
     });
 
-    const modelWithTools = model.bind({
+    const modelWithTools = model.withConfig({
       tools: [weatherTool],
       strict: true,
     });
@@ -270,4 +271,64 @@ test("Test OpenAI serialization doesn't pass along extra params", async () => {
   expect(JSON.stringify(chat)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
   );
+
+  const loadedChat = await load<ChatOpenAI>(JSON.stringify(chat), {
+    secretsMap: { OPENAI_API_KEY: "test-key" },
+    importMap: { chat_models__openai: { ChatOpenAI } },
+  });
+
+  expect(loadedChat.model).toEqual("o3-mini");
+});
+
+test("OpenAI runs with structured output contain structured output options", async () => {
+  const mockFetch = jest.fn<(url: any, options?: any) => Promise<any>>();
+  mockFetch.mockImplementation((url, options) => {
+    // Store the request details for later inspection
+    mockFetch.mock.calls.push([url, options]);
+
+    // Return a mock response
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({}),
+    });
+  });
+
+  const weatherSchema = z.object({
+    location: z.string().describe("The location to get the weather for"),
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-2024-08-06",
+    configuration: {
+      fetch: mockFetch,
+    },
+  }).withStructuredOutput(weatherSchema, {
+    name: "get_current_weather",
+    method: "jsonSchema",
+  });
+
+  let extra;
+  // This will fail since we're not returning a valid response in our mocked fetch function.
+  await expect(
+    model.invoke("What's the weather like?", {
+      callbacks: [
+        {
+          handleLLMStart: (_1, _2, _3, _4, extraParams) => {
+            extra = extraParams;
+          },
+        },
+      ],
+    })
+  ).rejects.toThrow();
+  expect(extra).toMatchObject({
+    options: {
+      ls_structured_output_format: {
+        kwargs: { method: "json_schema" },
+        schema: {
+          title: "get_current_weather",
+          ...toJsonSchema(weatherSchema),
+        },
+      },
+    },
+  });
 });

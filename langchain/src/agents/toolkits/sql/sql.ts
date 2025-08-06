@@ -27,7 +27,7 @@ export interface SqlCreatePromptArgs extends ZeroShotCreatePromptArgs {
  * initializes SQL tools based on the provided SQL database.
  * @example
  * ```typescript
- * const model = new ChatOpenAI({});
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const toolkit = new SqlToolkit(sqlDb, model);
  * const executor = createSqlAgent(model, toolkit);
  * const result = await executor.invoke({ input: 'List the total sales per country. Which country's customers spent the most?' });

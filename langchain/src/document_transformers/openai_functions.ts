@@ -1,14 +1,13 @@
-import { z } from "zod";
-import {
-  zodToJsonSchema,
-  type JsonSchema7ObjectType,
-} from "zod-to-json-schema";
-
 import {
   Document,
   MappingDocumentTransformer,
 } from "@langchain/core/documents";
 import { ChatOpenAI } from "@langchain/openai";
+import { InteropZodObject } from "@langchain/core/utils/types";
+import {
+  type JsonSchema7ObjectType,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { BaseChain } from "../chains/base.js";
 import {
   TaggingChainOptions,
@@ -57,18 +56,18 @@ export function createMetadataTagger(
   schema: JsonSchema7ObjectType,
   options: TaggingChainOptions & { llm?: ChatOpenAI }
 ) {
-  const { llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }), ...rest } =
+  const { llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }), ...rest } =
     options;
   const taggingChain = createTaggingChain(schema, llm, rest);
   return new MetadataTagger({ taggingChain });
 }
 
 export function createMetadataTaggerFromZod(
-  schema: z.AnyZodObject,
+  schema: InteropZodObject,
   options: TaggingChainOptions & { llm?: ChatOpenAI }
 ) {
   return createMetadataTagger(
-    zodToJsonSchema(schema) as JsonSchema7ObjectType,
+    toJsonSchema(schema) as JsonSchema7ObjectType,
     options
   );
 }

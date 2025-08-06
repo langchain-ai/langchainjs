@@ -177,9 +177,10 @@ test("Bind tools to a configurable model", async () => {
     temperature: 0,
   });
 
-  const configurableModelWithTools = configurableModel.bind({
-    tools: [getWeatherTool, getPopulationTool],
-  });
+  const configurableModelWithTools = configurableModel.bindTools([
+    getWeatherTool,
+    getPopulationTool,
+  ]);
 
   const configurableToolResult = await configurableModelWithTools.invoke(
     "Which city is hotter today and which is bigger: LA or NY?",
@@ -520,7 +521,7 @@ describe("Can call base runnable methods", () => {
       {
         version: "v2",
         configurable: {
-          model: "gpt-4o",
+          model: "gpt-4o-mini",
         },
       }
     );

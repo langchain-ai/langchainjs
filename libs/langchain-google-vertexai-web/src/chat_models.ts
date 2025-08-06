@@ -22,14 +22,14 @@ export interface ChatVertexAIInput extends ChatGoogleInput {}
  * ## [Runtime args](https://api.js.langchain.com/interfaces/langchain_google_common_types.GoogleAIBaseLanguageModelCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
- *   stop: ["\n"],
- *   tools: [...],
- * });
+ * // If binding tools along with other options, chain `.bindTools` and `.withConfig`
+ * const llmWithArgsBound = llm.bindTools([...]) // tools array
+ *   .withConfig({
+ *     stop: ["\n"], // other call options
+ *   });
  *
  * // When calling `.bindTools`, call options should be passed via the second argument
  * const llmWithTools = llm.bindTools(

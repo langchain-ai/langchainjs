@@ -26,7 +26,7 @@ const model = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
+}).withConfig({
   functions: [functionSchema],
 });
 

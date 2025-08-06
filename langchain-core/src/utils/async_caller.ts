@@ -94,7 +94,9 @@ export class AsyncCaller {
     this.onFailedAttempt =
       params.onFailedAttempt ?? defaultFailedAttemptHandler;
 
-    const PQueue = "default" in PQueueMod ? PQueueMod.default : PQueueMod;
+    const PQueue = (
+      "default" in PQueueMod ? PQueueMod.default : PQueueMod
+    ) as typeof PQueueMod;
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
   }
 

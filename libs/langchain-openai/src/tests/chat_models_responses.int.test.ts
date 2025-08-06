@@ -13,6 +13,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
@@ -68,16 +69,16 @@ function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   expect(message.usage_metadata?.output_tokens).toBeGreaterThan(0);
   expect(message.usage_metadata?.total_tokens).toBeGreaterThan(0);
   expect(message.response_metadata.model_name).toBeDefined();
+  expect(message.response_metadata.service_tier).toBeDefined();
   for (const toolOutput of (message.additional_kwargs.tool_outputs ??
     []) as Record<string, unknown>[]) {
     expect(toolOutput.id).toBeDefined();
-    expect(toolOutput.status).toBeDefined();
     expect(toolOutput.type).toBeDefined();
   }
 }
 
 test("Test with built-in web search", async () => {
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
 
   // Test invoking with web search
   const firstResponse = await llm.invoke(
@@ -131,7 +132,7 @@ test.each(["stream", "invoke"])(
       schema: z.object({ x: z.number(), y: z.number() }),
     });
 
-    const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" }).bindTools([
+    const llm = new ChatOpenAI({ model: "gpt-4o-mini" }).bindTools([
       multiply,
       { type: "web_search_preview" },
     ]);
@@ -190,7 +191,7 @@ test("Test structured output", async () => {
   };
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
   const response = await llm.invoke("how are ya", { response_format });
@@ -227,7 +228,7 @@ test("Test function calling and structured output", async () => {
   };
 
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
 
@@ -257,15 +258,33 @@ test("Test function calling and structured output", async () => {
   expect(parsed.response).toBeDefined();
 });
 
+test("Test tool binding with optional zod fields", async () => {
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
+  const multiply = tool((args) => args.x * args.y, {
+    name: "multiply",
+    description: "Multiply two numbers",
+    schema: z.object({
+      x: z.number(),
+      y: z.number(),
+      foo: z.number().optional(),
+    }),
+  });
+  const response = await llm
+    .bindTools([multiply], { strict: true })
+    .invoke("whats 5 * 4");
+  expect(response.tool_calls?.[0].args).toHaveProperty("foo");
+  expect(response.tool_calls?.[0].args.foo).toBe(null);
+});
+
 test("Test reasoning", async () => {
-  const llm = new ChatOpenAI({ modelName: "o3-mini", useResponsesApi: true });
-  const response = await llm.invoke("Hello", { reasoning_effort: "low" });
+  const llm = new ChatOpenAI({ model: "o3-mini", useResponsesApi: true });
+  const response = await llm.invoke("Hello", { reasoning: { effort: "low" } });
   expect(response).toBeInstanceOf(AIMessage);
   expect(response.additional_kwargs.reasoning).toBeDefined();
 
   const llmWithEffort = new ChatOpenAI({
-    modelName: "o3-mini",
-    reasoningEffort: "low",
+    model: "o3-mini",
+    reasoning: { effort: "low" },
     useResponsesApi: true,
   });
   const response2 = await llmWithEffort.invoke("Hello");
@@ -279,7 +298,7 @@ test("Test reasoning", async () => {
 
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
-    modelName: "gpt-4o-mini",
+    model: "gpt-4o-mini",
     useResponsesApi: true,
   });
   const response = await llm.invoke("how are you, my name is Bobo");
@@ -301,7 +320,7 @@ test("Test stateful API", async () => {
 });
 
 test("Test file search", async () => {
-  const llm = new ChatOpenAI({ modelName: "gpt-4o-mini" });
+  const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
   const tool = {
     type: "file_search",
     vector_store_ids: [process.env.OPENAI_VECTOR_STORE_ID],
@@ -317,6 +336,185 @@ test("Test file search", async () => {
 
   expect(isAIMessageChunk(full)).toBe(true);
   assertResponse(full);
+});
+
+test("Test Code Interpreter", async () => {
+  const model = new ChatOpenAI({
+    model: "o4-mini",
+    useResponsesApi: true,
+  });
+
+  const modelWithAutoInterpreter = model.bindTools([
+    { type: "code_interpreter", container: { type: "auto" } },
+  ]);
+
+  const response = await modelWithAutoInterpreter.invoke(
+    "Write and run code to answer the question: what is 3^3?"
+  );
+  assertResponse(response);
+  expect(response.additional_kwargs.tool_outputs).toBeDefined();
+
+  const toolOutputs = response.additional_kwargs.tool_outputs as Record<
+    string,
+    unknown
+  >[];
+  expect(toolOutputs).toBeTruthy();
+  expect(Array.isArray(toolOutputs)).toBe(true);
+  expect(
+    toolOutputs.some((output) => output.type === "code_interpreter_call")
+  ).toBe(true);
+
+  // Test streaming using the same container
+  expect(toolOutputs.length).toBe(1);
+  const containerId = toolOutputs[0].container_id as string;
+  const modelWithToolsReuse = model.bindTools([
+    { type: "code_interpreter", container: containerId },
+  ]);
+
+  const full = await concatStream(
+    modelWithToolsReuse.stream(
+      "Write and run code to answer the question: what is 3^3?"
+    )
+  );
+
+  expect(isAIMessageChunk(full)).toBe(true);
+  const streamToolOutputs = full.additional_kwargs.tool_outputs as Record<
+    string,
+    unknown
+  >[];
+  expect(streamToolOutputs).toBeTruthy();
+  expect(Array.isArray(streamToolOutputs)).toBe(true);
+  expect(
+    streamToolOutputs.some(
+      (output: Record<string, unknown>) =>
+        output.type === "code_interpreter_call"
+    )
+  ).toBe(true);
+});
+
+test("Test Remote MCP", async () => {
+  const model = new ChatOpenAI({
+    model: "o4-mini",
+    useResponsesApi: true,
+  }).bindTools([
+    {
+      type: "mcp",
+      server_label: "deepwiki",
+      server_url: "https://mcp.deepwiki.com/mcp",
+      require_approval: {
+        always: {
+          tool_names: ["read_wiki_structure"],
+        },
+      },
+    },
+  ]);
+
+  const response = await model.invoke(
+    "What transport protocols does the 2025-03-26 version of the MCP spec (modelcontextprotocol/modelcontextprotocol) support?"
+  );
+  assertResponse(response);
+  expect(response.additional_kwargs.tool_outputs).toBeDefined();
+
+  const approvals = [];
+  if (Array.isArray(response.additional_kwargs.tool_outputs)) {
+    for (const content of response.additional_kwargs.tool_outputs) {
+      if (content.type === "mcp_approval_request") {
+        approvals.push({
+          type: "mcp_approval_response",
+          approval_request_id: content.id,
+          approve: true,
+        });
+      }
+    }
+  }
+
+  const response2 = await model.invoke(
+    [new HumanMessage({ content: approvals })],
+    {
+      previous_response_id: response.response_metadata.id,
+    }
+  );
+  assertResponse(response2);
+});
+
+describe("Test image generation", () => {
+  const expectedOutputKeys = [
+    "id",
+    "background",
+    "output_format",
+    "quality",
+    "result",
+    "revised_prompt",
+    "size",
+    "status",
+    "type",
+  ];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function assertImageGenerationToolOutput(tool_outputs: any) {
+    expect(tool_outputs).toBeDefined();
+    expect(Array.isArray(tool_outputs)).toBe(true);
+    expect(tool_outputs.length).toBe(1);
+    expect(tool_outputs[0].type).toBe("image_generation_call");
+    expectedOutputKeys.forEach((key) => {
+      expect(Object.keys(tool_outputs[0])).toContain(key);
+    });
+  }
+
+  test("with streaming", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4.1",
+      useResponsesApi: true,
+    }).bindTools([
+      {
+        type: "image_generation",
+        partial_images: 1,
+        quality: "low",
+        output_format: "jpeg",
+        output_compression: 100,
+        size: "1024x1024",
+      },
+    ]);
+
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream(
+      "Draw a random short word in green font."
+    )) {
+      expect(chunk).toBeInstanceOf(AIMessageChunk);
+      full = full?.concat(chunk) ?? chunk;
+    }
+    assertImageGenerationToolOutput(full?.additional_kwargs.tool_outputs);
+  });
+
+  test("multi-turn", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4.1",
+      useResponsesApi: true,
+    }).bindTools([
+      {
+        type: "image_generation",
+        quality: "low",
+        output_format: "jpeg",
+        output_compression: 100,
+        size: "1024x1024",
+      },
+    ]);
+
+    const response = await model.invoke(
+      "Draw a random short word in green font."
+    );
+    assertResponse(response);
+    assertImageGenerationToolOutput(response.additional_kwargs.tool_outputs);
+
+    const response2 = await model.invoke([
+      response,
+      new HumanMessage(
+        "Now, change the font to blue. Keep the word and everything else the same."
+      ),
+    ]);
+    assertResponse(response2);
+    assertImageGenerationToolOutput(response2.additional_kwargs.tool_outputs);
+  });
 });
 
 test("Test computer call", async () => {
@@ -410,6 +608,23 @@ test("Test computer call", async () => {
 
   computerCall = findComputerCall(aiMessage);
   expect(computerCall).toBeDefined();
+});
+
+test("external message ids", async () => {
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", useResponsesApi: true });
+  const response = await model.invoke([
+    new HumanMessage({
+      id: randomUUID(),
+      content: "What is 3 to the power of 3?",
+    }),
+    new AIMessage({ id: randomUUID(), content: "42" }),
+    new HumanMessage({
+      id: randomUUID(),
+      content: "What is 42 to the power of 3?",
+    }),
+  ]);
+
+  expect(response.id).toBeDefined();
 });
 
 describe("reasoning summaries", () => {
@@ -538,7 +753,7 @@ describe("reasoning summaries", () => {
           environment: "browser",
         },
       ])
-      .bind({
+      .withConfig({
         truncation: "auto",
       });
 
@@ -550,4 +765,61 @@ describe("reasoning summaries", () => {
 
     expect(response).toBeDefined();
   });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/8577
+test("useResponsesApi=true should emit handleLLMNewToken events during streaming", async () => {
+  // This test demonstrates that when useResponsesApi=true is enabled,
+  // the ChatOpenAI class properly passes the runManager parameter to
+  // ChatOpenAIResponses._streamResponseChunks, allowing handleLLMNewToken
+  // events to be emitted during streaming.
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    useResponsesApi: true,
+  });
+
+  const messages = [new HumanMessage("Say 'Hello world' in 3 words.")];
+
+  // Track handleLLMNewToken events
+  const newTokenEvents: string[] = [];
+  let handleLLMNewTokenCalled = false;
+
+  const stream = model.streamEvents(messages, {
+    version: "v2",
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          handleLLMNewTokenCalled = true;
+          newTokenEvents.push(token);
+        },
+      },
+    ],
+  });
+
+  // Collect all events
+  const events = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+
+  // Verify that handleLLMNewToken was called with individual tokens
+  expect(handleLLMNewTokenCalled).toBe(true);
+  expect(newTokenEvents.length).toBeGreaterThan(0);
+
+  // Verify we have streaming events
+  const streamingEvents = events.filter(
+    (event) => event.event === "on_chat_model_stream"
+  );
+  expect(streamingEvents.length).toBeGreaterThan(0);
+
+  // Verify we have the start and end events
+  const startEvents = events.filter(
+    (event) => event.event === "on_chat_model_start"
+  );
+  const endEvents = events.filter(
+    (event) => event.event === "on_chat_model_end"
+  );
+  expect(startEvents.length).toBeGreaterThan(0);
+  expect(endEvents.length).toBeGreaterThan(0);
 });

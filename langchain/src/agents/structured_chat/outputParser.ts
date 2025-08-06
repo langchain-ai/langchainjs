@@ -87,7 +87,7 @@ export interface StructuredChatOutputParserArgs {
  * @example
  * ```typescript
  * const outputParser = new StructuredChatOutputParserWithRetries.fromLLM(
- *   new ChatOpenAI({ temperature: 0 }),
+ *   new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   {
  *     toolNames: ["calculator", "random-number-generator"],
  *   },

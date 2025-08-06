@@ -11,6 +11,7 @@ import {
 } from "../index.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
+import { ToolCallChunk } from "../tool.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
@@ -335,6 +336,186 @@ describe("Complex AIMessageChunk concat", () => {
         response_metadata: { extra: "value" },
       })
     );
+  });
+
+  it("concatenates partial json tool call chunks", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: undefined,
+        args: '{"issueKey": "',
+        id: "0",
+        type: "tool_call_chunk",
+      },
+      {
+        name: "",
+        args: "INFO-",
+        id: "0",
+        type: "tool_call_chunk",
+      },
+      {
+        name: "",
+        args: '10001", "fields": ["summary"]', // missing closing curly
+        id: "0",
+        type: "tool_call_chunk",
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        name: "",
+        args: {
+          issueKey: "INFO-10001",
+          fields: ["summary"],
+        },
+        id: "0",
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates partial json tool call chunks with malformed args", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: "",
+        args: 'h{"issueKey": "',
+        id: "0",
+        type: "tool_call_chunk",
+      },
+      {
+        name: "",
+        args: "INFO-",
+        id: "0",
+        type: "tool_call_chunk",
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(0);
+    expect(result.invalid_tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls).toEqual([
+      {
+        name: "",
+        args: 'h{"issueKey": "INFO-',
+        id: "0",
+        error: "Malformed args.",
+        type: "invalid_tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks with no args", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        id: "0",
+        name: "foo",
+        type: "tool_call_chunk",
+      },
+    ];
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "0",
+        name: "foo",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks with empty string args", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        id: "0",
+        name: "foo",
+        type: "tool_call_chunk",
+        args: "",
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "0",
+        name: "foo",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks without IDs", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: "get_current_time",
+        type: "tool_call_chunk",
+        index: 0,
+        // no `id` provided
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "fallback-0", // Should get fallback ID
+        name: "get_current_time",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
+  });
+
+  it("concatenates tool call chunks without IDs and no index", () => {
+    const chunks: ToolCallChunk[] = [
+      {
+        name: "get_current_time",
+        type: "tool_call_chunk",
+        // no `id` or `index` provided
+      },
+    ];
+
+    const result = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: chunks,
+    });
+
+    expect(result.tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls?.length).toBe(0);
+    expect(result.tool_calls).toEqual([
+      {
+        id: "fallback-0", // Should get fallback ID with index 0
+        name: "get_current_time",
+        args: {},
+        type: "tool_call",
+      },
+    ]);
   });
 });
 

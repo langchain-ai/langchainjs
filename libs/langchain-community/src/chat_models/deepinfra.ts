@@ -326,7 +326,7 @@ export class ChatDeepInfra
     tools: BindToolsInput[],
     kwargs?: Partial<DeepInfraCallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, DeepInfraCallOptions> {
-    return this.bind({
+    return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     } as DeepInfraCallOptions);

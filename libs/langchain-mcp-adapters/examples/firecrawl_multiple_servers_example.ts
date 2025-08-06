@@ -11,7 +11,7 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage } from "@langchain/core/messages";
 import dotenv from "dotenv";
 
-import { Connection, MultiServerMCPClient } from "../src/index.js";
+import { ClientConfig, MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -19,22 +19,25 @@ dotenv.config();
 /**
  * Configuration for multiple MCP servers
  */
-const multipleServersConfig: Record<string, Connection> = {
-  firecrawl: {
-    transport: "stdio",
-    command: "npx",
-    args: ["-y", "firecrawl-mcp"],
-    env: {
-      FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || "",
-      FIRECRAWL_RETRY_MAX_ATTEMPTS: "3",
+const multipleServersConfig: ClientConfig = {
+  mcpServers: {
+    firecrawl: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "firecrawl-mcp"],
+      env: {
+        FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY || "",
+        FIRECRAWL_RETRY_MAX_ATTEMPTS: "3",
+      },
+    },
+    // Math server configuration
+    math: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
     },
   },
-  // Math server configuration
-  math: {
-    transport: "stdio",
-    command: "npx",
-    args: ["-y", "@modelcontextprotocol/server-math"],
-  },
+  useStandardContentBlocks: true,
 };
 
 /**
@@ -69,7 +72,7 @@ async function runExample() {
 
     // Create an OpenAI model
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4o",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4o",
       temperature: 0,
     });
 

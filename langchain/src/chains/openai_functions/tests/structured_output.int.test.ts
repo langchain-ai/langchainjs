@@ -35,7 +35,7 @@ test("structured output chain", async () => {
         ],
         inputVariables: ["inputText"],
       }),
-      llm: new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
+      llm: new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 }),
       outputKey: "person",
     }
   );

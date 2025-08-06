@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     );
 
     const prompt = PromptTemplate.fromTemplate(CUSTOMER_SUPPORT);
-    const model = new ChatOpenAI({ temperature: 0.8 });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.8 });
     // Initialize an output parser that handles serialization and byte-encoding for streaming
     const outputParser = new BytesOutputParser();
     const chain = prompt.pipe(model).pipe(outputParser); // Chain the prompt, model, and output parser together

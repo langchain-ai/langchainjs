@@ -74,7 +74,7 @@ export type CreateOpenAIToolsAgentParams = {
  *
  * const llm = new ChatOpenAI({
  *   temperature: 0,
- *   modelName: "gpt-3.5-turbo-1106",
+ *   model: "gpt-3.5-turbo-1106",
  * });
  *
  * const agent = await createOpenAIToolsAgent({
@@ -116,9 +116,11 @@ export async function createOpenAIToolsAgent({
       ].join("\n")
     );
   }
-  const modelWithTools = llm.bind({
-    tools: tools.map((tool) => convertToOpenAITool(tool)),
-  });
+  const modelWithTools = llm.bindTools
+    ? llm.bindTools(tools)
+    : llm.withConfig({
+        tools: tools.map((tool) => convertToOpenAITool(tool)),
+      });
   const agent = AgentRunnableSequence.fromRunnables(
     [
       RunnablePassthrough.assign({

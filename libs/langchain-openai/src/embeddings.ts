@@ -7,6 +7,13 @@ import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/openai.js";
 
 /**
+ * @see https://platform.openai.com/docs/guides/embeddings#embedding-models
+ */
+export type OpenAIEmbeddingModelId =
+  | OpenAIClient.EmbeddingModel
+  | (string & NonNullable<unknown>);
+
+/**
  * Interface for OpenAIEmbeddings parameters. Extends EmbeddingsParams and
  * defines additional parameters specific to the OpenAIEmbeddings class.
  */
@@ -16,9 +23,9 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
    * Alias for `model`
    * @deprecated Use "model" instead.
    */
-  modelName: string;
+  modelName: OpenAIEmbeddingModelId;
   /** Model name to use */
-  model: string;
+  model: OpenAIEmbeddingModelId;
 
   /**
    * The number of dimensions the resulting output embeddings should have.
@@ -216,8 +223,7 @@ export class OpenAIEmbeddings
 
       this.client = new OpenAIClient(params);
     }
-    const requestOptions: OpenAICoreRequestOptions<OpenAIClient.EmbeddingCreateParams> =
-      {};
+    const requestOptions: OpenAICoreRequestOptions = {};
     return this.caller.call(async () => {
       try {
         const res = await this.client.embeddings.create(

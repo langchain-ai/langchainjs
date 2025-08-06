@@ -7,26 +7,30 @@ import {
   AIMessageChunk,
   BaseMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   UsageMetadata,
   getBufferString,
 } from "@langchain/core/messages";
 import { z } from "zod";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   StructuredTool,
   StructuredToolParams,
   tool,
 } from "@langchain/core/tools";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { concat } from "@langchain/core/utils/stream";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
+import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
+import { TestCallbackHandler } from "../utils.js";
+import { isMessageContentComplex } from "../utils/types.js";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -37,8 +41,8 @@ const TEST_IMAGE_BASE64 =
 
 const TEST_IMAGE_DATA_URL = `data:image/png;base64,${TEST_IMAGE_BASE64}`;
 
-// TODO: need to find a short mp3 or wav file to use as a test
-// const TEST_AUDIO_URL = "https://www.w3schools.com/html/horse.ogg";
+const TEST_AUDIO_URL =
+  "https://upload.wikimedia.org/wikipedia/commons/e/ef/Phylloscopus_collybita_-_Common_Chiffchaff_XC170664.mp3";
 
 const TEST_AUDIO_BASE64 =
   "UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"; // Short silent WAV
@@ -68,7 +72,7 @@ class AdderTool extends StructuredTool {
 
   schema = adderSchema;
 
-  async _call(input: z.infer<typeof adderSchema>) {
+  async _call(input: InferInteropZodOutput<typeof adderSchema>) {
     const sum = input.a + input.b;
     return JSON.stringify({ result: sum });
   }
@@ -160,7 +164,7 @@ export abstract class ChatModelIntegrationTests<
    *
    * It verifies that:
    * 1. The result is defined and is an instance of the correct type.
-   * 2. The content of the response is a non-empty string.
+   * 2. The text content of the result is a non-empty string.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
@@ -178,7 +182,8 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Verify that the response content is not empty
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
     expect(result.text).not.toBe("");
   }
 
@@ -188,9 +193,10 @@ export abstract class ChatModelIntegrationTests<
    * and that each streamed token is a valid AIMessageChunk.
    *
    * It verifies that:
-   * 1. Each streamed token is defined and is an instance of AIMessageChunk.
-   * 2. The content of each token is a string.
-   * 3. The total number of characters streamed is greater than zero.
+   * 1. The stream produces at least one chunk.
+   * 2. Each streamed chunk is defined and is an instance of AIMessageChunk.
+   * 3. The content of each chunk is a string or a valid array of MessageContentComplex.
+   * 4. The total content received across all chunks is greater than zero.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
    *  These options will be applied to the model at runtime.
@@ -198,18 +204,37 @@ export abstract class ChatModelIntegrationTests<
   async testStream(callOptions?: any) {
     const chatModel = new this.Cls(this.constructorArgs);
     let numChars = 0;
+    let chunkCount = 0;
 
     // Stream the response for a simple "Hello" prompt
     for await (const token of await chatModel.stream("Hello", callOptions)) {
-      // Verify each token is defined and of the correct type
+      chunkCount += 1;
       expect(token).toBeDefined();
       expect(token).toBeInstanceOf(AIMessageChunk);
+      expect(token.content).toBeDefined();
 
-      // Keep track of the total number of characters
-      numChars += token.content.length;
+      if (typeof token.content === "string") {
+        numChars += token.content.length;
+      } else if (Array.isArray(token.content)) {
+        for (const part of token.content) {
+          expect(isMessageContentComplex(part)).toBe(true);
+          // We can still count this as received content.
+          // Let's count text characters if available.
+          if (part.type === "text") {
+            numChars += part.text.length;
+          } else {
+            numChars += 1; // Count non-text parts as "1" unit of content
+          }
+        }
+      } else {
+        fail("token.content must be a string or MessageContentComplex[]");
+      }
     }
 
-    // Verify that some content was actually streamed
+    // Ensure the stream actually produced at least one chunk.
+    expect(chunkCount).toBeGreaterThan(0);
+
+    // Ensure that across all chunks, some content was actually received.
     expect(numChars).toBeGreaterThan(0);
   }
 
@@ -249,7 +274,8 @@ export abstract class ChatModelIntegrationTests<
       // Verify the result is of the expected type
       expect(result).toBeInstanceOf(this.invokeResponseType);
 
-      // Ensure the content is a non-empty string
+      // Ensure the response content is a non-empty string
+      expect(typeof result.text).toBe("string");
       expect(result.text).not.toBe("");
     }
   }
@@ -358,7 +384,48 @@ export abstract class ChatModelIntegrationTests<
     // Check that the result is an instance of the expected response type
     expect(result).toBeInstanceOf(this.invokeResponseType);
 
-    // Verify that the response content is not empty
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
+    expect(result.text).not.toBe("");
+  }
+
+  /**
+   * This test ensures that the model can process a sequence of numerous back-to-back messages
+   * from different roles (Human and AI) and generate an appropriate response.
+   *
+   * It verifies that:
+   * 1. The result is defined and is an instance of the correct response type.
+   * 2. The content of the response is a non-empty string.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testDoubleMessageConversation(callOptions?: any) {
+    // Create a new instance of the chat model
+    const chatModel = new this.Cls(this.constructorArgs);
+
+    // Prepare a conversation history with alternating Human and AI messages
+    const messages = [
+      new SystemMessage("hello"),
+      new SystemMessage("hello"),
+      new HumanMessage("hello"),
+      new HumanMessage("hello"),
+      new AIMessage("hello"),
+      new AIMessage("hello"),
+      new HumanMessage("how are you"),
+    ];
+
+    // Invoke the model with the conversation history
+    const result = await chatModel.invoke(messages, callOptions);
+
+    // Verify that the result is defined
+    expect(result).toBeDefined();
+
+    // Check that the result is an instance of the expected response type
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+
+    // Ensure the response content is a non-empty string
+    expect(typeof result.text).toBe("string");
     expect(result.text).not.toBe("");
   }
 
@@ -391,7 +458,7 @@ export abstract class ChatModelIntegrationTests<
 
     // Ensure that the result contains usage_metadata
     if (!("usage_metadata" in result)) {
-      throw new Error("result is not an instance of AIMessage");
+      throw new Error("result is missing `usage_metadata`");
     }
 
     // Extract the usage metadata from the result
@@ -408,6 +475,16 @@ export abstract class ChatModelIntegrationTests<
 
     // Check that total_tokens is a number
     expect(typeof usageMetadata.total_tokens).toBe("number");
+
+    // Ensure model_name is in response_metadata and is a non-empty string
+    if (!("response_metadata" in result)) {
+      throw new Error("result is missing `response_metadata`");
+    }
+    const responseMetadata = result.response_metadata;
+    expect(responseMetadata).toBeDefined();
+    expect(responseMetadata.model_name).toBeDefined();
+    expect(typeof responseMetadata.model_name).toBe("string");
+    expect(responseMetadata.model_name).not.toBe("");
 
     // Test additional usage metadata details
     if (this.supportedUsageMetadataDetails.invoke.includes("audio_input")) {
@@ -653,395 +730,77 @@ export abstract class ChatModelIntegrationTests<
   }
 
   /**
-   * Tests the chat model's ability to handle message histories with string tool contents.
-   * This test is specifically designed for models that support tool calling with string-based content,
-   * such as OpenAI's GPT models.
+   * Tests that the model does not fail when invoked with the `stop` parameter, which is a standard
+   * parameter for stopping generation at a certain token.
    *
-   * The test performs the following steps:
-   * 1. Creates a chat model and binds an AdderTool to it.
-   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with string content
-   *    (simulating a tool call), and a ToolMessage with the tool's response.
-   * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
-   *
-   * This test ensures that the model can correctly process and respond to complex message
-   * histories that include tool calls with string-based content structures.
+   * This test verifies that the `stop` sequence can be supplied in two ways:
+   * 1. As a runtime option to the `invoke` method.
+   * 2. As a parameter during the model's initialization.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
+   * These options will be applied to the model at runtime.
    */
-  async testToolMessageHistoriesStringContent(callOptions?: any) {
+  async testStopSequence(callOptions?: any) {
+    // Test 1: Passing 'stop' as a runtime argument to the invoke call.
+    const model = new this.Cls(this.constructorArgs);
+    const result = await model.invoke("hi", { ...callOptions, stop: ["you"] });
+
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+    expect(result.content).toBeDefined();
+
+    // Test 2: Passing 'stop' as an initialization parameter to the model's constructor.
+    const customModel = new this.Cls({
+      ...this.constructorArgs,
+      stop: ["you"],
+    });
+    const customResult = await customModel.invoke("hi", callOptions);
+    expect(customResult).toBeInstanceOf(this.invokeResponseType);
+    expect(customResult.content).toBeDefined();
+  }
+
+  /**
+   * Test that the model generates tool calls correctly.
+   *
+   * This test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with a tool call,
+   */
+  async testToolCalling(callOptions?: any) {
     // Skip the test if the model doesn't support tool calling
     if (!this.chatModelHasToolCalling) {
       console.log("Test requires tool calling. Skipping...");
       return;
     }
-
     const model = new this.Cls(this.constructorArgs);
     const adderTool = new AdderTool();
     if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test tool message histories."
-      );
+      throw new Error("bindTools undefined. Cannot test tool calling.");
     }
     // Bind the AdderTool to the model
     const modelWithTools = model.bindTools([adderTool]);
+
+    // Test invoke
     const functionName = adderTool.name;
     const functionArgs = { a: 1, b: 2 };
-
     const { functionId } = this;
-    // Invoke the tool to get the result
-    const functionResult = await adderTool.invoke(functionArgs);
 
-    // Construct a message history with string-based content
-    const messagesStringContent = [
-      new HumanMessage("What is 1 + 2"),
-      // AIMessage with string content (simulating OpenAI's format)
-      new AIMessage({
-        content: "",
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-          },
-        ],
-      }),
-      // ToolMessage with the result of the tool call
-      new ToolMessage(functionResult, functionId, functionName),
-    ];
+    const query = "What is the value of adderTool(1, 2)? Use the tool.";
+    const result: AIMessage = await modelWithTools.invoke(query, callOptions);
 
-    // Invoke the model with the constructed message history
-    const result = await modelWithTools.invoke(
-      messagesStringContent,
-      callOptions
-    );
-
-    // Verify that the result is of the expected type
+    // Validate the result of the tool call
+    expect(result).toBeDefined();
     expect(result).toBeInstanceOf(this.invokeResponseType);
-  }
 
-  /**
-   * Tests the chat model's ability to handle message histories with list tool contents.
-   * This test is specifically designed for models that support tool calling with list-based content,
-   * such as Anthropic's Claude.
-   *
-   * The test performs the following steps:
-   * 1. Creates a chat model and binds an AdderTool to it.
-   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with list content
-   *    (simulating a tool call), and a ToolMessage with the tool's response.
-   * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
-   *
-   * This test ensures that the model can correctly process and respond to complex message
-   * histories that include tool calls with list-based content structures.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   */
-  async testToolMessageHistoriesListContent(callOptions?: any) {
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
+    // Ensure only one tool call was made
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls!.length).toBe(1);
 
-    const model = new this.Cls(this.constructorArgs);
-    const adderTool = new AdderTool();
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test tool message histories."
-      );
-    }
-    const modelWithTools = model.bindTools([adderTool]);
-    const functionName = adderTool.name;
-    const functionArgs = { a: 1, b: 2 };
-
-    const { functionId } = this;
-    const functionResult = await adderTool.invoke(functionArgs);
-
-    // Construct a message history with list-based content
-    const messagesListContent = [
-      new HumanMessage("What is 1 + 2"),
-      // AIMessage with list content (simulating Anthropic's format)
-      new AIMessage({
-        content: [
-          { type: "text", text: "some text" },
-          {
-            type: "tool_use",
-            id: functionId,
-            name: functionName,
-            input: functionArgs,
-          },
-        ],
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-          },
-        ],
-      }),
-      // ToolMessage with the result of the tool call
-      new ToolMessage(functionResult, functionId, functionName),
-    ];
-
-    // Invoke the model with the constructed message history
-    const resultListContent = await modelWithTools.invoke(
-      messagesListContent,
-      callOptions
-    );
-
-    // Verify that the result is of the expected type
-    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
-  }
-
-  /**
-   * Tests the chat model's ability to process few-shot examples with tool calls.
-   * This test ensures that the model can correctly handle and respond to a conversation
-   * that includes tool calls within the context of few-shot examples.
-   *
-   * The test performs the following steps:
-   * 1. Creates a chat model and binds an AdderTool to it.
-   * 2. Constructs a message history that simulates a few-shot example scenario:
-   *    - A human message asking about addition
-   *    - An AI message with a tool call to the AdderTool
-   *    - A ToolMessage with the result of the tool call
-   *    - An AI message with the result
-   *    - A new human message asking about a different addition
-   * 3. Invokes the model with this message history.
-   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
-   *
-   * This test is crucial for ensuring that the model can learn from and apply
-   * the patterns demonstrated in few-shot examples, particularly when those
-   * examples involve tool usage.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testStructuredFewShotExamples(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    const adderTool = new AdderTool();
-    if (!model.bindTools) {
-      throw new Error("bindTools undefined. Cannot test few-shot examples.");
-    }
-    const modelWithTools = model.bindTools([adderTool]);
-    const functionName = adderTool.name;
-    const functionArgs = { a: 1, b: 2 };
-
-    const { functionId } = this;
-    const functionResult = await adderTool.invoke(functionArgs);
-
-    // Construct a message history that simulates a few-shot example scenario
-    const messagesStringContent = [
-      new HumanMessage("What is 1 + 2"),
-      new AIMessage({
-        content: "",
-        tool_calls: [
-          {
-            name: functionName,
-            args: functionArgs,
-            id: functionId,
-          },
-        ],
-      }),
-      new ToolMessage(functionResult, functionId, functionName),
-      new AIMessage(functionResult),
-      new HumanMessage("What is 3 + 4"), // New question to test if the model learned from the example
-    ];
-
-    // Invoke the model with the constructed message history
-    const result = await modelWithTools.invoke(
-      messagesStringContent,
-      callOptions
-    );
-
-    // Verify that the result is of the expected type
-    expect(result).toBeInstanceOf(this.invokeResponseType);
-  }
-
-  /**
-   * Tests the chat model's ability to generate structured output using the `withStructuredOutput` method.
-   * This test ensures that the model can correctly process a prompt and return a response
-   * that adheres to a predefined schema (adderSchema).
-   *
-   * It verifies that:
-   * 1. The model supports structured output functionality.
-   * 2. The result contains the expected fields ('a' and 'b') from the adderSchema.
-   * 3. The values of these fields are of the correct type (number).
-   *
-   * This test is crucial for ensuring that the model can generate responses
-   * in a specific format, which is useful for tasks requiring structured data output.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testWithStructuredOutput(callOptions?: any) {
-    // Skip the test if the model doesn't support structured output
-    if (!this.chatModelHasStructuredOutput) {
-      console.log("Test requires withStructuredOutput. Skipping...");
-      return;
-    }
-
-    // Create a new instance of the chat model
-    const model = new this.Cls(this.constructorArgs);
-
-    // Ensure the model has the withStructuredOutput method
-    if (!model.withStructuredOutput) {
-      throw new Error(
-        "withStructuredOutput undefined. Cannot test structured output."
-      );
-    }
-
-    // Create a new model instance with structured output capability
-    const modelWithTools = model.withStructuredOutput(adderSchema, {
-      name: "math_addition",
-    });
-
-    // Invoke the model with a predefined prompt
-    const result = await MATH_ADDITION_PROMPT.pipe(modelWithTools).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that the 'a' field is present and is a number
-    expect(result.a).toBeDefined();
-    expect(typeof result.a).toBe("number");
-
-    // Verify that the 'b' field is present and is a number
-    expect(result.b).toBeDefined();
-    expect(typeof result.b).toBe("number");
-  }
-
-  /**
-   * Tests the chat model's ability to generate structured output with raw response included.
-   * This test ensures that the model can correctly process a prompt and return a response
-   * that adheres to a predefined schema (adderSchema) while also including the raw model output.
-   *
-   * It verifies that:
-   * 1. The model supports structured output functionality with raw response inclusion.
-   * 2. The result contains both 'raw' and 'parsed' properties.
-   * 3. The 'raw' property is an instance of the expected response type.
-   * 4. The 'parsed' property contains the expected fields ('a' and 'b') from the adderSchema.
-   * 5. The values of these fields in the 'parsed' property are of the correct type (number).
-   *
-   * This test is crucial for ensuring that the model can generate responses in a specific format
-   * while also providing access to the original, unprocessed model output.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testWithStructuredOutputIncludeRaw(callOptions?: any) {
-    // Skip the test if the model doesn't support structured output
-    if (!this.chatModelHasStructuredOutput) {
-      console.log("Test requires withStructuredOutput. Skipping...");
-      return;
-    }
-
-    // Create a new instance of the chat model
-    const model = new this.Cls(this.constructorArgs);
-
-    // Ensure the model has the withStructuredOutput method
-    if (!model.withStructuredOutput) {
-      throw new Error(
-        "withStructuredOutput undefined. Cannot test tool message histories."
-      );
-    }
-
-    // Create a new model instance with structured output capability, including raw output
-    const modelWithTools = model.withStructuredOutput(adderSchema, {
-      includeRaw: true,
-      name: "math_addition",
-    });
-
-    // Invoke the model with a predefined prompt
-    const result = await MATH_ADDITION_PROMPT.pipe(modelWithTools).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that the raw output is of the expected type
-    expect(result.raw).toBeInstanceOf(this.invokeResponseType);
-
-    // Verify that the parsed 'a' field is present and is a number
-    expect(result.parsed.a).toBeDefined();
-    expect(typeof result.parsed.a).toBe("number");
-
-    // Verify that the parsed 'b' field is present and is a number
-    expect(result.parsed.b).toBeDefined();
-    expect(typeof result.parsed.b).toBe("number");
-  }
-
-  /**
-   * Tests the chat model's ability to bind and use OpenAI-formatted tools.
-   * This test ensures that the model can correctly process and use tools
-   * formatted in the OpenAI function calling style.
-   *
-   * It verifies that:
-   * 1. The model supports tool calling functionality.
-   * 2. The model can successfully bind an OpenAI-formatted tool.
-   * 3. The model invokes the bound tool correctly when prompted.
-   * 4. The result contains a tool call with the expected name.
-   *
-   * This test is crucial for ensuring compatibility with OpenAI's function
-   * calling format, which is a common standard in AI tool integration.
-   *
-   * @param {any | undefined} callOptions Optional call options to pass to the model.
-   *  These options will be applied to the model at runtime.
-   */
-  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
-    // Skip the test if the model doesn't support tool calling
-    if (!this.chatModelHasToolCalling) {
-      console.log("Test requires tool calling. Skipping...");
-      return;
-    }
-
-    const model = new this.Cls(this.constructorArgs);
-    if (!model.bindTools) {
-      throw new Error(
-        "bindTools undefined. Cannot test OpenAI formatted tool calls."
-      );
-    }
-
-    // Bind an OpenAI-formatted tool to the model
-    const modelWithTools = model.bindTools([
-      {
-        type: "function",
-        function: {
-          name: "math_addition",
-          description: adderSchema.description,
-          parameters: zodToJsonSchema(adderSchema),
-        },
-      },
-    ]);
-
-    // Invoke the model with a prompt that should trigger the tool use
-    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
-      modelWithTools
-    ).invoke(
-      {
-        toolName: "math_addition",
-      },
-      callOptions
-    );
-
-    // Verify that a tool call was made
-    expect(result.tool_calls?.[0]).toBeDefined();
-    if (!result.tool_calls?.[0]) {
-      throw new Error("result.tool_calls is undefined");
-    }
-    const { tool_calls } = result;
-
-    // Check that the correct tool was called
-    expect(tool_calls[0].name).toBe("math_addition");
+    // Check the tool call details
+    const toolCall = result.tool_calls![0];
+    expect(toolCall.name).toBe(functionName);
+    expect(toolCall.args).toEqual(functionArgs);
+    expect(toolCall.id).toBe(functionId);
+    expect(toolCall.type).toBe("tool_call");
   }
 
   /**
@@ -1105,8 +864,459 @@ export abstract class ChatModelIntegrationTests<
     }
     const { tool_calls } = result;
 
+    // Check that only one tool call was made
+    expect(tool_calls).toHaveLength(1);
+
+    const toolCall = tool_calls[0];
+
+    // Check that the correct tool was called
+    expect(toolCall.name).toBe("math_addition");
+
+    // Verify that the tool call has the expected arguments
+    expect(toolCall.args).toEqual({
+      a: expect.any(String),
+      b: expect.any(String),
+    }); // TODO: verify the values if possible? 1836281973 and 19973286
+
+    // Verify call ID is present
+    expect(toolCall.id).toBeDefined();
+
+    // Verify the tool call type is correct
+    expect(toolCall.type).toBe("tool_call");
+  }
+
+  /**
+   * Tests the chat model's ability to bind and decide to use an OpenAI-formatted tool.
+   * This test ensures that the model can correctly process and use tools formatted in
+   * the OpenAI function calling style.
+   *
+   * It verifies that:
+   * 1. The model supports tool calling functionality.
+   * 2. The model can successfully bind an OpenAI-formatted tool.
+   * 3. The model invokes the bound tool correctly when prompted.
+   * 4. The result contains a tool call with the expected name.
+   *
+   * This test is crucial for ensuring compatibility with OpenAI's function
+   * calling format, which is a common standard in AI tool integration.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testBindToolsWithOpenAIFormattedTools(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test OpenAI formatted tool calls."
+      );
+    }
+
+    // Bind an OpenAI-formatted tool to the model
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "math_addition",
+          description: adderSchema.description,
+          parameters: toJsonSchema(adderSchema) as Record<string, any>, // Explicit cast
+        },
+      },
+    ]);
+
+    // Invoke the model with a prompt that should trigger the tool use
+    const result: AIMessage = await MATH_ADDITION_PROMPT.pipe(
+      modelWithTools
+    ).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptions
+    );
+
+    // Verify that a tool call was made
+    expect(result.tool_calls?.[0]).toBeDefined();
+    if (!result.tool_calls?.[0]) {
+      throw new Error("result.tool_calls is undefined");
+    }
+    const { tool_calls } = result;
+
     // Check that the correct tool was called
     expect(tool_calls[0].name).toBe("math_addition");
+  }
+
+  /**
+   * Tests the chat model's ability to handle message histories with string tool contents.
+   * This test is specifically designed for models that support tool calling with string-based content,
+   * such as OpenAI's GPT models. It's ultimately ensuring that the model can continue a conversation
+   * that includes a completed tool call cycle (that has string content).
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with string content
+   *    (simulating a tool call), and a ToolMessage with the tool's response.
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk) and defined.
+   *
+   * This test ensures that the model can correctly process and respond to complex message
+   * histories that include tool calls with string-based content structures.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testToolMessageHistoriesStringContent(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test tool message histories."
+      );
+    }
+    // Bind the AdderTool to the model
+    const modelWithTools = model.bindTools([adderTool]);
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+
+    const { functionId } = this;
+    // Invoke the tool (standalone) to get the result
+    const functionResult = await adderTool.invoke(functionArgs);
+
+    // Construct a message history with string-based content
+    const messagesStringContent = [
+      new HumanMessage("What is 1 + 2"),
+      // AIMessage with string content (simulating OpenAI's format) including the tool call
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: functionName,
+            args: functionArgs,
+            id: functionId,
+            type: "tool_call",
+          },
+        ],
+      }),
+      // ToolMessage with the result of the tool call
+      new ToolMessage(functionResult, functionId, functionName),
+    ];
+
+    // Invoke the model with the constructed message history
+    const result = await modelWithTools.invoke(
+      messagesStringContent,
+      callOptions
+    );
+
+    // Verify that the result is of the expected type and defined
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+    expect(result.content).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to handle message histories with list tool contents.
+   * This test is specifically designed for models that support tool calling with list-based content,
+   * such as Anthropic's Claude.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that includes a HumanMessage, an AIMessage with list content
+   *    (simulating a tool call), and a ToolMessage with the tool's response.
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
+   *
+   * This test ensures that the model can correctly process and respond to complex message
+   * histories that include tool calls with list-based content structures.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   */
+  async testToolMessageHistoriesListContent(callOptions?: any) {
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error(
+        "bindTools undefined. Cannot test tool message histories."
+      );
+    }
+    const modelWithTools = model.bindTools([adderTool]);
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+
+    const { functionId } = this;
+    const functionResult = await adderTool.invoke(functionArgs);
+
+    // Construct a message history with list-based content
+    const messagesListContent = [
+      new HumanMessage("What is 1 + 2"),
+      // AIMessage with list content (simulating Anthropic's format)
+      new AIMessage({
+        content: [
+          { type: "text", text: "some text" },
+          {
+            type: "tool_use",
+            id: functionId,
+            name: functionName,
+            input: functionArgs,
+          },
+        ],
+        tool_calls: [
+          {
+            name: functionName,
+            args: functionArgs,
+            id: functionId,
+            type: "tool_call",
+          },
+        ],
+      }),
+      // ToolMessage with the result of the tool call
+      new ToolMessage(functionResult, functionId, functionName),
+    ];
+
+    // Invoke the model with the constructed message history
+    const resultListContent = await modelWithTools.invoke(
+      messagesListContent,
+      callOptions
+    );
+
+    // Verify that the result is of the expected type and defined
+    expect(resultListContent).toBeInstanceOf(this.invokeResponseType);
+    expect(resultListContent.content).toBeDefined();
+  }
+
+  /**
+   * Tests the chat model's ability to process few-shot examples with tool calls.
+   * This test ensures that the model can correctly handle and respond to a conversation
+   * that includes tool calls within the context of few-shot examples.
+   *
+   * The test performs the following steps:
+   * 1. Creates a chat model and binds an AdderTool to it.
+   * 2. Constructs a message history that simulates a few-shot example scenario:
+   *    - A human message asking about addition
+   *    - An AI message with a tool call to the AdderTool
+   *    - A ToolMessage with the result of the tool call
+   *    - An AI message with the result
+   *    - A new human message asking about a different addition
+   * 3. Invokes the model with this message history.
+   * 4. Verifies that the result is of the expected type (AIMessage or AIMessageChunk).
+   *
+   * This test is crucial for ensuring that the model can learn from and apply
+   * the patterns demonstrated in few-shot examples, particularly when those
+   * examples involve tool usage.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testStructuredFewShotExamples(callOptions?: any) {
+    // Skip the test if the model doesn't support tool calling
+    if (!this.chatModelHasToolCalling) {
+      console.log("Test requires tool calling. Skipping...");
+      return;
+    }
+
+    const model = new this.Cls(this.constructorArgs);
+    const adderTool = new AdderTool();
+    if (!model.bindTools) {
+      throw new Error("bindTools undefined. Cannot test few-shot examples.");
+    }
+    const modelWithTools = model.bindTools([adderTool]);
+    const functionName = adderTool.name;
+    const functionArgs = { a: 1, b: 2 };
+
+    const { functionId } = this;
+    const functionResult = await adderTool.invoke(functionArgs);
+
+    // Construct a message history that simulates a few-shot example scenario
+    const messagesStringContent = [
+      new HumanMessage("What is 1 + 2"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: functionName,
+            args: functionArgs,
+            id: functionId,
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage(functionResult, functionId, functionName),
+      new AIMessage(functionResult),
+      new HumanMessage("What is 3 + 4"), // New question to test if the model learned from the example
+    ];
+
+    // Invoke the model with the constructed message history
+    const result = await modelWithTools.invoke(
+      messagesStringContent,
+      callOptions
+    );
+
+    // Verify that the result is of the expected type
+    expect(result).toBeInstanceOf(this.invokeResponseType);
+  }
+
+  /**
+   * Tests the chat model's ability to generate structured output using the `withStructuredOutput` method.
+   * This test ensures that the model can correctly process a prompt and return a response
+   * that adheres to a predefined schema (adderSchema).
+   *
+   * It verifies that:
+   * 1. The model supports structured output functionality.
+   * 2. The result contains the expected fields ('a' and 'b') from the adderSchema.
+   * 3. The values of these fields are of the correct type (number).
+   *
+   * This test is crucial for ensuring that the model can generate responses
+   * in a specific format, which is useful for tasks requiring structured data output.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testWithStructuredOutput(callOptions?: any) {
+    // Skip the test if the model doesn't support structured output
+    if (!this.chatModelHasStructuredOutput) {
+      console.log("Test requires withStructuredOutput. Skipping...");
+      return;
+    }
+
+    // Create a new instance of the chat model
+    const model = new this.Cls(this.constructorArgs);
+
+    // Ensure the model has the withStructuredOutput method
+    if (!model.withStructuredOutput) {
+      throw new Error(
+        "withStructuredOutput undefined. Cannot test structured output."
+      );
+    }
+
+    // Setup and bind a callback handler to test the output params
+    const handler = new TestCallbackHandler();
+    const callOptionsWithHandler = {
+      ...callOptions,
+      callbacks: [handler],
+    };
+
+    // Create a new model instance with structured output capability
+    const modelWithTools = model.withStructuredOutput(adderSchema, {
+      name: "math_addition",
+    });
+
+    // Invoke the model with a predefined prompt
+    const result = await MATH_ADDITION_PROMPT.pipe(modelWithTools).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptionsWithHandler
+    );
+
+    // Verify that the 'a' field is present and is a number
+    expect(result.a).toBeDefined();
+    expect(typeof result.a).toBe("number");
+
+    // Verify that the 'b' field is present and is a number
+    expect(result.b).toBeDefined();
+    expect(typeof result.b).toBe("number");
+
+    // Verify that details to describe the structured output
+    // is emitted in tracing
+    expect(handler.extraParams).toEqual(
+      expect.objectContaining({
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: toJsonSchema(adderSchema),
+        },
+      })
+    );
+  }
+
+  /**
+   * Tests the chat model's ability to generate structured output with raw response included.
+   * This test ensures that the model can correctly process a prompt and return a response
+   * that adheres to a predefined schema (adderSchema) while also including the raw model output.
+   *
+   * It verifies that:
+   * 1. The model supports structured output functionality with raw response inclusion.
+   * 2. The result contains both 'raw' and 'parsed' properties.
+   * 3. The 'raw' property is an instance of the expected response type.
+   * 4. The 'parsed' property contains the expected fields ('a' and 'b') from the adderSchema.
+   * 5. The values of these fields in the 'parsed' property are of the correct type (number).
+   *
+   * This test is crucial for ensuring that the model can generate responses in a specific format
+   * while also providing access to the original, unprocessed model output.
+   *
+   * @param {any | undefined} callOptions Optional call options to pass to the model.
+   *  These options will be applied to the model at runtime.
+   */
+  async testWithStructuredOutputIncludeRaw(callOptions?: any) {
+    // Skip the test if the model doesn't support structured output
+    if (!this.chatModelHasStructuredOutput) {
+      console.log("Test requires withStructuredOutput. Skipping...");
+      return;
+    }
+
+    // Create a new instance of the chat model
+    const model = new this.Cls(this.constructorArgs);
+
+    // Ensure the model has the withStructuredOutput method
+    if (!model.withStructuredOutput) {
+      throw new Error(
+        "withStructuredOutput undefined. Cannot test tool message histories."
+      );
+    }
+
+    // Setup and bind a callback handler to test the output params
+    const handler = new TestCallbackHandler();
+    const callOptionsWithHandler = {
+      ...callOptions,
+      callbacks: [handler],
+    };
+
+    // Create a new model instance with structured output capability, including raw output
+    const modelWithTools = model.withStructuredOutput(adderSchema, {
+      includeRaw: true,
+      name: "math_addition",
+    });
+
+    // Invoke the model with a predefined prompt
+    const result = await MATH_ADDITION_PROMPT.pipe(modelWithTools).invoke(
+      {
+        toolName: "math_addition",
+      },
+      callOptionsWithHandler
+    );
+
+    // Verify that the raw output is of the expected type
+    expect(result.raw).toBeInstanceOf(this.invokeResponseType);
+
+    // Verify that the parsed 'a' field is present and is a number
+    expect(result.parsed.a).toBeDefined();
+    expect(typeof result.parsed.a).toBe("number");
+
+    // Verify that the parsed 'b' field is present and is a number
+    expect(result.parsed.b).toBeDefined();
+    expect(typeof result.parsed.b).toBe("number");
+
+    // Verify that details to describe the structured output
+    // is emitted in tracing
+    expect(handler.extraParams).toEqual(
+      expect.objectContaining({
+        ls_structured_output_format: {
+          kwargs: { method: "jsonMode" },
+          schema: toJsonSchema(adderSchema),
+        },
+      })
+    );
   }
 
   /**
@@ -1312,7 +1522,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);
@@ -1411,7 +1621,7 @@ export abstract class ChatModelIntegrationTests<
       tool_call_id: tool_calls[0].id ?? "",
       name: tool_calls[0].name,
       content: await weatherTool.invoke(
-        tool_calls[0].args as z.infer<typeof weatherSchema>
+        tool_calls[0].args as InferInteropZodOutput<typeof weatherSchema>
       ),
     });
     messages.push(toolMessage);
@@ -1639,11 +1849,13 @@ Extraction path: {extractionPath}`,
             name: weatherTool.name,
             id: "get_current_weather_id",
             args: { location: "San Francisco" },
+            type: "tool_call",
           },
           {
             name: currentTimeTool.name,
             id: "get_current_time_id",
             args: { location: "San Francisco" },
+            type: "tool_call",
           },
         ],
       });
@@ -2116,6 +2328,21 @@ Extraction path: {extractionPath}`,
       return;
     }
     const chatModel = new this.Cls(this.constructorArgs);
+    // URL
+    if (support.includes("url")) {
+      const msg = new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            source_type: "url",
+            url: TEST_AUDIO_URL,
+          },
+        ],
+      });
+      const result = await chatModel.invoke([msg], callOptions);
+      expect(result).toBeDefined();
+      expect(result.text).not.toBe("");
+    }
     // base64
     if (support.includes("base64")) {
       const msg = new HumanMessage({

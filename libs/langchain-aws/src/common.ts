@@ -40,8 +40,8 @@ import type {
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { isInteropZodSchema } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   ChatBedrockConverseToolType,
   BedrockToolChoice,
@@ -50,6 +50,19 @@ import {
   MessageContentReasoningBlockReasoningTextPartial,
   MessageContentReasoningBlockRedacted,
 } from "./types.js";
+
+function isDefaultCachePoint(block: unknown): boolean {
+  return Boolean(
+    typeof block === "object" &&
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
+  );
+}
 
 const standardContentBlockConverter: StandardContentBlockConverter<{
   text: ContentBlock.TextMember;
@@ -267,13 +280,7 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string
->({
-  block,
-  onUnknown = "throw",
-}: {
-  block: BlockT;
-  onUnknown?: "throw";
-}): ContentBlock;
+>({ block, onUnknown }: { block: BlockT; onUnknown?: "throw" }): ContentBlock;
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends MessageContentComplex | DataContentBlock | string
@@ -316,6 +323,14 @@ function convertLangChainContentBlockToConverseContentBlock<
     };
   }
 
+  if (isDefaultCachePoint(block)) {
+    return {
+      cachePoint: {
+        type: "default",
+      },
+    };
+  }
+
   if (onUnknown === "throw") {
     throw new Error(`Unsupported content block type: ${block.type}`);
   } else {
@@ -325,14 +340,28 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertSystemMessageToConverseMessage(
   msg: SystemMessage
-): BedrockSystemContentBlock {
+): BedrockSystemContentBlock[] {
   if (typeof msg.content === "string") {
-    return { text: msg.content };
-  } else if (msg.content.length === 1 && msg.content[0].type === "text") {
-    return { text: msg.content[0].text };
+    return [{ text: msg.content }];
+  } else if (Array.isArray(msg.content) && msg.content.length > 0) {
+    const contentBlocks: BedrockSystemContentBlock[] = [];
+    for (const block of msg.content) {
+      if (block.type === "text" && typeof block.text === "string") {
+        contentBlocks.push({
+          text: block.text,
+        });
+      } else if (isDefaultCachePoint(block)) {
+        contentBlocks.push({
+          cachePoint: {
+            type: "default",
+          },
+        });
+      } else break;
+    }
+    if (msg.content.length === contentBlocks.length) return contentBlocks;
   }
   throw new Error(
-    "System message content must be either a string, or a content array containing a single text object."
+    "System message content must be either a string, or an array of text blocks, optionally including a cache point."
   );
 }
 
@@ -358,6 +387,12 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
           reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
             block as MessageContentReasoningBlock
           ),
+        };
+      } else if (isDefaultCachePoint(block)) {
+        return {
+          cachePoint: {
+            type: "default",
+          },
         };
       } else {
         const blockValues = Object.fromEntries(
@@ -399,7 +434,7 @@ function convertHumanMessageToConverseMessage(
 ): BedrockMessage {
   if (msg.content === "") {
     throw new Error(
-      `Invalid message content: empty string. '${msg._getType()}' must contain non-empty content.`
+      `Invalid message content: empty string. '${msg.getType()}' must contain non-empty content.`
     );
   }
 
@@ -475,20 +510,20 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   converseSystem: BedrockSystemContentBlock[];
 } {
   const converseSystem: BedrockSystemContentBlock[] = messages
-    .filter((msg) => msg._getType() === "system")
-    .map((msg) => convertSystemMessageToConverseMessage(msg));
+    .filter((msg) => msg.getType() === "system")
+    .flatMap((msg) => convertSystemMessageToConverseMessage(msg));
 
   const converseMessages: BedrockMessage[] = messages
-    .filter((msg) => msg._getType() !== "system")
+    .filter((msg) => msg.getType() !== "system")
     .map((msg) => {
-      if (msg._getType() === "ai") {
+      if (msg.getType() === "ai") {
         return convertAIMessageToConverseMessage(msg as AIMessage);
-      } else if (msg._getType() === "human" || msg._getType() === "generic") {
+      } else if (msg.getType() === "human" || msg.getType() === "generic") {
         return convertHumanMessageToConverseMessage(msg as HumanMessage);
-      } else if (msg._getType() === "tool") {
+      } else if (msg.getType() === "tool") {
         return convertToolMessageToConverseMessage(msg as ToolMessage);
       } else {
-        throw new Error(`Unsupported message type: ${msg._getType()}`);
+        throw new Error(`Unsupported message type: ${msg.getType()}`);
       }
     });
 
@@ -543,8 +578,8 @@ export function convertToConverseTools(
         name: tool.name,
         description: tool.description,
         inputSchema: {
-          json: (isZodSchema(tool.schema)
-            ? zodToJsonSchema(tool.schema)
+          json: (isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
             : tool.schema) as __DocumentType,
         },
       },
@@ -966,4 +1001,21 @@ export function concatenateLangchainReasoningBlocks(
     concatenatedBlocks.push(concatenatedBlock as MessageContentReasoningBlock);
   }
   return concatenatedBlocks;
+}
+
+export function supportedToolChoiceValuesForModel(
+  model: string
+): Array<"auto" | "any" | "tool"> | undefined {
+  if (
+    model.includes("claude-3") ||
+    model.includes("claude-4") ||
+    model.includes("claude-opus-4") ||
+    model.includes("claude-sonnet-4")
+  ) {
+    return ["auto", "any", "tool"];
+  }
+  if (model.includes("mistral-large")) {
+    return ["auto", "any"];
+  }
+  return undefined;
 }

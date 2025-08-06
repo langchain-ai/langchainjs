@@ -27,24 +27,58 @@ import {
   Runnable,
   RunnablePassthrough,
 } from "@langchain/core/runnables";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
   TokenUsage,
 } from "@langchain/core/language_models/base";
-import { z } from "zod";
-import { isZodSchema } from "@langchain/core/utils/types";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 import {
   JsonOutputParser,
   StructuredOutputParser,
   type BaseLLMOutputParser,
 } from "@langchain/core/output_parsers";
+import {
+  ReasoningJsonOutputParser,
+  ReasoningStructuredOutputParser,
+} from "../utils/output_parsers.js";
 
 /**
  * Type representing the role of a message in the Perplexity chat model.
  */
 export type PerplexityRole = "system" | "user" | "assistant";
+
+export interface WebSearchOptions {
+  /**
+   * Determines how much search context is retrieved for the model.
+   * Options are: low (minimizes context for cost savings but less comprehensive answers), medium (balanced approach suitable for most queries), and high (maximizes context for comprehensive answers but at higher cost).
+   */
+  search_context_size?: "low" | "medium" | "high";
+
+  /**
+   * To refine search results based on geography, you can specify an approximate user location.
+   */
+  user_location?: {
+    /**
+     * The latitude of the user's location.
+     */
+    latitude: number;
+
+    /**
+     * The longitude of the user's location.
+     */
+    longitude: number;
+
+    /**
+     * The two letter ISO country code of the user's location.
+     */
+    country: string;
+  };
+}
 
 /**
  * Interface defining the parameters for the Perplexity chat model.
@@ -93,6 +127,23 @@ export interface PerplexityChatInput extends BaseChatModelParams {
 
   /** Timeout for requests to Perplexity */
   timeout?: number;
+
+  /** Controls the search mode used for the request. When set to 'academic', results will prioritize scholarly sources. */
+  searchMode?: "academic" | "web";
+
+  /** Controls how much computational effort the AI dedicates to each query for deep research models. Only applicable for sonar-deep-research. */
+  reasoningEffort?: "low" | "medium" | "high";
+
+  /** Filters search results to only include content published after this date. */
+  searchAfterDateFilter?: string;
+
+  /** Filters search results to only include content published before this date. */
+  searchBeforeDateFilter?: string;
+
+  /**
+   * Configuration for using web search in model responses.
+   */
+  webSearchOptions?: WebSearchOptions;
 }
 
 export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
@@ -145,6 +196,16 @@ export class ChatPerplexity
 
   frequencyPenalty?: number;
 
+  searchMode?: "academic" | "web";
+
+  reasoningEffort?: "low" | "medium" | "high";
+
+  searchAfterDateFilter?: string;
+
+  searchBeforeDateFilter?: string;
+
+  webSearchOptions?: WebSearchOptions;
+
   private client: OpenAI;
 
   constructor(fields: PerplexityChatInput) {
@@ -168,6 +229,11 @@ export class ChatPerplexity
       fields?.searchDomainFilter ?? this.searchDomainFilter;
     this.searchRecencyFilter =
       fields?.searchRecencyFilter ?? this.searchRecencyFilter;
+    this.searchMode = fields?.searchMode;
+    this.reasoningEffort = fields?.reasoningEffort;
+    this.searchAfterDateFilter = fields?.searchAfterDateFilter;
+    this.searchBeforeDateFilter = fields?.searchBeforeDateFilter;
+    this.webSearchOptions = fields?.webSearchOptions;
 
     if (!this.apiKey) {
       throw new Error("Perplexity API key not found");
@@ -201,6 +267,11 @@ export class ChatPerplexity
       response_format: options?.response_format,
       search_domain_filter: this.searchDomainFilter,
       search_recency_filter: this.searchRecencyFilter,
+      search_mode: this.searchMode,
+      reasoning_effort: this.reasoningEffort,
+      search_after_date_filter: this.searchAfterDateFilter,
+      search_before_date_filter: this.searchBeforeDateFilter,
+      web_search_options: this.webSearchOptions as Record<string, unknown>, // Cast WebSearchOptions to generic type to avoid conflict with OpenAI's WebSearchOptions interface
     };
   }
 
@@ -358,7 +429,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -369,7 +440,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -380,7 +451,7 @@ export class ChatPerplexity
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -397,9 +468,9 @@ export class ChatPerplexity
       throw new Error(`"strict" mode is not supported for this model.`);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
-    if (isZodSchema(schema)) {
-      schema = zodToJsonSchema(schema);
+    let schema: InteropZodType<RunOutput> | Record<string, any> = outputSchema;
+    if (isInteropZodSchema(schema)) {
+      schema = toJsonSchema(schema);
     }
     const name = config?.name;
     const description =
@@ -411,7 +482,7 @@ export class ChatPerplexity
         `Perplexity only supports "jsonSchema" as a structured output method.`
       );
     }
-    const llm: Runnable<BaseLanguageModelInput> = this.bind({
+    const llm: Runnable<BaseLanguageModelInput> = this.withConfig({
       response_format: {
         type: "json_schema",
         json_schema: {
@@ -423,11 +494,21 @@ export class ChatPerplexity
     });
 
     let outputParser: BaseLLMOutputParser;
+    // Check if this is a reasoning model
+    const isReasoningModel = this.model.toLowerCase().includes("reasoning");
 
-    if (isZodSchema(schema)) {
-      outputParser = StructuredOutputParser.fromZodSchema(schema);
+    if (isInteropZodSchema(schema)) {
+      if (isReasoningModel) {
+        outputParser = new ReasoningStructuredOutputParser(schema);
+      } else {
+        outputParser = StructuredOutputParser.fromZodSchema(schema);
+      }
     } else {
-      outputParser = new JsonOutputParser();
+      if (isReasoningModel) {
+        outputParser = new ReasoningJsonOutputParser(schema);
+      } else {
+        outputParser = new JsonOutputParser<RunOutput>();
+      }
     }
 
     if (!includeRaw) {

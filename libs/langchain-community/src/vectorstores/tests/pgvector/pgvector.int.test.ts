@@ -178,6 +178,21 @@ describe("PGVectorStore", () => {
     const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
 
     expect(result3.length).toEqual(3);
+
+    const result4 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        notIn: [100, 300],
+      },
+    });
+
+    expect(result4.length).toEqual(1);
+    expect(result4).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 200 },
+      },
+    ]);
   });
 
   test("PGvector supports arrayContains (?|) in metadata filter ", async () => {
@@ -803,6 +818,131 @@ describe("PGVectorStore with schema", () => {
     // All other documents should still be in database
     expect(idsAfterDelete).toContainEqual(initialIds[1]);
     expect(idsAfterDelete).toContainEqual(initialIds[2]);
+  });
+});
+
+describe("PGVectorStore with skipInitializationCheck", () => {
+  let pgvectorVectorStore: PGVectorStore;
+  const tableName = "testlangchain_skip_init";
+
+  afterEach(async () => {
+    const pool = new pg.Pool(postgresConnectionOptions);
+    await pool.query(`DROP TABLE IF EXISTS "${tableName}"`);
+    await pool.end();
+  });
+
+  test("skipInitializationCheck=false (default) should initialize tables", async () => {
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const result = await pgvectorVectorStore.pool.query(
+      `SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '${tableName}'
+      )`
+    );
+
+    expect(result.rows[0].exists).toBe(true);
+    await pgvectorVectorStore.end();
+  });
+
+  test("skipInitializationCheck=true should skip table initialization", async () => {
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      skipInitializationCheck: true,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const tableExists = await pgvectorVectorStore.pool.query(
+      `SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '${tableName}'
+      )`
+    );
+
+    expect(tableExists.rows[0].exists).toBe(false);
+
+    await pgvectorVectorStore.end();
+  });
+
+  test("skipInitializationCheck=true should work with addDocuments", async () => {
+    const setupPool = new pg.Pool(postgresConnectionOptions);
+
+    await setupPool.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+    await setupPool.query(`
+      CREATE TABLE "${tableName}" (
+        "id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+        "content" text,
+        "metadata" jsonb,
+        "vector" vector(1536)
+      );
+    `);
+
+    await setupPool.end();
+
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      skipInitializationCheck: true,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const documents = [
+      { pageContent: "Hello world", metadata: { source: "test" } },
+      {
+        pageContent: "Testing skipInitializationCheck",
+        metadata: { source: "test" },
+      },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents);
+
+    const query = await embeddingsEngine.embedQuery("Hello");
+    const results = await pgvectorVectorStore.similaritySearchVectorWithScore(
+      query,
+      1
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0][0].pageContent).toBe("Hello world");
+
+    await pgvectorVectorStore.end();
   });
 });
 

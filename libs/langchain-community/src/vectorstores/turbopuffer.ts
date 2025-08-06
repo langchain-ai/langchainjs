@@ -210,6 +210,7 @@ export class TurbopufferVectorStore extends VectorStore {
       const data = {
         ids: batchIds,
         vectors: batchVectors,
+        distance_metric: this.distanceMetric,
         attributes,
       };
 
