@@ -96,6 +96,7 @@
     }
   },
   "dependencies": {
+    "@langchain/agents": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "js-tiktoken": "^1.0.12",
