@@ -20,6 +20,7 @@ jobs:
             mistralai,
             aws,
             google-vertexai-web,
+            agents,
           ]
     steps:
       - uses: actions/checkout@v4
