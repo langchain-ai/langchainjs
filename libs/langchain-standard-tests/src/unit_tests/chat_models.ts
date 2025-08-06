@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import type { expect as JestExpect } from "@jest/globals";
 import {
   BaseChatModelCallOptions,
   LangSmithParams,
@@ -12,6 +12,19 @@ import {
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
+
+let expect: typeof JestExpect;
+
+try {
+  expect = (await import("@jest/globals")).expect;
+} catch {
+  try {
+    // @ts-expect-error Vitest is not a dependency of this package
+    expect = (await import("vitest")).expect;
+  } catch {
+    throw new Error("Could not load either Jest nor Vitest expect");
+  }
+}
 
 const person = /* #__PURE__ */ z
   .object({
@@ -106,7 +119,7 @@ export abstract class ChatModelUnitTests<
       return;
     }
     const chatModel = new this.Cls(this.constructorArgs);
-    expect((chatModel as any).withStructuredOutput?.(person)).toBeDefined();
+    expect(chatModel.withStructuredOutput?.(person)).toBeDefined();
   }
 
   testStandardParams() {
@@ -130,42 +143,42 @@ export abstract class ChatModelUnitTests<
     let allTestsPassed = true;
     try {
       this.testChatModelInit();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testChatModelInit failed", e);
     }
 
     try {
       this.testChatModelInitApiKey();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testChatModelInitApiKey failed", e);
     }
 
     try {
       this.testChatModelInitStreaming();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testChatModelInitStreaming failed", e);
     }
 
     try {
       this.testChatModelWithBindTools();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testChatModelWithBindTools failed", e);
     }
 
     try {
       this.testChatModelWithStructuredOutput();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testChatModelWithStructuredOutput failed", e);
     }
 
     try {
       this.testStandardParams();
-    } catch (e: any) {
+    } catch (e) {
       allTestsPassed = false;
       console.error("testStandardParams failed", e);
     }

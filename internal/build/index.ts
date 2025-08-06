@@ -1,7 +1,7 @@
 import { resolve, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { build } from "tsdown";
+import { build, type Format, type AttwOptions } from "tsdown";
 import type { PackageJson } from "type-fest";
 import type { Options as UnusedOptions } from "unplugin-unused";
 
@@ -44,6 +44,10 @@ async function buildProject(
   const entry = input.map(([, { input }]) => input).filter(Boolean) as string[];
   const watch = opts.watch ?? false;
   const sourcemap = !opts.skipSourcemap;
+  const exportsCJS = Object.values(pkg.exports || {}).some(
+    (exp) => typeof exp === "object" && exp && "require" in exp
+  );
+  const format: Format[] = exportsCJS ? ["esm", "cjs"] : ["esm"];
 
   /**
    * don't clean if user passes `--skipClean` or if `--noEmit` is enabled
@@ -82,9 +86,9 @@ async function buildProject(
           } as UnusedOptions)
         : false,
     attw: {
-      profile: "node16",
+      profile: exportsCJS ? "node16" : "esmOnly",
       level: "error",
-    } as const,
+    } as AttwOptions,
     /**
      * skip publint if:
      * - watch is enabled, to avoid running publint on every change
@@ -150,7 +154,7 @@ async function buildProject(
     platform: "node",
     target: "es2022",
     outDir: "./dist",
-    format: ["esm", "cjs"],
+    format,
     watch,
     tsconfig: resolve(path, "tsconfig.json"),
     ignoreWatch: [

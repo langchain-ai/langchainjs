@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect } from "@jest/globals";
+import type { expect as JestExpect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   AIMessage,
@@ -31,6 +31,21 @@ import {
 } from "../base.js";
 import { TestCallbackHandler } from "../utils.js";
 import { isMessageContentComplex } from "../utils/types.js";
+
+let expect: typeof JestExpect;
+
+try {
+  expect = (await import("@jest/globals")).expect;
+} catch {
+  try {
+    // @ts-expect-error Vitest is not a dependency of this package
+    expect = (await import("vitest")).expect;
+  } catch {
+    throw new Error("Could not load either Jest nor Vitest expect");
+  }
+}
+
+console.log("\n\n\nCHECHCHHCHC", expect);
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
