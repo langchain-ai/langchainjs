@@ -88,7 +88,6 @@ export const config = {
     "embeddings/llama_cpp": "embeddings/llama_cpp",
     "embeddings/minimax": "embeddings/minimax",
     "embeddings/ollama": "embeddings/ollama",
-    "embeddings/oracle": "embeddings/oracle",
     "embeddings/premai": "embeddings/premai",
     "embeddings/tensorflow": "embeddings/tensorflow",
     "embeddings/tencent_hunyuan": "embeddings/tencent_hunyuan/index",
@@ -150,7 +149,6 @@ export const config = {
     "vectorstores/neo4j_vector": "vectorstores/neo4j_vector",
     "vectorstores/neon": "vectorstores/neon",
     "vectorstores/opensearch": "vectorstores/opensearch",
-    "vectorstores/oraclevs": "vectorstores/oraclevs",
     "vectorstores/pgvector": "vectorstores/pgvector",
     "vectorstores/pinecone": "vectorstores/pinecone",
     "vectorstores/prisma": "vectorstores/prisma",
@@ -333,13 +331,11 @@ export const config = {
     "document_loaders/fs/unstructured": "document_loaders/fs/unstructured",
     "document_loaders/fs/openai_whisper_audio":
       "document_loaders/fs/openai_whisper_audio",
-    "document_loaders/fs/oracle": "document_loaders/fs/oracle",
     "document_loaders/fs/pptx": "document_loaders/fs/pptx",
     // utils
     "utils/convex": "utils/convex",
     "utils/event_source_parse": "utils/event_source_parse",
     "utils/cassandra": "utils/cassandra",
-    "utils/oracle": "utils/oracle",
     // experimental
     "experimental/callbacks/handlers/datadog":
       "experimental/callbacks/handlers/datadog",
