@@ -13,7 +13,6 @@ export const config = {
   internals: [/node\:/, /@langchain\/core\//],
   entrypoints: {
     index: "index",
-    "oracle": "oracle_text_splitter",
   },
   requiresOptionalDependency: [],
   tsConfigPath: resolve("./tsconfig.json"),
