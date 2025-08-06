@@ -85,7 +85,6 @@ export * as experimental__masking from "../experimental/masking/index.js";
 export * as experimental__prompts__custom_format from "../experimental/prompts/custom_format.js";
 export * as experimental__prompts__handlebars from "../experimental/prompts/handlebars.js";
 export * as evaluation from "../evaluation/index.js";
-export * as smith from "../smith/index.js";
 export * as indexes from "../indexes/index.js";
 import {
   ChatOpenAI,
