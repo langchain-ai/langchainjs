@@ -30,6 +30,7 @@ import {
   FakeToolCallingChatModel,
   FakeToolCallingModel,
   createCheckpointer,
+  SearchAPI,
 } from "./utils.js";
 
 describe("createReactAgent", () => {
@@ -1195,6 +1196,165 @@ describe("createReactAgent", () => {
     expect(aiMessage.content).toBe("Hello agent");
     expect(aiMessage.name).toBe("test-agent");
   });
+
+  it("Should respect a passed signal", async () => {
+    const llm = new FakeToolCallingChatModel({
+      responses: [new AIMessage("result")],
+      sleep: 500, // Add delay to allow cancellation
+    });
+
+    const agent = createReactAgent({
+      llm,
+      tools: [],
+      prompt: "You are a helpful assistant",
+    });
+
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 100);
+
+    await expect(async () => {
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello Input!")] },
+        { signal: controller.signal }
+      );
+    }).rejects.toThrowError();
+  });
+
+  it("Works with tools that return content_and_artifact response format", async () => {
+    class SearchAPIWithArtifact extends StructuredTool {
+      name = "search_api";
+      description = "A simple API that returns content with artifact.";
+      schema = z.object({
+        query: z.string().describe("The query to search for."),
+      });
+
+      async _call(_input: z.infer<typeof this.schema>) {
+        return {
+          content: "some response format",
+          artifact: Buffer.from("123"),
+        };
+      }
+    }
+
+    const llm = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "result1",
+          tool_calls: [
+            {
+              name: "search_api",
+              id: "tool_abcd123",
+              args: { query: "foo" },
+            },
+          ],
+        }),
+        new AIMessage("result2"),
+      ],
+    });
+
+    const agent = createReactAgent({
+      llm,
+      tools: [new SearchAPIWithArtifact()],
+      prompt: "You are a helpful assistant",
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Hello Input!")],
+    });
+
+    expect(result.messages).toHaveLength(4);
+    const toolMessage = JSON.parse(
+      result.messages[2].content as string
+    ) as ToolMessage;
+    expect(toolMessage.content).toBe("some response format");
+    expect(Buffer.from(toolMessage.artifact.data)).toEqual(Buffer.from("123"));
+  });
+
+  it("Can accept RunnableToolLike", async () => {
+    const searchApiTool = new SearchAPI();
+    const runnableToolLikeTool = RunnableLambda.from<
+      z.infer<typeof searchApiTool.schema>,
+      ToolMessage
+    >(async (input, config) => searchApiTool.invoke(input, config)).asTool({
+      name: searchApiTool.name,
+      description: searchApiTool.description,
+      schema: searchApiTool.schema,
+    });
+
+    const llm = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "result1",
+          tool_calls: [
+            {
+              name: "search_api",
+              id: "tool_abcd123",
+              args: { query: "foo" },
+            },
+          ],
+        }),
+        new AIMessage("result2"),
+      ],
+    });
+
+    const agent = createReactAgent({
+      llm,
+      tools: [runnableToolLikeTool],
+      prompt: "You are a helpful assistant",
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Hello Input!")],
+    });
+
+    expect(result.messages).toHaveLength(4);
+    expect((result.messages[2] as ToolMessage).content).toBe("result for foo");
+  });
+
+  it.each(["openai", "anthropic", "bedrock", "google"] as const)(
+    "Should throw on tool mismatch with %s style",
+    async (toolStyle) => {
+      const llm = new FakeToolCallingChatModel({ toolStyle });
+
+      const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+        name: "tool1",
+        description: "Tool 1 docstring.",
+        schema: z.object({
+          someVal: z.number().describe("Input value"),
+        }),
+      });
+
+      const tool2 = tool((input) => `Tool 2: ${input.someVal}`, {
+        name: "tool2",
+        description: "Tool 2 docstring.",
+        schema: z.object({
+          someVal: z.number().describe("Input value"),
+        }),
+      });
+
+      // Test mismatching tool lengths
+      await expect(async () => {
+        const agent = createReactAgent({
+          llm: llm.bindTools([tool1]),
+          tools: [tool1, tool2],
+        });
+        await agent.invoke({
+          messages: [new HumanMessage("Hello Input!")],
+        });
+      }).rejects.toThrow();
+
+      // Test missing bound tools
+      await expect(async () => {
+        const agent = createReactAgent({
+          llm: llm.bindTools([tool1]),
+          tools: [tool2],
+        });
+        await agent.invoke({
+          messages: [new HumanMessage("Hello Input!")],
+        });
+      }).rejects.toThrow();
+    }
+  );
 
   it.skip("postModelHook + partial tool call application", async () => {
     const searchSchema = z.object({

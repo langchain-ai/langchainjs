@@ -33,6 +33,7 @@ import {
   type BaseCheckpointSaver,
 } from "@langchain/langgraph-checkpoint";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
+import { z } from "zod";
 
 export class _AnyIdAIMessage extends AIMessage {
   get lc_id() {
@@ -427,5 +428,20 @@ export class FakeToolCallingModel extends BaseChatModel {
       ],
       llmOutput: {},
     };
+  }
+}
+
+export class SearchAPI extends StructuredTool {
+  name = "search_api";
+  description = "A simple API that returns the input string.";
+  schema = z.object({
+    query: z.string().describe("The query to search for."),
+  });
+
+  async _call(input: z.infer<typeof this.schema>) {
+    if (input?.query === "error") {
+      throw new Error("Error");
+    }
+    return `result for ${input?.query}`;
   }
 }
