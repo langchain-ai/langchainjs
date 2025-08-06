@@ -4,6 +4,7 @@ import {
   AnnotationRoot,
   MessagesAnnotation,
   START,
+  Runtime,
 } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
@@ -64,13 +65,28 @@ export type Prompt =
     ) => Promise<BaseMessageLike[]>)
   | Runnable;
 
+export type StructuredResponseSchemaOptions<StructuredResponseType> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: InteropZodType<StructuredResponseType> | Record<string, any>;
+  prompt?: string;
+
+  strict?: boolean;
+  [key: string]: unknown;
+};
+
 export type CreateReactAgentParams<
   A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  StructuredResponseType = Record<string, any>
+  StructuredResponseType extends Record<string, any> = Record<string, any>,
+  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm: LanguageModelLike;
+  llm:
+    | LanguageModelLike
+    | ((
+        state: ToAnnotationRoot<A>["State"] & PreHookAnnotation["State"],
+        runtime: Runtime<ToAnnotationRoot<C>["State"]>
+      ) => Promise<LanguageModelLike> | LanguageModelLike);
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];
@@ -90,7 +106,16 @@ export type CreateReactAgentParams<
    * This is now deprecated and will be removed in a future release.
    */
   prompt?: Prompt;
+
+  /**
+   * Additional state schema for the agent.
+   */
   stateSchema?: A;
+
+  /**
+   * An optional schema for the context.
+   */
+  contextSchema?: C;
   /** An optional checkpoint saver to persist the agent's state. */
   checkpointSaver?: BaseCheckpointSaver | boolean;
   /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
@@ -131,9 +156,9 @@ export type CreateReactAgentParams<
 
   /**
    * Use to specify how to expose the agent name to the underlying supervisor LLM.
-   * - `undefined`: Relies on the LLM provider {@link AIMessage#name}. Currently, only OpenAI supports this.
-   * - `"inline"`: Add the agent name directly into the content field of the {@link AIMessage} using XML-style tags.
-   *      Example: `"How can I help you"` -> `"<name>agent_name</name><content>How can I help you?</content>"`
+   *   - `undefined`: Relies on the LLM provider {@link AIMessage#name}. Currently, only OpenAI supports this.
+   *   - `"inline"`: Add the agent name directly into the content field of the {@link AIMessage} using XML-style tags.
+   *       Example: `"How can I help you"` -> `"<name>agent_name</name><content>How can I help you?</content>"`
    */
   includeAgentName?: "inline" | undefined;
 
@@ -156,13 +181,4 @@ export type CreateReactAgentParams<
     ToAnnotationRoot<A>["Update"],
     LangGraphRunnableConfig
   >;
-};
-
-export type StructuredResponseSchemaOptions<StructuredResponseType> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodType<StructuredResponseType> | Record<string, any>;
-  prompt?: string;
-
-  strict?: boolean;
-  [key: string]: unknown;
 };

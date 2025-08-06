@@ -942,8 +942,8 @@ importers:
         specifier: workspace:*
         version: link:../langchain-core
       '@langchain/langgraph':
-        specifier: ^0.4.2
-        version: 0.4.2(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
+        specifier: ^0.4.3
+        version: 0.4.3(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
       '@langchain/langgraph-checkpoint':
         specifier: ^0.1.0
         version: 0.1.0(@langchain/core@libs+langchain-core)
@@ -7461,8 +7461,8 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/langgraph@0.4.2':
-    resolution: {integrity: sha512-QAxeBIjamn2T2hlqCi+qC8k3Bv/bE/j0VGA+qR+z8NizSbGeD2uftqAYIrk3YtYLWIwk0kIICKcmTz8dKIWzog==}
+  '@langchain/langgraph@0.4.3':
+    resolution: {integrity: sha512-wYi0LsJ+VQMpOHradx0apZtDXR5iINLus9mtvaVwT2qS78wd9Ic/XWKHHpVUNGDpO2KalTkmJWWXVjYKW5C3Rw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.3.58 < 0.4.0'
@@ -24907,7 +24907,7 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/langgraph@0.4.2(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))':
+  '@langchain/langgraph@0.4.3(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph-checkpoint': 0.1.0(@langchain/core@libs+langchain-core)

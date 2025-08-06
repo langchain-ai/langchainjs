@@ -7,11 +7,8 @@ import {
   HumanMessage,
   ToolMessage,
   SystemMessage,
+  isAIMessage,
 } from "@langchain/core/messages";
-import {
-  BaseChatModel,
-  ToolChoice,
-} from "@langchain/core/language_models/chat_models";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatResult } from "@langchain/core/outputs";
 import { StructuredTool, tool } from "@langchain/core/tools";
@@ -22,7 +19,6 @@ import {
 } from "@langchain/core/runnables";
 import {
   InMemoryStore,
-  MemorySaver,
   MessagesAnnotation,
   type BaseCheckpointSaver,
 } from "@langchain/langgraph";
@@ -30,131 +26,11 @@ import {
 import { type Prompt } from "../types.js";
 import { createReactAgent } from "../index.js";
 
-interface ToolCall {
-  name: string;
-  args: Record<string, any>;
-  id: string;
-  type?: "tool_call";
-}
-
-interface FakeToolCallingModelFields {
-  toolCalls?: ToolCall[][];
-  toolStyle?: "openai" | "anthropic";
-  index?: number;
-  structuredResponse?: any;
-}
-
-/**
- * Fake chat model for testing tool calling functionality
- */
-class FakeToolCallingModel extends BaseChatModel {
-  toolCalls: ToolCall[][];
-
-  toolStyle: "openai" | "anthropic";
-
-  index: number;
-
-  structuredResponse?: any;
-
-  private tools: StructuredTool[] = [];
-
-  constructor({
-    toolCalls = [],
-    toolStyle = "openai",
-    index = 0,
-    structuredResponse,
-    ...rest
-  }: FakeToolCallingModelFields = {}) {
-    super(rest);
-    this.toolCalls = toolCalls;
-    this.toolStyle = toolStyle;
-    this.index = index;
-    this.structuredResponse = structuredResponse;
-  }
-
-  _llmType(): string {
-    return "fake-tool-calling";
-  }
-
-  _combineLLMOutput() {
-    return [];
-  }
-
-  bindTools(
-    tools: StructuredTool[]
-  ):
-    | FakeToolCallingModel
-    | RunnableBinding<
-        any,
-        any,
-        any & { tool_choice?: ToolChoice | undefined }
-      > {
-    const newInstance = new FakeToolCallingModel({
-      toolCalls: this.toolCalls,
-      toolStyle: this.toolStyle,
-      index: this.index,
-      structuredResponse: this.structuredResponse,
-    });
-    newInstance.tools = [...this.tools, ...tools];
-    return newInstance;
-  }
-
-  withStructuredOutput(_schema: any) {
-    return new RunnableLambda({
-      func: async () => {
-        return this.structuredResponse;
-      },
-    });
-  }
-
-  async _generate(
-    messages: BaseMessage[],
-    _options?: this["ParsedCallOptions"],
-    _runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    const lastMessage = messages[messages.length - 1];
-    let content = lastMessage.content as string;
-
-    // Handle prompt concatenation
-    if (messages.length > 1) {
-      const parts = messages.map((m) => m.content as string).filter(Boolean);
-      content = parts.join("-");
-    }
-
-    const currentToolCalls = this.toolCalls[this.index] || [];
-    const messageId = this.index.toString();
-
-    // Move to next set of tool calls for subsequent invocations
-    this.index = (this.index + 1) % Math.max(1, this.toolCalls.length);
-
-    const message = new AIMessage({
-      content,
-      id: messageId,
-      tool_calls:
-        currentToolCalls.length > 0
-          ? currentToolCalls.map((tc) => ({
-              ...tc,
-              type: "tool_call" as const,
-            }))
-          : undefined,
-    });
-
-    return {
-      generations: [
-        {
-          text: content,
-          message,
-        },
-      ],
-      llmOutput: {},
-    };
-  }
-}
-
-// Helper function to create checkpointer
-function createCheckpointer(): BaseCheckpointSaver {
-  return new MemorySaver();
-}
+import {
+  FakeToolCallingChatModel,
+  FakeToolCallingModel,
+  createCheckpointer,
+} from "./utils.js";
 
 describe("createReactAgent", () => {
   let syncCheckpointer: BaseCheckpointSaver;
@@ -1318,5 +1194,84 @@ describe("createReactAgent", () => {
     const aiMessage = response.messages[1] as AIMessage;
     expect(aiMessage.content).toBe("Hello agent");
     expect(aiMessage.name).toBe("test-agent");
+  });
+
+  it.skip("postModelHook + partial tool call application", async () => {
+    const searchSchema = z.object({
+      query: z.string().describe("The query to search for."),
+    });
+
+    class SearchAPI extends StructuredTool {
+      name = "search_api";
+
+      description = "A simple API that returns the input string.";
+
+      schema = searchSchema;
+
+      async _call(input: z.infer<typeof searchSchema>) {
+        if (input?.query === "error") {
+          throw new Error("Error");
+        }
+        return `result for ${input?.query}`;
+      }
+    }
+
+    const llm = new FakeToolCallingChatModel({
+      responses: [
+        new AIMessage({
+          content: "result1",
+          tool_calls: [
+            { name: "search_api", id: "tool_a", args: { query: "foo" } },
+            { name: "search_api", id: "tool_b", args: { query: "bar" } },
+          ],
+        }),
+        new AIMessage("done"),
+      ],
+    });
+
+    const agent = createReactAgent({
+      llm,
+      tools: [new SearchAPI()],
+      postModelHook: (state) => {
+        const lastMessage = state.messages.at(-1);
+        if (
+          lastMessage != null &&
+          isAIMessage(lastMessage) &&
+          lastMessage.tool_calls?.length
+        ) {
+          // apply only the first tool call
+          const firstToolCall = lastMessage.tool_calls[0]!;
+          return {
+            messages: [
+              new ToolMessage({
+                content: "post-model-hook",
+                tool_call_id: firstToolCall.id!,
+              }),
+            ],
+          };
+        }
+
+        return {};
+      },
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather?")],
+    });
+
+    expect(result).toMatchObject({
+      messages: [
+        { text: "What's the weather?" },
+        {
+          tool_calls: [
+            { name: "search_api", id: "tool_a", args: { query: "foo" } },
+            { name: "search_api", id: "tool_b", args: { query: "bar" } },
+          ],
+        },
+        { text: "post-model-hook" },
+        { text: "result for bar" },
+        { text: "done" },
+      ],
+    });
   });
 });

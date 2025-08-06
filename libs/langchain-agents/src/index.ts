@@ -1,14 +1,19 @@
 import {
   BaseChatModel,
   BindToolsInput,
+  BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
+import {
+  LanguageModelLike,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
 import {
   BaseMessage,
   isAIMessage,
   isBaseMessage,
   isToolMessage,
   SystemMessage,
+  AIMessageChunk,
 } from "@langchain/core/messages";
 import {
   Runnable,
@@ -31,6 +36,7 @@ import {
   messagesStateReducer,
   END,
   START,
+  LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 
 import type {
@@ -59,45 +65,6 @@ export interface AgentState<
   // graph recursion end
   // is_last_step: boolean;
   structuredResponse: StructuredResponseType;
-}
-
-const PROMPT_RUNNABLE_NAME = "prompt";
-
-function _getPromptRunnable(
-  prompt?: Prompt
-): Runnable<unknown, unknown, RunnableConfig<Record<string, unknown>>> {
-  let promptRunnable: Runnable<
-    unknown,
-    unknown,
-    RunnableConfig<Record<string, unknown>>
-  >;
-
-  if (prompt == null) {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => state.messages
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "string") {
-    const systemMessage = new SystemMessage(prompt);
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => {
-        return [systemMessage, ...(state.messages ?? [])];
-      }
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (isBaseMessage(prompt) && prompt._getType() === "system") {
-    promptRunnable = RunnableLambda.from(
-      (state: typeof MessagesAnnotation.State) => [prompt, ...state.messages]
-    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (typeof prompt === "function") {
-    promptRunnable = RunnableLambda.from(prompt).withConfig({
-      runName: PROMPT_RUNNABLE_NAME,
-    });
-  } else if (Runnable.isRunnable(prompt)) {
-    promptRunnable = prompt;
-  } else {
-    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
-  }
-
-  return promptRunnable;
 }
 
 function isClientTool(tool: ClientTool | ServerTool): tool is ClientTool {
@@ -132,6 +99,39 @@ function _isChatModelWithBindTools(
 ): llm is BaseChatModel & Required<Pick<BaseChatModel, "bindTools">> {
   if (!_isBaseChatModel(llm)) return false;
   return "bindTools" in llm && typeof llm.bindTools === "function";
+}
+
+const PROMPT_RUNNABLE_NAME = "prompt";
+
+function _getPromptRunnable(prompt?: Prompt): Runnable {
+  let promptRunnable: Runnable;
+
+  if (prompt == null) {
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => state.messages
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (typeof prompt === "string") {
+    const systemMessage = new SystemMessage(prompt);
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => {
+        return [systemMessage, ...(state.messages ?? [])];
+      }
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (isBaseMessage(prompt) && prompt._getType() === "system") {
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => [prompt, ...state.messages]
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (typeof prompt === "function") {
+    promptRunnable = RunnableLambda.from(prompt).withConfig({
+      runName: PROMPT_RUNNABLE_NAME,
+    });
+  } else if (Runnable.isRunnable(prompt)) {
+    promptRunnable = prompt;
+  } else {
+    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+  }
+
+  return promptRunnable;
 }
 
 export async function _shouldBindTools(
@@ -281,7 +281,11 @@ const _simpleBindTools = (
 export async function _bindTools(
   llm: LanguageModelLike,
   toolClasses: (ClientTool | ServerTool)[]
-): Promise<RunnableLike> {
+): Promise<
+  | RunnableSequence<any, any>
+  | RunnableBinding<any, any, any>
+  | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
+> {
   const model = _simpleBindTools(llm, toolClasses);
   if (model) return model;
 
@@ -316,7 +320,7 @@ export async function _bindTools(
 
 export async function _getModel(
   llm: LanguageModelLike | ConfigurableModelInterface
-): Promise<BaseChatModel> {
+): Promise<LanguageModelLike> {
   // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
   let model = llm;
   if (RunnableSequence.isRunnableSequence(model)) {
@@ -335,7 +339,7 @@ export async function _getModel(
 
   // Get the underlying model from a RunnableBinding
   if (RunnableBinding.isRunnableBinding(model)) {
-    model = model.bound as BaseChatModel;
+    model = model.bound;
   }
 
   if (!_isBaseChatModel(model)) {
@@ -344,7 +348,7 @@ export async function _getModel(
     );
   }
 
-  return model as BaseChatModel;
+  return model;
 }
 
 export const createReactAgentAnnotation = <
@@ -416,9 +420,10 @@ type WithStateGraphNodes<K extends string, Graph> = Graph extends StateGraph<
 export function createReactAgent<
   A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
+  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<A, StructuredResponseFormat>
+  params: CreateReactAgentParams<A, StructuredResponseFormat, C>
 ): CompiledStateGraph<
   ToAnnotationRoot<A>["State"],
   ToAnnotationRoot<A>["Update"],
@@ -435,6 +440,7 @@ export function createReactAgent<
     tools,
     prompt,
     stateSchema,
+    contextSchema,
     checkpointSaver,
     checkpointer,
     interruptBefore,
@@ -458,32 +464,43 @@ export function createReactAgent<
     toolNode = new ToolNode(toolClasses.filter(isClientTool));
   }
 
-  let cachedModelRunnable: Runnable | null = null;
+  let cachedStaticModel: Runnable | null = null;
 
-  const getModelRunnable = async (llm: LanguageModelLike) => {
-    if (cachedModelRunnable) {
-      return cachedModelRunnable;
-    }
+  const _getStaticModel = async (llm: LanguageModelLike): Promise<Runnable> => {
+    if (cachedStaticModel) return cachedStaticModel;
 
     let modelWithTools: LanguageModelLike;
     if (await _shouldBindTools(llm, toolClasses)) {
-      modelWithTools = (await _bindTools(
-        llm,
-        toolClasses
-      )) as LanguageModelLike;
+      modelWithTools = await _bindTools(llm, toolClasses);
     } else {
       modelWithTools = llm;
     }
 
     const promptRunnable = _getPromptRunnable(prompt);
-
     const modelRunnable =
       includeAgentName === "inline"
-        ? promptRunnable.pipe(withAgentName(modelWithTools, includeAgentName))
-        : promptRunnable.pipe(modelWithTools);
+        ? withAgentName(modelWithTools, includeAgentName)
+        : modelWithTools;
 
-    cachedModelRunnable = modelRunnable;
-    return modelRunnable;
+    cachedStaticModel = promptRunnable.pipe(modelRunnable);
+    return cachedStaticModel;
+  };
+
+  const _getDynamicModel = async (
+    llm: (
+      state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+      runtime: LangGraphRunnableConfig
+    ) => Promise<LanguageModelLike> | LanguageModelLike,
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: LangGraphRunnableConfig
+  ) => {
+    const model = await llm(state, config);
+
+    return _getPromptRunnable(prompt).pipe(
+      includeAgentName === "inline"
+        ? withAgentName(model, includeAgentName)
+        : model
+    );
   };
 
   // If any of the tools are configured to return_directly after running,
@@ -506,8 +523,8 @@ export function createReactAgent<
   }
 
   const generateStructuredResponse = async (
-    state: AgentState<StructuredResponseFormat>,
-    config?: RunnableConfig
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: RunnableConfig
   ) => {
     if (responseFormat == null) {
       throw new Error(
@@ -517,7 +534,16 @@ export function createReactAgent<
     const messages = [...state.messages];
     let modelWithStructuredOutput;
 
-    const model = await _getModel(llm);
+    const model: LanguageModelLike =
+      typeof llm === "function"
+        ? await llm(state, config)
+        : await _getModel(llm);
+
+    if (!_isBaseChatModel(model)) {
+      throw new Error(
+        `Expected \`llm\` to be a ChatModel with .withStructuredOutput() method, got ${model.constructor.name}`
+      );
+    }
 
     if (typeof responseFormat === "object" && "schema" in responseFormat) {
       const { prompt, schema, ...options } =
@@ -537,11 +563,15 @@ export function createReactAgent<
 
   const callModel = async (
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-    config?: RunnableConfig
+    config: RunnableConfig
   ) => {
     // NOTE: we're dynamically creating the model runnable here
     // to ensure that we can validate ConfigurableModel properly
-    const modelRunnable = await getModelRunnable(llm);
+    const modelRunnable: Runnable =
+      typeof llm === "function"
+        ? await _getDynamicModel(llm, state, config)
+        : await _getStaticModel(llm);
+
     // TODO: Auto-promote streaming.
     const response = (await modelRunnable.invoke(
       getModelInputState(state),
@@ -557,10 +587,10 @@ export function createReactAgent<
   const schema =
     stateSchema ?? createReactAgentAnnotation<StructuredResponseFormat>();
 
-  const workflow = new StateGraph(schema as AnyAnnotationRoot).addNode(
-    "tools",
-    toolNode
-  );
+  const workflow = new StateGraph(
+    schema as AnyAnnotationRoot,
+    contextSchema
+  ).addNode("tools", toolNode);
 
   if (!("messages" in workflow._schemaDefinition)) {
     throw new Error("Missing required `messages` key in state schema.");

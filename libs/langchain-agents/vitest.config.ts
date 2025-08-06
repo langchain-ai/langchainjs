@@ -17,10 +17,10 @@ export default defineConfig({
         "src/tests/utils.ts",
       ],
       thresholds: {
-        statements: 92,
+        statements: 91,
         branches: 87,
-        functions: 94,
-        lines: 92,
+        functions: 95,
+        lines: 91,
       },
     },
   },

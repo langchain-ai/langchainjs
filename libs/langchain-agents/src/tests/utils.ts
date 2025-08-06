@@ -7,7 +7,9 @@ import {
   BaseChatModelParams,
   BaseChatModelCallOptions,
   BindToolsInput,
+  ToolChoice,
 } from "@langchain/core/language_models/chat_models";
+import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseMessage,
   AIMessage,
@@ -22,11 +24,13 @@ import {
   Runnable,
   RunnableConfig,
   RunnableLambda,
+  RunnableBinding,
 } from "@langchain/core/runnables";
 import {
   MemorySaver,
   Checkpoint,
   CheckpointMetadata,
+  type BaseCheckpointSaver,
 } from "@langchain/langgraph-checkpoint";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 
@@ -297,5 +301,131 @@ export class MemorySaverAssertImmutable extends MemorySaver {
     this.storageForCopies[thread_id][checkpoint.id] = serializedCheckpoint;
 
     return super.put(config, checkpoint, metadata);
+  }
+}
+
+interface ToolCall {
+  name: string;
+  args: Record<string, any>;
+  id: string;
+  type?: "tool_call";
+}
+
+interface FakeToolCallingModelFields {
+  toolCalls?: ToolCall[][];
+  toolStyle?: "openai" | "anthropic";
+  index?: number;
+  structuredResponse?: any;
+}
+
+// Helper function to create checkpointer
+export function createCheckpointer(): BaseCheckpointSaver {
+  return new MemorySaver();
+}
+
+/**
+ * Fake chat model for testing tool calling functionality
+ */
+export class FakeToolCallingModel extends BaseChatModel {
+  toolCalls: ToolCall[][];
+
+  toolStyle: "openai" | "anthropic";
+
+  index: number;
+
+  structuredResponse?: any;
+
+  private tools: StructuredTool[] = [];
+
+  constructor({
+    toolCalls = [],
+    toolStyle = "openai",
+    index = 0,
+    structuredResponse,
+    ...rest
+  }: FakeToolCallingModelFields = {}) {
+    super(rest);
+    this.toolCalls = toolCalls;
+    this.toolStyle = toolStyle;
+    this.index = index;
+    this.structuredResponse = structuredResponse;
+  }
+
+  _llmType(): string {
+    return "fake-tool-calling";
+  }
+
+  _combineLLMOutput() {
+    return [];
+  }
+
+  bindTools(
+    tools: StructuredTool[]
+  ):
+    | FakeToolCallingModel
+    | RunnableBinding<
+        any,
+        any,
+        any & { tool_choice?: ToolChoice | undefined }
+      > {
+    const newInstance = new FakeToolCallingModel({
+      toolCalls: this.toolCalls,
+      toolStyle: this.toolStyle,
+      index: this.index,
+      structuredResponse: this.structuredResponse,
+    });
+    newInstance.tools = [...this.tools, ...tools];
+    return newInstance;
+  }
+
+  withStructuredOutput(_schema: any) {
+    return new RunnableLambda({
+      func: async () => {
+        return this.structuredResponse;
+      },
+    });
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    _options?: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const lastMessage = messages[messages.length - 1];
+    let content = lastMessage.content as string;
+
+    // Handle prompt concatenation
+    if (messages.length > 1) {
+      const parts = messages.map((m) => m.content as string).filter(Boolean);
+      content = parts.join("-");
+    }
+
+    const currentToolCalls = this.toolCalls[this.index] || [];
+    const messageId = this.index.toString();
+
+    // Move to next set of tool calls for subsequent invocations
+    this.index = (this.index + 1) % Math.max(1, this.toolCalls.length);
+
+    const message = new AIMessage({
+      content,
+      id: messageId,
+      tool_calls:
+        currentToolCalls.length > 0
+          ? currentToolCalls.map((tc) => ({
+              ...tc,
+              type: "tool_call" as const,
+            }))
+          : undefined,
+    });
+
+    return {
+      generations: [
+        {
+          text: content,
+          message,
+        },
+      ],
+      llmOutput: {},
+    };
   }
 }
