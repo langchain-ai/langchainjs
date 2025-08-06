@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "vitest";
 import { Document } from "@langchain/core/documents";
 import {
   CharacterTextSplitter,
@@ -6,7 +6,7 @@ import {
   MarkdownTextSplitter,
   RecursiveCharacterTextSplitter,
   TokenTextSplitter,
-} from "../text_splitter.js";
+} from "../index.js";
 
 function textLineGenerator(char: string, length: number) {
   const line = new Array(length).join(char);
