@@ -4,6 +4,7 @@ import {
   ClientConfiguration,
   ConfigFileAuthenticationDetailsProvider,
   InstancePrincipalsAuthenticationDetailsProviderBuilder,
+  SessionAuthDetailProvider,
   MaxAttemptsTerminationStrategy,
   Region,
 } from "oci-common";
@@ -90,6 +91,9 @@ export class OciGenAiSdkClient {
       case OciGenAiNewClientAuthType.InstancePrincipal:
         return await this._getInstancePrincipalAuthProvider();
 
+      case OciGenAiNewClientAuthType.Session:
+        return this._getSessionAuthProvider(params)
+
       default:
         throw new Error("Invalid authentication type");
     }
@@ -111,6 +115,18 @@ export class OciGenAiSdkClient {
     const instancePrincipalAuthenticationBuilder =
       new InstancePrincipalsAuthenticationDetailsProviderBuilder();
     return await instancePrincipalAuthenticationBuilder.build();
+  }
+
+  static _getSessionAuthProvider(
+    params: OciGenAiClientParams
+  ): AuthenticationDetailsProvider {
+    const configFileAuthParams: ConfigFileAuthParams = <ConfigFileAuthParams>(
+      params.newClientParams?.authParams
+    );
+    return new SessionAuthDetailProvider(
+      configFileAuthParams?.clientConfigFilePath,
+      configFileAuthParams?.clientProfile
+    );
   }
 
   static _getClientConfiguration(
