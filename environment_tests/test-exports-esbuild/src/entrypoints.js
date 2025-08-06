@@ -64,5 +64,3 @@ import * as evaluation from "langchain/evaluation";
 import * as smith from "langchain/smith";
 import * as runnables_remote from "langchain/runnables/remote";
 import * as indexes from "langchain/indexes";
-import * as schema_query_constructor from "langchain/schema/query_constructor";
-import * as schema_prompt_template from "langchain/schema/prompt_template";
