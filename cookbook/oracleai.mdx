@@ -173,7 +173,7 @@ A significant advantage of utilizing an ONNX model directly within Oracle is the
 Below is the example code to upload an ONNX model into Oracle Database:
 
 ```typescript
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+import {OracleEmbeddings} from "@langchain/oracle";
 
 // please update with your related information
 // make sure that you have onnx file in the system
@@ -260,7 +260,7 @@ A significant advantage of utilizing OracleDocLoader is its capability to proces
 Below is a sample code snippet that demonstrates how to use OracleDocLoader
 
 ```typescript
-import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+import {OracleDocLoader} from "@langchain/oracle";
 
 // loading from Oracle Database table
 // make sure you have the table with this specification
@@ -300,7 +300,7 @@ Now that the you have loaded the documents, you may want to generate a summary f
 The following sample code will show how to generate summary:
 
 ```typescript
-import {OracleSummary} from "@langchain/community/utils/oracle";
+import {OracleSummary} from "@langchain/oracle";
 
 // proxy to be used when we instantiate summary and embedder object
 const proxy = "";
@@ -339,7 +339,7 @@ The documents may vary in size, ranging from small to very large. Users often pr
 Below is a sample code illustrating how to implement this:
 
 ```typescript
-import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
+import {OracleTextSplitter} from "@langchain/oracle";
 
 // split by default parameters
 const splitter_params = {"normalize": "all"};
@@ -371,7 +371,7 @@ Now that the documents are chunked as per requirements, you may want to generate
 The following sample code will show how to generate embeddings:
 
 ```typescript
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+import {OracleEmbeddings} from "@langchain/oracle";
   
 // proxy to be used when we instantiate summary and embedder object
 const proxy = "";
@@ -421,10 +421,10 @@ If you choose to use 3rd party provider,
 please follow the necessary steps for proxy and credential.
 */
 
-import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
-import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
-import {OracleSummary} from "@langchain/community/utils/oracle";
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+import {OracleTextSplitter} from "@langchain/oracle";
+import {OracleDocLoader} from "@langchain/oracle";
+import {OracleSummary} from "@langchain/oracle";
+import {OracleEmbeddings} from "@langchain/oracle";
 import {Document} from "langchain/document";
 import oracledb from "oracledb";
 

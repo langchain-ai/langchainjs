@@ -26,7 +26,7 @@ In addition, your vectors can benefit from all of Oracle Database’s most power
 Please check the [usage example](/docs/integrations/document_loaders/file_loaders/oracleai).
 
 ```typescript
-import {OracleDocLoader} from "@langchain/community/document_loaders/fs/oracle";
+import {OracleDocLoader} from "@langchain/oracle";
 
 const loader = new OracleDocLoader(conn, loader_params);
 const docs = await loader.load();
@@ -37,7 +37,7 @@ const docs = await loader.load();
 Please check the [usage example](/docs/integrations/document_loaders/file_loaders/oracleai).
 
 ```typescript
-import {OracleTextSplitter} from "@langchain/textsplitters/oracle";
+import {OracleTextSplitter} from "@langchain/oracle";
 
 const splitter = new OracleTextSplitter(conn, splitter_params);
 let chunks = await splitter.splitText(doc.pageContent);
@@ -48,7 +48,7 @@ let chunks = await splitter.splitText(doc.pageContent);
 Please check the [usage example](/docs/integrations/text_embedding/oracleai).
 
 ```typescript
-import {OracleEmbeddings} from "@langchain/community/embeddings/oracle";
+import {OracleEmbeddings} from "@langchain/oracle";
 
 const embedder = new OracleEmbeddings(conn, embedder_params, proxy);
 const embed = await embedder.embedQuery(chunk);
@@ -59,7 +59,7 @@ const embed = await embedder.embedQuery(chunk);
 Please check the [usage example](/docs/integrations/tools/oracleai).
 
 ```typescript
-import {OracleSummary} from "@langchain/community/utils/oracle";
+import {OracleSummary} from "@langchain/oracle";
 
 const model = new OracleSummary(conn, summary_params, proxy);
 const summary = await model.getSummary(doc.pageContent);
