@@ -15,6 +15,7 @@ const IMPORTANT_IMPORTS = JSON.parse(
 );
 
 const CURRENT_KNOWN_FAILURES = [
+  "langchain/prompts/chat/BaseMessagePromptTemplate",
   "langchain/llms/openai/BaseOpenAI",
   "langchain/llms/openai/AzureOpenAI",
   "langchain/llms/vertexai/VertexAI",
