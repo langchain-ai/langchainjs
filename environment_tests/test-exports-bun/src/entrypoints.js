@@ -62,7 +62,6 @@ export * from "langchain/experimental/masking";
 export * from "langchain/experimental/prompts/custom_format";
 export * from "langchain/evaluation";
 export * from "langchain/smith";
-export * from "langchain/runnables/remote";
 export * from "langchain/indexes";
 export * from "langchain/schema/query_constructor";
 export * from "langchain/schema/prompt_template";
