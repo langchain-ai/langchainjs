@@ -4,6 +4,7 @@ import { ToolCall } from "@langchain/core/messages/tool";
 import { ToolDefinition } from "@langchain/core/language_models/base";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
+import { DynamicTool } from "@langchain/core/tools";
 import { formatToOpenAITool, OpenAIToolChoice } from "./openai.js";
 
 export type ResponsesTool = NonNullable<
@@ -75,6 +76,37 @@ export type CustomToolCall = ToolCall & {
   call_id: string;
   isCustomTool: true;
 };
+
+type LangchainCustomTool = DynamicTool<string> & {
+  metadata: {
+    customTool: OpenAIClient.Responses.CustomTool;
+  };
+};
+
+export function isCustomTool(tool: unknown): tool is LangchainCustomTool {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "metadata" in tool &&
+    typeof tool.metadata === "object" &&
+    tool.metadata !== null &&
+    "customTool" in tool.metadata &&
+    typeof tool.metadata.customTool === "object" &&
+    tool.metadata.customTool !== null
+  );
+}
+
+export function isOpenAICustomTool(
+  tool: ChatOpenAIToolType
+): tool is OpenAIClient.Chat.ChatCompletionCustomTool {
+  return (
+    "type" in tool &&
+    tool.type === "custom" &&
+    "custom" in tool &&
+    typeof tool.custom === "object" &&
+    tool.custom !== null
+  );
+}
 
 export function parseCustomToolCall(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

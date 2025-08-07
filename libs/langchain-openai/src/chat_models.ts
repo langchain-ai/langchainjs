@@ -99,12 +99,13 @@ import {
   convertResponsesCustomTool,
   isBuiltInTool,
   isBuiltInToolChoice,
+  isCustomTool,
   isCustomToolCall,
+  isOpenAICustomTool,
   parseCustomToolCall,
   ResponsesTool,
   ResponsesToolChoice,
 } from "./utils/tools.js";
-import { isCustomTool, isOpenAICustomTool } from "./tools/custom.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 

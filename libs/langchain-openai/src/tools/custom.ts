@@ -11,12 +11,6 @@ import { OpenAIClient } from "../index.js";
 
 export type CustomToolFields = Omit<OpenAI.Responses.CustomTool, "type">;
 
-type LangchainCustomTool = DynamicTool<string> & {
-  metadata: {
-    customTool: OpenAI.Responses.CustomTool;
-  };
-};
-
 export function customTool(
   func: RunnableFunc<string, string, ToolRunnableConfig>,
   fields: CustomToolFields
@@ -44,29 +38,4 @@ export function customTool(
         );
       }),
   });
-}
-
-export function isCustomTool(tool: unknown): tool is LangchainCustomTool {
-  return (
-    typeof tool === "object" &&
-    tool !== null &&
-    "metadata" in tool &&
-    typeof tool.metadata === "object" &&
-    tool.metadata !== null &&
-    "customTool" in tool.metadata &&
-    typeof tool.metadata.customTool === "object" &&
-    tool.metadata.customTool !== null
-  );
-}
-
-export function isOpenAICustomTool(
-  tool: ChatOpenAIToolType
-): tool is OpenAIClient.Chat.ChatCompletionCustomTool {
-  return (
-    "type" in tool &&
-    tool.type === "custom" &&
-    "custom" in tool &&
-    typeof tool.custom === "object" &&
-    tool.custom !== null
-  );
 }
