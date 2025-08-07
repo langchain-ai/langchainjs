@@ -27,7 +27,7 @@ import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentConfig,
+  type CreateReactAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -88,7 +88,7 @@ await store.put(["procedural_memory"], "user456", {
  * Tool to get user's procedural memory
  */
 const getProceduralMemoryTool = tool(
-  async (_: never, config: CreateReactAgentConfig): Promise<string> => {
+  async (_: never, config: CreateReactAgentToolConfig): Promise<string> => {
     const storeInstance = config.store;
     if (!storeInstance) {
       throw new Error("Store is required when compiling the graph");
@@ -115,7 +115,7 @@ const getProceduralMemoryTool = tool(
  * Tool to update user's procedural memory
  */
 const updateProceduralMemoryTool = tool(
-  async (input, config: CreateReactAgentConfig): Promise<string> => {
+  async (input, config: CreateReactAgentToolConfig): Promise<string> => {
     const storeInstance = config.store;
     if (!storeInstance) {
       throw new Error("Store is required when compiling the graph");

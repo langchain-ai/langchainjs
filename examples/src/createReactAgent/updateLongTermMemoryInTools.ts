@@ -19,7 +19,7 @@ import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentConfig,
+  type CreateReactAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -112,7 +112,7 @@ interface MarketInsight {
  * Customer relationship management tool that learns preferences
  */
 const customerPreferencesTool = tool(
-  async (input, config: CreateReactAgentConfig) => {
+  async (input, config: CreateReactAgentToolConfig) => {
     console.log(`💾 Storing customer preference for ${input.customerId}...`);
 
     const key = input.customerId;
@@ -145,7 +145,7 @@ const customerPreferencesTool = tool(
  * Product recommendation tool that uses stored preferences
  */
 const productRecommendationTool = tool(
-  async (input, config: CreateReactAgentConfig) => {
+  async (input, config: CreateReactAgentToolConfig) => {
     console.log(
       `🔍 Looking up preferences for customer ${input.customerId}...`
     );
@@ -270,7 +270,7 @@ ${products
  * Market research tool that accumulates insights
  */
 const marketInsightTool = tool(
-  async (input, config: CreateReactAgentConfig) => {
+  async (input, config: CreateReactAgentToolConfig) => {
     console.log(
       `📊 Recording market insight: ${input.insight.slice(0, 50)}...`
     );
@@ -323,7 +323,7 @@ Insight: ${input.insight}`;
  * Meeting notes tool that stores key decisions and actions
  */
 const meetingNotesTool = tool(
-  async (input, config: CreateReactAgentConfig) => {
+  async (input, config: CreateReactAgentToolConfig) => {
     console.log(`📝 Storing meeting notes for: ${input.meeting}...`);
 
     const storeInstance = config.store ?? store;

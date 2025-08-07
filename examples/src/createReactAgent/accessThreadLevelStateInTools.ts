@@ -18,7 +18,7 @@
  * returns a polished result back to the supervisor.
  */
 
-import { createReactAgent, tool, CreateReactAgentConfig } from "langchain";
+import { createReactAgent, tool, CreateReactAgentToolConfig } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -44,7 +44,7 @@ const subAgent = createReactAgent({
  * Tool that delegates to the sub-agent, passing full thread messages
  */
 const delegateToSubAgentTool = tool(
-  async (input: { task: string }, config: CreateReactAgentConfig) => {
+  async (input: { task: string }, config: CreateReactAgentToolConfig) => {
     /**
      * Access full thread messages from state
      */

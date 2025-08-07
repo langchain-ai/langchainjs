@@ -20,6 +20,10 @@ export {
   createReactAgent,
   type CreateReactAgentState,
   type CreateReactAgentRuntime,
+  /**
+   * note(@christian-bromann): temporary naming
+   */
+  type LangGraphRunnableConfig as CreateReactAgentToolConfig,
 } from "@langchain/agents";
 export { type Runtime } from "@langchain/langgraph";
 

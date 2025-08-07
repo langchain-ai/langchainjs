@@ -22,7 +22,7 @@ import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentConfig,
+  type CreateReactAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -78,7 +78,7 @@ await store.put(["interactions"], "sarah_456", []);
 const knowledgeRetrievalTool = tool(
   async (
     input: { query: string; userId?: string },
-    config: CreateReactAgentConfig
+    config: CreateReactAgentToolConfig
   ) => {
     const storeInstance = config.store;
     if (!storeInstance) {
@@ -182,7 +182,7 @@ This information helps me provide more personalized and contextually relevant re
 const preferencelearningTool = tool(
   async (
     input: { observation: string; userId: string; category: string },
-    config: CreateReactAgentConfig
+    config: CreateReactAgentToolConfig
   ) => {
     const storeInstance = config.store;
     if (!storeInstance) {
