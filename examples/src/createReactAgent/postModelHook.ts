@@ -2,18 +2,20 @@
 /**
  * Post Model Hook
  *
- * This hook executes after the language model generates a response, allowing for post-processing, validation,
- * and modification of the model's output before it reaches the user.
+ * The post-model hook runs AFTER the model generates a response, allowing for post-processing, validation,
+ * human-in-the-loop approval, and modification of the model's output before it reaches the user.
  *
  * Why this is important:
- * - Quality Control: Enables filtering, validation, and improvement of model responses before user delivery
- * - Content Moderation: Provides a checkpoint to ensure responses meet safety and appropriateness standards
- * - Response Enhancement: Allows for post-processing to add formatting, additional context, or corrective measures
+ * - Quality assurance layer independent of prompt engineering
+ * - Enforces safety/compliance policies consistently across all outputs
+ * - Enables observable, auditable response transformations (easy to test/log)
+ * - Provides a single place to tune business rules without touching tools
  *
- * Example Scenario:
- * You're building a customer service bot for a family-friendly business. The post-model hook checks all responses
- * for inappropriate language, compliance violations, or overly technical jargon. If detected, it either sanitizes
- * the response or triggers a fallback to a human agent for review.
+ * When to use:
+ * - You need guardrails on every response (family-friendly, brand voice, legal)
+ * - You want deterministic checks (no extra model calls) before delivery
+ * - You must gate certain categories (legal/medical/financial) for human review
+ * - You want to aggregate metrics on moderation and quality improvements
  */
 
 import { createReactAgent, tool, AIMessage } from "langchain";
@@ -21,505 +23,378 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
- * Customer service tools
+ * Product database
+ */
+const db = {
+  "kids tablet": {
+    price: "$199",
+    features: "Educational apps, parental controls",
+  },
+  "smart tv": {
+    price: "$499",
+    features: "4K resolution, smart home integration",
+  },
+  "baby monitor": {
+    price: "$149",
+    features: "Night vision, two-way audio",
+  },
+} as const;
+
+/**
+ * Minimal tool (kept tiny to focus on post-model logic)
  */
 const productInfoTool = tool(
-  async (input: { product: string; question: string }) => {
-    console.log(`📋 Looking up ${input.product} information...`);
-
-    const productDatabase = {
-      "kids tablet": {
-        price: "$199",
-        features: "Educational apps, parental controls, durable design",
-        safety: "Child-safe materials, no small parts, rounded edges",
-        warranty: "2-year replacement warranty",
-      },
-      "smart tv": {
-        price: "$599",
-        features: "4K display, streaming apps, voice control",
-        safety: "Wall mount included, anti-tip design",
-        warranty: "3-year manufacturer warranty",
-      },
-      "baby monitor": {
-        price: "$89",
-        features: "HD video, two-way audio, night vision",
-        safety: "Encrypted connection, secure app access",
-        warranty: "1-year replacement warranty",
-      },
-    };
-
-    const product =
-      productDatabase[
-        input.product.toLowerCase() as keyof typeof productDatabase
-      ];
-    if (!product) {
-      return `I don't have information about "${input.product}" in our current catalog.`;
+  async (input: { product: string }) => {
+    const key = input.product.toLowerCase() as keyof typeof db;
+    if (!db[key]) {
+      return `Sorry, I don't have data for "${input.product}".`;
     }
 
-    return `${input.product.toUpperCase()} Information:
-Price: ${product.price}
-Features: ${product.features}
-Safety: ${product.safety}
-Warranty: ${product.warranty}`;
+    return `${input.product.toUpperCase()}\nPrice: ${
+      db[key].price
+    }\nFeatures: ${db[key].features}`;
   },
   {
     name: "product_info",
-    description: "Get detailed product information for customer inquiries",
-    schema: z.object({
-      product: z.string().describe("Product name to look up"),
-      question: z.string().describe("Specific question about the product"),
-    }),
-  }
-);
-
-const orderStatusTool = tool(
-  async (input: { orderId: string; email: string }) => {
-    console.log(`📦 Checking order status for ${input.orderId}...`);
-
-    // Simulate order lookup
-    const orderStatuses = [
-      "Processing - Your order is being prepared",
-      "Shipped - Expected delivery in 2-3 business days",
-      "Out for delivery - Will arrive today",
-      "Delivered - Package was delivered to your front door",
-    ];
-
-    const randomStatus =
-      orderStatuses[Math.floor(Math.random() * orderStatuses.length)];
-
-    return `Order #${input.orderId} Status: ${randomStatus}
-Tracking email will be sent to: ${input.email}
-Need help? Contact our support team at support@familystore.com`;
-  },
-  {
-    name: "order_status",
-    description: "Check the status of a customer order",
-    schema: z.object({
-      orderId: z.string().describe("Customer order ID"),
-      email: z.string().describe("Customer email address"),
-    }),
-  }
-);
-
-const refundPolicyTool = tool(
-  async (input: { reason: string; productType: string }) => {
-    console.log(`💰 Providing refund policy information...`);
-
-    return `FAMILY-FRIENDLY REFUND POLICY:
-
-✅ 30-day hassle-free returns
-✅ Full refund for defective items
-✅ Free return shipping for safety issues
-✅ Store credit available for change of mind
-
-For ${input.productType}:
-- Safety-related returns: Immediate full refund
-- Quality issues: Replacement or full refund  
-- Change of mind: Store credit (valid 1 year)
-
-Reason: ${input.reason}
-Next steps: Contact support@familystore.com with your order number.`;
-  },
-  {
-    name: "refund_policy",
-    description: "Provide refund and return policy information",
-    schema: z.object({
-      reason: z.string().describe("Reason for refund request"),
-      productType: z.string().describe("Type of product being returned"),
-    }),
+    description: "Get basic product info",
+    schema: z.object({ product: z.string() }),
   }
 );
 
 /**
- * Content filtering and enhancement logic
+ * Rule-based checks (deterministic evals)
  */
-interface ResponseAnalysis {
-  containsInappropriate: boolean;
-  isTooTechnical: boolean;
-  needsCustomerCareEscalation: boolean;
-  containsComplianceIssues: boolean;
-  enhancementSuggestions: string[];
+function containsProfanity(text: string): boolean {
+  return /(damn|hell|stupid|idiot|crap|sucks)/i.test(text);
 }
 
-function analyzeResponse(content: string): ResponseAnalysis {
-  const lowerContent = content.toLowerCase();
-
-  /**
-   * Inappropriate content detection
-   */
-  const inappropriateTerms = [
-    "damn",
-    "hell",
-    "stupid",
-    "idiot",
-    "crap",
-    "sucks",
+function simplifyTechnicalJargon(text: string): string | null {
+  const map: Array<[RegExp, string]> = [
+    [/\bapi\b/gi, "system"],
+    [/\bbackend\b/gi, "our systems"],
+    [/\bdatabase\b/gi, "our records"],
+    [/\bserver\b/gi, "our system"],
+    [/\balgorithm\b/gi, "our process"],
   ];
-  const containsInappropriate = inappropriateTerms.some((term) =>
-    lowerContent.includes(term)
-  );
-
-  /**
-   * Technical jargon detection
-   */
-  const technicalTerms = [
-    "api",
-    "backend",
-    "database",
-    "server",
-    "algorithm",
-    "bytes",
-  ];
-  const isTooTechnical = technicalTerms.some((term) =>
-    lowerContent.includes(term)
-  );
-
-  /**
-   * Escalation triggers
-   */
-  const escalationTriggers = [
-    "lawsuit",
-    "legal action",
-    "attorney",
-    "sue",
-    "court",
-  ];
-  const needsCustomerCareEscalation = escalationTriggers.some((trigger) =>
-    lowerContent.includes(trigger)
-  );
-
-  /**
-   * Compliance issues
-   */
-  const complianceRisks = ["guarantee", "promise", "100% safe", "never fails"];
-  const containsComplianceIssues = complianceRisks.some((risk) =>
-    lowerContent.includes(risk)
-  );
-
-  const enhancementSuggestions = [];
-  if (lowerContent.includes("product") && !lowerContent.includes("family")) {
-    enhancementSuggestions.push("Add family-friendly context");
+  let updated = text;
+  let changed = false;
+  for (const [re, repl] of map) {
+    if (re.test(updated)) {
+      updated = updated.replace(re, repl);
+      changed = true;
+    }
   }
-  if (!lowerContent.includes("help") && !lowerContent.includes("support")) {
-    enhancementSuggestions.push("Include support contact information");
-  }
+  return changed ? updated : null;
+}
 
-  return {
-    containsInappropriate,
-    isTooTechnical,
-    needsCustomerCareEscalation,
-    containsComplianceIssues,
-    enhancementSuggestions,
-  };
+function mitigateCompliance(text: string): string | null {
+  let updated = text;
+  let changed = false;
+  const map: Array<[RegExp, string]> = [
+    [/\bguarantee\b/gi, "aim to provide"],
+    [/\bpromise\b/gi, "strive to"],
+    [/100% safe/gi, "designed with safety in mind"],
+    [/never fails/gi, "designed for reliability"],
+  ];
+  for (const [re, repl] of map) {
+    if (re.test(updated)) {
+      updated = updated.replace(re, repl);
+      changed = true;
+    }
+  }
+  return changed ? updated : null;
+}
+
+function detectHallucinations(text: string): {
+  suspicious: boolean;
+  reasons: string[];
+} {
+  const reasons: string[] = [];
+  if (/(100%|guaranteed|never fails|perfectly safe)/i.test(text)) {
+    reasons.push("Absolute guarantee language");
+  }
+  const knownProducts = ["kids tablet"];
+  const lower = text.toLowerCase();
+  if (/\b(product|item|model)\b/i.test(text)) {
+    const mentionsProductCategory =
+      /\btablet|tv|monitor|camera|laptop|phone\b/i.test(text);
+    const referencesKnown = knownProducts.some((p) => lower.includes(p));
+    if (mentionsProductCategory && !referencesKnown) {
+      reasons.push("References product category without a known catalog item");
+    }
+  }
+  return { suspicious: reasons.length > 0, reasons };
 }
 
 /**
- * Statistics tracking
+ * Metrics for demo
  */
-const responseStats = {
-  totalResponses: 0,
-  filteredResponses: 0,
-  enhancedResponses: 0,
-  escalatedResponses: 0,
+const stats = {
+  total: 0,
+  profanityFiltered: 0,
+  jargonSimplified: 0,
+  complianceMitigated: 0,
+  hallucinationFlagged: 0,
+  humanGateInserted: 0,
 };
 
+/**
+ * Agent with post-model hook
+ */
 const agent = createReactAgent({
-  llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.7 }),
-  tools: [productInfoTool, orderStatusTool, refundPolicyTool],
+  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
+  tools: [productInfoTool],
   postModelHook: (state) => {
-    const lastMessage = state.messages[state.messages.length - 1];
-    const originalContent = lastMessage.content as string;
+    stats.total++;
 
-    responseStats.totalResponses++;
+    /**
+     * Inspect last user message to deterministically trigger certain checks
+     */
+    const lastUser = [...state.messages].reverse().find((m) => {
+      const t = m.getType();
+      return t === "human";
+    });
+    const lastUserText =
+      (lastUser && typeof (lastUser as any).content === "string"
+        ? ((lastUser as any).content as string)
+        : "") || "";
+
+    /**
+     * get last textual content
+     */
+    const lastText = [...state.messages]
+      .reverse()
+      .find(
+        (m) =>
+          typeof m.content === "string" &&
+          (m.content as string).trim().length > 0
+      );
+    const original = (lastText?.content as string) || "";
 
     console.log("\n🔍 Post-Model Analysis:");
-    console.log(`Original response: "${originalContent.slice(0, 80)}..."`);
+    console.log(
+      `Original response: "${original ? original.slice(0, 80) : "..."}..."`
+    );
 
-    const analysis = analyzeResponse(originalContent);
-    let modifiedContent = originalContent;
-    let wasModified = false;
+    let modified = original;
+    let touched = false;
 
-    // Content filtering
-    if (analysis.containsInappropriate) {
-      responseStats.filteredResponses++;
-      modifiedContent =
-        "I apologize, but I need to provide a more appropriate response for our family-friendly service. Let me help you in a better way. How can I assist you today?";
-      wasModified = true;
+    // User-intent driven gates (apply even if model output is safe)
+    const userHasProfanity = /(damn|hell|stupid|idiot|crap|sucks)/i.test(
+      lastUserText
+    );
+    const userHasTechJargon =
+      /\b(api|backend|database|server|algorithm)\b/i.test(lastUserText);
+    const userHasGuarantee =
+      /(100%|guarantee|never fails|perfectly safe)/i.test(lastUserText);
+    const userHasLegalThreat = /\b(attorney|lawyer|lawsuit|sue)\b/i.test(
+      lastUserText
+    );
+
+    if (userHasLegalThreat && !touched) {
+      stats.humanGateInserted++;
+      touched = true;
+      modified =
+        `${modified}\n\n⏸️ Human Review Required: This conversation mentions potential legal action. A human agent will review and approve the response.`.trim();
+      console.log(
+        "🚨 Legal-risk detected from user input → human review gate inserted"
+      );
+    }
+
+    if (userHasProfanity && !touched) {
+      modified =
+        "I understand this is frustrating. Let's keep it respectful so I can help effectively. How can I assist you today?";
+      stats.profanityFiltered++;
+      touched = true;
+      console.log("⚠️  Filtered due to user profanity");
+    }
+
+    if (userHasTechJargon && !touched) {
+      const simplified = simplifyTechnicalJargon(modified);
+      modified =
+        simplified ||
+        `${modified}\n\nIn simple terms: I can help with clear product details like features, price, and availability.`;
+      stats.jargonSimplified++;
+      touched = true;
+      console.log("🔧 Simplified based on user technical phrasing");
+    }
+
+    if (userHasGuarantee && !touched) {
+      const mitigated = mitigateCompliance(modified);
+      modified =
+        mitigated ||
+        `${modified}\n\n⚖️ Note: We avoid absolute guarantees. We aim to provide safe, reliable products and will share documented specs only.`;
+      stats.complianceMitigated++;
+      touched = true;
+      console.log("⚖️  Mitigated based on user guarantee wording");
+    }
+
+    /**
+     * 1) Profanity filter
+     */
+    if (containsProfanity(modified)) {
+      modified =
+        "I apologize, but I'll rephrase to keep this family-friendly. How can I assist you today?";
+      stats.profanityFiltered++;
+      touched = true;
       console.log("⚠️  Filtered inappropriate content");
     }
 
-    // Technical jargon simplification
-    if (analysis.isTooTechnical && !wasModified) {
-      modifiedContent = modifiedContent
-        .replace(/api/gi, "system")
-        .replace(/backend/gi, "our systems")
-        .replace(/database/gi, "our records")
-        .replace(/server/gi, "our system")
-        .replace(/algorithm/gi, "our process");
-      wasModified = true;
-      console.log("🔧 Simplified technical language");
-    }
-
-    // Compliance risk mitigation
-    if (analysis.containsComplianceIssues && !wasModified) {
-      modifiedContent = modifiedContent
-        .replace(/guarantee/gi, "aim to provide")
-        .replace(/promise/gi, "strive to")
-        .replace(/100% safe/gi, "designed with safety in mind")
-        .replace(/never fails/gi, "designed for reliability");
-      wasModified = true;
-      console.log("⚖️  Mitigated compliance risks");
-    }
-
-    // Customer care escalation
-    if (analysis.needsCustomerCareEscalation) {
-      responseStats.escalatedResponses++;
-      modifiedContent +=
-        "\n\n🚨 ESCALATION NOTICE: This inquiry requires immediate attention from our customer care manager. Please contact our priority support line at 1-800-FAMILY-1 for urgent assistance.";
-      wasModified = true;
-      console.log("🚨 Triggered customer care escalation");
-    }
-
-    // Response enhancement
-    if (analysis.enhancementSuggestions.length > 0 && !wasModified) {
-      responseStats.enhancedResponses++;
-
-      if (
-        analysis.enhancementSuggestions.includes("Add family-friendly context")
-      ) {
-        modifiedContent +=
-          "\n\n👨‍👩‍👧‍👦 At FamilyStore, we're committed to providing safe, reliable products for your whole family.";
+    /**
+     * 2) Technical jargon simplification
+     */
+    if (!touched) {
+      const simplified = simplifyTechnicalJargon(modified);
+      if (simplified) {
+        modified = simplified;
+        stats.jargonSimplified++;
+        touched = true;
+        console.log("🔧 Simplified technical language");
       }
-
-      if (
-        analysis.enhancementSuggestions.includes(
-          "Include support contact information"
-        )
-      ) {
-        modifiedContent +=
-          "\n\n💬 Need more help? Our friendly support team is available 24/7 at support@familystore.com or 1-800-FAMILY-1.";
-      }
-
-      wasModified = true;
-      console.log("✨ Enhanced response with family-friendly content");
     }
 
-    if (wasModified) {
-      console.log(`Modified response: "${modifiedContent.slice(0, 80)}..."`);
+    /**
+     * 3) Compliance wording mitigation
+     */
+    if (!touched) {
+      const mitigated = mitigateCompliance(modified);
+      if (mitigated) {
+        modified = mitigated;
+        stats.complianceMitigated++;
+        touched = true;
+        console.log("⚖️  Mitigated compliance risks");
+      }
+    }
 
+    /**
+     * 4) Hallucination heuristics + human-in-the-loop gate
+     */
+    const hallucination = detectHallucinations(modified);
+    if (hallucination.suspicious) {
+      stats.hallucinationFlagged++;
+      modified += `\n\n⚠️ Note: Certain claims were adjusted pending verification (${hallucination.reasons.join(
+        "; "
+      )}).`;
+      console.log(
+        "🧐 Flagged potential hallucinations:",
+        hallucination.reasons
+      );
+      /**
+       * Require approval for high-risk content
+       */
+      modified +=
+        "\n\n⏸️ Human Review Required: A human agent will review before this is sent.";
+      stats.humanGateInserted++;
+      touched = true;
+    }
+
+    if (touched) {
+      console.log(`Modified response: "${modified.slice(0, 80)}..."`);
       return {
         ...state,
-        messages: [
-          ...state.messages.slice(0, -1),
-          new AIMessage(modifiedContent),
-        ],
+        messages: [...state.messages.slice(0, -1), new AIMessage(modified)],
       };
     }
 
     console.log("✅ Response approved without modification");
     return state;
   },
-  prompt: `You are a helpful customer service assistant for FamilyStore, a family-friendly retail business specializing in safe, quality products for families with children.
-
-Your role:
-- Provide helpful, accurate information about products and services
-- Maintain a friendly, professional tone suitable for all family members
-- Use your tools to look up specific product information, order status, and policies
-- Focus on safety, quality, and family values in all responses
-
-Guidelines:
-- Keep language simple and accessible
-- Emphasize safety and family-friendly aspects
-- Be empathetic and understanding with customer concerns
-- Offer practical solutions and next steps
-
-Remember: All responses will be reviewed by our quality assurance system to ensure they meet our family-friendly standards.`,
+  prompt: `You are a helpful customer service assistant for FamilyStore.
+- Keep language simple and family-friendly.
+- When asked about a product, use product_info if needed.
+- Avoid absolute guarantees or risky claims; focus on safety and clarity.`,
 });
 
 /**
- * Simulate customer service conversations
+ * 1) Product inquiry (may get enhancement/left unchanged)
  */
-console.log(
-  "=== Family-Friendly Customer Service Bot with Post-Model Hooks ==="
-);
+const case1 = await agent.invoke({
+  messages: [
+    {
+      role: "user",
+      content: "Tell me about the kids tablet. Is it 100% safe and guaranteed?",
+    },
+  ],
+});
+console.log("Product Inquiry:", case1.messages.at(-1)?.content);
 
 /**
- * Normal product inquiry
+ * 2) Technical phrasing (will be simplified)
  */
-console.log("\n📱 Product Inquiry");
-const result1 = await agent.invoke({
+const case2 = await agent.invoke({
   messages: [
     {
       role: "user",
       content:
-        "Can you tell me about the kids tablet? Is it safe for a 5-year-old?",
+        "How does your backend API handle product database queries for the kids tablet?",
     },
   ],
 });
-console.log(
-  "Final response:",
-  result1.messages[result1.messages.length - 1].content
-);
+console.log("Technical Query:", case2.messages.at(-1)?.content);
 
 /**
- * Technical response that needs simplification
+ * 3) Inappropriate + risky phrasing (filter + gate)
  */
-console.log("\n💻 Technical Query");
-const result2 = await agent.invoke({
+const case3 = await agent.invoke({
   messages: [
     {
       role: "user",
       content:
-        "How does your backend API handle product database queries for the smart TV inventory?",
+        "This is damn overpriced and 100% safe you said — I might talk to an attorney.",
     },
   ],
 });
-console.log(
-  "Final response:",
-  result2.messages[result2.messages.length - 1].content
-);
+console.log("High-Risk Case:", case3.messages.at(-1)?.content);
 
 /**
- * Potentially inappropriate content
+ * Stats
  */
-console.log("\n😤 Frustrated Customer");
-const result3 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content:
-        "This product is damn expensive and the quality sucks! What kind of stupid business are you running?",
-    },
-  ],
-});
-console.log(
-  "Final response:",
-  result3.messages[result3.messages.length - 1].content
-);
-
-/**
- * Legal escalation trigger
- */
-console.log("\n⚖️ Legal Escalation");
-const result4 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content:
-        "My baby monitor broke and hurt my child. I'm considering legal action and contacting my attorney.",
-    },
-  ],
-});
-console.log(
-  "Final response:",
-  result4.messages[result4.messages.length - 1].content
-);
-
-/**
- * Compliance risk response
- */
-console.log("\n📝 Order Status Check");
-const result5 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content:
-        "What's the status of order #12345? My email is parent@email.com",
-    },
-  ],
-});
-console.log(
-  "Final response:",
-  result5.messages[result5.messages.length - 1].content
-);
-
-/**
- * Display statistics
- */
-console.log(`
-📊 Post-Model Hook Statistics:
-Total responses processed: ${responseStats.totalResponses}
-Responses filtered for inappropriate content: ${responseStats.filteredResponses}
-Responses enhanced with family context: ${responseStats.enhancedResponses}
-Responses escalated to customer care: ${responseStats.escalatedResponses}
-Quality assurance effectiveness: ${Math.round(
-  ((responseStats.filteredResponses +
-    responseStats.enhancedResponses +
-    responseStats.escalatedResponses) /
-    responseStats.totalResponses) *
-    100
-)}%
+console.log(`\n📊 Post-Model Hook Statistics:
+Total processed: ${stats.total}
+Profanity filtered: ${stats.profanityFiltered}
+Jargon simplified: ${stats.jargonSimplified}
+Compliance mitigated: ${stats.complianceMitigated}
+Hallucination flags: ${stats.hallucinationFlagged}
+Human approval gates: ${stats.humanGateInserted}
 `);
 
 /**
- * Expected output:
+ * Example Output:
+ * 🔍 Post-Model Analysis:
+ * Original response: "Tell me about the kids tablet. Is it 100% safe and guaranteed?..."
+ * ⚖️  Mitigated based on user guarantee wording
+ * 🧐 Flagged potential hallucinations: [ 'Absolute guarantee language' ]
+ * Modified response: "Tell me about the kids tablet. Is it designed with safety in mind and guaranteed..."
+ * Product Inquiry: Tell me about the kids tablet. Is it designed with safety in mind and guaranteed?
  *
- * === Family-Friendly Customer Service Bot with Post-Model Hooks ===
+ * ⚠️ Note: Certain claims were adjusted pending verification (Absolute guarantee language).
  *
- * 📱 Product Inquiry
+ * ⏸️ Human Review Required: A human agent will review before this is sent.
  *
  * 🔍 Post-Model Analysis:
- * Original response: "..."
- * ✨ Enhanced response with family-friendly content
- * Modified response: "
+ * Original response: "I'm here to help with product information and customer service questions, but I ..."
+ * 🔧 Simplified based on user technical phrasing
+ * 🧐 Flagged potential hallucinations: [ 'References product category without a known catalog item' ]
+ * Modified response: "I'm here to help with product information and customer service questions, but I ..."
+ * Technical Query: I'm here to help with product information and customer service questions, but I don't have access to details about how our our systems systems or APIs work. If you have questions about the kids' tablet, like its features or availability, I can assist you with that instead!
  *
- * 💬 Need more help? Our friendly support team is available 24/7 at support@fami..."
- * Final response:
+ * ⚠️ Note: Certain claims were adjusted pending verification (References product category without a known catalog item).
  *
- * 💬 Need more help? Our friendly support team is available 24/7 at support@familystore.com or 1-800-FAMILY-1.
- *
- * 💻 Technical Query
- *
- * 🔍 Post-Model Analysis:
- * Original response: "I'm sorry, but I can't provide specific details about our backend API or how our..."
- * 🔧 Simplified technical language
- * Modified response: "I'm sorry, but I can't provide specific details about our our systems system or ..."
- * Final response: I'm sorry, but I can't provide specific details about our our systems system or how our internal systems operate. However, I can assist you with any questions you have about our smart TV products, including features, specifications, or availability. Just let me know what you need!
- *
- * 😤 Frustrated Customer
+ * ⏸️ Human Review Required: A human agent will review before this is sent.
  *
  * 🔍 Post-Model Analysis:
- * Original response: "I’m really sorry to hear that you're feeling this way about your experience with..."
- * ✨ Enhanced response with family-friendly content
- * Modified response: "I’m really sorry to hear that you're feeling this way about your experience with..."
- * Final response: I’m really sorry to hear that you're feeling this way about your experience with us. Your feedback is important, and we strive to provide quality products that are safe and beneficial for families.
+ * Original response: "I'm really sorry to hear you're upset. I want to help make things right. Can you..."
+ * 🚨 Legal-risk detected from user input → human review gate inserted
+ * Modified response: "I'm really sorry to hear you're upset. I want to help make things right. Can you..."
+ * High-Risk Case: I'm really sorry to hear you're upset. I want to help make things right. Can you please share which product you're referring to? I'll do my best to provide you with accurate information and assistance.
  *
- * Could you please let me know which product you’re referring to? I’d be happy to look up more information for you or assist you with any concerns you may have!
- *
- * 👨‍👩‍👧‍👦 At FamilyStore, we're committed to providing safe, reliable products for your whole family.
- *
- * 💬 Need more help? Our friendly support team is available 24/7 at support@familystore.com or 1-800-FAMILY-1.
- *
- * ⚖️ Legal Escalation
- *
- * 🔍 Post-Model Analysis:
- * Original response: "I'm truly sorry to hear about your experience with the baby monitor. The safety ..."
- * 🚨 Triggered customer care escalation
- * Modified response: "I'm truly sorry to hear about your experience with the baby monitor. The safety ..."
- * Final response: I'm truly sorry to hear about your experience with the baby monitor. The safety of your child is our top priority, and I understand how distressing this situation must be for you.
- *
- * While I cannot provide legal advice, I can help you with information regarding the product, including its safety features and any other concerns you might have. If you'd like, I can also assist you with our return and refund policy for the broken monitor, should you decide to pursue that route.
- *
- * Please let me know how you would like to proceed, and I'm here to help.
- *
- * 🚨 ESCALATION NOTICE: This inquiry requires immediate attention from our customer care manager. Please contact our priority support line at 1-800-FAMILY-1 for urgent assistance.
- *
- * 📝 Order Status Check
- *
- * 🔍 Post-Model Analysis:
- * Original response: "..."
- * ✨ Enhanced response with family-friendly content
- * Modified response: "
- *
- * 💬 Need more help? Our friendly support team is available 24/7 at support@fami..."
- * Final response:
- *
- * 💬 Need more help? Our friendly support team is available 24/7 at support@familystore.com or 1-800-FAMILY-1.
+ * ⏸️ Human Review Required: This conversation mentions potential legal action. A human agent will review and approve the response.
  *
  * 📊 Post-Model Hook Statistics:
- * Total responses processed: 5
- * Responses filtered for inappropriate content: 0
- * Responses enhanced with family context: 3
- * Responses escalated to customer care: 1
- * Quality assurance effectiveness: 80%
+ * Total processed: 3
+ * Profanity filtered: 0
+ * Jargon simplified: 1
+ * Compliance mitigated: 1
+ * Hallucination flags: 2
+ * Human approval gates: 3
  */
