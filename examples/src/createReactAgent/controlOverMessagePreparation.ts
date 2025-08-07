@@ -1,5 +1,5 @@
 /**
- * Explicit control over message generation
+ * Explicit control over message preparation
  *
  * This allows you to temporarily modify the message list before sending it to the LLM,
  * without persisting those changes to the conversation state. The transformations only

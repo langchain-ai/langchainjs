@@ -10,7 +10,7 @@
  * - Thread state (conversation history, inferred preferences)
  * - Long-term memory (stored user data, past interactions)
  *
- * **Example Scenario:**
+ * Example Scenario:
  * A customer service agent needs to know the user's account tier, support history,
  * and current product context to provide appropriate assistance.
  */
