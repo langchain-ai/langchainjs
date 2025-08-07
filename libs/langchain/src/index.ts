@@ -27,8 +27,6 @@ export {
 /**
  * LangChain Memory
  */
-export { VectorStoreRetrieverMemory } from "./memory/vector_store.js";
-export { MemoryVectorStore } from "./vectorstores/memory.js";
 export { InMemoryStore } from "@langchain/langgraph-checkpoint";
 
 /**
