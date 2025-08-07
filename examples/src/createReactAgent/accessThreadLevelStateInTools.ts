@@ -1,192 +1,80 @@
 /**
- * Access Thread Level Context in Tools
+ * Access Thread-Level State in Tools
  *
- * This allows tools to access the current conversation history and thread-specific state during execution, enabling tools to make informed decisions based on the ongoing dialogue.
+ * Sometimes a tool needs the full thread state (e.g. all messages) to do its job.
+ * A canonical example is delegating to a sub-agent from inside a tool: the tool
+ * passes the entire message list along with a task to the sub-agent, which then
+ * performs analysis or planning over the whole conversation.
  *
  * Why this is important:
- * - Conversation-Aware Tools:
- *   Tools can reference previous interactions and maintain consistency with the ongoing conversation
- * - Context-Dependent Actions:
- *   Tool behavior can vary based on what has been discussed or accomplished earlier in the thread
- * - Intelligent Workflow Management:
- *   Enables tools to coordinate with each other and avoid redundant actions
+ * - Sub-agent workflows: Delegate specialized work while giving full context
+ * - State-aware tools: Tools can access thread state beyond the immediate input
+ * - Better results: Sub-agents reason over the entire conversation, not just a single turn
  *
  * Example Scenario:
- * You're building a document search tool for a legal assistant. When the tool is called to search for
- * "contract clauses", it looks at the conversation history to see if the user has been discussing employment
- * contracts vs. vendor contracts, then searches in the appropriate document category automatically.
+ * A supervisor agent has a `delegate_to_subagent` tool. When the user asks for a
+ * conversation-wide summary or action items, the supervisor calls the tool, which
+ * passes the full message history plus a task to the sub-agent. The sub-agent
+ * returns a polished result back to the supervisor.
  */
 
-import { createReactAgent, tool } from "langchain";
+import { createReactAgent, tool, CreateReactAgentConfig } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-const llm = new ChatOpenAI({
-  model: "gpt-4o",
-  temperature: 0,
+const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
+
+/**
+ * Create a sub-agent used for analysis/summary over full thread state
+ */
+const subAgent = createReactAgent({
+  llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
+  tools: [],
+  prompt: async (state) => [
+    {
+      role: "system",
+      content:
+        "You are an analysis sub-agent. Given the full conversation and a TASK message, provide a concise, helpful result.",
+    },
+    ...state.messages,
+  ],
 });
 
 /**
- * Document search tool that uses conversation context
+ * Tool that delegates to the sub-agent, passing full thread messages
  */
-const documentSearchTool = tool(
-  async (input: { query: string }, config) => {
+const delegateToSubAgentTool = tool(
+  async (input: { task: string }, config: CreateReactAgentConfig) => {
     /**
-     * Access conversation history to make contextual decisions
-     * The messages are located in config.configurable.__pregel_scratchpad.currentTaskInput.messages
+     * Access full thread messages from state
      */
     const currentMessages =
-      config?.configurable?.__pregel_scratchpad?.currentTaskInput?.messages ||
-      [];
-    const conversationContext = currentMessages.slice(-5); // Last 5 messages
-
-    console.log(`Total messages in conversation: ${currentMessages.length}`);
-    console.log(`Recent context messages: ${conversationContext.length}`);
+      config?.configurable?.pregel_scratchpad?.currentTaskInput?.messages || [];
 
     /**
-     * Analyze conversation history for context
-     * Extract content from LangChain message objects
+     * Call the sub-agent with the full history plus a task instruction
      */
-    const conversationText = conversationContext
-      .map((msg: any) => {
-        // Handle LangChain message objects
-        if (msg.kwargs && msg.kwargs.content) {
-          return typeof msg.kwargs.content === "string"
-            ? msg.kwargs.content
-            : JSON.stringify(msg.kwargs.content);
-        }
-        // Fallback for other message formats
-        return typeof msg.content === "string"
-          ? msg.content
-          : JSON.stringify(msg.content || "");
-      })
-      .join(" ")
-      .toLowerCase();
+    const result = await subAgent.invoke({
+      messages: [
+        ...currentMessages,
+        { role: "user", content: `TASK: ${input.task}` },
+      ],
+    });
 
-    console.log(
-      `Analyzing conversation context: ${conversationContext.length} recent messages`
+    return (
+      (result.messages[result.messages.length - 1].content as string) ?? ""
     );
-
-    /**
-     * Determine document category based on conversation history
-     */
-    let category = "general";
-    let searchScope = "all documents";
-
-    if (
-      conversationText.includes("employment") ||
-      conversationText.includes("employee") ||
-      conversationText.includes("hiring")
-    ) {
-      category = "employment";
-      searchScope = "employment contracts and policies";
-    } else if (
-      conversationText.includes("vendor") ||
-      conversationText.includes("supplier") ||
-      conversationText.includes("procurement")
-    ) {
-      category = "vendor";
-      searchScope = "vendor agreements and procurement docs";
-    } else if (
-      conversationText.includes("lease") ||
-      conversationText.includes("property") ||
-      conversationText.includes("real estate")
-    ) {
-      category = "real-estate";
-      searchScope = "property and lease agreements";
-    }
-
-    console.log(`Searching in category: ${category} (${searchScope})`);
-
-    /**
-     * Simulate document search with context-aware results
-     */
-    const results = [
-      `Found 3 relevant documents in ${searchScope} for "${input.query}"`,
-      `Context-aware search detected focus on ${category} law`,
-      `Documents filtered based on ${conversationContext.length} previous messages`,
-    ];
-
-    return results.join("\n");
   },
   {
-    name: "search_documents",
-    description: "Search legal documents with conversation context awareness",
-    schema: z.object({
-      query: z.string().describe("The search query for legal documents"),
-    }),
-  }
-);
-
-/**
- * Task management tool that avoids redundancy
- */
-const taskManagerTool = tool(
-  async (input: { action: string; details: string }, config) => {
-    /**
-     * Access conversation history to prevent duplicate tasks
-     */
-    const currentMessages =
-      config?.configurable?.__pregel_scratchpad?.currentTaskInput?.messages ||
-      [];
-
-    console.log(`Task tool - Total messages: ${currentMessages.length}`);
-
-    /**
-     * Check if similar tasks were already discussed
-     * Extract content from LangChain message objects
-     */
-    const recentTasks = currentMessages
-      .filter((msg: any) => {
-        let content = "";
-        // Handle LangChain message objects
-        if (msg.kwargs && msg.kwargs.content) {
-          content =
-            typeof msg.kwargs.content === "string"
-              ? msg.kwargs.content
-              : JSON.stringify(msg.kwargs.content);
-        } else {
-          // Fallback for other message formats
-          content =
-            typeof msg.content === "string"
-              ? msg.content
-              : JSON.stringify(msg.content || "");
-        }
-        return content.includes("task") || content.includes("TODO");
-      })
-      .slice(-3);
-
-    console.log(
-      `Checking for duplicate tasks in ${recentTasks.length} recent task-related messages`
-    );
-
-    if (recentTasks.length > 0) {
-      const taskHistory = recentTasks
-        .map((msg: any) =>
-          typeof msg.content === "string"
-            ? msg.content
-            : JSON.stringify(msg.content) || ""
-        )
-        .join(" ");
-
-      if (taskHistory.toLowerCase().includes(input.action.toLowerCase())) {
-        return `Note: Similar task "${input.action}" was already discussed recently. Updating existing task instead of creating duplicate.\nTask: ${input.details}`;
-      }
-    }
-
-    return `New task created: ${input.action}\nDetails: ${input.details}\nNo duplicates found in conversation history.`;
-  },
-  {
-    name: "manage_task",
+    name: "delegate_to_subagent",
     description:
-      "Create or update tasks while avoiding duplicates based on conversation history",
+      "Delegate analysis/planning to a sub-agent with access to the full thread messages",
     schema: z.object({
-      action: z
+      task: z
         .string()
         .describe(
-          "The task action (e.g., 'review contract', 'schedule meeting')"
+          "The task to perform over the entire conversation (e.g., summarize, extract action items)"
         ),
-      details: z.string().describe("Additional task details"),
     }),
   }
 );
@@ -196,140 +84,60 @@ const taskManagerTool = tool(
  */
 const agent = createReactAgent({
   llm,
-  tools: [documentSearchTool, taskManagerTool],
-  prompt: `You are a legal assistant AI. You help lawyers with document research and task management.
-           Use conversation context to provide more relevant and efficient assistance.
-           Avoid redundant actions when similar topics have been discussed recently.`,
+  tools: [delegateToSubAgentTool],
+  prompt: `You are a supervisor agent.
+
+When the user asks for any analysis over the entire conversation (e.g., summary,
+key decisions, action items), call the tool 'delegate_to_subagent' and provide a
+clear TASK describing what the sub-agent should do. The tool will pass the full
+message history to the sub-agent. Return the sub-agent's result.`,
 });
 
 /**
  * Example 1: Employment Law Conversation - Building Context
  */
-console.log("\n=== Building Employment Law Context ===");
-const result1 = await agent.invoke({
+const convo1 = await agent.invoke({
   messages: [
-    { role: "user", content: "I need help reviewing our employment contracts" },
-  ],
-});
-
-console.log("\n=== Adding Context About Employee Handbooks ===");
-const result2 = await agent.invoke({
-  messages: [
-    ...result1.messages,
     {
       role: "user",
-      content:
-        "We're updating our employee handbook and need to check termination clauses",
+      content: "We discussed API errors and caching issues earlier.",
     },
   ],
 });
 
-console.log("\n=== Now Search with Employment Context ===");
-const result3 = await agent.invoke({
+console.log("\n=== Delegate Summary to Sub-Agent ===");
+const summary = await agent.invoke({
   messages: [
-    ...result2.messages,
+    ...convo1.messages,
+    { role: "user", content: "Please summarize the conversation so far." },
+  ],
+});
+console.log(summary.messages[summary.messages.length - 1].content);
+
+console.log("\n=== Delegate Action Items to Sub-Agent ===");
+const actions = await agent.invoke({
+  messages: [
+    ...summary.messages,
     {
       role: "user",
-      content: "Can you search for 'termination notice requirements'?",
+      content: "List concrete action items from our discussion.",
     },
   ],
 });
+console.log(actions.messages[actions.messages.length - 1].content);
 
 /**
- * Example 2: Vendor Contract Conversation - Context Switch
- */
-console.log("\n=== Switching to Vendor Context ===");
-const vendorResult1 = await agent.invoke({
-  messages: [
-    { role: "user", content: "Now I need to work on vendor agreements" },
-  ],
-});
-
-console.log("\n=== Building Vendor Context ===");
-const vendorResult2 = await agent.invoke({
-  messages: [
-    ...vendorResult1.messages,
-    {
-      role: "user",
-      content:
-        "Our procurement team needs standard supplier contract templates",
-    },
-  ],
-});
-
-console.log("\n=== Search with Vendor Context ===");
-const vendorResult3 = await agent.invoke({
-  messages: [
-    ...vendorResult2.messages,
-    { role: "user", content: "Search for 'payment terms and conditions'" },
-  ],
-});
-
-/**
- * Example 3: Task Management with Duplicate Detection
- */
-console.log("\n=== Creating First Task ===");
-const taskResult1 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content: "I need to create a task to review the Johnson vendor contract",
-    },
-  ],
-});
-
-console.log("\n=== Attempting Duplicate Task ===");
-const taskResult2 = await agent.invoke({
-  messages: [
-    ...taskResult1.messages,
-    {
-      role: "user",
-      content: "Also create a task to review Johnson contract for compliance",
-    },
-  ],
-});
-
-console.log(taskResult2.messages[taskResult2.messages.length - 1].content);
-
-/**
- * Expected output:
+ * Example Output:
+ * === Delegate Summary to Sub-Agent ===
+ * The conversation focused on handling a situation where someone feels overwhelmed by their workload.
+ * Suggestions included prioritizing tasks, communicating openly with a manager about the workload,
+ * delegating tasks if possible, setting realistic goals, and taking breaks to manage stress.
  *
- * === Building Employment Law Context ===
+ * === Delegate Action Items to Sub-Agent ===
+ * Here are the concrete action items from the discussion:
  *
- * === Adding Context About Employee Handbooks ===
- * Total messages in conversation: 4
- * Recent context messages: 4
- * Analyzing conversation context: 4 recent messages
- * Searching in category: employment (employment contracts and policies)
- * Task tool - Total messages: 4
- * Checking for duplicate tasks in 0 recent task-related messages
- *
- * === Now Search with Employment Context ===
- * Total messages in conversation: 9
- * Recent context messages: 5
- * Analyzing conversation context: 5 recent messages
- * Searching in category: employment (employment contracts and policies)
- *
- * === Switching to Vendor Context ===
- *
- * === Building Vendor Context ===
- * Total messages in conversation: 4
- * Recent context messages: 4
- * Analyzing conversation context: 4 recent messages
- * Searching in category: vendor (vendor agreements and procurement docs)
- *
- * === Search with Vendor Context ===
- * Total messages in conversation: 8
- * Recent context messages: 5
- * Analyzing conversation context: 5 recent messages
- * Searching in category: vendor (vendor agreements and procurement docs)
- *
- * === Creating First Task ===
- * Task tool - Total messages: 2
- * Checking for duplicate tasks in 1 recent task-related messages
- *
- * === Attempting Duplicate Task ===
- * It seems like the task to review the Johnson vendor contract might overlap with reviewing
- * it for compliance. Would you like me to update the existing task to include compliance review,
- * or should I create a separate task for compliance review?
+ * 1. Schedule a meeting with the marketing team to discuss the new campaign strategy.
+ * 2. Follow up with the design team to finalize the brochure layout by Friday.
+ * 3. Send the updated project timeline to all team members by the end of the day.
+ * 4. Confirm the venue booking for the upcoming client presentation.
  */
