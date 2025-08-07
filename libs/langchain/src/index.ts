@@ -18,11 +18,10 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
  */
 export {
   createReactAgent,
-  /**
-   * note(@christian-bromann): temporary naming
-   */
-  type LangGraphRunnableConfig as CreateReactAgentConfig,
+  type CreateReactAgentState,
+  type CreateReactAgentRuntime,
 } from "@langchain/agents";
+export { type Runtime } from "@langchain/langgraph";
 
 /**
  * LangChain Memory
