@@ -95,4 +95,11 @@ const result = await agent.invoke({
   ],
 });
 
-console.log(result);
+console.log(result.messages.at(-1)?.content);
+
+/**
+ * Example Output:
+ * All system services are operational at this time. Your inability to access your account may
+ * be due to incorrect login details. Please make sure you're using the right credentials. If
+ * the issue persists, you might need to reset your password.
+ */
