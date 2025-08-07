@@ -587,6 +587,15 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
+
+
+  /**
+   * If true, verbose parsing errors will be returned.leveraging option from StructuredTool
+   * This is useful for debugging issues with tool output parsing.
+   *
+   * @default false
+   */
+  verboseParsingErrors?: boolean;
 };
 
 /**
