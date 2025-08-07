@@ -823,3 +823,12 @@ test("useResponsesApi=true should emit handleLLMNewToken events during streaming
   expect(startEvents.length).toBeGreaterThan(0);
   expect(endEvents.length).toBeGreaterThan(0);
 });
+
+test("gpt-5", async () => {
+  const model = new ChatOpenAI({ model: "gpt-5" });
+  const response = await model.invoke(
+    "Write a short story about a robot who discovers they can dream. Include themes of consciousness, identity, and what it means to be alive. The story should be approximately 200 words and have a hopeful ending."
+  );
+  expect(response).toBeDefined();
+  console.log(response);
+});

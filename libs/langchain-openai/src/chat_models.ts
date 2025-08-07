@@ -1447,10 +1447,22 @@ export class ChatOpenAIResponses<
         : (() => {
             const formatted = formatToOpenAIToolChoice(options?.tool_choice);
             if (typeof formatted === "object" && "type" in formatted) {
-              return { type: "function", name: formatted.function.name };
-            } else {
-              return undefined;
+              if (formatted.type === "function") {
+                return { type: "function", name: formatted.function.name };
+              } else if (formatted.type === "allowed_tools") {
+                return {
+                  type: "allowed_tools",
+                  mode: formatted.allowed_tools.mode,
+                  tools: formatted.allowed_tools.tools,
+                };
+              } else if (formatted.type === "custom") {
+                return {
+                  type: "custom",
+                  name: formatted.custom.name,
+                };
+              }
             }
+            return undefined;
           })(),
       text: (() => {
         if (options?.text) return options.text;
@@ -1740,7 +1752,7 @@ export class ChatOpenAIResponses<
         text: chunk.delta,
         index: chunk.content_index,
       });
-    } else if (chunk.type === "response.output_text_annotation.added") {
+    } else if (chunk.type === "response.output_text.annotation.added") {
       content.push({
         type: "text",
         text: "",
