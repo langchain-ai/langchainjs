@@ -1233,7 +1233,7 @@ export abstract class ChatModelIntegrationTests<
     expect(handler.extraParams).toEqual(
       expect.objectContaining({
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
+          kwargs: { method: "json_schema" },
           schema: toJsonSchema(adderSchema),
         },
       })
@@ -1312,7 +1312,7 @@ export abstract class ChatModelIntegrationTests<
     expect(handler.extraParams).toEqual(
       expect.objectContaining({
         ls_structured_output_format: {
-          kwargs: { method: "jsonMode" },
+          kwargs: { method: "json_schema" },
           schema: toJsonSchema(adderSchema),
         },
       })
