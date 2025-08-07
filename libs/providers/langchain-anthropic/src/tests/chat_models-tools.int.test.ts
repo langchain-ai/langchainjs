@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { jest, expect, test } from "@jest/globals";
+import { vi, expect, test } from "vitest";
 import {
   AIMessage,
   AIMessageChunk,
@@ -721,7 +721,7 @@ test("structured output with thinking enabled", async () => {
 
   // Mock console.warn to check for warnings
   const originalWarn = console.warn;
-  const mockWarn = jest.fn();
+  const mockWarn = vi.fn();
   console.warn = mockWarn;
 
   try {
