@@ -1,20 +1,24 @@
 /**
- * Access External Context in Tools
+ * Access External Context in Tools for User-Specific Data
  *
- * This enables tools to access external application state, user data, and environmental context when executing their functions, making tool behavior context-aware and personalized.
+ * Tools can access runtime context (like user ID) to lookup user-specific data
+ * from databases or APIs. This enables secure, personalized tool behavior.
  *
- * Why this is important:
- * - Contextual Tool Execution:
- *   Tools can adapt their behavior based on user identity, preferences, or current application state
- * - Data Integration:
- *   Seamlessly incorporates external data sources and APIs into tool functionality
- * - Security and Personalization:
- *   Ensures tools operate with appropriate permissions and user-specific context
+ * Key Benefits:
+ * - User-Specific Data Access: Tools lookup data belonging to the authenticated user
+ * - Security Through Context: User ID from context ensures tools only access authorized data
+ * - Database Integration: Context provides connection details and user identity for queries
+ *
+ * Common Pattern:
+ * 1. User ID passed in context from authentication/session
+ * 2. Tool accesses context to get user ID
+ * 3. Tool queries database using user ID to get user-specific data
+ * 4. Tool returns personalized results
  *
  * Example Scenario:
- * You're building a travel planning assistant. When the weather tool is called, it not only gets weather data but
- * also considers the user's preferences (e.g., they hate rain, prefer temperatures above 70°F) and their accessibility
- * needs (e.g., wheelchair-friendly venues) to provide more relevant recommendations.
+ * An e-commerce assistant where tools need to access a user's purchase history,
+ * saved items, or account details. The user ID from context ensures each user
+ * only sees their own data, providing both personalization and security.
  */
 
 import {
@@ -27,136 +31,217 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
- * Simulate external weather service
+ * Simulated database with user-specific data
  */
-async function getWeatherForUser(
-  location: string,
-  userId: string,
-  preferences: any
-) {
-  const baseWeather = `Weather in ${location}: 75°F, partly cloudy`;
-
-  // Customize based on user preferences
-  if (preferences?.units === "celsius") {
-    return `Weather in ${location}: 24°C, partly cloudy (customized for user ${userId})`;
-  }
-
-  if (preferences?.includeWind) {
-    return `${baseWeather}, winds 10mph (detailed forecast for user ${userId})`;
-  }
-
-  return `${baseWeather} (for user ${userId})`;
-}
+const userPurchasesDB = {
+  user123: [
+    {
+      id: "p1",
+      item: "Wireless Headphones",
+      date: "2024-01-15",
+      price: 199.99,
+    },
+    { id: "p2", item: "Phone Case", date: "2024-02-03", price: 29.99 },
+    { id: "p3", item: "Laptop Stand", date: "2024-02-20", price: 89.99 },
+  ],
+  user456: [
+    { id: "p4", item: "Bluetooth Speaker", date: "2024-01-20", price: 79.99 },
+    { id: "p5", item: "Charging Cable", date: "2024-02-15", price: 19.99 },
+  ],
+  user789: [
+    { id: "p6", item: "Monitor", date: "2024-01-05", price: 349.99 },
+    { id: "p7", item: "Keyboard", date: "2024-01-06", price: 129.99 },
+    { id: "p8", item: "Mouse", date: "2024-01-06", price: 69.99 },
+    { id: "p9", item: "Webcam", date: "2024-02-10", price: 159.99 },
+  ],
+};
 
 /**
- * Tool that accesses external context
+ * Tool that accesses user-specific data via context
  */
-const weatherTool = tool(
-  async (input: { location: string }) => {
-    // Access external context for personalized responses
+const getUserPurchasesTool = tool(
+  async (input: { limit?: number }) => {
+    /**
+     * Access user ID from context - this ensures security and personalization
+     */
     const userId = getContextVariable("userId");
-    const userPreferences = getContextVariable("userPreferences");
 
-    console.log(`Weather tool called for user: ${userId}`);
-    console.log(`User preferences:`, userPreferences);
+    if (!userId) {
+      return "Error: User not authenticated. Please log in to view purchases.";
+    }
 
-    // Use context to customize tool behavior
-    const weatherData = await getWeatherForUser(
-      input.location,
-      userId,
-      userPreferences
-    );
-    return weatherData;
+    console.log(`Looking up purchases for user: ${userId}`);
+
+    // Query database using user ID from context
+    const userPurchases =
+      userPurchasesDB[userId as keyof typeof userPurchasesDB] || [];
+
+    if (userPurchases.length === 0) {
+      return "No purchases found for your account.";
+    }
+
+    // Apply limit if specified
+    const purchases = input.limit
+      ? userPurchases.slice(0, input.limit)
+      : userPurchases;
+
+    const purchaseList = purchases
+      .map((p) => `• ${p.item} - $${p.price} (${p.date})`)
+      .join("\n");
+
+    return `Your recent purchases:\n${purchaseList}`;
   },
   {
-    name: "get_weather",
-    description: "Get weather for a location with user personalization",
+    name: "get_user_purchases",
+    description: "Get the authenticated user's purchase history",
     schema: z.object({
-      location: z.string().describe("The location to get weather for"),
+      limit: z
+        .number()
+        .optional()
+        .describe("Maximum number of purchases to return"),
     }),
   }
 );
 
 /**
- * Create agent that uses tools with external context
+ * Tool for user-specific account information
  */
-const agent = createReactAgent({
+const getAccountInfoTool = tool(
+  async () => {
+    const userId = getContextVariable("userId");
+
+    if (!userId) {
+      return "Error: User not authenticated.";
+    }
+
+    console.log(`Getting account info for user: ${userId}`);
+
+    /**
+     * Simulate account lookup
+     */
+    const accountInfo = {
+      user123: { name: "John Doe", memberSince: "2023-01-15", totalOrders: 3 },
+      user456: {
+        name: "Jane Smith",
+        memberSince: "2023-06-20",
+        totalOrders: 2,
+      },
+      user789: {
+        name: "Bob Wilson",
+        memberSince: "2022-03-10",
+        totalOrders: 4,
+      },
+    };
+
+    const userAccount = accountInfo[userId as keyof typeof accountInfo];
+
+    if (!userAccount) {
+      return "Account information not found.";
+    }
+
+    return `Account: ${userAccount.name}\nMember since: ${userAccount.memberSince}\nTotal orders: ${userAccount.totalOrders}`;
+  },
+  {
+    name: "get_account_info",
+    description: "Get the authenticated user's account information",
+    schema: z.object({}),
+  }
+);
+
+/**
+ * Create e-commerce assistant agent
+ */
+const ecommerceAgent = createReactAgent({
   llm: new ChatOpenAI({
     model: "gpt-4o",
     temperature: 0,
   }),
-  tools: [weatherTool],
+  tools: [getUserPurchasesTool, getAccountInfoTool],
   prompt:
-    "You are a helpful travel assistant. Use the weather tool to help users plan their trips.",
+    "You are a helpful e-commerce assistant. You can help users check their purchase history and account information. Always use the available tools to provide accurate, personalized information.",
 });
 
 /**
- * Function to handle requests with external context
+ * Function to handle authenticated user requests
+ * @param userId - The user ID
+ * @param query - The user query
  */
-async function handleUserRequest(
-  userId: string,
-  userPreferences: any,
-  query: string
-) {
-  // Set external context before invoking agent
+async function handleUserRequest(userId: string, query: string) {
+  // Set user ID in context - this would typically come from authentication/session
   setContextVariable("userId", userId);
-  setContextVariable("userPreferences", userPreferences);
 
   console.log(`\n--- Handling request for user: ${userId} ---`);
   console.log(`Query: ${query}`);
 
-  const result = await agent.invoke({
+  const result = await ecommerceAgent.invoke({
     messages: [{ role: "user", content: query }],
   });
 
-  console.log(result.messages[result.messages.length - 1].content);
+  console.log("Response:", result.messages[result.messages.length - 1].content);
 }
 
 /**
- * Example usage demonstrating User 1: Prefers Celsius and detailed forecasts
+ * Example: User checking their purchase history
  */
-await handleUserRequest(
-  "user_123",
-  { units: "celsius", includeWind: true },
-  "What's the weather like in Paris?"
-);
+console.log("=== Purchase History Lookup ===");
+await handleUserRequest("user123", "Can you show me my recent purchases?");
 
 /**
- * Example usage demonstrating User 2: Standard preferences
+ * Example: User checking account information
  */
-await handleUserRequest(
-  "user_456",
-  { units: "fahrenheit" },
-  "I'm planning a trip to Tokyo, what should I expect weather-wise?"
-);
+console.log("\n=== Account Information Lookup ===");
+await handleUserRequest("user456", "What's my account information?");
 
 /**
- * Example usage demonstrating User 3: No special preferences
+ * Example: User with more purchase history
  */
-await handleUserRequest(
-  "user_789",
-  {},
-  "Check the weather in New York for my business trip"
-);
+console.log("\n=== Limited Purchase History ===");
+await handleUserRequest("user789", "Show me my last 2 purchases");
 
 /**
- * Returns:
+ * Example: Unauthenticated request (no user ID in context)
+ */
+console.log("\n=== Unauthenticated Request ===");
+await handleUserRequest("", "Show me my purchases");
+
+/**
+ * Example Output:
+ * === Purchase History Lookup ===
  *
- * --- Handling request for user: user_123 ---
- * Query: What's the weather like in Paris?
- * Weather tool called for user: user_123
- * User preferences: { units: 'celsius', includeWind: true }
- * The weather in Paris is currently 24°C and partly cloudy.
+ * --- Handling request for user: user123 ---
+ * Query: Can you show me my recent purchases?
+ * Looking up purchases for user: user123
+ * Response: Here are your recent purchases:
  *
- * --- Handling request for user: user_456 ---
- * Query: I'm planning a trip to Tokyo, what should I expect weather-wise?
- * Weather tool called for user: user_456
- * User preferences: { units: 'fahrenheit' }
- * In Tokyo, you can expect partly cloudy weather with a temperature of around 75°F. Enjoy your trip!
+ * 1. **Wireless Headphones** - $199.99 (Purchased on 2024-01-15)
+ * 2. **Phone Case** - $29.99 (Purchased on 2024-02-03)
+ * 3. **Laptop Stand** - $89.99 (Purchased on 2024-02-20)
  *
- * --- Handling request for user: user_789 ---
- * Query: Check the weather in New York for my business trip
- * Weather tool called for user: user_789
- * User preferences: {}
- * The weather in New York is currently 75°F and partly cloudy. Enjoy your business trip!
+ * === Account Information Lookup ===
+ *
+ * --- Handling request for user: user456 ---
+ * Query: What's my account information?
+ * Getting account info for user: user456
+ * Response: Here is your account information:
+ *
+ * - **Name:** Jane Smith
+ * - **Member since:** June 20, 2023
+ * - **Total orders:** 2
+ *
+ * === Limited Purchase History ===
+ *
+ * --- Handling request for user: user789 ---
+ * Query: Show me my last 2 purchases
+ * Looking up purchases for user: user789
+ * Response: Here are your last two purchases:
+ *
+ * 1. **Keyboard** - $129.99 (Purchased on 2024-01-06)
+ * 2. **Monitor** - $349.99 (Purchased on 2024-01-05)
+ *
+ * === Unauthenticated Request ===
+ *
+ * --- Handling request for user:  ---
+ * Query: Show me my purchases
+ * Response: It seems that you're not currently logged in. Please log in to your account to view
+ * your purchase history. If you need further assistance, feel free to ask!
  */
