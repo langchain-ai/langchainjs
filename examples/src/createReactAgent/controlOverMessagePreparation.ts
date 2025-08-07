@@ -156,7 +156,7 @@ console.log(
  * - State remains clean and unchanged
  * - Temporary transformations only
  *
- * Pre-model hook (alternative approach):
+ * Pre-model hook (see `preModelHook.ts` for an example):
  * - Would actually modify and save the reminder to conversation state
  * - Permanent changes that persist across interactions
  * - Used for summarization, content filtering, etc.
@@ -164,7 +164,7 @@ console.log(
  * This keeps the permanent conversation clean while ensuring the LLM
  * always follows guidelines through temporary prompting.
  *
- * Expected output:
+ * Example Output:
  * === First Customer Interaction ===
  * Assistant: I'm really sorry to hear that your order arrived damaged. I completely understand your
  * frustration and I'm here to assist you. In order to proceed, can you please provide me with your

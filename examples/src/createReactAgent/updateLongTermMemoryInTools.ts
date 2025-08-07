@@ -1,4 +1,3 @@
-/* eslint-disable no-plusplus */
 /**
  * Update Long Term Memory in Tools
  *
@@ -16,39 +15,115 @@
  * interactions with this customer can emphasize sustainable options automatically.
  */
 
-import { createReactAgent, tool, MemoryVectorStore, Document } from "langchain";
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import {
+  createReactAgent,
+  tool,
+  InMemoryStore,
+  type CreateReactAgentConfig,
+} from "langchain";
+import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
- * Initialize long-term memory vector store
+ * Initialize long-term memory store (LangGraph primitive)
  */
-const embeddings = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
-const longTermMemory = new MemoryVectorStore(embeddings);
+const store = new InMemoryStore();
+
+/**
+ * Product database
+ */
+const productDatabase = {
+  laptops: [
+    {
+      name: "EcoBook Pro",
+      eco: true,
+      price: "$1299",
+      features: "100% recycled materials, solar charging",
+    },
+    {
+      name: "PowerMax Elite",
+      eco: false,
+      price: "$1899",
+      features: "High performance, gaming optimized",
+    },
+    {
+      name: "GreenTech Slim",
+      eco: true,
+      price: "$899",
+      features: "Energy efficient, biodegradable packaging",
+    },
+  ],
+  phones: [
+    {
+      name: "EcoPhone X",
+      eco: true,
+      price: "$799",
+      features: "Sustainable manufacturing, long battery life",
+    },
+    {
+      name: "TechPhone Pro",
+      eco: false,
+      price: "$1199",
+      features: "Latest processor, premium build",
+    },
+    {
+      name: "GreenCall",
+      eco: true,
+      price: "$599",
+      features: "Fair trade materials, repairable design",
+    },
+  ],
+  accessories: [
+    {
+      name: "Solar Charger",
+      eco: true,
+      price: "$89",
+      features: "Solar powered, portable",
+    },
+    {
+      name: "Premium Case",
+      eco: false,
+      price: "$49",
+      features: "Luxury leather, premium protection",
+    },
+    {
+      name: "Bamboo Stand",
+      eco: true,
+      price: "$29",
+      features: "Sustainable bamboo, ergonomic design",
+    },
+  ],
+};
+
+interface CustomerPreference {
+  preference: string;
+  context: string;
+  timestamp: string;
+}
+
+interface MarketInsight {
+  insight: string;
+  category: string;
+  confidence: string;
+  timestamp: string;
+}
 
 /**
  * Customer relationship management tool that learns preferences
  */
 const customerPreferencesTool = tool(
-  async (input: {
-    customerId: string;
-    preference: string;
-    context: string;
-  }) => {
+  async (input, config: CreateReactAgentConfig) => {
     console.log(`💾 Storing customer preference for ${input.customerId}...`);
 
-    // Store customer preference in long-term memory
-    const preferenceDocument = new Document({
-      pageContent: `Customer ${input.customerId} prefers: ${input.preference}. Context: ${input.context}`,
-      metadata: {
-        customerId: input.customerId,
-        type: "customer_preference",
-        timestamp: new Date().toISOString(),
-        source: "customer_interaction",
-      },
+    const key = input.customerId;
+    const existing = await config.store?.get(["customer_preferences"], key);
+    const items = (existing?.value as CustomerPreference[]) || [];
+    items.push({
+      preference: input.preference,
+      context: input.context,
+      timestamp: new Date().toISOString(),
     });
-
-    await longTermMemory.addDocuments([preferenceDocument]);
+    await config.store?.put(["customer_preferences"], key, items);
 
     return `✅ Stored preference for customer ${input.customerId}: "${input.preference}" (Context: ${input.context})`;
   },
@@ -70,82 +145,17 @@ const customerPreferencesTool = tool(
  * Product recommendation tool that uses stored preferences
  */
 const productRecommendationTool = tool(
-  async (input: { customerId: string; productCategory: string }) => {
+  async (input, config: CreateReactAgentConfig) => {
     console.log(
       `🔍 Looking up preferences for customer ${input.customerId}...`
     );
 
-    // Retrieve customer preferences from long-term memory
-    const customerPreferences = await longTermMemory.similaritySearch(
-      `Customer ${input.customerId} preferences ${input.productCategory}`,
-      3,
-      (doc) =>
-        doc.metadata.customerId === input.customerId &&
-        doc.metadata.type === "customer_preference"
+    const storeInstance = config.store ?? store;
+    const existing = await storeInstance.get(
+      ["customer_preferences"],
+      input.customerId
     );
-
-    const productDatabase = {
-      laptops: [
-        {
-          name: "EcoBook Pro",
-          eco: true,
-          price: "$1299",
-          features: "100% recycled materials, solar charging",
-        },
-        {
-          name: "PowerMax Elite",
-          eco: false,
-          price: "$1899",
-          features: "High performance, gaming optimized",
-        },
-        {
-          name: "GreenTech Slim",
-          eco: true,
-          price: "$899",
-          features: "Energy efficient, biodegradable packaging",
-        },
-      ],
-      phones: [
-        {
-          name: "EcoPhone X",
-          eco: true,
-          price: "$799",
-          features: "Sustainable manufacturing, long battery life",
-        },
-        {
-          name: "TechPhone Pro",
-          eco: false,
-          price: "$1199",
-          features: "Latest processor, premium build",
-        },
-        {
-          name: "GreenCall",
-          eco: true,
-          price: "$599",
-          features: "Fair trade materials, repairable design",
-        },
-      ],
-      accessories: [
-        {
-          name: "Solar Charger",
-          eco: true,
-          price: "$89",
-          features: "Solar powered, portable",
-        },
-        {
-          name: "Premium Case",
-          eco: false,
-          price: "$49",
-          features: "Luxury leather, premium protection",
-        },
-        {
-          name: "Bamboo Stand",
-          eco: true,
-          price: "$29",
-          features: "Sustainable bamboo, ergonomic design",
-        },
-      ],
-    };
+    const customerPreferences = (existing?.value as CustomerPreference[]) || [];
 
     const products =
       productDatabase[
@@ -158,19 +168,17 @@ const productRecommendationTool = tool(
       );
 
       // Check if customer prefers eco-friendly products
-      const prefersEco = customerPreferences.some(
-        (pref) =>
-          pref.pageContent.toLowerCase().includes("eco") ||
-          pref.pageContent.toLowerCase().includes("sustainable") ||
-          pref.pageContent.toLowerCase().includes("environment")
+      const prefersEco = customerPreferences.some((pref) =>
+        `${pref.preference} ${pref.context}`
+          .toLowerCase()
+          .match(/eco|sustainable|environment/)
       );
 
       // Check if customer is budget-conscious
-      const budgetConscious = customerPreferences.some(
-        (pref) =>
-          pref.pageContent.toLowerCase().includes("budget") ||
-          pref.pageContent.toLowerCase().includes("affordable") ||
-          pref.pageContent.toLowerCase().includes("cheap")
+      const budgetConscious = customerPreferences.some((pref) =>
+        `${pref.preference} ${pref.context}`
+          .toLowerCase()
+          .match(/budget|affordable|cheap/)
       );
 
       let recommendations = products;
@@ -194,10 +202,7 @@ const productRecommendationTool = tool(
       }
 
       const preferenceDetails = customerPreferences
-        .map(
-          (pref) =>
-            `  • ${pref.pageContent.split("Context: ")[1] || pref.pageContent}`
-        )
+        .map((pref) => `  • ${pref.context || pref.preference}`)
         .join("\n");
 
       return `🎯 PERSONALIZED RECOMMENDATIONS for Customer ${input.customerId}
@@ -265,33 +270,24 @@ ${products
  * Market research tool that accumulates insights
  */
 const marketInsightTool = tool(
-  async (input: { insight: string; category: string; confidence: string }) => {
+  async (input, config: CreateReactAgentConfig) => {
     console.log(
       `📊 Recording market insight: ${input.insight.slice(0, 50)}...`
     );
 
-    // Store market insight in long-term memory
-    const insightDocument = new Document({
-      pageContent: `Market insight: ${input.insight}`,
-      metadata: {
-        type: "market_insight",
-        category: input.category,
-        confidence: input.confidence,
-        timestamp: new Date().toISOString(),
-        source: "market_analysis",
-      },
+    const storeInstance = config.store ?? store;
+    const key = input.category;
+    const existing = await storeInstance.get(["market_insights"], key);
+    const insights = (existing?.value as MarketInsight[]) || [];
+    insights.push({
+      insight: input.insight,
+      category: input.category,
+      confidence: input.confidence,
+      timestamp: new Date().toISOString(),
     });
+    await storeInstance.put(["market_insights"], key, insights);
 
-    await longTermMemory.addDocuments([insightDocument]);
-
-    // Retrieve related insights to build upon
-    const relatedInsights = await longTermMemory.similaritySearch(
-      input.insight,
-      2,
-      (doc) =>
-        doc.metadata.type === "market_insight" &&
-        doc.metadata.category === input.category
-    );
+    const relatedInsights = insights.slice(-3); // recent related
 
     let analysis = `📈 MARKET INSIGHT RECORDED
 Category: ${input.category}
@@ -301,15 +297,10 @@ Insight: ${input.insight}`;
     if (relatedInsights.length > 0) {
       analysis += `\n\n🔗 Related insights already in memory:`;
       relatedInsights.forEach((insight, index) => {
-        analysis += `\n  ${index + 1}. ${insight.pageContent.replace(
-          "Market insight: ",
-          ""
-        )}`;
+        analysis += `\n  ${index + 1}. ${insight.insight}`;
       });
 
-      analysis += `\n\n💡 Total insights in "${input.category}" category: ${
-        relatedInsights.length + 1
-      }`;
+      analysis += `\n\n💡 Total insights in "${input.category}" category: ${insights.length}`;
     }
 
     return analysis;
@@ -332,37 +323,31 @@ Insight: ${input.insight}`;
  * Meeting notes tool that stores key decisions and actions
  */
 const meetingNotesTool = tool(
-  async (input: {
-    meeting: string;
-    keyDecisions: string;
-    actionItems: string;
-    attendees: string;
-  }) => {
+  async (input, config: CreateReactAgentConfig) => {
     console.log(`📝 Storing meeting notes for: ${input.meeting}...`);
 
-    // Store comprehensive meeting information
-    const meetingDocument = new Document({
-      pageContent: `Meeting: ${input.meeting}
-Key Decisions: ${input.keyDecisions}
-Action Items: ${input.actionItems}
-Attendees: ${input.attendees}`,
-      metadata: {
-        type: "meeting_notes",
-        meeting: input.meeting,
-        timestamp: new Date().toISOString(),
-        source: "meeting_capture",
-        attendees: input.attendees.split(",").map((a) => a.trim()),
-      },
-    });
+    const storeInstance = config.store ?? store;
+    const key = input.meeting;
+    const note = {
+      meeting: input.meeting,
+      keyDecisions: input.keyDecisions,
+      actionItems: input.actionItems,
+      attendees: input.attendees.split(",").map((a) => a.trim()),
+      timestamp: new Date().toISOString(),
+    };
+    await storeInstance.put(["meeting_notes"], key, note);
 
-    await longTermMemory.addDocuments([meetingDocument]);
+    // Maintain a simple meeting index
+    const index =
+      (await storeInstance.get(["meeting_index"], "all"))?.value || [];
+    if (!index.includes(key)) {
+      index.push(key);
+      await storeInstance.put(["meeting_index"], "all", index);
+    }
 
-    // Check for related previous meetings
-    const relatedMeetings = await longTermMemory.similaritySearch(
-      input.meeting,
-      2,
-      (doc) => doc.metadata.type === "meeting_notes"
-    );
+    const relatedMeetings: string[] = index
+      .filter((m: string) => m !== key)
+      .slice(-2);
 
     let summary = `📋 MEETING NOTES STORED
 Meeting: ${input.meeting}
@@ -376,9 +361,9 @@ ${input.actionItems}`;
 
     if (relatedMeetings.length > 0) {
       summary += `\n\n🔗 Related meetings found:`;
-      relatedMeetings.forEach((meeting, index) => {
-        const meetingName = meeting.metadata.meeting || "Unknown Meeting";
-        summary += `\n  ${index + 1}. ${meetingName}`;
+      relatedMeetings.forEach((meeting, i) => {
+        const meetingName = meeting || "Unknown Meeting";
+        summary += `\n  ${i + 1}. ${meetingName}`;
       });
     }
 
@@ -426,11 +411,11 @@ const agent = createReactAgent({
       content.includes("INSIGHT RECORDED") ||
       content.includes("MEETING NOTES STORED")
     ) {
-      memoryStats.documentsStored++;
+      memoryStats.documentsStored += 1;
     }
 
     if (content.includes("Found") && content.includes("stored preferences")) {
-      memoryStats.retrievalCount++;
+      memoryStats.retrievalCount += 1;
     }
 
     return state;
@@ -578,7 +563,7 @@ Memory utilization: ${memoryStats.retrievalCount > 0 ? "High" : "Low"}
 `);
 
 /**
- * Expected output:
+ * Example Output:
  * 
  * === Business Assistant with Long-Term Memory Updates ===
  *

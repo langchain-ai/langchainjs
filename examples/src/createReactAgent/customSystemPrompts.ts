@@ -126,7 +126,7 @@ const response2 = await contextAwareAgent.invoke({
 console.log(response2.messages[response2.messages.length - 1].content);
 
 /**
- * Expected output:
+ * Example Output:
  *
  * === Static Template Example ===
  * Absolutely, I'd be happy to assist you with your account, user123. Since you are a premium
