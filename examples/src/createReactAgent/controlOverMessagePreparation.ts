@@ -1,17 +1,29 @@
 /**
- * Explicit control over message preparation
+ * Transient Message Transformations via Prompt Function
  *
  * This allows you to temporarily modify the message list before sending it to the LLM,
  * without persisting those changes to the conversation state. The transformations only
  * exist for that specific LLM call.
  *
- * When to use this vs storing in state:
- * - Use this for: Temporary reminders, contextual hints, formatting that you don't want
- *   cluttering the permanent conversation history
- * - Store in state: Important information, user messages, assistant responses, tool results
- *   that should be part of the ongoing conversation
+ * IMPORTANT DISTINCTION - Prompt Function vs Pre-Model Hook:
  *
- * Common patterns:
+ * Prompt Function (this example):
+ * - Executes: When the model is called
+ * - Purpose: TEMPORARY transformations for this LLM call only
+ * - State Changes: None - original state remains unchanged
+ * - Use Cases: Reminders, temporary context, formatting hints
+ *
+ * Pre-Model Hook (see `preModelHook.ts` for an example):
+ * - Executes: Before model node in the graph
+ * - Purpose: PERMANENT transformations that modify state
+ * - State Changes: Updates are saved to conversation state
+ * - Use Cases: Message summarization, content filtering, persistent context injection
+ *
+ * Rule of Thumb:
+ * - Temporary transformations → Use prompt function (this pattern)
+ * - Permanent state changes → Use pre-model hook
+ *
+ * Common Prompt Function Patterns:
  * - Adding reminder messages at the end to reinforce key guidelines
  * - Injecting temporary context that's only relevant for the current turn
  * - Reformatting existing messages without changing the stored conversation
@@ -52,14 +64,15 @@ const checkRefundPolicy = tool(
 );
 
 /**
- * Create agent that adds transient reminder messages
+ * Create agent using `prompt` function for transient transformations
  */
 const customerServiceAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [escalateToHuman, checkRefundPolicy],
   prompt: async (state) => {
     /**
-     * Start with the stored conversation messages
+     * Start with the stored conversation messages from state
+     * These are the permanent messages that get persisted.
      */
     const messages = [
       {
@@ -70,8 +83,15 @@ const customerServiceAgent = createReactAgent({
     ];
 
     /**
-     * TRANSIENT TRANSFORMATION: Add temporary reminder at the end
-     * This is NOT stored in state - it's just for this LLM call
+     * Prompt function transformation: Add temporary reminder at the end
+     *
+     * Key Points:
+     * - This runs when the model is called (not before)
+     * - This is NOT stored in state - it's just for this LLM call
+     * - State remains unchanged after this transformation
+     * - Next time the agent runs, this gets added again transiently
+     *
+     * If you wanted this reminder to be permanent, you'd use a pre-model hook instead
      */
     messages.push({
       role: "system",
@@ -129,9 +149,20 @@ console.log(
 );
 
 /**
- * Key Point: The reminder message appears in every LLM call but is never
- * stored in the conversation history. This keeps the permanent conversation
- * clean while ensuring the LLM always follows guidelines.
+ * Key Distinction Summary:
+ *
+ * `prompt` function (this example):
+ * - Reminder message appears in every LLM call but is NEVER stored
+ * - State remains clean and unchanged
+ * - Temporary transformations only
+ *
+ * Pre-model hook (alternative approach):
+ * - Would actually modify and save the reminder to conversation state
+ * - Permanent changes that persist across interactions
+ * - Used for summarization, content filtering, etc.
+ *
+ * This keeps the permanent conversation clean while ensuring the LLM
+ * always follows guidelines through temporary prompting.
  *
  * Expected output:
  * === First Customer Interaction ===

@@ -2,6 +2,7 @@
  * LangChain Messages
  */
 export {
+  BaseMessage,
   AIMessage,
   SystemMessage,
   HumanMessage,
