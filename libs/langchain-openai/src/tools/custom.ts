@@ -6,8 +6,6 @@ import {
 import { AsyncLocalStorageProviderSingleton } from "@langchain/core/singletons";
 import { DynamicTool, ToolRunnableConfig } from "@langchain/core/tools";
 import OpenAI from "openai";
-import { ChatOpenAIToolType } from "../utils/tools.js";
-import { OpenAIClient } from "../index.js";
 
 export type CustomToolFields = Omit<OpenAI.Responses.CustomTool, "type">;
 
