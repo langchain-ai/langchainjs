@@ -3333,7 +3333,7 @@ export class ChatOpenAI<
     return [...super.lc_serializable_keys, "useResponsesApi"];
   }
 
-  constructor(fields?: ChatOpenAIFields) {
+  constructor(protected fields?: ChatOpenAIFields) {
     super(fields);
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
@@ -3404,7 +3404,8 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    this.defaultOptions = { ...this.defaultOptions, ...config };
-    return this;
+    const newModel = new ChatOpenAI<CallOptions>(this.fields);
+    newModel.defaultOptions = { ...this.defaultOptions, ...config };
+    return newModel;
   }
 }
