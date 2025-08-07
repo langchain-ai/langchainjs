@@ -99,6 +99,7 @@
     "@langchain/agents": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
+    "@langchain/langgraph-checkpoint": "^0.1.0",
     "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",

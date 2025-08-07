@@ -787,6 +787,9 @@ importers:
       '@langchain/agents':
         specifier: workspace:*
         version: link:../langchain-agents
+      '@langchain/langgraph-checkpoint':
+        specifier: ^0.1.0
+        version: 0.1.0(@langchain/core@libs+langchain-core)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai

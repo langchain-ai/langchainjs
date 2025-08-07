@@ -16,13 +16,20 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
 /**
  * LangChain Agents
  */
-export { createReactAgent } from "@langchain/agents";
+export {
+  createReactAgent,
+  /**
+   * note(@christian-bromann): temporary naming
+   */
+  type LangGraphRunnableConfig as CreateReactAgentConfig,
+} from "@langchain/agents";
 
 /**
  * LangChain Memory
  */
 export { VectorStoreRetrieverMemory } from "./memory/vector_store.js";
 export { MemoryVectorStore } from "./vectorstores/memory.js";
+export { InMemoryStore } from "@langchain/langgraph-checkpoint";
 
 /**
  * LangChain Context
