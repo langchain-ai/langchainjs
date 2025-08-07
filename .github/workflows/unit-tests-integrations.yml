@@ -56,20 +56,37 @@ jobs:
           # Convert PACKAGES environment variable into an array
           IFS=',' read -r -a packages <<< "$PACKAGES"
           echo "Packages: ${packages[*]}"
-          matrix="{\"include\": ["
-          first_entry=true
-          for package in "${packages[@]}"; do
-            echo "Checking package: $package"
-            if echo "$changed_files" | grep -q "$package"; then
-              echo "Package $package found in changed files."
+
+          # Check if standard-tests has changes - if so, run tests on all packages
+          if echo "$changed_files" | grep -q "standard-tests"; then
+            echo "standard-tests package has changes. Running tests on all packages."
+            matrix="{\"include\": ["
+            first_entry=true
+            for package in "${packages[@]}"; do
               if [ "$first_entry" = true ]; then
-              matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
-              first_entry=false
-            else
-              matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
-            fi
-            fi
-          done
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                first_entry=false
+              else
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+              fi
+            done
+          else
+            # Only run tests on packages that have changes
+            matrix="{\"include\": ["
+            first_entry=true
+            for package in "${packages[@]}"; do
+              echo "Checking package: $package"
+              if echo "$changed_files" | grep -q "$package"; then
+                echo "Package $package found in changed files."
+                if [ "$first_entry" = true ]; then
+                matrix="$matrix{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+                first_entry=false
+              else
+                matrix="$matrix, {\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"},{\"os\": \"ubuntu-latest\", \"node-version\": \"20\", \"package\": \"$package\"}"
+              fi
+              fi
+            done
+          fi
           matrix="$matrix]}"
           matrix_length=$(echo $matrix | jq '.include | length')
           echo "Matrix: $matrix"
