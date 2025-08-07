@@ -1,21 +1,19 @@
 /**
- * Access Thread Level State in Message Generation
+ * Access Thread-Level State in Message Generation
  *
- * This enables the agent to access and utilize the current conversation history and thread-specific state
- * when crafting responses, maintaining conversational coherence and context awareness.
+ * Thread-level state is data that the agent modifies over time (unlike static
+ * runtime context such as userId). Tools can update this state (NOT the
+ * `messages` key), and the prompt can then inject that state into the system
+ * instructions for subsequent turns.
  *
  * Why this is important:
- * - Conversational Continuity:
- *   Maintains coherent dialogue by referencing previous exchanges and building upon established context
- * - Adaptive Responses:
- *   Modifies response style and content based on conversation flow and user interaction patterns
- * - State-Aware Decision Making:
- *   Makes informed choices about tools and actions based on what has already occurred in the conversation
+ * - State-driven prompts: The current thread state can shape system prompts/messages
+ * - Evolving behavior: Tools update state as work progresses (e.g., a TODO list)
+ * - Clear separation: Context (static, per-session) vs State (dynamic, per-thread)
  *
  * Example Scenario:
- * You're building a coding tutor bot. If the user has been asking about Python basics for several messages,
- * then suddenly asks "How do I make a loop?", the agent can infer they want a Python loop example rather than
- * asking them to clarify the programming language.
+ * A TODO assistant. Tools add/remove items in a thread-level TODO list. The
+ * prompt always includes the current TODOs so the model can plan next steps.
  */
 
 import { createReactAgent, tool } from "langchain";
@@ -23,52 +21,66 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
- * Tool for coding examples
+ * Thread-level state (would normally live in your app or a store)
  */
-const codeExampleTool = tool(
-  async (input: { language: string; concept: string }) => {
-    return `Here's a ${input.language} example for ${input.concept}:\n// Example code here`;
+const threadState: { todos: string[] } = { todos: [] };
+
+/**
+ * Tools that update thread-level state (NOT messages)
+ */
+const addTodo = tool(
+  async (input: { item: string }) => {
+    threadState.todos.push(input.item);
+    return `Added TODO: ${input.item}`;
   },
   {
-    name: "get_code_example",
-    description: "Get code examples for programming concepts",
-    schema: z.object({
-      language: z.string(),
-      concept: z.string(),
-    }),
+    name: "add_todo",
+    description: "Add an item to the thread TODO list",
+    schema: z.object({ item: z.string().describe("The TODO item to add") }),
+  }
+);
+
+const removeTodo = tool(
+  async (input: { item: string }) => {
+    const before = threadState.todos.length;
+    threadState.todos = threadState.todos.filter((t) => t !== input.item);
+    const removed = before !== threadState.todos.length;
+    return removed
+      ? `Removed TODO: ${input.item}`
+      : `No matching TODO found for: ${input.item}`;
+  },
+  {
+    name: "remove_todo",
+    description: "Remove an item from the thread TODO list",
+    schema: z.object({ item: z.string().describe("The TODO item to remove") }),
   }
 );
 
 /**
- * Create agent that uses conversation history for context
+ * Create agent that injects thread-level state into the prompt
  */
 const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
-  tools: [codeExampleTool],
+  tools: [addTodo, removeTodo],
   prompt: async (state) => {
-    const conversationHistory = state.messages;
-    const messageCount = conversationHistory.length;
-
-    // Analyze conversation to infer context
-    const recentMessages = conversationHistory.slice(-5);
-    const mentionedLanguages = recentMessages
-      .map((msg) => msg.content || "")
-      .join(" ")
-      .toLowerCase();
-
-    let inferredLanguage = "general";
-    if (mentionedLanguages.includes("python")) inferredLanguage = "Python";
-    else if (mentionedLanguages.includes("javascript"))
-      inferredLanguage = "JavaScript";
-    else if (mentionedLanguages.includes("java")) inferredLanguage = "Java";
+    /**
+     * Pull dynamic, thread-level state (maintained by tools) into the system prompt
+     */
+    const { todos } = threadState;
+    const todosSection =
+      todos.length > 0
+        ? `Current TODOs (thread state):\n- ${todos.join("\n- ")}`
+        : "Current TODOs (thread state):\n- (none)";
 
     return [
       {
         role: "system",
-        content: `You are a coding tutor. Based on our ${messageCount} message conversation, 
-                 the user seems to be working with ${inferredLanguage}. 
-                 When they ask about programming concepts, assume they want ${inferredLanguage} examples 
-                 unless they specify otherwise.`,
+        content: `You are a helpful assistant that manages a thread-level TODO list.
+
+${todosSection}
+
+When planning or responding, consider the current TODOs. If the user asks to update the list,
+use the appropriate tools. If asked for next steps, reference and prioritize items in the list.`,
       },
       ...state.messages,
     ];
@@ -76,17 +88,17 @@ const agent = createReactAgent({
 });
 
 /**
- * Example Usage
+ * Example Usage: Simulate prior tool calls that updated thread-level state
+ */
+await addTodo.invoke({ item: "Set up project repository" });
+await addTodo.invoke({ item: "Write initial README" });
+
+/**
+ * Now the agent prompt will include the current TODOs from thread state
  */
 const result = await agent.invoke({
-  messages: [
-    { role: "user", content: "I'm learning Python basics" },
-    {
-      role: "assistant",
-      content: "Great! Python is a wonderful language to start with.",
-    },
-    { role: "user", content: "How do I make a loop?" }, // Agent will infer Python loop
-  ],
+  messages: [{ role: "user", content: "What should I work on next?" }],
 });
 
-console.log(result);
+console.log("Result: ");
+console.log(result.messages[result.messages.length - 1].content);
