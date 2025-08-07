@@ -26,7 +26,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
-        model: "gpt-3.5-turbo",
+        model: "gpt-5",
       },
       supportsStandardContentType: {
         text: true,
