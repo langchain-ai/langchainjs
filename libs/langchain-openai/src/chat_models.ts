@@ -140,7 +140,7 @@ function isBuiltInToolChoice(
 }
 
 function isReasoningModel(model?: string) {
-  return model && /^o\d/.test(model);
+  return model && (/^o\d/.test(model) || model.startsWith("gpt-5"));
 }
 
 function isStructuredOutputMethodParams(
