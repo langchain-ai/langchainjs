@@ -1,23 +1,25 @@
 /**
- * Access External Context in Message Generation
+ * Access External Context for Runtime Parameters
  *
- * This allows the agent to incorporate external data sources, user information, and
- * environmental context when generating responses, making the agent aware of broader
- * application state.
+ * Context contains runtime parameters like user ID, database connections, and static
+ * configuration that affects how the agent behaves. This context can influence the
+ * system prompt and tool behavior.
  *
- * Why this is important:
- * - Personalization:
- *   Enables user-specific responses based on profile data, preferences, or session information
- * - Real-time Awareness:
- *   Incorporates live data from databases, APIs, or application state into decision-making
- * - Contextual Relevance:
- *   Ensures responses are appropriate for the current application context and user situation
+ * Context vs State Distinction:
+ * - Context: Static runtime parameters (user ID, DB connections, config)
+ *   - Set once per session/request
+ *   - Doesn't change during conversation
+ *   - Used to look up user info, configure behavior
+ *
+ * - State: Dynamic conversation data (messages, memory, session variables)
+ *   - Modified over time during interaction
+ *   - Persists and evolves through the conversation
+ *   - Managed by the agent framework
  *
  * Example Scenario:
- * You're building an e-commerce assistant. When a user logs in, you set their user ID,
- * shopping preferences, and current cart contents as context variables. Now the agent
- * can provide personalized product recommendations and remember the user's preferred
- * brands without explicitly passing this data in every message.
+ * A support agent that needs the current user's ID to look up their account details
+ * and tailor responses. The user ID is static context, but the conversation messages
+ * are dynamic state.
  */
 
 import { createReactAgent, tool } from "langchain";
@@ -25,51 +27,80 @@ import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
 /**
- * Global context storage for this example
+ * Runtime context - static parameters set per session
  */
-const userContext: {
+const runtimeContext: {
   userId?: string;
-  accountType?: string;
-  preferences?: { theme: string; language: string };
+  username?: string;
+  dbConnection?: string;
+  userTier?: string;
 } = {};
 
 /**
- * Tool that uses external context
+ * Simulated database lookup using context
  */
-const personalizedTool = tool(
-  async (input: { query: string }) => {
-    const userId = userContext.userId ?? "unknown";
-    const preferences = userContext.preferences ?? {
-      theme: "light",
-      language: "en",
-    };
-    return `Personalized response for user ${userId} with preferences: ${JSON.stringify(
-      preferences
-    )}. Query: ${input.query}`;
+function getUserDetails(userId: string) {
+  // In a real app, this would query your database using the connection from context
+  const userDatabase = {
+    user123: { username: "john_doe", tier: "premium", joinDate: "2023-01-15" },
+    user456: { username: "jane_smith", tier: "basic", joinDate: "2023-06-20" },
+    user789: {
+      username: "bob_wilson",
+      tier: "enterprise",
+      joinDate: "2022-03-10",
+    },
+  };
+
+  return (
+    userDatabase[userId as keyof typeof userDatabase] || {
+      username: "unknown",
+      tier: "basic",
+      joinDate: "unknown",
+    }
+  );
+}
+
+/**
+ * Tool that uses runtime context for personalized behavior
+ */
+const accountInfoTool = tool(
+  async (input: { action: string }) => {
+    const userId = runtimeContext.userId ?? "unknown";
+    const userDetails = getUserDetails(userId);
+
+    return `Account ${input.action} for ${userDetails.username} (${userDetails.tier} tier, member since ${userDetails.joinDate})`;
   },
   {
-    name: "personalized_search",
-    description: "Search with user personalization",
-    schema: z.object({ query: z.string() }),
+    name: "account_info",
+    description: "Get account information for the current user",
+    schema: z.object({
+      action: z.string().describe("Action to perform: check, update, etc."),
+    }),
   }
 );
 
 /**
- * Create agent that accesses external context in message generation
+ * Create agent that uses runtime context to customize behavior
  */
-const agent = createReactAgent({
+const supportAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
-  tools: [personalizedTool],
+  tools: [accountInfoTool],
   prompt: async (state) => {
-    // Access external context when generating messages
-    const userId = userContext.userId ?? "unknown";
-    const accountType = userContext.accountType ?? "free";
+    // Access runtime context to customize system prompt
+    const userId = runtimeContext.userId ?? "unknown";
+    const userDetails = getUserDetails(userId);
 
     return [
       {
         role: "system",
-        content: `You are an assistant for user ${userId} with ${accountType} account.
-                 Tailor your responses to their account level and preferences.`,
+        content: `You are a customer support agent helping ${userDetails.username}.
+
+User Context (from runtime parameters):
+- User ID: ${userId}
+- Account Tier: ${userDetails.tier}
+- Member Since: ${userDetails.joinDate}
+
+Tailor your responses based on their ${userDetails.tier} tier. Enterprise users get priority treatment, premium users get detailed explanations, basic users get simple guidance.`,
       },
       ...state.messages,
     ];
@@ -77,40 +108,67 @@ const agent = createReactAgent({
 });
 
 /**
- * Usage with external context injection
- *
- * @param userId - The user ID
- * @param accountType - The account type
- * @param preferences - The user preferences
- * @param query - The user query
- * @returns The agent response
+ * Function to handle user requests with runtime context
+ * @param userId - Static user identifier from session/auth
+ * @param query - User's message (this becomes part of dynamic state)
  */
-async function handleUserRequest(
-  userId: string,
-  accountType: string,
-  preferences: { theme: string; language: string },
-  query: string
-) {
-  /**
-   * Set external context before invoking agent
-   */
-  userContext.userId = userId;
-  userContext.accountType = accountType;
-  userContext.preferences = preferences;
+async function handleSupportRequest(userId: string, query: string) {
+  // Set runtime context (static for this session)
+  runtimeContext.userId = userId;
 
-  return agent.invoke({
+  return supportAgent.invoke({
     messages: [{ role: "user", content: query }],
   });
 }
 
 /**
- * Example usage
+ * Example: Different users get different treatment based on context
  */
-const result = await handleUserRequest(
-  "user123",
-  "premium",
-  { theme: "dark", language: "en" },
-  "Find me the best restaurants nearby"
+console.log("=== Premium User Request ===");
+const premiumResult = await handleSupportRequest(
+  "user123", // Premium user ID
+  "I'm having trouble with my account settings"
+);
+console.log(
+  "Response:",
+  premiumResult.messages[premiumResult.messages.length - 1].content
 );
 
-console.log(result);
+console.log("\n=== Basic User Request ===");
+const basicResult = await handleSupportRequest(
+  "user456", // Basic user ID
+  "I'm having trouble with my account settings"
+);
+console.log(
+  "Response:",
+  basicResult.messages[basicResult.messages.length - 1].content
+);
+
+console.log("\n=== Enterprise User Request ===");
+const enterpriseResult = await handleSupportRequest(
+  "user789", // Enterprise user ID
+  "I'm having trouble with my account settings"
+);
+console.log(
+  "Response:",
+  enterpriseResult.messages[enterpriseResult.messages.length - 1].content
+);
+
+/**
+ * Example Output:
+ * === Premium User Request ===
+ * Response: I'm sorry to hear that you're experiencing trouble with your account settings, John.
+ * As a premium user, you are entitled to a detailed explanation and solution to your problem.
+ * Could you please elaborate more on the issue? Providing specific details such as the feature
+ * you're having trouble with, or any error messages you're seeing, will assist me greatly in
+ * pinpointing and resolving your issue.
+ *
+ * === Basic User Request ===
+ * Response: Sure, I'd be happy to help. Could you please tell me more about the issues you're
+ * facing with your account settings?
+ *
+ * === Enterprise User Request ===
+ * Response: I'm sorry to hear you're having trouble with your account settings, Bob. As an enterprise
+ * user, you are given priority assistance. Could you please provide more details about the issue?
+ * It will allow me to assist you more effectively.
+ */
