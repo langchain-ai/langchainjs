@@ -9534,7 +9534,7 @@ __metadata:
     typescript: ~5.8.3
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.58 <0.4.0"
+    "@langchain/core": ">=0.3.68 <0.4.0"
   languageName: unknown
   linkType: soft
 
