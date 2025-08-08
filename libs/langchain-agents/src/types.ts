@@ -74,6 +74,18 @@ export type StructuredResponseSchemaOptions<StructuredResponseType> = {
   [key: string]: unknown;
 };
 
+export type CreateReactAgentState<
+  AnnotationRoot extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot
+> = ToAnnotationRoot<AnnotationRoot>["State"] & PreHookAnnotation["State"];
+
+export type CreateReactAgentRuntime<
+  AnnotationRoot extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot
+> = Runtime<ToAnnotationRoot<AnnotationRoot>["State"]>;
+
 export type CreateReactAgentParams<
   A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,7 +96,7 @@ export type CreateReactAgentParams<
   llm:
     | LanguageModelLike
     | ((
-        state: ToAnnotationRoot<A>["State"] & PreHookAnnotation["State"],
+        state: CreateReactAgentState<A>,
         runtime: Runtime<ToAnnotationRoot<C>["State"]>
       ) => Promise<LanguageModelLike> | LanguageModelLike);
 

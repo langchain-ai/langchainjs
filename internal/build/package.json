@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "compile": "tsx cli.ts"
+    "compile": "tsx cli.ts",
+    "watch": "tsx cli.ts --watch"
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",

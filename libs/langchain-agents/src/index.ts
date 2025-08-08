@@ -36,7 +36,7 @@ import {
   messagesStateReducer,
   END,
   START,
-  LangGraphRunnableConfig,
+  getConfig,
 } from "@langchain/langgraph";
 
 import type {
@@ -725,3 +725,6 @@ export function createReactAgent<
 }
 
 export * from "./types.js";
+export * from "./resume.js";
+export type LangGraphRunnableConfig = ReturnType<typeof getConfig>;
+export { interrupt } from "@langchain/langgraph";
