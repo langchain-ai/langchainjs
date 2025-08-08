@@ -38,12 +38,11 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
-  type BindToolsInput,
   type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  isOpenAITool,
+  isOpenAITool as isOpenAIFunctionTool,
   type BaseFunctionCallOptions,
   type BaseLanguageModelInput,
   type FunctionDefinition,
@@ -68,11 +67,6 @@ import {
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
 import type { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
-import type {
-  ResponseFormatText,
-  ResponseFormatJSONObject,
-  ResponseFormatJSONSchema,
-} from "openai/resources/shared";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -85,6 +79,7 @@ import {
   type OpenAICoreRequestOptions,
   type ChatOpenAIResponseFormat,
   ChatOpenAIReasoningSummary,
+  ResponseFormatConfiguration,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
@@ -97,22 +92,22 @@ import {
   FunctionDef,
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
-import { _convertToOpenAITool } from "./utils/tools.js";
+import {
+  _convertToOpenAITool,
+  ChatOpenAIToolType,
+  convertCompletionsCustomTool,
+  convertResponsesCustomTool,
+  isBuiltInTool,
+  isBuiltInToolChoice,
+  isCustomTool,
+  isCustomToolCall,
+  isOpenAICustomTool,
+  parseCustomToolCall,
+  ResponsesTool,
+  ResponsesToolChoice,
+} from "./utils/tools.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
-
-type ResponsesTool = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tools"]
->[number];
-
-type ResponsesToolChoice = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tool_choice"]
->;
-
-type ChatOpenAIToolType =
-  | BindToolsInput
-  | OpenAIClient.Chat.ChatCompletionTool
-  | ResponsesTool;
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -123,21 +118,6 @@ interface OpenAILLMOutput {
 }
 
 export type { OpenAICallOptions, OpenAIChatInput };
-
-function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
-  return "type" in tool && tool.type !== "function";
-}
-
-function isBuiltInToolChoice(
-  tool_choice: OpenAIToolChoice | ResponsesToolChoice | undefined
-): tool_choice is ResponsesToolChoice {
-  return (
-    tool_choice != null &&
-    typeof tool_choice === "object" &&
-    "type" in tool_choice &&
-    tool_choice.type !== "function"
-  );
-}
 
 function isReasoningModel(model?: string) {
   return model && (/^o\d/.test(model) || model.startsWith("gpt-5"));
@@ -716,6 +696,7 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
+      "verbosity",
     ];
   }
 
@@ -846,11 +827,7 @@ export abstract class BaseChatOpenAI<
    */
   protected _getResponseFormat(
     resFormat?: CallOptions["response_format"]
-  ):
-    | ResponseFormatText
-    | ResponseFormatJSONObject
-    | ResponseFormatJSONSchema
-    | undefined {
+  ): ResponseFormatConfiguration | undefined {
     if (
       resFormat &&
       resFormat.type === "json_schema" &&
@@ -865,11 +842,7 @@ export abstract class BaseChatOpenAI<
         }
       );
     }
-    return resFormat as
-      | ResponseFormatText
-      | ResponseFormatJSONObject
-      | ResponseFormatJSONSchema
-      | undefined;
+    return resFormat as ResponseFormatConfiguration | undefined;
   }
 
   protected _combineCallOptions(
@@ -915,7 +888,10 @@ export abstract class BaseChatOpenAI<
     tool: ChatOpenAIToolType,
     fields?: { strict?: boolean }
   ): OpenAIClient.ChatCompletionTool {
-    if (isOpenAITool(tool)) {
+    if (isCustomTool(tool)) {
+      return convertResponsesCustomTool(tool.metadata.customTool);
+    }
+    if (isOpenAIFunctionTool(tool)) {
       if (fields?.strict !== undefined) {
         return {
           ...tool,
@@ -925,7 +901,6 @@ export abstract class BaseChatOpenAI<
           },
         };
       }
-
       return tool;
     }
     return _convertToOpenAITool(tool, fields);
@@ -1714,6 +1689,15 @@ export class ChatOpenAIResponses<
         }
       } else if (item.type === "reasoning") {
         additional_kwargs.reasoning = item;
+      } else if (item.type === "custom_tool_call") {
+        const parsed = parseCustomToolCall(item);
+        if (parsed) {
+          tool_calls.push(parsed);
+        } else {
+          invalid_tool_calls.push(
+            makeInvalidToolCall(item, "Malformed custom tool call")
+          );
+        }
       } else {
         additional_kwargs.tool_outputs ??= [];
         additional_kwargs.tool_outputs.push(item);
@@ -1790,6 +1774,7 @@ export class ChatOpenAIResponses<
         "mcp_list_tools",
         "mcp_approval_request",
         "image_generation_call",
+        "custom_tool_call",
       ].includes(chunk.item.type)
     ) {
       additional_kwargs.tool_outputs = [chunk.item];
@@ -1953,6 +1938,15 @@ export class ChatOpenAIResponses<
             };
           }
 
+          // Handle custom tool output
+          if (toolMessage.metadata?.customTool) {
+            return {
+              type: "custom_tool_call_output",
+              call_id: toolMessage.tool_call_id,
+              output: toolMessage.content as string,
+            };
+          }
+
           return {
             type: "function_call_output",
             call_id: toolMessage.tool_call_id,
@@ -2002,43 +1996,54 @@ export class ChatOpenAIResponses<
             ];
           }
 
-          input.push({
-            type: "message",
-            role: "assistant",
-            ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
-              ? { id: lcMsg.id }
-              : {}),
-            content:
-              typeof content === "string"
-                ? content
-                : content.flatMap((item) => {
-                    if (item.type === "text") {
-                      return {
-                        type: "output_text",
-                        text: item.text,
-                        // @ts-expect-error TODO: add types for `annotations`
-                        annotations: item.annotations ?? [],
-                      };
-                    }
+          if (typeof content === "string" || content.length > 0) {
+            input.push({
+              type: "message",
+              role: "assistant",
+              ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
+                ? { id: lcMsg.id }
+                : {}),
+              content:
+                typeof content === "string"
+                  ? content
+                  : content.flatMap((item) => {
+                      if (item.type === "text") {
+                        return {
+                          type: "output_text",
+                          text: item.text,
+                          // @ts-expect-error TODO: add types for `annotations`
+                          annotations: item.annotations ?? [],
+                        };
+                      }
 
-                    if (
-                      item.type === "output_text" ||
-                      item.type === "refusal"
-                    ) {
-                      return item;
-                    }
+                      if (
+                        item.type === "output_text" ||
+                        item.type === "refusal"
+                      ) {
+                        return item;
+                      }
 
-                    return [];
-                  }),
-          });
+                      return [];
+                    }),
+            });
+          }
 
           const functionCallIds =
             additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
 
           if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
             input.push(
-              ...lcMsg.tool_calls.map(
-                (toolCall): ResponsesInputItem => ({
+              ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
+                if (isCustomToolCall(toolCall)) {
+                  return {
+                    type: "custom_tool_call",
+                    id: toolCall.call_id,
+                    call_id: toolCall.id ?? "",
+                    input: toolCall.args.input,
+                    name: toolCall.name,
+                  };
+                }
+                return {
                   type: "function_call",
                   name: toolCall.name,
                   arguments: JSON.stringify(toolCall.args),
@@ -2046,8 +2051,8 @@ export class ChatOpenAIResponses<
                   ...(this.zdrEnabled
                     ? { id: functionCallIds?.[toolCall.id!] }
                     : {}),
-                })
-              )
+                };
+              })
             );
           } else if (additional_kwargs?.tool_calls) {
             input.push(
@@ -2197,7 +2202,7 @@ export class ChatOpenAIResponses<
           tool.partial_images = 1;
         }
         reducedTools.push(tool);
-      } else if (isOpenAITool(tool)) {
+      } else if (isOpenAIFunctionTool(tool)) {
         reducedTools.push({
           type: "function",
           name: tool.function.name,
@@ -2205,6 +2210,8 @@ export class ChatOpenAIResponses<
           description: tool.function.description,
           strict: fields?.strict ?? null,
         });
+      } else if (isOpenAICustomTool(tool)) {
+        reducedTools.push(convertCompletionsCustomTool(tool));
       }
     }
     return reducedTools;
@@ -3361,8 +3368,14 @@ export class ChatOpenAI<
       options?.include != null ||
       options?.reasoning?.summary != null ||
       this.reasoning?.summary != null;
+    const hasCustomTools = options?.tools?.some(isOpenAICustomTool);
 
-    return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
+    return (
+      this.useResponsesApi ||
+      usesBuiltInTools ||
+      hasResponsesOnlyKwargs ||
+      hasCustomTools
+    );
   }
 
   override getLsParams(options: this["ParsedCallOptions"]) {
