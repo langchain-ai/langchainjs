@@ -203,6 +203,13 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
 }
 
 export interface AzureOpenAIInput {

@@ -6,6 +6,7 @@ import {
   BaseMessage,
   BaseMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   isAIMessage,
   isAIMessageChunk,
@@ -17,6 +18,7 @@ import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
+import { LONG_PROMPT } from "./data/long-prompt.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -831,4 +833,46 @@ test("gpt-5", async () => {
   );
   expect(response).toBeDefined();
   console.log(response);
+});
+
+describe("promptCacheKey", () => {
+  test("works as a constructor option", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      promptCacheKey: "long-prompt-cache-key-1",
+    });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
+  });
+
+  test("works as a call option", async () => {
+    const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
+  });
 });
