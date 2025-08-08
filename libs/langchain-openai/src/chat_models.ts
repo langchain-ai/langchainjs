@@ -543,6 +543,13 @@ export interface BaseChatOpenAICallOptions
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
 }
 
 export interface BaseChatOpenAIFields
@@ -638,6 +645,13 @@ export abstract class BaseChatOpenAI<
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
 
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey: string;
+
   protected defaultOptions: CallOptions;
 
   _llmType() {
@@ -716,6 +730,8 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
+      "verbosity",
+      "promptCacheKey",
     ];
   }
 
@@ -784,6 +800,7 @@ export abstract class BaseChatOpenAI<
     this.reasoning = fields?.reasoning;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
 
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;
@@ -1486,6 +1503,7 @@ export class ChatOpenAIResponses<
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
     };
@@ -2280,6 +2298,7 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
+      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
@@ -2614,6 +2633,7 @@ export class ChatOpenAICompletions<
             clientOptions
           );
         } else {
+          console.log("request", request);
           return await this.client.chat.completions.create(
             request,
             clientOptions
