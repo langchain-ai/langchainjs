@@ -824,11 +824,28 @@ test("useResponsesApi=true should emit handleLLMNewToken events during streaming
   expect(endEvents.length).toBeGreaterThan(0);
 });
 
-test("gpt-5", async () => {
-  const model = new ChatOpenAI({ model: "gpt-5" });
-  const response = await model.invoke(
+describe("gpt-5", () => {
+  const storyPrompt = new HumanMessage(
     "Write a short story about a robot who discovers they can dream. Include themes of consciousness, identity, and what it means to be alive. The story should be approximately 200 words and have a hopeful ending."
   );
-  expect(response).toBeDefined();
-  console.log(response);
+  test("works", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5" });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+    console.log(response);
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8641
+  test("works with maxTokens", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", maxTokens: 100 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8642
+  test("works with temperature", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", temperature: 0.5 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
 });
