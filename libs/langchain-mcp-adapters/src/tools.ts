@@ -473,6 +473,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
   useStandardContentBlocks: false,
+  verboseParsingErrors: false
 };
 
 /**
