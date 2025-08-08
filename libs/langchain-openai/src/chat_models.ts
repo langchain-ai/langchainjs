@@ -2639,7 +2639,6 @@ export class ChatOpenAICompletions<
             clientOptions
           );
         } else {
-          console.log("request", request);
           return await this.client.chat.completions.create(
             request,
             clientOptions
