@@ -1,116 +1,49 @@
 /**
- * Expands a type into a single object by recursively expanding all its properties.
+ * Recursively merges two object types T and U, with U taking precedence over T.
  *
- * For primitive types (string, number, boolean, bigint, symbol, null, undefined),
- * the type is returned as-is. For object types, all properties are expanded to
- * show their actual structure rather than lazy type aliases.
- *
- * This utility is particularly useful for making TypeScript display the full
- * structure of complex types in IDE tooltips and error messages, rather than
- * showing abbreviated type names.
- *
- * @template T - The type to expand
- *
- * @example
- * type MyType = { a: string } & { b: number };
- * type Expanded = $Expand<MyType>; // { a: string; b: number }
- *
- * type PrimitiveExpanded = $Expand<string>; // string (unchanged)
- */
-export type $Expand<T> = T extends Primitive
-  ? T
-  : { [K in keyof T]: $Expand<T[K]> };
-
-/**
- * Merges two array types T and U into a single array type.
- *
- * The merge behavior handles the following cases:
- * - If T is never: Returns an array with elements merged from T and U
- * - If U is never: Returns an array with elements merged from T and U
- * - If both T and U are valid array types: Performs deep merging of element types
- *
- * This type properly handles union types by distributing over each member of the union.
- * The resulting array contains elements that are the merged type of T's and U's element types.
- *
- * @template T - The first array type to merge, must extend readonly any[]
- * @template U - The second array type to merge, must extend readonly any[]
- *
- * @example
- * type Result1 = $MergeArrays<string[], number[]>; // (string | number)[]
- * type Result2 = $MergeArrays<{ a: string }[], { b: number }[]>; // { a: string; b: number }[]
- * type Result3 = $MergeArrays<never, string[]>; // string[]
- */
-export type $MergeArrays<T extends readonly any[], U extends readonly any[]> = [
-  T
-] extends [never]
-  ? U extends any
-    ? MergeNonUnionArrays<T, U>
-    : never
-  : [U] extends [never]
-  ? T extends any
-    ? MergeNonUnionArrays<T, U>
-    : never
-  : T extends any
-  ? U extends any
-    ? MergeNonUnionArrays<T, U>
-    : never
-  : never;
-
-/**
- * Merges two object types T and U into a single object type.
- *
- * The merge behavior handles the following cases:
- * - If T is never: Returns U with all properties made optional and undefined excluded
- * - If U is never: Returns T with all properties made optional and undefined excluded
- * - If both T and U are valid types: Performs deep merging
- *
- * This type properly handles union types by distributing over each member of the union.
+ * This utility type performs a deep merge of two object types:
+ * - For keys that exist in both T and U:
+ *   - If both values are objects (Record<string, unknown>), recursively merge them
+ *   - Otherwise, U's value takes precedence
+ * - For keys that exist only in T, use T's value
+ * - For keys that exist only in U, use U's value
  *
  * @template T - The first object type to merge
- * @template U - The second object type to merge
+ * @template U - The second object type to merge (takes precedence over T)
  *
  * @example
- * type Result1 = $MergeObjects<{ a: string }, { b: number }>; // { a: string; b: number }
- * type Result2 = $MergeObjects<never, { a: string }>; // { a?: string }
- * type Result3 = $MergeObjects<{ a: string }, never>; // { a?: string }
+ * ```ts
+ * type ObjectA = {
+ *   shared: { a: string; b: number };
+ *   onlyInA: boolean;
+ * };
+ *
+ * type ObjectB = {
+ *   shared: { b: string; c: Date };
+ *   onlyInB: symbol;
+ * };
+ *
+ * type Merged = $MergeObjects<ObjectA, ObjectB>;
+ * // Result: {
+ * //   shared: { a: string; b: string; c: Date };
+ * //   onlyInA: boolean;
+ * //   onlyInB: symbol;
+ * // }
+ * ```
  */
-export type $MergeObjects<T, U> = [T] extends [never]
-  ? U extends any
-    ? { [K in keyof U]?: Exclude<U[K], undefined> }
-    : never
-  : [U] extends [never]
-  ? T extends any
-    ? { [K in keyof T]?: Exclude<T[K], undefined> }
-    : never
-  : T extends any
-  ? U extends any
-    ? MergeNonUnionObjects<T, U>
-    : never
-  : never;
-
-/**
- * Merges two types T and U into a single type.
- *
- * The merge behavior depends on the types being merged:
- * - For primitive types: Returns a union of the primitives from both T and U
- * - For arrays: Merges array types using $MergeArrays, combining element types
- * - For objects: Merges object types using $MergeObjects, combining properties
- *
- * @template T - The first type to merge
- * @template U - The second type to merge
- *
- * @example
- * type Result1 = $Merge<{ a: string }, { b: number }>; // { a: string; b: number }
- * type Result2 = $Merge<string[], number[]>; // (string | number)[]
- * type Result3 = $Merge<string, number>; // string | number
- */
-export type $Merge<T, U> =
-  | Extract<T | U, Primitive>
-  | $MergeArrays<Extract<T, readonly any[]>, Extract<U, readonly any[]>>
-  | $MergeObjects<
-      Exclude<T, Primitive | readonly any[]>,
-      Exclude<U, Primitive | readonly any[]>
-    >;
+export type $MergeObjects<T, U> = {
+  [K in keyof T | keyof U]: K extends keyof T
+    ? K extends keyof U
+      ? T[K] extends Record<string, unknown>
+        ? U[K] extends Record<string, unknown>
+          ? $MergeObjects<T[K], U[K]>
+          : U[K]
+        : U[K]
+      : T[K]
+    : K extends keyof U
+    ? U[K]
+    : never;
+};
 
 /**
  * Merges two discriminated unions A and B based on a discriminator key (defaults to "type").
@@ -162,37 +95,3 @@ export type $UnionToIntersection<U> = (
 export type $PickUnion<TUnion, TKeys> = $UnionToIntersection<
   TUnion extends TKeys ? TUnion : never
 >;
-
-type Primitive = string | number | boolean | bigint | symbol | null | undefined;
-
-type OptionalKeys<T> = {
-  [K in keyof T]-?: T extends Record<K, T[K]> ? never : K;
-}[keyof T];
-
-type OptionalMergeKeys<T, U> = Extract<OptionalKeys<T>, PropertyKey> &
-  Extract<OptionalKeys<U>, PropertyKey>;
-type RequiredMergeKeys<T, U> = Extract<
-  Exclude<keyof T | keyof U, OptionalMergeKeys<T, U>>,
-  PropertyKey
->;
-
-type MergedValueAtKey<T, U, K extends PropertyKey> = K extends keyof T
-  ? K extends keyof U
-    ? $Expand<$Merge<Exclude<T[K], undefined>, Exclude<U[K], undefined>>>
-    : Exclude<T[K], undefined>
-  : K extends keyof U
-  ? Exclude<U[K], undefined>
-  : never;
-
-type MergeNonUnionObjects<T, U> = $Expand<
-  {
-    [K in RequiredMergeKeys<T, U>]-?: MergedValueAtKey<T, U, K>;
-  } & {
-    [K in OptionalMergeKeys<T, U>]?: MergedValueAtKey<T, U, K>;
-  }
->;
-
-type MergeNonUnionArrays<
-  T extends readonly any[],
-  U extends readonly any[]
-> = Array<$Expand<$Merge<T[number], U[number]>>>;
