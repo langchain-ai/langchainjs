@@ -17,20 +17,20 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
  * LangChain Agents
  */
 export {
+  interrupt,
+  resume,
   createReactAgent,
   type CreateReactAgentState,
   type CreateReactAgentRuntime,
-  /**
-   * note(@christian-bromann): temporary naming
-   */
   type LangGraphRunnableConfig as CreateReactAgentToolConfig,
 } from "@langchain/agents";
 export { type Runtime } from "@langchain/langgraph";
 
 /**
  * LangChain Memory
+ * Check in what we want to export here
  */
-export { InMemoryStore } from "@langchain/langgraph-checkpoint";
+export { MemorySaver, InMemoryStore } from "@langchain/langgraph";
 
 /**
  * LangChain Context

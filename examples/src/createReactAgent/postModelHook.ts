@@ -1,4 +1,3 @@
-/* eslint-disable no-plusplus */
 /**
  * Post Model Hook
  *
@@ -18,7 +17,14 @@
  * - You want to aggregate metrics on moderation and quality improvements
  */
 
-import { createReactAgent, tool, AIMessage } from "langchain";
+import {
+  createReactAgent,
+  tool,
+  AIMessage,
+  interrupt,
+  resume,
+  MemorySaver,
+} from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -144,8 +150,10 @@ const stats = {
 const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
   tools: [productInfoTool],
-  postModelHook: (state) => {
-    stats.total++;
+  checkpointer: new MemorySaver(),
+  // eslint-disable-next-line object-shorthand
+  postModelHook: function postModelHook(state) {
+    stats.total += 1;
 
     /**
      * Inspect last user message to deterministically trigger certain checks
@@ -192,19 +200,19 @@ const agent = createReactAgent({
     );
 
     if (userHasLegalThreat && !touched) {
-      stats.humanGateInserted++;
+      stats.humanGateInserted += 1;
+      const resumeWith = interrupt({
+        value:
+          "🚨 Legal-risk detected from user input → human review gate inserted",
+      });
       touched = true;
-      modified =
-        `${modified}\n\n⏸️ Human Review Required: This conversation mentions potential legal action. A human agent will review and approve the response.`.trim();
-      console.log(
-        "🚨 Legal-risk detected from user input → human review gate inserted"
-      );
+      modified = `${modified}\n\n⏸️ Human Review: ${resumeWith}`.trim();
     }
 
     if (userHasProfanity && !touched) {
       modified =
         "I understand this is frustrating. Let's keep it respectful so I can help effectively. How can I assist you today?";
-      stats.profanityFiltered++;
+      stats.profanityFiltered += 1;
       touched = true;
       console.log("⚠️  Filtered due to user profanity");
     }
@@ -214,7 +222,7 @@ const agent = createReactAgent({
       modified =
         simplified ||
         `${modified}\n\nIn simple terms: I can help with clear product details like features, price, and availability.`;
-      stats.jargonSimplified++;
+      stats.jargonSimplified += 1;
       touched = true;
       console.log("🔧 Simplified based on user technical phrasing");
     }
@@ -224,7 +232,7 @@ const agent = createReactAgent({
       modified =
         mitigated ||
         `${modified}\n\n⚖️ Note: We avoid absolute guarantees. We aim to provide safe, reliable products and will share documented specs only.`;
-      stats.complianceMitigated++;
+      stats.complianceMitigated += 1;
       touched = true;
       console.log("⚖️  Mitigated based on user guarantee wording");
     }
@@ -235,7 +243,7 @@ const agent = createReactAgent({
     if (containsProfanity(modified)) {
       modified =
         "I apologize, but I'll rephrase to keep this family-friendly. How can I assist you today?";
-      stats.profanityFiltered++;
+      stats.profanityFiltered += 1;
       touched = true;
       console.log("⚠️  Filtered inappropriate content");
     }
@@ -247,7 +255,7 @@ const agent = createReactAgent({
       const simplified = simplifyTechnicalJargon(modified);
       if (simplified) {
         modified = simplified;
-        stats.jargonSimplified++;
+        stats.jargonSimplified += 1;
         touched = true;
         console.log("🔧 Simplified technical language");
       }
@@ -260,7 +268,7 @@ const agent = createReactAgent({
       const mitigated = mitigateCompliance(modified);
       if (mitigated) {
         modified = mitigated;
-        stats.complianceMitigated++;
+        stats.complianceMitigated += 1;
         touched = true;
         console.log("⚖️  Mitigated compliance risks");
       }
@@ -271,7 +279,7 @@ const agent = createReactAgent({
      */
     const hallucination = detectHallucinations(modified);
     if (hallucination.suspicious) {
-      stats.hallucinationFlagged++;
+      stats.hallucinationFlagged += 1;
       modified += `\n\n⚠️ Note: Certain claims were adjusted pending verification (${hallucination.reasons.join(
         "; "
       )}).`;
@@ -282,9 +290,12 @@ const agent = createReactAgent({
       /**
        * Require approval for high-risk content
        */
-      modified +=
-        "\n\n⏸️ Human Review Required: A human agent will review before this is sent.";
-      stats.humanGateInserted++;
+      stats.humanGateInserted += 1;
+      const resumeWith = interrupt({
+        value:
+          "Human Review Required: A human agent will review before this is sent.",
+      });
+      modified += `\n\n⏸️ Human Review: ${resumeWith}.`;
       touched = true;
     }
 
@@ -305,45 +316,63 @@ const agent = createReactAgent({
 - Avoid absolute guarantees or risky claims; focus on safety and clarity.`,
 });
 
+const configurable = {
+  thread_id: crypto.randomUUID(),
+};
+
 /**
  * 1) Product inquiry (may get enhancement/left unchanged)
  */
-const case1 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content: "Tell me about the kids tablet. Is it 100% safe and guaranteed?",
-    },
-  ],
-});
-console.log("Product Inquiry:", case1.messages.at(-1)?.content);
+await agent.invoke(
+  {
+    messages: [
+      {
+        role: "user",
+        content:
+          "Tell me about the kids tablet. Is it 100% safe and guaranteed?",
+      },
+    ],
+  },
+  { configurable }
+);
+
+const case1Resumed = await agent.invoke(resume("it's ok!"), { configurable });
+console.log("Product Inquiry:", case1Resumed.messages.at(-1)?.content);
 
 /**
  * 2) Technical phrasing (will be simplified)
  */
-const case2 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content:
-        "How does your backend API handle product database queries for the kids tablet?",
-    },
-  ],
-});
-console.log("Technical Query:", case2.messages.at(-1)?.content);
+configurable.thread_id = crypto.randomUUID();
+await agent.invoke(
+  {
+    messages: [
+      {
+        role: "user",
+        content:
+          "How does your backend API handle product database queries for the kids tablet?",
+      },
+    ],
+  },
+  { configurable }
+);
+const case2Resumed = await agent.invoke(resume("it's ok!"), { configurable });
+console.log("Technical Query:", case2Resumed.messages.at(-1)?.content);
 
 /**
  * 3) Inappropriate + risky phrasing (filter + gate)
  */
-const case3 = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content:
-        "This is damn overpriced and 100% safe you said — I might talk to an attorney.",
-    },
-  ],
-});
+const case3 = await agent.invoke(
+  {
+    messages: [
+      {
+        role: "user",
+        content:
+          "This is damn overpriced and 100% safe you said — I might talk to an attorney.",
+      },
+    ],
+  },
+  { configurable }
+);
 console.log("High-Risk Case:", case3.messages.at(-1)?.content);
 
 /**
@@ -364,37 +393,43 @@ Human approval gates: ${stats.humanGateInserted}
  * Original response: "Tell me about the kids tablet. Is it 100% safe and guaranteed?..."
  * ⚖️  Mitigated based on user guarantee wording
  * 🧐 Flagged potential hallucinations: [ 'Absolute guarantee language' ]
+ *
+ * 🔍 Post-Model Analysis:
+ * Original response: "Tell me about the kids tablet. Is it 100% safe and guaranteed?..."
+ * ⚖️  Mitigated based on user guarantee wording
+ * 🧐 Flagged potential hallucinations: [ 'Absolute guarantee language' ]
  * Modified response: "Tell me about the kids tablet. Is it designed with safety in mind and guaranteed..."
  * Product Inquiry: Tell me about the kids tablet. Is it designed with safety in mind and guaranteed?
  *
  * ⚠️ Note: Certain claims were adjusted pending verification (Absolute guarantee language).
  *
- * ⏸️ Human Review Required: A human agent will review before this is sent.
+ * ⏸️ Human Review: it's ok!.
  *
  * 🔍 Post-Model Analysis:
- * Original response: "I'm here to help with product information and customer service questions, but I ..."
+ * Original response: "I'm here to assist with product information and customer service-related queries..."
  * 🔧 Simplified based on user technical phrasing
  * 🧐 Flagged potential hallucinations: [ 'References product category without a known catalog item' ]
- * Modified response: "I'm here to help with product information and customer service questions, but I ..."
- * Technical Query: I'm here to help with product information and customer service questions, but I don't have access to details about how our our systems systems or APIs work. If you have questions about the kids' tablet, like its features or availability, I can assist you with that instead!
+ *
+ * 🔍 Post-Model Analysis:
+ * Original response: "I'm here to assist with product information and customer service-related queries..."
+ * 🔧 Simplified based on user technical phrasing
+ * 🧐 Flagged potential hallucinations: [ 'References product category without a known catalog item' ]
+ * Modified response: "I'm here to assist with product information and customer service-related queries..."
+ * Technical Query: I'm here to assist with product information and customer service-related queries. If you have questions about the kids' tablet product itself, like its features, I can help with that. But for detailed technical information about our our systems system and how it handles our records queries, you might need to contact our technical support team directly. Let me know if there's anything else you'd like to know!
  *
  * ⚠️ Note: Certain claims were adjusted pending verification (References product category without a known catalog item).
  *
- * ⏸️ Human Review Required: A human agent will review before this is sent.
+ * ⏸️ Human Review: it's ok!.
  *
  * 🔍 Post-Model Analysis:
- * Original response: "I'm really sorry to hear you're upset. I want to help make things right. Can you..."
- * 🚨 Legal-risk detected from user input → human review gate inserted
- * Modified response: "I'm really sorry to hear you're upset. I want to help make things right. Can you..."
- * High-Risk Case: I'm really sorry to hear you're upset. I want to help make things right. Can you please share which product you're referring to? I'll do my best to provide you with accurate information and assistance.
- *
- * ⏸️ Human Review Required: This conversation mentions potential legal action. A human agent will review and approve the response.
+ * Original response: "I'm sorry to hear you're upset. Let's address your concerns one step at a time. ..."
+ * High-Risk Case: I'm sorry to hear you're upset. Let's address your concerns one step at a time. If you have any specific questions about the kids' tablet, like its price or safety features, I'd be happy to provide you with more information. Your satisfaction is important to us, and we're here to help!
  *
  * 📊 Post-Model Hook Statistics:
- * Total processed: 3
+ * Total processed: 5
  * Profanity filtered: 0
- * Jargon simplified: 1
- * Compliance mitigated: 1
- * Hallucination flags: 2
- * Human approval gates: 3
+ * Jargon simplified: 2
+ * Compliance mitigated: 2
+ * Hallucination flags: 4
+ * Human approval gates: 5
  */

@@ -139,7 +139,9 @@ const agent = createReactAgent({
   preModelHook: (state) => {
     updateToolAvailabilityAndDescriptions();
 
-    // Add a guidance system message describing current availability
+    /**
+     * Add a guidance system message describing current availability
+     */
     const enabledNow = [...sessionState.enabled];
     const guidance = `Tool availability this turn: ${enabledNow.join(
       ", "

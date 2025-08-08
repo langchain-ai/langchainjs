@@ -274,7 +274,7 @@ const johnResult1 = await agent.invoke(
   { configurable: { userId: "john_123" } }
 );
 
-console.log(johnResult1.messages[johnResult1.messages.length - 1].content);
+console.log(johnResult1.messages.at(-1)?.content);
 
 console.log("\n=== Learning About John's New Preference ===");
 const johnResult2 = await agent.invoke(
@@ -291,7 +291,7 @@ const johnResult2 = await agent.invoke(
   { configurable: { userId: "john_123" } }
 );
 
-console.log(johnResult2.messages[johnResult2.messages.length - 1].content);
+console.log(johnResult2.messages.at(-1)?.content);
 
 console.log("\n=== Sarah's Different Context ===");
 const sarahResult1 = await agent.invoke(
@@ -307,7 +307,7 @@ const sarahResult1 = await agent.invoke(
   { configurable: { userId: "sarah_456" } }
 );
 
-console.log(sarahResult1.messages[sarahResult1.messages.length - 1].content);
+console.log(sarahResult1.messages.at(-1)?.content);
 
 console.log("\n=== John Returns Later ===");
 const johnResult3 = await agent.invoke(
@@ -323,7 +323,7 @@ const johnResult3 = await agent.invoke(
   { configurable: { userId: "john_123" } }
 );
 
-console.log(johnResult3.messages[johnResult3.messages.length - 1].content);
+console.log(johnResult3.messages.at(-1)?.content);
 
 /**
  * Example Output:
