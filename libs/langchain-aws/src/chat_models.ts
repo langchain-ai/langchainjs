@@ -849,6 +849,7 @@ export class ChatBedrockConverse
     });
     const response = await this.client.send(command, {
       abortSignal: options.signal,
+      requestMetadata: options.metadata,
     });
     const { output, ...responseMetadata } = response;
     if (!output?.message) {
@@ -889,6 +890,7 @@ export class ChatBedrockConverse
     });
     const response = await this.client.send(command, {
       abortSignal: options.signal,
+      requestMetadata: options.metadata,
     });
     if (response.stream) {
       for await (const chunk of response.stream) {
