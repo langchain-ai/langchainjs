@@ -10,3 +10,4 @@ export * from "./utils/openai.js";
 export * from "./utils/azure.js";
 export * from "./tools/index.js";
 export { convertPromptToOpenAI } from "./utils/prompts.js";
+export { customTool } from "./tools/custom.js";
