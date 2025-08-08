@@ -1,5 +1,5 @@
-import { type ContentBlock } from "./content/index.js";
-import { $Merge, $MergeDiscriminatedUnion } from "./utils.js";
+import { ContentBlock } from "./content";
+import { $Expand, $Merge, $MergeDiscriminatedUnion } from "./utils";
 
 /**
  * Represents the possible types of messages in the system.
@@ -110,22 +110,11 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  * Core interface that defines the structure of messages.
  * This interface acts as the base for describing the various shapes of messages.
  *
- * @property [tools] - Optional set of tools that can be used within messages.
- *   Tools are defined as a map of tool names to their input/output definitions.
- *
- * @property [contentBlocks] - Optional content blocks for different message types.
- *   Maps message types (excluding "tool") to their content block definitions.
- *   Content blocks can contain text, images, or other media types.
- *
- * @property [properties] - Optional properties for different message types.
- *   Maps message types to arbitrary property objects.
- *   Used to attach metadata or other information to specific message types.
- *
  * @example
  * ```ts
  * // Basic message structure with just content blocks
  * interface SimpleMessageStructure extends $MessageStructure {
- *   contentBlocks: {
+ *   content: {
  *     human: ContentBlock.Text;
  *     // allows for text + reasoning blocks in ai messages
  *     ai: ContentBlock.Text | ContentBlock.Reasoning;
@@ -140,7 +129,7 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  *       number
  *     >;
  *   };
- *   contentBlocks: {
+ *   content: {
  *     // allows for text + image blocks in human messages
  *     human: ContentBlock.Text | ContentBlock.Multimodal.Image;
  *     // only allows for text blocks in ai messages
@@ -171,16 +160,14 @@ export interface $MessageStructure {
    * Each tool is defined with input/output types and can be referenced in tool messages.
    */
   readonly tools?: $MessageToolSet;
-
   /**
    * Optional mapping of message types to their allowed content blocks.
    * Excludes the "tool" message type since tool messages have a special structure.
    * Each message type can specify what content block types it supports (text, images, etc).
    */
-  readonly contentBlocks?: Partial<{
-    [key in Exclude<$MessageType, "tool">]: ContentBlock;
+  readonly content?: Partial<{
+    [key in $MessageType]: ContentBlock;
   }>;
-
   /**
    * Optional mapping of message types to arbitrary property objects.
    * Allows attaching custom metadata or other information to specific message types.
@@ -222,7 +209,7 @@ export interface $MessageStructure {
  * ```ts
  * // Structure A allows text in human messages and has a confidence property on AI messages
  * interface StructureA extends $MessageStructure {
- *   contentBlocks: {
+ *   content: {
  *     human: ContentBlock.Text;
  *   };
  *   properties: {
@@ -232,7 +219,7 @@ export interface $MessageStructure {
  *
  * // Structure B allows images in human messages and has a model property on AI messages
  * interface StructureB extends $MessageStructure {
- *   contentBlocks: {
+ *   content: {
  *     human: ContentBlock.Multimodal.Image;
  *   };
  *   properties: {
@@ -248,64 +235,31 @@ export interface $MessageStructure {
  * @template A - First message structure to merge
  * @template B - Second message structure to merge (takes precedence over A)
  */
-export interface $MergeMessageStructure<
-  A extends $MessageStructure,
-  B extends $MessageStructure
-> {
-  tools: $Merge<A["tools"], B["tools"]>;
-  contentBlocks: {
-    [K in keyof (A["contentBlocks"] &
-      B["contentBlocks"])]: K extends keyof A["contentBlocks"] &
-      keyof B["contentBlocks"]
+export type $MergeMessageStructure<
+  T extends $MessageStructure,
+  U extends $MessageStructure
+> = {
+  tools: $Expand<$Merge<T["tools"], U["tools"]>>;
+  content: $Expand<{
+    [K in keyof (T["content"] & U["content"])]: K extends keyof T["content"] &
+      keyof U["content"]
       ? $MergeDiscriminatedUnion<
-          NonNullable<A["contentBlocks"][K]> & Record<"type", PropertyKey>,
-          NonNullable<B["contentBlocks"][K]> & Record<"type", PropertyKey>,
+          NonNullable<T["content"][K]> & Record<"type", PropertyKey>,
+          NonNullable<U["content"][K]> & Record<"type", PropertyKey>,
           "type"
         >
-      : K extends keyof A["contentBlocks"]
-      ? A["contentBlocks"][K]
-      : K extends keyof B["contentBlocks"]
-      ? B["contentBlocks"][K]
+      : K extends keyof T["content"]
+      ? T["content"][K]
+      : K extends keyof U["content"]
+      ? U["content"][K]
       : never;
-  };
-  properties: {
-    [K in keyof (A["properties"] &
-      B["properties"])]: K extends keyof A["properties"] & keyof B["properties"]
-      ? $Merge<NonNullable<A["properties"]>[K], NonNullable<B["properties"]>[K]>
-      : K extends keyof A["properties"]
-      ? A["properties"][K]
-      : K extends keyof B["properties"]
-      ? B["properties"][K]
-      : never;
-  };
-}
+  }>;
+  properties: $Merge<T["properties"], U["properties"]>;
+};
 
-/**
- * Gets all possible message types from a message structure
- *
- * This is used internally to get the possible message types for a given message structure.
- *
- * If a message structure has no tools, it will not include the "tool" type. If a message structure
- * has arbitrary types defined in either contentBlocks or properties, it will include those types
- * as available message types.
- *
- * @template TStructure - The message structure to get types from
- * @example
- * ```ts
- * interface MyStructure extends $MessageStructure {
- *   contentBlocks: { human: ContentBlock.Text };
- *   properties: { ai: { confidence: number } };
- *   tools: Tools.ToolCall;
- * }
- *
- * type Types = $MessageStructureTypes<MyStructure>;
- * // Types = "human" | "ai" | "tool"
- * ```
- */
-export type $MessageStructureTypes<TStructure extends $MessageStructure> =
-  | keyof TStructure["contentBlocks"]
-  | keyof TStructure["properties"]
-  | (TStructure["tools"] extends undefined ? never : "tool");
+const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
+  "langchain.message.std-structure"
+);
 
 /**
  * Standard message structured used to define the most basic message structure that's
@@ -313,21 +267,18 @@ export type $MessageStructureTypes<TStructure extends $MessageStructure> =
  *
  * This is also the message structure that's used when a message structure is not provided.
  */
-
-const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
-  "langchain.message.std-structure"
-);
-
-export type $StandardMessageStructure = $MessageStructure & {
+export type $StandardMessageStructure = {
   /** @internal Discriminator to give TS a hint when evaluating if a type is a standard message structure */
   [STANDARD_MESSAGE_STRUCTURE_TYPE]: never;
-  contentBlocks: {
+  content: {
     /** Text content for AI messages */
     ai: ContentBlock.Text;
     /** Text content for human messages */
     human: ContentBlock.Text;
     /** Text content for system messages */
     system: ContentBlock.Text;
+    /** Text content for tool messages */
+    tool: ContentBlock.Text;
   };
   properties: {
     /** Properties specific to AI messages */
@@ -349,6 +300,18 @@ export type $StandardMessageStructure = $MessageStructure & {
         totalTokens: number;
       };
     };
+    human: {
+      /** Metadata about the human message */
+      metadata: Record<string, unknown>;
+    };
+    system: {
+      /** Metadata about the system message */
+      metadata: Record<string, unknown>;
+    };
+    tool: {
+      /** Metadata about the tool message */
+      metadata: Record<string, unknown>;
+    };
   };
 };
 
@@ -368,150 +331,262 @@ export type $NormalizedMessageStructure<T extends $MessageStructure> =
     : $MergeMessageStructure<$StandardMessageStructure, T>;
 
 /**
- * Applies message-specific properties to a base object based on the message type and structure.
+ * Infers the content type for a specific message role from a message structure.
  *
- * This type utility merges a base object with any additional properties defined for a specific
- * message type in the message structure. If no properties are defined for the message type,
- * the base object is returned unchanged.
+ * This utility type extracts the content block type that corresponds to a given message role
+ * from the message structure's content definition. It safely handles cases where the content
+ * property might be undefined or not properly structured.
  *
- * @template TStructure - The message structure type that defines available message types and their properties
- * @template TMessageType - The specific message type to get properties for
- * @template TObject - The base object type to merge properties into
- * @returns The base object merged with any message-specific properties defined in the structure
+ * @template TStructure - The message structure to infer content from
+ * @template TRole - The message role/type to get content for (e.g., "ai", "human", "system", "tool")
+ * @returns The content block type for the specified role, or never if not found
+ *
+ * @example
+ * ```ts
+ * interface MyStructure extends $MessageStructure {
+ *   content: {
+ *     human: ContentBlock.Text;
+ *     ai: ContentBlock.Text | ContentBlock.ToolCall;
+ *   };
+ * }
+ *
+ * type HumanContent = $InferMessageContent<MyStructure, "human">;
+ * // HumanContent = ContentBlock.Text
+ *
+ * type AIContent = $InferMessageContent<MyStructure, "ai">;
+ * // AIContent = ContentBlock.Text | ContentBlock.ToolCall
+ * ```
  */
-export type $ApplyMessageProperties<
+export type $InferMessageContent<
   TStructure extends $MessageStructure,
-  TMessageType extends $MessageStructureTypes<TStructure>,
-  TObject extends Record<string, unknown>
-> = TObject &
-  (TMessageType extends keyof TStructure["properties"]
-    ? TStructure["properties"][TMessageType]
-    : Record<string, unknown>);
+  TRole extends $MessageType
+> = $NormalizedMessageStructure<TStructure> extends infer S
+  ? S extends $MessageStructure
+    ? S["content"] extends infer C | undefined
+      ? C extends Record<PropertyKey, unknown>
+        ? TRole extends keyof C
+          ? S["tools"] extends undefined
+            ? C[TRole]
+            : $MergeDiscriminatedUnion<
+                NonNullable<C[TRole]> & Record<"type", PropertyKey>,
+                $MessageToolCallBlock<S>,
+                "type"
+              >
+          : never
+        : never
+      : never
+    : never
+  : never;
 
 /**
- * Defines the shape of a base message in a conversation, handling different message types and their properties.
+ * Infers the properties type for a specific message role from a message structure.
  *
- * @template TStructure - The message structure definition that specifies available message types and their properties
- * @template TRole - The role or type of the message sender, must be one of the message types defined in TStructure
+ * This utility type extracts the properties object that corresponds to a given message role
+ * from the message structure's properties definition. It automatically excludes the reserved
+ * "content" and "type" properties to avoid conflicts with the core message structure.
  *
- * This type creates a discriminated union based on the message role (TRole) with specific handling for:
- * - Tool messages: Includes tool-specific properties like toolCallId, status, and tool-specific output types
- * - Content block messages: Handles regular message content with optional tool call blocks
+ * If the specified role is not defined in the message structure's properties, it returns
+ * a generic Record<string, unknown> type to allow for arbitrary properties.
  *
- * The resulting type ensures type safety and proper structure for different kinds of messages
- * while maintaining flexibility for custom message types and properties.
+ * @template TStructure - The message structure to infer properties from
+ * @template TRole - The message role/type to get properties for (e.g., "ai", "human", "system", "tool")
+ * @returns The properties object type for the specified role, excluding "content" and "type"
+ *
+ * @example
+ * ```ts
+ * interface MyStructure extends $MessageStructure {
+ *   properties: {
+ *     ai: {
+ *       responseMetadata: { model: string };
+ *       usageMetadata: { tokens: number };
+ *       content: string; // This will be omitted
+ *       type: string;    // This will be omitted
+ *     };
+ *     human: { metadata: Record<string, unknown> };
+ *   };
+ * }
+ *
+ * type AIProperties = $InferMessageProperties<MyStructure, "ai">;
+ * // AIProperties = { responseMetadata: { model: string }; usageMetadata: { tokens: number } }
+ *
+ * type HumanProperties = $InferMessageProperties<MyStructure, "human">;
+ * // HumanProperties = { metadata: Record<string, unknown> }
+ *
+ * type SystemProperties = $InferMessageProperties<MyStructure, "system">;
+ * // SystemProperties = Record<string, unknown> (fallback for undefined role)
+ * ```
  */
-export type BaseMessageShape<
+export type $InferMessageProperties<
+  TStructure extends $MessageStructure,
+  TRole extends $MessageType
+> = $NormalizedMessageStructure<TStructure> extends infer S
+  ? S extends $MessageStructure
+    ? S["properties"] extends infer P | undefined
+      ? P extends Record<PropertyKey, unknown>
+        ? TRole extends keyof P
+          ? Omit<P[TRole], "content" | "type">
+          : Record<string, unknown>
+        : never
+      : never
+    : never
+  : never;
+
+/**
+ * Infers the type of a specific property for a message role from a message structure.
+ *
+ * This utility type extracts the type of a single property by name from the properties
+ * object that corresponds to a given message role. It builds upon $InferMessageProperties
+ * to provide type-safe access to individual properties.
+ *
+ * If the specified property key does not exist in the role's properties, it returns `never`.
+ * This ensures type safety by preventing access to non-existent properties.
+ *
+ * @template TStructure - The message structure to infer the property from
+ * @template TRole - The message role/type to get the property for (e.g., "ai", "human", "system", "tool")
+ * @template K - The property key to extract the type for
+ * @returns The type of the specified property, or `never` if the property doesn't exist
+ *
+ * @example
+ * ```ts
+ * interface MyStructure extends $MessageStructure {
+ *   properties: {
+ *     ai: {
+ *       responseMetadata: { model: string; temperature: number };
+ *       usageMetadata: { inputTokens: number; outputTokens: number };
+ *     };
+ *     human: { metadata: Record<string, unknown> };
+ *   };
+ * }
+ *
+ * type ResponseMetadata = $InferMessageProperty<MyStructure, "ai", "responseMetadata">;
+ * // ResponseMetadata = { model: string; temperature: number }
+ *
+ * type UsageMetadata = $InferMessageProperty<MyStructure, "ai", "usageMetadata">;
+ * // UsageMetadata = { inputTokens: number; outputTokens: number }
+ *
+ * type NonExistentProperty = $InferMessageProperty<MyStructure, "ai", "nonExistent">;
+ * // NonExistentProperty = never
+ *
+ * type HumanMetadata = $InferMessageProperty<MyStructure, "human", "metadata">;
+ * // HumanMetadata = Record<string, unknown>
+ * ```
+ */
+export type $InferMessageProperty<
+  TStructure extends $MessageStructure,
+  TRole extends $MessageType,
+  K extends string
+> = K extends keyof $InferMessageProperties<TStructure, TRole>
+  ? $InferMessageProperties<TStructure, TRole>[K]
+  : never;
+
+export interface Message<
   TStructure extends $MessageStructure = $StandardMessageStructure,
-  TRole extends $MessageStructureTypes<TStructure> = $MessageStructureTypes<TStructure>
-> = {
-  // Map over each message type in the role (TRole)
-  [TMessageType in TRole]: TMessageType extends "tool"
-    ? // If this is a tool message...
-      TStructure["tools"] extends $MessageToolSet
-      ? // And if the structure has a tools definition...
-        {
-          // Create a mapped type over all tool names, applying the structure's defined
-          // properties to the inner message definition
-          [K in keyof TStructure["tools"]]: $ApplyMessageProperties<
-            TStructure,
-            TMessageType,
-            {
-              type: "tool";
-              toolCallId: string; // Unique ID for this tool call
-              status: "success" | "error"; // Whether the tool call succeeded
-              name?: K; // Optional name of the specific tool
-              content: TStructure["tools"][K] extends $MessageToolDefinition
-                ? TStructure["tools"][K]["output"] // Use the tool's defined output type
-                : unknown; // Fallback if no output type defined
-            }
-          >;
-        }[keyof TStructure["tools"]] // Index to convert mapped type to union
-      : never // If no tools defined, this type is never
-    : // If this is not a tool message, but is a valid content block type...
-    TMessageType extends keyof TStructure["contentBlocks"]
-    ? // Apply the structure's defined properties to the inner message definition
-      $ApplyMessageProperties<
-        TStructure,
-        TMessageType,
-        {
-          type: TMessageType;
-          content: Array<
-            // If tools are undefined, use just the content block type
-            TStructure["tools"] extends undefined
-              ? TStructure["contentBlocks"][TMessageType]
-              : // Otherwise merge the existing content block type with a tool call block type
-                $MergeDiscriminatedUnion<
-                  NonNullable<TStructure["contentBlocks"][TMessageType]> &
-                    Record<"type", PropertyKey>,
-                  // Pull the tool call block type from the structure
-                  $MessageToolCallBlock<TStructure>,
-                  "type"
-                >
-          >;
-        }
-      >
-    : never; // If neither tool nor content block type, this type is never
-}[TRole];
+  TRole extends $MessageType = $MessageType
+> {
+  id: string;
+  name?: string;
+  readonly type: TRole;
+  content: Array<$InferMessageContent<TStructure, TRole>>;
+}
 
-/**
- * Base message type that represents a message in a conversation.
- * This serves as the foundation for specific message types like AI, Human, System, and Tool messages.
- *
- * @template TStructure - The message structure definition
- * @template TRole - The role of the message sender (ai, human, system, or tool)
- */
-export type BaseMessage<
-  TStructure extends $MessageStructure = $StandardMessageStructure,
-  TRole extends $MessageStructureTypes<
-    $NormalizedMessageStructure<TStructure>
-  > = $MessageStructureTypes<$NormalizedMessageStructure<TStructure>>
-> = BaseMessageShape<$NormalizedMessageStructure<TStructure>, TRole>;
-
-/**
- * Represents a message from an AI assistant in a conversation.
- * Contains the AI's response content and any associated metadata.
- *
- * @template TStructure - The message structure definition
- */
-export type AIMessage<
+export class AIMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> = BaseMessage<TStructure, "ai">;
+> implements Message<TStructure, "ai">
+{
+  id: string;
+  name?: string;
+  readonly type: "ai" = "ai";
+  content: Array<$InferMessageContent<TStructure, "ai">>;
+  responseMetadata: $InferMessageProperty<TStructure, "ai", "responseMetadata">;
+  usageMetadata: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
 
-/**
- * Represents a message from a human user in a conversation.
- * Contains the user's input content and any associated metadata.
- *
- * @template TStructure - The message structure definition
- */
-export type HumanMessage<
-  TStructure extends $MessageStructure = $StandardMessageStructure
-> = BaseMessage<TStructure, "human">;
+  constructor(text: string);
+  constructor(content: Array<$InferMessageContent<TStructure, "human">>);
+  constructor(
+    textOrContent: string | Array<$InferMessageContent<TStructure, "human">>
+  ) {
+    if (typeof textOrContent === "string") {
+      this.content = [{ type: "text", text: textOrContent }];
+    } else {
+      this.content = textOrContent;
+    }
+  }
+}
 
-/**
- * Represents a system message in a conversation.
- * Typically used for providing context, instructions, or controlling conversation behavior.
- *
- * @template TStructure - The message structure definition
- */
-export type SystemMessage<
+export class HumanMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> = BaseMessage<TStructure, "system">;
+> implements Message<TStructure, "human">
+{
+  id: string;
+  name?: string;
+  readonly type: "human" = "human";
+  content: Array<$InferMessageContent<TStructure, "human">>;
+  metadata: $InferMessageProperty<TStructure, "human", "metadata">;
 
-/**
- * Represents a message from a tool in a conversation.
- * Contains the tool's output, status, and metadata about the tool execution.
- *
- * @template TStructure - The message structure definition
- */
-export type ToolMessage<
+  constructor(text: string);
+  constructor(content: Array<$InferMessageContent<TStructure, "human">>);
+  constructor(
+    textOrContent: string | Array<$InferMessageContent<TStructure, "human">>
+  ) {
+    if (typeof textOrContent === "string") {
+      this.content = [{ type: "text", text: textOrContent }];
+    } else {
+      this.content = textOrContent;
+    }
+  }
+
+  get text() {
+    return this.content
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+  }
+}
+
+export class SystemMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> = "tool" extends $MessageStructureTypes<TStructure>
-  ? BaseMessage<TStructure, "tool">
-  : {
-      type: "tool";
-      toolCallId: string;
-      status: "success" | "error";
-      name?: string;
-      content: unknown;
-    };
+> implements Message<TStructure, "system">
+{
+  id: string;
+  name?: string;
+  readonly type: "system" = "system";
+  content: Array<$InferMessageContent<TStructure, "system">>;
+  metadata: $InferMessageProperty<TStructure, "system", "metadata">;
+
+  constructor(text: string);
+  constructor(content: Array<$InferMessageContent<TStructure, "human">>);
+  constructor(
+    textOrContent: string | Array<$InferMessageContent<TStructure, "human">>
+  ) {
+    if (typeof textOrContent === "string") {
+      this.content = [{ type: "text", text: textOrContent }];
+    } else {
+      this.content = textOrContent;
+    }
+  }
+
+  get text() {
+    return this.content
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+  }
+}
+
+export class ToolMessage<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> implements Message<TStructure, "tool">
+{
+  id: string;
+  name?: string;
+  readonly type: "tool" = "tool";
+  content: Array<$InferMessageContent<TStructure, "tool">>;
+  metadata: $InferMessageProperty<TStructure, "tool", "metadata">;
+
+  get text() {
+    return this.content
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+  }
+}
