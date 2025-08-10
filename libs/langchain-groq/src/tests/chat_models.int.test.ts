@@ -264,7 +264,6 @@ test("response metadata includes groq metadata", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await model.invoke([message]);
-  // console.dir(res, { depth: Infinity });
   expect(res.response_metadata.x_groq?.id).toBeDefined();
 });
 
