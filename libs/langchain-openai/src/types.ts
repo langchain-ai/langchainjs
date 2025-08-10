@@ -3,6 +3,8 @@ import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
+  ResponseFormatTextPython,
+  ResponseFormatTextGrammar,
 } from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
@@ -105,6 +107,10 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    */
   apiKey?: string;
+
+  // TODO(hntrl): replace this with Verbosity enum when released
+  /** The verbosity of the model's response. */
+  verbosity: "low" | "medium" | "high";
 }
 
 export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
@@ -197,6 +203,13 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
 }
 
 export interface AzureOpenAIInput {
@@ -309,4 +322,11 @@ export type ChatOpenAIReasoningSummary = Omit<
 export type ChatOpenAIResponseFormat =
   | ResponseFormatText
   | ResponseFormatJSONObject
+  | ResponseFormatTextGrammar
+  | ResponseFormatTextPython
   | ChatOpenAIResponseFormatJSONSchema;
+
+export type ResponseFormatConfiguration =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ResponseFormatJSONSchema;

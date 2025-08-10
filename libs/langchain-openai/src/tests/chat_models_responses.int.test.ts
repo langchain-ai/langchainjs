@@ -6,6 +6,7 @@ import {
   BaseMessage,
   BaseMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   isAIMessage,
   isAIMessageChunk,
@@ -17,6 +18,7 @@ import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
+import { LONG_PROMPT } from "./data/long-prompt.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -822,4 +824,72 @@ test("useResponsesApi=true should emit handleLLMNewToken events during streaming
   );
   expect(startEvents.length).toBeGreaterThan(0);
   expect(endEvents.length).toBeGreaterThan(0);
+});
+
+describe("gpt-5", () => {
+  const storyPrompt = new HumanMessage(
+    "Write a short story about a robot who discovers they can dream. Include themes of consciousness, identity, and what it means to be alive. The story should be approximately 200 words and have a hopeful ending."
+  );
+  test("works", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5" });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+    console.log(response);
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8641
+  test("works with maxTokens", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", maxTokens: 100 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8642
+  test("works with temperature", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", temperature: 0.5 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
+});
+
+describe("promptCacheKey", () => {
+  test("works as a constructor option", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      promptCacheKey: "long-prompt-cache-key-1",
+    });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
+  });
+
+  test("works as a call option", async () => {
+    const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
+  });
 });
