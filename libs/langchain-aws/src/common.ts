@@ -54,13 +54,13 @@ import {
 function isDefaultCachePoint(block: unknown): boolean {
   return Boolean(
     typeof block === "object" &&
-    block !== null &&
-    "cachePoint" in block &&
-    block.cachePoint &&
-    typeof block.cachePoint === "object" &&
-    block.cachePoint !== null &&
-    "type" in block.cachePoint &&
-    block.cachePoint.type === "default"
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
   );
 }
 
@@ -377,14 +377,16 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
     });
   } else if (Array.isArray(msg.content)) {
     const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
-    const contentBlocks: ContentBlock[] = []
+    const contentBlocks: ContentBlock[] = [];
     concatenatedBlocks.forEach((block) => {
       if (block.type === "text" && block.text !== "") {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
         const cleanedText = block.text?.replace(/\n/g, "").trim();
         if (cleanedText === "") {
           if (contentBlocks.length > 0) {
-            const mergedTextContent = `${contentBlocks[contentBlocks.length - 1].text}${block.text}`;
+            const mergedTextContent = `${
+              contentBlocks[contentBlocks.length - 1].text
+            }${block.text}`;
             contentBlocks[contentBlocks.length - 1].text = mergedTextContent;
           }
         } else {
@@ -450,17 +452,17 @@ function convertHumanMessageToConverseMessage(
 
   const content: ContentBlock[] = Array.isArray(msg.content)
     ? msg.content.map((c) =>
-      convertLangChainContentBlockToConverseContentBlock({
-        block: c,
-        onUnknown: "throw",
-      })
-    )
+        convertLangChainContentBlockToConverseContentBlock({
+          block: c,
+          onUnknown: "throw",
+        })
+      )
     : [
-      convertLangChainContentBlockToConverseContentBlock({
-        block: msg.content,
-        onUnknown: "throw",
-      }),
-    ];
+        convertLangChainContentBlockToConverseContentBlock({
+          block: msg.content,
+          onUnknown: "throw",
+        }),
+      ];
 
   return {
     role: "user" as const,
@@ -669,8 +671,8 @@ export function convertToBedrockToolChoice(
 
     throw new Error(
       `${supportedTxt} Please see` +
-      "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html" +
-      "for the latest documentation on models that support tool choice."
+        "https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html" +
+        "for the latest documentation on models that support tool choice."
     );
   }
 
