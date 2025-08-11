@@ -30,7 +30,7 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install
+pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/anthropic` to build and run tests
 # We need to run inside the anthropic directory so turbo repo does
