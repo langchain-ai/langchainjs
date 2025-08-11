@@ -16,13 +16,24 @@ const collectionName = "GenerateCollection";
 beforeAll(async () => {
   expect(process.env.WEAVIATE_URL).toBeDefined();
   expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
-  client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
-    authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
-    headers: {
-      "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
-      "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
-    },
-  });
+  if (process.env.WEAVIATE_URL === "local") {
+    client = await weaviate.connectToLocal({
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  } else {
+    client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
+      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  }
+  console.log("Connecting to Weaviate at", process.env.WEAVIATE_URL);
+  console.log("Ready?", await client.isReady());
 });
 
 test("Generate with limit", async () => {
