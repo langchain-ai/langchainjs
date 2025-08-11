@@ -377,23 +377,35 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
     });
   } else if (Array.isArray(msg.content)) {
     const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
-    const contentBlocks: ContentBlock[] = concatenatedBlocks.map((block) => {
+    const contentBlocks: ContentBlock[] = [];
+    concatenatedBlocks.forEach((block) => {
       if (block.type === "text" && block.text !== "") {
-        return {
-          text: block.text,
-        };
+        // Merge whitespace/newlines with previous text blocks to avoid validation errors.
+        const cleanedText = block.text?.replace(/\n/g, "").trim();
+        if (cleanedText === "") {
+          if (contentBlocks.length > 0) {
+            const mergedTextContent = `${
+              contentBlocks[contentBlocks.length - 1].text
+            }${block.text}`;
+            contentBlocks[contentBlocks.length - 1].text = mergedTextContent;
+          }
+        } else {
+          contentBlocks.push({
+            text: block.text,
+          });
+        }
       } else if (block.type === "reasoning_content") {
-        return {
+        contentBlocks.push({
           reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
             block as MessageContentReasoningBlock
           ),
-        };
+        });
       } else if (isDefaultCachePoint(block)) {
-        return {
+        contentBlocks.push({
           cachePoint: {
             type: "default",
           },
-        };
+        });
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")

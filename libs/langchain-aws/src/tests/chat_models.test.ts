@@ -416,13 +416,19 @@ test("Streaming supports empty string chunks", async () => {
     {
       contentBlockIndex: 0,
       delta: {
-        text: "Hello ",
+        text: "Hello",
       },
     },
     {
       contentBlockIndex: 0,
       delta: {
         text: "",
+      },
+    },
+    {
+      contentBlockIndex: 0,
+      delta: {
+        text: " ",
       },
     },
     {
