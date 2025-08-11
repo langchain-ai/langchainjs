@@ -1,6 +1,19 @@
 import { ContentBlock } from "./content";
 import { $MergeDiscriminatedUnion, $MergeObjects } from "./utils";
 
+/** @internal */
+const __BRANDED_MESSAGE = Symbol.for("langchain.message");
+
+/**
+ * Branded type for identifying messages.
+ * TypeScript uses *structural* typing meaning anything with the same shape as type `T` is a `T`.
+ * For the message classes exported by langchain we want *nominal* typing (i.e. in certain cases
+ * we only want to accept `AIMessage` from langchain, not any other class with the same shape)
+ */
+interface $BrandedMessage {
+  [__BRANDED_MESSAGE]: never;
+}
+
 /**
  * Represents the possible types of messages in the system.
  * Includes standard message types ("ai", "human", "tool", "system")
@@ -566,8 +579,10 @@ export interface Message<
  */
 export class AIMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> implements Message<TStructure, "ai">
+> implements Message<TStructure, "ai">, $BrandedMessage
 {
+  /** @internal */
+  [__BRANDED_MESSAGE]: never;
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the AI that generated this message */
@@ -659,8 +674,10 @@ export class AIMessage<
  */
 export class HumanMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> implements Message<TStructure, "human">
+> implements Message<TStructure, "human">, $BrandedMessage
 {
+  /** @internal */
+  [__BRANDED_MESSAGE]: never;
   /** Unique identifier for the message */
   id: string;
   /** Optional name identifier for the message sender */
@@ -750,8 +767,10 @@ export class HumanMessage<
  */
 export class SystemMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> implements Message<TStructure, "system">
+> implements Message<TStructure, "system">, $BrandedMessage
 {
+  /** @internal */
+  [__BRANDED_MESSAGE]: never;
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the system that generated this message */
@@ -842,8 +861,10 @@ export class SystemMessage<
  */
 export class ToolMessage<
   TStructure extends $MessageStructure = $StandardMessageStructure
-> implements Message<TStructure, "tool">
+> implements Message<TStructure, "tool">, $BrandedMessage
 {
+  /** @internal */
+  [__BRANDED_MESSAGE]: never;
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the tool that generated this message */
