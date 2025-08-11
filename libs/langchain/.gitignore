@@ -358,10 +358,6 @@ smith.cjs
 smith.js
 smith.d.ts
 smith.d.cts
-runnables/remote.cjs
-runnables/remote.js
-runnables/remote.d.ts
-runnables/remote.d.cts
 indexes.cjs
 indexes.js
 indexes.d.ts

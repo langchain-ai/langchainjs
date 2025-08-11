@@ -86,7 +86,6 @@ export * as experimental__prompts__custom_format from "../experimental/prompts/c
 export * as experimental__prompts__handlebars from "../experimental/prompts/handlebars.js";
 export * as evaluation from "../evaluation/index.js";
 export * as smith from "../smith/index.js";
-export * as runnables__remote from "../runnables/remote.js";
 export * as indexes from "../indexes/index.js";
 import {
   ChatOpenAI,

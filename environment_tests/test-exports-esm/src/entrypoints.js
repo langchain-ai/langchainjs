@@ -62,5 +62,4 @@ import * as experimental_masking from "langchain/experimental/masking";
 import * as experimental_prompts_custom_format from "langchain/experimental/prompts/custom_format";
 import * as evaluation from "langchain/evaluation";
 import * as smith from "langchain/smith";
-import * as runnables_remote from "langchain/runnables/remote";
 import * as indexes from "langchain/indexes";
