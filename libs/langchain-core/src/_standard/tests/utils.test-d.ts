@@ -1,62 +1,194 @@
-// : $Merge
-// :: should merge two object types, with the second type's properties overwriting the first's
-// ::: should combine properties from both types when there is no overlap
-// ::: should overwrite properties of A with properties of B when there is overlap
-// ::: should handle cases where B has properties that A does not
-// ::: should handle cases where A has properties that B does not
-// :: should handle undefined
-// ::: should return A if B is undefined
-// ::: should return B if A is undefined
-// :: should handle `any` and `never`
-// ::: should result in `any` if either A or B is `any`
-// ::: should ignore `never` type, treating it as an empty object
-// :: should handle non-object types
-// ::: should correctly merge primitive types, with B taking precedence (e.g., $Merge<string, number> should be number)
-// ::: should handle intersections and unions
-// :: should handle complex nested objects
-// ::: should perform a shallow merge on nested objects, with B's nested object overwriting A's
+import { describe, it, expectTypeOf } from "vitest";
+import { type $MergeObjects, type $MergeDiscriminatedUnion } from "../utils";
 
-// : $MergeDiscriminatedUnion
-// :: should merge two discriminated unions with a default key 'type'
-// ::: should use B's member when discriminator value exists in both A and B
-// ::: should use A's member when discriminator value only exists in A
-// ::: should use B's member when discriminator value only exists in B
-// ::: should result in a union containing all unique discriminated members
-// :: should merge two discriminated unions with a custom key
-// ::: should correctly merge unions based on a specified custom key
-// :: should handle empty or `never` unions
-// ::: should return B if A is `never`
-// ::: should return A if B is `never`
-// :: should handle unions with no overlapping discriminators
-// ::: should produce a new union of all members from both A and B
-// :: should handle unions with fully overlapping discriminators
-// ::: should produce a union that is identical to B
+describe("$MergeObjects", () => {
+  it("should merge non-overlapping keys from T and U into the result type", async () => {
+    type T = { a: string };
+    type U = { b: number };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ a: string; b: number }>();
+  });
 
-// : $UnionToIntersection
-// :: should convert a union of object types to an intersection
-// ::: should convert a union of two object types
-// ::: should convert a union of multiple object types
-// :: should handle unions with primitive types
-// ::: should result in `never` for a union of unrelated primitive types (e.g., string | number)
-// :: should handle `any`, `unknown`, and `never`
-// ::: should resolve to `any` if `any` is in the union
-// ::: should resolve to `unknown` if `unknown` is in the union (and not `any`)
-// ::: should resolve to `never` if the union is `never`
-// :: should handle a single type in the union
-// ::: should return the type itself if it's not a union
+  it("should use U's value when both T and U define a non-object value for the same key", async () => {
+    type T = { v: string };
+    type U = { v: number };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ v: number }>();
+  });
 
-// : $PickUnion<TUnion, TMatcher>
-// :: should filter a union type based on a matcher type
-// ::: should pick members of the union that are assignable to the matcher type
-// ::: should return a single type if only one member matches
-// ::: should return an intersection of types if multiple members match
-// :: should handle non-matching cases
-// ::: should result in `never` if no members of the union are assignable to the matcher
-// :: should handle matcher type `any` and `unknown`
-// ::: should pick all members if the matcher is `any` or `unknown`, and return their intersection
-// :: should handle matcher type `never`
-// ::: should result in `never` if the matcher is `never` (unless `never` is in the union)
-// :: should work with primitive type unions
-// ::: should correctly filter a union of primitives (e.g., `string | number`, with matcher `string`)
-// :: should work with object unions
-// ::: should correctly filter a union of objects based on shape
+  it("should recursively merge nested records when both T[K] and U[K] extend Record<string, unknown>", async () => {
+    type T = { cfg: { a: string; b: number } };
+    type U = { cfg: { b: string; c: Date } };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{
+      cfg: { a: string; b: string; c: Date };
+    }>();
+  });
+
+  it("should prefer U[K] when T[K] extends Record<string, unknown> but U[K] does not", async () => {
+    type T = Record<string, unknown>;
+    type U = { x: boolean };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ x: boolean }>();
+  });
+
+  it("should prefer U[K] when U[K] extends Record<string, unknown> but T[K] does not", async () => {
+    type T = { x: string };
+    type U = Record<string, unknown>;
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<Record<string, unknown>>();
+  });
+
+  it("should include keys that exist only in T with their original types", async () => {
+    type T = { onlyT: number };
+    type U = {};
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ onlyT: number }>();
+  });
+
+  it("should include keys that exist only in U with their original types", async () => {
+    type T = {};
+    type U = { onlyU: number };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ onlyU: number }>();
+  });
+
+  it("should deep-merge multiple nesting levels (3+ levels) when both sides have nested records", async () => {
+    type T = { a: { b: { c: { x: number; y: number } } } };
+    type U = { a: { b: { c: { y: string; z: boolean } } } };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{
+      a: { b: { c: { x: number; y: string; z: boolean } } };
+    }>();
+  });
+
+  it("should treat arrays as non-mergeable (since not Record<string, unknown>) and prefer U's array type over T's", async () => {
+    type T = { arr: string[] };
+    type U = { arr: number[] };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R>().toEqualTypeOf<{ arr: number[] }>();
+  });
+
+  it("should be idempotent with empty U (M<T, {}> yields T)", async () => {
+    type T = { a: string; b: { c: number } };
+    type R = $MergeObjects<T, {}>;
+    expectTypeOf<R>().toEqualTypeOf<{ a: string; b: { c: number } }>();
+  });
+
+  it("should be idempotent with empty T (M<{}, U> yields U)", async () => {
+    type U = { a: string; b: { c: number } };
+    type R = $MergeObjects<{}, U>;
+    expectTypeOf<R>().toEqualTypeOf<U>();
+  });
+
+  it("should not be commutative (M<T, U> differs from M<U, T> when overlapping keys exist)", async () => {
+    type T = { x: { a: number } };
+    type U = { x: boolean };
+    type R1 = $MergeObjects<T, U>;
+    type R2 = $MergeObjects<U, T>;
+    expectTypeOf<R1>().toEqualTypeOf<{ x: boolean }>();
+    expectTypeOf<R2>().toEqualTypeOf<{ x: { a: number } }>();
+  });
+
+  it("should support symbol and number keys in mapped types without loss", async () => {
+    const SYM = Symbol("SYM");
+    type T = { [SYM]: { a: 1 }; 42: string };
+    type U = { [SYM]: boolean; 42: number };
+    type R = $MergeObjects<T, U>;
+    expectTypeOf<R[typeof SYM]>().toEqualTypeOf<boolean>();
+    expectTypeOf<R[42]>().toEqualTypeOf<number>();
+  });
+});
+
+describe("$MergeDiscriminatedUnion", () => {
+  it("should include all discriminator members present in A when not overridden by B", async () => {
+    type A = { type: "a"; a: 1 } | { type: "b"; b: 2 } | { type: 1; n: "one" };
+    type B = { type: "b"; b: "B"; extra: string } | { type: "c"; c: true };
+    type R = $MergeDiscriminatedUnion<A, B>;
+    // 'a' and numeric 1 only in A should be present
+    expectTypeOf<Extract<R, { type: "a" }>>().toEqualTypeOf<{
+      type: "a";
+      a: 1;
+    }>();
+    expectTypeOf<Extract<R, { type: 1 }>>().toEqualTypeOf<{
+      type: 1;
+      n: "one";
+    }>();
+    expectTypeOf<R>().toEqualTypeOf<
+      | { type: "a"; a: 1 }
+      | { type: "b"; b: "B"; extra: string }
+      | { type: "c"; c: true }
+      | { type: 1; n: "one" }
+    >();
+  });
+
+  it("should include all discriminator members present in B, overriding members from A with the same discriminator value", async () => {
+    type A = { type: "b"; b: 2 };
+    type B = { type: "b"; b: "B"; extra: string };
+    type R = $MergeDiscriminatedUnion<A, B>;
+    expectTypeOf<R>().toEqualTypeOf<{ type: "b"; b: "B"; extra: string }>();
+  });
+
+  it("should include members only present in B (new discriminator values) in the result", async () => {
+    type A = { type: "a"; a: 1 };
+    type B = { type: "c"; c: true };
+    type R = $MergeDiscriminatedUnion<A, B>;
+    expectTypeOf<R>().toEqualTypeOf<
+      { type: "a"; a: 1 } | { type: "c"; c: true }
+    >();
+  });
+
+  it("should include members only present in A (missing from B) in the result", async () => {
+    type A = { type: "a"; a: 1 };
+    type B = { type: "b"; b: 2 };
+    type R = $MergeDiscriminatedUnion<A, B>;
+    expectTypeOf<R>().toEqualTypeOf<
+      { type: "a"; a: 1 } | { type: "b"; b: 2 }
+    >();
+  });
+
+  it("should accept a custom discriminator key via the third type parameter (e.g., 'kind')", async () => {
+    type A = { kind: "x"; ax: number } | { kind: "y"; ay: string };
+    type B = { kind: "y"; by: boolean } | { kind: "z"; bz: Date };
+    type R = $MergeDiscriminatedUnion<A, B, "kind">;
+    type Expected =
+      | { kind: "x"; ax: number }
+      | { kind: "y"; ay: string; by: boolean }
+      | { kind: "z"; bz: Date };
+    expectTypeOf<R>().toEqualTypeOf<Expected>();
+  });
+
+  it("should support string, number, and symbol discriminator values", async () => {
+    const S1 = Symbol("S1");
+    const S2 = Symbol("S2");
+    type A =
+      | { type: "a"; a: 1 }
+      | { type: 1; n: "one" }
+      | { type: typeof S1; s1: true };
+    type B = { type: "b"; b: 2 } | { type: typeof S2; s2: false };
+    type R = $MergeDiscriminatedUnion<A, B>;
+    expectTypeOf<Extract<R, { type: "a" }>>().toEqualTypeOf<{
+      type: "a";
+      a: 1;
+    }>();
+    expectTypeOf<Extract<R, { type: 1 }>>().toEqualTypeOf<{
+      type: 1;
+      n: "one";
+    }>();
+    expectTypeOf<Extract<R, { type: typeof S1 }>>().toEqualTypeOf<{
+      type: typeof S1;
+      s1: true;
+    }>();
+    expectTypeOf<Extract<R, { type: typeof S2 }>>().toEqualTypeOf<{
+      type: typeof S2;
+      s2: false;
+    }>();
+    expectTypeOf<R>().toEqualTypeOf<
+      | { type: "a"; a: 1 }
+      | { type: "b"; b: 2 }
+      | { type: 1; n: "one" }
+      | { type: typeof S1; s1: true }
+      | { type: typeof S2; s2: false }
+    >();
+  });
+});
