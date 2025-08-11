@@ -87,7 +87,7 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
-    model: "llama-3.3-70b-versatile",
+    model: "moonshotai/kimi-k2-instruct",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
@@ -168,7 +168,7 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatGroq({
-    model: "llama-3.3-70b-versatile",
+    model: "moonshotai/kimi-k2-instruct",
     temperature: 0,
   }).bindTools(
     [
@@ -222,7 +222,7 @@ test("Few shotting with tool calls", async () => {
 
 test("Groq can stream tool calls", async () => {
   const model = new ChatGroq({
-    model: "llama-3.1-70b-versatile",
+    model: "llama-3.3-70b-versatile",
     temperature: 0,
   });
 
@@ -264,7 +264,6 @@ test("response metadata includes groq metadata", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await model.invoke([message]);
-  // console.dir(res, { depth: Infinity });
   expect(res.response_metadata.x_groq?.id).toBeDefined();
 });
 

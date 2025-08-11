@@ -9187,7 +9187,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    groq-sdk: ^0.19.0
+    groq-sdk: ^0.29.0
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -25215,9 +25215,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"groq-sdk@npm:^0.19.0":
-  version: 0.19.0
-  resolution: "groq-sdk@npm:0.19.0"
+"groq-sdk@npm:^0.29.0":
+  version: 0.29.0
+  resolution: "groq-sdk@npm:0.29.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -25226,7 +25226,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: 34ea4c3c0d55d2730961bc12aa655af596c3df80347a3a9d46fb8efd5eeb64f7c5905ef7b1e8ce5929918596a43239f86c27a1f6e16809ab27470f1732ef13d2
+  checksum: dfe6811db1411ed80c9a9889a4c87315837925b0b5d5ef1e081c7495df5a88a37dd46b7a52990481fedbcc1745f7b522fb9ed23b7a052c5265da7a32c45d648a
   languageName: node
   linkType: hard
 
