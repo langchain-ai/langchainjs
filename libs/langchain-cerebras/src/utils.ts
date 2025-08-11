@@ -54,7 +54,7 @@ function convertAIMessageToCerebras(
     return [
       {
         role: "assistant",
-        content: messages.content,
+        content: messages.content || null,
       },
     ];
   }
