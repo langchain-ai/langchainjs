@@ -8,7 +8,7 @@ const __BRANDED_MESSAGE = Symbol.for("langchain.message");
  * Branded type for identifying messages.
  * TypeScript uses *structural* typing meaning anything with the same shape as type `T` is a `T`.
  * For the message classes exported by langchain we want *nominal* typing (i.e. in certain cases
- * we only want to accept `AIMessage` from langchain, not any other class with the same shape)
+ * we only want to accept the literal `AIMessage` from langchain, not any other objects with the same shape)
  */
 interface $BrandedMessage {
   [__BRANDED_MESSAGE]: never;
@@ -376,15 +376,15 @@ export type $InferMessageContent<
 > = $NormalizedMessageStructure<TStructure> extends infer S
   ? S extends $MessageStructure
     ? S["content"] extends infer C | undefined
-  ? C extends Record<PropertyKey, unknown>
-    ? TRole extends keyof C
-      ? TStructure["tools"] extends undefined
-        ? C[TRole]
-        : $MergeDiscriminatedUnion<
-            NonNullable<C[TRole]> & Record<"type", PropertyKey>,
-            $MessageToolCallBlock<TStructure>,
-            "type"
-          >
+      ? C extends Record<PropertyKey, unknown>
+        ? TRole extends keyof C
+          ? TStructure["tools"] extends undefined
+            ? C[TRole]
+            : $MergeDiscriminatedUnion<
+                NonNullable<C[TRole]> & Record<"type", PropertyKey>,
+                $MessageToolCallBlock<TStructure>,
+                "type"
+              >
           : never
         : never
       : never
@@ -435,10 +435,10 @@ export type $InferMessageProperties<
 > = $NormalizedMessageStructure<TStructure> extends infer S
   ? S extends $MessageStructure
     ? S["properties"] extends infer P | undefined
-  ? P extends Record<PropertyKey, unknown>
-    ? TRole extends keyof P
-      ? Omit<P[TRole], "content" | "type">
-      : Record<string, unknown>
+      ? P extends Record<PropertyKey, unknown>
+        ? TRole extends keyof P
+          ? Omit<P[TRole], "content" | "type">
+          : Record<string, unknown>
         : never
       : never
     : never
@@ -543,15 +543,42 @@ export interface Message<
   TStructure extends $MessageStructure = $StandardMessageStructure,
   TRole extends $MessageType = $MessageType
 > {
+  /** The message type/role, determines the content structure and available properties */
+  readonly type: TRole;
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the entity that created this message */
   name?: string;
-  /** The message type/role, determines the content structure and available properties */
-  readonly type: TRole;
   /** Array of content blocks that make up the message content, typed based on the structure and role */
   content: Array<$InferMessageContent<TStructure, TRole>>;
 }
+
+/** Parameters for creating an AIMessage */
+type AIMessageParams<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> = {
+  /** Optional unique identifier for the message */
+  id?: string;
+  /** Optional name/identifier for the AI that generated this message */
+  name?: string;
+  /** Optional metadata about the AI model response (model provider, model name, etc.) */
+  responseMetadata?: $InferMessageProperty<
+    TStructure,
+    "ai",
+    "responseMetadata"
+  >;
+  /** Optional usage statistics for the AI response (token counts, etc.) */
+  usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
+} & (
+  | {
+      /** Array of content blocks that make up the message */
+      content: Array<$InferMessageContent<TStructure, "ai">>;
+    }
+  | {
+      /** Text content for the message */
+      content: string;
+    }
+);
 
 /**
  * Represents a message from an AI assistant or model.
@@ -567,6 +594,9 @@ export interface Message<
  * // Create an AI message with simple text
  * const aiMessage = new AIMessage("Hello, how can I help you?");
  *
+ * // Access the combined text content
+ * console.log(aiMessage.text); // "Hello, how can I help you?"
+ *
  * // Create an AI message with structured content
  * const aiMessageWithContent = new AIMessage([
  *   { type: "text", text: "Here's the answer: " },
@@ -574,7 +604,7 @@ export interface Message<
  * ]);
  *
  * // Access the combined text content
- * console.log(aiMessage.text); // "Hello, how can I help you?"
+ * console.log(aiMessageWithContent.text); // "Here's the answer: 42"
  * ```
  */
 export class AIMessage<
@@ -583,18 +613,22 @@ export class AIMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+  /** The message type, always "ai" for AI messages */
+  readonly type: "ai" = "ai";
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the AI that generated this message */
   name?: string;
-  /** The message type, always "ai" for AI messages */
-  readonly type: "ai" = "ai";
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "ai">>;
   /** Metadata about the AI model response (model provider, model name, etc.) */
-  responseMetadata: $InferMessageProperty<TStructure, "ai", "responseMetadata">;
+  responseMetadata?: $InferMessageProperty<
+    TStructure,
+    "ai",
+    "responseMetadata"
+  >;
   /** Usage statistics for the AI response (token counts, etc.) */
-  usageMetadata: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
+  usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
 
   /**
    * Creates an AI message with simple text content.
@@ -606,18 +640,39 @@ export class AIMessage<
    * @param content - Array of content blocks for the message
    */
   constructor(content: Array<$InferMessageContent<TStructure, "ai">>);
+  /**
+   * Creates an AI message from a params object
+   * @param params - The parameters for the message
+   */
+  constructor(params: AIMessageParams<TStructure>);
   constructor(
-    textOrContent: string | Array<$InferMessageContent<TStructure, "ai">>
+    arg:
+      | string
+      | Array<$InferMessageContent<TStructure, "ai">>
+      | AIMessageParams<TStructure>
   ) {
-    if (typeof textOrContent === "string") {
-      this.content = [
-        { type: "text", text: textOrContent } as $InferMessageContent<
-          TStructure,
-          "ai"
-        >,
-      ];
+    const textContent = (text: string) => [
+      { type: "text", text } as $InferMessageContent<TStructure, "ai">,
+    ];
+    if (typeof arg === "string") {
+      // new AIMessage("Hello")
+      this.content = textContent(arg);
+    } else if (Array.isArray(arg)) {
+      // new AIMessage([{ type: "text", text: "Hello" }])
+      this.content = arg;
     } else {
-      this.content = textOrContent;
+      // new AIMessage({ ... })
+      this.id = arg.id ?? "";
+      this.name = arg.name;
+      this.responseMetadata = arg.responseMetadata;
+      this.usageMetadata = arg.usageMetadata;
+      if (typeof arg.content === "string") {
+        // new AIMessage({ content: "Hello" })
+        this.content = textContent(arg.content);
+      } else {
+        // new AIMessage({ content: [{ type: "text", text: "Hello" }] })
+        this.content = arg.content;
+      }
     }
   }
 
@@ -636,7 +691,7 @@ export class AIMessage<
    * console.log(message.text); // "Hello world!"
    * ```
    */
-  get text() {
+  get text(): string {
     const content = this.content as Array<
       $InferMessageContent<$StandardMessageStructure, "ai">
     >;
@@ -645,7 +700,35 @@ export class AIMessage<
       .map((block) => block.text)
       .join("");
   }
+
+  get toolCalls(): Array<$MessageToolCallBlock<TStructure>> {
+    const content = this.content as any[];
+    return content
+      .filter((block) => block.type === "tool_call")
+      .map((block) => block);
+  }
 }
+
+/** Parameters for creating a HumanMessage */
+type HumanMessageParams<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> = {
+  /** Optional unique identifier for the message */
+  id?: string;
+  /** Optional name identifier for the message sender */
+  name?: string;
+  /** Optional metadata associated with the human message, as defined by the message structure */
+  metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
+} & (
+  | {
+      /** Array of structured content blocks that make up the message content */
+      content: Array<$InferMessageContent<TStructure, "human">>;
+    }
+  | {
+      /** Simple string content for the message */
+      content: string;
+    }
+);
 
 /**
  * Represents a message from a human user in a conversation.
@@ -678,16 +761,16 @@ export class HumanMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+  /** The message type, always "human" for HumanMessage instances */
+  readonly type: "human" = "human";
   /** Unique identifier for the message */
   id: string;
   /** Optional name identifier for the message sender */
   name?: string;
-  /** The message type, always "human" for HumanMessage instances */
-  readonly type: "human" = "human";
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "human">>;
   /** Metadata associated with the human message, as defined by the message structure */
-  metadata: $InferMessageProperty<TStructure, "human", "metadata">;
+  metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
 
   /**
    * Creates a human message with simple text content.
@@ -699,18 +782,38 @@ export class HumanMessage<
    * @param content - Array of content blocks for the message
    */
   constructor(content: Array<$InferMessageContent<TStructure, "human">>);
+  /**
+   * Creates a human message from a params object
+   * @param params - The parameters for the message
+   */
+  constructor(params: HumanMessageParams<TStructure>);
   constructor(
-    textOrContent: string | Array<$InferMessageContent<TStructure, "human">>
+    arg:
+      | string
+      | Array<$InferMessageContent<TStructure, "human">>
+      | HumanMessageParams<TStructure>
   ) {
-    if (typeof textOrContent === "string") {
-      this.content = [
-        { type: "text", text: textOrContent } as $InferMessageContent<
-          TStructure,
-          "human"
-        >,
-      ];
+    const textContent = (text: string) => [
+      { type: "text", text } as $InferMessageContent<TStructure, "human">,
+    ];
+    if (typeof arg === "string") {
+      // new HumanMessage("Hello")
+      this.content = textContent(arg);
+    } else if (Array.isArray(arg)) {
+      // new HumanMessage([{ type: "text", text: "Hello" }])
+      this.content = arg;
     } else {
-      this.content = textOrContent;
+      // new HumanMessage({ ... })
+      this.id = arg.id ?? "";
+      this.name = arg.name;
+      this.metadata = arg.metadata;
+      if (typeof arg.content === "string") {
+        // new HumanMessage({ content: "Hello" })
+        this.content = textContent(arg.content);
+      } else {
+        // new HumanMessage({ content: [{ type: "text", text: "Hello" }] })
+        this.content = arg.content;
+      }
     }
   }
 
@@ -729,7 +832,7 @@ export class HumanMessage<
    * console.log(message.text); // "Hello world!"
    * ```
    */
-  get text() {
+  get text(): string {
     const content = this.content as Array<
       $InferMessageContent<$StandardMessageStructure, "human">
     >;
@@ -739,6 +842,27 @@ export class HumanMessage<
       .join("");
   }
 }
+
+/** Parameters for creating a SystemMessage */
+type SystemMessageParams<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> = {
+  /** Optional unique identifier for the message */
+  id?: string;
+  /** Optional name/identifier for the system that generated this message */
+  name?: string;
+  /** Optional metadata associated with the system message, as defined by the message structure */
+  metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
+} & (
+  | {
+      /** Array of content blocks that make up the message */
+      content: Array<$InferMessageContent<TStructure, "system">>;
+    }
+  | {
+      /** Text content for the message */
+      content: string;
+    }
+);
 
 /**
  * Represents a system message that provides context, instructions, or configuration to the AI.
@@ -771,16 +895,16 @@ export class SystemMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+  /** The message type, always "system" for system messages */
+  readonly type: "system" = "system";
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the system that generated this message */
   name?: string;
-  /** The message type, always "system" for system messages */
-  readonly type: "system" = "system";
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "system">>;
   /** Metadata associated with the system message */
-  metadata: $InferMessageProperty<TStructure, "system", "metadata">;
+  metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
 
   /**
    * Creates a system message with simple text content.
@@ -792,18 +916,38 @@ export class SystemMessage<
    * @param content - Array of content blocks for the message
    */
   constructor(content: Array<$InferMessageContent<TStructure, "system">>);
+  /**
+   * Creates a system message from a params object
+   * @param params - The parameters for the message
+   */
+  constructor(params: SystemMessageParams<TStructure>);
   constructor(
-    textOrContent: string | Array<$InferMessageContent<TStructure, "system">>
+    arg:
+      | string
+      | Array<$InferMessageContent<TStructure, "system">>
+      | SystemMessageParams<TStructure>
   ) {
-    if (typeof textOrContent === "string") {
-      this.content = [
-        { type: "text", text: textOrContent } as $InferMessageContent<
-          TStructure,
-          "system"
-        >,
-      ];
+    const textContent = (text: string) => [
+      { type: "text", text } as $InferMessageContent<TStructure, "system">,
+    ];
+    if (typeof arg === "string") {
+      // new SystemMessage("Hello")
+      this.content = textContent(arg);
+    } else if (Array.isArray(arg)) {
+      // new SystemMessage([{ type: "text", text: "Hello" }])
+      this.content = arg;
     } else {
-      this.content = textOrContent;
+      // new SystemMessage({ ... })
+      this.id = arg.id ?? "";
+      this.name = arg.name;
+      this.metadata = arg.metadata;
+      if (typeof arg.content === "string") {
+        // new SystemMessage({ content: "Hello" })
+        this.content = textContent(arg.content);
+      } else {
+        // new SystemMessage({ content: [{ type: "text", text: "Hello" }] })
+        this.content = arg.content;
+      }
     }
   }
 
@@ -822,7 +966,7 @@ export class SystemMessage<
    * console.log(message.text); // "You are a helpful assistant."
    * ```
    */
-  get text() {
+  get text(): string {
     const content = this.content as Array<
       $InferMessageContent<$StandardMessageStructure, "system">
     >;
@@ -832,6 +976,18 @@ export class SystemMessage<
       .join("");
   }
 }
+
+/** Parameters for creating a ToolMessage */
+type ToolMessageParams<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> = {
+  id?: string;
+  name?: string;
+  toolCallId: string;
+  status: "success" | "error";
+  content: Array<$InferMessageContent<TStructure, "tool">>;
+  metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
+};
 
 /**
  * Represents a message from a tool execution or tool call result.
@@ -865,33 +1021,50 @@ export class ToolMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+  /** The message type, always "tool" for tool messages */
+  readonly type: "tool" = "tool";
   /** Unique identifier for this message */
   id: string;
   /** Optional name/identifier for the tool that generated this message */
   name?: string;
-  /** The message type, always "tool" for tool messages */
-  readonly type: "tool" = "tool";
+  /** The ID of the tool call that this message is associated with */
+  toolCallId: string;
+  /** The status of the tool call */
+  status: "success" | "error";
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "tool">>;
   /** Metadata associated with the tool message, as defined by the message structure */
-  metadata: $InferMessageProperty<TStructure, "tool", "metadata">;
+  metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
+
+  constructor(params: ToolMessageParams<TStructure>) {
+    this.id = params.id ?? "";
+    this.name = params.name;
+    this.toolCallId = params.toolCallId;
+    this.status = params.status;
+    this.content = params.content;
+    this.metadata = params.metadata;
+  }
 
   /**
    * Gets the combined text content from all text-type content blocks.
    * Filters out non-text content blocks and concatenates the text from remaining blocks.
    *
-   * @returns The concatenated text content of the message
+   * @returns The concatenated text content of the message representing the tool result
    *
    * @example
    * ```ts
-   * const message = new ToolMessage([
-   *   { type: "text", text: "Result: " },
-   *   { type: "text", text: "Success" }
-   * ]);
-   * console.log(message.text); // "Result: Success"
+   * const toolMessage = new ToolMessage({
+   *   toolCallId: "call_123",
+   *   status: "success",
+   *   content: [
+   *     { type: "text", text: "Calculation result: " },
+   *     { type: "text", text: "42" }
+   *   ]
+   * });
+   * console.log(toolMessage.result); // "Calculation result: 42"
    * ```
    */
-  get text() {
+  get result(): string {
     const content = this.content as Array<
       $InferMessageContent<$StandardMessageStructure, "tool">
     >;

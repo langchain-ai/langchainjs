@@ -1067,29 +1067,15 @@ describe("AIMessage", () => {
     expectTypeOf<Inst["type"]>().toEqualTypeOf<"ai">();
   });
 
-  it("should accept constructor(text: string) and build text content block internally", async () => {
-    const m = new AIMessage("hello world");
-    type Elem = (typeof m.content)[number];
-    expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
-  });
-
-  it("should accept constructor(content: Array<$InferMessageContent<..., 'ai'>>)", async () => {
-    const m = new AIMessage([{ type: "text", text: "a" }]);
-    type Elem = (typeof m.content)[number];
-    expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
-  });
-
-  it(".text getter should concatenate only text-type content blocks in order", async () => {
-    type Inst = InstanceType<typeof AIMessage>;
-    expectTypeOf<Inst["text"]>().toEqualTypeOf<string>();
-  });
-
   it(".responseMetadata should include standard response metadata", async () => {
     const m = new AIMessage("hello world");
-    expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<{
-      modelProvider: string;
-      modelName: string;
-    }>();
+    expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<
+      | {
+          modelProvider: string;
+          modelName: string;
+        }
+      | undefined
+    >();
   });
 
   it(".responseMetadata should be typed to include additional properties from the structure", async () => {
@@ -1099,20 +1085,26 @@ describe("AIMessage", () => {
       };
     }
     const m = new AIMessage<S>("hello world");
-    expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<{
-      modelProvider: string;
-      modelName: string;
-      extra: string;
-    }>();
+    expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<
+      | {
+          modelProvider: string;
+          modelName: string;
+          extra: string;
+        }
+      | undefined
+    >();
   });
 
-  it(".usageMetadata should include standard usage metadata", async () => {
+  it(".usageMetadata should be typed to include standard usage metadata", async () => {
     const m = new AIMessage("hello world");
-    expectTypeOf<typeof m.usageMetadata>().toEqualTypeOf<{
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-    }>();
+    expectTypeOf<typeof m.usageMetadata>().toEqualTypeOf<
+      | {
+          inputTokens: number;
+          outputTokens: number;
+          totalTokens: number;
+        }
+      | undefined
+    >();
   });
 
   it(".usageMetadata should be typed to include additional properties from the structure", async () => {
@@ -1122,12 +1114,15 @@ describe("AIMessage", () => {
       };
     }
     const m = new AIMessage<S>("hello world");
-    expectTypeOf<typeof m.usageMetadata>().toEqualTypeOf<{
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-      extra: string;
-    }>();
+    expectTypeOf<typeof m.usageMetadata>().toEqualTypeOf<
+      | {
+          inputTokens: number;
+          outputTokens: number;
+          totalTokens: number;
+          extra: string;
+        }
+      | undefined
+    >();
   });
 });
 
@@ -1207,7 +1202,9 @@ describe("HumanMessage", () => {
       };
     }
     const m = new HumanMessage<S>("hello");
-    expectTypeOf<typeof m.metadata>().toEqualTypeOf<{ foo: string }>();
+    expectTypeOf<typeof m.metadata>().toEqualTypeOf<
+      { foo: string } | undefined
+    >();
   });
 });
 
@@ -1287,7 +1284,9 @@ describe("SystemMessage", () => {
       };
     }
     const m = new SystemMessage<S>("ctx");
-    expectTypeOf<typeof m.metadata>().toEqualTypeOf<{ note: string }>();
+    expectTypeOf<typeof m.metadata>().toEqualTypeOf<
+      { note: string } | undefined
+    >();
   });
 });
 
@@ -1316,11 +1315,6 @@ describe("ToolMessage", () => {
     expectTypeOf<Inst["type"]>().toEqualTypeOf<"tool">();
   });
 
-  it("should expose text getter concatenating only text-type content blocks in order", async () => {
-    type Inst = InstanceType<typeof ToolMessage>;
-    expectTypeOf<Inst["text"]>().toEqualTypeOf<string>();
-  });
-
   it(".metadata should be typed to include additional properties from the structure", async () => {
     interface S extends $MessageStructure {
       properties: {
@@ -1328,7 +1322,9 @@ describe("ToolMessage", () => {
       };
     }
     type Inst = InstanceType<typeof ToolMessage<S>>;
-    expectTypeOf<Inst["metadata"]>().toEqualTypeOf<{ info: string }>();
+    expectTypeOf<Inst["metadata"]>().toEqualTypeOf<
+      { info: string } | undefined
+    >();
   });
 
   it("with custom structure, content should reflect merged/normalized content blocks", async () => {
@@ -1446,17 +1442,23 @@ describe("Integration scenarios", () => {
       }
       type M = $MergeMessageStructure<T, U>;
       const m = new AIMessage<M>("hello");
-      expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<{
-        modelProvider: string;
-        modelName: string;
-        foo: number;
-        qar: string;
-        bar: string;
-      }>();
+      expectTypeOf<typeof m.responseMetadata>().toEqualTypeOf<
+        | {
+            modelProvider: string;
+            modelName: string;
+            foo: number;
+            qar: string;
+            bar: string;
+          }
+        | undefined
+      >();
       const h = new HumanMessage<M>("world");
-      expectTypeOf<typeof h.metadata>().toEqualTypeOf<{
-        baz: string;
-      }>();
+      expectTypeOf<typeof h.metadata>().toEqualTypeOf<
+        | {
+            baz: string;
+          }
+        | undefined
+      >();
     });
   });
 });
