@@ -241,7 +241,7 @@ export type $MergeMessageStructure<
 > = {
   tools: $MergeObjects<T["tools"], U["tools"]>;
   content: {
-    [K in keyof (T["content"] | U["content"])]: K extends keyof T["content"] &
+    [K in keyof (T["content"] & U["content"])]: K extends keyof T["content"] &
       keyof U["content"]
       ? $MergeDiscriminatedUnion<
           NonNullable<T["content"][K]> & Record<"type", PropertyKey>,
@@ -267,7 +267,7 @@ const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
  *
  * This is also the message structure that's used when a message structure is not provided.
  */
-export type $StandardMessageStructure = $MessageStructure & {
+export type $StandardMessageStructure = {
   /** @internal Discriminator to give TS a hint when evaluating if a type is a standard message structure */
   [STANDARD_MESSAGE_STRUCTURE_TYPE]: never;
   content: {
@@ -360,7 +360,9 @@ export type $NormalizedMessageStructure<T extends $MessageStructure> =
 export type $InferMessageContent<
   TStructure extends $MessageStructure,
   TRole extends $MessageType
-> = TStructure["content"] extends infer C | undefined
+> = $NormalizedMessageStructure<TStructure> extends infer S
+  ? S extends $MessageStructure
+    ? S["content"] extends infer C | undefined
   ? C extends Record<PropertyKey, unknown>
     ? TRole extends keyof C
       ? TStructure["tools"] extends undefined
@@ -370,6 +372,8 @@ export type $InferMessageContent<
             $MessageToolCallBlock<TStructure>,
             "type"
           >
+          : never
+        : never
       : never
     : never
   : never;
@@ -415,11 +419,15 @@ export type $InferMessageContent<
 export type $InferMessageProperties<
   TStructure extends $MessageStructure,
   TRole extends $MessageType
-> = TStructure["properties"] extends infer P | undefined
+> = $NormalizedMessageStructure<TStructure> extends infer S
+  ? S extends $MessageStructure
+    ? S["properties"] extends infer P | undefined
   ? P extends Record<PropertyKey, unknown>
     ? TRole extends keyof P
       ? Omit<P[TRole], "content" | "type">
       : Record<string, unknown>
+        : never
+      : never
     : never
   : never;
 
@@ -506,7 +514,7 @@ export interface Message<
  * ```
  */
 export class AIMessage<
-  TStructure extends $StandardMessageStructure = $StandardMessageStructure
+  TStructure extends $MessageStructure = $StandardMessageStructure
 > implements Message<TStructure, "ai">
 {
   /** Unique identifier for this message */
