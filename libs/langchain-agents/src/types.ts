@@ -90,7 +90,8 @@ export type CreateReactAgentParams<
   A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  AsStateGraph extends boolean = false
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
   llm:
@@ -193,4 +194,12 @@ export type CreateReactAgentParams<
     ToAnnotationRoot<A>["Update"],
     LangGraphRunnableConfig
   >;
+
+  /**
+   * Whether to return the state graph instance instead of the agent instance.
+   * This is useful for debugging and for advanced use cases.
+   *
+   * @default false
+   */
+  asStateGraph?: AsStateGraph;
 };

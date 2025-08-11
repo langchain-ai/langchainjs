@@ -376,6 +376,46 @@ type WithStateGraphNodes<K extends string, Graph> = Graph extends StateGraph<
   : never;
 
 /**
+ * Internal type for the ReactAgent class.
+ *
+ * The `createReactAgent` function returns an instance of a state graph. We expose to the user
+ * only the `invoke` and `stream` methods, hiding the internal state graph.
+ *
+ * @internal
+ */
+export type InternalReactAgent<
+  A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >
+> = CompiledStateGraph<
+  ToAnnotationRoot<A>["State"],
+  ToAnnotationRoot<A>["Update"],
+  any,
+  typeof MessagesAnnotation.spec & ToAnnotationRoot<A>["spec"],
+  ReturnType<
+    typeof createReactAgentAnnotation<StructuredResponseFormat>
+  >["spec"] &
+    ToAnnotationRoot<A>["spec"]
+>;
+
+/**
+ * If `asStateGraph` is true, we return the internal state graph type.
+ * Otherwise, we return the simplified ReactAgent type.
+ */
+type CreateReactAgentReturnType<
+  A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
+  AsStateGraph extends boolean = false
+> = AsStateGraph extends true
+  ? InternalReactAgent<A, StructuredResponseFormat>
+  : ReactAgent<A, StructuredResponseFormat>;
+
+/**
  * Creates a StateGraph agent that relies on a chat model utilizing tool calling.
  *
  * @example
@@ -419,22 +459,15 @@ type WithStateGraphNodes<K extends string, Graph> = Graph extends StateGraph<
  */
 export function createReactAgent<
   A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
+  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  AsStateGraph extends boolean = false
 >(
-  params: CreateReactAgentParams<A, StructuredResponseFormat, C>
-): CompiledStateGraph<
-  ToAnnotationRoot<A>["State"],
-  ToAnnotationRoot<A>["Update"],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any,
-  typeof MessagesAnnotation.spec & ToAnnotationRoot<A>["spec"],
-  ReturnType<
-    typeof createReactAgentAnnotation<StructuredResponseFormat>
-  >["spec"] &
-    ToAnnotationRoot<A>["spec"]
-> {
+  params: CreateReactAgentParams<A, StructuredResponseFormat, C, AsStateGraph>
+): CreateReactAgentReturnType<A, StructuredResponseFormat, AsStateGraph> {
   const {
     llm,
     tools,
@@ -723,6 +756,11 @@ export function createReactAgent<
     name,
   });
 }
+
+export type ReactAgent<
+  A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>
+> = Pick<InternalReactAgent<A, StructuredResponseFormat>, "invoke" | "stream">;
 
 export * from "./types.js";
 export * from "./resume.js";
