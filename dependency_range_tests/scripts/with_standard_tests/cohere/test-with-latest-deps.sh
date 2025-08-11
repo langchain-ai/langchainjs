@@ -28,7 +28,7 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install --prod
+pnpm install --prod --no-frozen-lockfile
 
 # Navigate into `@langchain/cohere` to build and run tests
 # We need to run inside the cohere directory so turbo repo does

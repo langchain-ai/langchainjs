@@ -29,7 +29,7 @@ node "update_resolutions_latest.js"
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
 cat ./package.json
-pnpm install
+pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/google-vertexai` to build and run tests
 # We need to run inside the google-vertexai directory so turbo repo does

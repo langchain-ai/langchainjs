@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 monorepo_dir="/app/monorepo"
 monorepo_community_dir="/app/monorepo/libs/langchain-community"
 updater_script_dir="/app/updater_script"
@@ -25,7 +27,7 @@ node "update_resolutions_lowest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install
+pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/package` to build and run tests
 # We need to run inside the package directory so turbo repo does

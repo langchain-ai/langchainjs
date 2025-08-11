@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 monorepo_dir="/app/monorepo"
 monorepo_cohere_dir="/app/monorepo/libs/providers/langchain-cohere"
 updater_script_dir="/app/updater_script"
@@ -26,7 +28,7 @@ node "update_resolutions_lowest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-pnpm install
+pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/cohere` to build and run tests
 # We need to run inside the cohere directory so turbo repo does
