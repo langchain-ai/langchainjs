@@ -9,7 +9,7 @@ import {
 
 import { BaseMessage } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
-import { OciGenAiBaseChat } from "./index.js";
+import { OciGenAiBaseChat } from "./chat_models.js";
 
 interface HistoryMessageInfo {
   chatHistory: CohereMessage[];
@@ -133,7 +133,7 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
       typeof chunkData === "object" &&
       typeof (<CohereStreamedResponseChunkData>chunkData).text === "string" &&
       (<CohereStreamedResponseChunkData>chunkData).apiFormat ===
-      CohereChatRequest.apiFormat
+        CohereChatRequest.apiFormat
     );
   }
 
@@ -145,7 +145,7 @@ export class OciGenAiCohereChat extends OciGenAiBaseChat<CohereCallOptions> {
       ls_model_type: "chat",
       ls_temperature: options.requestParams?.temperature || 0,
       ls_max_tokens: options.requestParams?.maxTokens || 0,
-      ls_stop: options.stop || []
+      ls_stop: options.stop || [],
     };
   }
 }

@@ -3,6 +3,7 @@
 
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
+import { AIMessageChunk } from "@langchain/core/messages";
 import { OciGenAiCohereChat } from "../cohere_chat.js";
 import { OciGenAiGenericChat } from "../generic_chat.js";
 
@@ -36,9 +37,35 @@ test("OCI GenAI chat invoke", async () => {
       for (const params of creationParams) {
         const chatClass = new ChatClassType(params);
         const response = await chatClass.invoke(
-          "generate a single, very short mission statement for a pet insurance company"
+          "generate a marketing slogan for a pet insurance company"
         );
+
         expect(response.content.length).toBeGreaterThan(0);
+      }
+    },
+    creationParameters
+  );
+});
+
+test("OCI GenAI chat stream", async () => {
+  await testEachChatModelType(
+    async (ChatClassType: OciGenAiChatConstructor, creationParams: any[]) => {
+      for (const params of creationParams) {
+        const chatClass = new ChatClassType(params);
+        const response = await chatClass.stream(
+          "generate a story about person and their dog"
+        );
+
+        let numChunks: number = 0;
+
+        for await (const chunk of response) {
+          expect(chunk).toBeInstanceOf(AIMessageChunk);
+          expect(chunk.content).toBeDefined();
+          numChunks += 1;
+        }
+
+        expect(numChunks).toBeGreaterThan(0);
+        console.log(`Chunks generated: ${numChunks}`);
       }
     },
     creationParameters

@@ -13,7 +13,7 @@ import {
   ChatContent,
 } from "oci-generativeaiinference/lib/model";
 
-import { OciGenAiBaseChat } from "./index.js";
+import { OciGenAiBaseChat } from "./chat_models.js";
 
 export type GenericCallOptions = Omit<
   GenericChatRequest,

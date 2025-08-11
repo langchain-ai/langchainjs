@@ -96,7 +96,7 @@ export abstract class OciGenAiBaseChat<RequestType> extends SimpleChatModel<
       stream
     );
     await this._setupClient();
-    return <ResponseType>await this._chat(request);
+    return <ResponseType> await this._chat(request);
   }
 
   async _setupClient() {

@@ -20,7 +20,11 @@ import {
 export class OciGenAiSdkClient {
   static readonly _DEFAULT_REGION_ID = Region.US_CHICAGO_1.regionId;
 
-  private constructor(private _client: GenerativeAiInferenceClient) { }
+  private _client: GenerativeAiInferenceClient;
+
+  private constructor(client: GenerativeAiInferenceClient) {
+    this._client = client;
+  }
 
   get client(): GenerativeAiInferenceClient {
     return this._client;
@@ -92,7 +96,7 @@ export class OciGenAiSdkClient {
         return await this._getInstancePrincipalAuthProvider();
 
       case OciGenAiNewClientAuthType.Session:
-        return this._getSessionAuthProvider(params)
+        return this._getSessionAuthProvider(params);
 
       default:
         throw new Error("Invalid authentication type");
