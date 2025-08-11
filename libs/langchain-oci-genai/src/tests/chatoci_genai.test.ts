@@ -34,10 +34,7 @@ import { OciGenAiCohereChat } from "../cohere_chat.js";
 import { OciGenAiGenericChat } from "../generic_chat.js";
 import { JsonServerEventsIterator } from "../server_events_iterator.js";
 import { OciGenAiSdkClient } from "../oci_genai_sdk_client.js";
-import {
-  OciGenAiClientParams,
-  OciGenAiNewClientAuthType,
-} from "../types.js";
+import { OciGenAiClientParams, OciGenAiNewClientAuthType } from "../types.js";
 
 type OciGenAiChatConstructor = new (args: any) =>
   | OciGenAiCohereChat
@@ -49,37 +46,42 @@ type OciGenAiChatConstructor = new (args: any) =>
 
 const invalidServerEvents: string[][] = [
   [{} as string],
-  ["invalid event data", 'data: {"test":5}'],
-  ['{"prop":"val"}'],
+  ["invalid event data", 'data: {"test":5}\n\n'],
+  ['{"prop":"val"}\n\n'],
   [""],
   [" "],
-  [' ata: {"final": true}'],
-  ['data  {"prop":"val"}'],
-  ['data: {"prop":"val"'],
-  ["data:"],
-  ["data: "],
-  ["data: 5"],
-  ["data: fail"],
-  ['data: "testing 1, 2, 3"'],
-  ["data: null"],
-  ["data: -345.345345"],
-  ["\u{1F600}e\u0301"],
+  [' ata: {"final": true}\n\n'],
+  ['data  {"prop":"val"}\n\n'],
+  ['data: {"prop":"val"\n\n'],
+  ["data:\n\n"],
+  ["data: \n\n"],
+  ["data: 5\n\n"],
+  ["data: fail\n\n"],
+  ['data: "testing 1, 2, 3"\n'],
+  ["data: null\n\n"],
+  ["data: -345.345345\n\n"],
+  ["\u{1F600}e\u0301\n\n"],
 ];
 
 const invalidEventDataErrors = new RegExp(
   "Event text is empty, too short or malformed|" +
-  "Event data is empty or too short to be valid|" +
-  "Could not parse event data as JSON|" +
-  "Event raw data is empty or too short to be valid|" +
-  "Event data could not be parsed into an object"
+    "Event data is empty or too short to be valid|" +
+    "Could not parse event data as JSON|" +
+    "Event data could not be parsed into an object"
 );
 
 const validServerEvents: string[] = [
-  'data: {"test":5}',
-  'data: {"message":"this is a message"}',
-  'data: {"finalReason":"i j`us`t felt like stopping", "terminate": true}',
-  "data: {}",
-  'data: \n{"message":"this is a message"\n,"ignore":{"yes":"no"}}',
+  'data: {"test":5}\n\n',
+  'data: {"message":"this is a message"}\n\n',
+  'data: {"finalReason":"i j`us`t felt like stopping", "terminate": true}\n\n',
+  "data: {}\n\n",
+  'data: {"message":"this is a message"\n,"ignore":{"yes":"no"}}\n\n',
+  'data: {"message":"this is',
+  ' a message"',
+  ',"ignore": { "yes": "no" }}\n\n',
+  'data: {"index":0,"message":{"role":"ASSISTANT","content":[{"type":"TEXT","text":" I"}]},"pad":"aaaaa"}\n\n',
+  'data: {"index":0,"message":{"role":"',
+  'ASSISTANT","content":[{"type":"TEXT","text":" discover"}]},"pad":"aaaaaaaaaaa"}\n\n',
 ];
 
 interface ValidServerEventProps {
@@ -116,10 +118,15 @@ test("JsonServerEventsIterator empty events", async () => {
 });
 
 test("JsonServerEventsIterator valid events", async () => {
-  await testNumExpectedServerEvents(
-    validServerEvents,
-    validServerEvents.length
-  );
+  let numExpectedEvents: number = 0;
+
+  for (const event of validServerEvents) {
+    if (event.startsWith("data:")) {
+      numExpectedEvents += 1;
+    }
+  }
+
+  await testNumExpectedServerEvents(validServerEvents, numExpectedEvents);
 });
 
 test("JsonServerEventsIterator valid events check properties", async () => {
@@ -227,7 +234,7 @@ const createParams = {
 };
 
 const DummyClient = {
-  chat() { },
+  chat() {},
 };
 
 test("OCI GenAI chat models creation", async () => {
@@ -349,9 +356,8 @@ const createRequestParams = [
       );
       expect(cohereRequest.maxTokens).toBe(callOptions.requestParams.maxTokens);
     },
-    convertMessages: (messages: BaseMessage[]): Message[] => messages.map(
-      OciGenAiCohereChat._convertBaseMessageToCohereMessage
-    ),
+    convertMessages: (messages: BaseMessage[]): Message[] =>
+      messages.map(OciGenAiCohereChat._convertBaseMessageToCohereMessage),
   },
   {
     test: (genericRequest: GenericChatRequest, params: any) => {
@@ -368,9 +374,8 @@ const createRequestParams = [
         callOptions.requestParams.maxTokens
       );
     },
-    convertMessages: (messages: BaseMessage[]): Message[] => messages.map(
-      OciGenAiGenericChat._convertBaseMessageToGenericMessage
-    ),
+    convertMessages: (messages: BaseMessage[]): Message[] =>
+      messages.map(OciGenAiGenericChat._convertBaseMessageToGenericMessage),
   },
 ];
 
@@ -1223,7 +1228,7 @@ test("OCI GenAI chat models invoke with dedicated endpoint", async () => {
         compartmentId,
         dedicatedEndpointId,
         client: {
-          chat: () => params
+          chat: () => params,
         },
       });
 
@@ -1237,13 +1242,13 @@ test("OCI GenAI chat models invoke with dedicated endpoint", async () => {
 
 const chatStreamReturnValues: string[][] = [
   [
-    `data: {"apiFormat":"${CohereChatRequest.apiFormat}", "text":"this is some text"}`,
-    `data: {"apiFormat":"${CohereChatRequest.apiFormat}", "text":"this is some more text"}`,
+    `data: {"apiFormat":"${CohereChatRequest.apiFormat}", "text":"this is some text"}\n\n`,
+    `data: {"apiFormat":"${CohereChatRequest.apiFormat}", "text":"this is some more text"}\n\n`,
   ],
   [
-    `data: {"message":{"content":[{"type":"${TextContent.type}","text":"this is some text"}]}}`,
-    `data: {"message":{"content":[{"type":"${TextContent.type}","text":"this is some more text"}]}}`,
-    'data: {"finishReason":"stop sequence"}',
+    `data: {"message":{"content":[{"type":"${TextContent.type}","text":"this is some text"}]}}\n\n`,
+    `data: {"message":{"content":[{"type":"${TextContent.type}","text":"this is some more text"}]}}\n\n`,
+    'data: {"finishReason":"stop sequence"}\n\n',
   ],
 ];
 
@@ -1333,7 +1338,7 @@ class StringArrayToInt8ArraySource implements UnderlyingSource {
   private textEncoder = new TextEncoder();
 
   // eslint-disable-next-line no-empty-function
-  constructor(private values: string[]) { }
+  constructor(private values: string[]) {}
 
   pull(controller: ReadableStreamDefaultController) {
     if (this.valuesIndex < this.values.length) {
