@@ -479,13 +479,64 @@ export type $InferMessageProperty<
   ? $InferMessageProperties<TStructure, TRole>[K]
   : never;
 
+/**
+ * Represents a message object that organize context for an LLM.
+ *
+ * @template TStructure - The message structure type that defines the content and property types.
+ *                        Defaults to $StandardMessageStructure.
+ * @template TRole - The message role/type (e.g., "ai", "human", "system", "tool").
+ *                   Defaults to $MessageType which includes all possible message types.
+ *
+ * @example
+ * ```ts
+ * // Basic message with text content
+ * const message: Message = {
+ *   id: "msg-123",
+ *   name: "user",
+ *   type: "human",
+ *   content: [{ type: "text", text: "Hello!" }]
+ * };
+ *
+ * // Basic ai message interface extension
+ * interface MyMessage extends Message<$StandardMessageStructure, "ai"> {
+ *   // Additional AI-specific properties can be added here
+ * }
+ *
+ * // Custom message structure
+ * interface CustomStructure extends $MessageStructure {
+ *   content: {
+ *     ai: ContentBlock.Text | ContentBlock.ToolCall;
+ *     human: ContentBlock.Text | ContentBlock.Multimodal.Image;
+ *   };
+ * }
+ *
+ * // Create a message with custom structure
+ * const message: Message<CustomStructure> = {
+ *   id: "msg-123",
+ *   name: "user",
+ *   type: "ai",
+ *   content: [
+ *     { type: "text", text: "Hello!" },
+ *     {
+ *       type: "tool_call",
+ *       name: "search",
+ *       args: { query: "What is the capital of France?" }
+ *     }
+ *   ]
+ * };
+ * ```
+ */
 export interface Message<
   TStructure extends $MessageStructure = $StandardMessageStructure,
   TRole extends $MessageType = $MessageType
 > {
+  /** Unique identifier for this message */
   id: string;
+  /** Optional name/identifier for the entity that created this message */
   name?: string;
+  /** The message type/role, determines the content structure and available properties */
   readonly type: TRole;
+  /** Array of content blocks that make up the message content, typed based on the structure and role */
   content: Array<$InferMessageContent<TStructure, TRole>>;
 }
 
