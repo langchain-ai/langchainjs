@@ -721,6 +721,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
         content.every((item) => typeof item === "object"))
     ) {
       return new ToolMessage({
+        status: "success",
         content,
         artifact,
         tool_call_id: toolCallId,
@@ -729,6 +730,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
       });
     } else {
       return new ToolMessage({
+        status: "success",
         content: _stringify(content),
         artifact,
         tool_call_id: toolCallId,
