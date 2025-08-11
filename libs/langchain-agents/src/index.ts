@@ -484,6 +484,7 @@ export function createReactAgent<
     postModelHook,
     name,
     includeAgentName,
+    asStateGraph,
   } = params;
 
   let toolClasses: (ClientTool | ServerTool)[];
@@ -748,19 +749,47 @@ export function createReactAgent<
     allNodeWorkflows.addEdge("tools", entrypoint);
   }
 
-  return allNodeWorkflows.compile({
+  const agent = allNodeWorkflows.compile({
     checkpointer: checkpointer ?? checkpointSaver,
     interruptBefore,
     interruptAfter,
     store,
     name,
   });
+
+  /**
+   * If `asStateGraph` is false, we return a proxy that allows to access the
+   * initiation properties This is useful for testing agent hooks and other
+   * properties that are not available on the agent instance.
+   */
+  if (!asStateGraph) {
+    return new Proxy(agent, {
+      get(target, prop: keyof typeof agent & "options") {
+        if (prop === "options") {
+          return params;
+        }
+        return target[prop];
+      },
+    }) as CreateReactAgentReturnType<A, StructuredResponseFormat, AsStateGraph>;
+  }
+
+  return agent as CreateReactAgentReturnType<
+    A,
+    StructuredResponseFormat,
+    AsStateGraph
+  >;
 }
 
 export type ReactAgent<
   A extends AnyAnnotationRoot | InteropZodObject = typeof MessagesAnnotation,
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>
-> = Pick<InternalReactAgent<A, StructuredResponseFormat>, "invoke" | "stream">;
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
+  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> = Pick<
+  InternalReactAgent<A, StructuredResponseFormat>,
+  "invoke" | "stream"
+> & {
+  options: CreateReactAgentParams<A, StructuredResponseFormat, C, false>;
+};
 
 export * from "./types.js";
 export * from "./resume.js";

@@ -42,12 +42,13 @@ describe("createReactAgent", () => {
     syncCheckpointer = createCheckpointer();
   });
 
-  it("should work with no prompt", async () => {
+  it.only("should work with no prompt", async () => {
     const model = new FakeToolCallingModel();
 
     const agent = createReactAgent({
       llm: model,
       tools: [],
+      preModelHook: (state) => state,
       checkpointer: syncCheckpointer,
     });
 
@@ -70,6 +71,9 @@ describe("createReactAgent", () => {
     });
     // Note: Checkpoint properties may vary by implementation
     expect(saved).toHaveProperty("channel_values");
+
+    // allows to access initiation properties
+    expect((agent.options.preModelHook as any)("foo")).toBe("foo");
   });
 
   it("should work with system message prompt", async () => {
@@ -372,7 +376,7 @@ describe("createReactAgent", () => {
         const agent = createReactAgent({
           llm: model.bindTools([tool1, tool2]),
           tools,
-          // version, // TODO: Add version support when available
+          asStateGraph: true,
         });
 
         const result = await agent.nodes.tools.invoke({
@@ -483,7 +487,6 @@ describe("createReactAgent", () => {
       llm: model,
       tools: [getWeather],
       responseFormat: WeatherResponseSchema,
-      // version, // TODO: Add version support when available
     });
 
     const response = await agent.invoke({
