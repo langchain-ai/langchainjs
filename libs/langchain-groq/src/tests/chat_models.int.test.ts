@@ -280,3 +280,32 @@ test("response metadata includes groq metadata when streaming", async () => {
   // console.dir(finalRes, { depth: Infinity });
   expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
 });
+
+test("invoke with image input", async () => {
+  const chat = new ChatGroq({
+    maxRetries: 0,
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+  });
+  const message = new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "What's in this image?",
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png",
+        },
+      },
+    ],
+  });
+  const res = await chat.invoke([message]);
+
+  expect(res.content.length).toBeGreaterThan(10);
+  expect(typeof res.content).toBe("string");
+  // The response should contain some reference to Google or logo
+  expect((res.content as string).toLowerCase()).toMatch(
+    /google|logo|text|image/
+  );
+});
