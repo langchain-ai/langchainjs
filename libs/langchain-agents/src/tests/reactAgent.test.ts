@@ -42,7 +42,7 @@ describe("createReactAgent", () => {
     syncCheckpointer = createCheckpointer();
   });
 
-  it.only("should work with no prompt", async () => {
+  it("should work with no prompt", async () => {
     const model = new FakeToolCallingModel();
 
     const agent = createReactAgent({
