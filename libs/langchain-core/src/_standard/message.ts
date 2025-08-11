@@ -1,5 +1,5 @@
-import { ContentBlock } from "./content";
-import { $MergeDiscriminatedUnion, $MergeObjects } from "./utils";
+import type { ContentBlock } from "./content/index.js";
+import type { $MergeDiscriminatedUnion, $MergeObjects } from "./utils.js";
 
 /** @internal */
 const __BRANDED_MESSAGE = Symbol.for("langchain.message");
@@ -613,20 +613,26 @@ export class AIMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+
   /** The message type, always "ai" for AI messages */
-  readonly type: "ai" = "ai";
+  readonly type = "ai" as const;
+
   /** Unique identifier for this message */
   id: string;
+
   /** Optional name/identifier for the AI that generated this message */
   name?: string;
+
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "ai">>;
+
   /** Metadata about the AI model response (model provider, model name, etc.) */
   responseMetadata?: $InferMessageProperty<
     TStructure,
     "ai",
     "responseMetadata"
   >;
+
   /** Usage statistics for the AI response (token counts, etc.) */
   usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
 
@@ -701,6 +707,26 @@ export class AIMessage<
       .join("");
   }
 
+  /**
+   * Gets all tool call content blocks from the message.
+   * Filters the message content to return only blocks of type "tool_call".
+   *
+   * @returns An array of tool call blocks contained in this message
+   *
+   * @example
+   * ```ts
+   * const aiMessage = new AIMessage([
+   *   { type: "text", text: "I'll help you with that calculation." },
+   *   {
+   *     type: "tool_call",
+   *     name: "calculator",
+   *     args: { operation: "add", a: 5, b: 3 }
+   *   }
+   * ]);
+   * console.log(aiMessage.toolCalls);
+   * // [{ type: "tool_call", name: "calculator", args: { operation: "add", a: 5, b: 3 } }]
+   * ```
+   */
   get toolCalls(): Array<$MessageToolCallBlock<TStructure>> {
     const content = this.content as any[];
     return content
@@ -761,14 +787,19 @@ export class HumanMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+
   /** The message type, always "human" for HumanMessage instances */
-  readonly type: "human" = "human";
+  readonly type = "human" as const;
+
   /** Unique identifier for the message */
   id: string;
+
   /** Optional name identifier for the message sender */
   name?: string;
+
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "human">>;
+
   /** Metadata associated with the human message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
 
@@ -895,14 +926,19 @@ export class SystemMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+
   /** The message type, always "system" for system messages */
-  readonly type: "system" = "system";
+  readonly type = "system" as const;
+
   /** Unique identifier for this message */
   id: string;
+
   /** Optional name/identifier for the system that generated this message */
   name?: string;
+
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "system">>;
+
   /** Metadata associated with the system message */
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
 
@@ -1021,18 +1057,25 @@ export class ToolMessage<
 {
   /** @internal */
   [__BRANDED_MESSAGE]: never;
+
   /** The message type, always "tool" for tool messages */
-  readonly type: "tool" = "tool";
+  readonly type = "tool" as const;
+
   /** Unique identifier for this message */
   id: string;
+
   /** Optional name/identifier for the tool that generated this message */
   name?: string;
+
   /** The ID of the tool call that this message is associated with */
   toolCallId: string;
+
   /** The status of the tool call */
   status: "success" | "error";
+
   /** Array of content blocks that make up the message content */
   content: Array<$InferMessageContent<TStructure, "tool">>;
+
   /** Metadata associated with the tool message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
 
