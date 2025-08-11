@@ -8650,7 +8650,7 @@ __metadata:
     node-llama-cpp: 3.1.1
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    openai: "*"
+    openai: ^5.12.2
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -8785,7 +8785,7 @@ __metadata:
     neo4j-driver: "*"
     notion-to-md: ^3.1.0
     officeparser: ^4.0.4
-    openai: "*"
+    openai: ^5.12.2
     pdf-parse: 1.1.1
     pg: ^8.11.0
     pg-copy-streams: ^6.0.5
@@ -32203,23 +32203,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*":
-  version: 5.3.0
-  resolution: "openai@npm:5.3.0"
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: c85db58ede53356bdc0b7a3cd68784102fb9825df271393bc8131db5b274028829b257d3b2550eff5d1265c9eeddb07aa932bbcd3a918e79f099388a68af158b
-  languageName: node
-  linkType: hard
-
 "openai@npm:4.28.0":
   version: 4.28.0
   resolution: "openai@npm:4.28.0"
@@ -32239,7 +32222,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:5.12.2":
+"openai@npm:5.12.2, openai@npm:^5.12.2":
   version: 5.12.2
   resolution: "openai@npm:5.12.2"
   peerDependencies:
