@@ -1,6 +1,6 @@
 import { test, expectTypeOf } from "vitest";
-import { FakeToolCallingModel } from "./utils";
-import { createReactAgent, InternalReactAgent, ReactAgent } from "../index";
+import { FakeToolCallingModel } from "./utils.js";
+import { createReactAgent, InternalReactAgent, ReactAgent } from "../index.js";
 
 test("createReactAgent simple type", () => {
   const agent = createReactAgent({
