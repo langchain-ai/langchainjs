@@ -1018,7 +1018,17 @@ describe("Message<TStructure, TRole>", () => {
 
 describe("AIMessage", () => {
   it("should be assignable to Message", async () => {
-    expectTypeOf<typeof AIMessage>().instance.toExtend<Message>();
+    expectTypeOf<AIMessage>().toExtend<Message>();
+  });
+
+  it("Message should not be assignable", async () => {
+    expectTypeOf<Message>().not.toExtend<AIMessage>();
+    expectTypeOf<{
+      type: "ai";
+      content: [];
+      text: "";
+      toolCalls: [];
+    }>().not.toExtend<AIMessage>();
   });
 
   it("should keep standard content blocks when TStructure is provided", async () => {
@@ -1123,7 +1133,16 @@ describe("AIMessage", () => {
 
 describe("HumanMessage", () => {
   it("should be assignable to Message", async () => {
-    expectTypeOf<typeof HumanMessage>().instance.toExtend<Message>();
+    expectTypeOf<HumanMessage>().toExtend<Message>();
+  });
+
+  it("Message should not be assignable", async () => {
+    expectTypeOf<Message>().not.toExtend<HumanMessage>();
+    expectTypeOf<{
+      type: "human";
+      content: [];
+      text: "";
+    }>().not.toExtend<HumanMessage>();
   });
 
   it("should keep standard content blocks when TStructure is provided", async () => {
@@ -1194,7 +1213,16 @@ describe("HumanMessage", () => {
 
 describe("SystemMessage", () => {
   it("should be assignable to Message", async () => {
-    expectTypeOf<typeof SystemMessage>().instance.toExtend<Message>();
+    expectTypeOf<SystemMessage>().toExtend<Message>();
+  });
+
+  it("Message should not be assignable", async () => {
+    expectTypeOf<Message>().not.toExtend<SystemMessage>();
+    expectTypeOf<{
+      type: "system";
+      content: [];
+      text: "";
+    }>().not.toExtend<SystemMessage>();
   });
 
   it("should keep standard content blocks when TStructure is provided", async () => {
