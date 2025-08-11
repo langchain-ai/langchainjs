@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 monorepo_dir="/app/monorepo"
 monorepo_community_dir="/app/monorepo/libs/langchain-community"
 updater_script_dir="/app/updater_script"

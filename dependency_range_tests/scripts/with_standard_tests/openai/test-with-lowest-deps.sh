@@ -4,6 +4,8 @@ set -euxo pipefail
 
 export CI=true
 
+corepack enable
+
 monorepo_dir="/app/monorepo"
 monorepo_openai_dir="/app/monorepo/libs/providers/langchain-openai"
 updater_script_dir="/app/updater_script"
