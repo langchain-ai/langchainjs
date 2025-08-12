@@ -1,6 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatGroq,
@@ -39,8 +38,4 @@ class ChatGroqStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatGroqStandardUnitTests();
-
-test("ChatGroqStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatGroqStandardUnitTests");
