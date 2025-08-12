@@ -51,14 +51,5 @@ export * from "langchain/storage/in_memory";
 export * from "langchain/util/document";
 export * from "langchain/util/math";
 export * from "langchain/util/time";
-// export * from "langchain/experimental/autogpt"; // Disabled for browser compatibility
-// export * from "langchain/experimental/openai_assistant"; // Disabled for browser compatibility
-// export * from "langchain/experimental/openai_files"; // Disabled for browser compatibility
-export * from "langchain/experimental/babyagi";
-export * from "langchain/experimental/generative_agents";
-export * from "langchain/experimental/plan_and_execute";
-export * from "langchain/experimental/chains/violation_of_expectations";
-export * from "langchain/experimental/masking";
-export * from "langchain/experimental/prompts/custom_format";
 export * from "langchain/evaluation";
 export * from "langchain/indexes";
