@@ -87,17 +87,6 @@
       },
       "input": "./src/index.ts"
     },
-    "./experimental": {
-      "import": {
-        "types": "./dist/experimental/index.d.ts",
-        "default": "./dist/experimental/index.js"
-      },
-      "require": {
-        "types": "./dist/experimental/index.d.cts",
-        "default": "./dist/experimental/index.cjs"
-      },
-      "input": "./src/experimental/index.ts"
-    },
     "./package.json": "./package.json"
   },
   "files": [
