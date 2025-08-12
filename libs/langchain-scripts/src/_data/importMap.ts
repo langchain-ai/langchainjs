@@ -5005,14 +5005,4 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     new: "@langchain/community/agents/toolkits/connery",
     namedImport: null,
   },
-  {
-    old: "langchain/experimental/chat_models/ollama_functions",
-    new: "@langchain/community/experimental/chat_models/ollama_functions",
-    namedImport: null,
-  },
-  {
-    old: "langchain/experimental/multimodal_embeddings/googlevertexai",
-    new: "@langchain/community/experimental/multimodal_embeddings/googlevertexai",
-    namedImport: null,
-  },
 ];
