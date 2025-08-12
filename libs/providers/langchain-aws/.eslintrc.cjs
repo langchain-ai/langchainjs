@@ -22,6 +22,7 @@ module.exports = {
     "*.cjs",
     "*.d.ts",
   ],
+  include: ["src/**/*.ts", "vitest.config.ts"],
   rules: {
     "no-process-env": 2,
     "no-instanceof/no-instanceof": 2,
