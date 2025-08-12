@@ -1,7 +1,7 @@
 /*  eslint-disable no-promise-executor-return  */
 /* eslint-disable no-process-env */
 
-import { expect } from "@jest/globals";
+import { test, expect, beforeEach } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { CosmosClient } from "@azure/cosmos";
 import { DefaultAzureCredential } from "@azure/identity";

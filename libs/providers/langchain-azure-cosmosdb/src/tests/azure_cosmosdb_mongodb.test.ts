@@ -1,29 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect, beforeEach } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { AzureCosmosDBMongoDBVectorStore } from "../azure_cosmosdb_mongodb.js";
 
 // Mock mongodb client
 const createMockClient = () => ({
-  db: jest.fn<any>().mockReturnValue({
+  db: vi.fn<any>().mockReturnValue({
     collectionName: "documents",
-    collection: jest.fn<any>().mockReturnValue({
-      listIndexes: jest.fn().mockReturnValue({
-        toArray: jest.fn().mockReturnValue([
+    collection: vi.fn<any>().mockReturnValue({
+      listIndexes: vi.fn().mockReturnValue({
+        toArray: vi.fn().mockReturnValue([
           {
             name: "vectorSearchIndex",
           },
         ]),
       }),
-      dropIndex: jest.fn(),
-      deleteMany: jest.fn(),
-      insertMany: jest.fn().mockImplementation((docs: any) => ({
+      dropIndex: vi.fn(),
+      deleteMany: vi.fn(),
+      insertMany: vi.fn().mockImplementation((docs: any) => ({
         insertedIds: docs.map((_: any, i: any) => `id${i}`),
       })),
-      aggregate: jest.fn().mockReturnValue({
-        map: jest.fn().mockReturnValue({
-          toArray: jest
+      aggregate: vi.fn().mockReturnValue({
+        map: vi.fn().mockReturnValue({
+          toArray: vi
             .fn()
             .mockReturnValue([
               [new Document({ pageContent: "test", metadata: { a: 1 } }), 0.5],
@@ -31,13 +31,13 @@ const createMockClient = () => ({
         }),
       }),
     }),
-    command: jest.fn(),
+    command: vi.fn(),
   }),
-  connect: jest.fn(),
-  close: jest.fn(),
+  connect: vi.fn(),
+  close: vi.fn(),
 });
 
-const embedMock = jest.spyOn(FakeEmbeddings.prototype, "embedDocuments");
+const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
 
 beforeEach(() => {
   embedMock.mockClear();
