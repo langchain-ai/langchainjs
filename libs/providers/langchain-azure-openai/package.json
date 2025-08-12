@@ -18,8 +18,6 @@
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
-    "test": "vitest run",
-    "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "test:standard:unit": "vitest run --mode standard-unit",
     "test:standard:int": "vitest run --mode standard-int",
