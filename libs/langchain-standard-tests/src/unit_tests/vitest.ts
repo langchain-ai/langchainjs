@@ -26,9 +26,6 @@ export abstract class ChatModelUnitTests<
 
   /**
    * Run all unit tests for the chat model.
-   * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
-   * If a test fails, the error is logged to the console, and the test suite continues.
-   * @returns {boolean}
    */
   runTests(testName = "ChatModelUnitTests") {
     describe(testName, () => {
