@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ClientSecretCredential, TokenCredential } from "@azure/identity";
 import { OpenAIKeyCredential } from "@azure/openai";
