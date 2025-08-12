@@ -5,12 +5,10 @@ import {
 } from "vitest/config";
 
 export default defineConfig((env) => {
-  const common = {
+  const common: UserConfigExport = {
     test: {
       environment: "node",
       hideSkippedTests: true,
-      // TODO: remove this once standard tests are updated to use vitest
-      globals: true
       testTimeout: 30_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
