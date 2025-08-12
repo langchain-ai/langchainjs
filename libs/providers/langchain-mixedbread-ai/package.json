@@ -41,6 +41,7 @@
     "@tsconfig/recommended": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
@@ -52,7 +53,8 @@
     "prettier": "^2.8.3",
     "release-it": "^18.1.2",
     "rollup": "^4.5.2",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"
