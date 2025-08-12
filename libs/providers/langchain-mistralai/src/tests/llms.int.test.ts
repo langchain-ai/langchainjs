@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { MistralAI } from "../llms.js";
