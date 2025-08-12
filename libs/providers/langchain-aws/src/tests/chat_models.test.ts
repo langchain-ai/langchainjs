@@ -12,7 +12,7 @@ import type {
   SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, it } from "vitest";
 import {
   convertToConverseMessages,
   handleConverseStreamContentBlockDelta,
