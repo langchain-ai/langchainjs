@@ -34,14 +34,31 @@ beforeAll(async () => {
       },
     });
   }
+  await client.collections.delete("MyCollection");
   console.log("Connecting to Weaviate at", process.env.WEAVIATE_URL);
   console.log("Ready?", await client.isReady());
 });
 
 test("Hybridsearch with limit", async () => {
   const embeddings = new OpenAIEmbeddings();
+  const schema = {
+    name: collectionName,
+    description: "A simple dataset",
+    properties: [
+      {
+        name: "title",
+        dataType: dataType.TEXT,
+      },
+      {
+        name: "foo",
+        dataType: dataType.TEXT,
+      },
+    ],
+    vectorizers: vectorizer.text2VecOpenAI(),
+  };
   const weaviateArgs = {
     client,
+    schema,
     indexName: "HybridSearchWithLimit",
   };
   try {
@@ -74,6 +91,7 @@ test("Hybridsearch with limit", async () => {
 });
 
 test("Hybridsearch with named vectors", async () => {
+  await client.collections.delete(collectionName);
   const embeddings = new OpenAIEmbeddings();
   const schemaWithNamedVectors = {
     name: collectionName,
