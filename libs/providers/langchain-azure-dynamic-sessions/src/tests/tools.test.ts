@@ -1,29 +1,37 @@
-import { test, jest, describe, beforeEach } from "@jest/globals";
+import {
+  test,
+  expect,
+  describe,
+  beforeEach,
+  afterEach,
+  vi,
+  type MockInstance,
+} from "vitest";
 import { DefaultAzureCredential } from "@azure/identity";
 import { SessionsPythonREPLTool } from "../index.js";
 
 describe("SessionsPythonREPLTool", () => {
   describe("Default access token provider", () => {
     let defaultAzureADTokenProvider: () => Promise<string>;
-    let getTokenMock: jest.SpiedFunction<DefaultAzureCredential["getToken"]>;
+    let getTokenMock: MockInstance<DefaultAzureCredential["getToken"]>;
     beforeEach(() => {
       const tool = new SessionsPythonREPLTool({
         poolManagementEndpoint: "https://poolmanagement.com",
         sessionId: "session-id",
       });
       defaultAzureADTokenProvider = tool.azureADTokenProvider;
-      getTokenMock = jest.spyOn(DefaultAzureCredential.prototype, "getToken");
+      getTokenMock = vi.spyOn(DefaultAzureCredential.prototype, "getToken");
       getTokenMock.mockClear();
     });
 
     afterEach(() => {
-      jest.restoreAllMocks();
-      jest.useRealTimers();
+      vi.restoreAllMocks();
+      vi.useRealTimers();
     });
 
     test("Should use cached token when not expiring", async () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date("2024-01-01 10:00:00"));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2024-01-01 10:00:00"));
       getTokenMock.mockImplementationOnce(async () => ({
         token: "test-token",
         expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
@@ -47,8 +55,8 @@ describe("SessionsPythonREPLTool", () => {
     });
 
     test("Should refresh token when expired", async () => {
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date("2024-01-01 10:00:00"));
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2024-01-01 10:00:00"));
       getTokenMock.mockImplementationOnce(async () => ({
         token: "test-token1",
         expiresOnTimestamp: new Date("2024-01-01 10:30:00").getTime(),
@@ -58,7 +66,7 @@ describe("SessionsPythonREPLTool", () => {
       expect(token).toBe("test-token1");
       expect(getTokenMock).toHaveBeenCalledTimes(1);
 
-      jest.setSystemTime(new Date("2024-01-01 10:31:00"));
+      vi.setSystemTime(new Date("2024-01-01 10:31:00"));
       getTokenMock.mockImplementationOnce(async () => ({
         token: "test-token2",
         expiresOnTimestamp: new Date("2024-01-01 11:00:00").getTime(),
@@ -78,7 +86,7 @@ describe("SessionsPythonREPLTool", () => {
         sessionId: "session-id",
       });
 
-      const getTokenMock = jest.spyOn(
+      const getTokenMock = vi.spyOn(
         DefaultAzureCredential.prototype,
         "getToken"
       );
@@ -87,7 +95,7 @@ describe("SessionsPythonREPLTool", () => {
         expiresOnTimestamp: new Date().getTime() + 1000 * 60 * 60,
       });
 
-      const fetchMock = jest.spyOn(global, "fetch");
+      const fetchMock = vi.spyOn(global, "fetch");
       fetchMock.mockResolvedValue({
         ok: true,
         json: async () => ({
