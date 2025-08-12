@@ -1,4 +1,4 @@
-import { vi, test } from "vitest";
+import { vi, test, expect } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
