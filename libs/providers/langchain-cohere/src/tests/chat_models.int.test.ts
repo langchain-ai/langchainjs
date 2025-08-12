@@ -1,5 +1,5 @@
 /* eslint-disable no-promise-executor-return */
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import {
   AIMessageChunk,
   HumanMessage,

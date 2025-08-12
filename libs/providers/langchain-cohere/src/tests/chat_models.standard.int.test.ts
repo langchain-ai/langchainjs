@@ -1,6 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatCohere,
@@ -65,8 +64,4 @@ class ChatCohereStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatCohereStandardIntegrationTests();
-
-test("ChatCohereStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatCohereStandardIntegrationTests");
