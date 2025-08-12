@@ -1,6 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatDeepSeek, ChatDeepSeekCallOptions } from "../chat_models.js";
 
@@ -32,8 +31,4 @@ class ChatDeepSeekStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatDeepSeekStandardUnitTests();
-
-test("ChatDeepSeekStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatDeepSeekStandardUnitTests");
