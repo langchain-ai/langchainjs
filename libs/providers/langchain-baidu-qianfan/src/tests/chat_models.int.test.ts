@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { HumanMessage } from "@langchain/core/messages";
 import { ChatBaiduQianfan } from "../chat_models.js";
