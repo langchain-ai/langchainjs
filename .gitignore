@@ -50,3 +50,4 @@ credentials.json
 .vercel
 
 bun.lock
+coverage/
