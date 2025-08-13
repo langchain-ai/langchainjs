@@ -35,6 +35,7 @@ import type {
 
 import type { ToolNode } from "./nodes/ToolNode.js";
 import type { PreHookAnnotation } from "./annotation.js";
+import type { PredicateFunction } from "./stopWhen.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -140,6 +141,13 @@ export type CreateReactAgentParams<
    * Additional state schema for the agent.
    */
   stateSchema?: StateSchema;
+
+  /**
+   * An optional predicate function to stop the agent.
+   */
+  stopWhen?:
+    | PredicateFunction<StructuredResponseType>
+    | PredicateFunction<StructuredResponseType>[];
 
   /**
    * An optional schema for the context.

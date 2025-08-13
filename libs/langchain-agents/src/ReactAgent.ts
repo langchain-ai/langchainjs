@@ -104,6 +104,7 @@ export class ReactAgent<
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
+        stopWhen: this.options.stopWhen,
         toolClasses,
         shouldReturnDirect,
       }),

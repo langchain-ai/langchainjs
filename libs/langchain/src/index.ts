@@ -20,6 +20,8 @@ export {
   interrupt,
   resume,
   createReactAgent,
+  stopWhenToolCall,
+  stopWhen,
   type CreateReactAgentState,
   type CreateReactAgentRuntime,
   type LangGraphRunnableConfig as CreateReactAgentToolConfig,

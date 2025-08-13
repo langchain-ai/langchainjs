@@ -2,7 +2,7 @@ import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
-import type { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { type LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
@@ -15,6 +15,7 @@ import {
   CreateReactAgentParams,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
+import { PredicateFunction } from "../stopWhen.js";
 
 interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
@@ -29,7 +30,7 @@ interface AgentNodeOptions<
       StructuredResponseFormat,
       ContextSchema
     >,
-    "llm" | "prompt" | "includeAgentName" | "name"
+    "llm" | "prompt" | "includeAgentName" | "name" | "stopWhen"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -54,6 +55,8 @@ export class AgentNode<
 
   #cachedStaticModel?: Runnable;
 
+  #stopWhen: PredicateFunction<StructuredResponseFormat>[];
+
   constructor(
     options: AgentNodeOptions<
       StateSchema,
@@ -63,16 +66,39 @@ export class AgentNode<
   ) {
     super({
       name: options.name ?? "agent",
-      func: (input, config) => this.#run(input, config as RunnableConfig),
+      func: (input, config) =>
+        this.#run(input, config as RunnableConfig) as any,
     });
 
     this.#options = options;
+    this.#stopWhen = options.stopWhen
+      ? Array.isArray(options.stopWhen)
+        ? options.stopWhen
+        : [options.stopWhen]
+      : [];
   }
 
   async #run(
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
   ) {
+    /**
+     * Check if we should stop the agent.
+     */
+    const stopWhenResults = await Promise.all(
+      this.#stopWhen.map((stopWhen) => stopWhen(state, config))
+    );
+    const shouldStop = stopWhenResults.filter((result) => result.shouldStop);
+    if (shouldStop.length > 0) {
+      const shouldStopReasoning =
+        shouldStop.length === 1
+          ? `A stop condition was met: ${shouldStop[0].description}`
+          : `Multiple stop conditions were met: ${shouldStop
+              .map((result) => result.description)
+              .join(", ")}`;
+      return { messages: [shouldStopReasoning] };
+    }
+
     /**
      * We're dynamically creating the model runnable here
      * to ensure that we can validate ConfigurableModel properly
