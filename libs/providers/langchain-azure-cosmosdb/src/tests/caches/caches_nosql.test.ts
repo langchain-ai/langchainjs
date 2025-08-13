@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest } from "@jest/globals";
+import { vi, it, describe, expect } from "vitest";
 import { FakeEmbeddings, FakeLLM } from "@langchain/core/utils/testing";
 import { AzureCosmosDBNoSQLSemanticCache } from "../../index.js";
 
@@ -8,22 +8,22 @@ const createMockClient = () => {
   let id = 0;
   const client = {
     databases: {
-      createIfNotExists: jest.fn().mockReturnThis(),
+      createIfNotExists: vi.fn().mockReturnThis(),
       get database() {
         return this;
       },
       containers: {
-        createIfNotExists: jest.fn().mockReturnThis(),
+        createIfNotExists: vi.fn().mockReturnThis(),
         get container() {
           return this;
         },
         items: {
-          create: jest.fn().mockImplementation((doc: any) => ({
+          create: vi.fn().mockImplementation((doc: any) => ({
             // eslint-disable-next-line no-plusplus
             resource: { id: doc.id ?? `${id++}` },
           })),
-          query: jest.fn().mockReturnThis(),
-          fetchAll: jest.fn().mockImplementation(() => ({
+          query: vi.fn().mockReturnThis(),
+          fetchAll: vi.fn().mockImplementation(() => ({
             resources: [
               {
                 metadata: {
@@ -34,8 +34,8 @@ const createMockClient = () => {
             ],
           })),
         },
-        item: jest.fn().mockReturnThis(),
-        delete: jest.fn(),
+        item: vi.fn().mockReturnThis(),
+        delete: vi.fn(),
       },
     },
   };

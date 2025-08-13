@@ -1,39 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { vi, test, expect, beforeEach } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 import { AzureCosmosDBNoSQLVectorStore } from "../azure_cosmosdb_nosql.js";
 
-const embedMock = jest.spyOn(FakeEmbeddings.prototype, "embedDocuments");
+const embedMock = vi.spyOn(FakeEmbeddings.prototype, "embedDocuments");
 
 const createMockClient = () => {
   let id = 0;
   const client = {
     databases: {
-      createIfNotExists: jest.fn().mockReturnThis(),
+      createIfNotExists: vi.fn().mockReturnThis(),
       get database() {
         return this;
       },
       containers: {
-        createIfNotExists: jest.fn().mockReturnThis(),
+        createIfNotExists: vi.fn().mockReturnThis(),
         get container() {
           return this;
         },
         items: {
-          create: jest.fn().mockImplementation((doc: any) => ({
+          create: vi.fn().mockImplementation((doc: any) => ({
             // eslint-disable-next-line no-plusplus
             resource: { id: doc.id ?? `${id++}` },
           })),
-          query: jest.fn().mockReturnThis(),
-          fetchAll: jest.fn().mockImplementation(() => ({
+          query: vi.fn().mockReturnThis(),
+          fetchAll: vi.fn().mockImplementation(() => ({
             resources: Array(id)
               .fill(0)
               .map((_, i) => ({ id: i })),
           })),
         },
-        item: jest.fn().mockReturnThis(),
-        delete: jest.fn(),
+        item: vi.fn().mockReturnThis(),
+        delete: vi.fn(),
       },
     },
   };
