@@ -9,6 +9,33 @@ import {
   MessageContent,
 } from "@langchain/core/messages";
 import { Send } from "@langchain/langgraph";
+import { Runnable } from "@langchain/core/runnables";
+import {
+  BaseChatModel,
+  type BindToolsInput,
+  type BaseChatModelCallOptions,
+} from "@langchain/core/language_models/chat_models";
+import {
+  LanguageModelLike,
+  BaseLanguageModelInput,
+} from "@langchain/core/language_models/base";
+import { SystemMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  RunnableLike,
+  RunnableLambda,
+  RunnableSequence,
+  RunnableBinding,
+} from "@langchain/core/runnables";
+import { MessagesAnnotation } from "@langchain/langgraph";
+
+import { ToolNode } from "./nodes/ToolNode.js";
+import { PROMPT_RUNNABLE_NAME } from "./constants.js";
+import {
+  ServerTool,
+  ClientTool,
+  ConfigurableModelInterface,
+  Prompt,
+} from "./types.js";
 
 export function isSend(x: unknown): x is Send {
   // eslint-disable-next-line no-instanceof/no-instanceof
@@ -178,4 +205,269 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
     content: updatedContent,
     name: updatedName,
   }) as T;
+}
+
+export function isClientTool(
+  tool: ClientTool | ServerTool
+): tool is ClientTool {
+  return Runnable.isRunnable(tool);
+}
+
+export function isBaseChatModel(
+  model: LanguageModelLike
+): model is BaseChatModel {
+  return (
+    "invoke" in model &&
+    typeof model.invoke === "function" &&
+    "_modelType" in model
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isConfigurableModel(
+  model: unknown
+): model is ConfigurableModelInterface {
+  return (
+    typeof model === "object" &&
+    model != null &&
+    "_queuedMethodOperations" in model &&
+    "_model" in model &&
+    typeof model._model === "function"
+  );
+}
+
+function _isChatModelWithBindTools(
+  llm: LanguageModelLike
+): llm is BaseChatModel & Required<Pick<BaseChatModel, "bindTools">> {
+  if (!isBaseChatModel(llm)) return false;
+  return "bindTools" in llm && typeof llm.bindTools === "function";
+}
+
+export function getPromptRunnable(prompt?: Prompt): Runnable {
+  let promptRunnable: Runnable;
+
+  if (prompt == null) {
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => state.messages
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (typeof prompt === "string") {
+    const systemMessage = new SystemMessage(prompt);
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => {
+        return [systemMessage, ...(state.messages ?? [])];
+      }
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (isBaseMessage(prompt) && prompt._getType() === "system") {
+    promptRunnable = RunnableLambda.from(
+      (state: typeof MessagesAnnotation.State) => [prompt, ...state.messages]
+    ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
+  } else if (typeof prompt === "function") {
+    promptRunnable = RunnableLambda.from(prompt).withConfig({
+      runName: PROMPT_RUNNABLE_NAME,
+    });
+  } else if (Runnable.isRunnable(prompt)) {
+    promptRunnable = prompt;
+  } else {
+    throw new Error(`Got unexpected type for 'prompt': ${typeof prompt}`);
+  }
+
+  return promptRunnable;
+}
+
+export async function shouldBindTools(
+  llm: LanguageModelLike,
+  tools: (ClientTool | ServerTool)[]
+): Promise<boolean> {
+  // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
+  let model = llm;
+  if (RunnableSequence.isRunnableSequence(model)) {
+    model =
+      model.steps.find(
+        (step) =>
+          RunnableBinding.isRunnableBinding(step) ||
+          isBaseChatModel(step) ||
+          isConfigurableModel(step)
+      ) || model;
+  }
+
+  if (isConfigurableModel(model)) {
+    model = await model._model();
+  }
+
+  // If not a RunnableBinding, we should bind tools
+  if (!RunnableBinding.isRunnableBinding(model)) {
+    return true;
+  }
+
+  let boundTools = (() => {
+    // check if model.kwargs contain the tools key
+    if (
+      model.kwargs != null &&
+      typeof model.kwargs === "object" &&
+      "tools" in model.kwargs &&
+      Array.isArray(model.kwargs.tools)
+    ) {
+      return (model.kwargs.tools ?? null) as BindToolsInput[] | null;
+    }
+
+    // Some models can bind the tools via `withConfig()` instead of `bind()`
+    if (
+      model.config != null &&
+      typeof model.config === "object" &&
+      "tools" in model.config &&
+      Array.isArray(model.config.tools)
+    ) {
+      return (model.config.tools ?? null) as BindToolsInput[] | null;
+    }
+
+    return null;
+  })();
+
+  // google-style
+  if (
+    boundTools != null &&
+    boundTools.length === 1 &&
+    "functionDeclarations" in boundTools[0]
+  ) {
+    boundTools = boundTools[0].functionDeclarations;
+  }
+
+  // If no tools in kwargs, we should bind tools
+  if (boundTools == null) return true;
+
+  // Check if tools count matches
+  if (tools.length !== boundTools.length) {
+    throw new Error(
+      "Number of tools in the model.bindTools() and tools passed to createReactAgent must match"
+    );
+  }
+
+  const toolNames = new Set<string>(
+    tools.flatMap((tool) => (isClientTool(tool) ? tool.name : []))
+  );
+
+  const boundToolNames = new Set<string>();
+
+  for (const boundTool of boundTools) {
+    let boundToolName: string | undefined;
+
+    // OpenAI-style tool
+    if ("type" in boundTool && boundTool.type === "function") {
+      boundToolName = boundTool.function.name;
+    }
+    // Anthropic or Google-style tool
+    else if ("name" in boundTool) {
+      boundToolName = boundTool.name;
+    }
+    // Bedrock-style tool
+    else if ("toolSpec" in boundTool && "name" in boundTool.toolSpec) {
+      boundToolName = boundTool.toolSpec.name;
+    }
+    // unknown tool type so we'll ignore it
+    else {
+      continue;
+    }
+
+    if (boundToolName) {
+      boundToolNames.add(boundToolName);
+    }
+  }
+
+  const missingTools = [...toolNames].filter((x) => !boundToolNames.has(x));
+  if (missingTools.length > 0) {
+    throw new Error(
+      `Missing tools '${missingTools}' in the model.bindTools().` +
+        `Tools in the model.bindTools() must match the tools passed to createReactAgent.`
+    );
+  }
+
+  return false;
+}
+
+const _simpleBindTools = (
+  llm: LanguageModelLike,
+  toolClasses: (ClientTool | ServerTool)[]
+) => {
+  if (_isChatModelWithBindTools(llm)) {
+    return llm.bindTools(toolClasses);
+  }
+
+  if (
+    RunnableBinding.isRunnableBinding(llm) &&
+    _isChatModelWithBindTools(llm.bound)
+  ) {
+    const newBound = llm.bound.bindTools(toolClasses);
+
+    if (RunnableBinding.isRunnableBinding(newBound)) {
+      return new RunnableBinding({
+        bound: newBound.bound,
+        config: { ...llm.config, ...newBound.config },
+        kwargs: { ...llm.kwargs, ...newBound.kwargs },
+        configFactories: newBound.configFactories ?? llm.configFactories,
+      });
+    }
+
+    return new RunnableBinding({
+      bound: newBound,
+      config: llm.config,
+      kwargs: llm.kwargs,
+      configFactories: llm.configFactories,
+    });
+  }
+
+  return null;
+};
+
+export async function bindTools(
+  llm: LanguageModelLike,
+  toolClasses: (ClientTool | ServerTool)[]
+): Promise<
+  | RunnableSequence<any, any>
+  | RunnableBinding<any, any, any>
+  | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
+> {
+  const model = _simpleBindTools(llm, toolClasses);
+  if (model) return model;
+
+  if (isConfigurableModel(llm)) {
+    const model = _simpleBindTools(await llm._model(), toolClasses);
+    if (model) return model;
+  }
+
+  if (RunnableSequence.isRunnableSequence(llm)) {
+    const modelStep = llm.steps.findIndex(
+      (step) =>
+        RunnableBinding.isRunnableBinding(step) ||
+        isBaseChatModel(step) ||
+        isConfigurableModel(step)
+    );
+
+    if (modelStep >= 0) {
+      const model = _simpleBindTools(llm.steps[modelStep], toolClasses);
+      if (model) {
+        const nextSteps: unknown[] = llm.steps.slice();
+        nextSteps.splice(modelStep, 1, model);
+
+        return RunnableSequence.from(
+          nextSteps as [RunnableLike, ...RunnableLike[], RunnableLike]
+        );
+      }
+    }
+  }
+
+  throw new Error(`llm ${llm} must define bindTools method.`);
+}
+
+export function getTools(tools: ToolNode | (ServerTool | ClientTool)[]) {
+  if (!Array.isArray(tools)) {
+    return {
+      toolClasses: tools.tools,
+      toolNode: tools,
+    };
+  }
+
+  return {
+    toolClasses: tools,
+    toolNode: new ToolNode(tools.filter(isClientTool)),
+  };
 }

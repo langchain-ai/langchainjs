@@ -1,28 +1,40 @@
-import { InteropZodObject, InteropZodType } from "@langchain/core/utils/types";
-import {
+import type {
+  InteropZodObject,
+  InteropZodType,
+} from "@langchain/core/utils/types";
+import type {
   LangGraphRunnableConfig,
   AnnotationRoot,
   MessagesAnnotation,
   START,
   Runtime,
+  StateGraph,
 } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
-import { SystemMessage, BaseMessageLike } from "@langchain/core/messages";
-import {
+import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type {
+  SystemMessage,
+  BaseMessageLike,
+  BaseMessage,
+} from "@langchain/core/messages";
+import type {
   All,
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
-import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
-import {
+import type {
+  DynamicTool,
+  StructuredToolInterface,
+} from "@langchain/core/tools";
+import type {
   Runnable,
   RunnableLike,
   RunnableToolLike,
 } from "@langchain/core/runnables";
 
-import { ToolNode } from "./ToolNode.js";
-import { PreHookAnnotation } from "./PreHookAnnotation.js";
+import type { ToolNode } from "./nodes/ToolNode.js";
+import type { PreHookAnnotation } from "./annotation.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -86,20 +98,24 @@ export type CreateReactAgentRuntime<
     | InteropZodObject = AnyAnnotationRoot
 > = Runtime<ToAnnotationRoot<AnnotationRoot>["State"]>;
 
+export type LLM<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> =
+  | LanguageModelLike
+  | ((
+      state: CreateReactAgentState<StateSchema>,
+      runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
+    ) => Promise<LanguageModelLike> | LanguageModelLike);
+
 export type CreateReactAgentParams<
-  A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  AsStateGraph extends boolean = false
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm:
-    | LanguageModelLike
-    | ((
-        state: CreateReactAgentState<A>,
-        runtime: Runtime<ToAnnotationRoot<C>["State"]>
-      ) => Promise<LanguageModelLike> | LanguageModelLike);
+  llm: LLM<StateSchema, ContextSchema>;
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];
@@ -123,12 +139,12 @@ export type CreateReactAgentParams<
   /**
    * Additional state schema for the agent.
    */
-  stateSchema?: A;
+  stateSchema?: StateSchema;
 
   /**
    * An optional schema for the context.
    */
-  contextSchema?: C;
+  contextSchema?: ContextSchema;
   /** An optional checkpoint saver to persist the agent's state. */
   checkpointSaver?: BaseCheckpointSaver | boolean;
   /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
@@ -180,8 +196,8 @@ export type CreateReactAgentParams<
    * Useful for managing long message histories (e.g., message trimming, summarization, etc.).
    */
   preModelHook?: RunnableLike<
-    ToAnnotationRoot<A>["State"] & PreHookAnnotation["State"],
-    ToAnnotationRoot<A>["Update"] & PreHookAnnotation["Update"],
+    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
     LangGraphRunnableConfig
   >;
 
@@ -190,16 +206,44 @@ export type CreateReactAgentParams<
    * Useful for implementing human-in-the-loop, guardrails, validation, or other post-processing.
    */
   postModelHook?: RunnableLike<
-    ToAnnotationRoot<A>["State"],
-    ToAnnotationRoot<A>["Update"],
+    ToAnnotationRoot<StateSchema>["State"],
+    ToAnnotationRoot<StateSchema>["Update"],
     LangGraphRunnableConfig
   >;
-
-  /**
-   * Whether to return the state graph instance instead of the agent instance.
-   * This is useful for debugging and for advanced use cases.
-   *
-   * @default false
-   */
-  asStateGraph?: AsStateGraph;
 };
+
+export interface ConfigurableModelInterface {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _queuedMethodOperations: Record<string, any>;
+  _model: () => Promise<BaseChatModel>;
+}
+
+export interface AgentState<
+  StructuredResponseType extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >
+> {
+  messages: BaseMessage[];
+  // TODO: This won't be set until we
+  // implement managed values in LangGraphJS
+  // Will be useful for inserting a message on
+  // graph recursion end
+  // is_last_step: boolean;
+  structuredResponse: StructuredResponseType;
+}
+
+export type WithStateGraphNodes<
+  K extends string,
+  Graph
+> = Graph extends StateGraph<
+  infer SD,
+  infer S,
+  infer U,
+  infer N,
+  infer I,
+  infer O,
+  infer C
+>
+  ? StateGraph<SD, S, U, N | K, I, O, C>
+  : never;

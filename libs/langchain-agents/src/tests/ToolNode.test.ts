@@ -27,7 +27,7 @@ import {
   MessagesZodState,
 } from "@langchain/langgraph";
 
-import { ToolNode } from "../ToolNode.js";
+import { ToolNode } from "../nodes/ToolNode.js";
 import { _shouldBindTools, _bindTools, _getModel } from "../index.js";
 import {
   _AnyIdAIMessage,

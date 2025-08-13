@@ -16,8 +16,8 @@ import {
   MessagesAnnotation,
 } from "@langchain/langgraph";
 
-import { RunnableCallable } from "./RunnableCallable.js";
-import { isSend } from "./utils.js";
+import { RunnableCallable } from "../RunnableCallable.js";
+import { isSend } from "../utils.js";
 
 export type ToolNodeOptions = {
   name?: string;
