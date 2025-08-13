@@ -643,6 +643,14 @@ export abstract class BaseLanguageModel<
  */
 export interface TokenUsage {
   completionTokens?: number;
+  completionTokensDetails?: {
+    reasoningTokens?: number;
+    acceptedPredictionTokens?: number;
+    rejectedPredictionTokens?: number;
+  };
   promptTokens?: number;
+  promptTokensDetails?: {
+    cachedTokens?: number;
+  };
   totalTokens?: number;
 }
