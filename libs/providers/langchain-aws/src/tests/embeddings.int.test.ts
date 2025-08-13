@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
 // import { MemoryVectorStore } from "langchain/vectorstores/memory";
