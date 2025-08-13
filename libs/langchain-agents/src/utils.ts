@@ -28,7 +28,6 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 
-import { ToolNode } from "./nodes/ToolNode.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import {
   ServerTool,
@@ -456,18 +455,4 @@ export async function bindTools(
   }
 
   throw new Error(`llm ${llm} must define bindTools method.`);
-}
-
-export function getTools(tools: ToolNode | (ServerTool | ClientTool)[]) {
-  if (!Array.isArray(tools)) {
-    return {
-      toolClasses: tools.tools,
-      toolNode: tools,
-    };
-  }
-
-  return {
-    toolClasses: tools,
-    toolNode: new ToolNode(tools.filter(isClientTool)),
-  };
 }

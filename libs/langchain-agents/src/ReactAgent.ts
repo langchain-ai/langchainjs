@@ -16,7 +16,7 @@ import {
 } from "@langchain/core/messages";
 
 import { createReactAgentAnnotation } from "./annotation.js";
-import { getTools, isClientTool } from "./utils.js";
+import { isClientTool } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { StructuredResponseNode } from "./nodes/StructuredResponseNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -52,7 +52,10 @@ export class ReactAgent<
   constructor(
     public options: CreateReactAgentParams<A, StructuredResponseFormat, C>
   ) {
-    const { toolClasses, toolNode } = getTools(options.tools);
+    const toolClasses = Array.isArray(options.tools)
+      ? options.tools
+      : options.tools.tools;
+
     /**
      * If any of the tools are configured to return_directly after running,
      * our graph needs to check if these were called
@@ -191,6 +194,9 @@ export class ReactAgent<
       }
     }
 
+    /**
+     * compile the graph
+     */
     this.#graph = allNodeWorkflows.compile({
       checkpointer: this.options.checkpointer ?? this.options.checkpointSaver,
       interruptBefore: this.options.interruptBefore,
