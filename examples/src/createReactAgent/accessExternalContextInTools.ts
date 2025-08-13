@@ -21,6 +21,7 @@
  * only sees their own data, providing both personalization and security.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
@@ -203,6 +204,14 @@ await handleUserRequest("user789", "Show me my last 2 purchases");
  */
 console.log("\n=== Unauthenticated Request ===");
 await handleUserRequest("", "Show me my purchases");
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await ecommerceAgent.visualize());
 
 /**
  * Example Output:

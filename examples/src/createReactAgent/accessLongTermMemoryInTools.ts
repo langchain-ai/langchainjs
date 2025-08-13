@@ -18,6 +18,7 @@
  * over time, enabling stable, user-specific behavior across sessions.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
@@ -324,6 +325,14 @@ const johnResult3 = await agent.invoke(
 );
 
 console.log(johnResult3.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.visualize());
 
 /**
  * Example Output:

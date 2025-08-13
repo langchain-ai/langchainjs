@@ -18,6 +18,7 @@
  * reference this information without the user having to repeat task details.
  */
 
+import fs from "node:fs/promises";
 import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -417,6 +418,14 @@ const result5 = await agent.invoke({
 });
 
 console.log(result5.messages[result5.messages.length - 1].content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.visualize());
 
 /**
  * Expected output demonstrates how tools update thread-level state:

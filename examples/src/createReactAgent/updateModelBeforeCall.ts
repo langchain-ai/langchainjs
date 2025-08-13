@@ -26,6 +26,7 @@
  * like "Design a distributed caching algorithm" are routed to a more powerful model.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   type CreateReactAgentState,
@@ -127,6 +128,14 @@ const contextPrefer = await agent.invoke(
   }
 );
 console.log("Context Prefer:", contextPrefer.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.visualize());
 
 /**
  * Expected: first query routes to gpt-4o-mini, second to gpt-4o.

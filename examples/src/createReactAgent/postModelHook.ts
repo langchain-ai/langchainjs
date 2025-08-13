@@ -17,6 +17,7 @@
  * - You want to aggregate metrics on moderation and quality improvements
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
@@ -386,6 +387,14 @@ Compliance mitigated: ${stats.complianceMitigated}
 Hallucination flags: ${stats.hallucinationFlagged}
 Human approval gates: ${stats.humanGateInserted}
 `);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.visualize());
 
 /**
  * Example Output:

@@ -206,6 +206,23 @@ export class ReactAgent<
     });
   }
 
+  /**
+   * Get the compiled graph.
+   */
+  get graph(): CompiledStateGraph<
+    ToAnnotationRoot<A>["State"],
+    ToAnnotationRoot<A>["Update"],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    typeof MessagesAnnotation.spec & ToAnnotationRoot<A>["spec"],
+    ReturnType<
+      typeof createReactAgentAnnotation<StructuredResponseFormat>
+    >["spec"] &
+      ToAnnotationRoot<A>["spec"]
+  > {
+    return this.#graph;
+  }
+
   #getEntryPoint() {
     const entryPoint = this.options.preModelHook ? "pre_model_hook" : "agent";
     return entryPoint;
@@ -354,11 +371,54 @@ export class ReactAgent<
     };
   }
 
+  /**
+   * Invoke the agent with a single input and config.
+   * @param input The input to the graph.
+   * @param options The configuration to use for the run.
+   */
   get invoke(): typeof CompiledStateGraph.prototype.invoke {
     return this.#graph.invoke.bind(this.#graph);
   }
 
+  /**
+   * Streams the execution of an agent, emitting state updates as they occur.
+   * This is the primary method for observing graph execution in real-time.
+   *
+   * Stream modes:
+   * - "values": Emits complete state after each step
+   * - "updates": Emits only state changes after each step
+   * - "debug": Emits detailed debug information
+   * - "messages": Emits messages from within nodes
+   *
+   * @param input - The input to start agent execution with
+   * @param options - Configuration options for streaming
+   * @returns An async iterable stream of agent state updates
+   */
   get stream(): typeof CompiledStateGraph.prototype.stream {
     return this.#graph.stream.bind(this.#graph);
+  }
+
+  /**
+   * Visualize the graph as a PNG image.
+   * @param params - Parameters for the drawMermaidPng method.
+   * @param params.withStyles - Whether to include styles in the graph.
+   * @param params.curveStyle - The style of the graph's curves.
+   * @param params.nodeColors - The colors of the graph's nodes.
+   * @param params.wrapLabelNWords - The maximum number of words to wrap in a node's label.
+   * @param params.backgroundColor - The background color of the graph.
+   * @returns PNG image as a buffer
+   */
+  async visualize(params: {
+    withStyles?: boolean;
+    curveStyle?: string;
+    nodeColors?: Record<string, string>;
+    wrapLabelNWords?: number;
+    backgroundColor?: string;
+  }) {
+    const representation = await this.#graph.getGraphAsync();
+    const image = await representation.drawMermaidPng(params);
+    const arrayBuffer = await image.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+    return buffer;
   }
 }

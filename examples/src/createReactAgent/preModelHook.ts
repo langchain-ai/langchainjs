@@ -36,6 +36,7 @@
  * conversation history manageable while preserving important context.
  */
 
+import fs from "node:fs/promises";
 import { BaseMessage, createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -174,8 +175,8 @@ console.log(
   `\nAfter pre-model hook: ${result.messages.length} messages in state`
 );
 console.log("\n=== What's permanently stored in state ===");
-result.messages.forEach((msg, i) => {
-  const messageType = msg._getType?.() || "unknown";
+result.messages.forEach((msg: BaseMessage, i: number) => {
+  const messageType = msg.getType() || "unknown";
   const content =
     typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
   const preview = content.substring(0, 60) + (content.length > 60 ? "..." : "");
@@ -188,6 +189,14 @@ const lastContent =
     ? lastMessage.content
     : JSON.stringify(lastMessage.content);
 console.log(`\nAssistant response: ${lastContent}`);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await supportAgent.visualize());
 
 /**
  * Key Distinction Summary:
