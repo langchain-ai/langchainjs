@@ -28,6 +28,7 @@ import {
 
 import { type Prompt } from "../types.js";
 import { createReactAgent } from "../index.js";
+import { stopWhen, stopWhenToolCall, stopWhenMaxSteps } from "../stopWhen.js";
 
 import {
   FakeToolCallingChatModel,
@@ -1900,6 +1901,265 @@ describe("createReactAgent", () => {
 
       // The dynamic model function should receive the original state, not the processed model input
       expect(dynamicModel).toHaveBeenCalledWith(inputState, expect.any(Object));
+    });
+  });
+
+  describe("stopWhen conditions", () => {
+    it("should stop with general stopWhen predicate", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({ content: "Start conversation", id: "0" }),
+          new AIMessage({ content: "First response with STOP", id: "1" }),
+        ],
+      });
+
+      // Stop when "STOP" keyword is found in message
+      const conditionMock = vi.fn((state) => {
+        const lastMessage = state.messages[state.messages.length - 1];
+        const content = lastMessage?.content?.toString() || "";
+        return {
+          shouldStop: content.includes("STOP"),
+          description: "Found STOP keyword in message",
+        };
+      });
+      const stopOnKeyword = stopWhen(conditionMock);
+
+      const agent = createReactAgent({
+        llm: model,
+        tools: [],
+        stopWhen: stopOnKeyword,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Go!")],
+      });
+      expect(result.messages).toHaveLength(2);
+      expect(result.messages.at(-1)?.content).toBe("Start conversation");
+
+      const result2 = await agent.invoke({
+        messages: [new HumanMessage("Go!")],
+      });
+      expect(result2.messages).toHaveLength(2);
+      expect(result2.messages.at(-1)?.content).toBe("First response with STOP");
+
+      expect(conditionMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("should stop after specified number of tool calls", async () => {
+      const weatherTool = tool((_input) => "Weather data", {
+        name: "get_weather",
+        description: "Get weather data",
+        schema: z.object({
+          location: z.string(),
+        }),
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "call1",
+                name: "get_weather",
+                args: { location: "NYC" },
+              },
+            ],
+          }),
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "call2",
+                name: "get_weather",
+                args: { location: "LA" },
+              },
+            ],
+          }),
+          new AIMessage({
+            content: "Should not reach this",
+            tool_calls: [
+              {
+                id: "call3",
+                name: "get_weather",
+                args: { location: "Chicago" },
+              },
+            ],
+          }),
+        ],
+      });
+
+      const stopWhen = vi.fn(stopWhenToolCall("get_weather", 2));
+      const agent = createReactAgent({
+        llm: model,
+        tools: [weatherTool],
+        stopWhen,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Get weather for multiple cities")],
+      });
+
+      // Count tool messages
+      const toolMessages = result.messages.filter(
+        (msg) => msg.getType() === "tool" && msg.name === "get_weather"
+      );
+      expect(toolMessages).toHaveLength(2);
+
+      // Verify we didn't process the third tool call
+      const aiMessages = result.messages.filter(
+        (msg) => msg.getType() === "ai"
+      );
+      expect(aiMessages).toHaveLength(2); // Only two AI messages, not three
+      expect(stopWhen).toHaveBeenCalledTimes(3); // 3 calls for 3 FakeToolCallingChatModel responses
+    });
+
+    it("should stop after max steps (model calls)", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({ content: "Step 1", id: "1" }),
+          new AIMessage({ content: "Step 2", id: "2" }),
+          new AIMessage({ content: "Step 3", id: "3" }),
+          new AIMessage({ content: "Should not reach", id: "4" }),
+        ],
+      });
+
+      const agent = createReactAgent({
+        llm: model,
+        tools: [],
+        stopWhen: stopWhenMaxSteps(1),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Start multi-step process")],
+      });
+
+      // Count AI messages
+      const aiMessages = result.messages.filter(
+        (msg) => msg.getType() === "ai"
+      );
+      expect(aiMessages).toHaveLength(1);
+      expect(aiMessages[0].content).toBe("Step 1");
+    });
+
+    it("should validate max steps parameter", () => {
+      // Should throw for non-positive integers
+      expect(() => stopWhenMaxSteps(0)).toThrow(
+        "maxSteps must be a positive integer"
+      );
+      expect(() => stopWhenMaxSteps(-1)).toThrow(
+        "maxSteps must be a positive integer"
+      );
+      expect(() => stopWhenMaxSteps(1.5)).toThrow(
+        "maxSteps must be a positive integer"
+      );
+      expect(() => stopWhenToolCall("tool", 0)).toThrow(
+        "toolCallCount must be a positive integer"
+      );
+      expect(() => stopWhenToolCall("tool", -1)).toThrow(
+        "toolCallCount must be a positive integer"
+      );
+      expect(() => stopWhenToolCall("tool", 1.5)).toThrow(
+        "toolCallCount must be a positive integer"
+      );
+    });
+
+    it("should combine multiple stop conditions", async () => {
+      const searchTool = tool((_input) => "Search results", {
+        name: "search",
+        description: "Search the web",
+        schema: z.object({
+          query: z.string(),
+        }),
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "call1",
+                name: "search",
+                args: { query: "test" },
+              },
+            ],
+          }),
+          new AIMessage({ content: "After search", id: "2" }),
+          new AIMessage({ content: "Should not reach", id: "3" }),
+        ],
+      });
+
+      // Combine: stop after search OR after 1 step
+      const combinedStop = stopWhen((state) => {
+        // Check if search was called
+        const searchStop = stopWhenToolCall("search")(state);
+        if (searchStop.shouldStop) return searchStop;
+
+        // Otherwise check step count
+        return stopWhenMaxSteps(1)(state);
+      });
+
+      const agent = createReactAgent({
+        llm: model,
+        tools: [searchTool],
+        stopWhen: combinedStop,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Search and process")],
+      });
+
+      // Should stop after first AI message (which includes tool call)
+      const aiMessages = result.messages.filter(
+        (msg) => msg.getType() === "ai"
+      );
+      expect(aiMessages).toHaveLength(1);
+
+      const toolMessages = result.messages.filter(
+        (msg) => msg.getType() === "tool"
+      );
+      expect(toolMessages).toHaveLength(1);
+    });
+
+    it("should work with async predicates", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({ content: "Done", id: "1" }),
+          new AIMessage({ content: "Should not reach", id: "2" }),
+        ],
+      });
+
+      // Async predicate that simulates checking external condition
+      const asyncStop = stopWhen(async (state) => {
+        // Simulate async operation
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        const lastMessage = state.messages[state.messages.length - 1];
+        const isDone = lastMessage?.content?.toString().includes("Done");
+
+        return {
+          shouldStop: isDone,
+          description: "Async check completed",
+        };
+      });
+
+      const agent = createReactAgent({
+        llm: model,
+        tools: [],
+        stopWhen: asyncStop,
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Start async process")],
+      });
+
+      expect(result.messages).toHaveLength(2);
+      const aiMessages = result.messages.filter(
+        (msg) => msg.getType() === "ai"
+      );
+      expect(aiMessages).toHaveLength(1);
+      expect(aiMessages[0].content).toBe("Done");
     });
   });
 });

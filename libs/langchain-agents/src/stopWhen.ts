@@ -1,7 +1,6 @@
 import { AgentState } from "./types.js";
 import { PreHookAnnotation } from "./annotation.js";
 import { RunnableConfig } from "@langchain/core/runnables";
-import { AIMessage } from "@langchain/core/messages";
 
 export interface PredicateFunctionReturn {
   shouldStop: boolean;
@@ -133,6 +132,10 @@ export function stopWhen<
  * ```
  */
 export function stopWhenToolCall(toolName: string, toolCallCount = 1) {
+  if (toolCallCount < 1 || !Number.isInteger(toolCallCount)) {
+    throw new Error("toolCallCount must be a positive integer");
+  }
+
   return (state: AgentState<any>): PredicateFunctionReturn => {
     const toolCalls = state.messages.filter(
       (msg) => msg.getType() === "tool" && msg.name === toolName

@@ -2,7 +2,7 @@ import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
-import { type LangGraphRunnableConfig, Command } from "@langchain/langgraph";
+import { type LangGraphRunnableConfig } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
