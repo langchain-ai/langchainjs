@@ -21,6 +21,7 @@ module.exports = {
     "*.js",
     "*.cjs",
     "*.d.ts",
+    "vitest.config.ts",
   ],
   rules: {
     "no-process-env": 2,
@@ -65,10 +66,10 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };
