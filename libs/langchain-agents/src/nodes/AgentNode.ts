@@ -6,7 +6,12 @@ import { type LangGraphRunnableConfig } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
-import { shouldBindTools, bindTools, getPromptRunnable } from "../utils.js";
+import {
+  shouldBindTools,
+  bindTools,
+  getPromptRunnable,
+  validateLLMHasNoBoundTools,
+} from "../utils.js";
 import {
   AgentState,
   ClientTool,
@@ -192,6 +197,11 @@ export class AgentNode<
     config: LangGraphRunnableConfig
   ) {
     const model = await llm(state, config);
+
+    /**
+     * Check if the LLM already has bound tools and throw if it does.
+     */
+    validateLLMHasNoBoundTools(model);
 
     return getPromptRunnable(this.#options.prompt).pipe(
       this.#options.includeAgentName === "inline"

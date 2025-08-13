@@ -28,6 +28,7 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 
+import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
 import {
   ServerTool,
@@ -455,4 +456,75 @@ export async function bindTools(
   }
 
   throw new Error(`llm ${llm} must define bindTools method.`);
+}
+
+/**
+ * Check if the LLM already has bound tools and throw if it does.
+ *
+ * @param llm - The LLM to check.
+ * @returns void
+ */
+export function validateLLMHasNoBoundTools(llm: any): void {
+  /**
+   * If llm is a function, we can't validate until runtime, so skip
+   */
+  if (typeof llm === "function") {
+    return;
+  }
+
+  let model = llm;
+
+  /**
+   * If model is a RunnableSequence, find a RunnableBinding in its steps
+   */
+  if (RunnableSequence.isRunnableSequence(model)) {
+    model =
+      model.steps.find((step: any) =>
+        RunnableBinding.isRunnableBinding(step)
+      ) || model;
+  }
+
+  /**
+   * If model is configurable, get the underlying model
+   */
+  if (isConfigurableModel(model)) {
+    /**
+     * Can't validate async model retrieval in constructor
+     */
+    return;
+  }
+
+  /**
+   * Check if model is a RunnableBinding with bound tools
+   */
+  if (RunnableBinding.isRunnableBinding(model)) {
+    const hasToolsInKwargs =
+      model.kwargs != null &&
+      typeof model.kwargs === "object" &&
+      "tools" in model.kwargs &&
+      Array.isArray(model.kwargs.tools) &&
+      model.kwargs.tools.length > 0;
+
+    const hasToolsInConfig =
+      model.config != null &&
+      typeof model.config === "object" &&
+      "tools" in model.config &&
+      Array.isArray(model.config.tools) &&
+      model.config.tools.length > 0;
+
+    if (hasToolsInKwargs || hasToolsInConfig) {
+      throw new MultipleToolsBoundError();
+    }
+  }
+
+  /**
+   * Also check if model has tools property directly (e.g., FakeToolCallingModel)
+   */
+  if (
+    model.tools !== undefined &&
+    Array.isArray(model.tools) &&
+    model.tools.length > 0
+  ) {
+    throw new MultipleToolsBoundError();
+  }
 }

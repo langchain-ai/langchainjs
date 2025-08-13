@@ -16,7 +16,7 @@ import {
 } from "@langchain/core/messages";
 
 import { createReactAgentAnnotation } from "./annotation.js";
-import { isClientTool } from "./utils.js";
+import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { StructuredResponseNode } from "./nodes/StructuredResponseNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -61,6 +61,11 @@ export class ReactAgent<
       ContextSchema
     >
   ) {
+    /**
+     * Check if the LLM already has bound tools and throw if it does.
+     */
+    validateLLMHasNoBoundTools(options.llm);
+
     const toolClasses = Array.isArray(options.tools)
       ? options.tools
       : options.tools.tools;

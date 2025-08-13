@@ -81,6 +81,26 @@ describe("createReactAgent", () => {
     expect((agent.options.preModelHook as any)("foo")).toBe("foo");
   });
 
+  it("should reject LLM with bound tools", async () => {
+    const model = new FakeToolCallingModel();
+    const searchTool = new SearchAPI();
+
+    // Create a model with bound tools
+    const modelWithTools = model.bindTools([searchTool]);
+
+    // Should throw when trying to create agent with bound tools
+    expect(() => {
+      createReactAgent({
+        llm: modelWithTools,
+        tools: [searchTool],
+      });
+    }).toThrow(
+      "The provided LLM already has bound tools. " +
+        "Please provide an LLM without bound tools to createReactAgent. " +
+        "The agent will bind the tools provided in the 'tools' parameter."
+    );
+  });
+
   it("should work with system message prompt", async () => {
     const prompt = new SystemMessage("Foo");
     const agent = createReactAgent({
@@ -352,7 +372,7 @@ describe("createReactAgent", () => {
 
   describe.each(["openai", "anthropic"])("tool style %s", (toolStyle) => {
     describe.each([true, false])("include builtin: %s", (includeBuiltin) => {
-      it("should work with model with tools", async () => {
+      it("should reject model with bound tools", async () => {
         const model = new FakeToolCallingModel({
           toolStyle: toolStyle as any,
         });
@@ -396,62 +416,36 @@ describe("createReactAgent", () => {
           });
         }
 
-        // Check valid agent constructor
-        const agent = createReactAgent({
-          llm: model.bindTools(tools),
-          tools,
-        });
+        // Should throw when trying to create agent with bound tools
+        expect(() => {
+          createReactAgent({
+            llm: model.bindTools(tools),
+            tools,
+          });
+        }).toThrow(
+          "The provided LLM already has bound tools. " +
+            "Please provide an LLM without bound tools to createReactAgent. " +
+            "The agent will bind the tools provided in the 'tools' parameter."
+        );
 
-        const result = await Promise.all([
-          agent.graph.nodes.tool1.invoke({
-            messages: [
-              new AIMessage({
-                content: "hi?",
-                tool_calls: [
-                  {
-                    name: "tool1",
-                    args: { someVal: 2 },
-                    id: "some 1",
-                  },
-                ],
-              }),
-            ],
-          }),
-          agent.graph.nodes.tool2.invoke({
-            messages: [
-              new AIMessage({
-                content: "hi?",
-                tool_calls: [
-                  {
-                    name: "tool2",
-                    args: { someVal: 2 },
-                    id: "some 2",
-                  },
-                ],
-              }),
-            ],
-          }),
-        ]);
-
-        const messages = result.map((r) => r.messages).flat();
-        const toolMessages = messages.slice(-2) as ToolMessage[];
-        for (const toolMessage of toolMessages) {
-          expect(toolMessage.getType()).toBe("tool");
-          expect(["Tool 1: 2", "Tool 2: 2"]).toContain(toolMessage.content);
-          expect(["some 1", "some 2"]).toContain(toolMessage.tool_call_id);
-        }
-
-        // Test mismatching tool lengths - Note: Implementation may not throw in all cases
-        try {
+        // Test mismatching tool lengths should also throw
+        expect(() => {
           createReactAgent({
             llm: model.bindTools([tool1]),
             tools: [tool1, tool2],
           });
-          // If no error is thrown, that's okay for now
-        } catch (error) {
-          // Error expected in some implementations
-          expect(error).toBeDefined();
-        }
+        }).toThrow(
+          "The provided LLM already has bound tools. " +
+            "Please provide an LLM without bound tools to createReactAgent. " +
+            "The agent will bind the tools provided in the 'tools' parameter."
+        );
+
+        // Should work without bound tools
+        const agent = createReactAgent({
+          llm: model,
+          tools,
+        });
+        expect(agent).toBeDefined();
 
         // Test missing bound tools - Note: Implementation may not throw in all cases
         try {
@@ -1901,6 +1895,30 @@ describe("createReactAgent", () => {
 
       // The dynamic model function should receive the original state, not the processed model input
       expect(dynamicModel).toHaveBeenCalledWith(inputState, expect.any(Object));
+    });
+
+    it("should reject dynamic model that returns LLM with bound tools at runtime", async () => {
+      const searchTool = new SearchAPI();
+
+      // Create a dynamic model that returns a model with bound tools
+      const dynamicModelWithBoundTools = () => {
+        const model = new FakeToolCallingModel();
+        // This bindTools happens at runtime, after validation
+        return model.bindTools([searchTool]);
+      };
+
+      const agent = createReactAgent({
+        llm: dynamicModelWithBoundTools,
+        tools: [searchTool],
+      });
+
+      // The agent creation should succeed (validation is skipped for functions)
+      expect(agent).toBeDefined();
+
+      // But invoking should fail when the dynamic model returns a model with bound tools
+      await expect(async () => {
+        await agent.invoke({ messages: [new HumanMessage("test")] });
+      }).rejects.toThrow("The provided LLM already has bound tools");
     });
   });
 
