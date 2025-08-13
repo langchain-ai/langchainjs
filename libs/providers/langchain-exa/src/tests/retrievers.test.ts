@@ -1,4 +1,4 @@
-import { it, expect } from "@jest/globals";
+import { it, expect } from "vitest";
 import { SearchResult, TextContentsOptions } from "exa-js";
 import { _getMetadata } from "../retrievers.js";
 

@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import Exa from "exa-js";
 import { ExaRetriever } from "../retrievers.js";
 
