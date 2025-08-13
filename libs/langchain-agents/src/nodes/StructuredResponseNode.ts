@@ -100,19 +100,10 @@ export class StructuredResponseNode<
       );
     }
 
-    /**
-     * Type the config with the strict option for structured output models.
-     * (required by some models, like OpenAI)
-     */
-    const invokeConfig = {
+    const response = await modelWithStructuredOutput.invoke(messages, {
       ...config,
       strict: true,
-    } as RunnableConfig;
-
-    const response = await modelWithStructuredOutput.invoke(
-      messages,
-      invokeConfig
-    );
+    } as RunnableConfig);
     return { structuredResponse: response };
   }
 

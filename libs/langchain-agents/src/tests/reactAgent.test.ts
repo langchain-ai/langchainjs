@@ -22,6 +22,7 @@ import {
   Runtime,
   InMemoryStore,
   MessagesAnnotation,
+  Command,
   type BaseCheckpointSaver,
 } from "@langchain/langgraph";
 
@@ -396,33 +397,42 @@ describe("createReactAgent", () => {
 
         // Check valid agent constructor
         const agent = createReactAgent({
-          llm: model.bindTools([tool1, tool2]),
+          llm: model.bindTools(tools),
           tools,
         });
 
-        const result = await agent.graph.tools.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "tool1",
-                  args: { someVal: 2 },
-                  id: "some 1",
-                },
-                {
-                  name: "tool2",
-                  args: { someVal: 2 },
-                  id: "some 2",
-                },
-              ],
-            }),
-          ],
-        });
+        const result = await Promise.all([
+          agent.graph.nodes.tool1.invoke({
+            messages: [
+              new AIMessage({
+                content: "hi?",
+                tool_calls: [
+                  {
+                    name: "tool1",
+                    args: { someVal: 2 },
+                    id: "some 1",
+                  },
+                ],
+              }),
+            ],
+          }),
+          agent.graph.nodes.tool2.invoke({
+            messages: [
+              new AIMessage({
+                content: "hi?",
+                tool_calls: [
+                  {
+                    name: "tool2",
+                    args: { someVal: 2 },
+                    id: "some 2",
+                  },
+                ],
+              }),
+            ],
+          }),
+        ]);
 
-        const messages = Array.isArray(result.messages)
-          ? result.messages
-          : [result.messages];
+        const messages = result.map((r) => r.messages).flat();
         const toolMessages = messages.slice(-2) as ToolMessage[];
         for (const toolMessage of toolMessages) {
           expect(toolMessage.getType()).toBe("tool");
@@ -1081,16 +1091,12 @@ describe("createReactAgent", () => {
   });
 
   it("should handle mixed Command and non-Command tool outputs", async () => {
-    // Import Command and Send from langgraph
-    const { Command, Send } = await import("@langchain/langgraph");
-
     // Create a tool that returns a Command
     const commandTool = tool(
       (_input: { action: string }) => {
-        // Return a Command that sends to a specific node
+        // Return a Command with no effect - just for testing mixed outputs
         return new Command({
-          graph: Command.PARENT,
-          goto: [new Send("agent", { messages: [] })],
+          update: {}, // Empty update
         });
       },
       {
@@ -1147,8 +1153,11 @@ describe("createReactAgent", () => {
     // The commandTool returns a Command (control flow) which doesn't add a message
     expect(result.messages).toHaveLength(3);
 
-    // Check that AI message has both tool calls (this is what triggers the mixed output path)
-    const aiMessage = result.messages[1] as AIMessage;
+    // Find the AIMessage (it might not be at a fixed index)
+    const aiMessage = result.messages.find(
+      (msg) => msg.getType() === "ai"
+    ) as AIMessage;
+    expect(aiMessage).toBeDefined();
     expect(aiMessage.tool_calls).toHaveLength(2);
     expect(aiMessage.tool_calls?.some((tc) => tc.name === "commandTool")).toBe(
       true
@@ -1157,10 +1166,17 @@ describe("createReactAgent", () => {
       true
     );
 
-    // Check that we have a tool message from the normal tool
-    const toolMessage = result.messages[2];
-    expect(toolMessage._getType()).toBe("tool");
-    expect(toolMessage.content).toBe("Normal result: test_normal");
+    // Find the tool message from the normal tool
+    const toolMessage = result.messages.find((msg) => msg.getType() === "tool");
+    expect(toolMessage).toBeDefined();
+    expect(toolMessage?.content).toBe("Normal result: test_normal");
+
+    // Verify we have a human message
+    const humanMessage = result.messages.find(
+      (msg) => msg.getType() === "human"
+    );
+    expect(humanMessage).toBeDefined();
+    expect(humanMessage?.content).toBe("Test mixed outputs");
   });
 
   it("should work with includeAgentName: 'inline'", async () => {

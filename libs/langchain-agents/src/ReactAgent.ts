@@ -30,27 +30,36 @@ import type {
   WithStateGraphNodes,
 } from "./types.js";
 
-export class ReactAgent<
-  A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
-  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> {
-  #graph: CompiledStateGraph<
-    ToAnnotationRoot<A>["State"],
-    ToAnnotationRoot<A>["Update"],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
-    typeof MessagesAnnotation.spec & ToAnnotationRoot<A>["spec"],
-    ReturnType<
-      typeof createReactAgentAnnotation<StructuredResponseFormat>
-    >["spec"] &
-      ToAnnotationRoot<A>["spec"]
-  >;
+type AgentGraph<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>
+> = CompiledStateGraph<
+  ToAnnotationRoot<StateSchema>["State"],
+  ToAnnotationRoot<StateSchema>["Update"],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
+  ReturnType<
+    typeof createReactAgentAnnotation<StructuredResponseFormat>
+  >["spec"] &
+    ToAnnotationRoot<StateSchema>["spec"]
+>;
 
-  #inputSchema?: AnnotationRoot<ToAnnotationRoot<A>["spec"]>;
+export class ReactAgent<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> {
+  #graph: AgentGraph<StateSchema, StructuredResponseFormat>;
+
+  #inputSchema?: AnnotationRoot<ToAnnotationRoot<StateSchema>["spec"]>;
 
   constructor(
-    public options: CreateReactAgentParams<A, StructuredResponseFormat, C>
+    public options: CreateReactAgentParams<
+      StateSchema,
+      StructuredResponseFormat,
+      ContextSchema
+    >
   ) {
     const toolClasses = Array.isArray(options.tools)
       ? options.tools
@@ -154,7 +163,9 @@ export class ReactAgent<
 
     if (this.options.postModelHook) {
       allNodeWorkflows.addEdge("agent", "post_model_hook");
-      const postHookPaths = this.#getPostModelHookPaths(toolClasses);
+      const postHookPaths = this.#getPostModelHookPaths(
+        toolClasses.filter(isClientTool)
+      );
       if (postHookPaths.length === 1) {
         allNodeWorkflows.addEdge("post_model_hook", postHookPaths[0]);
       } else {
@@ -165,7 +176,7 @@ export class ReactAgent<
         );
       }
     } else {
-      const modelPaths = this.#getModelPaths(toolClasses);
+      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
       if (modelPaths.length === 1) {
         allNodeWorkflows.addEdge("agent", modelPaths[0]);
       } else {
@@ -204,23 +215,14 @@ export class ReactAgent<
       interruptAfter: this.options.interruptAfter,
       store: this.options.store,
       name: this.options.name,
+      description: this.options.description,
     });
   }
 
   /**
    * Get the compiled graph.
    */
-  get graph(): CompiledStateGraph<
-    ToAnnotationRoot<A>["State"],
-    ToAnnotationRoot<A>["Update"],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
-    typeof MessagesAnnotation.spec & ToAnnotationRoot<A>["spec"],
-    ReturnType<
-      typeof createReactAgentAnnotation<StructuredResponseFormat>
-    >["spec"] &
-      ToAnnotationRoot<A>["spec"]
-  > {
+  get graph(): AgentGraph<StateSchema, StructuredResponseFormat> {
     return this.#graph;
   }
 
@@ -381,7 +383,7 @@ export class ReactAgent<
    * @param input The input to the graph.
    * @param options The configuration to use for the run.
    */
-  get invoke(): typeof CompiledStateGraph.prototype.invoke {
+  get invoke(): AgentGraph<StateSchema, StructuredResponseFormat>["invoke"] {
     return this.#graph.invoke.bind(this.#graph);
   }
 
@@ -399,7 +401,7 @@ export class ReactAgent<
    * @param options - Configuration options for streaming
    * @returns An async iterable stream of agent state updates
    */
-  get stream(): typeof CompiledStateGraph.prototype.stream {
+  get stream(): AgentGraph<StateSchema, StructuredResponseFormat>["stream"] {
     return this.#graph.stream.bind(this.#graph);
   }
 
@@ -413,7 +415,7 @@ export class ReactAgent<
    * @param params.backgroundColor - The background color of the graph.
    * @returns PNG image as a buffer
    */
-  async visualize(params: {
+  async visualize(params?: {
     withStyles?: boolean;
     curveStyle?: string;
     nodeColors?: Record<string, string>;

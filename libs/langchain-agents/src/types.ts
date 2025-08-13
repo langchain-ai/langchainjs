@@ -184,6 +184,12 @@ export type CreateReactAgentParams<
   name?: string;
 
   /**
+   * An optional description for the agent.
+   * This can be used to describe the agent to the underlying supervisor LLM.
+   */
+  description?: string;
+
+  /**
    * Use to specify how to expose the agent name to the underlying supervisor LLM.
    *   - `undefined`: Relies on the LLM provider {@link AIMessage#name}. Currently, only OpenAI supports this.
    *   - `"inline"`: Add the agent name directly into the content field of the {@link AIMessage} using XML-style tags.
