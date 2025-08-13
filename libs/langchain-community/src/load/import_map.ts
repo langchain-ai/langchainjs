@@ -30,6 +30,7 @@ export * as embeddings__baidu_qianfan from "../embeddings/baidu_qianfan.js";
 export * as embeddings__bytedance_doubao from "../embeddings/bytedance_doubao.js";
 export * as embeddings__deepinfra from "../embeddings/deepinfra.js";
 export * as embeddings__fireworks from "../embeddings/fireworks.js";
+export * as embeddings__hana_internal from "../embeddings/hana_internal.js";
 export * as embeddings__minimax from "../embeddings/minimax.js";
 export * as embeddings__ollama from "../embeddings/ollama.js";
 export * as embeddings__togetherai from "../embeddings/togetherai.js";
