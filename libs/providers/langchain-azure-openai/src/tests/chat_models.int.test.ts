@@ -1,4 +1,4 @@
-import { test, jest, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import {
   BaseMessage,
   ChatMessage,

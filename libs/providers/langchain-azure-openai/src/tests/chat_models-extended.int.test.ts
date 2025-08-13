@@ -1,4 +1,4 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { InMemoryCache } from "@langchain/core/caches";
 import { AzureChatOpenAI } from "../chat_models.js";
