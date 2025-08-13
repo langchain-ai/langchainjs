@@ -2065,7 +2065,7 @@ export class RunnableSequence<
       otherOptions?.runName
     );
     const steps = [this.first, ...this.middle, this.last];
-    let concatSupported = true;
+    let concatSupported = options?.concatSupported ?? true;
     let finalOutput;
     async function* inputGenerator() {
       yield input;
@@ -2105,6 +2105,8 @@ export class RunnableSequence<
               concatSupported = false;
             }
           }
+        } else {
+          finalOutput = chunk;
         }
       }
     } catch (e) {
