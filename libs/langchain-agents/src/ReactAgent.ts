@@ -94,6 +94,7 @@ export class ReactAgent<
         llm: this.options.llm,
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
+        name: this.options.name,
         toolClasses,
         shouldReturnDirect,
       }),
@@ -312,7 +313,11 @@ export class ReactAgent<
       const messages = state.messages;
       const lastMessage = messages.at(-1);
 
-      if (!(lastMessage instanceof AIMessage) || !lastMessage.tool_calls) {
+      if (
+        !(lastMessage instanceof AIMessage) ||
+        !lastMessage.tool_calls ||
+        lastMessage.tool_calls.length === 0
+      ) {
         if (this.options.postModelHook) {
           return "post_model_hook";
         }

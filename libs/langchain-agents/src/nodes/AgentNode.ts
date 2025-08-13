@@ -29,7 +29,7 @@ interface AgentNodeOptions<
       StructuredResponseFormat,
       ContextSchema
     >,
-    "llm" | "prompt" | "includeAgentName"
+    "llm" | "prompt" | "includeAgentName" | "name"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -62,7 +62,7 @@ export class AgentNode<
     >
   ) {
     super({
-      name: "agent",
+      name: options.name ?? "agent",
       func: (input, config) => this.#run(input, config as RunnableConfig),
     });
 
@@ -73,8 +73,6 @@ export class AgentNode<
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
   ) {
-    const modelInput = this.#getModelInputState(state);
-
     /**
      * We're dynamically creating the model runnable here
      * to ensure that we can validate ConfigurableModel properly
@@ -84,6 +82,7 @@ export class AgentNode<
         ? await this.#getDynamicModel(this.#options.llm, state, config)
         : await this.#getStaticModel(this.#options.llm);
 
+    const modelInput = this.#getModelInputState(state);
     const response = (await modelRunnable.invoke(
       modelInput,
       config
@@ -96,6 +95,8 @@ export class AgentNode<
       return {
         messages: [
           new AIMessage("Sorry, need more steps to process this request.", {
+            name: this.name,
+            lc_kwargs: { name: this.name },
             id: response.id,
           }),
         ],

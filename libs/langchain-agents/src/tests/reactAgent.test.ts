@@ -57,7 +57,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs }, thread);
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "agent", content: "hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
 
@@ -66,7 +69,7 @@ describe("createReactAgent", () => {
     expect(saved?.channel_values).toMatchObject({
       messages: [
         expect.objectContaining({ content: "hi?" }),
-        new AIMessage({ content: "hi?", id: "0" }),
+        new AIMessage({ name: "agent", content: "hi?", id: "0" }),
       ],
     });
     // Note: Checkpoint properties may vary by implementation
@@ -90,7 +93,12 @@ describe("createReactAgent", () => {
     const expectedResponse = {
       messages: [
         ...inputs,
-        new AIMessage({ content: "Foo-hi?", id: "0", tool_calls: [] }),
+        new AIMessage({
+          name: "agent",
+          content: "Foo-hi?",
+          id: "0",
+          tool_calls: [],
+        }),
       ],
     };
     expect(response).toEqual(expectedResponse);
@@ -110,7 +118,12 @@ describe("createReactAgent", () => {
     const expectedResponse = {
       messages: [
         ...inputs,
-        new AIMessage({ content: "Foo-hi?", id: "0", tool_calls: [] }),
+        new AIMessage({
+          name: "agent",
+          content: "Foo-hi?",
+          id: "0",
+          tool_calls: [],
+        }),
       ],
     };
     expect(response).toEqual(expectedResponse);
@@ -134,7 +147,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Bar hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "agent", content: "Bar hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -157,7 +173,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Bar hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "agent", content: "Bar hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -181,7 +200,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Baz hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "agent", content: "Baz hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -376,10 +398,9 @@ describe("createReactAgent", () => {
         const agent = createReactAgent({
           llm: model.bindTools([tool1, tool2]),
           tools,
-          asStateGraph: true,
         });
 
-        const result = await agent.nodes.tools.invoke({
+        const result = await agent.graph.tools.invoke({
           messages: [
             new AIMessage({
               content: "hi?",
@@ -515,7 +536,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs }, thread);
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "agent", content: "hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
 
@@ -524,7 +548,7 @@ describe("createReactAgent", () => {
     expect(saved?.channel_values).toMatchObject({
       messages: [
         expect.objectContaining({ content: "hi?" }),
-        new AIMessage({ content: "hi?", id: "0" }),
+        new AIMessage({ name: "agent", content: "hi?", id: "0" }),
       ],
     });
     expect(saved).toHaveProperty("channel_values");
@@ -581,6 +605,7 @@ describe("createReactAgent", () => {
       new AIMessage({
         content: "Test direct",
         id: "0",
+        name: "agent",
         tool_calls: firstToolCall.map((tc) => ({
           ...tc,
           type: "tool_call" as const,

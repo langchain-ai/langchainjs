@@ -100,14 +100,29 @@ export class StructuredResponseNode<
       );
     }
 
-    const response = await modelWithStructuredOutput.invoke(messages, config);
+    /**
+     * Type the config with the strict option for structured output models.
+     * (required by some models, like OpenAI)
+     */
+    const invokeConfig = {
+      ...config,
+      strict: true,
+    } as RunnableConfig;
+
+    const response = await modelWithStructuredOutput.invoke(
+      messages,
+      invokeConfig
+    );
     return { structuredResponse: response };
   }
 
   async #getModel(
     llm: LanguageModelLike | ConfigurableModelInterface
   ): Promise<LanguageModelLike> {
-    // If model is a RunnableSequence, find a RunnableBinding or BaseChatModel in its steps
+    /**
+     * If model is a RunnableSequence, find a RunnableBinding or BaseChatModel
+     * in its steps
+     */
     let model = llm;
     if (RunnableSequence.isRunnableSequence(model)) {
       model =
