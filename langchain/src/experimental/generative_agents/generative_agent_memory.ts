@@ -311,6 +311,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
  * );
  * const summary = await tommiesMemory.getSummary();
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class GenerativeAgentMemory extends BaseMemory {
   llm: BaseLanguageModelInterface;

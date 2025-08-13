@@ -1,3 +1,5 @@
+import { logVersion100SimpleMigrationWarning } from "../util/entrypoint_deprecation.js";
+
 export { BufferMemory, type BufferMemoryInput } from "./buffer_memory.js";
 export {
   BaseMemory,
@@ -35,3 +37,16 @@ export {
   ConversationTokenBufferMemory,
   type ConversationTokenBufferMemoryInput,
 } from "./buffer_token_memory.js";
+
+logVersion100SimpleMigrationWarning({
+  oldEntrypointName: "memory",
+  customMessage: [
+    "LangChain memory classes are now deprecated in favor of LangGraph memory.",
+    "",
+    "Please install LangGraph:",
+    "",
+    "  npm install @langchain/langgraph",
+    "",
+    "For more information, please see the migration guide: https://js.langchain.com/docs/versions/migrating_memory/",
+  ].join("\n"),
+});

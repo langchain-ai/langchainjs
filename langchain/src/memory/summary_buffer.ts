@@ -12,6 +12,7 @@ import {
 /**
  * Interface for the input parameters of the
  * ConversationSummaryBufferMemory class.
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export interface ConversationSummaryBufferMemoryInput
   extends BaseConversationSummaryMemoryInput {
@@ -56,6 +57,7 @@ export interface ConversationSummaryBufferMemoryInput
  *   prompt: chatPrompt,
  * });
  * ```
+ * @deprecated Will be removed in 1.0.0. Please see the migration guide at: https://js.langchain.com/docs/versions/migrating_memory/
  */
 export class ConversationSummaryBufferMemory
   extends BaseConversationSummaryMemory
