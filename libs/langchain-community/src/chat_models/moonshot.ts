@@ -83,10 +83,9 @@ interface ChatCompletionResponse extends BaseResponse {
  */
 export interface ChatMoonshotParams {
   /**
-   * @default "moonshot-v1-8k"
-   * Alias for `model`
+   * @deprecated Use `model` instead.
    */
-  modelName: ModelName;
+  modelName?: ModelName;
   /**
    * @default "moonshot-v1-8k"
    */
@@ -201,6 +200,7 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
 
   messages?: MoonshotMessage[];
 
+  /** @deprecated Use `model` instead. */
   modelName: ChatCompletionRequest["model"];
 
   model: ChatCompletionRequest["model"];
@@ -237,8 +237,8 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
     this.topP = fields.topP ?? 1;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.modelName = fields?.model ?? fields.modelName ?? "moonshot-v1-8k";
-    this.model = this.modelName;
+    this.model = fields?.model ?? fields.modelName ?? "moonshot-v1-8k";
+    this.modelName = this.model;
     this.presencePenalty = fields.presencePenalty ?? 0;
     this.frequencyPenalty = fields.frequencyPenalty ?? 0;
     this.n = fields.n ?? 1;

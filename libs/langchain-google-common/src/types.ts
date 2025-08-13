@@ -216,8 +216,7 @@ export interface GoogleModelParams {
   model?: string;
 
   /**
-   * Model to use
-   * Alias for `model`
+   * @deprecated Use `model` instead
    */
   modelName?: string;
 }

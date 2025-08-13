@@ -66,11 +66,7 @@ export declare interface OpenAIBaseInput {
    */
   streamUsage?: boolean;
 
-  /**
-   * Model name to use
-   * Alias for `model`
-   * @deprecated Use "model" instead.
-   */
+  /** @deprecated Use "model" instead. */
   modelName: string;
 
   /** Model name to use */

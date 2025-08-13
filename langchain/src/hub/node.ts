@@ -33,29 +33,27 @@ export async function pull<T extends Runnable>(
   let modelClass;
   if (options?.includeModel) {
     if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
-      const modelName =
+      const model =
         promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
-      if (modelName === "ChatOpenAI") {
+      if (model === "ChatOpenAI") {
         modelClass = (await import("@langchain/openai")).ChatOpenAI;
-      } else if (modelName === "ChatAnthropic") {
+      } else if (model === "ChatAnthropic") {
         modelClass = (await import("@langchain/anthropic")).ChatAnthropic;
-      } else if (modelName === "ChatAzureOpenAI") {
+      } else if (model === "ChatAzureOpenAI") {
         modelClass = (await import("@langchain/openai")).AzureChatOpenAI;
-      } else if (modelName === "ChatVertexAI") {
+      } else if (model === "ChatVertexAI") {
         modelClass = (await import("@langchain/google-vertexai")).ChatVertexAI;
-      } else if (modelName === "ChatGoogleGenerativeAI") {
+      } else if (model === "ChatGoogleGenerativeAI") {
         modelClass = (await import("@langchain/google-genai"))
           .ChatGoogleGenerativeAI;
-      } else if (modelName === "ChatBedrockConverse") {
+      } else if (model === "ChatBedrockConverse") {
         modelClass = (await import("@langchain/aws")).ChatBedrockConverse;
-      } else if (modelName === "ChatMistral") {
+      } else if (model === "ChatMistral") {
         modelClass = (await import("@langchain/mistralai")).ChatMistralAI;
-      } else if (modelName === "ChatGroq") {
+      } else if (model === "ChatGroq") {
         modelClass = (await import("@langchain/groq")).ChatGroq;
-      } else if (modelName !== undefined) {
-        console.warn(
-          `Received unknown model name from prompt hub: "${modelName}"`
-        );
+      } else if (model !== undefined) {
+        console.warn(`Received unknown model name from prompt hub: "${model}"`);
       }
     }
   }
