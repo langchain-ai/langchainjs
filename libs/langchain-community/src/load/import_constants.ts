@@ -156,6 +156,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/document_loaders/web/azure_blob_storage_file",
   "langchain_community/document_loaders/web/browserbase",
   "langchain_community/document_loaders/web/cheerio",
+  "langchain_community/document_loaders/web/dropbox",
   "langchain_community/document_loaders/web/puppeteer",
   "langchain_community/document_loaders/web/playwright",
   "langchain_community/document_loaders/web/college_confidential",
