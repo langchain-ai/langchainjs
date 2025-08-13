@@ -1,6 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import {
@@ -43,8 +42,4 @@ class ChatCloudflareWorkersAIStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatCloudflareWorkersAIStandardUnitTests();
-
-test("ChatCloudflareWorkersAIStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatCloudflareWorkersAIStandardUnitTests");
