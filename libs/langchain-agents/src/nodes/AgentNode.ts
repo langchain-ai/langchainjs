@@ -1,5 +1,5 @@
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
 import type { LangGraphRunnableConfig } from "@langchain/langgraph";
@@ -32,6 +32,7 @@ interface AgentNodeOptions<
     "llm" | "prompt" | "includeAgentName"
   > {
   toolClasses: (ClientTool | ServerTool)[];
+  shouldReturnDirect: Set<string>;
 }
 
 export class AgentNode<
@@ -72,23 +73,55 @@ export class AgentNode<
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
   ) {
-    // NOTE: we're dynamically creating the model runnable here
-    // to ensure that we can validate ConfigurableModel properly
+    const modelInput = this.#getModelInputState(state);
+
+    /**
+     * We're dynamically creating the model runnable here
+     * to ensure that we can validate ConfigurableModel properly
+     */
     const modelRunnable: Runnable =
       typeof this.#options.llm === "function"
         ? await this.#getDynamicModel(this.#options.llm, state, config)
         : await this.#getStaticModel(this.#options.llm);
 
-    // TODO: Auto-promote streaming.
     const response = (await modelRunnable.invoke(
-      this.#getModelInputState(state),
+      modelInput,
       config
-    )) as BaseMessage;
-    // add agent name to the AIMessage
-    // TODO: figure out if we can avoid mutating the message directly
+    )) as AIMessage;
+
     response.name = this.name;
     response.lc_kwargs.name = this.name;
+
+    if (this.#areMoreStepsNeeded(state, response)) {
+      return {
+        messages: [
+          new AIMessage("Sorry, need more steps to process this request.", {
+            id: response.id,
+          }),
+        ],
+      };
+    }
+
     return { messages: [response] };
+  }
+
+  #areMoreStepsNeeded(
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    response: BaseMessage
+  ): boolean {
+    const hasToolCalls = response instanceof AIMessage && response.tool_calls;
+    const allToolsReturnDirect =
+      response instanceof AIMessage &&
+      response.tool_calls?.every((call) =>
+        this.#options.shouldReturnDirect.has(call.name)
+      );
+    const remainingSteps =
+      "remainingSteps" in state ? (state.remainingSteps as number) : undefined;
+    return Boolean(
+      remainingSteps &&
+        ((remainingSteps < 1 && allToolsReturnDirect) ||
+          (remainingSteps < 2 && hasToolCalls))
+    );
   }
 
   #getModelInputState(

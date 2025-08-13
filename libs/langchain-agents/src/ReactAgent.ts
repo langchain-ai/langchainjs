@@ -19,6 +19,7 @@ import { createReactAgentAnnotation } from "./annotation.js";
 import { getTools, isClientTool } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { StructuredResponseNode } from "./nodes/StructuredResponseNode.js";
+import { ToolNode } from "./nodes/ToolNode.js";
 import type {
   CreateReactAgentParams,
   AnyAnnotationRoot,
@@ -91,14 +92,19 @@ export class ReactAgent<
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
         toolClasses,
+        shouldReturnDirect,
       }),
       {
         input: this.#inputSchema,
       }
     );
 
-    if (toolClasses.length > 0) {
-      allNodeWorkflows.addNode("tools", toolNode);
+    /**
+     * add individual tool nodes
+     */
+    for (const tool of toolClasses.filter(isClientTool)) {
+      const individualToolNode = new ToolNode([tool]);
+      allNodeWorkflows.addNode(tool.name, individualToolNode);
     }
 
     /**
@@ -167,16 +173,22 @@ export class ReactAgent<
       }
     }
 
+    /**
+     * add edges for individual tool nodes
+     */
     if (toolClasses.length > 0) {
-      if (shouldReturnDirect) {
-        allNodeWorkflows.addConditionalEdges(
-          "tools",
-          this.#createToolsRouter(shouldReturnDirect),
-          [this.#getEntryPoint(), END]
-        );
+      const toolRouter = this.#createToolsRouter(shouldReturnDirect);
+      for (const tool of toolClasses.filter(isClientTool)) {
+        if (shouldReturnDirect) {
+          allNodeWorkflows.addConditionalEdges(
+            tool.name as "tools",
+            toolRouter,
+            [this.#getEntryPoint(), END]
+          );
+        } else {
+          allNodeWorkflows.addEdge(tool.name as "tools", this.#getEntryPoint());
+        }
       }
-    } else {
-      allNodeWorkflows.addEdge("tools", this.#getEntryPoint());
     }
 
     this.#graph = allNodeWorkflows.compile({
@@ -205,7 +217,10 @@ export class ReactAgent<
       | "tools"
     )[] = [];
     if (toolClasses.length > 0) {
-      paths.push(this.#getEntryPoint(), "tools");
+      paths.push(
+        this.#getEntryPoint(),
+        ...(toolClasses.map((tool) => tool.name) as "tools"[])
+      );
     }
     if (this.options.responseFormat) {
       paths.push("generate_structured_response");
@@ -226,7 +241,8 @@ export class ReactAgent<
 
       if (pendingToolCalls) {
         return pendingToolCalls.map(
-          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+          (toolCall) =>
+            new Send(toolCall.name, { ...state, lg_tool_call: toolCall })
         );
       }
 
@@ -252,7 +268,7 @@ export class ReactAgent<
   ): ("tools" | "generate_structured_response" | typeof END)[] {
     const paths: ("tools" | "generate_structured_response" | typeof END)[] = [];
     if (toolClasses.length > 0) {
-      return ["tools"];
+      paths.push(...toolClasses.map((tool) => tool.name as "tools"));
     }
 
     paths.push(
@@ -289,8 +305,12 @@ export class ReactAgent<
         return "post_model_hook";
       }
 
+      /**
+       * Route to individual tool nodes
+       */
       return lastMessage.tool_calls.map(
-        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+        (toolCall) =>
+          new Send(toolCall.name, { ...state, lg_tool_call: toolCall })
       );
     };
   }
@@ -328,15 +348,11 @@ export class ReactAgent<
     };
   }
 
-  invoke(
-    input: ToAnnotationRoot<A>["State"]
-  ): Promise<ToAnnotationRoot<A>["Update"]> {
-    return this.#graph.invoke(input);
+  get invoke(): typeof CompiledStateGraph.prototype.invoke {
+    return this.#graph.invoke.bind(this.#graph);
   }
 
-  stream(
-    input: ToAnnotationRoot<A>["State"]
-  ): Promise<ReadableStream<ToAnnotationRoot<A>["Update"]>> {
-    return this.#graph.stream(input);
+  get stream(): typeof CompiledStateGraph.prototype.stream {
+    return this.#graph.stream.bind(this.#graph);
   }
 }
