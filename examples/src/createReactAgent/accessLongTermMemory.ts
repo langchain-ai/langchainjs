@@ -310,7 +310,7 @@ console.log(
 const currentFilePath = new URL(import.meta.url).pathname;
 const outputPath = currentFilePath.replace(/\.ts$/, ".png");
 console.log(`\nSaving visualization to: ${outputPath}`);
-await fs.writeFile(outputPath, await codingAssistant.visualize());
+await fs.writeFile(outputPath, await codingAssistant.drawMermaidPng());
 
 /**
  * Example Output:

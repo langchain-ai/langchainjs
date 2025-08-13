@@ -211,7 +211,7 @@ await handleUserRequest("", "Show me my purchases");
 const currentFilePath = new URL(import.meta.url).pathname;
 const outputPath = currentFilePath.replace(/\.ts$/, ".png");
 console.log(`\nSaving visualization to: ${outputPath}`);
-await fs.writeFile(outputPath, await ecommerceAgent.visualize());
+await fs.writeFile(outputPath, await ecommerceAgent.drawMermaidPng());
 
 /**
  * Example Output:

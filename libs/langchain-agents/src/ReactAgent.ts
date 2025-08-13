@@ -150,6 +150,7 @@ export class ReactAgent<
           responseFormat: this.options.responseFormat,
         })
       );
+      allNodeWorkflows.addEdge("generate_structured_response", END);
     }
 
     /**
@@ -194,7 +195,8 @@ export class ReactAgent<
     if (toolClasses.length > 0) {
       const toolRouter = this.#createToolsRouter(shouldReturnDirect);
       for (const tool of toolClasses.filter(isClientTool)) {
-        if (shouldReturnDirect) {
+        // Only add conditional edges if this specific tool has returnDirect
+        if (shouldReturnDirect.has(tool.name)) {
           allNodeWorkflows.addConditionalEdges(
             tool.name as "tools",
             toolRouter,
@@ -415,7 +417,7 @@ export class ReactAgent<
    * @param params.backgroundColor - The background color of the graph.
    * @returns PNG image as a buffer
    */
-  async visualize(params?: {
+  async drawMermaidPng(params?: {
     withStyles?: boolean;
     curveStyle?: string;
     nodeColors?: Record<string, string>;
@@ -427,5 +429,26 @@ export class ReactAgent<
     const arrayBuffer = await image.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
     return buffer;
+  }
+
+  /**
+   * Draw the graph as a Mermaid string.
+   * @param params - Parameters for the drawMermaid method.
+   * @param params.withStyles - Whether to include styles in the graph.
+   * @param params.curveStyle - The style of the graph's curves.
+   * @param params.nodeColors - The colors of the graph's nodes.
+   * @param params.wrapLabelNWords - The maximum number of words to wrap in a node's label.
+   * @param params.backgroundColor - The background color of the graph.
+   * @returns Mermaid string
+   */
+  async drawMermaid(params?: {
+    withStyles?: boolean;
+    curveStyle?: string;
+    nodeColors?: Record<string, string>;
+    wrapLabelNWords?: number;
+    backgroundColor?: string;
+  }) {
+    const representation = await this.#graph.getGraphAsync();
+    return representation.drawMermaid(params);
   }
 }
