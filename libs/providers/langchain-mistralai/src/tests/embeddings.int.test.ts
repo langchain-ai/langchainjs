@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
 import { HTTPClient } from "@mistralai/mistralai/lib/http.js";
 import { MistralAIEmbeddings } from "../embeddings.js";
 

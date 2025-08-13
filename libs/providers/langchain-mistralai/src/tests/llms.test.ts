@@ -1,3 +1,4 @@
+import { test, expect } from "vitest";
 import { MistralAI } from "../llms.js";
 
 test("Serialization", () => {

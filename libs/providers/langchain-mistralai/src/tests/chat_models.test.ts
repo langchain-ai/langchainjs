@@ -1,3 +1,4 @@
+import { test, expect, describe } from "vitest";
 import { ChatMistralAI } from "../chat_models.js";
 import {
   _isValidMistralToolCallId,
