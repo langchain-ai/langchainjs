@@ -50,6 +50,7 @@ export class StructuredResponseNode<
     StructuredResponseFormat,
     ContextSchema
   >;
+
   constructor(options: StructuredResponseNodeOptions) {
     super({
       name: "generate_structured_response",

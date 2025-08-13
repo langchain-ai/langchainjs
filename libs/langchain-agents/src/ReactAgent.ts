@@ -90,7 +90,7 @@ export class ReactAgent<
         llm: this.options.llm,
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
-        toolClasses: toolClasses,
+        toolClasses,
       }),
       {
         input: this.#inputSchema,
