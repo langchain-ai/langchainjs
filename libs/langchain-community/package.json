@@ -931,6 +931,15 @@
       "import": "./tools/ifttt.js",
       "require": "./tools/ifttt.cjs"
     },
+    "./tools/puppeteer": {
+      "types": {
+        "import": "./tools/puppeteer.d.ts",
+        "require": "./tools/puppeteer.d.cts",
+        "default": "./tools/puppeteer.d.ts"
+      },
+      "import": "./tools/puppeteer.js",
+      "require": "./tools/puppeteer.cjs"
+    },
     "./tools/searchapi": {
       "types": {
         "import": "./tools/searchapi.d.ts",
@@ -3381,6 +3390,10 @@
     "tools/ifttt.js",
     "tools/ifttt.d.ts",
     "tools/ifttt.d.cts",
+    "tools/puppeteer.cjs",
+    "tools/puppeteer.js",
+    "tools/puppeteer.d.ts",
+    "tools/puppeteer.d.cts",
     "tools/searchapi.cjs",
     "tools/searchapi.js",
     "tools/searchapi.d.ts",
