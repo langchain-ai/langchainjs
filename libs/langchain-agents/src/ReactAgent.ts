@@ -130,10 +130,6 @@ export class ReactAgent<
      * setup preModelHook
      */
     if (options.preModelHook) {
-      if (typeof options.preModelHook !== "function") {
-        throw new Error("preModelHook must be a function");
-      }
-
       allNodeWorkflows.addNode("pre_model_hook", options.preModelHook);
     }
 
@@ -141,10 +137,6 @@ export class ReactAgent<
      * setup postModelHook
      */
     if (options.postModelHook) {
-      if (typeof options.postModelHook !== "function") {
-        throw new Error("postModelHook must be a function");
-      }
-
       allNodeWorkflows.addNode("post_model_hook", options.postModelHook);
     }
 

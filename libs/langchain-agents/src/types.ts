@@ -5,7 +5,6 @@ import type {
 import type {
   LangGraphRunnableConfig,
   AnnotationRoot,
-  MessagesAnnotation,
   START,
   Runtime,
   StateGraph,
@@ -65,17 +64,17 @@ export type ClientTool =
   | DynamicTool
   | RunnableToolLike;
 
-export type Prompt =
+export type Prompt<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> =
   | SystemMessage
   | string
   | ((
-      state: typeof MessagesAnnotation.State,
-      config: LangGraphRunnableConfig
-    ) => BaseMessageLike[])
-  | ((
-      state: typeof MessagesAnnotation.State,
-      config: LangGraphRunnableConfig
-    ) => Promise<BaseMessageLike[]>)
+      state: ToAnnotationRoot<StateSchema>["State"] &
+        PreHookAnnotation["State"],
+      config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
+    ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
   | Runnable;
 
 export type StructuredResponseSchemaOptions<StructuredResponseType> = {
@@ -135,7 +134,7 @@ export type CreateReactAgentParams<
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
    */
-  prompt?: Prompt;
+  prompt?: Prompt<StateSchema, ContextSchema>;
 
   /**
    * Additional state schema for the agent.
@@ -212,7 +211,7 @@ export type CreateReactAgentParams<
   preModelHook?: RunnableLike<
     ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
-    LangGraphRunnableConfig
+    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   >;
 
   /**
@@ -220,9 +219,9 @@ export type CreateReactAgentParams<
    * Useful for implementing human-in-the-loop, guardrails, validation, or other post-processing.
    */
   postModelHook?: RunnableLike<
-    ToAnnotationRoot<StateSchema>["State"],
-    ToAnnotationRoot<StateSchema>["Update"],
-    LangGraphRunnableConfig
+    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
+    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   >;
 };
 

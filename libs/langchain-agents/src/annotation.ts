@@ -10,6 +10,10 @@ export const PreHookAnnotation = Annotation.Root({
     reducer: (_, update) => messagesStateReducer([], update),
     default: () => [],
   }),
+  messages: Annotation<BaseMessage[], Messages>({
+    reducer: messagesStateReducer,
+    default: () => [],
+  }),
 });
 export type PreHookAnnotation = typeof PreHookAnnotation;
 
