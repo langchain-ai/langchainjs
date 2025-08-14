@@ -178,17 +178,11 @@ export class ReactAgent<
     if (toolClasses.length > 0) {
       const toolRouter = this.#createToolsRouter(shouldReturnDirect);
       for (const tool of toolClasses.filter(isClientTool)) {
-        // Only add conditional edges if this specific tool has returnDirect and no responseFormat
-        if (shouldReturnDirect.has(tool.name) && !this.options.responseFormat) {
-          allNodeWorkflows.addConditionalEdges(
-            tool.name as "tools",
-            toolRouter,
-            [this.#getEntryPoint(), END]
-          );
-        } else {
-          // Always route back to agent if responseFormat is set or tool doesn't have returnDirect
-          allNodeWorkflows.addEdge(tool.name as "tools", this.#getEntryPoint());
-        }
+        // Use conditional edges for all tools to properly handle returnDirect
+        allNodeWorkflows.addConditionalEdges(tool.name as "tools", toolRouter, [
+          this.#getEntryPoint(),
+          END,
+        ]);
       }
     }
 
@@ -317,33 +311,20 @@ export class ReactAgent<
   #createToolsRouter(shouldReturnDirect: Set<string>) {
     return (state: AgentState<StructuredResponseFormat>) => {
       const messages = state.messages;
-      let lastAIMessage: AIMessage | undefined;
-      for (const message of messages.reverse()) {
-        lastAIMessage = message instanceof AIMessage ? message : undefined;
+      const lastMessage = messages[messages.length - 1];
 
-        if (!(message instanceof ToolMessage)) {
-          break;
-        }
-
-        if (message.name && shouldReturnDirect.has(message.name)) {
-          // If we have a response format, route back to agent to generate structured response
-          // Otherwise, return directly
-          return this.options.responseFormat ? this.#getEntryPoint() : END;
-        }
-      }
-
+      // Check if we just executed a returnDirect tool
       if (
-        lastAIMessage &&
-        lastAIMessage.tool_calls &&
-        lastAIMessage.tool_calls.some((call) =>
-          shouldReturnDirect.has(call.name)
-        )
+        lastMessage instanceof ToolMessage &&
+        lastMessage.name &&
+        shouldReturnDirect.has(lastMessage.name)
       ) {
-        // If we have a response format, route back to agent to generate structured response
+        // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly
         return this.options.responseFormat ? this.#getEntryPoint() : END;
       }
 
+      // For non-returnDirect tools, always route back to agent
       return this.#getEntryPoint();
     };
   }

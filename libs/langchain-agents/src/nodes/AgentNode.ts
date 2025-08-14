@@ -4,6 +4,7 @@ import {
   AIMessage,
   SystemMessage,
   isAIMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
@@ -100,6 +101,24 @@ export class AgentNode<
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
   ) {
+    /**
+     * Check if we just executed a returnDirect tool
+     * If so, we should generate structured response (if needed) and stop
+     */
+    const lastMessage = state.messages[state.messages.length - 1];
+    if (
+      lastMessage instanceof ToolMessage &&
+      lastMessage.name &&
+      this.#options.shouldReturnDirect.has(lastMessage.name)
+    ) {
+      // If responseFormat is set, generate structured response
+      if (this.#options.responseFormat) {
+        return this.#generateStructuredResponse(state, config);
+      }
+      // Otherwise, we shouldn't be here - the graph routing should have ended
+      return { messages: [] };
+    }
+
     /**
      * Check if we should stop the agent:
      * - If the agent has any tool calls
