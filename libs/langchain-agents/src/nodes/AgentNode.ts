@@ -24,7 +24,6 @@ import {
   ServerTool,
   AnyAnnotationRoot,
   CreateReactAgentParams,
-  StructuredResponseSchemaOptions,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import { PredicateFunction } from "../stopWhen.js";
@@ -250,9 +249,37 @@ export class AgentNode<
       );
     }
 
+    const modelWithStructuredOutput = await this.#getModelWithStructuredOutput(
+      state,
+      config,
+      this.#options.responseFormat
+    );
     const messages = [...state.messages];
-    let modelWithStructuredOutput;
 
+    const response = await modelWithStructuredOutput
+      .invoke(messages, {
+        ...config,
+        /**
+         * Ensure the model returns a structured response
+         */
+        strict: true,
+        tool_choice: "none",
+      } as RunnableConfig)
+      .catch(() => modelWithStructuredOutput.invoke(messages, config));
+    return { structuredResponse: response as StructuredResponseFormat };
+  }
+
+  async #getModelWithStructuredOutput(
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: RunnableConfig,
+    responseFormat: Required<
+      CreateReactAgentParams<
+        StateSchema,
+        StructuredResponseFormat,
+        ContextSchema
+      >
+    >["responseFormat"]
+  ) {
     const model: LanguageModelLike =
       typeof this.#options.llm === "function"
         ? await this.#options.llm(state, config)
@@ -264,31 +291,19 @@ export class AgentNode<
       );
     }
 
-    if (
-      typeof this.#options.responseFormat === "object" &&
-      "schema" in this.#options.responseFormat
-    ) {
-      const { prompt, schema, ...options } = this.#options
-        .responseFormat as StructuredResponseSchemaOptions<StructuredResponseFormat>;
-
-      modelWithStructuredOutput = model.withStructuredOutput(schema, options);
-      if (prompt != null) {
-        messages.unshift(new SystemMessage({ content: prompt }));
-      }
-    } else {
-      modelWithStructuredOutput = model.withStructuredOutput(
-        this.#options.responseFormat
+    if (typeof responseFormat === "object" && "schema" in responseFormat) {
+      const { prompt, schema, ...options } = responseFormat;
+      const modelWithStructuredOutput = model.withStructuredOutput(
+        schema,
+        options
       );
+      if (prompt != null) {
+        state.messages.unshift(new SystemMessage({ content: prompt }));
+      }
+
+      return modelWithStructuredOutput;
     }
 
-    const response = await modelWithStructuredOutput.invoke(messages, {
-      ...config,
-      /**
-       * Ensure the model returns a structured response
-       */
-      strict: true,
-      tool_choice: "none",
-    } as RunnableConfig);
-    return { structuredResponse: response };
+    return model.withStructuredOutput(responseFormat);
   }
 }
