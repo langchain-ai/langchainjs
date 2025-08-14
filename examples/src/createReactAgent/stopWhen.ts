@@ -58,7 +58,8 @@ const response = await agent.invoke({
  * Expected Output:
  * `{ attempts: 3, succeeded: false }`
  */
-console.log(response.structuredResponse);
+console.log("Last Message", response.messages.at(-1)?.content);
+console.log("Structured Response", response.structuredResponse);
 
 /**
  * Get the current file's path and derive the output PNG path

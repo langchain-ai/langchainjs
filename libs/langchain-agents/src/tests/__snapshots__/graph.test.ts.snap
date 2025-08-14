@@ -10,8 +10,7 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_no_hooks_with_format 1`] = `
 "graph TD;
 	__start__ --> agent;
-	agent --> generate_structured_response;
-	generate_structured_response --> __end__;
+	agent --> __end__;
 "
 `;
 
@@ -28,8 +27,7 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 "graph TD;
 	__start__ --> pre_model_hook;
 	agent --> post_model_hook;
-	generate_structured_response --> __end__;
-	post_model_hook --> generate_structured_response;
+	post_model_hook --> __end__;
 	pre_model_hook --> agent;
 "
 `;
@@ -46,8 +44,7 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 "graph TD;
 	__start__ --> agent;
 	agent --> post_model_hook;
-	generate_structured_response --> __end__;
-	post_model_hook --> generate_structured_response;
+	post_model_hook --> __end__;
 "
 `;
 
@@ -62,8 +59,7 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_pre_hook_with_format 1`] = `
 "graph TD;
 	__start__ --> pre_model_hook;
-	agent --> generate_structured_response;
-	generate_structured_response --> __end__;
+	agent --> __end__;
 	pre_model_hook --> agent;
 "
 `;
@@ -82,12 +78,11 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_no_hooks_with_format 1`] = `
 "graph TD;
 	__start__ --> agent;
-	generate_structured_response --> __end__;
 	tool1 --> agent;
 	tool2 --> agent;
 	agent -.-> tool1;
 	agent -.-> tool2;
-	agent -.-> generate_structured_response;
+	agent -.-> __end__;
 "
 `;
 
@@ -109,14 +104,13 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 "graph TD;
 	__start__ --> pre_model_hook;
 	agent --> post_model_hook;
-	generate_structured_response --> __end__;
 	pre_model_hook --> agent;
 	tool1 --> pre_model_hook;
 	tool2 --> pre_model_hook;
 	post_model_hook -.-> pre_model_hook;
 	post_model_hook -.-> tool1;
 	post_model_hook -.-> tool2;
-	post_model_hook -.-> generate_structured_response;
+	post_model_hook -.-> __end__;
 "
 `;
 
@@ -137,13 +131,12 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 "graph TD;
 	__start__ --> agent;
 	agent --> post_model_hook;
-	generate_structured_response --> __end__;
 	tool1 --> agent;
 	tool2 --> agent;
 	post_model_hook -.-> agent;
 	post_model_hook -.-> tool1;
 	post_model_hook -.-> tool2;
-	post_model_hook -.-> generate_structured_response;
+	post_model_hook -.-> __end__;
 "
 `;
 
@@ -162,12 +155,11 @@ exports[`Graph > React Agent Graph Structure > should create correct graph struc
 exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_pre_hook_with_format 1`] = `
 "graph TD;
 	__start__ --> pre_model_hook;
-	generate_structured_response --> __end__;
 	pre_model_hook --> agent;
 	tool1 --> pre_model_hook;
 	tool2 --> pre_model_hook;
 	agent -.-> tool1;
 	agent -.-> tool2;
-	agent -.-> generate_structured_response;
+	agent -.-> __end__;
 "
 `;

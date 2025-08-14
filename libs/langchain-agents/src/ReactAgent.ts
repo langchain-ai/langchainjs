@@ -178,11 +178,21 @@ export class ReactAgent<
     if (toolClasses.length > 0) {
       const toolRouter = this.#createToolsRouter(shouldReturnDirect);
       for (const tool of toolClasses.filter(isClientTool)) {
-        // Use conditional edges for all tools to properly handle returnDirect
-        allNodeWorkflows.addConditionalEdges(tool.name as "tools", toolRouter, [
-          this.#getEntryPoint(),
-          END,
-        ]);
+        /**
+         * Only add conditional edges with END for tools that have returnDirect
+         */
+        if (shouldReturnDirect.has(tool.name)) {
+          allNodeWorkflows.addConditionalEdges(
+            tool.name as "tools",
+            toolRouter,
+            [this.#getEntryPoint(), END]
+          );
+        } else {
+          /**
+           * For non-returnDirect tools, always route back to agent
+           */
+          allNodeWorkflows.addEdge(tool.name as "tools", this.#getEntryPoint());
+        }
       }
     }
 
