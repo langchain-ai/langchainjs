@@ -73,6 +73,10 @@ export function stopWhen<
     unknown
   >
 >(predicate: PredicateFunction<StructuredResponseFormat>) {
+  if (typeof predicate !== "function") {
+    throw new Error("stopWhen must be a function");
+  }
+
   return async (
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
