@@ -543,3 +543,12 @@ export function hasToolCalls(messages: BaseMessage[]): boolean {
       lastMessage.tool_calls.length > 0
   );
 }
+
+/**
+ * Check if the model name supports structured output
+ * @param modelName - The name of the model
+ * @returns True if the model supports structured output, false otherwise
+ */
+export function hasSupportForStructuredOutput(modelName: string): boolean {
+  return modelName.startsWith("gpt-4") || modelName.startsWith("gpt-5");
+}

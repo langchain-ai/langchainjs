@@ -3,6 +3,7 @@ import {
   BaseMessage,
   AIMessage,
   SystemMessage,
+  isAIMessage,
 } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
@@ -17,6 +18,7 @@ import {
   validateLLMHasNoBoundTools,
   isBaseChatModel,
   hasToolCalls,
+  hasSupportForStructuredOutput,
 } from "../utils.js";
 import {
   AgentState,
@@ -99,11 +101,21 @@ export class AgentNode<
     config: RunnableConfig
   ) {
     /**
-     * Check if we should stop the agent.
+     * Check if we should stop the agent:
+     * - If the agent has any tool calls
+     * - if any of the provided predicate functions return true
      */
-    const stopWhenResults = await Promise.all(
-      this.#stopWhen.map((stopWhen) => stopWhen(state, config))
+    const hasToolCalls = state.messages.some(
+      (message) =>
+        isAIMessage(message) &&
+        message.tool_calls &&
+        message.tool_calls?.length > 0
     );
+    const stopWhenResults = hasToolCalls
+      ? await Promise.all(
+          this.#stopWhen.map((stopWhen) => stopWhen(state, config))
+        )
+      : [];
     const shouldStop = stopWhenResults.filter((result) => result.shouldStop);
     if (shouldStop.length > 0) {
       const shouldStopReasoning =
@@ -239,6 +251,23 @@ export class AgentNode<
     );
   }
 
+  /**
+   * Get the base model from the options
+   * @param state - The state of the agent
+   * @param config - The config of the agent
+   * @returns The base model
+   */
+  async #getBaseModel(
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: RunnableConfig
+  ): Promise<LanguageModelLike> {
+    const model: LanguageModelLike =
+      typeof this.#options.llm === "function"
+        ? await this.#options.llm(state, config)
+        : this.#options.llm;
+    return model;
+  }
+
   async #generateStructuredResponse(
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
@@ -256,17 +285,38 @@ export class AgentNode<
     );
     const messages = [...state.messages];
 
-    const response = await modelWithStructuredOutput
-      .invoke(messages, {
-        ...config,
-        /**
-         * Ensure the model returns a structured response
-         */
-        strict: true,
-        tool_choice: "none",
-      } as RunnableConfig)
-      .catch(() => modelWithStructuredOutput.invoke(messages, config));
-    return { structuredResponse: response as StructuredResponseFormat };
+    /**
+     * Get the base model to access model name
+     */
+    const baseModel = await this.#getBaseModel(state, config);
+    if (isBaseChatModel(baseModel)) {
+      const identifyingParams = baseModel._identifyingParams();
+      const modelName = identifyingParams.model_name || identifyingParams.model;
+
+      /**
+       * If the model supports structured output, we can use the structured output feature
+       */
+      if (hasSupportForStructuredOutput(modelName)) {
+        const structuredResponse = (await modelWithStructuredOutput.invoke(
+          messages,
+          {
+            ...config,
+            /**
+             * Ensure the model returns a structured response
+             */
+            strict: true,
+            tool_choice: "none",
+          } as RunnableConfig
+        )) as StructuredResponseFormat;
+        return { structuredResponse };
+      }
+    }
+
+    const structuredResponse = (await modelWithStructuredOutput.invoke(
+      messages,
+      config
+    )) as StructuredResponseFormat;
+    return { structuredResponse };
   }
 
   async #getModelWithStructuredOutput(
@@ -280,10 +330,7 @@ export class AgentNode<
       >
     >["responseFormat"]
   ) {
-    const model: LanguageModelLike =
-      typeof this.#options.llm === "function"
-        ? await this.#options.llm(state, config)
-        : this.#options.llm;
+    const model: LanguageModelLike = await this.#getBaseModel(state, config);
 
     if (!isBaseChatModel(model)) {
       throw new Error(
@@ -291,6 +338,9 @@ export class AgentNode<
       );
     }
 
+    /**
+     * Inject a system message when using a custom JSON schema
+     */
     if (typeof responseFormat === "object" && "schema" in responseFormat) {
       const { prompt, schema, ...options } = responseFormat;
       const modelWithStructuredOutput = model.withStructuredOutput(
@@ -304,6 +354,9 @@ export class AgentNode<
       return modelWithStructuredOutput;
     }
 
+    /**
+     * Zod schema
+     */
     return model.withStructuredOutput(responseFormat);
   }
 }
