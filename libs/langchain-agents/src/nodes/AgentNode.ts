@@ -267,10 +267,20 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(model);
 
+    /**
+     * Bind tools to the model if they are not already bound.
+     */
+    const modelWithTools: LanguageModelLike = (await shouldBindTools(
+      model,
+      this.#options.toolClasses
+    ))
+      ? await bindTools(model, this.#options.toolClasses)
+      : model;
+
     return getPromptRunnable(this.#options.prompt).pipe(
       this.#options.includeAgentName === "inline"
-        ? withAgentName(model, this.#options.includeAgentName)
-        : model
+        ? withAgentName(modelWithTools, this.#options.includeAgentName)
+        : modelWithTools
     );
   }
 
