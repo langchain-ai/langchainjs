@@ -915,6 +915,9 @@ export class ChatGoogleGenerativeAI
     );
 
     let usageMetadata: UsageMetadata | undefined;
+    // Keep prior cumulative counts for calculating token deltas while streaming
+    let prevPromptTokenCount = 0;
+    let prevCandidatesTokenCount = 0;
     let index = 0;
     for await (const response of stream) {
       if (
@@ -923,28 +926,23 @@ export class ChatGoogleGenerativeAI
         options.streamUsage !== false
       ) {
         const genAIUsageMetadata = response.usageMetadata as {
-          promptTokenCount: number | undefined;
-          candidatesTokenCount: number | undefined;
+          promptTokenCount: number | undefined; // Number of tokens in the request
+          candidatesTokenCount: number | undefined; // Nummber of tokens in the response(s)
           totalTokenCount: number | undefined;
         };
-        if (!usageMetadata) {
-          usageMetadata = {
-            input_tokens: genAIUsageMetadata.promptTokenCount ?? 0,
-            output_tokens: genAIUsageMetadata.candidatesTokenCount ?? 0,
-            total_tokens: genAIUsageMetadata.totalTokenCount ?? 0,
-          };
-        } else {
-          // Under the hood, LangChain combines the prompt tokens. Google returns the updated
-          // total each time, so we need to find the difference between the tokens.
-          const outputTokenDiff =
-            (genAIUsageMetadata.candidatesTokenCount ?? 0) -
-            usageMetadata.output_tokens;
-          usageMetadata = {
-            input_tokens: 0,
-            output_tokens: outputTokenDiff,
-            total_tokens: outputTokenDiff,
-          };
-        }
+        // Under the hood, LangChain combines the prompt tokens. Google returns the updated
+        // total each time, so we need to find the difference between the tokens.
+        const newPromptTokenCount = genAIUsageMetadata.promptTokenCount ?? 0;
+        const newCandidatesTokenCount = genAIUsageMetadata.candidatesTokenCount ?? 0;
+        const inputDelta = Math.max(0, newPromptTokenCount - prevPromptTokenCount);
+        const outputDelta = Math.max(0, newCandidatesTokenCount   - prevCandidatesTokenCount);
+        prevPromptTokenCount = newPromptTokenCount;
+        prevCandidatesTokenCount = newCandidatesTokenCount;
+        usageMetadata = {
+          input_tokens: inputDelta,
+          output_tokens: outputDelta,
+          total_tokens: inputDelta + outputDelta,
+        };
       }
 
       const chunk = convertResponseContentToChatGenerationChunk(response, {
