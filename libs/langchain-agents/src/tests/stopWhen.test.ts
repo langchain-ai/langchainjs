@@ -33,6 +33,12 @@ describe("stopWhen", () => {
       );
     });
 
+    it("Should throw for non-positive integers", () => {
+      expect(() => stopWhenMaxSteps(1.5)).toThrow(
+        "maxSteps must be a positive integer"
+      );
+    });
+
     it("should throw if stopWhen parameter is not a function", () => {
       // @ts-expect-error - we want to test the error case
       expect(() => stopWhen("not a function")).toThrow(

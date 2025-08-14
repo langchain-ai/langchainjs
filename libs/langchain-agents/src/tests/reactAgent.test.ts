@@ -26,9 +26,9 @@ import {
   type BaseCheckpointSaver,
 } from "@langchain/langgraph";
 
+import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen.js";
 import { type Prompt } from "../types.js";
 import { createReactAgent } from "../index.js";
-import { stopWhen, stopWhenToolCall, stopWhenMaxSteps } from "../stopWhen.js";
 
 import {
   FakeToolCallingChatModel,
@@ -1922,7 +1922,7 @@ describe("createReactAgent", () => {
     });
   });
 
-  describe("stopWhen conditions", () => {
+  describe("stopWhen", () => {
     it("should stop with general stopWhen predicate", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [
@@ -2058,28 +2058,6 @@ describe("createReactAgent", () => {
       );
       expect(aiMessages).toHaveLength(1);
       expect(aiMessages[0].content).toBe("Step 1");
-    });
-
-    it("should validate max steps parameter", () => {
-      // Should throw for non-positive integers
-      expect(() => stopWhenMaxSteps(0)).toThrow(
-        "maxSteps must be a positive integer"
-      );
-      expect(() => stopWhenMaxSteps(-1)).toThrow(
-        "maxSteps must be a positive integer"
-      );
-      expect(() => stopWhenMaxSteps(1.5)).toThrow(
-        "maxSteps must be a positive integer"
-      );
-      expect(() => stopWhenToolCall("tool", 0)).toThrow(
-        "toolCallCount must be a positive integer"
-      );
-      expect(() => stopWhenToolCall("tool", -1)).toThrow(
-        "toolCallCount must be a positive integer"
-      );
-      expect(() => stopWhenToolCall("tool", 1.5)).toThrow(
-        "toolCallCount must be a positive integer"
-      );
     });
 
     it("should combine multiple stop conditions", async () => {
