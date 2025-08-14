@@ -528,3 +528,18 @@ export function validateLLMHasNoBoundTools(llm: any): void {
     throw new MultipleToolsBoundError();
   }
 }
+
+/**
+ * Check if the last message in the messages array has tool calls.
+ *
+ * @param messages - The messages to check.
+ * @returns True if the last message has tool calls, false otherwise.
+ */
+export function hasToolCalls(messages: BaseMessage[]): boolean {
+  const lastMessage = messages.at(-1);
+  return Boolean(
+    lastMessage instanceof AIMessage &&
+      lastMessage.tool_calls &&
+      lastMessage.tool_calls.length > 0
+  );
+}

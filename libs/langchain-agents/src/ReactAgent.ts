@@ -18,7 +18,6 @@ import {
 import { createReactAgentAnnotation } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
-import { StructuredResponseNode } from "./nodes/StructuredResponseNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
 import type {
   CreateReactAgentParams,
@@ -91,11 +90,7 @@ export class ReactAgent<
     );
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      | "pre_model_hook"
-      | "post_model_hook"
-      | "generate_structured_response"
-      | "tools"
-      | "agent",
+      "pre_model_hook" | "post_model_hook" | "tools" | "agent",
       typeof workflow
     >;
 
@@ -110,6 +105,7 @@ export class ReactAgent<
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
         stopWhen: this.options.stopWhen,
+        responseFormat: this.options.responseFormat,
         toolClasses,
         shouldReturnDirect,
       }),
@@ -138,17 +134,6 @@ export class ReactAgent<
      */
     if (options.postModelHook) {
       allNodeWorkflows.addNode("post_model_hook", options.postModelHook);
-    }
-
-    if (this.options.responseFormat) {
-      allNodeWorkflows.addNode(
-        "generate_structured_response",
-        new StructuredResponseNode({
-          llm: this.options.llm,
-          responseFormat: this.options.responseFormat,
-        })
-      );
-      allNodeWorkflows.addEdge("generate_structured_response", END);
     }
 
     /**
@@ -193,14 +178,15 @@ export class ReactAgent<
     if (toolClasses.length > 0) {
       const toolRouter = this.#createToolsRouter(shouldReturnDirect);
       for (const tool of toolClasses.filter(isClientTool)) {
-        // Only add conditional edges if this specific tool has returnDirect
-        if (shouldReturnDirect.has(tool.name)) {
+        // Only add conditional edges if this specific tool has returnDirect and no responseFormat
+        if (shouldReturnDirect.has(tool.name) && !this.options.responseFormat) {
           allNodeWorkflows.addConditionalEdges(
             tool.name as "tools",
             toolRouter,
             [this.#getEntryPoint(), END]
           );
         } else {
+          // Always route back to agent if responseFormat is set or tool doesn't have returnDirect
           allNodeWorkflows.addEdge(tool.name as "tools", this.#getEntryPoint());
         }
       }
@@ -235,24 +221,14 @@ export class ReactAgent<
    * Get possible edge destinations from post_model_hook node.
    */
   #getPostModelHookPaths(toolClasses: (ClientTool | ServerTool)[]) {
-    const paths: (
-      | typeof END
-      | "agent"
-      | "pre_model_hook"
-      | "generate_structured_response"
-      | "tools"
-    )[] = [];
+    const paths: (typeof END | "agent" | "pre_model_hook" | "tools")[] = [];
     if (toolClasses.length > 0) {
       paths.push(
         this.#getEntryPoint(),
         ...(toolClasses.map((tool) => tool.name) as "tools"[])
       );
     }
-    if (this.options.responseFormat) {
-      paths.push("generate_structured_response");
-    } else {
-      paths.push(END);
-    }
+    paths.push(END);
     return paths;
   }
 
@@ -276,10 +252,6 @@ export class ReactAgent<
         return this.#getEntryPoint();
       }
 
-      if (this.options.responseFormat) {
-        return "generate_structured_response";
-      }
-
       return END;
     };
   }
@@ -291,15 +263,13 @@ export class ReactAgent<
    */
   #getModelPaths(
     toolClasses: (ClientTool | ServerTool)[]
-  ): ("tools" | "generate_structured_response" | typeof END)[] {
-    const paths: ("tools" | "generate_structured_response" | typeof END)[] = [];
+  ): ("tools" | typeof END)[] {
+    const paths: ("tools" | typeof END)[] = [];
     if (toolClasses.length > 0) {
       paths.push(...toolClasses.map((tool) => tool.name as "tools"));
     }
 
-    paths.push(
-      this.options.responseFormat ? "generate_structured_response" : END
-    );
+    paths.push(END);
 
     return paths;
   }
@@ -322,10 +292,6 @@ export class ReactAgent<
       ) {
         if (this.options.postModelHook) {
           return "post_model_hook";
-        }
-
-        if (this.options.responseFormat) {
-          return "generate_structured_response";
         }
 
         return END;
@@ -360,7 +326,9 @@ export class ReactAgent<
         }
 
         if (message.name && shouldReturnDirect.has(message.name)) {
-          return END;
+          // If we have a response format, route back to agent to generate structured response
+          // Otherwise, return directly
+          return this.options.responseFormat ? this.#getEntryPoint() : END;
         }
       }
 
@@ -371,7 +339,9 @@ export class ReactAgent<
           shouldReturnDirect.has(call.name)
         )
       ) {
-        return END;
+        // If we have a response format, route back to agent to generate structured response
+        // Otherwise, return directly
+        return this.options.responseFormat ? this.#getEntryPoint() : END;
       }
 
       return this.#getEntryPoint();

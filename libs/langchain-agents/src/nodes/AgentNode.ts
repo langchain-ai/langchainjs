@@ -1,5 +1,9 @@
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage, AIMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  AIMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InteropZodObject } from "@langchain/core/utils/types";
 import { type LangGraphRunnableConfig } from "@langchain/langgraph";
@@ -11,6 +15,8 @@ import {
   bindTools,
   getPromptRunnable,
   validateLLMHasNoBoundTools,
+  isBaseChatModel,
+  hasToolCalls,
 } from "../utils.js";
 import {
   AgentState,
@@ -18,6 +24,7 @@ import {
   ServerTool,
   AnyAnnotationRoot,
   CreateReactAgentParams,
+  StructuredResponseSchemaOptions,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import { PredicateFunction } from "../stopWhen.js";
@@ -35,7 +42,12 @@ interface AgentNodeOptions<
       StructuredResponseFormat,
       ContextSchema
     >,
-    "llm" | "prompt" | "includeAgentName" | "name" | "stopWhen"
+    | "llm"
+    | "prompt"
+    | "includeAgentName"
+    | "name"
+    | "stopWhen"
+    | "responseFormat"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -50,7 +62,7 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  { messages: BaseMessage[] }
+  { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
 > {
   #options: AgentNodeOptions<
     StateSchema,
@@ -101,6 +113,12 @@ export class AgentNode<
           : `Multiple stop conditions were met: ${shouldStop
               .map((result) => result.description)
               .join(", ")}`;
+
+      if (this.#options.responseFormat) {
+        state.messages.push(new AIMessage(shouldStopReasoning));
+        return this.#generateStructuredResponse(state, config);
+      }
+
       return { messages: [shouldStopReasoning] };
     }
 
@@ -134,6 +152,19 @@ export class AgentNode<
       };
     }
 
+    /**
+     * Check if we need to generate a structured response
+     * This happens when:
+     * 1. responseFormat is set
+     * 2. The agent has no more tool calls to make
+     */
+    if (
+      this.#options.responseFormat &&
+      (!response.tool_calls || response.tool_calls.length === 0)
+    ) {
+      return this.#generateStructuredResponse(state, config);
+    }
+
     return { messages: [response] };
   }
 
@@ -141,7 +172,6 @@ export class AgentNode<
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     response: BaseMessage
   ): boolean {
-    const hasToolCalls = response instanceof AIMessage && response.tool_calls;
     const allToolsReturnDirect =
       response instanceof AIMessage &&
       response.tool_calls?.every((call) =>
@@ -152,7 +182,7 @@ export class AgentNode<
     return Boolean(
       remainingSteps &&
         ((remainingSteps < 1 && allToolsReturnDirect) ||
-          (remainingSteps < 2 && hasToolCalls))
+          (remainingSteps < 2 && hasToolCalls(state.messages)))
     );
   }
 
@@ -208,5 +238,57 @@ export class AgentNode<
         ? withAgentName(model, this.#options.includeAgentName)
         : model
     );
+  }
+
+  async #generateStructuredResponse(
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: RunnableConfig
+  ): Promise<{ structuredResponse: StructuredResponseFormat }> {
+    if (this.#options.responseFormat == null) {
+      throw new Error(
+        "Attempted to generate structured output with no passed response schema."
+      );
+    }
+
+    const messages = [...state.messages];
+    let modelWithStructuredOutput;
+
+    const model: LanguageModelLike =
+      typeof this.#options.llm === "function"
+        ? await this.#options.llm(state, config)
+        : this.#options.llm;
+
+    if (!isBaseChatModel(model)) {
+      throw new Error(
+        `Expected \`llm\` to be a ChatModel with .withStructuredOutput() method, got ${model.constructor.name}`
+      );
+    }
+
+    if (
+      typeof this.#options.responseFormat === "object" &&
+      "schema" in this.#options.responseFormat
+    ) {
+      const { prompt, schema, ...options } = this.#options
+        .responseFormat as StructuredResponseSchemaOptions<StructuredResponseFormat>;
+
+      modelWithStructuredOutput = model.withStructuredOutput(schema, options);
+      if (prompt != null) {
+        messages.unshift(new SystemMessage({ content: prompt }));
+      }
+    } else {
+      modelWithStructuredOutput = model.withStructuredOutput(
+        this.#options.responseFormat
+      );
+    }
+
+    const response = await modelWithStructuredOutput.invoke(messages, {
+      ...config,
+      /**
+       * Ensure the model returns a structured response
+       */
+      strict: true,
+      tool_choice: "none",
+    } as RunnableConfig);
+    return { structuredResponse: response };
   }
 }
