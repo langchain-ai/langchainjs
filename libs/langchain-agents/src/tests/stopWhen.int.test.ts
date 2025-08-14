@@ -5,21 +5,34 @@ import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
 import {
+  type PredicateFunction,
   createReactAgent,
   stopWhen,
   stopWhenToolCall,
   stopWhenMaxSteps,
 } from "../index.js";
 
+interface TestScenario {
+  name: string;
+  stopWhen: PredicateFunction<any>[];
+  toolParams?: PollToolParams;
+  expectedToolCalls: number;
+  responseFormat?: z.ZodSchema;
+  expectedLastMessage: string;
+  expectedStructuredResponse: any;
+  only?: boolean;
+  skip?: boolean;
+}
+
 // Response format schema used in some test cases
-// const responseFormatSchema = z.object({
-//   attempts: z.number(),
-//   succeeded: z.boolean(),
-// });
+const responseFormat = z.object({
+  attempts: z.number(),
+  succeeded: z.boolean(),
+});
 
 // define a llm
 const llm = new ChatAnthropic({
-  model: "claude-3-5-sonnet-20240620",
+  model: "claude-opus-4-0",
   temperature: 0,
 });
 
@@ -81,22 +94,18 @@ const AGENT_PROMPT = `You are a strict polling bot.
 - If status is "pending", call the tool again. Do not produce a final answer.
 - When it is "succeeded", return exactly: "Attempts: <number>" with no extra text.`;
 
-const testScenarios = [
+const testScenarios: TestScenario[] = [
   {
     name: "No stop condition - runs until task completion (10 tool calls)",
     stopWhen: [],
-    toolParams: undefined,
     expectedToolCalls: 10,
-    responseFormat: undefined,
     expectedLastMessage: "Attempts: 10",
     expectedStructuredResponse: undefined,
   },
   {
     name: "Tool call limit (before completion) - stops at 5 tool calls",
     stopWhen: [stopWhenToolCall("pollJob", 5)],
-    toolParams: undefined,
     expectedToolCalls: 5,
-    responseFormat: undefined,
     expectedLastMessage:
       "A stop condition was met: Tool call count for pollJob is 5 and exceeded the limit of 5",
     expectedStructuredResponse: undefined,
@@ -104,18 +113,14 @@ const testScenarios = [
   {
     name: "Tool call limit (after completion) - completes normally at 10 calls",
     stopWhen: [stopWhenToolCall("pollJob", 15)],
-    toolParams: undefined,
     expectedToolCalls: 10,
-    responseFormat: undefined,
     expectedLastMessage: "Attempts: 10",
     expectedStructuredResponse: undefined,
   },
   {
     name: "Max steps limit (before completion) - stops after 3 LLM calls",
     stopWhen: [stopWhenMaxSteps(3)],
-    toolParams: undefined,
     expectedToolCalls: 3,
-    responseFormat: undefined,
     expectedLastMessage:
       "A stop condition was met: Model call count is 3 and reached the limit of 3",
     expectedStructuredResponse: undefined,
@@ -123,18 +128,14 @@ const testScenarios = [
   {
     name: "Max steps limit (after completion) - completes normally",
     stopWhen: [stopWhenMaxSteps(20)],
-    toolParams: undefined,
     expectedToolCalls: 10,
-    responseFormat: undefined,
     expectedLastMessage: "Attempts: 10",
     expectedStructuredResponse: undefined,
   },
   {
     name: "Array of conditions (first triggers) - stops at 5 tool calls",
     stopWhen: [stopWhenToolCall("pollJob", 5), stopWhenMaxSteps(10)],
-    toolParams: undefined,
     expectedToolCalls: 5,
-    responseFormat: undefined,
     expectedLastMessage:
       "A stop condition was met: Tool call count for pollJob is 5 and exceeded the limit of 5",
     expectedStructuredResponse: undefined,
@@ -142,9 +143,7 @@ const testScenarios = [
   {
     name: "Array of conditions (second triggers) - stops after 2 LLM calls",
     stopWhen: [stopWhenToolCall("pollJob", 20), stopWhenMaxSteps(2)],
-    toolParams: undefined,
     expectedToolCalls: 2,
-    responseFormat: undefined,
     expectedLastMessage:
       "A stop condition was met: Model call count is 2 and reached the limit of 2",
     expectedStructuredResponse: undefined,
@@ -152,9 +151,7 @@ const testScenarios = [
   {
     name: "Duplicate conditions - most restrictive wins",
     stopWhen: [stopWhenToolCall("pollJob", 5), stopWhenToolCall("pollJob", 3)],
-    toolParams: undefined,
     expectedToolCalls: 3,
-    responseFormat: undefined,
     expectedLastMessage:
       "A stop condition was met: Tool call count for pollJob is 3 and exceeded the limit of 3",
     expectedStructuredResponse: undefined,
@@ -162,16 +159,11 @@ const testScenarios = [
   {
     name: "Stop condition + response_format - provides structured response",
     stopWhen: [stopWhenToolCall("pollJob", 5)],
-    toolParams: undefined,
     expectedToolCalls: 5,
     expectedLastMessage:
       "A stop condition was met: Tool call count for pollJob is 5 and exceeded the limit of 5",
     expectedStructuredResponse: { attempts: 5, succeeded: false },
-
-    /**
-     * Todo Fix: `stopWhen` doesn't work with `responseFormat`
-     */
-    skip: true,
+    responseFormat,
   },
   {
     name: "Content-based stop - stops when specific word appears",
@@ -186,11 +178,12 @@ const testScenarios = [
 
 describe("stopWhen Tests", () => {
   testScenarios.forEach((scenario) => {
-    it.concurrent(scenario.name, async ({ skip }) => {
-      if (scenario.skip) {
-        return skip();
-      }
-
+    const testFn = scenario.only
+      ? it.only
+      : scenario.skip
+      ? it.skip
+      : it.concurrent;
+    testFn(scenario.name, async () => {
       const { tool: pollJob, mock } = makePollTool(scenario.toolParams);
 
       const agent = createReactAgent({
@@ -198,6 +191,7 @@ describe("stopWhen Tests", () => {
         tools: [pollJob],
         prompt: AGENT_PROMPT,
         stopWhen: scenario.stopWhen,
+        responseFormat: scenario.responseFormat,
       });
 
       const result = await agent.invoke({

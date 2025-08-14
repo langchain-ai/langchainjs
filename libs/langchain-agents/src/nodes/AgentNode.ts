@@ -111,11 +111,15 @@ export class AgentNode<
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
-      // If responseFormat is set, generate structured response
+      /**
+       * If responseFormat is set, generate structured response
+       */
       if (this.#options.responseFormat) {
         return this.#generateStructuredResponse(state, config);
       }
-      // Otherwise, we shouldn't be here - the graph routing should have ended
+      /**
+       * Otherwise, we shouldn't be here - the graph routing should have ended
+       */
       return { messages: [] };
     }
 
