@@ -933,9 +933,16 @@ export class ChatGoogleGenerativeAI
         // Under the hood, LangChain combines the prompt tokens. Google returns the updated
         // total each time, so we need to find the difference between the tokens.
         const newPromptTokenCount = genAIUsageMetadata.promptTokenCount ?? 0;
-        const newCandidatesTokenCount = genAIUsageMetadata.candidatesTokenCount ?? 0;
-        const inputDelta = Math.max(0, newPromptTokenCount - prevPromptTokenCount);
-        const outputDelta = Math.max(0, newCandidatesTokenCount   - prevCandidatesTokenCount);
+        const newCandidatesTokenCount =
+          genAIUsageMetadata.candidatesTokenCount ?? 0;
+        const inputDelta = Math.max(
+          0,
+          newPromptTokenCount - prevPromptTokenCount
+        );
+        const outputDelta = Math.max(
+          0,
+          newCandidatesTokenCount - prevCandidatesTokenCount
+        );
         prevPromptTokenCount = newPromptTokenCount;
         prevCandidatesTokenCount = newCandidatesTokenCount;
         usageMetadata = {
