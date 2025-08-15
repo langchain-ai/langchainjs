@@ -8404,6 +8404,7 @@ __metadata:
     prettier: ^2.8.3
     puppeteer: ^22.0.0
     pyodide: ^0.26.2
+    recallio: ^1.2.5
     redis: ^4.6.6
     release-it: ^18.1.2
     replicate: ^1.0.1
@@ -17296,7 +17297,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.11.0":
+"axios@npm:^1.11.0, axios@npm:^1.7.7":
   version: 1.11.0
   resolution: "axios@npm:1.11.0"
   dependencies:
@@ -34552,6 +34553,15 @@ __metadata:
   version: 1.3.0
   resolution: "readline@npm:1.3.0"
   checksum: dfaf8e6ac20408ea00d650e95f7bb47f77c4c62dd12ed7fb51731ee84532a2f3675fcdc4cab4923dc1eef227520a2e082a093215190907758bea9f585b19438e
+  languageName: node
+  linkType: hard
+
+"recallio@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "recallio@npm:1.2.5"
+  dependencies:
+    axios: ^1.7.7
+  checksum: 2226bbdbbacea12ed3f8f79068582ca467845ac3314488a6c71883f9f72fc0cfae1304484c4b3fde226a8cf599a43e962f59a13522a000ee9c45bad28cd0fc47
   languageName: node
   linkType: hard
 

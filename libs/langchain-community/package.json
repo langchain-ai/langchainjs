@@ -208,6 +208,7 @@
     "prettier": "^2.8.3",
     "puppeteer": "^22.0.0",
     "pyodide": "^0.26.2",
+    "recallio": "^1.2.5",
     "redis": "^4.6.6",
     "release-it": "^18.1.2",
     "replicate": "^1.0.1",
@@ -341,6 +342,7 @@
     "portkey-ai": "^0.1.11",
     "puppeteer": "*",
     "pyodide": ">=0.24.1 <0.27.0",
+    "recallio": "^1.2.5",
     "redis": "*",
     "replicate": "*",
     "sonix-speech-recognition": "^2.1.1",
@@ -687,6 +689,9 @@
       "optional": true
     },
     "pyodide": {
+      "optional": true
+    },
+    "recallio": {
       "optional": true
     },
     "redis": {
@@ -2740,6 +2745,15 @@
       "import": "./memory/motorhead_memory.js",
       "require": "./memory/motorhead_memory.cjs"
     },
+    "./memory/recallio": {
+      "types": {
+        "import": "./memory/recallio.d.ts",
+        "require": "./memory/recallio.d.cts",
+        "default": "./memory/recallio.d.ts"
+      },
+      "import": "./memory/recallio.js",
+      "require": "./memory/recallio.cjs"
+    },
     "./memory/zep": {
       "types": {
         "import": "./memory/zep.d.ts",
@@ -4185,6 +4199,10 @@
     "memory/motorhead_memory.js",
     "memory/motorhead_memory.d.ts",
     "memory/motorhead_memory.d.cts",
+    "memory/recallio.cjs",
+    "memory/recallio.js",
+    "memory/recallio.d.ts",
+    "memory/recallio.d.cts",
     "memory/zep.cjs",
     "memory/zep.js",
     "memory/zep.d.ts",
