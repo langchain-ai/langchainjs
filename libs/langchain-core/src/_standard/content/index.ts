@@ -1,6 +1,6 @@
-import { BaseContentBlock } from "./base.js";
-import { Tools as ToolsContentBlock } from "./tools.js";
-import { Multimodal as MultimodalContentBlock } from "./multimodal.js";
+import type { BaseContentBlock } from "./base.js";
+import type { Tools } from "./tools.js";
+import type { Multimodal } from "./multimodal.js";
 
 export type ContentBlock = BaseContentBlock;
 
@@ -9,7 +9,7 @@ export declare namespace ContentBlock {
   /**
    * Annotation for citing data from a document.
    */
-  interface Citation {
+  export interface Citation {
     /**
      * Type of the content block
      */
@@ -48,7 +48,7 @@ export declare namespace ContentBlock {
    * This typically represents the main text content of a message, such as the response
    * from a language model or the text of a user message.
    */
-  interface Text extends ContentBlock {
+  export interface Text extends ContentBlock {
     /**
      * Type of the content block
      */
@@ -70,7 +70,7 @@ export declare namespace ContentBlock {
   /**
    * Reasoning output from a LLM.
    */
-  interface Reasoning extends ContentBlock {
+  export interface Reasoning extends ContentBlock {
     /**
      * Type of the content block
      */
@@ -88,8 +88,8 @@ export declare namespace ContentBlock {
     index?: number;
   }
 
-  export import Tools = ToolsContentBlock;
-  export import Multimodal = MultimodalContentBlock;
+  export { Tools as Tools };
+  export { Multimodal as Multimodal };
   export type Standard =
     | Text
     | Reasoning
