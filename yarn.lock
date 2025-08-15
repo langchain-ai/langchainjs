@@ -8539,6 +8539,7 @@ __metadata:
     portkey-ai: ^0.1.11
     puppeteer: "*"
     pyodide: ">=0.24.1 <0.27.0"
+    recallio: ^1.2.5
     redis: "*"
     replicate: "*"
     sonix-speech-recognition: ^2.1.1
@@ -8774,6 +8775,8 @@ __metadata:
     puppeteer:
       optional: true
     pyodide:
+      optional: true
+    recallio:
       optional: true
     redis:
       optional: true
