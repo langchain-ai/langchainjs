@@ -7,7 +7,6 @@ import {
   StructuredTool,
   StructuredToolInterface,
   Tool,
-  ToolInterface,
   tool,
 } from "../index.js";
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
@@ -39,10 +38,6 @@ describe("tool type tests", () => {
     it("should be assignable to Tool", () => {
       const tool: Tool = testDynamicTool;
       expect(tool).toBe(testDynamicTool);
-    });
-    it("should be assignable to ToolInterface", () => {
-      const toolInterface: ToolInterface = testDynamicTool;
-      expect(toolInterface).toBe(testDynamicTool);
     });
     it("should be assignable to StructuredTool", () => {
       const structuredTool: StructuredTool = testDynamicTool;
@@ -143,7 +138,7 @@ describe("tool type tests", () => {
           type: "tool_call",
         };
 
-        const output: ToolMessage = await testDynamicTool.call(toolCall);
+        const output: ToolMessage = await testDynamicTool.invoke(toolCall);
         expect(output).toBeInstanceOf(ToolMessage);
       });
 
@@ -155,7 +150,7 @@ describe("tool type tests", () => {
           type: "tool_call",
         };
 
-        const output: ToolMessage | string = await testDynamicTool.call(
+        const output: ToolMessage | string = await testDynamicTool.invoke(
           toolCall.args,
           { toolCall }
         );
@@ -170,9 +165,12 @@ describe("tool type tests", () => {
           type: "tool_call",
         } as const;
 
-        const output: ToolMessage = await testDynamicTool.call(toolCall.args, {
-          toolCall,
-        });
+        const output: ToolMessage = await testDynamicTool.invoke(
+          toolCall.args,
+          {
+            toolCall,
+          }
+        );
         expect(output).toBeInstanceOf(ToolMessage);
       });
 
@@ -199,7 +197,7 @@ describe("tool type tests", () => {
             } as ToolOutputT),
         });
 
-        const output: ToolOutputT = await directOutputDynamicTool.call(
+        const output: ToolOutputT = await directOutputDynamicTool.invoke(
           toolCall
         );
 
@@ -223,7 +221,7 @@ describe("tool type tests", () => {
       expect(toolInterface).toBe(testDynamicStructuredTool);
     });
     it("should be assignable to ToolInterface if narrowed to use ZodEffects schema`", () => {
-      const toolInterface: ToolInterface =
+      const toolInterface: StructuredToolInterface =
         testDynamicStructuredToolWithZodEffects;
       expect(toolInterface).toBe(testDynamicStructuredToolWithZodEffects);
     });
@@ -342,7 +340,7 @@ describe("tool type tests", () => {
           type: "tool_call",
         };
 
-        const output: ToolMessage = await testDynamicStructuredTool.call(
+        const output: ToolMessage = await testDynamicStructuredTool.invoke(
           toolCall
         );
         expect(output).toBeInstanceOf(ToolMessage);
@@ -356,7 +354,7 @@ describe("tool type tests", () => {
           type: "tool_call",
         };
 
-        const output = await testDynamicStructuredTool.call(
+        const output = await testDynamicStructuredTool.invoke(
           toolCall.args as { input: string },
           {
             toolCall,
@@ -380,7 +378,7 @@ describe("tool type tests", () => {
           type: "tool_call",
         } as const;
 
-        const output: ToolMessage = await testDynamicStructuredTool.call(
+        const output: ToolMessage = await testDynamicStructuredTool.invoke(
           toolCall.args,
           {
             toolCall,
@@ -413,7 +411,7 @@ describe("tool type tests", () => {
           schema: z.object({ input: z.string() }),
         });
 
-        const output: ToolOutputT = await directOutputDynamicTool.call(
+        const output: ToolOutputT = await directOutputDynamicTool.invoke(
           toolCall.args as { input: string }
         );
 
