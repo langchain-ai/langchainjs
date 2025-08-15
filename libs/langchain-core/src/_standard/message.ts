@@ -1,5 +1,10 @@
+import { SerializedConstructor } from "../load/serializable.js";
 import type { ContentBlock } from "./content/index.js";
-import type { $MergeDiscriminatedUnion, $MergeObjects } from "./utils.js";
+import {
+  iife,
+  type $MergeDiscriminatedUnion,
+  type $MergeObjects,
+} from "./utils.js";
 
 /** @internal */
 const __BRANDED_MESSAGE = Symbol.for("langchain.message");
@@ -11,7 +16,34 @@ const __BRANDED_MESSAGE = Symbol.for("langchain.message");
  * we only want to accept the literal `AIMessage` from langchain, not any other objects with the same shape)
  */
 interface $BrandedMessage {
-  [__BRANDED_MESSAGE]: never;
+  [__BRANDED_MESSAGE]: true;
+}
+
+/**
+ * Type guard to check if a value is a branded message.
+ *
+ * @param message - The value to check
+ * @param role - The role of the message
+ * @returns true if the value is a branded message, false otherwise
+ */
+function isBrandedMessage(
+  message: unknown,
+  role?: $MessageType
+): message is $BrandedMessage {
+  const isBranded =
+    typeof message === "object" &&
+    message !== null &&
+    __BRANDED_MESSAGE in message &&
+    message[__BRANDED_MESSAGE] === true;
+
+  if (role === undefined) return isBranded;
+  return (
+    isBranded &&
+    typeof message === "object" &&
+    message !== null &&
+    "type" in message &&
+    message.type === role
+  );
 }
 
 /**
@@ -493,7 +525,7 @@ export type $InferMessageProperty<
   : never;
 
 /**
- * Represents a message object that organize context for an LLM.
+ * Represents a message object that organizes context for an LLM.
  *
  * @template TStructure - The message structure type that defines the content and property types.
  *                        Defaults to $StandardMessageStructure.
@@ -553,8 +585,208 @@ export interface Message<
   content: Array<$InferMessageContent<TStructure, TRole>>;
 }
 
+/**
+ * Type guard to check if a value is a valid Message object.
+ *
+ * @param message - The value to check
+ * @returns true if the value is a valid Message object, false otherwise
+ */
+export function isMessage(message: unknown): message is Message {
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    "type" in message &&
+    "content" in message &&
+    Array.isArray(message.content)
+  );
+}
+
+/**
+ * A tuple representation of a message consisting of a role and content.
+ *
+ * This type provides a compact way to represent messages as a two-element array,
+ * where the first element is the message type/role and the second element is the content.
+ * The content can be either a simple string or an array of structured content blocks.
+ *
+ * @template TStructure - The message structure type that defines the content and property types.
+ *                        Defaults to $StandardMessageStructure.
+ * @template TRole - The message type/role that determines the content structure.
+ *                   Defaults to $MessageType (any valid message type).
+ *
+ * @example
+ * ```ts
+ * // Simple text message tuple
+ * const humanTuple: MessageTuple = ["human", "Hello, world!"];
+ *
+ * // AI message tuple with structured content
+ * const aiTuple: MessageTuple = [
+ *   "ai",
+ *   [
+ *     { type: "text", text: "Here's the answer:" },
+ *     { type: "tool_call", name: "search", args: { query: "example" } }
+ *   ]
+ * ];
+ *
+ * // Custom structure message tuple
+ * const customTuple: MessageTuple<CustomStructure, "ai"> = [
+ *   "ai",
+ *   [{ type: "text", text: "Custom AI response" }]
+ * ];
+ * ```
+ */
+export type MessageTuple<
+  TStructure extends $MessageStructure = $StandardMessageStructure,
+  TRole extends $MessageType = $MessageType
+> = [TRole, string | Iterable<$InferMessageContent<TStructure, TRole>>];
+
+/**
+ * Type guard to check if a value is a valid MessageTuple object.
+ *
+ * @param message - The value to check
+ * @returns true if the value is a valid MessageTuple object, false otherwise
+ */
+export function isMessageTuple<TStructure extends $MessageStructure>(
+  message: unknown
+): message is MessageTuple<TStructure> {
+  return (
+    Array.isArray(message) &&
+    message.length === 2 &&
+    typeof message[0] === "string" &&
+    (typeof message[1] === "string" || Symbol.iterator in message[1])
+  );
+}
+
+/**
+ * Converts a MessageTuple object to a Message object.
+ *
+ * @param message - The MessageTuple object to convert
+ * @returns A Message object if the conversion is successful, undefined otherwise
+ */
+export function convertMessageTuple<TStructure extends $MessageStructure>(
+  message: MessageTuple<TStructure>
+): Message<TStructure> | undefined {
+  const [role, content] = message;
+  switch (role) {
+    case "ai":
+      return new AIMessage<TStructure>(content);
+    case "human":
+      return new HumanMessage<TStructure>(content);
+    case "system":
+      return new SystemMessage<TStructure>(content);
+    case "tool":
+      return new ToolMessage<TStructure>(content);
+    default:
+      const normalizedContent = iife(() => {
+        if (typeof content === "string") {
+          return [
+            { type: "text", text: content } as $InferMessageContent<
+              TStructure,
+              typeof role
+            >,
+          ];
+        }
+        if (Symbol.iterator in content) {
+          return Array.from(content);
+        }
+        return content;
+      });
+      return {
+        type: role,
+        id: "", // TODO: generate a random id
+        content: normalizedContent,
+      };
+  }
+}
+
+/**
+ * A union type representing various formats that can be used to represent a message.
+ *
+ * This type provides flexibility in how messages can be specified, allowing for different
+ * input formats that can be normalized into a standard Message object. It supports:
+ * - Simple string content (automatically converted to a human message)
+ * - Full Message objects with complete structure and metadata
+ * - Compact MessageTuple format for concise message representation
+ * - Serialized constructor format for message reconstruction
+ *
+ * @template TStructure - The message structure type that defines the content and property types.
+ *                        Defaults to $StandardMessageStructure.
+ *
+ * @example
+ * ```ts
+ * // Simple string - becomes a human message
+ * const stringMessage: MessageLike = "Hello, world!";
+ *
+ * // Message class
+ * const fullMessage: MessageLike = new HumanMessage("Hello, world!");
+ *
+ * // Tuple format
+ * const tupleMessage: MessageLike = ["human", "Hello, world!"];
+ *
+ * // Serialized constructor (for deserialization)
+ * const serializedMessage: MessageLike = {
+ *   lc: 1,
+ *   type: "constructor",
+ *   id: ["langchain", "schema", "messages", "HumanMessage"],
+ *   kwargs: { content: "Hello, world!" }
+ * };
+ *
+ * // Custom structure
+ * const customMessage: MessageLike<CustomStructure> = new HumanMessage<CustomStructure>({
+ *   content: "Custom message"
+ * });
+ * ```
+ */
+export type MessageLike<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> =
+  | string
+  | Message<TStructure>
+  | MessageTuple<TStructure>
+  | SerializedConstructor;
+
+/**
+ * Type guard to check if a value is a valid MessageLike object.
+ *
+ * @param message - The value to check
+ * @returns true if the value is a valid MessageLike object, false otherwise
+ */
+export function isMessageLike<TStructure extends $MessageStructure>(
+  message: unknown
+): message is MessageLike<TStructure> {
+  // TODO: add `SerializedConstructor` guard
+  return (
+    typeof message === "string" || isMessage(message) || isMessageTuple(message)
+  );
+}
+
+/**
+ * Converts a MessageLike object to a Message object.
+ *
+ * @param message - The MessageLike object to convert
+ * @returns A Message object if the conversion is successful, undefined otherwise
+ */
+export function convertMessageLike<TStructure extends $MessageStructure>(
+  message: MessageLike<TStructure>
+): Message<TStructure> | undefined {
+  if (typeof message === "string") {
+    return new HumanMessage<TStructure>(message);
+  }
+  if (isMessage(message)) {
+    return message;
+  }
+  if (isMessageTuple(message)) {
+    return convertMessageTuple(message);
+  }
+  // `SerializedConstructor`
+  if (message.lc === 1) {
+    // TODO: implement
+    throw new Error("not implemented");
+  }
+  return undefined;
+}
+
 /** Parameters for creating an AIMessage */
-type AIMessageParams<
+export type AIMessageParams<
   TStructure extends $MessageStructure = $StandardMessageStructure
 > = {
   /** Optional unique identifier for the message */
@@ -571,8 +803,8 @@ type AIMessageParams<
   usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
 } & (
   | {
-      /** Array of content blocks that make up the message */
-      content: Array<$InferMessageContent<TStructure, "ai">>;
+      /** Content blocks that make up the message */
+      content: Iterable<$InferMessageContent<TStructure, "ai">>;``
     }
   | {
       /** Text content for the message */
@@ -612,7 +844,7 @@ export class AIMessage<
 > implements Message<TStructure, "ai">, $BrandedMessage
 {
   /** @internal */
-  [__BRANDED_MESSAGE]: never;
+  [__BRANDED_MESSAGE] = true as const;
 
   /** The message type, always "ai" for AI messages */
   readonly type = "ai" as const;
@@ -636,25 +868,10 @@ export class AIMessage<
   /** Usage statistics for the AI response (token counts, etc.) */
   usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
 
-  /**
-   * Creates an AI message with simple text content.
-   * @param text - The text content for the message
-   */
-  constructor(text: string);
-  /**
-   * Creates an AI message with structured content blocks.
-   * @param content - Array of content blocks for the message
-   */
-  constructor(content: Array<$InferMessageContent<TStructure, "ai">>);
-  /**
-   * Creates an AI message from a params object
-   * @param params - The parameters for the message
-   */
-  constructor(params: AIMessageParams<TStructure>);
   constructor(
     arg:
       | string
-      | Array<$InferMessageContent<TStructure, "ai">>
+      | Iterable<$InferMessageContent<TStructure, "ai">>
       | AIMessageParams<TStructure>
   ) {
     const textContent = (text: string) => [
@@ -663,9 +880,9 @@ export class AIMessage<
     if (typeof arg === "string") {
       // new AIMessage("Hello")
       this.content = textContent(arg);
-    } else if (Array.isArray(arg)) {
+    } else if (Symbol.iterator in arg) {
       // new AIMessage([{ type: "text", text: "Hello" }])
-      this.content = arg;
+      this.content = Array.from(arg);
     } else {
       // new AIMessage({ ... })
       this.id = arg.id ?? "";
@@ -677,7 +894,7 @@ export class AIMessage<
         this.content = textContent(arg.content);
       } else {
         // new AIMessage({ content: [{ type: "text", text: "Hello" }] })
-        this.content = arg.content;
+        this.content = Array.from(arg.content);
       }
     }
   }
@@ -733,10 +950,36 @@ export class AIMessage<
       .filter((block) => block.type === "tool_call")
       .map((block) => block);
   }
+
+  /**
+   * Type guard to check if an unknown value is an AIMessage instance.
+   *
+   * This method performs a runtime check to determine whether the provided
+   * value is a valid AIMessage instance by checking for the appropriate
+   * branding and message type.
+   *
+   * @param message - The unknown value to check
+   * @returns true if the message is an AIMessage instance, false otherwise
+   *
+   * @example
+   * ```ts
+   * const unknownMessage: unknown = new AIMessage("Hello world!");
+   *
+   * if (AIMessage.isInstance(unknownMessage)) {
+   *   // TypeScript now knows unknownMessage is an AIMessage
+   *   console.log(unknownMessage.text); // "Hello world!"
+   *   console.log(unknownMessage.type); // "ai"
+   *   console.log(unknownMessage.toolCalls); // []
+   * }
+   * ```
+   */
+  static isInstance(message: unknown): message is AIMessage {
+    return isBrandedMessage(message, "ai");
+  }
 }
 
 /** Parameters for creating a HumanMessage */
-type HumanMessageParams<
+export type HumanMessageParams<
   TStructure extends $MessageStructure = $StandardMessageStructure
 > = {
   /** Optional unique identifier for the message */
@@ -786,7 +1029,7 @@ export class HumanMessage<
 > implements Message<TStructure, "human">, $BrandedMessage
 {
   /** @internal */
-  [__BRANDED_MESSAGE]: never;
+  [__BRANDED_MESSAGE] = true as const;
 
   /** The message type, always "human" for HumanMessage instances */
   readonly type = "human" as const;
@@ -803,25 +1046,10 @@ export class HumanMessage<
   /** Metadata associated with the human message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
 
-  /**
-   * Creates a human message with simple text content.
-   * @param text - The text content for the message
-   */
-  constructor(text: string);
-  /**
-   * Creates a human message with structured content blocks.
-   * @param content - Array of content blocks for the message
-   */
-  constructor(content: Array<$InferMessageContent<TStructure, "human">>);
-  /**
-   * Creates a human message from a params object
-   * @param params - The parameters for the message
-   */
-  constructor(params: HumanMessageParams<TStructure>);
   constructor(
     arg:
       | string
-      | Array<$InferMessageContent<TStructure, "human">>
+      | Iterable<$InferMessageContent<TStructure, "human">>
       | HumanMessageParams<TStructure>
   ) {
     const textContent = (text: string) => [
@@ -830,9 +1058,9 @@ export class HumanMessage<
     if (typeof arg === "string") {
       // new HumanMessage("Hello")
       this.content = textContent(arg);
-    } else if (Array.isArray(arg)) {
+    } else if (Symbol.iterator in arg) {
       // new HumanMessage([{ type: "text", text: "Hello" }])
-      this.content = arg;
+      this.content = Array.from(arg);
     } else {
       // new HumanMessage({ ... })
       this.id = arg.id ?? "";
@@ -872,10 +1100,35 @@ export class HumanMessage<
       .map((block) => block.text)
       .join("");
   }
+
+  /**
+   * Type guard to check if an unknown value is a HumanMessage instance.
+   *
+   * This method performs a runtime check to determine whether the provided
+   * value is a valid HumanMessage instance by checking for the appropriate
+   * branding and message type.
+   *
+   * @param message - The unknown value to check
+   * @returns true if the message is a HumanMessage instance, false otherwise
+   *
+   * @example
+   * ```ts
+   * const unknownMessage: unknown = new HumanMessage("Hello world!");
+   *
+   * if (HumanMessage.isInstance(unknownMessage)) {
+   *   // TypeScript now knows unknownMessage is a HumanMessage
+   *   console.log(unknownMessage.text); // "Hello world!"
+   *   console.log(unknownMessage.type); // "human"
+   * }
+   * ```
+   */
+  static isInstance(message: unknown): message is HumanMessage {
+    return isBrandedMessage(message, "human");
+  }
 }
 
 /** Parameters for creating a SystemMessage */
-type SystemMessageParams<
+export type SystemMessageParams<
   TStructure extends $MessageStructure = $StandardMessageStructure
 > = {
   /** Optional unique identifier for the message */
@@ -886,8 +1139,8 @@ type SystemMessageParams<
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
 } & (
   | {
-      /** Array of content blocks that make up the message */
-      content: Array<$InferMessageContent<TStructure, "system">>;
+      /** Content blocks that make up the message */
+      content: Iterable<$InferMessageContent<TStructure, "system">>;
     }
   | {
       /** Text content for the message */
@@ -925,7 +1178,7 @@ export class SystemMessage<
 > implements Message<TStructure, "system">, $BrandedMessage
 {
   /** @internal */
-  [__BRANDED_MESSAGE]: never;
+  [__BRANDED_MESSAGE] = true as const;
 
   /** The message type, always "system" for system messages */
   readonly type = "system" as const;
@@ -942,25 +1195,10 @@ export class SystemMessage<
   /** Metadata associated with the system message */
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
 
-  /**
-   * Creates a system message with simple text content.
-   * @param text - The text content for the message
-   */
-  constructor(text: string);
-  /**
-   * Creates a system message with structured content blocks.
-   * @param content - Array of content blocks for the message
-   */
-  constructor(content: Array<$InferMessageContent<TStructure, "system">>);
-  /**
-   * Creates a system message from a params object
-   * @param params - The parameters for the message
-   */
-  constructor(params: SystemMessageParams<TStructure>);
   constructor(
     arg:
       | string
-      | Array<$InferMessageContent<TStructure, "system">>
+      | Iterable<$InferMessageContent<TStructure, "system">>
       | SystemMessageParams<TStructure>
   ) {
     const textContent = (text: string) => [
@@ -969,9 +1207,9 @@ export class SystemMessage<
     if (typeof arg === "string") {
       // new SystemMessage("Hello")
       this.content = textContent(arg);
-    } else if (Array.isArray(arg)) {
+    } else if (Symbol.iterator in arg) {
       // new SystemMessage([{ type: "text", text: "Hello" }])
-      this.content = arg;
+      this.content = Array.from(arg);
     } else {
       // new SystemMessage({ ... })
       this.id = arg.id ?? "";
@@ -982,7 +1220,7 @@ export class SystemMessage<
         this.content = textContent(arg.content);
       } else {
         // new SystemMessage({ content: [{ type: "text", text: "Hello" }] })
-        this.content = arg.content;
+        this.content = Array.from(arg.content);
       }
     }
   }
@@ -1011,10 +1249,35 @@ export class SystemMessage<
       .map((block) => block.text)
       .join("");
   }
+
+  /**
+   * Type guard to check if an unknown value is a SystemMessage instance.
+   *
+   * This method performs a runtime check to determine whether the provided
+   * value is a valid SystemMessage instance by checking for the appropriate
+   * branding and message type.
+   *
+   * @param message - The unknown value to check
+   * @returns true if the message is a SystemMessage instance, false otherwise
+   *
+   * @example
+   * ```ts
+   * const unknownMessage: unknown = new SystemMessage("You are a helpful assistant");
+   *
+   * if (SystemMessage.isInstance(unknownMessage)) {
+   *   // TypeScript now knows unknownMessage is a SystemMessage
+   *   console.log(unknownMessage.text); // "You are a helpful assistant"
+   *   console.log(unknownMessage.type); // "system"
+   * }
+   * ```
+   */
+  static isInstance(message: unknown): message is SystemMessage {
+    return isBrandedMessage(message, "system");
+  }
 }
 
 /** Parameters for creating a ToolMessage */
-type ToolMessageParams<
+export type ToolMessageParams<
   TStructure extends $MessageStructure = $StandardMessageStructure
 > = {
   id?: string;
@@ -1056,7 +1319,7 @@ export class ToolMessage<
 > implements Message<TStructure, "tool">, $BrandedMessage
 {
   /** @internal */
-  [__BRANDED_MESSAGE]: never;
+  [__BRANDED_MESSAGE] = true as const;
 
   /** The message type, always "tool" for tool messages */
   readonly type = "tool" as const;
@@ -1115,5 +1378,34 @@ export class ToolMessage<
       .filter((block) => block.type === "text")
       .map((block) => block.text)
       .join("");
+  }
+
+  /**
+   * Type guard to check if an unknown value is a ToolMessage instance.
+   *
+   * This method performs runtime type checking to determine if the provided
+   * value is a valid ToolMessage instance by checking for the branded message
+   * marker and the correct message type.
+   *
+   * @param message - The unknown value to check
+   * @returns true if the message is a ToolMessage instance, false otherwise
+   *
+   * @example
+   * ```ts
+   * const message: unknown = new ToolMessage({
+   *   toolCallId: "call_123",
+   *   status: "success",
+   *   content: [{ type: "text", text: "Success!" }]
+   * });
+   *
+   * if (ToolMessage.isInstance(message)) {
+   *   // TypeScript now knows message is a ToolMessage
+   *   console.log(message.toolCallId); // "call_123"
+   *   console.log(message.result); // "Success!"
+   * }
+   * ```
+   */
+  static isInstance(message: unknown): message is ToolMessage {
+    return isBrandedMessage(message, "tool");
   }
 }

@@ -121,3 +121,11 @@ export type $MergeDiscriminatedUnion<
   // Index into the mapped type with all possible discriminator values
   // This converts the mapped type back into a union
 }[A[Key] | B[Key]];
+
+/**
+ * Immediately-invoked function expression.
+ *
+ * @param fn - The function to execute
+ * @returns The result of the function
+ */
+export const iife = <T>(fn: () => T) => fn();
