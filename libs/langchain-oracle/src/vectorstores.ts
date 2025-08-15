@@ -1,5 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import oracledb from "oracledb";
 import { createHash } from "crypto";
 import {
@@ -10,9 +8,159 @@ import { Document, type DocumentInterface } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
-type Metadata = Record<string, unknown>;
+export type Metadata = FilterCondition | FilterGroup | Record<string, unknown>;
 
-export interface OracleDBVSStoreArgs {
+export interface FilterCondition {
+  key: string; // JSON field inside metadata
+  oper: string; // Logical operator name: EQ, GT, LT, GTE, LTE
+  value: unknown; // Value to compare against
+}
+
+export interface FilterGroup {
+  _and?: Array<Metadata>;
+  _or?: Array<Metadata>;
+}
+
+/**
+ * Convert high-level operation codes to SQL-compatible operators
+ */
+function convertOperToSql(oper: string): string {
+  const operMap: Record<string, string> = {
+    EQ: "==",
+    GT: ">",
+    LT: "<",
+    GTE: ">=",
+    LTE: "<=",
+  };
+  if (!(oper in operMap)) {
+    throw new Error(`Filter operation ${oper} not supported`);
+  }
+  return operMap[oper];
+}
+
+/**
+ * Generate JSON_EXISTS condition from a FilterCondition
+ */
+function generateCondition(
+  condition: FilterCondition,
+  bindValues: unknown[]
+): string {
+  const { key } = condition;
+  const oper = convertOperToSql(condition.oper);
+  const { value } = condition;
+
+  bindValues.push(value);
+  const pos = bindValues.length;
+  return `JSON_EXISTS(metadata, '$.${key}?(@ ${oper} $bindName)' PASSING :${pos} AS "bindName")`;
+}
+
+/**
+ * Generate OR chain of JSON_EXISTS for array values (IN-style)
+ */
+function generateInCondition(
+  column: string,
+  values: string[],
+  bindValues: unknown[]
+): string {
+  const clauses = values.map((v) => {
+    bindValues.push(v);
+    const pos = bindValues.length; // 1-based bind position
+    return `JSON_EXISTS(metadata, '$.${column}?(@ == $bindName)' PASSING :${pos} AS "bindName")`;
+  });
+
+  return clauses.join(" OR ");
+}
+
+function buildJsonPath(column: string): string {
+  // Quote each path segment so keys with dots/spaces/hyphens are safe
+  // e.g. category.sub -> $."category"."sub"
+  const segs = column.split(".").map((s) => `"${s.replace(/"/g, '""')}"`);
+  return `$.${segs.join(".")}`;
+}
+
+/**
+ * Generate OR chain of JSON_EQUAL for { k: val}
+ */
+export function generateEqualCondition(
+  column: string,
+  value: string,
+  bindValues: unknown[]
+): string {
+  bindValues.push(value);
+  const pos = bindValues.length;
+
+  const path = buildJsonPath(column);
+  // For string scalars:
+  return `JSON_VALUE(metadata, '${path}') = :${pos}`;
+}
+
+/**
+ * Recursively generate WHERE clause
+ */
+export function generateWhereClause(
+  dbFilter: Metadata,
+  bindValues: unknown[]
+): string {
+  // Case 1: Single FilterCondition
+  if ("key" in dbFilter) {
+    return generateCondition(dbFilter as FilterCondition, bindValues);
+  }
+
+  // Case 2: Shorthand IN-style filter { column: ["v1", "v2"] }
+
+  if (!("_and" in dbFilter) && !("_or" in dbFilter)) {
+    const entries = Object.entries(dbFilter);
+    if (entries.length === 1) {
+      const [col, val] = entries[0];
+
+      // Case 1: Array directly → { author: ["a", "b"] }
+      if (Array.isArray(val)) {
+        return generateInCondition(col, val as string[], bindValues);
+      }
+
+      // value is a string -> { author: "a"}
+      if (typeof val === "string") {
+        return generateEqualCondition(col, val, bindValues);
+      }
+
+      // Case 2: Object with IN → { author: { IN: ["a", "b"] } }
+      if (typeof val === "object" && val !== null && "IN" in val) {
+        const inVals = (val as { IN: string[] }).IN;
+        if (Array.isArray(inVals)) {
+          return generateInCondition(col, inVals, bindValues);
+        }
+      }
+    }
+  }
+
+  // Case 3: AND group
+  if (
+    "_and" in dbFilter &&
+    Array.isArray(dbFilter._and) &&
+    dbFilter._and.length > 0
+  ) {
+    const andConditions = dbFilter._and.map((cond) =>
+      generateWhereClause(cond as any, bindValues)
+    );
+    return `(${andConditions.join(" AND ")})`;
+  }
+
+  // Case 4: OR group
+  if (
+    "_or" in dbFilter &&
+    Array.isArray(dbFilter._or) &&
+    dbFilter._or.length > 0
+  ) {
+    const orConditions = dbFilter._or.map((cond) =>
+      generateWhereClause(cond as any, bindValues)
+    );
+    return `(${orConditions.join(" OR ")})`;
+  }
+
+  throw new Error(`Invalid filter structure: ${JSON.stringify(dbFilter)}`);
+}
+
+export interface OracleDBVSArgs {
   tableName: string;
   schemaName?: string | null;
   client: oracledb.Pool | oracledb.Connection;
@@ -169,7 +317,7 @@ async function createHNSWIndex(
       }
     }
 
-    const {idxName} = config;
+    const { idxName } = config;
     const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
       idxName
     )}
@@ -245,7 +393,7 @@ async function createIVFIndex(
     }
 
     // Base SQL statement
-    const {idxName} = config;
+    const { idxName } = config;
     const baseSql = `CREATE VECTOR INDEX IF NOT EXISTS ${quoteIdentifier(
       idxName
     )}
@@ -307,7 +455,7 @@ export class OracleVS extends VectorStore {
     return "oraclevs";
   }
 
-  constructor(embeddings: EmbeddingsInterface, dbConfig: OracleDBVSStoreArgs) {
+  constructor(embeddings: EmbeddingsInterface, dbConfig: OracleDBVSArgs) {
     super(embeddings, dbConfig);
 
     try {
@@ -486,15 +634,14 @@ export class OracleVS extends VectorStore {
       SELECT id, 
         text,
         metadata,
-        vector_distance(embedding, :embedding, ${this.distanceStrategy}) as distance,
+        vector_distance(embedding, :1, ${this.distanceStrategy}) as distance,
         embedding
       FROM ${this.tableName} `;
       if (filter && Object.keys(filter).length > 0) {
-        sqlQuery += " WHERE JSON_EQUAL(metadata, :filter)";
-        bindValues.push({ type: oracledb.DB_TYPE_JSON, val: filter });
+        sqlQuery += ` WHERE ${generateWhereClause(filter, bindValues)}`;
       }
-      sqlQuery += " ORDER BY distance FETCH APPROX FIRST :k ROWS ONLY ";
       bindValues.push(k);
+      sqlQuery += ` ORDER BY distance FETCH APPROX FIRST :${bindValues.length} ROWS ONLY `;
 
       // Execute the query
       connection = await this.getConnection();
@@ -513,10 +660,10 @@ export class OracleVS extends VectorStore {
           const metadata = row[2] as Metadata;
           const distance = row[3] as number;
           const embedding = row[4] as any;
-
           const document = new Document({
             pageContent: text || "",
             metadata: metadata || {},
+            id: String(row[0]),
           });
           docsScoresAndEmbeddings.push([document, distance, embedding]);
         }
@@ -616,7 +763,7 @@ export class OracleVS extends VectorStore {
     const queryEmbedding: number[] = Array.from(embedding);
 
     // Ensure lambdaMult has a default value if not provided
-    const lambdaMult = 0.5;
+    const lambdaMult = options.lambda ?? 0.5;
     const mmrSelectedIndices: number[] = maximalMarginalRelevance(
       queryEmbedding,
       consistentEmbeddings,
@@ -632,7 +779,7 @@ export class OracleVS extends VectorStore {
   }
 
   public async delete(params: {
-    ids?: string[];
+    ids?: Buffer[];
     deleteAll?: boolean;
   }): Promise<void> {
     let connection: oracledb.Connection | null = null;
@@ -665,9 +812,9 @@ export class OracleVS extends VectorStore {
   static async fromDocuments(
     documents: Document[],
     embeddings: EmbeddingsInterface,
-    dbConfig: OracleDBVSStoreArgs
+    dbConfig: OracleDBVSArgs
   ): Promise<OracleVS> {
-    const {client} = dbConfig;
+    const { client } = dbConfig;
     if (!client) throw new Error("client parameter is required...");
 
     try {

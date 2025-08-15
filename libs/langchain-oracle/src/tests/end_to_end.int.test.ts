@@ -10,24 +10,18 @@ import {
   OracleEmbeddings,
   OracleSummary,
   DistanceStrategy,
+  dropTablePurge,
   createIndex,
   OracleVS,
-  dropTablePurge,
 } from "../index.js";
 
-test("Test end-to-end", async () => {
-  const pool = await oracledb.createPool({
-    user: process.env.ORACLE_USERNAME,
-    password: process.env.ORACLE_PASSWORD,
-    connectString: process.env.ORACLE_DSN,
-  });
-
+describe("Integrated Testing ", () => {
+  let connection: oracledb.Connection | undefined;
+  let pool: oracledb.Pool | undefined;
   const filePath = path.resolve(
     path.dirname(url.fileURLToPath(import.meta.url)),
     "./example_data/"
   );
-
-  const EMBEDDINGS_TABLE = "embeddings";
 
   const loaderPref = { dir: filePath };
   const splitterPref = { by: "words", max: 100, normalize: "all" };
@@ -36,9 +30,23 @@ test("Test end-to-end", async () => {
     model: process.env.DEMO_ONNX_MODEL,
   };
   const summaryPref = { provider: "database", gLevel: "P" };
+  const tableName = "embeddings";
 
-  let connection;
-  try {
+  afterAll(async () => {
+    if (connection) {
+      await dropTablePurge(connection as oracledb.Connection, tableName);
+      await connection?.close();
+      await pool?.close();
+    }
+  });
+
+  test("Test end-to-end", async () => {
+    pool = await oracledb.createPool({
+      user: process.env.ORACLE_USERNAME,
+      password: process.env.ORACLE_PASSWORD,
+      connectString: process.env.ORACLE_DSN,
+    });
+
     connection = await pool.getConnection();
 
     // instantiate loader, splitter, and embedder
@@ -49,7 +57,7 @@ test("Test end-to-end", async () => {
 
     const dbConfig = {
       client: pool,
-      tableName: EMBEDDINGS_TABLE,
+      tableName,
       distanceStrategy: DistanceStrategy.DOT_PRODUCT,
       query: "What are salient features of oracledb",
       embeddings: embedder,
@@ -89,7 +97,7 @@ test("Test end-to-end", async () => {
       }
     }
 
-    await dropTablePurge(connection as oracledb.Connection, EMBEDDINGS_TABLE);
+    await dropTablePurge(connection as oracledb.Connection, tableName);
 
     const oraclevs = await OracleVS.fromDocuments(
       total_chunks,
@@ -123,8 +131,5 @@ test("Test end-to-end", async () => {
     );
     expect(matches).toHaveLength(5);
     expect(matches[0].metadata.summary).toContain("Jacob Lee Resume");
-  } finally {
-    await connection?.close();
-    await pool.close();
-  }
+  });
 });
