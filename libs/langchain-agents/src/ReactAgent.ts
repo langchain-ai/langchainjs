@@ -342,30 +342,27 @@ export class ReactAgent<
   }
 
   /**
-   * Invoke the agent with a single input and config.
-   * @param input The input to the graph.
-   * @param options The configuration to use for the run.
+   * @inheritdoc
    */
   get invoke(): AgentGraph<StateSchema, StructuredResponseFormat>["invoke"] {
     return this.#graph.invoke.bind(this.#graph);
   }
 
   /**
-   * Streams the execution of an agent, emitting state updates as they occur.
-   * This is the primary method for observing graph execution in real-time.
-   *
-   * Stream modes:
-   * - "values": Emits complete state after each step
-   * - "updates": Emits only state changes after each step
-   * - "debug": Emits detailed debug information
-   * - "messages": Emits messages from within nodes
-   *
-   * @param input - The input to start agent execution with
-   * @param options - Configuration options for streaming
-   * @returns An async iterable stream of agent state updates
+   * @inheritdoc
    */
   get stream(): AgentGraph<StateSchema, StructuredResponseFormat>["stream"] {
     return this.#graph.stream.bind(this.#graph);
+  }
+
+  /**
+   * @inheritdoc
+   */
+  get streamEvents(): AgentGraph<
+    StateSchema,
+    StructuredResponseFormat
+  >["streamEvents"] {
+    return this.#graph.streamEvents.bind(this.#graph);
   }
 
   /**
