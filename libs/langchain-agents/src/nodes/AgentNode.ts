@@ -84,7 +84,7 @@ export class AgentNode<
     >
   ) {
     super({
-      name: options.name ?? "agent",
+      name: options.name ?? "model",
       func: (input, config) =>
         this.#run(input, config as RunnableConfig) as any,
     });
