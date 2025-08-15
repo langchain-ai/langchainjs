@@ -1,5 +1,7 @@
 import { BaseContentBlock } from "./base.js";
 
+export type Multimodal = {};
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
   type BaseDataRecord = {
@@ -43,9 +45,7 @@ export declare namespace Multimodal {
   type DataRecord = DataRecordFileId | DataRecordUrl | DataRecordData;
 
   /** Content block for multimodal data */
-  export type Data<
-    TMetadata extends Record<string, unknown> = Record<string, unknown>
-  > = BaseContentBlock &
+  export type Data<TMetadata = Record<string, unknown>> = BaseContentBlock &
     DataRecord & {
       /**
        * MIME type of the file. Required for base64 encoding.
