@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  SystemMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import z from "zod";
 
 import { createReactAgent } from "../index.js";
@@ -10,8 +14,10 @@ interface TestScenario {
   name: string;
   throwWithin: "toolCall" | "llm" | "prompt" | "preModelHook" | "postModelHook";
   throwTimming?: "immediate" | "delayed";
+  errorHandler?: "bubbleUp" | "cached";
   expectedToolCalls: number;
-  expectedError: string;
+  expectedError?: string;
+  expectedResult?: string;
   only?: boolean;
   skip?: boolean;
 }
@@ -40,12 +46,12 @@ function makePollTool(params?: ToolParams) {
     if (params?.throwTimming === "delayed") {
       counter += 1;
       if (counter > THROW_DELAY_COUNT) {
-        throw new Error("counter error");
+        throw new Error("tool call error");
       }
     }
 
     if (params?.throwTimming === "immediate") {
-      throw new Error("4");
+      throw new Error("tool call error");
     }
 
     return { result: inputValue + 1 };
@@ -63,6 +69,22 @@ function makePollTool(params?: ToolParams) {
   };
 }
 
+function bubbleUpErrorHandler(toolCall: { error: unknown }) {
+  throw toolCall.error;
+}
+
+function cachedErrorHandler(toolCall: {
+  error: unknown;
+  name: string;
+  id: string;
+}) {
+  return new ToolMessage({
+    content: JSON.stringify({ result: "123" }),
+    name: toolCall.name,
+    tool_call_id: toolCall.id ?? "",
+  });
+}
+
 // Agent prompt used across all tests
 const prompt = `You are a helpful assistant.
 Use the addRandom tool to add random numbers to 1 until your result is 10.
@@ -73,23 +95,33 @@ const testScenarios: TestScenario[] = [
     name: "throw immediate in tool call",
     throwWithin: "toolCall",
     throwTimming: "immediate",
-    expectedToolCalls: 0,
+    errorHandler: "bubbleUp",
+    expectedToolCalls: 1,
     expectedError: "tool call error",
-    /**
-     * unknown behavior
-     */
-    skip: true,
   },
   {
     name: "throw delayed in tool call",
     throwWithin: "toolCall",
     throwTimming: "delayed",
-    expectedToolCalls: 0,
+    errorHandler: "bubbleUp",
+    expectedToolCalls: 4,
     expectedError: "tool call error",
-    /**
-     * unknown behavior
-     */
-    skip: true,
+  },
+  {
+    name: "throw immediate in tool call",
+    throwWithin: "toolCall",
+    throwTimming: "immediate",
+    errorHandler: "cached",
+    expectedToolCalls: 1,
+    expectedResult: "123",
+  },
+  {
+    name: "throw delayed in tool call",
+    throwWithin: "toolCall",
+    throwTimming: "delayed",
+    errorHandler: "cached",
+    expectedToolCalls: 4,
+    expectedResult: "123",
   },
   /**
    * `llm` if provided as a function, it will be called only once.
@@ -215,15 +247,31 @@ describe("stopWhen Tests", () => {
           scenario.throwWithin === "postModelHook"
             ? getDynamicHook("postModelHook")
             : undefined,
+        ...(scenario.errorHandler === "bubbleUp"
+          ? {
+              onToolCallError: bubbleUpErrorHandler,
+            }
+          : {
+              onToolCallError: cachedErrorHandler,
+            }),
       });
 
-      await expect(() =>
-        agent.invoke({
+      if (scenario.expectedError) {
+        await expect(() =>
+          agent.invoke({
+            messages: [
+              new HumanMessage("Get a result that is greater or equal to 10"),
+            ],
+          })
+        ).rejects.toThrow();
+      } else {
+        const res = await agent.invoke({
           messages: [
             new HumanMessage("Get a result that is greater or equal to 10"),
           ],
-        })
-      ).rejects.toThrow();
+        });
+        expect(res.messages.at(-1)?.content).toContain(scenario.expectedResult);
+      }
 
       expect(mock).toHaveBeenCalledTimes(scenario.expectedToolCalls);
     });

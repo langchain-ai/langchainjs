@@ -16,6 +16,7 @@ import type {
   SystemMessage,
   BaseMessageLike,
   BaseMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import type {
   All,
@@ -223,6 +224,15 @@ export type CreateReactAgentParams<
     ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
     LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   >;
+
+  /**
+   * An optional function to handle tool call errors.
+   */
+  onToolCallError?: (
+    toolCall: ToolCallData,
+    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
+  ) => void | ToolMessage | Promise<ToolMessage>;
 };
 
 export interface ConfigurableModelInterface {
@@ -260,3 +270,22 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
+
+export interface ToolCallData {
+  /**
+   * The id of the tool call.
+   */
+  id: string;
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, unknown>;
+  /**
+   * The error that occurred if the tool call failed.
+   */
+  error: unknown;
+}

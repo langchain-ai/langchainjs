@@ -118,7 +118,9 @@ export class ReactAgent<
      * add individual tool nodes
      */
     for (const tool of toolClasses.filter(isClientTool)) {
-      const individualToolNode = new ToolNode([tool]);
+      const individualToolNode = new ToolNode([tool], {
+        onToolCallError: this.options.onToolCallError,
+      });
       allNodeWorkflows.addNode(tool.name, individualToolNode);
     }
 

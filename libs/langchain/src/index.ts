@@ -6,6 +6,7 @@ export {
   AIMessage,
   SystemMessage,
   HumanMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 
 /**

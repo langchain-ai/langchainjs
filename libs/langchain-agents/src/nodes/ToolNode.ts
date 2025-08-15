@@ -7,23 +7,41 @@ import {
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
+import type { InteropZodObject } from "@langchain/core/utils/types";
 import {
-  END,
   isCommand,
   Command,
   Send,
   isGraphInterrupt,
-  MessagesAnnotation,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { isSend } from "../utils.js";
+import { PreHookAnnotation } from "../annotation.js";
+import {
+  CreateReactAgentParams,
+  AnyAnnotationRoot,
+  ToAnnotationRoot,
+} from "../types.js";
 
-export type ToolNodeOptions = {
+export interface ToolNodeOptions<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> extends Pick<
+    CreateReactAgentParams<
+      StateSchema,
+      StructuredResponseFormat,
+      ContextSchema
+    >,
+    "onToolCallError"
+  > {
   name?: string;
   tags?: string[];
-  handleToolErrors?: boolean;
-};
+}
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
   Array.isArray(input) && input.every(isBaseMessage);
@@ -157,29 +175,35 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ToolNode<T = any> extends RunnableCallable<T, T> {
+export class ToolNode<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
-
-  handleToolErrors = true;
 
   trace = false;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
-    options?: ToolNodeOptions
+    public options?: ToolNodeOptions
   ) {
-    const { name, tags, handleToolErrors } = options ?? {};
+    const { name, tags } = options ?? {};
     super({
       name,
       tags,
-      func: (input, config) => this.run(input, config as RunnableConfig),
+      func: (state, config) =>
+        this.run(
+          state as ToAnnotationRoot<StateSchema>["State"] &
+            PreHookAnnotation["State"],
+          config as RunnableConfig
+        ),
     });
     this.tools = tools;
-    this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
   }
 
   protected async runTool(
     call: ToolCall,
+    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     config: RunnableConfig
   ): Promise<ToolMessage | Command> {
     const tool = this.tools.find((tool) => tool.name === call.name);
@@ -201,37 +225,62 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
         content: typeof output === "string" ? output : JSON.stringify(output),
         tool_call_id: call.id!,
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      if (!this.handleToolErrors) throw e;
-
+    } catch (e: unknown) {
       if (isGraphInterrupt(e)) {
-        // `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
-        // As such, they are not recoverable by the agent and shouldn't be fed
-        // back. Instead, re-throw these errors even when `handleToolErrors = true`.
+        /**
+         * `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
+         * As such, they are not recoverable by the agent and shouldn't be fed
+         * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+         */
         throw e;
       }
 
+      /**
+       * If the onToolCallError function is provided, call it with the tool call data and the state.
+       */
+      if (this.options?.onToolCallError) {
+        const update = await this.options.onToolCallError(
+          {
+            id: call.id ?? "",
+            name: call.name,
+            args: call.args,
+            error: e,
+          },
+          state,
+          config
+        );
+
+        /**
+         * only do something if the onToolCallError function returns a value
+         */
+        if (update) {
+          return update as ToolMessage;
+        }
+      }
+
+      const error = e instanceof Error ? e : new Error(String(e));
       return new ToolMessage({
-        content: `Error: ${e.message}\n Please fix your mistakes.`,
+        content: `Error: ${error.message}\n Please fix your mistakes.`,
         name: call.name,
         tool_call_id: call.id ?? "",
       });
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async run(input: unknown, config: RunnableConfig): Promise<T> {
+  protected async run(
+    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    config: RunnableConfig
+  ): Promise<ContextSchema> {
     let outputs: (ToolMessage | Command)[];
 
-    if (isSendInput(input)) {
-      outputs = [await this.runTool(input.lg_tool_call, config)];
+    if (isSendInput(state)) {
+      outputs = [await this.runTool(state.lg_tool_call, state, config)];
     } else {
       let messages: BaseMessage[];
-      if (isBaseMessageArray(input)) {
-        messages = input;
-      } else if (isMessagesState(input)) {
-        messages = input.messages;
+      if (isBaseMessageArray(state)) {
+        messages = state;
+      } else if (isMessagesState(state)) {
+        messages = state.messages;
       } else {
         throw new Error(
           "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
@@ -260,13 +309,15 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
       outputs = await Promise.all(
         aiMessage.tool_calls
           ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
-          .map((call) => this.runTool(call, config)) ?? []
+          .map((call) => this.runTool(call, state, config)) ?? []
       );
     }
 
     // Preserve existing behavior for non-command tool outputs for backwards compatibility
     if (!outputs.some(isCommand)) {
-      return (Array.isArray(input) ? outputs : { messages: outputs }) as T;
+      return (Array.isArray(state)
+        ? outputs
+        : { messages: outputs }) as unknown as ContextSchema;
     }
 
     // Handle mixed Command and non-Command outputs
@@ -297,7 +348,7 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
         }
       } else {
         combinedOutputs.push(
-          Array.isArray(input) ? [output] : { messages: [output] }
+          Array.isArray(state) ? [output] : { messages: [output] }
         );
       }
     }
@@ -306,24 +357,6 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
       combinedOutputs.push(parentCommand);
     }
 
-    return combinedOutputs as T;
-  }
-}
-
-export function toolsCondition(
-  state: BaseMessage[] | typeof MessagesAnnotation.State
-): "tools" | typeof END {
-  const message = Array.isArray(state)
-    ? state[state.length - 1]
-    : state.messages[state.messages.length - 1];
-
-  if (
-    message !== undefined &&
-    "tool_calls" in message &&
-    ((message as AIMessage).tool_calls?.length ?? 0) > 0
-  ) {
-    return "tools";
-  } else {
-    return END;
+    return combinedOutputs as unknown as ContextSchema;
   }
 }
