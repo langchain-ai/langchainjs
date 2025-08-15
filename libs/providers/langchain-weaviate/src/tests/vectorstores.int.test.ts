@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { WeaviateStore } from "../vectorstores.js";
 
 dotenv.config();
@@ -13,13 +13,24 @@ let client: WeaviateClient;
 beforeAll(async () => {
   expect(process.env.WEAVIATE_URL).toBeDefined();
   expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
-  client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
-    authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
-    headers: {
-      "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
-      "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
-    },
-  });
+  if (process.env.WEAVIATE_URL === "local") {
+    client = await weaviate.connectToLocal({
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  } else {
+    client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
+      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  }
+  console.log("Connecting to Weaviate at", process.env.WEAVIATE_URL);
+  console.log("Ready?", await client.isReady());
 });
 
 test("WeaviateStore", async () => {
@@ -31,6 +42,8 @@ test("WeaviateStore", async () => {
     metadataKeys: ["foo"],
   };
   try {
+    // delete indexName first
+    await client.collections.delete(weaviateArgs.indexName);
     const store = await WeaviateStore.fromTexts(
       ["hello world", "hi there", "how are you", "bye now"],
       [{ foo: "bar" }, { foo: "baz" }, { foo: "qux" }, { foo: "bar" }],

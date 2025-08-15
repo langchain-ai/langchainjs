@@ -1,17 +1,18 @@
 import * as uuid from "uuid";
 import {
-  BaseHybridOptions,
+  HybridOptions,
   CollectionConfigCreate,
   configure,
   type DataObject,
   type FilterValue,
   GenerateOptions,
   GenerativeConfigRuntime,
-  HybridOptions,
   Metadata,
   Vectors,
   WeaviateClient,
   type WeaviateField,
+  BaseHybridOptions,
+  MetadataKeys,
 } from "weaviate-client";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -294,19 +295,33 @@ export class WeaviateStore extends VectorStore {
     options?: HybridOptions<undefined>
   ): Promise<Document[]> {
     const collection = this.client.collections.get(this.indexName);
+    let query_vector: number[] | undefined;
+    if (!options?.vector) {
+      query_vector = await this.embeddings.embedQuery(query);
+    }
+
+    const options_with_vector = {
+      ...options,
+      vector: options?.vector || query_vector,
+      returnMetadata: [
+        "score",
+        ...((options?.returnMetadata as MetadataKeys) || []),
+      ] as MetadataKeys,
+    };
     let result;
     if (this.tenant) {
       result = await collection.withTenant(this.tenant).query.hybrid(query, {
-        ...(options || {}),
+        ...options_with_vector,
       });
     } else {
       result = await collection.query.hybrid(query, {
-        ...(options || {}),
+        ...options_with_vector,
       });
     }
-    const documents = [];
+    const documents: Document[] = [];
+
     for (const data of result.objects) {
-      const { properties = {} } = data ?? {};
+      const { properties = {}, metadata = {} } = data ?? {};
       const { [this.textKey]: text, ...rest } = properties;
 
       documents.push(
@@ -314,6 +329,7 @@ export class WeaviateStore extends VectorStore {
           pageContent: String(text ?? ""),
           metadata: {
             ...rest,
+            ...metadata,
           },
           id: data.uuid,
         })
@@ -413,6 +429,10 @@ export class WeaviateStore extends VectorStore {
   ): Promise<[Document, number, number, number[]][]> {
     try {
       const collection = this.client.collections.get(this.indexName);
+      // define query attributes to return
+      // if no queryAttrs, show all properties
+      const queryAttrs =
+        this.queryAttrs.length > 1 ? this.queryAttrs : undefined;
       let result;
       if (this.tenant) {
         result = await collection
@@ -421,6 +441,7 @@ export class WeaviateStore extends VectorStore {
             filters: filter,
             limit: k,
             returnMetadata: ["distance", "score"],
+            returnProperties: queryAttrs,
           });
       } else {
         result = await collection.query.nearVector(query, {
@@ -428,6 +449,7 @@ export class WeaviateStore extends VectorStore {
           limit: k,
           includeVector: true,
           returnMetadata: ["distance", "score"],
+          returnProperties: queryAttrs,
         });
       }
 
