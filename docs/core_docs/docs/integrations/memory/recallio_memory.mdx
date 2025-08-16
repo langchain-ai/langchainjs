@@ -1,0 +1,27 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# RecallIO.AI Memory
+
+[RecallIO](https://recallio.ai/) is a powerfull API allowing to store, index, and retrieve application “memories” with built-in fact extraction, dynamic summaries, reranked recall, and a full knowledge-graph layer.
+
+## Setup
+
+Goto [RecallIO Dashboard](https://app.recallio.ai) to get the API keys for RecallIO.
+
+## Usage
+
+import Example from "@examples/memory/recallio.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/core @langchain/community
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>

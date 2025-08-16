@@ -274,6 +274,7 @@ export const config = {
     "memory/chat_memory": "memory/chat_memory",
     "memory/mem0": "memory/mem0",
     "memory/motorhead_memory": "memory/motorhead_memory",
+    "memory/recallio": "memory/recallio",
     "memory/zep": "memory/zep",
     "memory/zep_cloud": "memory/zep_cloud",
     // indexes
@@ -511,6 +512,7 @@ export const config = {
     // memory
     "memory/mem0",
     "memory/motorhead_memory",
+    "memory/recallio",
     "memory/zep",
     "memory/zep_cloud",
     // utils

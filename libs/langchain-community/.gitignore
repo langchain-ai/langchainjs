@@ -890,6 +890,10 @@ memory/motorhead_memory.cjs
 memory/motorhead_memory.js
 memory/motorhead_memory.d.ts
 memory/motorhead_memory.d.cts
+memory/recallio.cjs
+memory/recallio.js
+memory/recallio.d.ts
+memory/recallio.d.cts
 memory/zep.cjs
 memory/zep.js
 memory/zep.d.ts
