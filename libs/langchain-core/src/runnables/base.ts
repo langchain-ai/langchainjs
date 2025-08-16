@@ -27,6 +27,7 @@ import {
   isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
+import { getAbortSignalError } from "../utils/signal.js";
 import {
   IterableReadableStream,
   concat,
@@ -1958,7 +1959,7 @@ export class RunnableSequence<
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       if (options?.signal?.aborted) {
-        throw new Error("Aborted");
+        throw getAbortSignalError(options.signal);
       }
       finalOutput = await this.last.invoke(
         nextStepInput,

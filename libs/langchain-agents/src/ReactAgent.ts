@@ -108,6 +108,7 @@ export class ReactAgent<
         responseFormat: this.options.responseFormat,
         toolClasses,
         shouldReturnDirect,
+        signal: this.options.signal,
       }),
       {
         input: this.#inputSchema,
@@ -120,6 +121,7 @@ export class ReactAgent<
     for (const tool of toolClasses.filter(isClientTool)) {
       const individualToolNode = new ToolNode([tool], {
         onToolCallError: this.options.onToolCallError,
+        signal: this.options.signal,
       });
       allNodeWorkflows.addNode(tool.name, individualToolNode);
     }

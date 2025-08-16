@@ -20,6 +20,7 @@ import {
   isBaseChatModel,
   hasToolCalls,
   hasSupportForStructuredOutput,
+  mergeAbortSignals,
 } from "../utils.js";
 import {
   AgentState,
@@ -53,6 +54,7 @@ interface AgentNodeOptions<
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
+  signal?: AbortSignal;
 }
 
 export class AgentNode<
@@ -166,10 +168,11 @@ export class AgentNode<
         : await this.#getStaticModel(this.#options.llm);
 
     const modelInput = this.#getModelInputState(state);
-    const response = (await modelRunnable.invoke(
-      modelInput,
-      config
-    )) as AIMessage;
+    const signal = mergeAbortSignals(this.#options.signal, config.signal);
+    const response = (await modelRunnable.invoke(modelInput, {
+      ...config,
+      signal,
+    })) as AIMessage;
 
     response.name = this.name;
     response.lc_kwargs.name = this.name;
@@ -317,6 +320,7 @@ export class AgentNode<
       this.#options.responseFormat
     );
     const messages = [...state.messages];
+    const signal = mergeAbortSignals(this.#options.signal, config.signal);
 
     /**
      * Get the base model to access model name
@@ -334,6 +338,7 @@ export class AgentNode<
           messages,
           {
             ...config,
+            signal,
             /**
              * Ensure the model returns a structured response
              */
@@ -347,7 +352,10 @@ export class AgentNode<
 
     const structuredResponse = (await modelWithStructuredOutput.invoke(
       messages,
-      config
+      {
+        ...config,
+        signal,
+      }
     )) as StructuredResponseFormat;
     return { structuredResponse };
   }

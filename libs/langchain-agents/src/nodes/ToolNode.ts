@@ -17,6 +17,7 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
+import { mergeAbortSignals } from "../utils.js";
 import type {
   CreateReactAgentParams,
   AnyAnnotationRoot,
@@ -40,6 +41,7 @@ export interface ToolNodeOptions<
   > {
   name?: string;
   tags?: string[];
+  signal?: AbortSignal;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -175,12 +177,14 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ToolNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
   trace = false;
+
+  signal?: AbortSignal;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
@@ -198,6 +202,7 @@ export class ToolNode<
         ),
     });
     this.tools = tools;
+    this.signal = options?.signal;
   }
 
   protected async runTool(
@@ -210,7 +215,14 @@ export class ToolNode<
       if (tool === undefined) {
         throw new Error(`Tool "${call.name}" not found.`);
       }
-      const output = await tool.invoke({ ...call, type: "tool_call" }, config);
+
+      const output = await tool.invoke(
+        { ...call, type: "tool_call" },
+        {
+          ...config,
+          signal: mergeAbortSignals(this.signal, config.signal),
+        }
+      );
 
       if (
         (isBaseMessage(output) && output.getType() === "tool") ||
@@ -231,6 +243,13 @@ export class ToolNode<
          * As such, they are not recoverable by the agent and shouldn't be fed
          * back. Instead, re-throw these errors even when `handleToolErrors = true`.
          */
+        throw e;
+      }
+
+      /**
+       * If the signal is aborted, we want to bubble up the error to the invoke caller.
+       */
+      if (this.signal?.aborted) {
         throw e;
       }
 
