@@ -168,9 +168,10 @@ export class AgentNode<
         : await this.#getStaticModel(this.#options.llm);
 
     const modelInput = this.#getModelInputState(state);
+    const signal = mergeAbortSignals(this.#options.signal, config.signal);
     const response = (await modelRunnable.invoke(modelInput, {
       ...config,
-      signal: this.#options.signal,
+      signal,
     })) as AIMessage;
 
     response.name = this.name;
