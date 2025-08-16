@@ -543,7 +543,7 @@ importers:
         version: 8.57.1
       eslint-config-airbnb-base:
         specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1))(eslint@8.57.1)
+        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
       eslint-config-prettier:
         specifier: ^8.6.0
         version: 8.10.2(eslint@8.57.1)
@@ -796,9 +796,6 @@ importers:
       jsonpointer:
         specifier: ^5.0.1
         version: 5.0.1
-      langsmith:
-        specifier: ^0.3.46
-        version: 0.3.50(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       openapi-types:
         specifier: ^12.1.3
         version: 12.1.3
@@ -935,6 +932,10 @@ importers:
       wikipedia:
         specifier: ^2.1.2
         version: 2.1.2
+    optionalDependencies:
+      langsmith:
+        specifier: ^0.3.46
+        version: 0.3.50(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
 
   libs/langchain-community:
     dependencies:
@@ -1563,7 +1564,7 @@ importers:
         version: 8.57.1
       eslint-config-airbnb-base:
         specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1))(eslint@8.57.1)
+        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
       eslint-config-prettier:
         specifier: ^8.6.0
         version: 8.10.2(eslint@8.57.1)
@@ -1855,7 +1856,7 @@ importers:
         version: 8.57.1
       eslint-config-airbnb-base:
         specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1))(eslint@8.57.1)
+        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
       eslint-config-prettier:
         specifier: ^8.6.0
         version: 8.10.2(eslint@8.57.1)
@@ -31130,15 +31131,6 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      confusing-browser-globals: 1.0.11
-      eslint: 8.57.1
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-      semver: 6.3.1
-
   eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       confusing-browser-globals: 1.0.11
@@ -31166,10 +31158,19 @@ snapshots:
       object.entries: 1.1.9
       semver: 6.3.1
 
+  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1):
+    dependencies:
+      confusing-browser-globals: 1.0.11
+      eslint: 8.57.1
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
+      object.assign: 4.1.7
+      object.entries: 1.1.9
+      semver: 6.3.1
+
   eslint-config-airbnb@19.0.4(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint-plugin-jsx-a11y@6.10.2(eslint@8.57.1))(eslint-plugin-react-hooks@4.6.2(eslint@8.57.1))(eslint-plugin-react@7.37.5(eslint@8.57.1))(eslint@8.57.1):
     dependencies:
       eslint: 8.57.1
-      eslint-config-airbnb-base: 15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-config-airbnb-base: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
       eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)

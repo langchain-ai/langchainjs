@@ -1,6 +1,5 @@
 import { Runnable } from "@langchain/core/runnables";
 import {
-  basePush,
   basePull,
   generateModelImportMap,
   generateOptionalImportMap,
@@ -10,7 +9,7 @@ import { getChatModelByClassName } from "../chat_models/universal.js";
 
 // TODO: Make this the default, add web entrypoint in next breaking release
 
-export { basePush as push };
+export { basePush as push } from "./base.js";
 
 /**
  * Pull a prompt from the hub.
