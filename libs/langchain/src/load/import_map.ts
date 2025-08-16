@@ -13,7 +13,6 @@ export * as chains__combine_documents from "../chains/combine_documents/index.js
 export * as chains__combine_documents__reduce from "../chains/combine_documents/reduce.js";
 export * as chains__history_aware_retriever from "../chains/history_aware_retriever.js";
 export * as chains__load from "../chains/load.js";
-export * as chains__openai_functions from "../chains/openai_functions/index.js";
 export * as chains__query_constructor from "../chains/query_constructor/index.js";
 export * as chains__query_constructor__ir from "../chains/query_constructor/ir.js";
 export * as chains__retrieval from "../chains/retrieval.js";

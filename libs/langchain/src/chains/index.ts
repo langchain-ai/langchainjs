@@ -72,7 +72,6 @@ export type {
   SerializedVectorDBQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
-export { OpenAIModerationChain } from "./openai_moderation.js";
 export {
   MultiRouteChain,
   type MultiRouteChainInput,
@@ -86,17 +85,3 @@ export {
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
 export { TransformChain, type TransformChainFields } from "./transform.js";
-export {
-  createExtractionChain,
-  createExtractionChainFromZod,
-} from "./openai_functions/extraction.js";
-export {
-  type TaggingChainOptions,
-  createTaggingChain,
-  createTaggingChainFromZod,
-} from "./openai_functions/tagging.js";
-export {
-  type OpenAPIChainOptions,
-  createOpenAPIChain,
-  convertOpenAPISpecToOpenAIFunctions,
-} from "./openai_functions/openapi.js";

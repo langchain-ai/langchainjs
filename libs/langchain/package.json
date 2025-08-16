@@ -77,7 +77,6 @@
     }
   },
   "dependencies": {
-    "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "@langchain/langgraph": "^1.0.0-alpha",
     "@langchain/langgraph-checkpoint": "^0.1.1",
@@ -265,17 +264,6 @@
         "default": "./dist/chains/load.cjs"
       },
       "input": "./src/chains/load.ts"
-    },
-    "./chains/openai_functions": {
-      "import": {
-        "types": "./dist/chains/openai_functions/index.d.ts",
-        "default": "./dist/chains/openai_functions/index.js"
-      },
-      "require": {
-        "types": "./dist/chains/openai_functions/index.d.cts",
-        "default": "./dist/chains/openai_functions/index.cjs"
-      },
-      "input": "./src/chains/openai_functions/index.ts"
     },
     "./chains/query_constructor": {
       "import": {
