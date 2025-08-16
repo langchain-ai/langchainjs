@@ -53,6 +53,7 @@ interface AgentNodeOptions<
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
+  signal?: AbortSignal;
 }
 
 export class AgentNode<
@@ -76,6 +77,8 @@ export class AgentNode<
 
   #stopWhen: PredicateFunction<StructuredResponseFormat>[];
 
+  #signal?: AbortSignal;
+
   constructor(
     options: AgentNodeOptions<
       StateSchema,
@@ -95,6 +98,7 @@ export class AgentNode<
         ? options.stopWhen
         : [options.stopWhen]
       : [];
+    this.#signal = options.signal;
   }
 
   async #run(
@@ -166,10 +170,10 @@ export class AgentNode<
         : await this.#getStaticModel(this.#options.llm);
 
     const modelInput = this.#getModelInputState(state);
-    const response = (await modelRunnable.invoke(
-      modelInput,
-      config
-    )) as AIMessage;
+    const response = (await modelRunnable.invoke(modelInput, {
+      signal: this.#signal,
+      ...config,
+    })) as AIMessage;
 
     response.name = this.name;
     response.lc_kwargs.name = this.name;
@@ -333,6 +337,7 @@ export class AgentNode<
         const structuredResponse = (await modelWithStructuredOutput.invoke(
           messages,
           {
+            signal: this.#signal,
             ...config,
             /**
              * Ensure the model returns a structured response
@@ -347,7 +352,10 @@ export class AgentNode<
 
     const structuredResponse = (await modelWithStructuredOutput.invoke(
       messages,
-      config
+      {
+        signal: this.#signal,
+        ...config,
+      }
     )) as StructuredResponseFormat;
     return { structuredResponse };
   }

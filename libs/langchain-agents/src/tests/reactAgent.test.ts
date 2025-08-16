@@ -2035,4 +2035,166 @@ describe("createReactAgent", () => {
       expect(aiMessages[0].content).toBe("Done");
     });
   });
+
+  describe("supports abort signal", () => {
+    it("should handle abort signal", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("ai response")],
+      });
+
+      const abortController = new AbortController();
+      const agent = createReactAgent({
+        llm: model,
+        tools: [],
+        abortSignal: abortController.signal,
+      });
+
+      abortController.abort(new Error("custom abortion"));
+
+      await expect(agent.invoke({ messages: "hello" })).rejects.toThrow(
+        "custom abortion"
+      );
+    });
+
+    it("should handle abort signal in tools", async () => {
+      const abortController = new AbortController();
+
+      const abortableTool = tool(
+        async () => {
+          // Simulate some long running async work
+          await new Promise((resolve) => setTimeout(resolve, 10000));
+          return "Tool completed successfully";
+        },
+        {
+          name: "abortable_tool",
+          description: "A tool that can be aborted",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const llm = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "test-call-1",
+                name: "abortable_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
+          }),
+        ],
+      });
+
+      const agent = createReactAgent({
+        llm,
+        tools: [abortableTool],
+        abortSignal: abortController.signal,
+      });
+
+      // Start the agent execution
+      const executionPromise = agent.invoke({
+        messages: [
+          {
+            role: "user",
+            content: "Please run the abortable tool with input 'test'",
+          },
+        ],
+      });
+
+      // Abort after a short delay
+      setTimeout(() => {
+        abortController.abort("custom abort");
+      }, 1000);
+
+      // Verify that the execution throws an abort error
+      await expect(executionPromise).rejects.toThrow("custom abort");
+    });
+
+    it("should merge abort signals from agent and config", async () => {
+      const agentAbortController = new AbortController();
+      const configAbortController = new AbortController();
+
+      const signalCheckTool = tool(
+        async () => {
+          // some long running async work
+          return new Promise((resolve) =>
+            setTimeout(() => resolve("Not aborted"), 500)
+          );
+        },
+        {
+          name: "signal_check_tool",
+          description: "Checks abort signal",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const llm = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "test-call-2",
+                name: "signal_check_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
+          }),
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "test-call-3",
+                name: "signal_check_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
+          }),
+        ],
+      });
+
+      const agent = createReactAgent({
+        llm,
+        tools: [signalCheckTool],
+        abortSignal: agentAbortController.signal,
+      });
+
+      // Test aborting via config signal
+      const configExecution = agent.invoke(
+        {
+          messages: [
+            {
+              role: "user",
+              content: "Run signal_check_tool with input 'test'",
+            },
+          ],
+        },
+        { signal: configAbortController.signal }
+      );
+
+      setTimeout(() => {
+        console.log("ABORTING CONFIG");
+        configAbortController.abort(new Error("Config abort"));
+      }, 1000);
+      setTimeout(() => {
+        agentAbortController.abort(new Error("Agent abort"));
+      }, 2000);
+
+      /**
+       * Abort reason is currently not being propagated in LangGraphJS
+       * @see https://github.com/langchain-ai/langgraphjs/pull/1521
+       */
+      // await expect(configExecution).rejects.toThrow(/Config abort/);
+      await expect(configExecution).rejects.toThrow();
+    });
+  });
 });

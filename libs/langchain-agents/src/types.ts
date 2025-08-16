@@ -233,6 +233,11 @@ export type CreateReactAgentParams<
     state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   ) => void | ToolMessage | Promise<ToolMessage>;
+
+  /**
+   * An optional AbortSignal to abort the agent.
+   */
+  abortSignal?: AbortSignal;
 };
 
 export interface ConfigurableModelInterface {
