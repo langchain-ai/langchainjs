@@ -126,7 +126,7 @@ export class BedrockEmbeddings
    * @param document Document for which to generate an embedding.
    * @returns Promise that resolves to an embedding for the input document.
    */
-  embedQuery(document: string): Promise<number[]> {
+  async embedQuery(document: string): Promise<number[]> {
     return this.caller.callWithOptions(
       {},
       this._embedText.bind(this),
