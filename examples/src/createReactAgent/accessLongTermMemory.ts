@@ -23,6 +23,7 @@
  * system prompt to maintain consistent behavior.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
@@ -302,6 +303,14 @@ console.log(
   "Direct store access:",
   JSON.stringify(directMemory?.value, null, 2)
 );
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await codingAssistant.drawMermaidPng());
 
 /**
  * Example Output:

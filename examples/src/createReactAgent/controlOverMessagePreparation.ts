@@ -33,6 +33,7 @@
  * Rather than repeating these guidelines in every stored message, you temporarily
  * append a reminder before each LLM call to ensure compliance.
  */
+import fs from "node:fs/promises";
 import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -147,6 +148,14 @@ console.log(
   "Assistant:",
   result2.messages[result2.messages.length - 1].content
 );
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await customerServiceAgent.drawMermaidPng());
 
 /**
  * Key Distinction Summary:

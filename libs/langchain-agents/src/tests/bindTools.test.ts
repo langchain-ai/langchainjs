@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   RunnableSequence,
@@ -20,12 +20,6 @@ describe("_shouldBindTools through createReactAgent", () => {
   const mockTool1 = tool(() => "result1", {
     name: "tool1",
     description: "Test tool 1",
-    schema: z.object({}),
-  });
-
-  const mockTool2 = tool(() => "result2", {
-    name: "tool2",
-    description: "Test tool 2",
     schema: z.object({}),
   });
 
@@ -162,7 +156,7 @@ describe("_shouldBindTools through createReactAgent", () => {
       expect(agent).toBeDefined();
     });
 
-    it("should handle RunnableSequence with pre-bound model", async () => {
+    it("should throw when using pre-bound model", async () => {
       const chatModel = new MockToolCallingModel();
       const boundModel = chatModel.bindTools([mockTool1]);
       const sequence = RunnableSequence.from([
@@ -170,193 +164,12 @@ describe("_shouldBindTools through createReactAgent", () => {
         boundModel,
       ]);
       // Should succeed as _shouldBindTools finds the RunnableBinding with matching tools
-      const agent = createReactAgent({
-        llm: sequence,
-        tools: [mockTool1],
-      });
-      expect(agent).toBeDefined();
-    });
-  });
-
-  describe("Pre-bound models with different tool formats", () => {
-    it("should work with pre-bound model (OpenAI format)", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [
-            {
-              type: "function",
-              function: { name: "tool1", description: "Test tool 1" },
-            },
-            {
-              type: "function",
-              function: { name: "tool2", description: "Test tool 2" },
-            },
-          ],
-        } as any,
-        config: {},
-      });
-      // Should succeed as _shouldBindTools finds matching tools and returns false
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should work with pre-bound model (Anthropic format)", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [
-            { name: "tool1", description: "Test tool 1" },
-            { name: "tool2", description: "Test tool 2" },
-          ],
-        } as any,
-        config: {},
-      });
-      // Should succeed as _shouldBindTools finds matching tools and returns false
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should work with pre-bound model (Bedrock format)", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [
-            { toolSpec: { name: "tool1", description: "Test tool 1" } },
-            { toolSpec: { name: "tool2", description: "Test tool 2" } },
-          ],
-        } as any,
-        config: {},
-      });
-      // Should succeed as _shouldBindTools finds matching tools and returns false
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should work with Google format with functionDeclarations", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [
-            {
-              functionDeclarations: [
-                { name: "tool1", description: "Test tool 1" },
-                { name: "tool2", description: "Test tool 2" },
-              ],
-            },
-          ],
-        } as any,
-        config: {},
-      });
-      // Should succeed as _shouldBindTools finds matching tools and returns false
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should work with model bound via bindTools method", async () => {
-      const model = new MockToolCallingModel();
-      const boundModel = model.bindTools([mockTool1, mockTool2]);
-      // Should succeed as _shouldBindTools finds matching tools and returns false
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should work with tools in config instead of kwargs", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {},
-        config: {
-          tools: [
-            { name: "tool1", description: "Test tool 1" },
-            { name: "tool2", description: "Test tool 2" },
-          ],
-        } as any,
-      });
-      // Should succeed as _shouldBindTools finds matching tools in config
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1, mockTool2],
-      });
-      expect(agent).toBeDefined();
-    });
-
-    it("should prioritize kwargs over config when both present", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [{ name: "tool1", description: "Test tool 1" }],
-        } as any,
-        config: {
-          tools: [{ name: "differentTool", description: "Different tool" }],
-        } as any,
-      });
-      // Should succeed as _shouldBindTools uses kwargs tools, not config tools
-      const agent = createReactAgent({
-        llm: boundModel,
-        tools: [mockTool1],
-      });
-      expect(agent).toBeDefined();
-    });
-  });
-
-  describe("Error conditions", () => {
-    it("should throw error when tool count doesn't match", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [{ name: "tool1", description: "Test tool 1" }],
-        } as any,
-        config: {},
-      });
-
-      await expect(async () =>
+      expect(() =>
         createReactAgent({
-          llm: boundModel,
-          tools: [mockTool1, mockTool2], // Mismatch: 2 tools vs 1 bound tool
-        }).invoke({ messages: [new HumanMessage("hi")] })
-      ).rejects.toThrow(
-        "Number of tools in the model.bindTools() and tools passed to createReactAgent must match"
-      );
-    });
-
-    it("should throw error when tools are missing", async () => {
-      const chatModel = new MockBasicChatModel();
-      const boundModel = new RunnableBinding({
-        bound: chatModel,
-        kwargs: {
-          tools: [{ name: "differentTool", description: "Different tool" }],
-        } as any,
-        config: {},
-      });
-
-      await expect(async () =>
-        createReactAgent({
-          llm: boundModel,
-          tools: [mockTool1], // tool1 not in bound tools
-        }).invoke({ messages: [new HumanMessage("hi")] })
-      ).rejects.toThrow("Missing tools 'tool1' in the model.bindTools()");
+          llm: sequence,
+          tools: [mockTool1],
+        })
+      ).toThrow();
     });
   });
 
@@ -365,9 +178,6 @@ describe("_shouldBindTools through createReactAgent", () => {
       const chatModel = new MockBasicChatModel();
       const boundModel = new RunnableBinding({
         bound: chatModel,
-        kwargs: {
-          tools: [{ name: "tool1", description: "Test tool 1" }],
-        } as any,
         config: {},
       });
 
@@ -383,18 +193,16 @@ describe("_shouldBindTools through createReactAgent", () => {
       const chatModel = new MockBasicChatModel();
       const boundModel = new RunnableBinding({
         bound: chatModel,
-        kwargs: {
-          tools: [
-            { name: "tool1", description: "Test tool 1" },
-            { description: "Tool without name" }, // Missing name
-          ],
-        } as any,
         config: {},
       });
 
       const agent = createReactAgent({
         llm: boundModel,
-        tools: [mockTool1],
+        tools: [
+          mockTool1,
+          { name: "tool1", description: "Test tool 1" },
+          { description: "Tool without name" }, // Missing name
+        ],
       });
       expect(agent).toBeDefined();
     });
@@ -435,18 +243,16 @@ describe("_shouldBindTools through createReactAgent", () => {
       const chatModel = new MockBasicChatModel();
       const boundModel = new RunnableBinding({
         bound: chatModel,
-        kwargs: {
-          tools: [
-            { unknownFormat: "tool1" }, // This should be ignored
-            { name: "tool1", description: "Test tool 1" },
-          ],
-        } as any,
         config: {},
       });
 
       const agent = createReactAgent({
         llm: boundModel,
-        tools: [mockTool1],
+        tools: [
+          mockTool1,
+          { unknownFormat: "tool1" }, // This should be ignored
+          { name: "tool1", description: "Test tool 1" },
+        ],
       });
       expect(agent).toBeDefined();
     });

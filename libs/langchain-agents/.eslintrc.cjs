@@ -28,6 +28,7 @@ module.exports = {
     "*.d.ts",
   ],
   rules: {
+    "no-nested-ternary": 0,
     "no-process-env": 2,
     "no-instanceof/no-instanceof": "off",
     "@typescript-eslint/explicit-module-boundary-types": 0,

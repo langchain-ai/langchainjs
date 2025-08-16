@@ -17,6 +17,7 @@
  * before each model call so the agent knows if services are down or experiencing issues.
  */
 
+import fs from "node:fs/promises";
 import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -96,6 +97,14 @@ const result = await agent.invoke({
 });
 
 console.log(result.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:
