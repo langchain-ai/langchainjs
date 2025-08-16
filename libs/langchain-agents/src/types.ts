@@ -30,12 +30,12 @@ import type {
 import type {
   Runnable,
   RunnableLike,
+  RunnableConfig,
   RunnableToolLike,
 } from "@langchain/core/runnables";
 
 import type { ToolNode } from "./nodes/ToolNode.js";
 import type { PreHookAnnotation } from "./annotation.js";
-import type { PredicateFunction } from "./stopWhen.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -288,4 +288,25 @@ export interface ToolCallData {
    * The error that occurred if the tool call failed.
    */
   error: unknown;
+}
+
+/**
+ * A predicate function that determines when to stop the agent.
+ * @param state - The state of the agent.
+ * @param config - The config of the agent.
+ * @returns A predicate function that can be used to stop the agent.
+ */
+export type PredicateFunction<
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >
+> = (
+  state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+  config: RunnableConfig
+) => PredicateFunctionReturn | Promise<PredicateFunctionReturn>;
+
+export interface PredicateFunctionReturn {
+  shouldStop: boolean;
+  description?: string;
 }

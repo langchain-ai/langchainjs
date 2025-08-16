@@ -27,9 +27,9 @@ import {
   ServerTool,
   AnyAnnotationRoot,
   CreateReactAgentParams,
+  PredicateFunction,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
-import { PredicateFunction } from "../stopWhen.js";
 
 interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,

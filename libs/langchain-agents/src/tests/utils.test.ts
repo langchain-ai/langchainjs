@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import z from "zod";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { Send } from "@langchain/langgraph";
 import {
   Runnable,
   RunnableLambda,
@@ -12,7 +11,6 @@ import {
 import {
   _addInlineAgentName,
   _removeInlineAgentName,
-  isSend,
   shouldBindTools,
   bindTools,
 } from "../utils.js";
@@ -161,21 +159,6 @@ message</content>`;
     });
     const result = _removeInlineAgentName(aiMessage);
     expect(result.content).toEqual("This is\na multiline\nmessage");
-  });
-});
-
-describe("isSend", () => {
-  it("should return true for send objects", () => {
-    const send = new Send("node", { foo: "bar" });
-    expect(isSend(send)).toBe(true);
-  });
-
-  it("should return false for non-send objects", () => {
-    const nonSend = {
-      type: "human",
-      content: "Hello",
-    };
-    expect(isSend(nonSend)).toBe(false);
   });
 });
 

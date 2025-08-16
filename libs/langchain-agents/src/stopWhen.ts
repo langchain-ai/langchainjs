@@ -1,21 +1,11 @@
-import { AgentState } from "./types.js";
-import { PreHookAnnotation } from "./annotation.js";
 import { RunnableConfig } from "@langchain/core/runnables";
 
-export interface PredicateFunctionReturn {
-  shouldStop: boolean;
-  description?: string;
-}
-
-export type PredicateFunction<
-  StructuredResponseFormat extends Record<string, unknown> = Record<
-    string,
-    unknown
-  >
-> = (
-  state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  config: RunnableConfig
-) => PredicateFunctionReturn | Promise<PredicateFunctionReturn>;
+import { PreHookAnnotation } from "./annotation.js";
+import {
+  AgentState,
+  PredicateFunction,
+  PredicateFunctionReturn,
+} from "./types.js";
 
 /**
  * Stop when a predicate is met. This is a general multi-purpose stop condition

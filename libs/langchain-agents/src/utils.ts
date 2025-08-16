@@ -10,7 +10,7 @@ import {
   isBaseMessage,
   isBaseMessageChunk,
 } from "@langchain/core/messages";
-import { Send, MessagesAnnotation } from "@langchain/langgraph";
+import { MessagesAnnotation } from "@langchain/langgraph";
 import {
   BaseChatModel,
   type BindToolsInput,
@@ -36,11 +36,6 @@ import {
   ConfigurableModelInterface,
   Prompt,
 } from "./types.js";
-
-export function isSend(x: unknown): x is Send {
-  // eslint-disable-next-line no-instanceof/no-instanceof
-  return x instanceof Send;
-}
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;

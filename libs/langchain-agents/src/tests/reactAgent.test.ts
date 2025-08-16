@@ -2004,7 +2004,9 @@ describe("createReactAgent", () => {
       // Async predicate that simulates checking external condition
       const asyncStop = stopWhen(async (state) => {
         // Simulate async operation
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 10);
+        });
 
         const lastMessage = state.messages[state.messages.length - 1];
         const isDone = lastMessage?.content?.toString().includes("Done");

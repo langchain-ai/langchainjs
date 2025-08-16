@@ -16,9 +16,8 @@ import {
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
-import { isSend } from "../utils.js";
 import { PreHookAnnotation } from "../annotation.js";
-import {
+import type {
   CreateReactAgentParams,
   AnyAnnotationRoot,
   ToAnnotationRoot,
@@ -359,4 +358,9 @@ export class ToolNode<
 
     return combinedOutputs as unknown as ContextSchema;
   }
+}
+
+export function isSend(x: unknown): x is Send {
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  return x instanceof Send;
 }

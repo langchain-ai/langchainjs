@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
 import { createReactAgent } from "../index.js";
@@ -56,12 +56,8 @@ const ResponseFormatSchema = z.object({
 });
 
 describe("Graph", () => {
-  let model: FakeToolCallingModel;
-
-  beforeEach(() => {
-    model = new FakeToolCallingModel({
-      toolCalls: [[{ id: "call_1", name: "tool1", args: { query: "test" } }]],
-    });
+  const llm = new FakeToolCallingModel({
+    toolCalls: [[{ id: "call_1", name: "tool1", args: { query: "test" } }]],
   });
 
   describe("React Agent Graph Structure", () => {
@@ -70,57 +66,45 @@ describe("Graph", () => {
       // No tools cases
       {
         tools: [],
-        preModelHook: undefined,
-        postModelHook: undefined,
-        responseFormat: undefined,
         name: "no_tools_no_hooks_no_format",
       },
       {
         tools: [],
-        preModelHook: preModelHook,
-        postModelHook: undefined,
-        responseFormat: undefined,
+        preModelHook,
         name: "no_tools_with_pre_hook_no_format",
       },
       {
         tools: [],
-        preModelHook: undefined,
-        postModelHook: postModelHook,
-        responseFormat: undefined,
+        postModelHook,
         name: "no_tools_with_post_hook_no_format",
       },
       {
         tools: [],
-        preModelHook: preModelHook,
-        postModelHook: postModelHook,
-        responseFormat: undefined,
+        preModelHook,
+        postModelHook,
         name: "no_tools_with_both_hooks_no_format",
       },
       {
         tools: [],
-        preModelHook: undefined,
-        postModelHook: undefined,
         responseFormat: ResponseFormatSchema,
         name: "no_tools_no_hooks_with_format",
       },
       {
         tools: [],
-        preModelHook: preModelHook,
-        postModelHook: undefined,
+        preModelHook,
         responseFormat: ResponseFormatSchema,
         name: "no_tools_with_pre_hook_with_format",
       },
       {
         tools: [],
-        preModelHook: undefined,
-        postModelHook: postModelHook,
+        postModelHook,
         responseFormat: ResponseFormatSchema,
         name: "no_tools_with_post_hook_with_format",
       },
       {
         tools: [],
-        preModelHook: preModelHook,
-        postModelHook: postModelHook,
+        preModelHook,
+        postModelHook,
         responseFormat: ResponseFormatSchema,
         name: "no_tools_with_both_hooks_with_format",
       },
@@ -128,57 +112,45 @@ describe("Graph", () => {
       // Two tools cases
       {
         tools: [tool1, tool2],
-        preModelHook: undefined,
-        postModelHook: undefined,
-        responseFormat: undefined,
         name: "two_tools_no_hooks_no_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: preModelHook,
-        postModelHook: undefined,
-        responseFormat: undefined,
+        preModelHook,
         name: "two_tools_with_pre_hook_no_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: undefined,
-        postModelHook: postModelHook,
-        responseFormat: undefined,
+        postModelHook,
         name: "two_tools_with_post_hook_no_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: preModelHook,
-        postModelHook: postModelHook,
-        responseFormat: undefined,
+        preModelHook,
+        postModelHook,
         name: "two_tools_with_both_hooks_no_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: undefined,
-        postModelHook: undefined,
         responseFormat: ResponseFormatSchema,
         name: "two_tools_no_hooks_with_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: preModelHook,
-        postModelHook: undefined,
+        preModelHook,
         responseFormat: ResponseFormatSchema,
         name: "two_tools_with_pre_hook_with_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: undefined,
-        postModelHook: postModelHook,
+        postModelHook,
         responseFormat: ResponseFormatSchema,
         name: "two_tools_with_post_hook_with_format",
       },
       {
         tools: [tool1, tool2],
-        preModelHook: preModelHook,
-        postModelHook: postModelHook,
+        preModelHook,
+        postModelHook,
         responseFormat: ResponseFormatSchema,
         name: "two_tools_with_both_hooks_with_format",
       },
@@ -188,7 +160,7 @@ describe("Graph", () => {
       ({ tools, preModelHook, postModelHook, responseFormat, name }) => {
         it(`should create correct graph structure: ${name}`, async () => {
           const agent = createReactAgent({
-            llm: model,
+            llm,
             tools,
             preModelHook,
             postModelHook,

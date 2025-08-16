@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen";
+import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen.js";
 
 describe("stopWhen", () => {
   describe("Input Validation", () => {
