@@ -27,7 +27,6 @@ import {
   isStreamEventsHandler,
 } from "../tracers/event_stream.js";
 import { Serializable } from "../load/serializable.js";
-import { getAbortSignalError } from "../utils/signal.js";
 import {
   IterableReadableStream,
   concat,
@@ -35,7 +34,7 @@ import {
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
-import { raceWithSignal } from "../utils/signal.js";
+import { raceWithSignal, getAbortSignalError } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   ensureConfig,
