@@ -108,6 +108,7 @@ export class ReactAgent<
         responseFormat: this.options.responseFormat,
         toolClasses,
         shouldReturnDirect,
+        signal: this.options.signal,
       }),
       {
         input: this.#inputSchema,

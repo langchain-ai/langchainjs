@@ -17,19 +17,12 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
+import { mergeAbortSignals } from "../utils.js";
 import type {
   CreateReactAgentParams,
   AnyAnnotationRoot,
   ToAnnotationRoot,
 } from "../types.js";
-
-/**
- * TypeScript currently doesn't support types for `AbortSignal.any`
- * @see https://github.com/microsoft/TypeScript/issues/60695
- */
-declare const AbortSignal: {
-  any?(signals: AbortSignal[]): AbortSignal;
-};
 
 export interface ToolNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
@@ -184,8 +177,8 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ToolNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
 > extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
@@ -223,20 +216,12 @@ export class ToolNode<
         throw new Error(`Tool "${call.name}" not found.`);
       }
 
-      /**
-       * `config` always contains a signal from LangGraphs Pregel class.
-       * To ensure we acknowledge the abort signal from the user, we merge it
-       * with the signal from the ToolNode.
-       */
-      const signal = this.signal
-        ? this.signal && AbortSignal.any
-          ? AbortSignal.any([this.signal, config.signal!])
-          : config.signal
-        : config.signal;
-
       const output = await tool.invoke(
         { ...call, type: "tool_call" },
-        { ...config, signal }
+        {
+          ...config,
+          signal: mergeAbortSignals(this.signal, config.signal),
+        }
       );
 
       if (
@@ -258,6 +243,13 @@ export class ToolNode<
          * As such, they are not recoverable by the agent and shouldn't be fed
          * back. Instead, re-throw these errors even when `handleToolErrors = true`.
          */
+        throw e;
+      }
+
+      /**
+       * If the signal is aborted, we want to bubble up the error to the invoke caller.
+       */
+      if (this.signal?.aborted) {
         throw e;
       }
 

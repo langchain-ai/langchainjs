@@ -237,7 +237,7 @@ export type CreateReactAgentParams<
   /**
    * An optional AbortSignal to abort the agent.
    */
-  abortSignal?: AbortSignal;
+  signal?: AbortSignal;
 };
 
 export interface ConfigurableModelInterface {

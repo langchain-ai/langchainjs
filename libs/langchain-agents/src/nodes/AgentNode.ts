@@ -20,6 +20,7 @@ import {
   isBaseChatModel,
   hasToolCalls,
   hasSupportForStructuredOutput,
+  mergeAbortSignals,
 } from "../utils.js";
 import {
   AgentState,
@@ -77,8 +78,6 @@ export class AgentNode<
 
   #stopWhen: PredicateFunction<StructuredResponseFormat>[];
 
-  #signal?: AbortSignal;
-
   constructor(
     options: AgentNodeOptions<
       StateSchema,
@@ -98,7 +97,6 @@ export class AgentNode<
         ? options.stopWhen
         : [options.stopWhen]
       : [];
-    this.#signal = options.signal;
   }
 
   async #run(
@@ -171,8 +169,8 @@ export class AgentNode<
 
     const modelInput = this.#getModelInputState(state);
     const response = (await modelRunnable.invoke(modelInput, {
-      signal: this.#signal,
       ...config,
+      signal: this.#options.signal,
     })) as AIMessage;
 
     response.name = this.name;
@@ -321,6 +319,7 @@ export class AgentNode<
       this.#options.responseFormat
     );
     const messages = [...state.messages];
+    const signal = mergeAbortSignals(this.#options.signal, config.signal);
 
     /**
      * Get the base model to access model name
@@ -337,8 +336,8 @@ export class AgentNode<
         const structuredResponse = (await modelWithStructuredOutput.invoke(
           messages,
           {
-            signal: this.#signal,
             ...config,
+            signal,
             /**
              * Ensure the model returns a structured response
              */
@@ -353,8 +352,8 @@ export class AgentNode<
     const structuredResponse = (await modelWithStructuredOutput.invoke(
       messages,
       {
-        signal: this.#signal,
         ...config,
+        signal,
       }
     )) as StructuredResponseFormat;
     return { structuredResponse };
