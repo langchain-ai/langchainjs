@@ -15,6 +15,7 @@
  * interactions with this customer can emphasize sustainable options automatically.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
@@ -561,6 +562,14 @@ Memory utilization: ${memoryStats.retrievalCount > 0 ? "High" : "Low"}
 
 💡 The agent is continuously learning and improving its responses based on accumulated knowledge!
 `);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:

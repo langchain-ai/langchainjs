@@ -1,12 +1,20 @@
 import { describe, it, expect } from "vitest";
+import z from "zod";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { Send } from "@langchain/langgraph";
+import { tool } from "@langchain/core/tools";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableSequence,
+} from "@langchain/core/runnables";
 
 import {
   _addInlineAgentName,
   _removeInlineAgentName,
-  isSend,
+  shouldBindTools,
+  bindTools,
 } from "../utils.js";
+import { FakeToolCallingChatModel, FakeConfigurableModel } from "./utils.js";
 
 describe("_addInlineAgentName", () => {
   it("should return non-AI messages unchanged", () => {
@@ -154,17 +162,265 @@ message</content>`;
   });
 });
 
-describe("isSend", () => {
-  it("should return true for send objects", () => {
-    const send = new Send("node", { foo: "bar" });
-    expect(isSend(send)).toBe(true);
+describe("shouldBindTools", () => {
+  it.each(["openai", "anthropic", "google", "bedrock"] as const)(
+    "Should determine when to bind tools - %s style",
+    async (toolStyle) => {
+      const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+        name: "tool1",
+        description: "Tool 1 docstring.",
+        schema: z.object({
+          someVal: z.number().describe("Input value"),
+        }),
+      });
+
+      const tool2 = tool((input) => `Tool 2: ${input.someVal}`, {
+        name: "tool2",
+        description: "Tool 2 docstring.",
+        schema: z.object({
+          someVal: z.number().describe("Input value"),
+        }),
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("test")],
+        toolStyle,
+      });
+
+      // Should bind when a regular model
+      expect(await shouldBindTools(model, [])).toBe(true);
+      expect(await shouldBindTools(model, [tool1])).toBe(true);
+
+      // Should bind when a seq
+      const seq = RunnableSequence.from([
+        model,
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await shouldBindTools(seq, [])).toBe(true);
+      expect(await shouldBindTools(seq, [tool1])).toBe(true);
+
+      // Should not bind when a model with tools
+      const modelWithTools = model.bindTools([tool1]);
+      expect(await shouldBindTools(modelWithTools, [tool1])).toBe(false);
+
+      // Should not bind when a seq with tools
+      const seqWithTools = RunnableSequence.from([
+        model.bindTools([tool1]),
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await shouldBindTools(seqWithTools, [tool1])).toBe(false);
+
+      // Should raise on invalid inputs
+      await expect(
+        async () => await shouldBindTools(model.bindTools([tool1]), [])
+      ).rejects.toThrow();
+      await expect(
+        async () => await shouldBindTools(model.bindTools([tool1]), [tool2])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await shouldBindTools(model.bindTools([tool1]), [tool1, tool2])
+      ).rejects.toThrow();
+
+      // test configurable model
+      const configurableModel = new FakeConfigurableModel({
+        model,
+      });
+
+      // Should bind when a regular model
+      expect(await shouldBindTools(configurableModel, [])).toBe(true);
+      expect(await shouldBindTools(configurableModel, [tool1])).toBe(true);
+
+      // Should bind when a seq
+      const configurableSeq = RunnableSequence.from([
+        configurableModel,
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await shouldBindTools(configurableSeq, [])).toBe(true);
+      expect(await shouldBindTools(configurableSeq, [tool1])).toBe(true);
+
+      // Should not bind when a model with tools
+      const configurableModelWithTools = configurableModel.bindTools([tool1]);
+      expect(await shouldBindTools(configurableModelWithTools, [tool1])).toBe(
+        false
+      );
+
+      // Should not bind when a seq with tools
+      const configurableSeqWithTools = RunnableSequence.from([
+        configurableModel.bindTools([tool1]),
+        RunnableLambda.from((message) => message),
+      ]);
+      expect(await shouldBindTools(configurableSeqWithTools, [tool1])).toBe(
+        false
+      );
+
+      // Should raise on invalid inputs
+      await expect(
+        async () =>
+          await shouldBindTools(configurableModel.bindTools([tool1]), [])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await shouldBindTools(configurableModel.bindTools([tool1]), [tool2])
+      ).rejects.toThrow();
+      await expect(
+        async () =>
+          await shouldBindTools(configurableModel.bindTools([tool1]), [
+            tool1,
+            tool2,
+          ])
+      ).rejects.toThrow();
+    }
+  );
+
+  it("should bind model with bindTools", async () => {
+    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+      name: "tool1",
+      description: "Tool 1 docstring.",
+      schema: z.object({
+        someVal: z.number().describe("Input value"),
+      }),
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("test")],
+      toolStyle: "openai",
+    });
+
+    const confModel = new FakeConfigurableModel({ model });
+
+    async function serialize(runnable: Runnable | Promise<Runnable>) {
+      return JSON.parse(JSON.stringify(await runnable));
+    }
+
+    // Should bind when a regular model
+    expect(
+      await serialize((await bindTools(model, [tool1])) as Runnable)
+    ).toEqual(await serialize(model.bindTools([tool1])));
+
+    // Should bind when model wrapped in `withConfig`
+    expect(
+      await serialize(
+        (await bindTools(model.withConfig({ tags: ["nostream"] }), [
+          tool1,
+        ])) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        model.bindTools([tool1]).withConfig({ tags: ["nostream"] })
+      )
+    );
+
+    // Should bind when model wrapped in multiple `withConfig`
+    expect(
+      await serialize(
+        (await bindTools(
+          model
+            .withConfig({ tags: ["nostream"] })
+            .withConfig({ metadata: { hello: "world" } }),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        model
+          .bindTools([tool1])
+          .withConfig({ tags: ["nostream"], metadata: { hello: "world" } })
+      )
+    );
+
+    // Should bind when a configurable model
+    expect(
+      await serialize((await bindTools(confModel, [tool1])) as Runnable)
+    ).toEqual(await serialize(confModel.bindTools([tool1])));
+
+    // Should bind when a seq
+    expect(
+      await serialize(
+        (await bindTools(
+          RunnableSequence.from([
+            model,
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          model.bindTools([tool1]),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
+
+    // Should bind when a seq with configurable model
+    expect(
+      await serialize(
+        (await bindTools(
+          RunnableSequence.from([
+            confModel,
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          confModel.bindTools([tool1]),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
+
+    // Should bind when a seq with config model
+    expect(
+      await serialize(
+        (await bindTools(
+          RunnableSequence.from([
+            confModel.withConfig({ tags: ["nostream"] }),
+            RunnableLambda.from((message) => message),
+          ]),
+          [tool1]
+        )) as Runnable
+      )
+    ).toEqual(
+      await serialize(
+        RunnableSequence.from([
+          confModel.bindTools([tool1]).withConfig({
+            tags: ["nostream"],
+          }),
+          RunnableLambda.from((message) => message),
+        ])
+      )
+    );
   });
 
-  it("should return false for non-send objects", () => {
-    const nonSend = {
-      type: "human",
-      content: "Hello",
-    };
-    expect(isSend(nonSend)).toBe(false);
+  it("should handle bindTool with server tools", async () => {
+    const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
+      name: "tool1",
+      description: "Tool 1 docstring.",
+      schema: z.object({ someVal: z.number().describe("Input value") }),
+    });
+
+    const server = { type: "web_search_preview" };
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("test")],
+    });
+
+    expect(await shouldBindTools(model, [tool1, server])).toBe(true);
+    expect(
+      await shouldBindTools(model.bindTools([tool1, server]), [tool1, server])
+    ).toBe(false);
+
+    await expect(
+      shouldBindTools(model.bindTools([tool1]), [tool1, server])
+    ).rejects.toThrow();
+
+    await expect(
+      shouldBindTools(model.bindTools([server]), [tool1, server])
+    ).rejects.toThrow();
   });
 });

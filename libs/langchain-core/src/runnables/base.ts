@@ -34,7 +34,7 @@ import {
   pipeGeneratorWithSetup,
   AsyncGeneratorWithSetup,
 } from "../utils/stream.js";
-import { raceWithSignal } from "../utils/signal.js";
+import { raceWithSignal, getAbortSignalError } from "../utils/signal.js";
 import {
   DEFAULT_RECURSION_LIMIT,
   ensureConfig,
@@ -1958,7 +1958,7 @@ export class RunnableSequence<
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
       if (options?.signal?.aborted) {
-        throw new Error("Aborted");
+        throw getAbortSignalError(options.signal);
       }
       finalOutput = await this.last.invoke(
         nextStepInput,

@@ -15,7 +15,7 @@
  * A TODO assistant. Tools add/remove items in a thread-level TODO list. The
  * prompt always includes the current TODOs so the model can plan next steps.
  */
-
+import fs from "node:fs/promises";
 import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -102,3 +102,11 @@ const result = await agent.invoke({
 
 console.log("Result: ");
 console.log(result.messages[result.messages.length - 1].content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());

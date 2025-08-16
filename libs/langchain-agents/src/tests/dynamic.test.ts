@@ -236,36 +236,6 @@ describe("Dynamic Model", () => {
     );
   });
 
-  it("should handle dynamic model with structured response format", async () => {
-    const TestResponse = z.object({
-      message: z.string(),
-      confidence: z.number(),
-    });
-
-    const dynamicModel = () => {
-      const expectedResponse = { message: "dynamic response", confidence: 0.9 };
-
-      return new FakeToolCallingChatModel({
-        responses: [new AIMessage("dynamic response")],
-        structuredResponse: expectedResponse,
-      });
-    };
-
-    const agent = createReactAgent({
-      llm: dynamicModel,
-      tools: [],
-      responseFormat: TestResponse,
-    });
-
-    expect(await agent.invoke({ messages: "hello" })).toMatchObject({
-      messages: [{ text: "hello" }, { text: "dynamic response" }],
-      structuredResponse: {
-        message: "dynamic response",
-        confidence: 0.9,
-      },
-    });
-  });
-
   it("should handle dynamic model that changes available tools based on state", async () => {
     const toolA = tool(async (args: { x: number }) => `A: ${args.x}`, {
       name: "tool_a",

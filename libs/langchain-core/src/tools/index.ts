@@ -37,6 +37,7 @@ import {
   type ZodObjectV3,
   type ZodObjectV4,
 } from "../utils/types/zod.js";
+import { getAbortSignalError } from "../utils/signal.js";
 import type {
   StructuredToolCallInput,
   ToolInputSchemaBase,
@@ -680,6 +681,12 @@ export function tool<
     schema,
     func: async (input, runManager, config) => {
       return new Promise<ToolOutputT>((resolve, reject) => {
+        if (config?.signal) {
+          config.signal.addEventListener("abort", () => {
+            return reject(getAbortSignalError(config.signal));
+          });
+        }
+
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
@@ -687,7 +694,17 @@ export function tool<
           pickRunnableConfigKeys(childConfig),
           async () => {
             try {
-              resolve(func(input, childConfig));
+              const result = await func(input, childConfig);
+
+              /**
+               * If the signal is aborted, we don't want to resolve the promise
+               * as the promise is already rejected.
+               */
+              if (config?.signal?.aborted) {
+                return;
+              }
+
+              resolve(result);
             } catch (e) {
               reject(e);
             }

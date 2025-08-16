@@ -30,6 +30,7 @@
  * - Each turn, update the `read_file` description to include the current file list.
  */
 
+import fs from "node:fs/promises";
 import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -196,6 +197,14 @@ const turn4 = await agent.invoke({
   messages: [{ role: "user", content: "Read report.pdf" }],
 });
 console.log("Turn 4:", turn4.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:
