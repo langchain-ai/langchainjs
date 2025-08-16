@@ -336,6 +336,28 @@ test("JSONOutputParser parses streamed JSON", async () => {
   );
 });
 
+test("JSONOutputParser traces streamed JSON as just the last chunk", async () => {
+  async function* generator() {
+    for (const token of STREAMED_TOKENS) {
+      yield token;
+    }
+  }
+  const parser = new JsonOutputParser();
+  let tracedOutput;
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    })
+  );
+  expect(result.at(-1)).toEqual(tracedOutput);
+});
+
 test("JSONOutputParser parses streamed JSON diff", async () => {
   async function* generator() {
     for (const token of STREAMED_TOKENS) {

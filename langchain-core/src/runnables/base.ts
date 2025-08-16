@@ -482,6 +482,10 @@ export abstract class Runnable<
     return outputs;
   }
 
+  protected _concatStreamedOutputChunks<O>(first: O, second: O): O {
+    return concat(first, second);
+  }
+
   /**
    * Helper method to transform an Iterator of Input values into an Iterator of
    * Output values, with callbacks.
@@ -572,8 +576,11 @@ export abstract class Runnable<
             finalOutput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = concat(finalOutput, chunk as any);
+              finalOutput = this._concatStreamedOutputChunks(
+                finalOutput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                chunk as any
+              );
             } catch {
               finalOutput = undefined;
               finalOutputSupported = false;

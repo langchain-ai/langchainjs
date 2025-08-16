@@ -18,6 +18,10 @@ export class JsonOutputParser<
 
   lc_serializable = true;
 
+  protected _concatStreamedOutputChunks<T>(_: T, second: T): T {
+    return second;
+  }
+
   protected _diff(
     prev: unknown | undefined,
     next: unknown
