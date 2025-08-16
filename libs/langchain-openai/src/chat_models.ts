@@ -607,6 +607,11 @@ export abstract class BaseChatOpenAI<
   reasoning?: OpenAIClient.Reasoning;
 
   /**
+   * The verbosity of the model's response when using the Responses API.
+   */
+  verbosity?: OpenAIChatInput["verbosity"];
+
+  /**
    * Must be set to `true` in tenancies with Zero Data Retention. Setting to `true` will disable
    * output storage in the Responses API, but this DOES NOT enable Zero Data Retention in your
    * OpenAI organization or project. This must be configured directly with OpenAI.
@@ -778,6 +783,7 @@ export abstract class BaseChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoning = fields?.reasoning;
+    this.verbosity = fields?.verbosity ?? this.verbosity;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
@@ -1456,24 +1462,44 @@ export class ChatOpenAIResponses<
             return undefined;
           })(),
       text: (() => {
-        if (options?.text) return options.text;
+        // If provided explicitly on call options, respect it and optionally merge verbosity
+        if (options?.text) {
+          if (this.verbosity != null && typeof options.text === "object") {
+            return {
+              ...options.text,
+              verbosity: this.verbosity,
+            } as NonNullable<
+              OpenAIClient.Responses.ResponseCreateParams["text"]
+            >;
+          }
+          return options.text;
+        }
+
         const format = this._getResponseFormat(options?.response_format);
         if (format?.type === "json_schema") {
           if (format.json_schema.schema != null) {
-            return {
+            const base = {
               format: {
-                type: "json_schema",
+                type: "json_schema" as const,
                 schema: format.json_schema.schema,
                 description: format.json_schema.description,
                 name: format.json_schema.name,
                 strict: format.json_schema.strict,
               },
             };
+            return this.verbosity != null
+              ? { ...base, verbosity: this.verbosity }
+              : base;
           }
           return undefined;
         }
 
-        return { format };
+        const base = { format } as NonNullable<
+          OpenAIClient.Responses.ResponseCreateParams["text"]
+        >;
+        return this.verbosity != null
+          ? { ...base, verbosity: this.verbosity }
+          : base;
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,

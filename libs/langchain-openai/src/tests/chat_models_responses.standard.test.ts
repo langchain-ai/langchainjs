@@ -37,3 +37,16 @@ test("ChatOpenAIResponsesStandardUnitTests", () => {
   const testResults = testClass.runTests();
   expect(testResults).toBe(true);
 });
+
+test("Responses API includes text.verbosity and reasoning", () => {
+  process.env.OPENAI_API_KEY = "test";
+  const m = new ChatOpenAI({
+    useResponsesApi: true,
+    model: "gpt-5",
+    verbosity: "low",
+    reasoning: { effort: "minimal" },
+  });
+  const params: any = m.invocationParams({});
+  expect(params.text.verbosity).toBe("low");
+  expect(params.reasoning).toEqual({ effort: "minimal" });
+});
