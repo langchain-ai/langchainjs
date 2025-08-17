@@ -1,7 +1,13 @@
 import { createOpenAPIChain } from "langchain/chains";
+import { ChatOpenAI } from "@langchain/openai";
+
+const chatModel = new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 });
 
 const chain = await createOpenAPIChain(
-  "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml"
+  "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml",
+  {
+    llm: chatModel,
+  }
 );
 const result = await chain.run(`What's today's comic?`);
 

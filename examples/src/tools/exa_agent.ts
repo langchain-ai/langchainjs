@@ -7,6 +7,7 @@ import Exa from "exa-js";
 import { createAgent } from "langchain";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
+import { HumanMessage } from "@langchain/core/messages";
 
 // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
 const client: Exa.default = new Exa(process.env.EXASEARCH_API_KEY);

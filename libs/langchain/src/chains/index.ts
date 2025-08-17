@@ -85,3 +85,8 @@ export {
 export { MultiPromptChain } from "./router/multi_prompt.js";
 export { MultiRetrievalQAChain } from "./router/multi_retrieval_qa.js";
 export { TransformChain, type TransformChainFields } from "./transform.js";
+export { createOpenAPIChain } from "./openapi.js";
+export {
+  createExtractionChain,
+  createExtractionChainFromZod,
+} from "./extractions.js";

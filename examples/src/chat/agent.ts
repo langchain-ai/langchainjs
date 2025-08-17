@@ -5,6 +5,7 @@ import type { PromptTemplate } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 
 import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { HumanMessage } from "@langchain/core/messages";
 
 export const run = async () => {
   // Define the tools the agent will have access to.

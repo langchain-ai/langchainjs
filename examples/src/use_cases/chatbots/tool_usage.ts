@@ -85,7 +85,7 @@ import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();
 
 const conversationalAgent = new RunnableWithMessageHistory({
-  runnable: agent2 as unknown as Runnable,
+  runnable: agent2,
   getMessageHistory: (_sessionId) => demoEphemeralChatMessageHistory,
   inputMessagesKey: "input",
   outputMessagesKey: "output",

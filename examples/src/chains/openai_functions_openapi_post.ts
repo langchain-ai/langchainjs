@@ -1,6 +1,11 @@
 import { createOpenAPIChain } from "langchain/chains";
+import { ChatOpenAI } from "@langchain/openai";
 
-const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml");
+const chatModel = new ChatOpenAI({ model: "gpt-4-0613", temperature: 0 });
+
+const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml", {
+  llm: chatModel,
+});
 const result = await chain.run(`How would you say no thanks in Russian?`);
 
 console.log(JSON.stringify(result, null, 2));
