@@ -4,7 +4,7 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "text-embedding-v2";
+  modelName: "text-embedding-v2" | "text-embedding-v3";
 
   /**
    * Timeout to use when making requests to AlibabaTongyi.
