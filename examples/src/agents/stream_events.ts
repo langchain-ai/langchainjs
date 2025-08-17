@@ -3,7 +3,8 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Define the tools the agent will have access to.
 const tools = [new TavilySearchResults({})];
@@ -21,20 +22,16 @@ const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
+  name: "Agent",
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-}).withConfig({ runName: "Agent" });
-
-const eventStream = agentExecutor.streamEvents(
+const eventStream = agent.streamEvents(
   {
-    input: "what is the weather in SF",
+    messages: [new HumanMessage("what is the weather in SF")],
   },
   { version: "v2" }
 );

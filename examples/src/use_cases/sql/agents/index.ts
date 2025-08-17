@@ -4,9 +4,9 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { SqlToolkit } from "langchain/agents/toolkits/sql";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
 
@@ -48,20 +48,19 @@ const newPrompt = await prompt.partial({
   dialect: sqlToolKit.dialect,
   top_k: "10",
 });
-const runnableAgent = await createOpenAIToolsAgent({
+const runnableAgent = await createReactAgent({
   llm,
   tools,
   prompt: newPrompt,
 });
-const agentExecutor = new AgentExecutor({
-  agent: runnableAgent,
-  tools,
-});
 
 console.log(
-  await agentExecutor.invoke({
-    input:
-      "List the total sales per country. Which country's customers spent the most?",
+  await runnableAgent.invoke({
+    messages: [
+      new HumanMessage(
+        "List the total sales per country. Which country's customers spent the most?"
+      ),
+    ],
   })
 );
 /**
@@ -85,8 +84,8 @@ console.log(
  */
 
 console.log(
-  await agentExecutor.invoke({
-    input: "Describe the playlisttrack table",
+  await runnableAgent.invoke({
+    messages: [new HumanMessage("Describe the playlisttrack table")],
   })
 );
 /**

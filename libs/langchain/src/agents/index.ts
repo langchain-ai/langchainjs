@@ -73,17 +73,6 @@ export {
   StructuredChatOutputParserWithRetries,
 } from "./structured_chat/outputParser.js";
 export {
-  OpenAIAgent,
-  type OpenAIAgentInput,
-  type OpenAIAgentCreatePromptArgs,
-  type CreateOpenAIFunctionsAgentParams,
-  createOpenAIFunctionsAgent,
-} from "./openai_functions/index.js";
-export {
-  type CreateOpenAIToolsAgentParams,
-  createOpenAIToolsAgent,
-} from "./openai_tools/index.js";
-export {
   type CreateToolCallingAgentParams,
   createToolCallingAgent,
 } from "./tool_calling/index.js";
@@ -93,10 +82,6 @@ export {
   type CreateXmlAgentParams,
   createXmlAgent,
 } from "./xml/index.js";
-export {
-  type CreateReactAgentParams,
-  createReactAgent,
-} from "./react/index.js";
 export type {
   AgentAction,
   AgentFinish,

@@ -1,10 +1,11 @@
-import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { pull } from "langchain/hub";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
 import { OpenAI } from "@langchain/openai";
 
 import { SerpAPI } from "@langchain/community/tools/serpapi";
+import { HumanMessage } from "@langchain/core/messages";
 
 export const run = async () => {
   // Define the tools the agent will have access to.
@@ -31,13 +32,8 @@ export const run = async () => {
     prompt,
   });
 
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
-  });
-
-  const result = await agentExecutor.invoke({
-    input: "what is LangChain?",
+  const result = await agent.invoke({
+    messages: [new HumanMessage("what is LangChain?")],
   });
 
   console.log(result);

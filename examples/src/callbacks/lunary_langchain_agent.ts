@@ -12,7 +12,7 @@ const chat = new ChatOpenAI({
 });
 
 const executor = await initializeAgentExecutorWithOptions(tools, chat, {
-  agentType: "openai-functions",
+  agentType: "structured-chat-zero-shot-react-description",
 });
 
 const result = await executor.run(

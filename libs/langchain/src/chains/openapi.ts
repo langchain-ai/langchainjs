@@ -7,7 +7,6 @@ import {
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";
-import { ChatOpenAI } from "@langchain/openai";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
@@ -16,11 +15,11 @@ import {
   BasePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
-import { OpenAPISpec } from "../../util/openapi.js";
-import { BaseChain } from "../base.js";
-import { LLMChain, LLMChainInput } from "../llm_chain.js";
-import { SequentialChain } from "../sequential_chain.js";
-import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions.js";
+import { OpenAPISpec } from "../util/openapi.js";
+import { BaseChain } from "./base.js";
+import { LLMChain, LLMChainInput } from "./llm_chain.js";
+import { SequentialChain } from "./sequential_chain.js";
+import { JsonOutputFunctionsParser } from "../output_parsers/openai_functions.js";
 
 /**
  * Type representing a function for executing OpenAPI requests.
@@ -447,7 +446,7 @@ class SimpleRequestChain extends BaseChain {
  * Type representing the options for creating an OpenAPI chain.
  */
 export type OpenAPIChainOptions = {
-  llm?: BaseChatModel<BaseFunctionCallOptions>;
+  llm: BaseChatModel<BaseFunctionCallOptions>;
   prompt?: BasePromptTemplate;
   requestChain?: BaseChain;
   llmChainInputs?: LLMChainInput;
@@ -464,7 +463,7 @@ export type OpenAPIChainOptions = {
  */
 export async function createOpenAPIChain(
   spec: OpenAPIV3_1.Document | string,
-  options: OpenAPIChainOptions = {}
+  options: OpenAPIChainOptions
 ) {
   let convertedSpec;
   if (typeof spec === "string") {
@@ -488,7 +487,6 @@ export async function createOpenAPIChain(
     );
   }
   const {
-    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }),
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"
@@ -506,7 +504,7 @@ export async function createOpenAPIChain(
     ...rest
   } = options;
   const formatChain = new LLMChain({
-    llm,
+    llm: options.llm,
     prompt,
     outputParser: new JsonOutputFunctionsParser({ argsOnly: false }),
     outputKey: "function",

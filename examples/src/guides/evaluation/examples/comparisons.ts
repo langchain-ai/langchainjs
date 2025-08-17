@@ -64,7 +64,7 @@ const conversationAgent = await initializeAgentExecutorWithOptions(
 );
 
 const functionsAgent = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "openai-functions",
+  agentType: "structured-chat-zero-shot-react-description",
 });
 
 // Step 4. Generate Responses

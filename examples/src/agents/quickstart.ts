@@ -6,7 +6,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { pull } from "langchain/hub";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createRetrieverTool } from "langchain/tools/retriever";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
@@ -70,42 +70,35 @@ const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-  verbose: true,
-});
-
-const result1 = await agentExecutor.invoke({
-  input: "hi!",
+const result1 = await agent.invoke({
+  messages: [new HumanMessage("hi!")],
 });
 
 console.log(result1);
 
-const result2 = await agentExecutor.invoke({
-  input: "how can langsmith help with testing?",
+const result2 = await agent.invoke({
+  messages: [new HumanMessage("how can langsmith help with testing?")],
 });
 
 console.log(result2);
 
-const result3 = await agentExecutor.invoke({
-  input: "hi! my name is cob.",
-  chat_history: [],
+const result3 = await agent.invoke({
+  messages: [new HumanMessage("hi! my name is cob.")],
 });
 
 console.log(result3);
 
-const result4 = await agentExecutor.invoke({
-  input: "what's my name?",
-  chat_history: [
+const result4 = await agent.invoke({
+  messages: [
     new HumanMessage("hi! my name is cob."),
     new AIMessage("Hello Cob! How can I assist you today?"),
+    new HumanMessage("what's my name?"),
   ],
 });
 
@@ -114,7 +107,7 @@ console.log(result4);
 const messageHistory = new ChatMessageHistory();
 
 const agentWithChatHistory = new RunnableWithMessageHistory({
-  runnable: agentExecutor,
+  runnable: agent,
   // This is needed because in most real world scenarios, a session id is needed per user.
   // It isn't really used here because we are using a simple in memory ChatMessageHistory.
   getMessageHistory: (_sessionId) => messageHistory,

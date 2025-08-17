@@ -9,7 +9,7 @@ const prefix =
   "You are a helpful AI assistant. However, all final response to the user must be in pirate dialect.";
 
 const executor = await initializeAgentExecutorWithOptions(tools, chat, {
-  agentType: "openai-functions",
+  agentType: "structured-chat-zero-shot-react-description",
   verbose: true,
   agentArgs: {
     prefix,

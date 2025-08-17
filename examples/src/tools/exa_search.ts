@@ -3,7 +3,8 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import Exa from "exa-js";
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { HumanMessage } from "@langchain/core/messages";
 
 // Define the tools the agent will have access to.
 const tools = [
@@ -25,19 +26,14 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-const result = await agentExecutor.invoke({
-  input: "what is the weather in wailea?",
+const result = await agent.invoke({
+  messages: [new HumanMessage("what is the weather in wailea?")],
 });
 
 console.log(result);

@@ -1,5 +1,5 @@
 import { StructuredToolInterface } from "@langchain/core/tools";
-import { ChatOpenAI } from "@langchain/openai";
+import type { ChatOpenAI } from "@langchain/openai";
 import { ConversationSummaryBufferMemory } from "../../../memory/summary_buffer.js";
 import { initializeAgentExecutorWithOptions } from "../../initialize.js";
 import { OpenAIAgentTokenBufferMemory } from "./token_buffer_memory.js";

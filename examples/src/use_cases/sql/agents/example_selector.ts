@@ -8,10 +8,11 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { HumanMessage } from "@langchain/core/messages";
 import { SqlToolkit } from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { examples } from "./examples.js";
 
 const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(
@@ -77,18 +78,16 @@ const newPrompt = await fullPrompt.partial({
   top_k: "10",
 });
 
-const runnableAgent = await createOpenAIToolsAgent({
+const runnableAgent = await createReactAgent({
   llm,
   tools,
   prompt: newPrompt,
 });
-const agentExecutor = new AgentExecutor({
-  agent: runnableAgent,
-  tools,
-});
 
 console.log(
-  await agentExecutor.invoke({ input: "How many artists are there?" })
+  await runnableAgent.invoke({
+    messages: [new HumanMessage("How many artists are there?")],
+  })
 );
 /**
 {

@@ -1,4 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
+import type { ChatOpenAI } from "@langchain/openai";
 import {
   InputValues,
   MemoryVariables,
@@ -6,12 +6,17 @@ import {
   getInputValue,
   getOutputValue,
 } from "@langchain/core/memory";
-import { type BaseMessage, getBufferString } from "@langchain/core/messages";
+import {
+  type BaseMessage,
+  getBufferString,
+  AIMessage,
+  FunctionMessage,
+} from "@langchain/core/messages";
+import { AgentAction, AgentStep } from "@langchain/core/agents";
 import {
   BaseChatMemory,
   BaseChatMemoryInput,
 } from "../../../memory/chat_memory.js";
-import { _formatIntermediateSteps } from "../../openai_functions/index.js";
 
 /**
  * Type definition for the fields required to initialize an instance of
@@ -135,4 +140,43 @@ export class OpenAIAgentTokenBufferMemory extends BaseChatMemory {
       }
     }
   }
+}
+
+function _convertAgentStepToMessages(
+  action: AgentAction | FunctionsAgentAction,
+  observation: string
+) {
+  if (isFunctionsAgentAction(action) && action.messageLog !== undefined) {
+    return action.messageLog?.concat(
+      new FunctionMessage(observation, action.tool)
+    );
+  } else {
+    return [new AIMessage(action.log)];
+  }
+}
+
+export function _formatIntermediateSteps(
+  intermediateSteps: AgentStep[]
+): BaseMessage[] {
+  return intermediateSteps.flatMap(({ action, observation }) =>
+    _convertAgentStepToMessages(action, observation)
+  );
+}
+
+/**
+ * Type that represents an agent action with an optional message log.
+ */
+export type FunctionsAgentAction = AgentAction & {
+  messageLog?: BaseMessage[];
+};
+
+/**
+ * Checks if the given action is a FunctionsAgentAction.
+ * @param action The action to check.
+ * @returns True if the action is a FunctionsAgentAction, false otherwise.
+ */
+function isFunctionsAgentAction(
+  action: AgentAction | FunctionsAgentAction
+): action is FunctionsAgentAction {
+  return (action as FunctionsAgentAction).messageLog !== undefined;
 }

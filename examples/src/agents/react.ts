@@ -3,7 +3,8 @@ import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
 import { pull } from "langchain/hub";
-import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 // Define the tools the agent will have access to.
 const tools = [new TavilySearchResults({ maxResults: 1 })];
@@ -24,14 +25,9 @@ const agent = await createReactAgent({
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
 // See public LangSmith trace here: https://smith.langchain.com/public/d72cc476-e88f-46fa-b768-76b058586cc1/r
-const result = await agentExecutor.invoke({
-  input: "what is LangChain?",
+const result = await agent.invoke({
+  messages: [new HumanMessage("what is LangChain?")],
 });
 
 console.log(result);
@@ -47,15 +43,12 @@ const agentWithChat = await createReactAgent({
   prompt: promptWithChat,
 });
 
-const agentExecutorWithChat = new AgentExecutor({
-  agent: agentWithChat,
-  tools,
-});
-
-const result2 = await agentExecutorWithChat.invoke({
-  input: "what's my name?",
-  // Notice that chat_history is a string, since this prompt is aimed at LLMs, not chat models
-  chat_history: "Human: Hi! My name is Cob\nAI: Hello Cob! Nice to meet you",
+const result2 = await agentWithChat.invoke({
+  messages: [
+    new HumanMessage("Hi! My name is Cob"),
+    new AIMessage("Hello Cob! Nice to meet you"),
+    new HumanMessage("what's my name?"),
+  ],
 });
 
 console.log(result2);

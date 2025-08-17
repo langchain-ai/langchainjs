@@ -3,13 +3,14 @@ import {
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { SqlToolkit } from "langchain/agents/toolkits/sql";
 import { SqlDatabase } from "langchain/sql_db";
 import { Tool } from "@langchain/core/tools";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { DataSource } from "typeorm";
+import { HumanMessage } from "@langchain/core/messages";
 
 const datasource = new DataSource({
   type: "sqlite",
@@ -90,18 +91,14 @@ const newPrompt = await prompt.partial({
   table_names: db.allTables.map((t) => t.tableName).join(", "),
 });
 const tools = [...sqlToolKit.getTools(), retrieverTool];
-const runnableAgent = await createOpenAIToolsAgent({
+const runnableAgent = await createReactAgent({
   llm,
   tools,
   prompt: newPrompt,
 });
-const agentExecutor = new AgentExecutor({
-  agent: runnableAgent,
-  tools,
-});
 console.log(
-  await agentExecutor.invoke({
-    input: "How many albums does alis in chain have?",
+  await runnableAgent.invoke({
+    messages: [new HumanMessage("How many albums does alis in chain have?")],
   })
 );
 /**

@@ -1,10 +1,11 @@
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
+import { HumanMessage } from "@langchain/core/messages";
 
 import { Calculator } from "@langchain/community/tools/calculator";
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // Define the tools the agent will have access to.
 const tools = [new TavilySearchResults({}), new Calculator()];
@@ -21,20 +22,14 @@ const prompt = await pull<ChatPromptTemplate>(
   "hwchase17/openai-functions-agent"
 );
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-  returnIntermediateSteps: true,
-});
-
-const res = await agentExecutor.invoke({
-  input: "what is the weather in SF and then LA",
+const res = await agent.invoke({
+  messages: [new HumanMessage("what is the weather in SF and then LA")],
 });
 
 console.log(JSON.stringify(res, null, 2));

@@ -3,7 +3,6 @@ import { z } from "zod";
 import type { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
-import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 
 import { TavilySearchAPIRetriever } from "@langchain/community/retrievers/tavily_search_api";
 import { AIMessage, FunctionMessage } from "@langchain/core/messages";
@@ -53,9 +52,7 @@ const responseOpenAIFunction = {
   parameters: zodToJsonSchema(responseSchema),
 };
 
-const structuredOutputParser = (
-  message: AIMessage
-): FunctionsAgentAction | AgentFinish => {
+const structuredOutputParser = (message: AIMessage): AgentFinish => {
   if (message.content && typeof message.content !== "string") {
     throw new Error("This agent cannot parse non-string model responses.");
   }
@@ -77,7 +74,7 @@ const structuredOutputParser = (
           function_call.arguments ?? "{}"
         }\n${message.content}`,
         messageLog: [message],
-      };
+      } as any;
     } catch (error) {
       throw new Error(
         `Failed to parse function arguments from chat model response. Text: "${function_call.arguments}". ${error}`

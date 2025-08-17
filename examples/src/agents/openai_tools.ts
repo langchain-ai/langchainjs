@@ -4,7 +4,7 @@ import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // Define the tools the agent will have access to.
 const tools = [new TavilySearchResults({ maxResults: 1 })];
@@ -19,28 +19,23 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createOpenAIToolsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-const result = await agentExecutor.invoke({
-  input: "what is LangChain?",
+const result = await agent.invoke({
+  messages: [new HumanMessage("what is LangChain?")],
 });
 
 console.log(result);
 
-const result2 = await agentExecutor.invoke({
-  input: "what's my name?",
-  chat_history: [
+const result2 = await agent.invoke({
+  messages: [
     new HumanMessage("hi! my name is cob"),
     new AIMessage("Hello Cob! How can I assist you today?"),
+    new HumanMessage("what's my name?"),
   ],
 });
 

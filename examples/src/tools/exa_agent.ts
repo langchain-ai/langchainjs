@@ -4,9 +4,10 @@ import {
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
+import { HumanMessage } from "@langchain/core/messages";
 
 // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
 const client: Exa.default = new Exa(process.env.EXASEARCH_API_KEY);
@@ -34,16 +35,16 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const agentExecutor = new AgentExecutor({
-  agent: await createOpenAIFunctionsAgent({
-    llm,
-    tools,
-    prompt,
-  }),
+const agent = await createReactAgent({
+  llm,
   tools,
+  prompt,
 });
+
 console.log(
-  await agentExecutor.invoke({
-    input: "Summarize for me a fascinating article about cats.",
+  await agent.invoke({
+    messages: [
+      new HumanMessage("Summarize for me a fascinating article about cats."),
+    ],
   })
 );
