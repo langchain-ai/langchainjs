@@ -1,6 +1,6 @@
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import type { Runnable } from "@langchain/core/runnables";
-import { Client } from "langsmith";
+import type { Client, ClientConfig } from "langsmith";
 
 /**
  * Push a prompt to the hub.
@@ -27,6 +27,7 @@ export async function basePush(
     tags?: string[];
   }
 ): Promise<string> {
+  const Client = await loadLangSmith();
   const client = new Client(options);
   const payloadOptions = {
     object: runnable,
@@ -43,6 +44,7 @@ export async function basePull(
   ownerRepoCommit: string,
   options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
 ) {
+  const Client = await loadLangSmith();
   const client = new Client(options);
 
   const promptObject = await client.pullPromptCommit(ownerRepoCommit, {
@@ -153,4 +155,21 @@ export function generateOptionalImportMap(
     }
   }
   return optionalImportMap;
+}
+
+/**
+ * Dynamically load the LangSmith client.
+ * @returns The LangSmith client.
+ */
+async function loadLangSmith(): Promise<new (config?: ClientConfig) => Client> {
+  try {
+    const { Client } = await import("langsmith");
+    return Client;
+  } catch (error) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Error loading "langsmith" package, install it via \`npm install langsmith\` before you use this function.\nError: ${errorMessage}`
+    );
+  }
 }
