@@ -20,7 +20,7 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "test": "pnpm test:standard:unit",
+    "test": "pnpm test:standard",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "test:standard:int": "vitest run --mode standard-int",
