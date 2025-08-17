@@ -234,7 +234,7 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test("withStructuredOutput JSON schema", async () => {
+test.only("withStructuredOutput JSON schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     model: "gpt-4o-mini",
@@ -273,6 +273,30 @@ Respond with a JSON object containing three keys:
   expect("operation" in result).toBe(true);
   expect("number1" in result).toBe(true);
   expect("number2" in result).toBe(true);
+
+  let tracedOutput;
+  const resultStream = await chain.stream(
+    {},
+    {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    }
+  );
+  let finalChunk;
+  for await (const chunk of resultStream) {
+    finalChunk = chunk;
+  }
+  expect(finalChunk).toBeDefined();
+  if (!finalChunk) return;
+  expect("operation" in finalChunk).toBe(true);
+  expect("number1" in finalChunk).toBe(true);
+  expect("number2" in finalChunk).toBe(true);
+  expect(finalChunk).toEqual(tracedOutput);
 });
 
 test("withStructuredOutput includeRaw true", async () => {

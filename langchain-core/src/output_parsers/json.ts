@@ -18,7 +18,7 @@ export class JsonOutputParser<
 
   lc_serializable = true;
 
-  protected _concatStreamedOutputChunks<T>(_: T, second: T): T {
+  override _concatOutputChunks<T>(_: T, second: T): T {
     return second;
   }
 
