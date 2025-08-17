@@ -1430,6 +1430,10 @@ export class RunnableBinding<
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
+  override _concatOutputChunks<O>(first: O, second: O): O {
+    return this.bound._concatOutputChunks(first, second);
+  }
+
   async *_streamIterator(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
