@@ -120,7 +120,10 @@ interface OpenAILLMOutput {
 export type { OpenAICallOptions, OpenAIChatInput };
 
 function isReasoningModel(model?: string) {
-  return model && (/^o\d/.test(model) || model.startsWith("gpt-5"));
+  if (!model) return false;
+  if (/^o\d/.test(model ?? "")) return true;
+  if (model.startsWith("gpt-5") && !model.startsWith("gpt-5-chat")) return true;
+  return false;
 }
 
 function isStructuredOutputMethodParams(
