@@ -234,7 +234,7 @@ Respond with a JSON object containing three keys:
   expect("number2" in result).toBe(true);
 });
 
-test.only("withStructuredOutput JSON schema", async () => {
+test("withStructuredOutput JSON schema", async () => {
   const model = new ChatOpenAI({
     temperature: 0,
     model: "gpt-4o-mini",
