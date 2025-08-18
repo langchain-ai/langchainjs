@@ -214,6 +214,10 @@ export class FakeChatModel extends BaseChatModel {
       llmOutput: {},
     };
   }
+
+  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+    return this;
+  }
 }
 
 export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModelCallOptions> {
