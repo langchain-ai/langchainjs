@@ -16,6 +16,7 @@ import type {
   ToolConfiguration,
   GuardrailConfiguration,
   PerformanceConfiguration,
+  ConverseRequest,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   BedrockRuntimeClient,
@@ -187,6 +188,11 @@ export interface ChatBedrockConverseCallOptions
    * If a tool name is passed, it will force the model to call that specific tool.
    */
   tool_choice?: BedrockConverseToolChoice;
+
+  /**
+   * Key-value pairs that you can use to filter invocation logs.
+   */
+  requestMetadata?: ConverseRequest["requestMetadata"];
 }
 
 /**
@@ -845,11 +851,11 @@ export class ChatBedrockConverse
       modelId: this.model,
       messages: converseMessages,
       system: converseSystem,
+      requestMetadata: options.requestMetadata,
       ...params,
     });
     const response = await this.client.send(command, {
       abortSignal: options.signal,
-      requestMetadata: options.metadata,
     });
     const { output, ...responseMetadata } = response;
     if (!output?.message) {
@@ -886,11 +892,11 @@ export class ChatBedrockConverse
       modelId: this.model,
       messages: converseMessages,
       system: converseSystem,
+      requestMetadata: options.requestMetadata,
       ...params,
     });
     const response = await this.client.send(command, {
       abortSignal: options.signal,
-      requestMetadata: options.metadata,
     });
     if (response.stream) {
       for await (const chunk of response.stream) {

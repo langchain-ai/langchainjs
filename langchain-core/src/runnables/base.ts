@@ -371,6 +371,7 @@ export abstract class Runnable<
     const callOptions = { ...(options as Partial<CallOptions>) };
     delete callOptions.callbacks;
     delete callOptions.tags;
+    delete callOptions.metadata;
     delete callOptions.runName;
     delete callOptions.configurable;
     delete callOptions.recursionLimit;
