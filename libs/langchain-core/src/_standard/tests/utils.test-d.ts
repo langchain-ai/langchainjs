@@ -1,5 +1,5 @@
 import { describe, it, expectTypeOf } from "vitest";
-import { type $MergeObjects, type $MergeDiscriminatedUnion } from "../utils";
+import { type $MergeObjects, type $MergeDiscriminatedUnion } from "../utils.js";
 
 describe("$MergeObjects", () => {
   it("should merge non-overlapping keys from T and U into the result type", async () => {
@@ -41,13 +41,13 @@ describe("$MergeObjects", () => {
 
   it("should include keys that exist only in T with their original types", async () => {
     type T = { onlyT: number };
-    type U = {};
+    type U = object;
     type R = $MergeObjects<T, U>;
     expectTypeOf<R>().toEqualTypeOf<{ onlyT: number }>();
   });
 
   it("should include keys that exist only in U with their original types", async () => {
-    type T = {};
+    type T = object;
     type U = { onlyU: number };
     type R = $MergeObjects<T, U>;
     expectTypeOf<R>().toEqualTypeOf<{ onlyU: number }>();
@@ -71,13 +71,13 @@ describe("$MergeObjects", () => {
 
   it("should be idempotent with empty U (M<T, {}> yields T)", async () => {
     type T = { a: string; b: { c: number } };
-    type R = $MergeObjects<T, {}>;
+    type R = $MergeObjects<T, object>;
     expectTypeOf<R>().toEqualTypeOf<{ a: string; b: { c: number } }>();
   });
 
   it("should be idempotent with empty T (M<{}, U> yields U)", async () => {
     type U = { a: string; b: { c: number } };
-    type R = $MergeObjects<{}, U>;
+    type R = $MergeObjects<object, U>;
     expectTypeOf<R>().toEqualTypeOf<U>();
   });
 
@@ -159,7 +159,9 @@ describe("$MergeDiscriminatedUnion", () => {
   });
 
   it("should support string, number, and symbol discriminator values", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const S1 = Symbol("S1");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const S2 = Symbol("S2");
     type A =
       | { type: "a"; a: 1 }

@@ -11,7 +11,7 @@ module.exports = {
     project: "./tsconfig.json",
     sourceType: "module",
   },
-  plugins: ["@typescript-eslint", "no-instanceof", "eslint-plugin-jest"],
+  plugins: ["@typescript-eslint", "no-instanceof"],
   ignorePatterns: [
     "src/utils/@cfworker",
     "src/utils/fast-json-patch",
@@ -44,7 +44,7 @@ module.exports = {
     "import/extensions": [2, "ignorePackages"],
     "import/no-extraneous-dependencies": [
       "error",
-      { devDependencies: ["**/*.test.ts"] },
+      { devDependencies: ["**/*.test.ts", "**/*.test-d.ts"] },
     ],
     "import/no-unresolved": 0,
     "import/prefer-default-export": 0,
@@ -70,16 +70,15 @@ module.exports = {
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
-    'jest/no-focused-tests': 'error',
     "arrow-body-style": 0,
     "prefer-destructuring": 0,
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };

@@ -593,176 +593,6 @@ export function isMessage(message: unknown): message is Message {
   );
 }
 
-/**
- * A tuple representation of a message consisting of a role and content.
- *
- * This type provides a compact way to represent messages as a two-element array,
- * where the first element is the message type/role and the second element is the content.
- * The content can be either a simple string or an array of structured content blocks.
- *
- * @template TStructure - The message structure type that defines the content and property types.
- *                        Defaults to $StandardMessageStructure.
- * @template TRole - The message type/role that determines the content structure.
- *                   Defaults to $MessageType (any valid message type).
- *
- * @example
- * ```ts
- * // Simple text message tuple
- * const humanTuple: MessageTuple = ["human", "Hello, world!"];
- *
- * // AI message tuple with structured content
- * const aiTuple: MessageTuple = [
- *   "ai",
- *   [
- *     { type: "text", text: "Here's the answer:" },
- *     { type: "tool_call", name: "search", args: { query: "example" } }
- *   ]
- * ];
- *
- * // Custom structure message tuple
- * const customTuple: MessageTuple<CustomStructure, "ai"> = [
- *   "ai",
- *   [{ type: "text", text: "Custom AI response" }]
- * ];
- * ```
- */
-export type MessageTuple<TRole extends $MessageType = $MessageType> = [
-  TRole,
-  string | Iterable<BaseContentBlock>
-];
-
-/**
- * Type guard to check if a value is a valid MessageTuple object.
- *
- * @param message - The value to check
- * @returns true if the value is a valid MessageTuple object, false otherwise
- */
-export function isMessageTuple(message: unknown): message is MessageTuple {
-  return (
-    Array.isArray(message) &&
-    message.length === 2 &&
-    typeof message[0] === "string" &&
-    (typeof message[1] === "string" || Symbol.iterator in message[1])
-  );
-}
-
-/**
- * Converts a MessageTuple object to a Message object.
- *
- * @param message - The MessageTuple object to convert
- * @returns A Message object if the conversion is successful, undefined otherwise
- */
-export function convertMessageTuple<TStructure extends $MessageStructure>(
-  message: MessageTuple
-): Message | undefined {
-  const [role, content] = message;
-  switch (role.toLowerCase()) {
-    case "ai":
-      return new AIMessage<TStructure>(content);
-    case "human":
-      return new HumanMessage<TStructure>(content);
-    case "system":
-      return new SystemMessage<TStructure>(content);
-    case "tool":
-      return new ToolMessage<TStructure>(content);
-    default:
-      const normalizedContent = iife(() => {
-        if (typeof content === "string") {
-          return [
-            { type: "text", text: content } as $InferMessageContent<
-              TStructure,
-              typeof role
-            >,
-          ];
-        }
-        if (Symbol.iterator in content) {
-          return Array.from(content);
-        }
-        return content;
-      });
-      return {
-        type: role,
-        id: "", // TODO: generate a random id
-        content: normalizedContent,
-      };
-  }
-}
-
-/**
- * A union type representing various formats that can be used to represent a message.
- *
- * This type provides flexibility in how messages can be specified, allowing for different
- * input formats that can be normalized into a standard Message object. It supports:
- * - Simple string content (automatically converted to a human message)
- * - Full Message objects with complete structure and metadata
- * - Compact MessageTuple format for concise message representation
- * - Serialized constructor format for message reconstruction (legacy)
- *
- * @example
- * ```ts
- * // Simple string - becomes a human message
- * const stringMessage: MessageLike = "Hello, world!";
- *
- * // Message class
- * const fullMessage: MessageLike = new HumanMessage("Hello, world!");
- *
- * // Tuple format
- * const tupleMessage: MessageLike = ["human", "Hello, world!"];
- *
- * // Serialized constructor (for deserialization)
- * const serializedMessage: MessageLike = {
- *   lc: 1,
- *   type: "constructor",
- *   id: ["langchain", "schema", "messages", "HumanMessage"],
- *   kwargs: { content: "Hello, world!" }
- * };
- * ```
- */
-export type MessageLike =
-  | string
-  | Message
-  | MessageTuple
-  | SerializedConstructor;
-
-/**
- * Type guard to check if a value is a valid MessageLike object.
- *
- * @param message - The value to check
- * @returns true if the value is a valid MessageLike object, false otherwise
- */
-export function isMessageLike(message: unknown): message is MessageLike {
-  // TODO: add `SerializedConstructor` guard
-  return (
-    typeof message === "string" || isMessage(message) || isMessageTuple(message)
-  );
-}
-
-/**
- * Converts a MessageLike object to a Message object.
- *
- * @param message - The MessageLike object to convert
- * @returns A Message object if the conversion is successful, undefined otherwise
- */
-export function convertMessageLike<TStructure extends $MessageStructure>(
-  message: MessageLike
-): Message | undefined {
-  if (typeof message === "string") {
-    return new HumanMessage<TStructure>(message);
-  }
-  if (isMessage(message)) {
-    return message;
-  }
-  if (isMessageTuple(message)) {
-    return convertMessageTuple(message);
-  }
-  // `SerializedConstructor`
-  if (message.lc === 1) {
-    // TODO: implement
-    throw new Error("not implemented");
-  }
-  return undefined;
-}
-
 /** Parameters for creating an AIMessage */
 export type AIMessageParams<
   TStructure extends $MessageStructure = $StandardMessageStructure
@@ -925,10 +755,7 @@ export class AIMessage<
    * ```
    */
   get toolCalls(): Array<$MessageToolCallBlock<TStructure>> {
-    const content = this.content as any[];
-    return content
-      .filter((block) => block.type === "tool_call")
-      .map((block) => block);
+    throw new Error("Not implemented");
   }
 
   /**
@@ -1419,4 +1246,175 @@ export class ToolMessage<
   static isInstance(message: unknown): message is ToolMessage {
     return isBrandedMessage(message, "tool");
   }
+}
+
+/**
+ * A tuple representation of a message consisting of a role and content.
+ *
+ * This type provides a compact way to represent messages as a two-element array,
+ * where the first element is the message type/role and the second element is the content.
+ * The content can be either a simple string or an array of structured content blocks.
+ *
+ * @template TStructure - The message structure type that defines the content and property types.
+ *                        Defaults to $StandardMessageStructure.
+ * @template TRole - The message type/role that determines the content structure.
+ *                   Defaults to $MessageType (any valid message type).
+ *
+ * @example
+ * ```ts
+ * // Simple text message tuple
+ * const humanTuple: MessageTuple = ["human", "Hello, world!"];
+ *
+ * // AI message tuple with structured content
+ * const aiTuple: MessageTuple = [
+ *   "ai",
+ *   [
+ *     { type: "text", text: "Here's the answer:" },
+ *     { type: "tool_call", name: "search", args: { query: "example" } }
+ *   ]
+ * ];
+ *
+ * // Custom structure message tuple
+ * const customTuple: MessageTuple<CustomStructure, "ai"> = [
+ *   "ai",
+ *   [{ type: "text", text: "Custom AI response" }]
+ * ];
+ * ```
+ */
+export type MessageTuple<TRole extends $MessageType = $MessageType> = [
+  TRole,
+  string | Iterable<BaseContentBlock>
+];
+
+/**
+ * Type guard to check if a value is a valid MessageTuple object.
+ *
+ * @param message - The value to check
+ * @returns true if the value is a valid MessageTuple object, false otherwise
+ */
+export function isMessageTuple(message: unknown): message is MessageTuple {
+  return (
+    Array.isArray(message) &&
+    message.length === 2 &&
+    typeof message[0] === "string" &&
+    (typeof message[1] === "string" || Symbol.iterator in message[1])
+  );
+}
+
+/**
+ * Converts a MessageTuple object to a Message object.
+ *
+ * @param message - The MessageTuple object to convert
+ * @returns A Message object if the conversion is successful, undefined otherwise
+ */
+export function convertMessageTuple<TStructure extends $MessageStructure>(
+  message: MessageTuple
+): Message | undefined {
+  const [role, content] = message;
+  switch (role.toLowerCase()) {
+    case "ai":
+      return new AIMessage<TStructure>(content);
+    case "human":
+      return new HumanMessage<TStructure>(content);
+    case "system":
+      return new SystemMessage<TStructure>(content);
+    case "tool":
+      return new ToolMessage<TStructure>(content);
+    default: {
+      const normalizedContent = iife(() => {
+        if (typeof content === "string") {
+          return [
+            { type: "text", text: content } as $InferMessageContent<
+              TStructure,
+              typeof role
+            >,
+          ];
+        }
+        if (Symbol.iterator in content) {
+          return Array.from(content);
+        }
+        return content;
+      });
+      return {
+        type: role,
+        id: "", // TODO: generate a random id
+        content: normalizedContent,
+      };
+    }
+  }
+}
+
+/**
+ * A union type representing various formats that can be used to represent a message.
+ *
+ * This type provides flexibility in how messages can be specified, allowing for different
+ * input formats that can be normalized into a standard Message object. It supports:
+ * - Simple string content (automatically converted to a human message)
+ * - Full Message objects with complete structure and metadata
+ * - Compact MessageTuple format for concise message representation
+ * - Serialized constructor format for message reconstruction (legacy)
+ *
+ * @example
+ * ```ts
+ * // Simple string - becomes a human message
+ * const stringMessage: MessageLike = "Hello, world!";
+ *
+ * // Message class
+ * const fullMessage: MessageLike = new HumanMessage("Hello, world!");
+ *
+ * // Tuple format
+ * const tupleMessage: MessageLike = ["human", "Hello, world!"];
+ *
+ * // Serialized constructor (for deserialization)
+ * const serializedMessage: MessageLike = {
+ *   lc: 1,
+ *   type: "constructor",
+ *   id: ["langchain", "schema", "messages", "HumanMessage"],
+ *   kwargs: { content: "Hello, world!" }
+ * };
+ * ```
+ */
+export type MessageLike =
+  | string
+  | Message
+  | MessageTuple
+  | SerializedConstructor;
+
+/**
+ * Type guard to check if a value is a valid MessageLike object.
+ *
+ * @param message - The value to check
+ * @returns true if the value is a valid MessageLike object, false otherwise
+ */
+export function isMessageLike(message: unknown): message is MessageLike {
+  // TODO: add `SerializedConstructor` guard
+  return (
+    typeof message === "string" || isMessage(message) || isMessageTuple(message)
+  );
+}
+
+/**
+ * Converts a MessageLike object to a Message object.
+ *
+ * @param message - The MessageLike object to convert
+ * @returns A Message object if the conversion is successful, undefined otherwise
+ */
+export function convertMessageLike<TStructure extends $MessageStructure>(
+  message: MessageLike
+): Message | undefined {
+  if (typeof message === "string") {
+    return new HumanMessage<TStructure>(message);
+  }
+  if (isMessage(message)) {
+    return message;
+  }
+  if (isMessageTuple(message)) {
+    return convertMessageTuple(message);
+  }
+  // `SerializedConstructor`
+  if (message.lc === 1) {
+    // TODO: implement
+    throw new Error("not implemented");
+  }
+  return undefined;
 }

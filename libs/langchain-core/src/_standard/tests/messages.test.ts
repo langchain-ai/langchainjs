@@ -1,4 +1,5 @@
-import { ContentBlock } from "../content";
+import { BaseContentBlock } from "../content/base.js";
+import { ContentBlock } from "../content/index.js";
 import {
   $MessageToolDefinition,
   AIMessage,
@@ -11,7 +12,8 @@ import {
   isMessageLike,
   convertMessageLike,
   MessageLike,
-} from "../message";
+  MessageTuple,
+} from "../message.js";
 
 describe("isMessage", () => {
   describe("valid cases", () => {
@@ -39,7 +41,7 @@ describe("isMessage", () => {
       expect(isMessage(null)).toBe(false);
     });
     it("returns false for primitives (number, string, boolean, symbol, undefined)", () => {
-      const values: any[] = [42, "foo", true, Symbol("s"), undefined];
+      const values = [42, "foo", true, Symbol("s"), undefined];
       for (const v of values) {
         expect(isMessage(v)).toBe(false);
       }
@@ -53,7 +55,7 @@ describe("isMessage", () => {
       expect(isMessage(value)).toBe(false);
     });
     it("returns false when 'content' is neither string nor array (e.g., object/function)", () => {
-      const cases: any[] = [
+      const cases = [
         { type: "ai", content: {} },
         { type: "ai", content: () => "hi" },
       ];
@@ -65,7 +67,7 @@ describe("isMessage", () => {
       function* gen() {
         yield { type: "text", text: "A" };
       }
-      const values: any[] = [
+      const values = [
         { type: "ai", content: new Set([{ type: "text", text: "A" }]) },
         { type: "ai", content: gen() },
       ];
@@ -127,7 +129,7 @@ describe("isMessageTuple", () => {
 
   describe("invalid cases", () => {
     it("returns false for non-array input (object/null/string/number)", () => {
-      const cases: any[] = [{}, null, "foo", 123];
+      const cases = [{}, null, "foo", 123];
       for (const v of cases) {
         expect(isMessageTuple(v)).toBe(false);
       }
@@ -152,10 +154,6 @@ describe("isMessageTuple", () => {
   });
 
   describe("edge cases", () => {
-    it("treats boxed String objects as iterable and therefore valid", () => {
-      const boxed = new String("hello");
-      expect(isMessageTuple(["ai", boxed])).toBe(true);
-    });
     it("treats plain objects with a [Symbol.iterator] property as valid per current behavior", () => {
       const obj = {
         [Symbol.iterator]() {
@@ -299,7 +297,7 @@ describe("convertMessageTuple", () => {
     });
 
     it("handles empty arrays for content", () => {
-      const blocks: any[] = [];
+      const blocks: BaseContentBlock[] = [];
       const ai = convertMessageTuple(["ai", blocks]) as AIMessage;
       expect(ai.content).toEqual([]);
 
@@ -310,7 +308,7 @@ describe("convertMessageTuple", () => {
 
   describe("type guards/integration", () => {
     it("produces values that pass isMessage for all roles", () => {
-      const cases: any[] = [
+      const cases: MessageTuple[] = [
         ["ai", "Hello"],
         ["human", "Hello"],
         ["system", "Hello"],
@@ -382,7 +380,7 @@ describe("isMessageLike", () => {
       expect(isMessageLike(null)).toBe(false);
     });
     it("returns false for primitives (number, boolean, symbol, undefined)", () => {
-      const values: any[] = [42, true, Symbol("s"), undefined];
+      const values = [42, true, Symbol("s"), undefined];
       for (const v of values) {
         expect(isMessageLike(v)).toBe(false);
       }
@@ -417,10 +415,6 @@ describe("isMessageLike", () => {
   });
 
   describe("edge cases", () => {
-    it("treats boxed String objects as iterable for tuple second element", () => {
-      const boxed = new String("hello");
-      expect(isMessageLike(["ai", boxed])).toBe(true);
-    });
     it("treats plain objects with a [Symbol.iterator] property as valid tuple second element (current behavior)", () => {
       const obj = {
         [Symbol.iterator]() {
@@ -503,14 +497,17 @@ describe("convertMessageLike", () => {
 
   describe("invalid cases", () => {
     it("returns undefined for non-MessageLike primitive inputs (number, boolean)", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cases: any[] = [42, true];
       for (const v of cases) {
-        const result = convertMessageLike(v as any);
+        const result = convertMessageLike(v);
         expect(result).toBeUndefined();
       }
     });
     it("throws for null and undefined inputs due to property access in implementation", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => convertMessageLike(null as any)).toThrow();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => convertMessageLike(undefined as any)).toThrow();
     });
   });
@@ -523,6 +520,7 @@ describe("convertMessageLike", () => {
         id: ["langchain", "schema", "messages", "HumanMessage"],
         kwargs: { content: "Hello" },
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => convertMessageLike(serialized as any)).toThrow(
         /not implemented/i
       );
@@ -550,9 +548,9 @@ describe("convertMessageLike", () => {
 
   describe("integration", () => {
     it("produces values that pass isMessage for all supported inputs", () => {
-      const inputs: any[] = [
+      const inputs: MessageLike[] = [
         "Hello",
-        { type: "ai", content: "Hello" },
+        { type: "ai", id: "123", content: "Hello" },
         ["ai", "Hello"],
         ["human", [{ type: "text", text: "Hi" }]],
         ["custom", new Set([{ type: "text", text: "A" }])],

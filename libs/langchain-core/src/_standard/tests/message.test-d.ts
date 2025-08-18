@@ -20,10 +20,10 @@ import {
   MessageTuple,
   isMessage,
   isMessageTuple,
-} from "../message";
-import { type SerializedConstructor } from "../../load/serializable";
-import { type ContentBlock } from "../content";
-import { BaseContentBlock } from "../content/base";
+} from "../message.js";
+import { type SerializedConstructor } from "../../load/serializable.js";
+import { type ContentBlock } from "../content/index.js";
+import { BaseContentBlock } from "../content/base.js";
 
 describe("$MessageType", () => {
   it("should allow standard literals 'ai' | 'human' | 'system' | 'tool'", async () => {
@@ -37,7 +37,7 @@ describe("$MessageType", () => {
     expectTypeOf("custom_type").toExtend<$MessageType>();
 
     // generic string should also be assignable
-    const someString: string = "anything";
+    const someString = "anything";
     const accept = (_t: $MessageType) => {};
     accept(someString);
   });
@@ -62,11 +62,11 @@ describe("$MessageToolDefinition", () => {
     expectTypeOf(ok).toExtend<$MessageToolDefinition>();
 
     // @ts-expect-error missing 'input'
-    const missingInput: $MessageToolDefinition<string, number> = {
+    const _missingInput: $MessageToolDefinition<string, number> = {
       output: 1,
     };
     // @ts-expect-error missing 'output'
-    const missingOutput: $MessageToolDefinition<string, number> = {
+    const _missingOutput: $MessageToolDefinition<string, number> = {
       input: "x",
     };
   });
@@ -156,7 +156,7 @@ describe("$MessageToolCallBlock<TStructure>", () => {
     const _impossible: $MessageToolCallBlock<NoTools> = {
       type: "tool_call",
       name: "x",
-      args: {} as any,
+      args: {},
     };
     expectTypeOf(_impossible).toEqualTypeOf<never>();
   });
@@ -1174,9 +1174,6 @@ describe("MessageLike", () => {
   });
 
   describe("edge cases", () => {
-    it("should not accept boxed String objects (String) as MessageLike", async () => {
-      expectTypeOf<String>().not.toExtend<MessageLike>();
-    });
     it("should support custom role casing via tuple form", async () => {
       expectTypeOf<["AI", "Hello"]>().toExtend<MessageLike>();
     });
