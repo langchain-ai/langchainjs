@@ -12,12 +12,18 @@ import {
   type $InferMessageProperties,
   type $InferMessageProperty,
   type Message,
+  type MessageLike,
   AIMessage,
   HumanMessage,
   SystemMessage,
   ToolMessage,
+  MessageTuple,
+  isMessage,
+  isMessageTuple,
 } from "../message";
+import { type SerializedConstructor } from "../../load/serializable";
 import { type ContentBlock } from "../content";
+import { BaseContentBlock } from "../content/base";
 
 describe("$MessageType", () => {
   it("should allow standard literals 'ai' | 'human' | 'system' | 'tool'", async () => {
@@ -907,112 +913,281 @@ describe("$InferMessageProperty<TStructure, TRole, K>", () => {
   });
 });
 
-describe("Message<TStructure, TRole>", () => {
-  it("should include standard structure by default", async () => {
-    type M = Message;
-
-    // basic fields
-    expectTypeOf<M["id"]>().toEqualTypeOf<string>();
-    expectTypeOf<M["name"]>().toEqualTypeOf<string | undefined>();
-
-    // type accepts at least the standard literals
-    expectTypeOf<"ai">().toExtend<M["type"]>();
-    expectTypeOf<"human">().toExtend<M["type"]>();
-    expectTypeOf<"system">().toExtend<M["type"]>();
-    expectTypeOf<"tool">().toExtend<M["type"]>();
-
-    // default content element is Text
-    type Elem = M["content"][number];
-    expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
-
-    // the canonical standard-role shapes are assignable to Message
-    expectTypeOf<
-      | {
-          id: string;
-          name?: string;
-          type: "ai";
-          content: Array<ContentBlock.Text>;
-        }
-      | {
-          id: string;
-          name?: string;
-          type: "human";
-          content: Array<ContentBlock.Text>;
-        }
-      | {
-          id: string;
-          name?: string;
-          type: "system";
-          content: Array<ContentBlock.Text>;
-        }
-      | {
-          id: string;
-          name?: string;
-          type: "tool";
-          content: Array<ContentBlock.Text>;
-        }
-    >().toExtend<Message>();
+describe("Message", () => {
+  it("message classes should be assignable", async () => {
+    expectTypeOf<AIMessage>().toExtend<Message>();
+    expectTypeOf<HumanMessage>().toExtend<Message>();
+    expectTypeOf<SystemMessage>().toExtend<Message>();
+    expectTypeOf<ToolMessage>().toExtend<Message>();
   });
 
-  it("should correctly infer the type of the message from the structure and role", async () => {
-    interface S extends $MessageStructure {
-      content: {
-        ai: ContentBlock.Reasoning;
-        human: ContentBlock.Multimodal.Image;
-      };
-    }
-
-    type MAI = Message<S, "ai">;
-    type MHuman = Message<S, "human">;
-
-    expectTypeOf<MAI["type"]>().toEqualTypeOf<"ai">();
-    expectTypeOf<MHuman["type"]>().toEqualTypeOf<"human">();
-
-    expectTypeOf<MAI["content"][number]>().toExtend<
-      $InferMessageContent<S, "ai">
-    >();
-    expectTypeOf<MAI["content"][number]>().not.toExtend<
-      $InferMessageContent<S, "human">
-    >();
-    expectTypeOf<MAI["content"][number]>().toExtend<
-      ContentBlock.Text | ContentBlock.Reasoning
-    >();
-    expectTypeOf<
-      MAI["content"][number]
-    >().not.toExtend<ContentBlock.Multimodal.Image>();
-
-    expectTypeOf<MHuman["content"][number]>().toExtend<
-      $InferMessageContent<S, "human">
-    >();
-    expectTypeOf<MHuman["content"][number]>().not.toExtend<
-      $InferMessageContent<S, "ai">
-    >();
-    expectTypeOf<MHuman["content"][number]>().toExtend<
-      ContentBlock.Text | ContentBlock.Multimodal.Image
-    >();
-    expectTypeOf<
-      MHuman["content"][number]
-    >().not.toExtend<ContentBlock.Reasoning>();
+  it("generic objects should be assignable", async () => {
+    expectTypeOf<{
+      type: "ai";
+      id: string;
+      content: string | BaseContentBlock[];
+    }>().toExtend<Message>();
   });
 
-  it("messages defined with custom structures should be assignable to Message", async () => {
-    interface S extends $MessageStructure {
-      content: {
-        ai: ContentBlock.Text;
-      };
-    }
-    expectTypeOf<Message<S>>().toExtend<Message>();
-    expectTypeOf<Message<S, "ai">>().toExtend<Message>();
+  it("should have string | BaseContentBlock[] content", async () => {
+    const m = new AIMessage("hello world");
+    expectTypeOf<typeof m.content>().toEqualTypeOf<
+      string | BaseContentBlock[]
+    >();
   });
 
-  it("messages defined with a role should be assignable to Message", async () => {
-    interface S extends $MessageStructure {
-      content: {
-        ai: ContentBlock.Reasoning;
+  // // TODO(hntrl): readd when `.contentBlocks` becomes `.content`
+  // it("should include standard structure by default", async () => {
+  //   type M = Message;
+  //
+  //   // basic fields
+  //   expectTypeOf<M["id"]>().toEqualTypeOf<string>();
+  //   expectTypeOf<M["name"]>().toEqualTypeOf<string | undefined>();
+  //
+  //   // type accepts at least the standard literals
+  //   expectTypeOf<"ai">().toExtend<M["type"]>();
+  //   expectTypeOf<"human">().toExtend<M["type"]>();
+  //   expectTypeOf<"system">().toExtend<M["type"]>();
+  //   expectTypeOf<"tool">().toExtend<M["type"]>();
+  //
+  //   // default content element is Text
+  //   type Elem = M["content"][number];
+  //   expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
+  //
+  //   // the canonical standard-role shapes are assignable to Message
+  //   expectTypeOf<
+  //     | {
+  //         id: string;
+  //         name?: string;
+  //         type: "ai";
+  //         content: Array<ContentBlock.Text>;
+  //       }
+  //     | {
+  //         id: string;
+  //         name?: string;
+  //         type: "human";
+  //         content: Array<ContentBlock.Text>;
+  //       }
+  //     | {
+  //         id: string;
+  //         name?: string;
+  //         type: "system";
+  //         content: Array<ContentBlock.Text>;
+  //       }
+  //     | {
+  //         id: string;
+  //         name?: string;
+  //         type: "tool";
+  //         content: Array<ContentBlock.Text>;
+  //       }
+  //   >().toExtend<Message>();
+  // });
+  //
+  // it("should correctly infer the type of the message from the structure and role", async () => {
+  //   interface S extends $MessageStructure {
+  //     content: {
+  //       ai: ContentBlock.Reasoning;
+  //       human: ContentBlock.Multimodal.Image;
+  //     };
+  //   }
+  //
+  //   type MAI = Message<S, "ai">;
+  //   type MHuman = Message<S, "human">;
+  //
+  //   expectTypeOf<MAI["type"]>().toEqualTypeOf<"ai">();
+  //   expectTypeOf<MHuman["type"]>().toEqualTypeOf<"human">();
+  //
+  //   expectTypeOf<MAI["content"][number]>().toExtend<
+  //     $InferMessageContent<S, "ai">
+  //   >();
+  //   expectTypeOf<MAI["content"][number]>().not.toExtend<
+  //     $InferMessageContent<S, "human">
+  //   >();
+  //   expectTypeOf<MAI["content"][number]>().toExtend<
+  //     ContentBlock.Text | ContentBlock.Reasoning
+  //   >();
+  //   expectTypeOf<
+  //     MAI["content"][number]
+  //   >().not.toExtend<ContentBlock.Multimodal.Image>();
+  //
+  //   expectTypeOf<MHuman["content"][number]>().toExtend<
+  //     $InferMessageContent<S, "human">
+  //   >();
+  //   expectTypeOf<MHuman["content"][number]>().not.toExtend<
+  //     $InferMessageContent<S, "ai">
+  //   >();
+  //   expectTypeOf<MHuman["content"][number]>().toExtend<
+  //     ContentBlock.Text | ContentBlock.Multimodal.Image
+  //   >();
+  //   expectTypeOf<
+  //     MHuman["content"][number]
+  //   >().not.toExtend<ContentBlock.Reasoning>();
+  // });
+  //
+  // it("messages defined with custom structures should be assignable to Message", async () => {
+  //   interface S extends $MessageStructure {
+  //     content: {
+  //       ai: ContentBlock.Text;
+  //     };
+  //   }
+  //   expectTypeOf<Message<S>>().toExtend<Message>();
+  //   expectTypeOf<Message<S, "ai">>().toExtend<Message>();
+  // });
+  //
+  // it("messages defined with a role should be assignable to Message", async () => {
+  //   interface S extends $MessageStructure {
+  //     content: {
+  //       ai: ContentBlock.Reasoning;
+  //     };
+  //   }
+  //   expectTypeOf<Message<S>>().toExtend<Message>();
+  //   expectTypeOf<Message<S, "ai">>().toExtend<Message>();
+  // });
+});
+
+describe("MessageTuple", () => {
+  it("should accept string | BaseContentBlock[]", () => {
+    expectTypeOf<["ai", "hello world"]>().toExtend<MessageTuple>();
+    expectTypeOf<
+      ["ai", [{ type: "text"; text: "hello world" }]]
+    >().toExtend<MessageTuple>();
+  });
+
+  it("should accept arbitrary roles", () => {
+    expectTypeOf<["foo", "hello world"]>().toExtend<MessageTuple>();
+    expectTypeOf<["bar", "hello world"]>().toExtend<MessageTuple>();
+  });
+
+  it("should not accept invalid tuples", () => {
+    expectTypeOf<["ai"]>().not.toExtend<MessageTuple>();
+    expectTypeOf<["ai", "hello world", "foo"]>().not.toExtend<MessageTuple>();
+    expectTypeOf<{
+      type: "ai";
+      content: string;
+    }>().not.toExtend<MessageTuple>();
+  });
+});
+
+describe("MessageLike", () => {
+  describe("assignability", () => {
+    it("should accept string", async () => {
+      expectTypeOf<string>().toExtend<MessageLike>();
+    });
+    it("should accept Message", async () => {
+      expectTypeOf<Message>().toExtend<MessageLike>();
+    });
+    it("should accept MessageTuple", async () => {
+      expectTypeOf<MessageTuple>().toExtend<MessageLike>();
+    });
+    it("should accept SerializedConstructor (legacy)", async () => {
+      expectTypeOf<SerializedConstructor>().toExtend<MessageLike>();
+    });
+    it("should accept AIMessage | HumanMessage | SystemMessage | ToolMessage", async () => {
+      expectTypeOf<AIMessage>().toExtend<MessageLike>();
+      expectTypeOf<HumanMessage>().toExtend<MessageLike>();
+      expectTypeOf<SystemMessage>().toExtend<MessageLike>();
+      expectTypeOf<ToolMessage>().toExtend<MessageLike>();
+    });
+  });
+
+  describe("negative cases", () => {
+    it("should reject null and undefined", async () => {
+      expectTypeOf<null>().not.toExtend<MessageLike>();
+      expectTypeOf<undefined>().not.toExtend<MessageLike>();
+    });
+    it("should reject numbers, booleans, symbols, and bigints", async () => {
+      expectTypeOf<number>().not.toExtend<MessageLike>();
+      expectTypeOf<boolean>().not.toExtend<MessageLike>();
+      expectTypeOf<symbol>().not.toExtend<MessageLike>();
+      expectTypeOf<bigint>().not.toExtend<MessageLike>();
+    });
+    it("should reject arrays that are not [role, content] tuples", async () => {
+      expectTypeOf<["ai"]>().not.toExtend<MessageLike>();
+      expectTypeOf<["ai", "hello", "extra"]>().not.toExtend<MessageLike>();
+      expectTypeOf<[123, "hello"]>().not.toExtend<MessageLike>();
+      expectTypeOf<["ai", 123]>().not.toExtend<MessageLike>();
+      expectTypeOf<["ai", undefined]>().not.toExtend<MessageLike>();
+      expectTypeOf<["ai", null]>().not.toExtend<MessageLike>();
+    });
+    it("should reject objects missing required Message fields", async () => {
+      expectTypeOf<{ type: "ai" }>().not.toExtend<MessageLike>();
+      expectTypeOf<{ content: string }>().not.toExtend<MessageLike>();
+      expectTypeOf<{}>().not.toExtend<MessageLike>();
+    });
+  });
+
+  describe("tuple behavior", () => {
+    it("should allow arbitrary role strings in the first element", async () => {
+      expectTypeOf<["foo", "hello"]>().toExtend<MessageLike>();
+      expectTypeOf<["bar", "world"]>().toExtend<MessageLike>();
+      expectTypeOf<["AI", "hello"]>().toExtend<MessageLike>();
+    });
+    it("should allow string content in the second element", async () => {
+      expectTypeOf<["ai", "hello world"]>().toExtend<MessageLike>();
+    });
+    it("should allow iterable content (e.g., Array, Set, generator) in the second element", async () => {
+      expectTypeOf<
+        ["ai", Array<{ type: "text"; text: string }>]
+      >().toExtend<MessageLike>();
+      expectTypeOf<
+        ["ai", Set<{ type: "text"; text: string }>]
+      >().toExtend<MessageLike>();
+      expectTypeOf<
+        ["ai", Generator<{ type: "text"; text: string }>]
+      >().toExtend<MessageLike>();
+    });
+    it("should allow empty string or empty iterable as content", async () => {
+      expectTypeOf<["ai", ""]>().toExtend<MessageLike>();
+      expectTypeOf<
+        ["ai", Array<{ type: "text"; text: string }>]
+      >().toExtend<MessageLike>();
+    });
+  });
+
+  describe("type-narrowing patterns", () => {
+    it("should narrow using typeof === 'string'", async () => {
+      const accept = (x: MessageLike) => {
+        if (typeof x === "string") {
+          expectTypeOf<typeof x>().toEqualTypeOf<string>();
+        } else {
+          expectTypeOf<typeof x>().not.toEqualTypeOf<string>();
+        }
       };
-    }
-    expectTypeOf<Message<S>>().toExtend<Message>();
-    expectTypeOf<Message<S, "ai">>().toExtend<Message>();
+      void accept;
+    });
+    it("should narrow using isMessage", async () => {
+      const accept = (x: MessageLike) => {
+        if (isMessage(x)) {
+          expectTypeOf<typeof x>().toEqualTypeOf<Message>();
+        }
+      };
+      void accept;
+    });
+    it("should narrow using isMessageTuple", async () => {
+      const accept = (x: MessageLike) => {
+        if (isMessageTuple(x)) {
+          expectTypeOf<typeof x>().toEqualTypeOf<MessageTuple>();
+        }
+      };
+      void accept;
+    });
+  });
+
+  describe("edge cases", () => {
+    it("should not accept boxed String objects (String) as MessageLike", async () => {
+      expectTypeOf<String>().not.toExtend<MessageLike>();
+    });
+    it("should support custom role casing via tuple form", async () => {
+      expectTypeOf<["AI", "Hello"]>().toExtend<MessageLike>();
+    });
+  });
+
+  describe("exhaustiveness", () => {
+    it("should be exactly string | Message | MessageTuple | SerializedConstructor", async () => {
+      expectTypeOf<MessageLike>().toEqualTypeOf<
+        string | Message | MessageTuple | SerializedConstructor
+      >();
+    });
   });
 });
 
@@ -1031,9 +1206,16 @@ describe("AIMessage", () => {
     }>().not.toExtend<AIMessage>();
   });
 
+  it("should have string | BaseContentBlock[] content", async () => {
+    const m = new AIMessage("hello world");
+    expectTypeOf<typeof m.content>().toEqualTypeOf<
+      string | BaseContentBlock[]
+    >();
+  });
+
   it("should keep standard content blocks when TStructure is provided", async () => {
     const m = new AIMessage("hello world");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
     expectTypeOf<Elem>().not.toExtend<ContentBlock.Reasoning>();
   });
@@ -1042,7 +1224,7 @@ describe("AIMessage", () => {
     const m = new AIMessage<{ content: { ai: ContentBlock.Reasoning } }>(
       "hello world"
     );
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text | ContentBlock.Reasoning>();
     expectTypeOf<Elem>().not.toExtend<ContentBlock.Multimodal.Image>();
   });
@@ -1054,12 +1236,6 @@ describe("AIMessage", () => {
       };
     }
     expectTypeOf<typeof AIMessage<S>>().instance.toExtend<Message>();
-  });
-
-  it("should be assignable to Message<$StandardMessageStructure, 'ai'>", async () => {
-    expectTypeOf<typeof AIMessage>().instance.toExtend<
-      Message<$MessageStructure, "ai">
-    >();
   });
 
   it("should set readonly type to 'ai'", async () => {
@@ -1140,9 +1316,16 @@ describe("HumanMessage", () => {
     }>().not.toExtend<HumanMessage>();
   });
 
+  it("should have string | BaseContentBlock[] content", async () => {
+    const m = new HumanMessage("hello world");
+    expectTypeOf<typeof m.content>().toEqualTypeOf<
+      string | BaseContentBlock[]
+    >();
+  });
+
   it("should keep standard content blocks when TStructure is provided", async () => {
     const m = new HumanMessage("hello world");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
     expectTypeOf<Elem>().not.toExtend<ContentBlock.Reasoning>();
   });
@@ -1151,7 +1334,7 @@ describe("HumanMessage", () => {
     const m = new HumanMessage<{
       content: { human: ContentBlock.Multimodal.Image };
     }>("hello world");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<
       ContentBlock.Text | ContentBlock.Multimodal.Image
     >();
@@ -1167,12 +1350,6 @@ describe("HumanMessage", () => {
     expectTypeOf<typeof HumanMessage<S>>().instance.toExtend<Message>();
   });
 
-  it("should be assignable to Message<$StandardMessageStructure, 'human'>", async () => {
-    expectTypeOf<typeof HumanMessage>().instance.toExtend<
-      Message<$MessageStructure, "human">
-    >();
-  });
-
   it("should set readonly type to 'human'", async () => {
     type Inst = InstanceType<typeof HumanMessage>;
     expectTypeOf<Inst["type"]>().toEqualTypeOf<"human">();
@@ -1180,13 +1357,13 @@ describe("HumanMessage", () => {
 
   it("should accept constructor(text: string) and build text content block internally", async () => {
     const m = new HumanMessage("hi there");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
   });
 
   it("should accept constructor(content: Array<$InferMessageContent<..., 'human'>>)", async () => {
     const m = new HumanMessage([{ type: "text", text: "hello" }]);
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
   });
 
@@ -1222,9 +1399,16 @@ describe("SystemMessage", () => {
     }>().not.toExtend<SystemMessage>();
   });
 
+  it("should have string | BaseContentBlock[] content", async () => {
+    const m = new SystemMessage("hello world");
+    expectTypeOf<typeof m.content>().toEqualTypeOf<
+      string | BaseContentBlock[]
+    >();
+  });
+
   it("should keep standard content blocks when TStructure is provided", async () => {
     const m = new SystemMessage("hello world");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
     expectTypeOf<Elem>().not.toExtend<ContentBlock.Reasoning>();
   });
@@ -1233,7 +1417,7 @@ describe("SystemMessage", () => {
     const m = new SystemMessage<{
       content: { system: ContentBlock.Multimodal.Image };
     }>("hello world");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<
       ContentBlock.Text | ContentBlock.Multimodal.Image
     >();
@@ -1249,12 +1433,6 @@ describe("SystemMessage", () => {
     expectTypeOf<typeof SystemMessage<S>>().instance.toExtend<Message>();
   });
 
-  it("should be assignable to Message<$StandardMessageStructure, 'system'>", async () => {
-    expectTypeOf<typeof SystemMessage>().instance.toExtend<
-      Message<$MessageStructure, "system">
-    >();
-  });
-
   it("should set readonly type to 'system'", async () => {
     type Inst = InstanceType<typeof SystemMessage>;
     expectTypeOf<Inst["type"]>().toEqualTypeOf<"system">();
@@ -1262,13 +1440,13 @@ describe("SystemMessage", () => {
 
   it("should accept constructor(text: string) and build text content block internally", async () => {
     const m = new SystemMessage("setup context");
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
   });
 
   it("should accept constructor(content: Array<$InferMessageContent<..., 'system'>>)", async () => {
     const m = new SystemMessage([{ type: "text", text: "policy" }]);
-    type Elem = (typeof m.content)[number];
+    type Elem = (typeof m.contentBlocks)[number];
     expectTypeOf<Elem>().toExtend<ContentBlock.Text>();
   });
 
@@ -1304,9 +1482,10 @@ describe("ToolMessage", () => {
     expectTypeOf<typeof ToolMessage<S>>().instance.toExtend<Message>();
   });
 
-  it("should be assignable to Message<$StandardMessageStructure, 'tool'>", async () => {
-    expectTypeOf<typeof ToolMessage>().instance.toExtend<
-      Message<$MessageStructure, "tool">
+  it("should have string | BaseContentBlock[] content", async () => {
+    const m = new ToolMessage("hello world");
+    expectTypeOf<typeof m.content>().toEqualTypeOf<
+      string | BaseContentBlock[]
     >();
   });
 
@@ -1334,7 +1513,7 @@ describe("ToolMessage", () => {
       };
     }
     type Inst = InstanceType<typeof ToolMessage<S>>;
-    type Elem = Inst["content"][number];
+    type Elem = Inst["contentBlocks"][number];
     expectTypeOf<Elem>().toExtend<
       ContentBlock.Text | ContentBlock.Multimodal.Image
     >();
@@ -1351,7 +1530,7 @@ describe("Integration scenarios", () => {
         };
       }
       const m = new AIMessage<S>("hello");
-      for (const c of m.content) {
+      for (const c of m.contentBlocks) {
         if (c.type === "tool_call") {
           expectTypeOf<typeof c.name>().toEqualTypeOf<"search">();
           expectTypeOf<typeof c.args>().toEqualTypeOf<{ q: string }>();
@@ -1360,7 +1539,7 @@ describe("Integration scenarios", () => {
         }
       }
       const h = new HumanMessage<S>("world");
-      for (const c of h.content) {
+      for (const c of h.contentBlocks) {
         if (c.type === "tool_call") {
           expectTypeOf<typeof c.name>().toEqualTypeOf<"search">();
           expectTypeOf<typeof c.args>().toEqualTypeOf<{ q: string }>();
@@ -1385,7 +1564,7 @@ describe("Integration scenarios", () => {
       }
       type M = $MergeMessageStructure<T, U>;
       const m = new AIMessage<M>("hello");
-      for (const c of m.content) {
+      for (const c of m.contentBlocks) {
         if (c.type === "tool_call") {
           expectTypeOf<typeof c.name>().toEqualTypeOf<"search" | "weather">();
           expectTypeOf<typeof c.args>().toEqualTypeOf<
@@ -1417,7 +1596,7 @@ describe("Integration scenarios", () => {
       }
       type M = $MergeMessageStructure<T, U>;
       const m = new AIMessage<M>("hello");
-      for (const c of m.content) {
+      for (const c of m.contentBlocks) {
         if (c.type === "text") {
           expectTypeOf<typeof c.text>().toEqualTypeOf<string>();
         } else if (c.type === "reasoning") {
