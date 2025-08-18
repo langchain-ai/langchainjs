@@ -262,7 +262,7 @@ export class Chroma extends VectorStore {
         });
       }
 
-      return this.index.createCollection({ name, configuration, metadata, embeddingFunction);
+      return this.index.createCollection({ name, configuration, metadata, embeddingFunction });
   }
 
   /**
