@@ -98,6 +98,7 @@ import {
   formatFunctionDefinitions,
 } from "./utils/openai-format-fndef.js";
 import { _convertToOpenAITool } from "./utils/tools.js";
+import { getStructuredOutputMethod } from "./utils/structuredOutput.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
@@ -141,18 +142,6 @@ function isBuiltInToolChoice(
 
 function isReasoningModel(model?: string) {
   return model && /^o\d/.test(model);
-}
-
-function isStructuredOutputMethodParams(
-  x: unknown
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): x is StructuredOutputMethodParams<Record<string, any>> {
-  return (
-    x !== undefined &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof (x as StructuredOutputMethodParams<Record<string, any>>).schema ===
-      "object"
-  );
 }
 
 function extractGenericMessageCustomRole(message: ChatMessage) {
@@ -1116,27 +1105,6 @@ export abstract class BaseChatOpenAI<
     return tokens;
   }
 
-  /** @internal */
-  protected _getStructuredOutputMethod(
-    config: StructuredOutputMethodOptions<boolean>
-  ) {
-    const ensuredConfig = { ...config };
-    if (
-      !this.model.startsWith("gpt-3") &&
-      !this.model.startsWith("gpt-4-") &&
-      this.model !== "gpt-4"
-    ) {
-      if (ensuredConfig?.method === undefined) {
-        return "jsonSchema";
-      }
-    } else if (ensuredConfig.method === "jsonSchema") {
-      console.warn(
-        `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
-      );
-    }
-    return ensuredConfig.method;
-  }
-
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
@@ -1172,42 +1140,46 @@ export abstract class BaseChatOpenAI<
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
+  /**
+   * Add structured output to the model.
+   *
+   * The OpenAI model family supports the following structured output methods:
+   * - `jsonSchema`: Use the `response_format` field in the response to return a JSON schema. Only supported with the `gpt-4o-mini`,
+   *   `gpt-4o-mini-2024-07-18`, and `gpt-4o-2024-08-06` model snapshots and later.
+   * - `functionCalling`: Function calling is useful when you are building an application that bridges the models and functionality
+   *   of your application.
+   * - `jsonMode`: JSON mode is a more basic version of the Structured Outputs feature. While JSON mode ensures that model
+   *   output is valid JSON, Structured Outputs reliably matches the model's output to the schema you specify.
+   *   We recommend you use `functionCalling` or `jsonSchema` if it is supported for your use case.
+   *
+   * The default method is `functionCalling`.
+   *
+   * @see https://platform.openai.com/docs/guides/structured-outputs
+   * @param outputSchema - The schema to use for structured output.
+   * @param config - The structured output method options.
+   * @returns The model with structured output.
+   */
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, unknown> = Record<string, unknown>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let schema: InteropZodType<RunOutput> | Record<string, any>;
-    let name;
-    let method;
-    let includeRaw;
-    if (isStructuredOutputMethodParams(outputSchema)) {
-      schema = outputSchema.schema;
-      name = outputSchema.name;
-      method = outputSchema.method;
-      includeRaw = outputSchema.includeRaw;
-    } else {
-      schema = outputSchema;
-      name = config?.name;
-      method = config?.method;
-      includeRaw = config?.includeRaw;
-    }
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: Runnable<AIMessageChunk, RunOutput>;
 
-    if (config?.strict !== undefined && method === "jsonMode") {
+    const { schema, name, includeRaw } = {
+      ...config,
+      schema: outputSchema,
+    };
+
+    if (config?.strict !== undefined && config.method === "jsonMode") {
       throw new Error(
         "Argument `strict` is only supported for `method` = 'function_calling'"
       );
     }
 
-    method = this._getStructuredOutputMethod({ ...config, method });
+    const method = getStructuredOutputMethod(this.model, config?.method);
 
     if (method === "jsonMode") {
       if (isInteropZodSchema(schema)) {
@@ -1259,6 +1231,9 @@ export abstract class BaseChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
+      /**
+       * handle structured output via tool calling
+       */
       let functionName = name ?? "extract";
       // Is function calling
       if (isInteropZodSchema(schema)) {
