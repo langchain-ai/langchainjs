@@ -101,7 +101,7 @@ test("Test LangChain Hub while loading model with dynamic imports", async () => 
   expect(res.tool_calls?.length).toEqual(1);
 });
 
-test.only("Test LangChain Hub while loading model with dynamic imports and structured output", async () => {
+test("Test LangChain Hub while loading model with dynamic imports and structured output", async () => {
   const pulledPrompt = await nodePull("jacob/structured-output", {
     includeModel: true,
   });
@@ -109,5 +109,6 @@ test.only("Test LangChain Hub while loading model with dynamic imports and struc
     question:
       "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
   });
-  console.log(res);
+  expect(res).not.toBeInstanceOf(AIMessage);
+  expect(typeof res.correctness).toBe("boolean");
 });
