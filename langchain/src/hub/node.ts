@@ -1,4 +1,4 @@
-import { Runnable } from "@langchain/core/runnables";
+import { Runnable, RunnableSequence } from "@langchain/core/runnables";
 import {
   basePush,
   basePull,
@@ -65,5 +65,23 @@ export async function pull<T extends Runnable>(
     generateOptionalImportMap(modelClass),
     generateModelImportMap(modelClass)
   );
+  if (
+    "first" in loadedPrompt &&
+    loadedPrompt.first !== null &&
+    typeof loadedPrompt.first === "object" &&
+    "schema" in loadedPrompt.first &&
+    "last" in loadedPrompt &&
+    loadedPrompt.last !== null &&
+    typeof loadedPrompt.last === "object" &&
+    "bound" in loadedPrompt.last &&
+    loadedPrompt.last.bound !== null &&
+    typeof loadedPrompt.last.bound === "object" &&
+    "withStructuredOutput" in loadedPrompt.last.bound &&
+    typeof loadedPrompt.last.bound.withStructuredOutput === "function"
+  ) {
+    loadedPrompt.last.bound = loadedPrompt.last.bound.withStructuredOutput(
+      loadedPrompt.first.schema
+    );
+  }
   return loadedPrompt;
 }
