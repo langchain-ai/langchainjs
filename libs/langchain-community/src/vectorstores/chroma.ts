@@ -239,6 +239,33 @@ export class Chroma extends VectorStore {
   }
 
   /**
+  * Creates a new collection with the specified configuration.
+  * @param options - Collection creation options
+  * @param options.name - The name of the collection
+  * @param options.configuration - Optional collection configuration
+  * @param options.metadata - Optional metadata for the collection
+  * @param options.embeddingFunction - Optional embedding function to use. Defaults to `DefaultEmbeddingFunction` from @chroma-core/default-embed
+  * @returns Promise resolving to the created Collection instance
+  * @throws Error if a collection with the same name already exists
+  */
+  async createCollection({ name, configuration, metadata, embeddingFunction, }: {
+        name: string;
+        configuration?: CreateCollectionConfiguration;
+        metadata?: CollectionMetadata;
+        embeddingFunction?: EmbeddingFunction | null;
+  }): Promise<Collection> {
+
+       if(!this.index)  {
+       this.index = new (await Chroma.imports()).ChromaClient({
+          path: this.url,
+          ...(this.clientParams ?? {}),
+        });
+      }
+
+      return this.index.createCollection({ name, configuration, metadata, embeddingFunction);
+  }
+
+  /**
    * Ensures that a collection exists in the Chroma database. If the
    * collection does not exist, it is created.
    * @returns A promise that resolves with the `Collection` instance.
