@@ -361,9 +361,10 @@ export async function createOpenAIFunctionsAgent({
       new OpenAIFunctionsAgentOutputParser(),
     ],
     {
-      name: "OpenAIFunctionsAgent",
+      name: "OpenAIToolsAgent",
       streamRunnable,
       singleAction: true,
+      verbose: (llm as BaseLanguageModel).verbose,
     }
   );
   return agent;

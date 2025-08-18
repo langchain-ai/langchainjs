@@ -12,6 +12,7 @@ import {
   ToolsAgentStep,
 } from "./output_parser.js";
 import { formatToToolMessages } from "../format_scratchpad/tool_calling.js";
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 
 function _isBaseChatModel(x: LanguageModelLike): x is BaseChatModel {
   const model = x as BaseChatModel;
@@ -132,6 +133,7 @@ export function createToolCallingAgent({
       name: "ToolCallingAgent",
       streamRunnable,
       singleAction: false,
+      verbose: (llm as BaseLanguageModel).verbose,
     }
   );
   return agent;

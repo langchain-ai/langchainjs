@@ -190,11 +190,17 @@ export class AgentRunnableSequence<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       RunnableLike<any, RunOutput>
     ],
-    config: { singleAction: boolean; streamRunnable?: boolean; name?: string }
+    config: { singleAction: boolean; streamRunnable?: boolean; name?: string; verbose?: boolean }
   ): AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>> {
+    // Extract verbose from the first runnable if it's a language model
+    let verbose = config.verbose;
+    if (verbose === undefined && first && typeof first === 'object' && 'verbose' in first) {
+      verbose = (first as any).verbose;
+    }
+    
     const sequence = RunnableSequence.from(
       [first, ...runnables],
-      config.name
+      { name: config.name, verbose }
     ) as AgentRunnableSequence<RunInput, Exclude<RunOutput, Error>>;
     sequence.singleAction = config.singleAction;
     sequence.streamRunnable = config.streamRunnable;
