@@ -155,7 +155,7 @@ export function generateOptionalImportMap(
   return optionalImportMap;
 }
 
-export function bindOutputSchema(loadedSequence: Runnable) {
+export function bindOutputSchema<T extends Runnable>(loadedSequence: T) {
   if (
     "first" in loadedSequence &&
     loadedSequence.first !== null &&
