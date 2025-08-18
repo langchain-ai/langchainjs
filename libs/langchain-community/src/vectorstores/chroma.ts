@@ -266,6 +266,28 @@ export class Chroma extends VectorStore {
   }
 
   /**
+     * Lists all collections in the current database.
+     * @param args - Optional pagination parameters
+     * @param args.limit - Maximum number of collections to return (default: 100)
+     * @param args.offset - Number of collections to skip (default: 0)
+     * @returns Promise resolving to an array of Collection instances
+     */
+  async listCollections(args?: Partial<{
+        limit: number;
+        offset: number;
+    }) : Promise<Collecton[]>{
+    if(!this.index)  {
+       this.index = new (await Chroma.imports()).ChromaClient({
+          path: this.url,
+          ...(this.clientParams ?? {}),
+        });
+    }
+    
+    return this.index.listCollections(args)
+    
+  }
+
+  /**
    * Adds vectors to the Chroma database. The vectors are associated with
    * the provided documents.
    * @param vectors An array of vectors to be added to the database.
