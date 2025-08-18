@@ -193,7 +193,6 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
           source: {
             type: "url",
             url: block.url,
-            media_type: block.mime_type ?? "",
           },
           ...("cache_control" in (block.metadata ?? {})
             ? { cache_control: block.metadata!.cache_control }
