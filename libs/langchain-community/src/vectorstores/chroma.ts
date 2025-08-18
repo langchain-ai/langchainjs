@@ -245,6 +245,7 @@ export class Chroma extends VectorStore {
       try {
         this.collection = await this.index.getOrCreateCollection({
           name: this.collectionName,
+          embeddingFunction: null,
           ...(this.collectionMetadata && { metadata: this.collectionMetadata }),
         });
       } catch (err) {
