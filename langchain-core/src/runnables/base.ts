@@ -482,6 +482,7 @@ export abstract class Runnable<
     return outputs;
   }
 
+  /** @internal */
   _concatOutputChunks<O>(first: O, second: O): O {
     return concat(first, second);
   }
@@ -1430,6 +1431,7 @@ export class RunnableBinding<
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
+  /** @internal */
   override _concatOutputChunks<O>(first: O, second: O): O {
     return this.bound._concatOutputChunks(first, second);
   }
@@ -2064,6 +2066,7 @@ export class RunnableSequence<
     return nextStepInputs;
   }
 
+  /** @internal */
   override _concatOutputChunks<O>(first: O, second: O): O {
     return this.last._concatOutputChunks(first, second);
   }
