@@ -1,6 +1,6 @@
 import { BaseContentBlock } from "./base.js";
 
-export type Tools = {};
+export type Tools = never;
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Tools {

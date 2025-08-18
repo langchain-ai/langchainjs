@@ -1,6 +1,6 @@
 import { BaseContentBlock } from "./base.js";
 
-export type Multimodal = {};
+export type Multimodal = never;
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {

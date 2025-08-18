@@ -150,10 +150,9 @@ describe("$MessageToolSet", () => {
 
 describe("$MessageToolCallBlock<TStructure>", () => {
   it("should be never when TStructure.tools is undefined", async () => {
-    interface NoTools extends $MessageStructure {}
     // should be never; any attempt to construct should error
     // @ts-expect-error cannot construct a value of type never
-    const _impossible: $MessageToolCallBlock<NoTools> = {
+    const _impossible: $MessageToolCallBlock<$MessageStructure> = {
       type: "tool_call",
       name: "x",
       args: {},
@@ -434,9 +433,8 @@ describe("$MergeMessageStructure<T, U>", () => {
         system: ContentBlock.Text;
       };
     }
-    interface U extends $MessageStructure {}
 
-    type M = $MergeMessageStructure<T, U>;
+    type M = $MergeMessageStructure<T, $MessageStructure>;
     type C = M["content"];
     type HasSystem = "system" extends keyof C ? true : false;
 
@@ -445,14 +443,13 @@ describe("$MergeMessageStructure<T, U>", () => {
   });
 
   it("should take content from U when only U defines the role", async () => {
-    interface T extends $MessageStructure {}
     interface U extends $MessageStructure {
       content: {
         tool: ContentBlock.Text;
       };
     }
 
-    type M = $MergeMessageStructure<T, U>;
+    type M = $MergeMessageStructure<$MessageStructure, U>;
     type C = NonNullable<M["content"]>;
     type HasTool = "tool" extends keyof C ? true : false;
 
@@ -528,8 +525,7 @@ describe("$NormalizedMessageStructure<T>", () => {
   });
 
   it("should ensure standard roles exist after normalization", async () => {
-    interface Minimal extends $MessageStructure {}
-    type N = $NormalizedMessageStructure<Minimal>;
+    type N = $NormalizedMessageStructure<$MessageStructure>;
 
     // Content backfilled for all standard roles
     expectTypeOf<
@@ -586,7 +582,7 @@ describe("$InferMessageContent<TStructure, TRole>", () => {
   });
 
   it("should include standard roles when TStructure.content is empty", async () => {
-    interface S extends $MessageStructure {}
+    type S = $MessageStructure;
     type AI = $InferMessageContent<S, "ai">;
     type Human = $InferMessageContent<S, "human">;
     type System = $InferMessageContent<S, "system">;
@@ -767,7 +763,7 @@ describe("$InferMessageContent<TStructure, TRole>", () => {
 
 describe("$InferMessageProperties<TStructure, TRole>", () => {
   it("should return standard properties when TStructure.properties is empty", async () => {
-    interface S extends $MessageStructure {}
+    type S = $MessageStructure;
 
     type AIProps = $InferMessageProperties<S, "ai">;
     expectTypeOf<AIProps>().toEqualTypeOf<{
@@ -1112,7 +1108,7 @@ describe("MessageLike", () => {
     it("should reject objects missing required Message fields", async () => {
       expectTypeOf<{ type: "ai" }>().not.toExtend<MessageLike>();
       expectTypeOf<{ content: string }>().not.toExtend<MessageLike>();
-      expectTypeOf<{}>().not.toExtend<MessageLike>();
+      expectTypeOf<object>().not.toExtend<MessageLike>();
     });
   });
 

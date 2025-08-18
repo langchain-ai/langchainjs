@@ -88,8 +88,8 @@ export declare namespace ContentBlock {
     index?: number;
   }
 
-  export { Tools as Tools };
-  export { Multimodal as Multimodal };
+  export { Tools };
+  export { Multimodal };
   export type Standard =
     | Text
     | Reasoning
