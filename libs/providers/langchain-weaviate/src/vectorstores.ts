@@ -25,38 +25,41 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
 export const flattenObjectForWeaviate = (obj: Record<string, unknown>) => {
   const flattenedObject: Record<string, unknown> = {};
-
   for (const key in obj) {
     if (!Object.hasOwn(obj, key)) {
       continue;
     }
+
+    // Replace any character that is not a letter, a number, or an underscore with '_'
+    const newKey = key.replace(/[^a-zA-Z0-9_]/g, "_");
+
     const value = obj[key];
     if (typeof value === "object" && !Array.isArray(value)) {
       const recursiveResult = flattenObjectForWeaviate(
         value as Record<string, unknown>
       );
-
       for (const deepKey in recursiveResult) {
-        if (Object.hasOwn(obj, key)) {
-          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+        if (Object.hasOwn(recursiveResult, deepKey)) {
+          // Replace any character in the deepKey that is not a letter, a number, or an underscore with '_'
+          const newDeepKey = deepKey.replace(/[^a-zA-Z0-9_]/g, "_");
+          flattenedObject[`${newKey}_${newDeepKey}`] = recursiveResult[deepKey];
         }
       }
     } else if (Array.isArray(value)) {
       if (value.length === 0) {
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       } else if (
         typeof value[0] !== "object" &&
         value.every((el: unknown) => typeof el === typeof value[0])
       ) {
         // Weaviate only supports arrays of primitive types,
         // where all elements are of the same type
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       }
     } else {
-      flattenedObject[key] = value;
+      flattenedObject[newKey] = value;
     }
   }
-
   return flattenedObject;
 };
 
