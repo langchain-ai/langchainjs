@@ -19,7 +19,7 @@ const mockCollection = {
 
 const mockClient = {
   getOrCreateCollection: jest.fn<any>().mockResolvedValue(mockCollection),
-  listCollections: jest.fn<any>().mockResolve([])
+  listCollections: jest.fn<any>().mockResolvedValue([])
 } as any;
 
 describe("Chroma", () => {
