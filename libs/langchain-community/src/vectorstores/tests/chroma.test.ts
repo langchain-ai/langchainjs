@@ -19,6 +19,7 @@ const mockCollection = {
 
 const mockClient = {
   getOrCreateCollection: jest.fn<any>().mockResolvedValue(mockCollection),
+  listCollections: jest.fn<any>().mockResolve([])
 } as any;
 
 describe("Chroma", () => {
@@ -62,6 +63,22 @@ describe("Chroma", () => {
 
     const { metadatas } = mockCollection.upsert.mock.calls[0][0];
     expect(metadatas).toEqual([{}, {}]);
+  });
+
+  test("should return all available collection", async () => {
+    const embeddings = new FakeEmbeddings();
+    const args = {
+      collectionName: "testCollection",
+      index: mockClient,
+      collectionMetadata: { "hnsw:space": "cosine" },
+    };
+     
+
+    const chroma = new Chroma(embeddings, args);
+    const collections = await chroma.listCollections()
+
+    expect(mockClient.listCollections).toHaveBeenCalled();
+     
   });
 
   test("should override loc.lines with locFrom/locTo", async () => {
