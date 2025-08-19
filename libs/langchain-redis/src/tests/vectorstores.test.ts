@@ -205,13 +205,6 @@ describe("RedisVectorStore dropIndex", () => {
       DD: true,
     });
   });
-
-  test("through delete convenience method with specific ids", async () => {
-    const deleteIds = ["doc1", "doc2"].map((key) => `doc:documents:${key}`);
-    await store.delete({ ids: deleteIds });
-
-    expect(client.del).toHaveBeenCalledWith(deleteIds);
-  });
 });
 
 describe("RedisVectorStore createIndex when index does not exist", () => {
@@ -279,6 +272,35 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         STOPWORDS: ["a", "b"],
         LANGUAGE: "German",
       }
+    );
+  });
+});
+
+describe("RedisVectorStore delete", () => {
+  const client = createRedisClientMockup();
+  const embeddings = new FakeEmbeddings();
+
+  const store = new RedisVectorStore(embeddings, {
+    redisClient: client as any,
+    indexName: "documents",
+  });
+
+  test("delete documents by ids", async () => {
+    const deleteIds = ["doc1", "doc2"].map((key) => `doc:documents:${key}`);
+    await store.delete({ ids: deleteIds });
+
+    expect(client.del).toHaveBeenCalledWith(deleteIds);
+  });
+
+  test("throws error if ids are not provided", async () => {
+    await expect(store.delete({ ids: [] })).rejects.toThrow(
+      'Invalid parameters passed to "delete".'
+    );
+  });
+
+  test("throws error if deleteAll is provided as false", async () => {
+    await expect(store.delete({ deleteAll: false })).rejects.toThrow(
+      'Invalid parameters passed to "delete".'
     );
   });
 });
