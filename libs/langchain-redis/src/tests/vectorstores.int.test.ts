@@ -74,4 +74,32 @@ describe("RedisVectorStore", () => {
       new Document({ metadata: { foo: uuid }, pageContent }),
     ]);
   });
+
+  test("delete documents by ids", async () => {
+    const documentKeys = ["doc1", "doc2"].map((key) => `test:${key}`);
+    const pageContent = faker.lorem.sentence(5);
+
+    const documents = documentKeys.map((key) => ({
+      pageContent,
+      metadata: {
+        id: key,
+      },
+    }));
+
+    await vectorStore.addDocuments(documents, {
+      keys: documentKeys,
+    });
+
+    const results = await vectorStore.similaritySearch(pageContent, 2);
+    expect(results).toHaveLength(2);
+    expect(results.map((result) => result.metadata.id)).toEqual(documentKeys);
+
+    await vectorStore.delete({ ids: [documentKeys[0]] });
+
+    const results2 = await vectorStore.similaritySearch(pageContent, 2);
+    expect(results2).toHaveLength(1);
+    expect(results2.map((result) => result.metadata.id)).toEqual(
+      documentKeys.slice(1)
+    );
+  });
 });

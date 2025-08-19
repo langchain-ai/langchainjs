@@ -7,6 +7,7 @@ import { RedisVectorStore } from "../vectorstores.js";
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();
   const expireMock = jest.fn();
+  const delMock = jest.fn<any>().mockResolvedValue(1);
 
   return {
     ft: {
@@ -22,6 +23,7 @@ const createRedisClientMockup = () => {
     },
     hSet: hSetMock,
     expire: expireMock,
+    del: delMock,
     multi: jest.fn<any>().mockImplementation(() => ({
       exec: jest.fn(),
       hSet: hSetMock,
@@ -202,6 +204,13 @@ describe("RedisVectorStore dropIndex", () => {
     expect(client.ft.dropIndex).toHaveBeenCalledWith("documents", {
       DD: true,
     });
+  });
+
+  test("through delete convenience method with specific ids", async () => {
+    const deleteIds = ["doc1", "doc2"].map((key) => `doc:documents:${key}`);
+    await store.delete({ ids: deleteIds });
+
+    expect(client.del).toHaveBeenCalledWith(deleteIds);
   });
 });
 
