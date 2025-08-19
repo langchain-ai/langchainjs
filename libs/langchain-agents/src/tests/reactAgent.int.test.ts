@@ -19,10 +19,7 @@ describe("createReactAgent Integration Tests", () => {
     description: "Get weather for a given city",
   };
   const getWeather = tool(toolMock, toolSchema);
-
-  const origFetch = globalThis.fetch;
-  const fetchMock = vi.fn(origFetch);
-
+  const fetchMock = vi.fn(fetch);
   const llm = new ChatAnthropic({
     model: "claude-3-5-sonnet-20240620",
     clientOptions: {
