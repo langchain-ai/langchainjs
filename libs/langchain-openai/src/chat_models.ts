@@ -80,6 +80,7 @@ import {
   type ChatOpenAIResponseFormat,
   ChatOpenAIReasoningSummary,
   ResponseFormatConfiguration,
+  OpenAIVerbosityParam,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import {
@@ -533,6 +534,11 @@ export interface BaseChatOpenAICallOptions
    * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
    */
   promptCacheKey?: string;
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 export interface BaseChatOpenAIFields
@@ -635,6 +641,11 @@ export abstract class BaseChatOpenAI<
    */
   promptCacheKey: string;
 
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
+
   protected defaultOptions: CallOptions;
 
   _llmType() {
@@ -713,8 +724,8 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
-      "verbosity",
       "promptCacheKey",
+      "verbosity",
     ];
   }
 
@@ -784,6 +795,7 @@ export abstract class BaseChatOpenAI<
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
+    this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;
@@ -1392,6 +1404,11 @@ export interface ChatOpenAIResponsesCallOptions
    * conversations.
    */
   previous_response_id?: OpenAIClient.Responses.ResponseCreateParams["previous_response_id"];
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 type ChatResponsesInvocationParams = Omit<
@@ -1475,8 +1492,7 @@ export class ChatOpenAIResponses<
           }
           return undefined;
         }
-
-        return { format };
+        return { format, verbosity: options?.verbosity };
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
@@ -2308,6 +2324,7 @@ export class ChatOpenAICompletions<
         : {}),
       ...this.modelKwargs,
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;

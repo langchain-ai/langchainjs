@@ -22,6 +22,8 @@ export type OpenAIChatModelId =
   | OpenAIClient.ChatModel
   | (string & NonNullable<unknown>);
 
+export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
+
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
   temperature: number;
@@ -108,9 +110,10 @@ export declare interface OpenAIBaseInput {
    */
   apiKey?: string;
 
-  // TODO(hntrl): replace this with Verbosity enum when released
-  /** The verbosity of the model's response. */
-  verbosity: "low" | "medium" | "high";
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
