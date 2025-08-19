@@ -4,18 +4,9 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import {
-  AgentState,
-  createReactAgent,
-  PredicateFunctionReturn,
-  stopWhenToolCall,
-} from "../index.js";
+import { createReactAgent, stopWhenToolCall } from "../index.js";
 
-// Response format schema used in some test cases
-const responseFormatSchema = z.object({
-  attempts: z.number(),
-  succeeded: z.boolean(),
-});
+import returnDirectSpec from "./specifications/returnDirect.json";
 
 /**
  * A deterministic poll tool: returns "pending" for the first 10 calls, then "succeeded".
@@ -42,6 +33,10 @@ function makePollTool(returnDirect: boolean) {
   };
 }
 
+const predicateMap = {
+  stopWhenToolCall,
+} as const;
+
 // Agent prompt used across all tests
 const AGENT_PROMPT = `You are a strict polling bot.
 
@@ -52,8 +47,13 @@ const AGENT_PROMPT = `You are a strict polling bot.
 interface TestCase {
   name: string;
   returnDirect: boolean;
-  responseFormat: z.ZodObject<any> | undefined;
-  stopWhen: ((state: AgentState<any>) => PredicateFunctionReturn)[] | undefined;
+  responseFormat: Record<string, unknown> | undefined;
+  stopWhen:
+    | {
+        predicate: keyof typeof predicateMap;
+        args: any[];
+      }[]
+    | undefined;
   expectedToolCalls: number;
   expectedLastMessage: string | RegExp;
   expectedStructuredResponse: any;
@@ -61,85 +61,7 @@ interface TestCase {
 }
 
 describe("return_direct Matrix Tests", () => {
-  const testCases: TestCase[] = [
-    {
-      name: "Scenario: ❌ return_direct, ❌ response_format, ❌ stop_when",
-      returnDirect: false,
-      responseFormat: undefined,
-      stopWhen: undefined,
-      expectedToolCalls: 10,
-      expectedLastMessage: "Attempts: 10",
-      expectedStructuredResponse: undefined,
-    },
-    {
-      name: "Scenario: ❌ return_direct, ✅ response_format, ❌ stop_when",
-      returnDirect: false,
-      responseFormat: responseFormatSchema,
-      stopWhen: undefined,
-      expectedToolCalls: 10,
-      expectedLastMessage:
-        'Returning structured response: {"attempts":10,"succeeded":true}',
-      expectedStructuredResponse: { attempts: 10, succeeded: true },
-    },
-    {
-      name: "Scenario: ❌ return_direct, ❌ response_format, ✅ stop_when",
-      returnDirect: false,
-      responseFormat: undefined,
-      stopWhen: [stopWhenToolCall("pollJob", 5)],
-      expectedToolCalls: 5,
-      expectedLastMessage:
-        "A stop condition was met: Tool call count for pollJob is 5 and exceeded the limit of 5",
-      expectedStructuredResponse: undefined,
-    },
-    {
-      name: "Scenario: ❌ return_direct, ✅ response_format, ✅ stop_when",
-      returnDirect: false,
-      responseFormat: responseFormatSchema,
-      stopWhen: [stopWhenToolCall("pollJob", 5)],
-      expectedToolCalls: 5,
-      expectedLastMessage:
-        "A stop condition was met: Tool call count for pollJob is 5 and exceeded the limit of 5",
-      expectedStructuredResponse: { attempts: 5, succeeded: false },
-    },
-    {
-      name: "Scenario: ✅ return_direct, ❌ response_format, ❌ stop_when",
-      returnDirect: true,
-      responseFormat: undefined,
-      stopWhen: undefined,
-      expectedToolCalls: 1,
-      expectedLastMessage: /\{\s*"status":\s*"pending",\s*"attempts":\s*1\s*\}/,
-      expectedStructuredResponse: undefined,
-    },
-    {
-      name: "Scenario: ✅ return_direct, ✅ response_format, ❌ stop_when",
-      returnDirect: true,
-      responseFormat: responseFormatSchema,
-      stopWhen: undefined,
-      expectedToolCalls: 1,
-      expectedLastMessage:
-        'Returning structured response: {"attempts":1,"succeeded":false}',
-      expectedStructuredResponse: { attempts: 1, succeeded: false },
-    },
-    {
-      name: "Scenario: ✅ return_direct, ❌ response_format, ✅ stop_when",
-      returnDirect: true,
-      responseFormat: undefined,
-      stopWhen: [stopWhenToolCall("pollJob", 5)],
-      expectedToolCalls: 1,
-      expectedLastMessage: /\{\s*"status":\s*"pending",\s*"attempts":\s*1\s*\}/,
-      expectedStructuredResponse: undefined,
-    },
-    {
-      name: "Scenario: ✅ return_direct, ✅ response_format, ✅ stop_when",
-      returnDirect: true,
-      responseFormat: responseFormatSchema,
-      stopWhen: [stopWhenToolCall("pollJob", 5)],
-      expectedToolCalls: 1,
-      expectedLastMessage:
-        'Returning structured response: {"attempts":1,"succeeded":false}',
-      expectedStructuredResponse: { attempts: 1, succeeded: false },
-    },
-  ];
+  const testCases = returnDirectSpec as TestCase[];
 
   testCases.forEach((testCase) => {
     let testFn = it.concurrent;
@@ -164,7 +86,11 @@ describe("return_direct Matrix Tests", () => {
         ...(testCase.responseFormat && {
           responseFormat: testCase.responseFormat,
         }),
-        ...(testCase.stopWhen && { stopWhen: testCase.stopWhen }),
+        ...(testCase.stopWhen && {
+          stopWhen: testCase.stopWhen.map((stopWhen) =>
+            predicateMap[stopWhen.predicate](stopWhen.args[0], stopWhen.args[1])
+          ),
+        }),
       });
 
       // Invoke the agent
@@ -191,7 +117,7 @@ describe("return_direct Matrix Tests", () => {
       }
 
       // Check structured response
-      if (testCase.expectedStructuredResponse !== undefined) {
+      if (testCase.expectedStructuredResponse !== null) {
         expect(result.structuredResponse).toEqual(
           testCase.expectedStructuredResponse
         );

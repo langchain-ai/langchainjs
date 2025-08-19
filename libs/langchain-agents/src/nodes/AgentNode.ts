@@ -133,19 +133,7 @@ export class AgentNode<
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
       /**
-       * If responseFormat is set, generate structured response
-       */
-      if (this.#options.responseFormat) {
-        const response = await this.#invokeModel(state, config, {
-          isDirectReturn: true,
-        });
-        if ("structuredResponse" in response) {
-          return response;
-        }
-        return { messages: [response] };
-      }
-      /**
-       * Otherwise, we shouldn't be here - the graph routing should have ended
+       * return directly without invoking the model again
        */
       return { messages: [] };
     }

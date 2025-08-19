@@ -208,7 +208,8 @@ export function transformResponseFormat(
   }
 
   if ("schema" in responseFormat) {
-    return [ToolOutput.fromSchema(responseFormat)];
+    const { schema, ...rest } = responseFormat;
+    return [ToolOutput.fromSchema(schema as Record<string, unknown>, rest)];
   }
 
   throw new Error(`Invalid response format: ${responseFormat.toString()}`);
