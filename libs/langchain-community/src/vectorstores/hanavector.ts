@@ -6,6 +6,8 @@ import {
 import { Document } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
+import { HanaInternalEmbeddings } from "../embeddings/hana_internal.js";
+
 export type DistanceStrategy = "euclidean" | "cosine";
 
 const COMPARISONS_TO_SQL: Record<string, string> = {
@@ -35,7 +37,8 @@ type Comparator =
   | "$in"
   | "$nin"
   | "$between"
-  | "$like";
+  | "$like"
+  | "$contains"; 
 // Filter using comparison operators
 // Defines the relationship between a comparison operator and its value
 type ComparatorFilter = {
@@ -74,6 +77,11 @@ const LOGICAL_OPERATORS_TO_SQL: Record<string, string> = {
   $and: "AND",
   $or: "OR",
 };
+
+const CONTAINS_OPERATOR = "$contains";
+
+const INTERMEDIATE_TABLE_NAME = "intermediate_result";
+
 
 const HANA_DISTANCE_FUNCTION: Record<DistanceStrategy, [string, string]> = {
   cosine: ["COSINE_SIMILARITY", "DESC"],
@@ -126,6 +134,10 @@ export class HanaDB extends VectorStore {
 
   private specificMetadataColumns: string[];
 
+  private useInternalEmbeddings: boolean;
+
+  private internalEmbeddingModelId: string;
+
   _vectorstoreType(): string {
     return "hanadb";
   }
@@ -151,6 +163,52 @@ export class HanaDB extends VectorStore {
       args.specificMetadataColumns || []
     );
     this.connection = args.connection;
+
+    // Set the embedding and decide whether to use internal embedding
+    this._setEmbeddings(embeddings);
+  }
+
+  /**
+   * Use this method to change the embeddings instance.
+   * 
+   * Sets the embedding instance and configures the internal embedding mode 
+   * if applicable.
+   *
+   * this method sets the internal flag and stores the model ID. 
+   * Otherwise, it ensures that external embedding mode is used.
+   *
+   * @param embeddings - An instance of EmbeddingsInterface.
+   */
+  private _setEmbeddings(embeddings: EmbeddingsInterface): void {
+    this.embeddings = embeddings
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((embeddings as any).isHanaInternalEmbeddings === true) {
+      this.useInternalEmbeddings = true;
+      this.internalEmbeddingModelId = (embeddings as HanaInternalEmbeddings).getModelId();
+    } else {
+      this.useInternalEmbeddings = false;
+      this.internalEmbeddingModelId = "";
+    }
+  }
+
+  /**
+   * Ping the database to check if the in-database embedding 
+   * function exists and works.
+   * 
+   * This method ensures that the internal VECTOR_EMBEDDING function 
+   * is available and functioning correctly by passing a test value. 
+   *
+   * @throws Error if the internal embedding function validation fails.
+   */
+  private async validateInternalEmbeddingFunction(): Promise<void> {
+    if (!this.internalEmbeddingModelId) {
+      throw new Error("Internal embedding model id is not set");
+    }
+    const sqlStr =
+      "SELECT COUNT(TO_NVARCHAR(VECTOR_EMBEDDING('test', 'QUERY', ?))) AS TEST FROM sys.DUMMY;";
+    const client = this.connection;
+    const stm = await this.prepareQuery(client, sqlStr);
+    await this.executeStatement(stm, [this.internalEmbeddingModelId]);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -196,6 +254,8 @@ export class HanaDB extends VectorStore {
   }
 
   public async initialize() {
+    if (this.useInternalEmbeddings)
+      await this.validateInternalEmbeddingFunction();
     let valid_distance = false;
     for (const key in HANA_DISTANCE_FUNCTION) {
       if (key === this.distanceStrategy) {
@@ -509,7 +569,18 @@ export class HanaDB extends VectorStore {
               `Operator '${specialOp}' expects a non-undefined value.`
             );
           }
-        } else if (specialOp in IN_OPERATORS_TO_SQL) {
+        } else if (specialOp === CONTAINS_OPERATOR) {
+          // Special handling for keyword search
+          operator = CONTAINS_OPERATOR;
+          if (specialVal !== undefined) {
+            queryTuple.push(specialVal.toString());
+          } else {
+            throw new Error(
+              `Operator '${specialOp}' expects a non-undefined value.`
+            );
+          }
+        }        
+        else if (specialOp in IN_OPERATORS_TO_SQL) {
           operator = IN_OPERATORS_TO_SQL[specialOp];
           if (Array.isArray(specialVal)) {
             const placeholders = Array(specialVal.length).fill("?").join(",");
@@ -527,13 +598,87 @@ export class HanaDB extends VectorStore {
         throw new Error(`Unsupported filter data-type: ${typeof filterValue}`);
       }
 
-      // Metadata column handling
-      const selector = this.specificMetadataColumns.includes(key)
+      if (operator === CONTAINS_OPERATOR) {
+        // Instead of a normal clause, create a keyword search condition.
+        whereStr += `SCORE(? IN ("${key}" EXACT SEARCH MODE 'text')) > 0`;
+      } else {
+      // Metadata column handling (not required in keyword search)
+        const selector = this.specificMetadataColumns.includes(key)
         ? `"${key}"`
         : `JSON_VALUE(${this.metadataColumn}, '$.${key}')`;
       whereStr += `${selector} ${operator} ${sqlParam}`;
+      }
     });
     return [whereStr, queryTuple];
+  }
+
+  /**
+   * Extract metadata columns used with `$contains` in the filter.
+   *
+   * Scans the filter to find unspecific metadata columns used 
+   * with the `$contains` operator.
+   *
+   * @param filter - (Optional) A filter object that may include nested filter conditions.
+   * @returns An array of unique metadata field names (as strings) that are used
+   *          with the "$contains" operator.
+   */
+  private extractKeywordSearchColumns(filter?: this["FilterType"]): string[] {
+    const keywordColumns = new Set<string>();
+    this.recurseFiltersHelper(keywordColumns, filter);
+    return [...keywordColumns];
+  }
+
+  private recurseFiltersHelper(keywordColumns: Set<string>, filterObj?: this["FilterType"], parentKey?: string): void {
+    if (!filterObj || typeof filterObj !== "object") return;
+  
+    Object.entries(filterObj).forEach(([key, value]) => {
+      if (key === CONTAINS_OPERATOR) {
+        if (
+          parentKey &&
+          parentKey !== this.contentColumn &&
+          !this.specificMetadataColumns.includes(parentKey)
+        ) {
+          keywordColumns.add(parentKey);
+        }
+      } else if (key in LOGICAL_OPERATORS_TO_SQL) {
+        // Assume it's an array of filters
+        (value as this["FilterType"][]).forEach((subfilter) => this.recurseFiltersHelper(keywordColumns, subfilter));
+      } else if (typeof value === "object" && value !== null) {
+        this.recurseFiltersHelper(keywordColumns, value as this["FilterType"], key);
+      }
+    });
+  }
+
+    
+  /**
+   * Generate a SQL `WITH` clause to project metadata columns for keyword search.
+   *
+   * 
+   * Example:
+   *       Input: ["title", "author"]
+   *       Output:
+   *       WITH intermediate_result AS (
+   *           SELECT *,
+   *           JSON_VALUE(metadata_column, '$.title') AS "title",
+   *           JSON_VALUE(metadata_column, '$.author') AS "author"
+   *           FROM "table_name"
+   *       )
+   *     *
+   * @param projectedMetadataColumns - List of metadata column names for projection.
+   * @returns A SQL `WITH` clause string.
+   */
+  private createMetadataProjection(
+    projectedMetadataColumns: string[]
+  ): string {
+    const metadataColumns = projectedMetadataColumns.map(
+      (col) =>
+        `JSON_VALUE(${this.metadataColumn}, '$.${HanaDB.sanitizeName(col)}') AS "${HanaDB.sanitizeName(col)}"`
+    );
+    return (
+      `WITH ${INTERMEDIATE_TABLE_NAME} AS (` +
+      `SELECT *, ${metadataColumns.join(", ")} ` +
+      `FROM "${this.tableName}")`
+    );
   }
 
   /**
@@ -717,18 +862,66 @@ export class HanaDB extends VectorStore {
   }
 
   /**
-   * Adds an array of documents to the table. The documents are first
-   * converted to vectors using the `embedDocuments` method of the
-   * `embeddings` instance.
+   * Adds an array of documents to the table. 
+   * 
+   * 
+   * In external embedding mode, this method computes embeddings client-side 
+   * and inserts them.
+   * In internal embedding mode, it leverages the database's internal 
+   * VECTOR_EMBEDDING function to generate embeddings.
+   * 
    * @param documents Array of Document instances to be added to the table.
    * @returns Promise that resolves when the documents are added.
    */
   async addDocuments(documents: Document[]): Promise<void> {
+    // If using internal embeddings, we do NOT call embedDocuments() from Node.
+    if (this.useInternalEmbeddings) {
+      return this.addDocumentsUsingInternalEmbedding(documents);
+    }
+    // Otherwise, default (external) approach:
     const texts = documents.map(({ pageContent }) => pageContent);
     return this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents
     );
+  }
+
+  /**
+   * Adds documents to the database using the internal embedding function.
+   *
+   * This method constructs an SQL INSERT statement that leverages the 
+   * database's internal VECTOR_EMBEDDING function to generate embeddings 
+   * on the server side.
+   *
+   * @param documents - Array of Document objects to be added.
+   * @returns Promise that resolves when the documents are added.
+   */
+  private async addDocumentsUsingInternalEmbedding(documents: Document[]): Promise<void> {
+    const texts = documents.map((doc) => doc.pageContent);
+    const metadatas = documents.map((doc) => doc.metadata);
+    const client = this.connection;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sqlParams: [string, string, string, string, ...(string | null)[]][] = texts.map((text, i) => {
+      const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const [remainingMetadata, specialMetadata] = this.splitOffSpecialMetadata(metadata);
+      // Prepare the SQL parameters
+      return [
+        text,
+        JSON.stringify(this.sanitizeMetadataKeys(remainingMetadata)),
+        text, 
+        this.internalEmbeddingModelId,
+        ...specialMetadata
+      ];
+    });
+    // Build the column list for the INSERT statement.
+    const specificMetadataColumnsString = this.getSpecificMetadataColumnsString()
+    const extraPlaceholders = this.specificMetadataColumns.map(() => ", ?").join("");
+
+    // Insert data into the table, bulk insert.
+    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}"${specificMetadataColumnsString}) 
+                    VALUES (?, ?, VECTOR_EMBEDDING(?, 'DOCUMENT', ?)${extraPlaceholders});`;
+    const stm = await this.prepareQuery(client, sqlStr);
+    await this.executeStatement(stm, sqlParams);
   }
 
   /**
@@ -745,33 +938,78 @@ export class HanaDB extends VectorStore {
     const texts = documents.map((doc) => doc.pageContent);
     const metadatas = documents.map((doc) => doc.metadata);
     const client = this.connection;
-    const sqlParams: [string, string, string][] = texts.map((text, i) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sqlParams: [string, string, string, ...any[]][] = texts.map((text, i) => {
       const metadata = Array.isArray(metadatas) ? metadatas[i] : metadatas;
+      const [remainingMetadata, specialMetadata] = this.splitOffSpecialMetadata(metadata);
       // Ensure embedding is generated or provided
       const embeddingString = `[${vectors[i].join(", ")}]`;
       // Prepare the SQL parameters
       return [
         text,
-        JSON.stringify(this.sanitizeMetadataKeys(metadata)),
-        embeddingString,
+        JSON.stringify(this.sanitizeMetadataKeys(remainingMetadata)),
+        embeddingString, 
+        ...specialMetadata
       ];
     });
+    // Build the column list for the INSERT statement.
+    const specificMetadataColumnsString = this.getSpecificMetadataColumnsString()
+    const extraPlaceholders = this.specificMetadataColumns.map(() => ", ?").join("");
+
     // Insert data into the table, bulk insert.
-    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}") 
-                    VALUES (?, ?, TO_REAL_VECTOR(?));`;
+    const sqlStr = `INSERT INTO "${this.tableName}" ("${this.contentColumn}", "${this.metadataColumn}", "${this.vectorColumn}"${specificMetadataColumnsString}) 
+                    VALUES (?, ?, TO_REAL_VECTOR(?)${extraPlaceholders});`;
     const stm = await this.prepareQuery(client, sqlStr);
     await this.executeStatement(stm, sqlParams);
     // stm.execBatch(sqlParams);
   }
 
   /**
-     * Return docs most similar to query.
-     * @param query Query text for the similarity search.
-     * @param k Number of Documents to return. Defaults to 4.
-     * @param filter A dictionary of metadata fields and values to filter by.
-                    Defaults to None.
-     * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
-     */
+   * Helper function to generate the SQL snippet for specific metadata columns.
+   *
+   * Returns a string in the format: ', "col1", "col2", ...' 
+   * if specific metadata columns are defined,
+   * or an empty string if there are none.
+   *
+   * @returns A string representing the specific metadata columns for SQL insertion.
+   */
+  private getSpecificMetadataColumnsString(): string{
+    if (this.specificMetadataColumns.length === 0) {
+      return "";
+    }
+    return ', "' + this.specificMetadataColumns.join('", "') + '"';
+  } 
+
+  /**
+   * Splits the given metadata object into two parts:
+   * 1. The original metadata (unchanged).
+   * 2. An array of special metadata values corresponding to each column
+   *    listed in `specificMetadataColumns`. 
+   *
+   * @param metadata - The metadata object from which to extract special values.
+   * @returns A tuple where the first element is the original metadata object,
+   *          and the second element is an array of special metadata values.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private splitOffSpecialMetadata(metadata: any): [any, (string | null)[]] {
+    const specialMetadata: (string | null)[] = [];
+    if (!metadata) {
+      return [{}, []];
+    }
+    for (const columnName of this.specificMetadataColumns) {
+      specialMetadata.push(metadata[columnName] ?? null);
+    }
+    return [metadata, specialMetadata];
+  }
+
+  /**
+   * Return docs most similar to query.
+   * @param query Query text for the similarity search.
+   * @param k Number of Documents to return. Defaults to 4.
+   * @param filter A dictionary of metadata fields and values to filter by.
+                  Defaults to None.
+    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+    */
   async similaritySearch(
     query: string,
     k: number,
@@ -782,30 +1020,47 @@ export class HanaDB extends VectorStore {
   }
 
   /**
-     * Return documents and score values most similar to query.
-     * @param query Query text for the similarity search.
-     * @param k Number of Documents to return. Defaults to 4.
-     * @param filter A dictionary of metadata fields and values to filter by.
-                    Defaults to None.
-     * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
-     */
+   * Return documents and score values most similar to query.
+   * @param query Query text for the similarity search.
+   * @param k Number of Documents to return. Defaults to 4.
+   * @param filter A dictionary of metadata fields and values to filter by.
+                  Defaults to None.
+    * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+    */
   async similaritySearchWithScore(
     query: string,
     k: number,
     filter?: this["FilterType"]
   ): Promise<[Document, number][]> {
-    const queryEmbedding = await this.embeddings.embedQuery(query);
-    return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
+    let wholeResult = null
+    if (this.useInternalEmbeddings) {
+      // Internal embeddings: pass the query directly
+      wholeResult = await this.similaritySearchWithScoreAndVectorByQuery(
+        query,
+        k,
+        filter
+      );
+    } else {
+      const queryEmbedding = await this.embeddings.embedQuery(query);
+      // External embeddings: generate embedding from the query
+      wholeResult = await this.similaritySearchWithScoreAndVectorByVector(
+        queryEmbedding,
+        k,
+        filter
+      );
+    }
+    return wholeResult.map(([doc, score]) => [doc, score]);
+
   }
 
   /**
-     * Return docs most similar to the given embedding.
-     * @param query Query embedding for the similarity search.
-     * @param k Number of Documents to return. Defaults to 4.
-     * @param filter A dictionary of metadata fields and values to filter by.
-                    Defaults to None.
-     * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
-     */
+   * Return docs most similar to the given embedding.
+   * @param query Query embedding for the similarity search.
+   * @param k Number of Documents to return. Defaults to 4.
+   * @param filter A dictionary of metadata fields and values to filter by.
+                  Defaults to None.
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
+   */
   async similaritySearchVectorWithScore(
     queryEmbedding: number[],
     k: number,
@@ -821,37 +1076,56 @@ export class HanaDB extends VectorStore {
   }
 
   /**
-   * Performs a similarity search based on vector comparison and returns documents along with their similarity scores and vectors.
-   * @param embedding The vector representation of the query for similarity comparison.
-   * @param k The number of top similar documents to return.
-   * @param filter Optional filter criteria to apply to the search query.
-   * @returns A promise that resolves to an array of tuples, each containing a Document, its similarity score, and its vector.
+   * Performs a similarity search using the provided embedding expression.
+   *
+   * This helper method is used by both external and internal similarity search methods
+   * to construct and execute the SQL query.
+   *
+   * @param embeddingExpr - SQL expression that represents or generates the query embedding.
+   * @param k - The number of documents to return.
+   * @param filter A dictionary of metadata fields and values to filter by.
+                  Defaults to None.
+   * @param vectorEmbeddingParams - Optional parameters for the embedding expression (used in internal mode).
+   * @returns Promise that resolves to a list of documents and their corresponding similarity scores.
    */
-  async similaritySearchWithScoreAndVectorByVector(
-    embedding: number[],
+  private async similaritySearchWithScoreAndVector(
+    embeddingExpr: string,
     k: number,
-    filter?: this["FilterType"]
+    filter?: this["FilterType"],
+    vectorEmbeddingParams?: string[]
   ): Promise<Array<[Document, number, number[]]>> {
     // Sanitize inputs
     const sanitizedK = HanaDB.sanitizeInt(k);
-    const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
     // Determine the distance function based on the configured strategy
     const distanceFuncName = HANA_DISTANCE_FUNCTION[this.distanceStrategy][0];
-    // Convert the embedding vector to a string for SQL query
-    const embeddingAsString = sanitizedEmbedding.join(",");
-    let sqlStr = `SELECT TOP ${sanitizedK}
+
+    // Keyword search: extract metadata columns used with $contains
+    const projectedMetadataColumns = this.extractKeywordSearchColumns(filter);
+    let metadataProjection = "";
+    let fromClause = `"${this.tableName}"`;
+    if (projectedMetadataColumns.length > 0) {
+      metadataProjection = this.createMetadataProjection(projectedMetadataColumns);
+      fromClause = INTERMEDIATE_TABLE_NAME;
+    }
+
+    let sqlStr = `${metadataProjection}
+                    SELECT TOP ${sanitizedK}
                     "${this.contentColumn}", 
                     "${this.metadataColumn}", 
                     TO_NVARCHAR("${this.vectorColumn}") AS VECTOR, 
-                    ${distanceFuncName}("${this.vectorColumn}", TO_REAL_VECTOR('[${embeddingAsString}]')) AS CS
-                    FROM "${this.tableName}"`;
+                    ${distanceFuncName}("${this.vectorColumn}", ${embeddingExpr}) AS CS
+                    FROM ${fromClause}`;
     // Add order by clause to sort by similarity
     const orderStr = ` ORDER BY CS ${
       HANA_DISTANCE_FUNCTION[this.distanceStrategy][1]
     }`;
 
     // Prepare and execute the SQL query
-    const [whereStr, queryTuple] = this.createWhereByFilter(filter);
+    const [whereStr, tempQueryTuple] = this.createWhereByFilter(filter);
+    let queryTuple = tempQueryTuple
+    if (vectorEmbeddingParams && vectorEmbeddingParams.length > 0) {
+      queryTuple = [...vectorEmbeddingParams, ...queryTuple];
+    }
 
     sqlStr += whereStr + orderStr;
     const client = this.connection;
@@ -875,9 +1149,65 @@ export class HanaDB extends VectorStore {
   }
 
   /**
+   * Performs a similarity search based on vector comparison and returns documents along with their similarity scores and vectors.
+   * @param embedding The vector representation of the query for similarity comparison.
+   * @param k The number of top similar documents to return.
+   * @param filter Optional filter criteria to apply to the search query.
+   * @returns A promise that resolves to an array of tuples, each containing a Document, its similarity score, and its vector.
+   */
+  async similaritySearchWithScoreAndVectorByVector(
+    embedding: number[],
+    k: number,
+    filter?: this["FilterType"]
+  ): Promise<Array<[Document, number, number[]]>> {
+    // Convert the embedding vector to a string for SQL query
+    const sanitizedEmbedding = HanaDB.sanitizeListFloat(embedding);
+    const embeddingAsString = sanitizedEmbedding.join(",");
+    return this.similaritySearchWithScoreAndVector(
+      `TO_REAL_VECTOR('[${embeddingAsString}]')`,
+      k, 
+      filter
+    );
+  }
+
+  /**
+   * Performs a similarity search using the internal embedding function.
+   *
+   * In this mode, the query text is passed directly to the database's internal VECTOR_EMBEDDING function.
+   *
+   * @param query - The query text.
+   * @param k - The number of documents to return.
+   * @param filter A dictionary of metadata fields and values to filter by.
+                  Defaults to None.
+   * @returns A promise that resolves to an array of tuples, each containing a Document, its similarity score, and its vector.
+   * @throws Error if internal embedding mode is not active.
+   */
+    async similaritySearchWithScoreAndVectorByQuery(
+      query: string,
+      k: number,
+      filter?: this["FilterType"]
+    ): Promise<Array<[Document, number, number[]]>> {
+      if (!this.useInternalEmbeddings) {
+        throw new Error(
+          "Internal embedding search requires an internal embedding instance."
+        );
+      }
+      const vectorEmbeddingParams = [query, this.internalEmbeddingModelId]
+      return this.similaritySearchWithScoreAndVector(
+        "VECTOR_EMBEDDING(?, 'QUERY', ?)",
+        k,
+        filter,
+        vectorEmbeddingParams
+      );
+    }
+
+  /**
    * Return documents selected using the maximal marginal relevance.
    * Maximal marginal relevance optimizes for similarity to the query AND
    * diversity among selected documents.
+   * When using an internal embedding instance, the query is processed 
+   * directly by the database's internal embedding function.
+   * Otherwise, the query is embedded externally.
    * @param query Text to look up documents similar to.
    * @param options.k Number of documents to return.
    * @param options.fetchK=20 Number of documents to fetch before passing to
@@ -892,7 +1222,25 @@ export class HanaDB extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     const { k, fetchK = 20, lambda = 0.5 } = options;
-    const queryEmbedding = await this.embeddings.embedQuery(query);
+    let queryEmbedding: number[];
+    if (this.useInternalEmbeddings){
+      const sqlStr = `SELECT TO_NVARCHAR(VECTOR_EMBEDDING(?, 'QUERY', ?))
+       AS VECTOR FROM sys.DUMMY;`
+      const queryTuple = [query, this.internalEmbeddingModelId];
+      const client = this.connection;
+      const stm = await this.prepareQuery(client, sqlStr);
+      const resultSet = await this.executeStatement(stm, queryTuple);
+      const result: [number[]] = resultSet.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (row: any) => {
+          return HanaDB.parseFloatArrayFromString(row.VECTOR);
+        }
+      );
+      queryEmbedding = result[0];
+    }
+    else {
+      queryEmbedding = await this.embeddings.embedQuery(query);
+    }
 
     const docs = await this.similaritySearchWithScoreAndVectorByVector(
       queryEmbedding,
