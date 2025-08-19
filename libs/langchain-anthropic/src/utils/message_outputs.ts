@@ -160,6 +160,27 @@ export function _makeMessageChunkFromAnthropicEvent(
     data.type === "content_block_delta" &&
     data.delta.type === "input_json_delta"
   ) {
+    let toolCallChunks: ToolCallChunk[] = [];
+    const additionalKwargs: Record<string, unknown> = {};
+    try {
+      const parsed = JSON.parse(data.delta.partial_json);
+      if (parsed && typeof parsed === "object" && "name" in parsed) {
+        toolCallChunks = [
+          {
+            index: data.index,
+            args: data.delta.partial_json,
+          },
+        ];
+      }
+    } catch (err) {
+      //   console.error(err);
+      additionalKwargs.raw_partial_json = data.delta.partial_json;
+      if (process.env.NODE_ENV !== "production") {
+        console.warn( "Invalid partial JSON from Anthropic:", data.delta.partial_json
+        );
+      }
+    }
+
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
@@ -171,13 +192,8 @@ export function _makeMessageChunkFromAnthropicEvent(
                 type: data.delta.type,
               },
             ],
-        additional_kwargs: {},
-        tool_call_chunks: [
-          {
-            index: data.index,
-            args: data.delta.partial_json,
-          },
-        ],
+        additional_kwargs: additionalKwargs,
+        tool_call_chunks: toolCallChunks,
       }),
     };
   } else if (
