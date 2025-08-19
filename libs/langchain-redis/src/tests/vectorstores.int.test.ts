@@ -76,7 +76,8 @@ describe("RedisVectorStore", () => {
   });
 
   test("delete documents by ids", async () => {
-    const documentKeys = ["doc1", "doc2"].map((key) => `test:${key}`);
+    const documentIds = ["doc1", "doc2"];
+    const documentKeys = documentIds.map((id) => `test:${id}`);
     const pageContent = faker.lorem.sentence(5);
 
     const documents = documentKeys.map((key) => ({
@@ -94,7 +95,7 @@ describe("RedisVectorStore", () => {
     expect(results).toHaveLength(2);
     expect(results.map((result) => result.metadata.id)).toEqual(documentKeys);
 
-    await vectorStore.delete({ ids: [documentKeys[0]] });
+    await vectorStore.delete({ ids: [documentIds[0]] });
 
     const results2 = await vectorStore.similaritySearch(pageContent, 2);
     expect(results2).toHaveLength(1);

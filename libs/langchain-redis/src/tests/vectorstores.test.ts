@@ -283,13 +283,17 @@ describe("RedisVectorStore delete", () => {
   const store = new RedisVectorStore(embeddings, {
     redisClient: client as any,
     indexName: "documents",
+    keyPrefix: "doc:documents:",
   });
 
   test("delete documents by ids", async () => {
-    const deleteIds = ["doc1", "doc2"].map((key) => `doc:documents:${key}`);
+    const deleteIds = ["doc1", "doc2"];
     await store.delete({ ids: deleteIds });
 
-    expect(client.del).toHaveBeenCalledWith(deleteIds);
+    expect(client.del).toHaveBeenCalledWith([
+      "doc:documents:doc1",
+      "doc:documents:doc2",
+    ]);
   });
 
   test("throws error if ids are not provided", async () => {

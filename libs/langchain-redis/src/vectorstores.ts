@@ -417,7 +417,7 @@ export class RedisVectorStore extends VectorStore {
    * @example
    * Delete specific documents by ID:
    * ```typescript
-   * await vectorStore.delete({ ids: ['key1', 'key2', 'key3'] });
+   * await vectorStore.delete({ ids: ['doc1', 'doc2', 'doc3'] });
    * ```
    */
   async delete(
@@ -426,7 +426,9 @@ export class RedisVectorStore extends VectorStore {
     if ("deleteAll" in params && params.deleteAll) {
       await this.dropIndex(true);
     } else if ("ids" in params && params.ids && params.ids.length > 0) {
-      await this.redisClient.del(params.ids);
+      const keys = params.ids.map((id) => `${this.keyPrefix}${id}`);
+
+      await this.redisClient.del(keys);
     } else {
       throw new Error(`Invalid parameters passed to "delete".`);
     }
