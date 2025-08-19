@@ -23,6 +23,8 @@ export {
   createReactAgent,
   stopWhenToolCall,
   stopWhen,
+  asToolOutput,
+  asJsonSchemaOutput,
   type CreateReactAgentState,
   type CreateReactAgentRuntime,
   type LangGraphRunnableConfig as CreateReactAgentToolConfig,

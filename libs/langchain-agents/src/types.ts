@@ -36,6 +36,7 @@ import type {
 
 import type { ToolNode } from "./nodes/ToolNode.js";
 import type { PreHookAnnotation } from "./annotation.js";
+import type { ResponseFormat, ToolOutput } from "./responses.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -77,15 +78,6 @@ export type Prompt<
       config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
     ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
   | Runnable;
-
-export type StructuredResponseSchemaOptions<StructuredResponseType> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodType<StructuredResponseType> | Record<string, any>;
-  prompt?: string;
-
-  strict?: boolean;
-  [key: string]: unknown;
-};
 
 export type CreateReactAgentState<
   AnnotationRoot extends
@@ -170,21 +162,57 @@ export type CreateReactAgentParams<
    *
    * Can be passed in as:
    *   - Zod schema
+   *     ```ts
+   *     const agent = createReactAgent({
+   *       responseFormat: z.object({
+   *         capital: z.string(),
+   *       }),
+   *       // ...
+   *     });
+   *     ```
    *   - JSON schema
-   *   - { prompt, schema }, where schema is one of the above.
-   *        The prompt will be used together with the model that is being used to generate the structured response.
-   *
-   * @remarks
-   * **Important**: `responseFormat` requires the model to support `.withStructuredOutput()`.
+   *     ```ts
+   *     const agent = createReactAgent({
+   *       responseFormat: {
+   *         type: "json_schema",
+   *         schema: {
+   *           type: "object",
+   *           properties: {
+   *             capital: { type: "string" },
+   *           },
+   *           required: ["capital"],
+   *         },
+   *       },
+   *       // ...
+   *     });
+   *     ```
+   *   - Create React Agent ResponseFormat
+   *     ```ts
+   *     import { asNativeOutput, ToolOutput } from "langchain";
+   *     const agent = createReactAgent({
+   *       responseFormat: asNativeOutput(
+   *         z.object({
+   *           capital: z.string(),
+   *         })
+   *       ),
+   *       // or
+   *       responseFormat: [
+   *         ToolOutput.fromSchema({ ... }),
+   *         ToolOutput.fromSchema({ ... }),
+   *       ]
+   *       // ...
+   *     });
+   *     ```
    *
    * **Note**: The graph will make a separate call to the LLM to generate the structured response after the agent loop is finished.
    * This is not the only strategy to get structured responses, see more options in [this guide](https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/).
    */
   responseFormat?:
     | InteropZodType<StructuredResponseType>
-    | StructuredResponseSchemaOptions<StructuredResponseType>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>;
+    | InteropZodType<unknown>[]
+    | Record<string, unknown>
+    | ResponseFormat
+    | ToolOutput[];
 
   /**
    * An optional name for the agent.

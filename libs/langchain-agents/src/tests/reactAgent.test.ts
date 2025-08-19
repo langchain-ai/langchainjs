@@ -27,7 +27,7 @@ import {
 
 import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen.js";
 import { type Prompt } from "../types.js";
-import { createReactAgent } from "../index.js";
+import { asNativeOutput, createReactAgent } from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -494,7 +494,16 @@ describe("createReactAgent", () => {
 
     type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
 
-    const toolCalls = [[{ args: {}, id: "1", name: "getWeather" }], []];
+    const toolCalls = [
+      [
+        {
+          args: { temperature: 75 },
+          id: "2",
+          name: "extract-1",
+          type: "tool_call" as const,
+        },
+      ],
+    ];
 
     const getWeather = tool(() => "The weather is sunny and 75°F.", {
       name: "getWeather",
@@ -519,9 +528,44 @@ describe("createReactAgent", () => {
     });
 
     expect(response.structuredResponse).toEqual(expectedStructuredResponse);
-    expect(response.messages).toHaveLength(3);
-    expect((response.messages[2] as ToolMessage).content).toBe(
-      "The weather is sunny and 75°F."
+    expect(response.messages).toHaveLength(2);
+    expect((response.messages[1] as ToolMessage).content).toBe(
+      `Returning structured response: {"temperature":75}`
+    );
+  });
+
+  it("should support native response format", async () => {
+    const WeatherResponseSchema = z.object({
+      temperature: z.number().describe("The temperature in fahrenheit"),
+    });
+
+    type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
+    const getWeather = tool(() => "The weather is sunny and 75°F.", {
+      name: "getWeather",
+      description: "Get the weather",
+      schema: z.object({}),
+    });
+
+    const expectedStructuredResponse: WeatherResponse = { temperature: 75 };
+    const model = new FakeToolCallingModel({
+      toolCalls: [],
+      structuredResponse: expectedStructuredResponse,
+    });
+
+    const agent = createReactAgent({
+      llm: model,
+      tools: [getWeather],
+      responseFormat: asNativeOutput(WeatherResponseSchema),
+    });
+
+    const response = await agent.invoke({
+      messages: [new AIMessage('{"temperature":75}')],
+    });
+
+    expect(response.structuredResponse).toEqual(expectedStructuredResponse);
+    expect(response.messages).toHaveLength(2);
+    expect((response.messages[1] as ToolMessage).content).toBe(
+      `{"temperature":75}`
     );
   });
 
@@ -644,7 +688,7 @@ describe("createReactAgent", () => {
       messages: [new HumanMessage({ content: "Test normal", id: "hum1" })],
     });
 
-    expect(result.messages).toHaveLength(4);
+    expect(result.messages).toHaveLength(3);
     expect(result.messages[0]).toEqual(
       new HumanMessage({ content: "Test normal", id: "hum1" })
     );
@@ -796,7 +840,7 @@ describe("createReactAgent", () => {
         messages: [new HumanMessage("Use the multiply tool with value 5")],
       });
 
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -804,7 +848,7 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("multiply_by_two");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Result: 10");
     });
 
@@ -959,7 +1003,7 @@ describe("createReactAgent", () => {
       });
 
       // Verify the agent works correctly with RunnableBinding
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -967,7 +1011,7 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("process_value");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Processed: test");
     });
 
@@ -1034,7 +1078,7 @@ describe("createReactAgent", () => {
       });
 
       // Verify the agent works correctly with nested RunnableBinding
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -1042,7 +1086,7 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("echo_tool");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Echo: hello");
     });
   });
@@ -1573,10 +1617,11 @@ describe("createReactAgent", () => {
       // the agent only returns the structured response without including
       // the AI message in the messages array. This might be a limitation
       // of the current implementation.
-      expect(result.messages).toHaveLength(1);
+      expect(result.messages).toHaveLength(2);
       expect(result.messages[0]).toBeInstanceOf(HumanMessage);
       expect(result.messages[0].content).toBe("hello");
-      expect(result.structuredResponse).toEqual(structuredResponse);
+      expect(result.messages[1]).toBeInstanceOf(AIMessage);
+      expect(result.messages[1].content).toBe("dynamic response");
     });
 
     it("should handle dynamic model that changes available tools based on state", async () => {

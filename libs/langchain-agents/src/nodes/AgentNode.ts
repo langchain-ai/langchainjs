@@ -2,25 +2,25 @@ import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,
   AIMessage,
-  SystemMessage,
   isAIMessage,
   ToolMessage,
 } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
-import type { InteropZodObject } from "@langchain/core/utils/types";
-import { type LangGraphRunnableConfig } from "@langchain/langgraph";
+import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import {
+  InteropZodObject,
+  getSchemaDescription,
+} from "@langchain/core/utils/types";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import {
-  shouldBindTools,
   bindTools,
   getPromptRunnable,
   validateLLMHasNoBoundTools,
-  isBaseChatModel,
   hasToolCalls,
-  hasSupportForStructuredOutput,
   mergeAbortSignals,
+  hasSupportForJsonSchemaOutput,
 } from "../utils.js";
 import {
   AgentState,
@@ -31,6 +31,11 @@ import {
   PredicateFunction,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
+import {
+  ToolOutput,
+  NativeOutput,
+  transformResponseFormat,
+} from "../responses.js";
 
 interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
@@ -78,6 +83,8 @@ export class AgentNode<
 
   #stopWhen: PredicateFunction<StructuredResponseFormat>[];
 
+  #structuredToolInfo: Record<string, ToolOutput> = {};
+
   constructor(
     options: AgentNodeOptions<
       StateSchema,
@@ -97,6 +104,18 @@ export class AgentNode<
         ? options.stopWhen
         : [options.stopWhen]
       : [];
+
+    /**
+     * Populate a list of structured tool info.
+     */
+    this.#structuredToolInfo = (
+      transformResponseFormat(this.#options.responseFormat).filter(
+        (format) => format instanceof ToolOutput
+      ) as ToolOutput[]
+    ).reduce((acc, format) => {
+      acc[format.name] = format;
+      return acc;
+    }, {} as Record<string, ToolOutput>);
   }
 
   async #run(
@@ -117,7 +136,13 @@ export class AgentNode<
        * If responseFormat is set, generate structured response
        */
       if (this.#options.responseFormat) {
-        return this.#generateStructuredResponse(state, config);
+        const response = await this.#invokeModel(state, config, {
+          isDirectReturn: true,
+        });
+        if ("structuredResponse" in response) {
+          return response;
+        }
+        return { messages: [response] };
       }
       /**
        * Otherwise, we shouldn't be here - the graph routing should have ended
@@ -150,29 +175,32 @@ export class AgentNode<
               .map((result) => result.description)
               .join(", ")}`;
 
+      /**
+       * if a `responseFormat` is provided, we need to invoke the model to
+       * attempt to generate a structured response
+       */
       if (this.#options.responseFormat) {
         state.messages.push(new AIMessage(shouldStopReasoning));
-        return this.#generateStructuredResponse(state, config);
+        const response = await this.#invokeModel(state, config, {
+          lastMessage: shouldStopReasoning,
+        });
+        if ("structuredResponse" in response) {
+          return response;
+        }
+        return { messages: [response] };
       }
 
       return { messages: [shouldStopReasoning] };
     }
 
-    /**
-     * We're dynamically creating the model runnable here
-     * to ensure that we can validate ConfigurableModel properly
-     */
-    const modelRunnable: Runnable =
-      typeof this.#options.llm === "function"
-        ? await this.#getDynamicModel(this.#options.llm, state, config)
-        : await this.#getStaticModel(this.#options.llm);
+    const response:
+      | AIMessage
+      | { structuredResponse: StructuredResponseFormat } =
+      await this.#invokeModel(state, config);
 
-    const modelInput = this.#getModelInputState(state);
-    const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const response = (await modelRunnable.invoke(modelInput, {
-      ...config,
-      signal,
-    })) as AIMessage;
+    if ("structuredResponse" in response) {
+      return response;
+    }
 
     response.name = this.name;
     response.lc_kwargs.name = this.name;
@@ -189,20 +217,95 @@ export class AgentNode<
       };
     }
 
+    return { messages: [response] };
+  }
+
+  async #invokeModel(
+    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    config: RunnableConfig,
+    options: {
+      lastMessage?: string;
+      isDirectReturn?: boolean;
+    } = {}
+  ): Promise<
+    | AIMessage
+    | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
+  > {
+    const model = await this.#getBaseModel(state, config);
+    const modelWithTools = await this.#bindTools(
+      model,
+      options?.isDirectReturn
+        ? {
+            tool_choice: {
+              type: "tool",
+              name: Object.keys(this.#structuredToolInfo)[0],
+            },
+          }
+        : {}
+    );
+    const modelInput = this.#getModelInputState(state);
+    const signal = mergeAbortSignals(this.#options.signal, config.signal);
+    const invokeConfig = {
+      ...config,
+      signal,
+    };
+
+    const response = (await modelWithTools.invoke(
+      modelInput,
+      invokeConfig
+    )) as AIMessage;
+
     /**
-     * Check if we need to generate a structured response
-     * This happens when:
-     * 1. responseFormat is set
-     * 2. The agent has no more tool calls to make
+     * if the user requests a native schema output, try to parse the response
+     * and return the structured response if it is valid
      */
-    if (
-      this.#options.responseFormat &&
-      (!response.tool_calls || response.tool_calls.length === 0)
-    ) {
-      return this.#generateStructuredResponse(state, config);
+    if (this.#options.responseFormat instanceof NativeOutput) {
+      const structuredResponse = this.#options.responseFormat.parse(response);
+      if (structuredResponse) {
+        return { structuredResponse, messages: [response] };
+      }
     }
 
-    return { messages: [response] };
+    if (!response.tool_calls) {
+      return response;
+    }
+
+    const toolCalls = response.tool_calls.filter(
+      (call) => call.name in this.#structuredToolInfo
+    );
+
+    /**
+     * if there were not structured tool calls, we can return the response
+     */
+    if (toolCalls.length === 0) {
+      return response;
+    }
+
+    /**
+     * if there were multiple structured tool calls, we should throw an error as this
+     * scenario is not defined/supported.
+     */
+    if (toolCalls.length > 1) {
+      throw new Error("Multiple structured tool calls are not supported");
+    }
+
+    const toolCall = toolCalls[0];
+    const tool = this.#structuredToolInfo[toolCall.name];
+    const structuredResponse = tool.parse(
+      toolCall.args
+    ) as StructuredResponseFormat;
+
+    return {
+      structuredResponse,
+      messages: [
+        new AIMessage(
+          options.lastMessage ??
+            `Returning structured response: ${JSON.stringify(
+              structuredResponse
+            )}`
+        ),
+      ],
+    };
   }
 
   #areMoreStepsNeeded(
@@ -233,62 +336,8 @@ export class AgentNode<
     return { messages, ...rest };
   }
 
-  async #getStaticModel(llm: LanguageModelLike): Promise<Runnable> {
-    if (this.#cachedStaticModel) {
-      return this.#cachedStaticModel;
-    }
-
-    const modelWithTools: LanguageModelLike = (await shouldBindTools(
-      llm,
-      this.#options.toolClasses
-    ))
-      ? await bindTools(llm, this.#options.toolClasses)
-      : llm;
-
-    const promptRunnable = getPromptRunnable(this.#options.prompt);
-    const modelRunnable =
-      this.#options.includeAgentName === "inline"
-        ? withAgentName(modelWithTools, this.#options.includeAgentName)
-        : modelWithTools;
-
-    this.#cachedStaticModel = promptRunnable.pipe(modelRunnable);
-    return this.#cachedStaticModel;
-  }
-
-  async #getDynamicModel(
-    llm: (
-      state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-      runtime: LangGraphRunnableConfig
-    ) => Promise<LanguageModelLike> | LanguageModelLike,
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-    config: LangGraphRunnableConfig
-  ) {
-    const model = await llm(state, config);
-
-    /**
-     * Check if the LLM already has bound tools and throw if it does.
-     */
-    validateLLMHasNoBoundTools(model);
-
-    /**
-     * Bind tools to the model if they are not already bound.
-     */
-    const modelWithTools: LanguageModelLike = (await shouldBindTools(
-      model,
-      this.#options.toolClasses
-    ))
-      ? await bindTools(model, this.#options.toolClasses)
-      : model;
-
-    return getPromptRunnable(this.#options.prompt).pipe(
-      this.#options.includeAgentName === "inline"
-        ? withAgentName(modelWithTools, this.#options.includeAgentName)
-        : modelWithTools
-    );
-  }
-
   /**
-   * Get the base model from the options
+   * Get the base model from the options with bound tools
    * @param state - The state of the agent
    * @param config - The config of the agent
    * @returns The base model
@@ -297,107 +346,100 @@ export class AgentNode<
     state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
     config: RunnableConfig
   ): Promise<LanguageModelLike> {
+    /**
+     * If the model has already been cached, return it
+     */
+    if (this.#cachedStaticModel) {
+      return this.#cachedStaticModel;
+    }
+
     const model: LanguageModelLike =
       typeof this.#options.llm === "function"
         ? await this.#options.llm(state, config)
         : this.#options.llm;
+
+    /**
+     * Check if the LLM already has bound tools and throw if it does.
+     */
+    validateLLMHasNoBoundTools(model);
+
+    /**
+     * cache the model for future use if it is NOT a dynamic model
+     */
+    if (typeof this.#options.llm !== "function") {
+      this.#cachedStaticModel = model;
+    }
+
     return model;
   }
 
-  async #generateStructuredResponse(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-    config: RunnableConfig
-  ): Promise<{ structuredResponse: StructuredResponseFormat }> {
-    if (this.#options.responseFormat == null) {
-      throw new Error(
-        "Attempted to generate structured output with no passed response schema."
-      );
-    }
-
-    const modelWithStructuredOutput = await this.#getModelWithStructuredOutput(
-      state,
-      config,
-      this.#options.responseFormat
+  async #bindTools(
+    model: LanguageModelLike,
+    bindOptions?: Partial<BaseChatModelCallOptions>
+  ): Promise<Runnable> {
+    const options: Partial<BaseChatModelCallOptions> = {};
+    const structuredTools = Object.values(this.#structuredToolInfo);
+    const allTools = this.#options.toolClasses.concat(
+      ...structuredTools.map((toolOutput) => toolOutput.tool)
     );
-    const messages = [...state.messages];
-    const signal = mergeAbortSignals(this.#options.signal, config.signal);
 
     /**
-     * Get the base model to access model name
+     * If there are structured tools, we need to set the tool choice to "any"
+     * so that the model can choose to use a structured tool or not.
      */
-    const baseModel = await this.#getBaseModel(state, config);
-    if (isBaseChatModel(baseModel)) {
-      const identifyingParams = baseModel._identifyingParams();
-      const modelName = identifyingParams.model_name || identifyingParams.model;
+    const toolChoice = structuredTools.length > 0 ? "any" : undefined;
 
+    /**
+     * check if the user requests a native schema output
+     */
+    if (this.#options.responseFormat instanceof NativeOutput) {
       /**
-       * If the model supports structured output, we can use the structured output feature
+       * if the model does not support JSON schema output, throw an error
        */
-      if (hasSupportForStructuredOutput(modelName)) {
-        const structuredResponse = (await modelWithStructuredOutput.invoke(
-          messages,
-          {
-            ...config,
-            signal,
-            /**
-             * Ensure the model returns a structured response
-             */
-            strict: true,
-            tool_choice: "none",
-          } as RunnableConfig
-        )) as StructuredResponseFormat;
-        return { structuredResponse };
+      if (!hasSupportForJsonSchemaOutput(model)) {
+        throw new Error(
+          "Model does not support native structured output responses. Please use a model that supports native structured output responses or use a tool output."
+        );
       }
-    }
 
-    const structuredResponse = (await modelWithStructuredOutput.invoke(
-      messages,
-      {
-        ...config,
-        signal,
-      }
-    )) as StructuredResponseFormat;
-    return { structuredResponse };
-  }
+      const jsonSchemaParams = {
+        name: this.#options.responseFormat.schema?.name ?? "extract",
+        description: getSchemaDescription(this.#options.responseFormat.schema),
+        schema: this.#options.responseFormat.schema,
+        strict: true,
+      };
 
-  async #getModelWithStructuredOutput(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-    config: RunnableConfig,
-    responseFormat: Required<
-      CreateReactAgentParams<
-        StateSchema,
-        StructuredResponseFormat,
-        ContextSchema
-      >
-    >["responseFormat"]
-  ) {
-    const model: LanguageModelLike = await this.#getBaseModel(state, config);
-
-    if (!isBaseChatModel(model)) {
-      throw new Error(
-        `Expected \`llm\` to be a ChatModel with .withStructuredOutput() method, got ${model.constructor.name}`
-      );
+      Object.assign(options, {
+        response_format: {
+          type: "json_schema",
+          json_schema: jsonSchemaParams,
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "json_schema" },
+          schema: this.#options.responseFormat.schema,
+        },
+        strict: true,
+      });
     }
 
     /**
-     * Inject a system message when using a custom JSON schema
+     * Bind tools to the model if they are not already bound.
      */
-    if (typeof responseFormat === "object" && "schema" in responseFormat) {
-      const { prompt, schema, ...options } = responseFormat;
-      const modelWithStructuredOutput = model.withStructuredOutput(
-        schema,
-        options
-      );
-      if (prompt != null) {
-        state.messages.unshift(new SystemMessage({ content: prompt }));
-      }
-
-      return modelWithStructuredOutput;
-    }
+    const modelWithTools = await bindTools(model, allTools, {
+      ...options,
+      tool_choice: toolChoice,
+      ...bindOptions,
+    });
 
     /**
-     * Zod schema
+     * Create a model runnable with the prompt and agent name
      */
-    return model.withStructuredOutput(responseFormat);
+    const modelRunnable = getPromptRunnable(this.#options.prompt).pipe(
+      this.#options.includeAgentName === "inline"
+        ? withAgentName(modelWithTools, this.#options.includeAgentName)
+        : modelWithTools
+    );
+
+    return modelRunnable;
   }
 }

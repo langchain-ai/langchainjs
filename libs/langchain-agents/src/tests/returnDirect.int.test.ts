@@ -4,7 +4,12 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, stopWhenToolCall } from "../index.js";
+import {
+  AgentState,
+  createReactAgent,
+  PredicateFunctionReturn,
+  stopWhenToolCall,
+} from "../index.js";
 
 // Response format schema used in some test cases
 const responseFormatSchema = z.object({
@@ -44,8 +49,19 @@ const AGENT_PROMPT = `You are a strict polling bot.
 - If status is "pending", call the tool again. Do not produce a final answer.
 - When it is "succeeded", return exactly: "Attempts: <number>" with no extra text.`;
 
+interface TestCase {
+  name: string;
+  returnDirect: boolean;
+  responseFormat: z.ZodObject<any> | undefined;
+  stopWhen: ((state: AgentState<any>) => PredicateFunctionReturn)[] | undefined;
+  expectedToolCalls: number;
+  expectedLastMessage: string | RegExp;
+  expectedStructuredResponse: any;
+  only?: boolean;
+}
+
 describe("return_direct Matrix Tests", () => {
-  const testCases = [
+  const testCases: TestCase[] = [
     {
       name: "Scenario: ❌ return_direct, ❌ response_format, ❌ stop_when",
       returnDirect: false,
@@ -62,7 +78,7 @@ describe("return_direct Matrix Tests", () => {
       stopWhen: undefined,
       expectedToolCalls: 10,
       expectedLastMessage:
-        /\{\s*"status":\s*"succeeded",\s*"attempts":\s*10\s*\}/,
+        'Returning structured response: {"attempts":10,"succeeded":true}',
       expectedStructuredResponse: { attempts: 10, succeeded: true },
     },
     {
@@ -100,7 +116,8 @@ describe("return_direct Matrix Tests", () => {
       responseFormat: responseFormatSchema,
       stopWhen: undefined,
       expectedToolCalls: 1,
-      expectedLastMessage: /\{\s*"status":\s*"pending",\s*"attempts":\s*1\s*\}/,
+      expectedLastMessage:
+        'Returning structured response: {"attempts":1,"succeeded":false}',
       expectedStructuredResponse: { attempts: 1, succeeded: false },
     },
     {
@@ -118,13 +135,18 @@ describe("return_direct Matrix Tests", () => {
       responseFormat: responseFormatSchema,
       stopWhen: [stopWhenToolCall("pollJob", 5)],
       expectedToolCalls: 1,
-      expectedLastMessage: /\{\s*"status":\s*"pending",\s*"attempts":\s*1\s*\}/,
+      expectedLastMessage:
+        'Returning structured response: {"attempts":1,"succeeded":false}',
       expectedStructuredResponse: { attempts: 1, succeeded: false },
     },
   ];
 
   testCases.forEach((testCase) => {
-    it.concurrent(testCase.name, async () => {
+    let testFn = it.concurrent;
+    if (testCase.only) {
+      testFn = it.only;
+    }
+    testFn(testCase.name, async () => {
       // Create LLM instance
       const llm = new ChatAnthropic({
         model: "claude-3-5-sonnet-20240620",

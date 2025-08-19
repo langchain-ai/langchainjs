@@ -381,17 +381,18 @@ export async function shouldBindTools(
 
 const _simpleBindTools = (
   llm: LanguageModelLike,
-  toolClasses: (ClientTool | ServerTool)[]
+  toolClasses: (ClientTool | ServerTool)[],
+  options: Partial<BaseChatModelCallOptions> = {}
 ) => {
   if (_isChatModelWithBindTools(llm)) {
-    return llm.bindTools(toolClasses);
+    return llm.bindTools(toolClasses, options);
   }
 
   if (
     RunnableBinding.isRunnableBinding(llm) &&
     _isChatModelWithBindTools(llm.bound)
   ) {
-    const newBound = llm.bound.bindTools(toolClasses);
+    const newBound = llm.bound.bindTools(toolClasses, options);
 
     if (RunnableBinding.isRunnableBinding(newBound)) {
       return new RunnableBinding({
@@ -415,17 +416,18 @@ const _simpleBindTools = (
 
 export async function bindTools(
   llm: LanguageModelLike,
-  toolClasses: (ClientTool | ServerTool)[]
+  toolClasses: (ClientTool | ServerTool)[],
+  options: Partial<BaseChatModelCallOptions> = {}
 ): Promise<
   | RunnableSequence<any, any>
   | RunnableBinding<any, any, any>
   | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
 > {
-  const model = _simpleBindTools(llm, toolClasses);
+  const model = _simpleBindTools(llm, toolClasses, options);
   if (model) return model;
 
   if (isConfigurableModel(llm)) {
-    const model = _simpleBindTools(await llm._model(), toolClasses);
+    const model = _simpleBindTools(await llm._model(), toolClasses, options);
     if (model) return model;
   }
 
@@ -438,7 +440,11 @@ export async function bindTools(
     );
 
     if (modelStep >= 0) {
-      const model = _simpleBindTools(llm.steps[modelStep], toolClasses);
+      const model = _simpleBindTools(
+        llm.steps[modelStep],
+        toolClasses,
+        options
+      );
       if (model) {
         const nextSteps: unknown[] = llm.steps.slice();
         nextSteps.splice(modelStep, 1, model);
@@ -579,4 +585,43 @@ export function mergeAbortSignals(
         typeof maybeSignal.aborted === "boolean"
     )
   );
+}
+
+const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
+  "ChatOpenAI",
+  "FakeToolCallingModel",
+];
+
+/**
+ * Identifies the models that support JSON schema output
+ * @param model - The model to check
+ * @returns True if the model supports JSON schema output, false otherwise
+ */
+export function hasSupportForJsonSchemaOutput(
+  model: LanguageModelLike
+): boolean {
+  if (!isBaseChatModel(model)) {
+    return false;
+  }
+
+  const chatModelClass = model.getName();
+  if (
+    CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.includes(chatModelClass) &&
+    ((chatModelClass === "ChatOpenAI" &&
+      /**
+       * OpenAI models
+       */
+      "model" in model &&
+      typeof model.model === "string" &&
+      model.model.startsWith("gpt-4")) ||
+      /**
+       * for testing purposes only
+       */
+      (chatModelClass === "FakeToolCallingModel" &&
+        "structuredResponse" in model))
+  ) {
+    return true;
+  }
+
+  return false;
 }
