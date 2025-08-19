@@ -850,6 +850,28 @@ describe("gpt-5", () => {
     const response = await model.invoke([storyPrompt]);
     expect(response).toBeDefined();
   });
+
+  describe("works with verbosity", () => {
+    test("in completions", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: false,
+        verbosity: "low",
+      });
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
+
+    test("in responses", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: true,
+        verbosity: "low",
+      });
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
+  });
 });
 
 describe("promptCacheKey", () => {
