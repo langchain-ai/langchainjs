@@ -33,17 +33,104 @@ import type {
   RunnableConfig,
   RunnableToolLike,
 } from "@langchain/core/runnables";
-
 import type { ToolNode } from "./nodes/ToolNode.js";
 import type { PreHookAnnotation } from "./annotation.js";
-import type { ResponseFormat, ToolOutput } from "./responses.js";
+import type {
+  ResponseFormat,
+  ToolOutput,
+  TypedToolOutput,
+  NativeOutput,
+} from "./responses.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
 export type N = typeof START | "agent" | "tools";
 
+/**
+ * Type representing a JSON Schema object format.
+ * This is a strict type that excludes ToolOutput and NativeOutput instances.
+ */
+export type JsonSchemaFormat = {
+  type: string;
+  properties: Record<string, unknown>;
+  required?: string[];
+  additionalProperties?: boolean;
+  [key: string]: unknown;
+} & {
+  // Brand to ensure this is not a ToolOutput or NativeOutput
+  __brand?: never;
+};
+
+/**
+ * Type helper to check if value contains ToolOutput types
+ */
+type HasToolOutput<T> = T extends ToolOutput<any>
+  ? true
+  : T extends TypedToolOutput<any>
+  ? true
+  : false;
+
+/**
+ * Type helper to check if value contains NativeOutput types
+ */
+type HasNativeOutput<T> = T extends NativeOutput<any> ? true : false;
+
+/**
+ * Type helper to check if an array contains mixed ToolOutput and NativeOutput types.
+ * This type will cause a TypeScript error if an array contains both types.
+ */
+export type ValidateNoMixedOutputArray<T extends readonly any[]> =
+  T extends readonly any[]
+    ? true extends HasToolOutput<T[number]>
+      ? true extends HasNativeOutput<T[number]>
+        ? ["Error: Cannot mix ToolOutput and NativeOutput in the same array"] // Has both, invalid
+        : T // Only has ToolOutput types
+      : T // Doesn't have ToolOutput, so it's fine
+    : T; // Not an array
+
+/**
+ * Validates the responseFormat type to ensure no mixed output arrays.
+ */
+export type ValidatedResponseFormat<T> = T extends readonly any[]
+  ? ValidateNoMixedOutputArray<T>
+  : T;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAnnotationRoot = AnnotationRoot<any>;
+
+/**
+ * Type helper to extract the inferred type from a single Zod schema or array of schemas
+ */
+export type ExtractZodType<T> = T extends InteropZodType<infer U>
+  ? U
+  : T extends readonly InteropZodType<any>[]
+  ? ExtractZodArrayTypes<T>
+  : never;
+
+/**
+ * Type helper to extract union type from an array of Zod schemas
+ */
+export type ExtractZodArrayTypes<T extends readonly InteropZodType<any>[]> =
+  T extends readonly [InteropZodType<infer A>, ...infer Rest]
+    ? Rest extends readonly InteropZodType<any>[]
+      ? A | ExtractZodArrayTypes<Rest>
+      : A
+    : never;
+
+/**
+ * Type helper to extract the structured response type from responseFormat
+ */
+export type InferResponseFormatType<T> = T extends InteropZodType<infer U>
+  ? U extends Record<string, any>
+    ? U
+    : Record<string, any>
+  : T extends readonly InteropZodType<any>[]
+  ? ExtractZodArrayTypes<T>
+  : T extends ToolOutput[]
+  ? Record<string, any> // ToolOutput arrays will be handled at runtime
+  : T extends ResponseFormat
+  ? Record<string, any> // Single ResponseFormat will be handled at runtime
+  : Record<string, any>;
 
 export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
   A extends AnyAnnotationRoot
@@ -105,7 +192,18 @@ export type CreateReactAgentParams<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
+  ResponseFormatType =
+    | InteropZodType<StructuredResponseType>
+    | InteropZodType<unknown>[]
+    | JsonSchemaFormat
+    | JsonSchemaFormat[]
+    | ResponseFormat
+    | TypedToolOutput<StructuredResponseType>
+    | ToolOutput<StructuredResponseType>
+    | NativeOutput<StructuredResponseType>
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
   llm: LLM<StateSchema, ContextSchema>;
@@ -188,17 +286,17 @@ export type CreateReactAgentParams<
    *     ```
    *   - Create React Agent ResponseFormat
    *     ```ts
-   *     import { asNativeOutput, ToolOutput } from "langchain";
+   *     import { nativeOutput, toolOutput } from "langchain";
    *     const agent = createReactAgent({
-   *       responseFormat: asNativeOutput(
+   *       responseFormat: nativeOutput(
    *         z.object({
    *           capital: z.string(),
    *         })
    *       ),
    *       // or
    *       responseFormat: [
-   *         ToolOutput.fromSchema({ ... }),
-   *         ToolOutput.fromSchema({ ... }),
+   *         toolOutput({ ... }),
+   *         toolOutput({ ... }),
    *       ]
    *       // ...
    *     });
@@ -207,12 +305,7 @@ export type CreateReactAgentParams<
    * **Note**: The graph will make a separate call to the LLM to generate the structured response after the agent loop is finished.
    * This is not the only strategy to get structured responses, see more options in [this guide](https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/).
    */
-  responseFormat?:
-    | InteropZodType<StructuredResponseType>
-    | InteropZodType<unknown>[]
-    | Record<string, unknown>
-    | ResponseFormat
-    | ToolOutput[];
+  responseFormat?: ValidatedResponseFormat<ResponseFormatType>;
 
   /**
    * An optional name for the agent.

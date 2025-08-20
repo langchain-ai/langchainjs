@@ -1,133 +1,217 @@
 import { describe, expectTypeOf, it } from "vitest";
-import {
-  createReactAgent,
-  asToolOutput,
-  asNativeOutput,
-  ToolOutput,
-  NativeOutput,
-} from "../index.js";
+import { createReactAgent, toolOutput, nativeOutput } from "../index.js";
+import type { JsonSchemaFormat } from "../types.js";
 import { z } from "zod";
 import { FakeToolCallingChatModel } from "./utils.js";
 
+const prompt = {
+  messages: [{ role: "user", content: "What is the capital of FakeCountry?" }],
+};
+
+const jsonSchema: JsonSchemaFormat = {
+  type: "json_schema",
+  properties: {
+    capital: {
+      type: "string",
+    },
+  },
+  required: ["capital"],
+};
+
 describe("response format", () => {
-  it("should allow zod schemas", async () => {
-    const agent = createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: z.object({
-        capital: z.string(),
-      }),
-    });
-
-    const agent2 = createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: [
-        z.object({
-          capitalA: z.string(),
+  describe("responseFormat as raw zod schemas", () => {
+    it("should allow a simple zod schema", async () => {
+      const agent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: z.object({
+          capital: z.string(),
         }),
-        z.object({
-          capitalB: z.string(),
-        }),
-      ],
+      });
+      const res = await agent.invoke(prompt);
+      expectTypeOf(res.structuredResponse).toEqualTypeOf({
+        capital: "Paris",
+      });
     });
 
-    const res2 = await agent2.invoke({
-      messages: [
-        { role: "user", content: "What is the capital of FakeCountry?" },
-      ],
-    });
-    expectTypeOf(res2.structuredResponse).toEqualTypeOf<
-      Record<string, unknown>
-    >();
+    it("should allow multiple zod schemas", async () => {
+      const agent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // Note: Using 'as const' is required for proper type inference
+        // of the union type from the array of schemas
+        responseFormat: [
+          z.object({
+            capitalA: z.string(),
+          }),
+          z.object({
+            capitalB: z.string(),
+          }),
+        ] as const,
+      });
 
-    const res = await agent.invoke({
-      messages: [
-        { role: "user", content: "What is the capital of FakeCountry?" },
-      ],
-    });
+      const res = await agent.invoke(prompt);
 
-    expectTypeOf(res.structuredResponse).toEqualTypeOf({
-      capital: "Paris",
+      // Check that structuredResponse is the expected union type
+      // The type should be inferred from the array of zod schemas
+      expectTypeOf(res.structuredResponse).toEqualTypeOf<
+        { capitalA: string } | { capitalB: string }
+      >();
     });
   });
 
-  it("should allow native objects", async () => {
-    const agent = createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: {
-        type: "json_schema",
-        properties: {
-          capital: {
-            type: "string",
-          },
-        },
-        required: ["capital"],
-      },
+  describe("responseFormat as json schema", () => {
+    it("should allow single json schema objects", async () => {
+      const agent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: jsonSchema,
+      });
+
+      const res = await agent.invoke(prompt);
+
+      expectTypeOf(res.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
     });
 
-    const res = await agent.invoke({
-      messages: [
-        { role: "user", content: "What is the capital of FakeCountry?" },
-      ],
+    it("should allow multiple json schema objects", async () => {
+      const agent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: [jsonSchema, jsonSchema],
+      });
+      const res = await agent.invoke(prompt);
+      expectTypeOf(res.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
     });
 
-    expectTypeOf(res.structuredResponse).toEqualTypeOf<
-      Record<string, unknown>
-    >();
-  });
-
-  it("should allow (multiple) tool outputs", async () => {
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: asToolOutput(z.object({ capital: z.string() })),
-    });
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: ToolOutput.fromSchema(z.object({ capital: z.string() })),
-    });
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: asToolOutput([
-        z.object({ capital: z.string() }),
-        z.object({ capital: z.string() }),
-      ]),
-    });
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: asToolOutput([
-        ToolOutput.fromSchema(z.object({ capital: z.string() })),
-        ToolOutput.fromSchema(z.object({ capital: z.string() })),
-      ]),
+    it("should NOT allow to pass in arbitrary objects", async () => {
+      createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // @ts-expect-error - arbitrary objects are not valid JSON schemas
+        responseFormat: { type: "test" },
+      });
     });
   });
 
-  it("should allow native outputs", async () => {
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: asNativeOutput(z.object({ capital: z.string() })),
+  describe("using toolOutput", () => {
+    it("should allow single zod schema", async () => {
+      const toolOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolOutput(z.object({ capital: z.string() })),
+      });
+      const toolOutputResult = await toolOutputAgent.invoke(prompt);
+      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<{
+        capital: string;
+      }>();
     });
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      responseFormat: NativeOutput.fromSchema(
-        z.object({ capital: z.string() })
-      ),
+
+    it("should allow multiple zod schemas", async () => {
+      const toolOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolOutput([
+          z.object({ capital: z.string() }),
+          z.object({ country: z.string() }),
+        ]),
+      });
+      const toolOutputResult = await toolOutputAgent.invoke(prompt);
+      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+        | {
+            capital: string;
+          }
+        | { country: string }
+      >();
     });
-    createReactAgent({
-      llm: new FakeToolCallingChatModel({}),
-      tools: [],
-      // @ts-expect-error - validate error: only one schema is allowed for native outputs
-      responseFormat: asNativeOutput([
-        z.object({ capital: z.string() }),
-        z.object({ capital: z.string() }),
-      ]),
+
+    it("should allow single json schema object", async () => {
+      const toolOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolOutput(jsonSchema),
+      });
+      const toolOutputResult = await toolOutputAgent.invoke(prompt);
+      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should allow multiple json schema objects", async () => {
+      const toolOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: toolOutput([jsonSchema, jsonSchema]),
+      });
+      const toolOutputResult = await toolOutputAgent.invoke(prompt);
+      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should NOT allow to pass in a tool output within an array", async () => {
+      createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // @ts-expect-error - validate error: only one schema is allowed for native outputs
+        responseFormat: [toolOutput(jsonSchema)],
+      });
+      createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // @ts-expect-error - validate error: only one schema is allowed for native outputs
+        responseFormat: [toolOutput(jsonSchema), nativeOutput(jsonSchema)],
+      });
+    });
+  });
+
+  describe("using nativeOutput", () => {
+    it("should allow single zod schema", async () => {
+      const nativeOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: nativeOutput(z.object({ capital: z.string() })),
+      });
+      const nativeOutputResult = await nativeOutputAgent.invoke(prompt);
+      expectTypeOf(nativeOutputResult.structuredResponse).toEqualTypeOf<{
+        capital: string;
+      }>();
+    });
+
+    it("should NOT allow multiple zod schemas", async () => {
+      createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // @ts-expect-error - validate error: only one schema is allowed for native outputs
+        responseFormat: nativeOutput([
+          z.object({ capital: z.string() }),
+          z.object({ country: z.string() }),
+        ]),
+      });
+    });
+
+    it("should allow single json schema object", async () => {
+      const nativeOutputAgent = createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: nativeOutput(jsonSchema),
+      });
+      const nativeOutputResult = await nativeOutputAgent.invoke(prompt);
+      expectTypeOf(nativeOutputResult.structuredResponse).toEqualTypeOf<
+        Record<string, unknown>
+      >();
+    });
+
+    it("should NOT allow multiple json schema objects", async () => {
+      createReactAgent({
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        // @ts-expect-error - validate error: only one schema is allowed for native outputs
+        responseFormat: nativeOutput([jsonSchema, jsonSchema]),
+      });
     });
   });
 });

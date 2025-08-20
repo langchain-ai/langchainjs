@@ -27,7 +27,7 @@ import {
 
 import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen.js";
 import { type Prompt } from "../types.js";
-import { asNativeOutput, createReactAgent } from "../index.js";
+import { nativeOutput, createReactAgent } from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -555,7 +555,7 @@ describe("createReactAgent", () => {
     const agent = createReactAgent({
       llm: model,
       tools: [getWeather],
-      responseFormat: asNativeOutput(WeatherResponseSchema),
+      responseFormat: nativeOutput(WeatherResponseSchema),
     });
 
     const response = await agent.invoke({

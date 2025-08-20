@@ -5,7 +5,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, asNativeOutput } from "../index.js";
+import { createReactAgent, nativeOutput } from "../index.js";
 
 describe("createReactAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
@@ -63,7 +63,7 @@ describe("createReactAgent Integration Tests", () => {
     const agent = createReactAgent({
       llm,
       tools: [getWeather],
-      responseFormat: asNativeOutput(answerSchema),
+      responseFormat: nativeOutput(answerSchema),
     });
 
     await expect(
@@ -86,7 +86,7 @@ describe("createReactAgent Integration Tests", () => {
     const agent = createReactAgent({
       llm,
       tools: [getWeather],
-      responseFormat: asNativeOutput(answerSchema),
+      responseFormat: nativeOutput(answerSchema),
     });
 
     const result = await agent.invoke({

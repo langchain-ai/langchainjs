@@ -9,6 +9,8 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 import { Validator } from "@langchain/core/utils/json_schema";
 
+import type { JsonSchemaFormat } from "./types.js";
+
 /**
  * This is a global counter for generating unique names for tools.
  */
@@ -20,7 +22,7 @@ let bindingIdentifier = 0;
  * via tool calls, including the original schema, its type classification, and the
  * corresponding tool implementation used by the tools strategy.
  */
-export class ToolOutput {
+export class ToolOutput<_T = unknown> {
   private constructor(
     /**
      * The original JSON Schema provided for structured output
@@ -39,6 +41,22 @@ export class ToolOutput {
     return this.tool.function.name;
   }
 
+  static fromSchema<S extends InteropZodObject>(
+    schema: S,
+    options?: {
+      name?: string;
+      description?: string;
+      strict?: boolean;
+    }
+  ): ToolOutput<S extends InteropZodType<infer U> ? U : unknown>;
+  static fromSchema(
+    schema: Record<string, unknown>,
+    options?: {
+      name?: string;
+      description?: string;
+      strict?: boolean;
+    }
+  ): ToolOutput<Record<string, unknown>>;
   static fromSchema(
     schema: InteropZodObject | Record<string, unknown>,
     options?: {
@@ -46,7 +64,7 @@ export class ToolOutput {
       description?: string;
       strict?: boolean;
     }
-  ): ToolOutput {
+  ): ToolOutput<any> {
     /**
      * It is required for tools to have a name so we can map the tool call to the correct tool
      * when parsing the response.
@@ -114,12 +132,23 @@ export class ToolOutput {
   }
 }
 
-export class NativeOutput {
+export class NativeOutput<T = unknown> {
+  // @ts-expect-error - _schemaType is used only for type inference
+  private _schemaType?: T;
+
   private constructor(public readonly schema: Record<string, unknown>) {}
 
-  static fromSchema(schema: InteropZodObject | Record<string, unknown>) {
+  static fromSchema<T>(schema: InteropZodType<T>): NativeOutput<T>;
+  static fromSchema(
+    schema: Record<string, unknown>
+  ): NativeOutput<Record<string, unknown>>;
+  static fromSchema<T = unknown>(
+    schema: InteropZodType<T> | Record<string, unknown>
+  ): NativeOutput<T> | NativeOutput<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
-    return new NativeOutput(asJsonSchema);
+    return new NativeOutput(asJsonSchema) as
+      | NativeOutput<T>
+      | NativeOutput<Record<string, unknown>>;
   }
 
   /**
@@ -151,7 +180,7 @@ export class NativeOutput {
   }
 }
 
-export type ResponseFormat = ToolOutput | NativeOutput;
+export type ResponseFormat = ToolOutput<any> | NativeOutput<any>;
 
 /**
  * Handle user input for `responseFormat` parameter of `CreateReactAgentParams`.
@@ -168,31 +197,57 @@ export function transformResponseFormat(
   responseFormat?:
     | InteropZodType<any>
     | InteropZodType<any>[]
-    | Record<string, unknown>
+    | JsonSchemaFormat
+    | JsonSchemaFormat[]
     | ResponseFormat
-    | ToolOutput[]
+    | ToolOutput<any>[]
 ): ResponseFormat[] {
   if (!responseFormat) {
     return [];
   }
 
   /**
-   * If users provide an array, all elements in that list need to be from type `ToolOutput`
-   * as we only support multiple structured outputs via tool calling.
+   * If users provide an array, it should only contain raw schemas (Zod or JSON schema),
+   * not ToolOutput or NativeOutput instances.
    */
   if (Array.isArray(responseFormat)) {
-    if (responseFormat.every((item) => item instanceof ToolOutput)) {
-      return responseFormat as ToolOutput[];
+    // Check if any item is a ToolOutput or NativeOutput instance
+    if (
+      responseFormat.some(
+        (item) => item instanceof ToolOutput || item instanceof NativeOutput
+      )
+    ) {
+      throw new Error(
+        `Invalid response format: arrays cannot contain ToolOutput or NativeOutput instances.\n` +
+          `Arrays should only contain raw Zod schemas or JSON schema objects.\n` +
+          `Use individual ToolOutput or NativeOutput instances, not arrays of them.`
+      );
     }
+
+    // Check if all items are Zod schemas
     if (responseFormat.every((item) => isInteropZodObject(item))) {
       return responseFormat.map((item) =>
         ToolOutput.fromSchema(item as InteropZodObject)
       );
     }
 
+    /**
+     * Check if all items are plain objects (JSON schema)
+     */
+    if (
+      responseFormat.every(
+        (item) =>
+          typeof item === "object" && item !== null && !isInteropZodObject(item)
+      )
+    ) {
+      return responseFormat.map((item) =>
+        ToolOutput.fromSchema(item as JsonSchemaFormat)
+      );
+    }
+
     throw new Error(
-      `Invalid response format: list contains items that are either instances of ToolOutput or InteropZodObject.\n` +
-        `Make sure all items are instances of ToolOutput or InteropZodObject.`
+      `Invalid response format: list contains mixed types.\n` +
+        `All items must be either InteropZodObject or plain JSON schema objects.`
     );
   }
 
@@ -207,26 +262,59 @@ export function transformResponseFormat(
     return [responseFormat];
   }
 
-  if ("schema" in responseFormat) {
-    const { schema, ...rest } = responseFormat;
-    return [ToolOutput.fromSchema(schema as Record<string, unknown>, rest)];
+  /**
+   * Handle plain object (JSON schema)
+   */
+  if (
+    typeof responseFormat === "object" &&
+    responseFormat !== null &&
+    "properties" in responseFormat
+  ) {
+    return [ToolOutput.fromSchema(responseFormat as JsonSchemaFormat)];
   }
 
-  throw new Error(`Invalid response format: ${responseFormat.toString()}`);
+  throw new Error(`Invalid response format: ${String(responseFormat)}`);
 }
 
-export function asToolOutput(
+/**
+ * Branded type for ToolOutput arrays that preserves type information
+ */
+export interface TypedToolOutput<T = unknown> extends Array<ToolOutput<any>> {
+  _schemaType?: T;
+}
+
+export function toolOutput<T extends InteropZodType<any>>(
+  responseFormat: T
+): TypedToolOutput<T extends InteropZodType<infer U> ? U : never>;
+export function toolOutput<T extends readonly InteropZodType<any>[]>(
+  responseFormat: T
+): TypedToolOutput<
+  { [K in keyof T]: T[K] extends InteropZodType<infer U> ? U : never }[number]
+>;
+export function toolOutput(
+  responseFormat: JsonSchemaFormat
+): TypedToolOutput<Record<string, unknown>>;
+export function toolOutput(
+  responseFormat: JsonSchemaFormat[]
+): TypedToolOutput<Record<string, unknown>>;
+export function toolOutput(
   responseFormat:
     | InteropZodType<any>
     | InteropZodType<any>[]
-    | Record<string, unknown>
-    | ToolOutput[]
-): ToolOutput[] {
-  return transformResponseFormat(responseFormat) as ToolOutput[];
+    | JsonSchemaFormat
+    | JsonSchemaFormat[]
+): TypedToolOutput {
+  return transformResponseFormat(responseFormat) as TypedToolOutput;
 }
 
-export function asNativeOutput(
-  responseFormat: InteropZodObject | Record<string, unknown>
-): NativeOutput {
-  return NativeOutput.fromSchema(responseFormat);
+export function nativeOutput<T extends InteropZodType<any>>(
+  responseFormat: T
+): NativeOutput<T extends InteropZodType<infer U> ? U : never>;
+export function nativeOutput(
+  responseFormat: JsonSchemaFormat
+): NativeOutput<Record<string, unknown>>;
+export function nativeOutput(
+  responseFormat: InteropZodType<any> | JsonSchemaFormat
+): NativeOutput<any> {
+  return NativeOutput.fromSchema(responseFormat as any) as NativeOutput<any>;
 }
