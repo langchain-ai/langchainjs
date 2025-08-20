@@ -3,6 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import {
   RunnablePassthrough,
   RunnableSequence,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createSqlQueryChain } from "langchain/chains/sql_db";
@@ -90,7 +91,9 @@ const queryChain = await createSqlQueryChain({
 });
 const retrieverChain = RunnableSequence.from([
   (i: { question: string }) => i.question,
-  retriever,
+  new RunnableLambda({
+    func: async (query: string) => retriever.invoke(query),
+  }),
   (docs: Array<DocumentInterface>) =>
     docs.map((doc) => doc.pageContent).join("\n"),
 ]);

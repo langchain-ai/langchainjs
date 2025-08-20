@@ -44,7 +44,7 @@ const prompt = ChatPromptTemplate.fromMessages([
 
 const chain = RunnableSequence.from([
   {
-    context: vectorStoreRetriever.pipe(formatDocumentsAsString),
+    context: vectorStoreRetriever.pipe(formatDocumentsAsString) as any,
     question: new RunnablePassthrough(),
   },
   prompt,

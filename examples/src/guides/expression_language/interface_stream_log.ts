@@ -5,6 +5,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
   RunnableSequence,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import {
   ChatPromptTemplate,
@@ -42,7 +43,10 @@ const prompt = ChatPromptTemplate.fromMessages(messages);
 
 const chain = RunnableSequence.from([
   {
-    context: vectorStoreRetriever.pipe(formatDocumentsAsString),
+    context: new RunnableLambda({
+      func: async (question: string) =>
+        vectorStoreRetriever.pipe(formatDocumentsAsString).invoke(question),
+    }),
     question: new RunnablePassthrough(),
   },
   prompt,

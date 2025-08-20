@@ -4,6 +4,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import {
   RunnablePassthrough,
   RunnableSequence,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import { Document } from "@langchain/core/documents";
 import { ChatAnthropic } from "@langchain/anthropic";
@@ -25,7 +26,13 @@ const prompt = PromptTemplate.fromTemplate(template);
 const formatDocs = (docs: Document[]) => docs.map((doc) => doc.pageContent);
 
 const retrievalChain = RunnableSequence.from([
-  { context: retriever.pipe(formatDocs), question: new RunnablePassthrough() },
+  {
+    context: new RunnableLambda({
+      func: async (question: string) =>
+        retriever.pipe(formatDocs).invoke(question),
+    }),
+    question: new RunnablePassthrough(),
+  },
   prompt,
   model,
   new StringOutputParser(),

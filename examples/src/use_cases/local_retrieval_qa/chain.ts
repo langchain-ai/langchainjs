@@ -8,6 +8,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import {
   RunnableSequence,
   RunnablePassthrough,
+  RunnableLambda,
 } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
@@ -45,7 +46,10 @@ const model = new Ollama({
 
 const chain = RunnableSequence.from([
   {
-    context: retriever.pipe(formatDocumentsAsString),
+    context: new RunnableLambda({
+      func: async (question: string) =>
+        retriever.pipe(formatDocumentsAsString).invoke(question),
+    }),
     question: new RunnablePassthrough(),
   },
   prompt,

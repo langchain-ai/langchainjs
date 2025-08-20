@@ -94,7 +94,7 @@ const historyAwarePrompt = ChatPromptTemplate.fromMessages([
 
 const historyAwareRetrieverChain = await createHistoryAwareRetriever({
   llm: chatModel,
-  retriever,
+  retriever: retriever as any,
   rephrasePrompt: historyAwarePrompt,
 });
 

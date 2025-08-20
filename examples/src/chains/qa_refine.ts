@@ -12,7 +12,7 @@ const chain = loadQARefineChain(model);
 // Load the documents and create the vector store
 const loader = new TextLoader("./state_of_the_union.txt");
 const splitter = new RecursiveCharacterTextSplitter();
-const docs = await loader.loadAndSplit(splitter);
+const docs = await loader.loadAndSplit(splitter as any);
 const store = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
 // Select the relevant documents
