@@ -9,7 +9,7 @@ const prompt = {
 };
 
 const jsonSchema: JsonSchemaFormat = {
-  type: "json_schema",
+  type: "number",
   properties: {
     capital: {
       type: "string",
@@ -19,6 +19,15 @@ const jsonSchema: JsonSchemaFormat = {
 };
 
 describe("response format", () => {
+  it("should allow no response format", async () => {
+    const agent = createReactAgent({
+      llm: new FakeToolCallingChatModel({}),
+      tools: [],
+    });
+    const res = await agent.invoke(prompt);
+    expectTypeOf(res).not.toHaveProperty("structuredResponse");
+  });
+
   describe("responseFormat as raw zod schemas", () => {
     it("should allow a simple zod schema", async () => {
       const agent = createReactAgent({

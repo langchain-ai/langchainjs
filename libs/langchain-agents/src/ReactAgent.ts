@@ -15,7 +15,11 @@ import {
   AIMessage,
 } from "@langchain/core/messages";
 
-import { createReactAgentAnnotation } from "./annotation.js";
+import {
+  createReactAgentAnnotationConditional,
+  ReactAgentAnnotation,
+} from "./annotation.js";
+import type { ResponseFormatUndefined } from "./types.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -31,22 +35,24 @@ import type {
 
 type AgentGraph<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>
+  StructuredResponseFormat extends
+    | Record<string, any>
+    | ResponseFormatUndefined = Record<string, any>
 > = CompiledStateGraph<
   ToAnnotationRoot<StateSchema>["State"],
   ToAnnotationRoot<StateSchema>["Update"],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
-  ReturnType<
-    typeof createReactAgentAnnotation<StructuredResponseFormat>
-  >["spec"] &
+  ReactAgentAnnotation<StructuredResponseFormat>["spec"] &
     ToAnnotationRoot<StateSchema>["spec"]
 >;
 
 export class ReactAgent<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
+  StructuredResponseFormat extends
+    | Record<string, any>
+    | ResponseFormatUndefined = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > {
   #graph: AgentGraph<StateSchema, StructuredResponseFormat>;
@@ -82,7 +88,9 @@ export class ReactAgent<
 
     const schema =
       this.options.stateSchema ??
-      createReactAgentAnnotation<StructuredResponseFormat>();
+      createReactAgentAnnotationConditional<StructuredResponseFormat>(
+        this.options.responseFormat !== undefined
+      );
 
     const workflow = new StateGraph(
       schema as AnyAnnotationRoot,

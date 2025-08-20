@@ -12,14 +12,12 @@
     "name": "Scenario: ❌ return_direct, ✅ response_format, ❌ stop_when",
     "returnDirect": false,
     "responseFormat": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "attempts": { "type": "number" },
-          "succeeded": { "type": "boolean" }
-        },
-        "required": ["attempts", "succeeded"]
-      }
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
     },
     "stopWhen": null,
     "expectedToolCalls": 10,
@@ -44,14 +42,12 @@
     "name": "Scenario: ❌ return_direct, ✅ response_format, ✅ stop_when",
     "returnDirect": false,
     "responseFormat": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "attempts": { "type": "number" },
-          "succeeded": { "type": "boolean" }
-        },
-        "required": ["attempts", "succeeded"]
-      }
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
     },
     "stopWhen": [
       {
@@ -76,14 +72,12 @@
     "name": "Scenario: ✅ return_direct, ✅ response_format, ❌ stop_when",
     "returnDirect": true,
     "responseFormat": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "attempts": { "type": "number" },
-          "succeeded": { "type": "boolean" }
-        },
-        "required": ["attempts", "succeeded"]
-      }
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
     },
     "stopWhen": null,
     "expectedToolCalls": 1,
@@ -108,14 +102,12 @@
     "name": "Scenario: ✅ return_direct, ✅ response_format, ✅ stop_when",
     "returnDirect": true,
     "responseFormat": {
-      "schema": {
-        "type": "object",
-        "properties": {
-          "attempts": { "type": "number" },
-          "succeeded": { "type": "boolean" }
-        },
-        "required": ["attempts", "succeeded"]
-      }
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
     },
     "stopWhen": [
       {

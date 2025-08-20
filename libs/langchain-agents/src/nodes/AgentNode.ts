@@ -319,9 +319,15 @@ export class AgentNode<
   ): Omit<AgentState<StructuredResponseFormat>, "llmInputMessages"> {
     const { messages, llmInputMessages, ...rest } = state;
     if (llmInputMessages && llmInputMessages.length > 0) {
-      return { messages: llmInputMessages, ...rest };
+      return { messages: llmInputMessages, ...rest } as Omit<
+        AgentState<StructuredResponseFormat>,
+        "llmInputMessages"
+      >;
     }
-    return { messages, ...rest };
+    return { messages, ...rest } as Omit<
+      AgentState<StructuredResponseFormat>,
+      "llmInputMessages"
+    >;
   }
 
   /**

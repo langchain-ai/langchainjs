@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
+import type { InteropZodType } from "@langchain/core/utils/types";
 import z from "zod";
 
 import {
@@ -17,7 +18,7 @@ interface TestScenario {
   stopWhen: PredicateFunction<any>[];
   toolParams?: PollToolParams;
   expectedToolCalls: number;
-  responseFormat?: z.ZodSchema;
+  responseFormat?: InteropZodType;
   expectedLastMessage: string;
   expectedStructuredResponse: any;
   only?: boolean;
@@ -167,7 +168,7 @@ const testScenarios: TestScenario[] = [
   },
   {
     name: "Content-based stop - stops when specific word appears",
-    stopWhen: [stopWhenMessageContains("ERROR")],
+    stopWhen: [stopWhenMessageContains("ERROR") as any],
     toolParams: { injectWord: "ERROR", injectAfter: 5 },
     expectedToolCalls: 5,
     expectedLastMessage:
@@ -191,7 +192,7 @@ describe("stopWhen Tests", () => {
         tools: [pollJob],
         prompt: AGENT_PROMPT,
         stopWhen: scenario.stopWhen,
-        responseFormat: scenario.responseFormat,
+        responseFormat: scenario.responseFormat as InteropZodType,
       });
 
       const result = await agent.invoke({
@@ -206,7 +207,7 @@ describe("stopWhen Tests", () => {
       expect(result.messages.at(-1)?.content).toBe(
         scenario.expectedLastMessage
       );
-      expect(result.structuredResponse).toEqual(
+      expect((result as any).structuredResponse).toEqual(
         scenario.expectedStructuredResponse
       );
     });

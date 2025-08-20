@@ -10,6 +10,7 @@ import type {
   CreateReactAgentParams,
   ExtractZodArrayTypes,
   JsonSchemaFormat,
+  ResponseFormatUndefined,
 } from "./types.js";
 import type {
   ToolOutput,
@@ -197,13 +198,12 @@ export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = typeof MessagesAnnotation,
-  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
   params: Omit<
     CreateReactAgentParams<
       StateSchema,
-      StructuredResponseFormat,
+      ResponseFormatUndefined,
       ContextSchema,
       never
     >,
@@ -211,7 +211,7 @@ export function createReactAgent<
   > & {
     responseFormat?: undefined;
   }
-): ReactAgent<StateSchema, StructuredResponseFormat, ContextSchema>;
+): ReactAgent<StateSchema, ResponseFormatUndefined, ContextSchema>;
 
 // Overload 9: For other ResponseFormat values (failsafe)
 export function createReactAgent<

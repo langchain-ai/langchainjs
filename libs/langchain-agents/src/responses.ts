@@ -9,7 +9,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 import { Validator } from "@langchain/core/utils/json_schema";
 
-import type { JsonSchemaFormat } from "./types.js";
+import type { JsonSchemaFormat, ResponseFormatUndefined } from "./types.js";
 
 /**
  * This is a global counter for generating unique names for tools.
@@ -201,8 +201,18 @@ export function transformResponseFormat(
     | JsonSchemaFormat[]
     | ResponseFormat
     | ToolOutput<any>[]
+    | ResponseFormatUndefined
 ): ResponseFormat[] {
   if (!responseFormat) {
+    return [];
+  }
+
+  // Handle ResponseFormatUndefined case
+  if (
+    typeof responseFormat === "object" &&
+    responseFormat !== null &&
+    "__responseFormatUndefined" in responseFormat
+  ) {
     return [];
   }
 

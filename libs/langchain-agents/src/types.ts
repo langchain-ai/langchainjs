@@ -47,12 +47,27 @@ export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 export type N = typeof START | "agent" | "tools";
 
 /**
+ * Special type to indicate that no response format is provided.
+ * When this type is used, the structuredResponse property should not be present in the result.
+ */
+export type ResponseFormatUndefined = {
+  __responseFormatUndefined: true;
+};
+
+/**
  * Type representing a JSON Schema object format.
  * This is a strict type that excludes ToolOutput and NativeOutput instances.
  */
 export type JsonSchemaFormat = {
-  type: string;
-  properties: Record<string, unknown>;
+  type:
+    | "null"
+    | "boolean"
+    | "object"
+    | "array"
+    | "number"
+    | "string"
+    | "integer";
+  properties?: Record<string, unknown>;
   required?: string[];
   additionalProperties?: boolean;
   [key: string]: unknown;
@@ -60,40 +75,6 @@ export type JsonSchemaFormat = {
   // Brand to ensure this is not a ToolOutput or NativeOutput
   __brand?: never;
 };
-
-/**
- * Type helper to check if value contains ToolOutput types
- */
-type HasToolOutput<T> = T extends ToolOutput<any>
-  ? true
-  : T extends TypedToolOutput<any>
-  ? true
-  : false;
-
-/**
- * Type helper to check if value contains NativeOutput types
- */
-type HasNativeOutput<T> = T extends NativeOutput<any> ? true : false;
-
-/**
- * Type helper to check if an array contains mixed ToolOutput and NativeOutput types.
- * This type will cause a TypeScript error if an array contains both types.
- */
-export type ValidateNoMixedOutputArray<T extends readonly any[]> =
-  T extends readonly any[]
-    ? true extends HasToolOutput<T[number]>
-      ? true extends HasNativeOutput<T[number]>
-        ? ["Error: Cannot mix ToolOutput and NativeOutput in the same array"] // Has both, invalid
-        : T // Only has ToolOutput types
-      : T // Doesn't have ToolOutput, so it's fine
-    : T; // Not an array
-
-/**
- * Validates the responseFormat type to ensure no mixed output arrays.
- */
-export type ValidatedResponseFormat<T> = T extends readonly any[]
-  ? ValidateNoMixedOutputArray<T>
-  : T;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAnnotationRoot = AnnotationRoot<any>;
@@ -204,6 +185,7 @@ export type CreateReactAgentParams<
     | TypedToolOutput<StructuredResponseType>
     | ToolOutput<StructuredResponseType>
     | NativeOutput<StructuredResponseType>
+    | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
   llm: LLM<StateSchema, ContextSchema>;
@@ -305,7 +287,7 @@ export type CreateReactAgentParams<
    * **Note**: The graph will make a separate call to the LLM to generate the structured response after the agent loop is finished.
    * This is not the only strategy to get structured responses, see more options in [this guide](https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/).
    */
-  responseFormat?: ValidatedResponseFormat<ResponseFormatType>;
+  responseFormat?: ResponseFormatType;
 
   /**
    * An optional name for the agent.
@@ -367,20 +349,21 @@ export interface ConfigurableModelInterface {
   _model: () => Promise<BaseChatModel>;
 }
 
-export interface AgentState<
-  StructuredResponseType extends Record<string, unknown> = Record<
+export type AgentState<
+  StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
     unknown
   >
-> {
+> = {
   messages: BaseMessage[];
   // TODO: This won't be set until we
   // implement managed values in LangGraphJS
   // Will be useful for inserting a message on
   // graph recursion end
   // is_last_step: boolean;
-  structuredResponse: StructuredResponseType;
-}
+} & (StructuredResponseType extends ResponseFormatUndefined
+  ? {}
+  : { structuredResponse: StructuredResponseType });
 
 export type WithStateGraphNodes<
   K extends string,
@@ -423,7 +406,7 @@ export interface ToolCallData {
  * @returns A predicate function that can be used to stop the agent.
  */
 export type PredicateFunction<
-  StructuredResponseFormat extends Record<string, unknown> = Record<
+  StructuredResponseFormat extends Record<string, unknown> | undefined = Record<
     string,
     unknown
   >

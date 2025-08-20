@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
+import type { InteropZodType } from "@langchain/core/utils/types";
+
 import { createReactAgent } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
@@ -164,7 +166,7 @@ describe("Graph", () => {
             tools,
             preModelHook,
             postModelHook,
-            responseFormat,
+            responseFormat: responseFormat as InteropZodType,
           });
 
           // Get the graph representation

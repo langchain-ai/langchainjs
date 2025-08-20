@@ -121,7 +121,7 @@ describe("responses Matrix Tests", () => {
               )
             : ToolOutput.fromSchema(testCase.responseFormat.schema),
         }),
-      });
+      } as any);
 
       for (const assertion of testCase.assertionsByInvocation) {
         // Invoke the agent

@@ -1861,7 +1861,7 @@ describe("createReactAgent", () => {
         llm: model,
         tools: [dummyTool],
         stopWhen: stopOnKeyword,
-      });
+      } as any);
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Go!")],
@@ -2017,7 +2017,7 @@ describe("createReactAgent", () => {
         llm: model,
         tools: [searchTool],
         stopWhen: combinedStop,
-      });
+      } as any);
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Search and process")],
@@ -2063,7 +2063,7 @@ describe("createReactAgent", () => {
         llm: model,
         tools: [],
         stopWhen: asyncStop,
-      });
+      } as any);
 
       const result = await agent.invoke({
         messages: [new HumanMessage("Start async process")],
