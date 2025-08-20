@@ -52,4 +52,3 @@ export * from "langchain/util/document";
 export * from "langchain/util/math";
 export * from "langchain/util/time";
 export * from "langchain/evaluation";
-export * from "langchain/indexes";
