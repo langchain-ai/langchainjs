@@ -25,9 +25,9 @@ export {
   stopWhen,
   toolOutput,
   nativeOutput,
-  type CreateReactAgentState,
-  type CreateReactAgentRuntime,
-  type LangGraphRunnableConfig as CreateReactAgentToolConfig,
+  type AgentState,
+  type AgentRuntime,
+  type LangGraphRunnableConfig as CreateAgentToolConfig,
 } from "@langchain/agents";
 export { type Runtime } from "@langchain/langgraph";
 

@@ -147,13 +147,13 @@ export type Prompt<
     ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
   | Runnable;
 
-export type CreateReactAgentState<
+export type AgentState<
   AnnotationRoot extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot
 > = ToAnnotationRoot<AnnotationRoot>["State"] & PreHookAnnotation["State"];
 
-export type CreateReactAgentRuntime<
+export type AgentRuntime<
   AnnotationRoot extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot
@@ -165,7 +165,7 @@ export type LLM<
 > =
   | LanguageModelLike
   | ((
-      state: CreateReactAgentState<StateSchema>,
+      state: AgentState<StateSchema>,
       runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
     ) => Promise<LanguageModelLike> | LanguageModelLike);
 
@@ -243,7 +243,7 @@ export type CreateReactAgentParams<
    * Can be passed in as:
    *   - Zod schema
    *     ```ts
-   *     const agent = createAgent({
+   *     const agent = createReactAgent({
    *       responseFormat: z.object({
    *         capital: z.string(),
    *       }),
@@ -252,7 +252,7 @@ export type CreateReactAgentParams<
    *     ```
    *   - JSON schema
    *     ```ts
-   *     const agent = createAgent({
+   *     const agent = createReactAgent({
    *       responseFormat: {
    *         type: "json_schema",
    *         schema: {
@@ -269,7 +269,7 @@ export type CreateReactAgentParams<
    *   - Create React Agent ResponseFormat
    *     ```ts
    *     import { nativeOutput, toolOutput } from "langchain";
-   *     const agent = createAgent({
+   *     const agent = createReactAgent({
    *       responseFormat: nativeOutput(
    *         z.object({
    *           capital: z.string(),
@@ -349,7 +349,7 @@ export interface ConfigurableModelInterface {
   _model: () => Promise<BaseChatModel>;
 }
 
-export type AgentState<
+export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
     unknown
@@ -411,7 +411,8 @@ export type PredicateFunction<
     unknown
   >
 > = (
-  state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+  state: InternalAgentState<StructuredResponseFormat> &
+    PreHookAnnotation["State"],
   config: RunnableConfig
 ) => PredicateFunctionReturn | Promise<PredicateFunctionReturn>;
 

@@ -1,12 +1,7 @@
 import fs from "fs/promises";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  createReactAgent,
-  tool,
-  HumanMessage,
-  stopWhenToolCall,
-} from "langchain";
+import { createAgent, tool, HumanMessage, stopWhenToolCall } from "langchain";
 
 /**
  * A deterministic poll tool: returns "pending" for the first 10 calls, then "succeeded".
@@ -31,7 +26,7 @@ function makePollTool() {
 const pollJob = makePollTool();
 const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
 
-const agent = createReactAgent({
+const agent = createAgent({
   llm,
   tools: [pollJob],
   stopWhen: [stopWhenToolCall("pollJob", 3)],

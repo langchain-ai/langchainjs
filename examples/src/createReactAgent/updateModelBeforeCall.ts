@@ -27,11 +27,7 @@
  */
 
 import fs from "node:fs/promises";
-import {
-  createReactAgent,
-  type CreateReactAgentState,
-  type CreateReactAgentRuntime,
-} from "langchain";
+import { createAgent, type AgentState, type AgentRuntime } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -54,8 +50,8 @@ const context = z.object({
  * @returns The model to use for the next call.
  */
 function dynamicModel(
-  state: CreateReactAgentState,
-  runtime: CreateReactAgentRuntime<typeof context>
+  state: AgentState,
+  runtime: AgentRuntime<typeof context>
 ) {
   /**
    * if model preference is provided by content, use it
@@ -83,7 +79,7 @@ function dynamicModel(
   });
 }
 
-const agent = createReactAgent({
+const agent = createAgent({
   llm: dynamicModel,
   tools: [],
   prompt: `You are a concise coding assistant. Answer clearly.`,

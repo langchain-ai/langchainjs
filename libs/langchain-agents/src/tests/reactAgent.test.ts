@@ -2104,7 +2104,9 @@ describe("createAgent", () => {
       const abortableTool = tool(
         async () => {
           // Simulate some long running async work
-          await new Promise((resolve) => setTimeout(resolve, 10000));
+          await new Promise((resolve) => {
+            setTimeout(resolve, 10000);
+          });
           return "Tool completed successfully";
         },
         {
@@ -2166,9 +2168,9 @@ describe("createAgent", () => {
       const signalCheckTool = tool(
         async () => {
           // some long running async work
-          return new Promise((resolve) =>
-            setTimeout(() => resolve("Not aborted"), 500)
-          );
+          return new Promise((resolve) => {
+            setTimeout(() => resolve("Not aborted"), 500);
+          });
         },
         {
           name: "signal_check_tool",

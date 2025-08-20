@@ -12,7 +12,7 @@
  * returning a cached value if the tool call fails.
  */
 import {
-  createReactAgent,
+  createAgent,
   tool,
   HumanMessage,
   SystemMessage,
@@ -84,7 +84,7 @@ const getLiveStockPrice = tool(
   }
 );
 
-const agent = createReactAgent({
+const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [getLiveStockPrice],
 

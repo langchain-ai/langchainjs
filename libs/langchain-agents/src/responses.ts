@@ -5,9 +5,8 @@ import {
   isInteropZodObject,
 } from "@langchain/core/utils/types";
 import { type AIMessage } from "@langchain/core/messages";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
-import { Validator } from "@langchain/core/utils/json_schema";
 
 import type { JsonSchemaFormat, ResponseFormatUndefined } from "./types.js";
 
@@ -28,6 +27,7 @@ export class ToolOutput<_T = unknown> {
      * The original JSON Schema provided for structured output
      */
     public readonly schema: Record<string, unknown>,
+
     /**
      * The tool that will be used to parse the tool call arguments.
      */
@@ -49,6 +49,7 @@ export class ToolOutput<_T = unknown> {
       strict?: boolean;
     }
   ): ToolOutput<S extends InteropZodType<infer U> ? U : unknown>;
+
   static fromSchema(
     schema: Record<string, unknown>,
     options?: {
@@ -57,6 +58,7 @@ export class ToolOutput<_T = unknown> {
       strict?: boolean;
     }
   ): ToolOutput<Record<string, unknown>>;
+
   static fromSchema(
     schema: InteropZodObject | Record<string, unknown>,
     options?: {
@@ -139,9 +141,11 @@ export class NativeOutput<T = unknown> {
   private constructor(public readonly schema: Record<string, unknown>) {}
 
   static fromSchema<T>(schema: InteropZodType<T>): NativeOutput<T>;
+
   static fromSchema(
     schema: Record<string, unknown>
   ): NativeOutput<Record<string, unknown>>;
+
   static fromSchema<T = unknown>(
     schema: InteropZodType<T> | Record<string, unknown>
   ): NativeOutput<T> | NativeOutput<Record<string, unknown>> {
@@ -175,7 +179,7 @@ export class NativeOutput<T = unknown> {
 
       return content;
     } catch (error) {
-      return;
+      // no-op
     }
   }
 }

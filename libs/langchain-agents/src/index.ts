@@ -292,5 +292,5 @@ export {
   nativeOutput,
   ToolOutput,
   NativeOutput,
-  ResponseFormat,
+  type ResponseFormat,
 } from "./responses.js";

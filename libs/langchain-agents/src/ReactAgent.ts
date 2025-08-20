@@ -19,7 +19,6 @@ import {
   createAgentAnnotationConditional,
   ReactAgentAnnotation,
 } from "./annotation.js";
-import type { ResponseFormatUndefined } from "./types.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
@@ -28,9 +27,10 @@ import type {
   AnyAnnotationRoot,
   ClientTool,
   ServerTool,
-  AgentState,
+  InternalAgentState,
   ToAnnotationRoot,
   WithStateGraphNodes,
+  ResponseFormatUndefined,
 } from "./types.js";
 
 type AgentGraph<
@@ -124,14 +124,14 @@ export class ReactAgent<
     );
 
     /**
-     * add individual tool nodes
+     * add single tool node for all tools
      */
-    for (const tool of toolClasses.filter(isClientTool)) {
-      const individualToolNode = new ToolNode([tool], {
+    if (toolClasses.length > 0) {
+      const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         onToolCallError: this.options.onToolCallError,
         signal: this.options.signal,
       });
-      allNodeWorkflows.addNode(tool.name, individualToolNode);
+      allNodeWorkflows.addNode("tools", toolNode);
     }
 
     /**
@@ -185,26 +185,17 @@ export class ReactAgent<
     }
 
     /**
-     * add edges for individual tool nodes
+     * add edges for tools node
      */
     if (toolClasses.length > 0) {
-      const toolRouter = this.#createToolsRouter(shouldReturnDirect);
-      for (const tool of toolClasses.filter(isClientTool)) {
-        /**
-         * Only add conditional edges with END for tools that have returnDirect
-         */
-        if (shouldReturnDirect.has(tool.name)) {
-          allNodeWorkflows.addConditionalEdges(
-            tool.name as "tools",
-            toolRouter,
-            [this.#getEntryPoint(), END]
-          );
-        } else {
-          /**
-           * For non-returnDirect tools, always route back to agent
-           */
-          allNodeWorkflows.addEdge(tool.name as "tools", this.#getEntryPoint());
-        }
+      if (shouldReturnDirect.size > 0) {
+        allNodeWorkflows.addConditionalEdges(
+          "tools",
+          this.#createToolsRouter(shouldReturnDirect),
+          [this.#getEntryPoint(), END]
+        );
+      } else {
+        allNodeWorkflows.addEdge("tools", this.#getEntryPoint());
       }
     }
 
@@ -239,17 +230,14 @@ export class ReactAgent<
   #getPostModelHookPaths(toolClasses: (ClientTool | ServerTool)[]) {
     const paths: (typeof END | "agent" | "pre_model_hook" | "tools")[] = [];
     if (toolClasses.length > 0) {
-      paths.push(
-        this.#getEntryPoint(),
-        ...(toolClasses.map((tool) => tool.name) as "tools"[])
-      );
+      paths.push(this.#getEntryPoint(), "tools");
     }
     paths.push(END);
     return paths;
   }
 
   #createPostModelHookRouter() {
-    return (state: AgentState<StructuredResponseFormat>) => {
+    return (state: InternalAgentState<StructuredResponseFormat>) => {
       const messages = state.messages;
       const toolMessages = messages.filter(isToolMessage);
       const lastAiMessage = messages.filter(isAIMessage).at(-1);
@@ -257,10 +245,9 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
 
-      if (pendingToolCalls) {
+      if (pendingToolCalls && pendingToolCalls.length > 0) {
         return pendingToolCalls.map(
-          (toolCall) =>
-            new Send(toolCall.name, { ...state, lg_tool_call: toolCall })
+          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
         );
       }
 
@@ -282,7 +269,7 @@ export class ReactAgent<
   ): ("tools" | typeof END)[] {
     const paths: ("tools" | typeof END)[] = [];
     if (toolClasses.length > 0) {
-      paths.push(...toolClasses.map((tool) => tool.name as "tools"));
+      paths.push("tools");
     }
 
     paths.push(END);
@@ -297,7 +284,7 @@ export class ReactAgent<
     /**
      * determine if the agent should continue or not
      */
-    return (state: AgentState<StructuredResponseFormat>) => {
+    return (state: InternalAgentState<StructuredResponseFormat>) => {
       const messages = state.messages;
       const lastMessage = messages.at(-1);
 
@@ -318,11 +305,10 @@ export class ReactAgent<
       }
 
       /**
-       * Route to individual tool nodes
+       * Route to tools node
        */
       return lastMessage.tool_calls.map(
-        (toolCall) =>
-          new Send(toolCall.name, { ...state, lg_tool_call: toolCall })
+        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
       );
     };
   }
@@ -331,7 +317,7 @@ export class ReactAgent<
    * Create routing function for tools node conditional edges.
    */
   #createToolsRouter(shouldReturnDirect: Set<string>) {
-    return (state: AgentState<StructuredResponseFormat>) => {
+    return (state: InternalAgentState<StructuredResponseFormat>) => {
       const messages = state.messages;
       const lastMessage = messages[messages.length - 1];
 

@@ -43,7 +43,7 @@ const createAgentAnnotation = <
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
 export function createAgentAnnotationConditional<
   T extends Record<string, any> | ResponseFormatUndefined
->(hasStructuredResponse: boolean = true) {
+>(hasStructuredResponse = true) {
   const baseAnnotation = {
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,

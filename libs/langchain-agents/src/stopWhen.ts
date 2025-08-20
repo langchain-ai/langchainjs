@@ -2,7 +2,7 @@ import { RunnableConfig } from "@langchain/core/runnables";
 
 import { PreHookAnnotation } from "./annotation.js";
 import {
-  AgentState,
+  InternalAgentState,
   PredicateFunction,
   PredicateFunctionReturn,
 } from "./types.js";
@@ -68,7 +68,8 @@ export function stopWhen<
   }
 
   return async (
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
     config: RunnableConfig
   ): Promise<PredicateFunctionReturn> => {
     return predicate(state, config);
@@ -130,7 +131,7 @@ export function stopWhenToolCall(toolName: string, toolCallCount = 1) {
     throw new Error("toolCallCount must be a positive integer");
   }
 
-  return (state: AgentState<any>): PredicateFunctionReturn => {
+  return (state: InternalAgentState<any>): PredicateFunctionReturn => {
     const toolCalls = state.messages.filter(
       (msg) => msg.getType() === "tool" && msg.name === toolName
     );
@@ -197,7 +198,7 @@ export function stopWhenMaxSteps(maxSteps: number) {
     throw new Error("maxSteps must be a positive integer");
   }
 
-  return (state: AgentState<any>): PredicateFunctionReturn => {
+  return (state: InternalAgentState<any>): PredicateFunctionReturn => {
     const modelCalls = state.messages.filter((msg) => msg.getType() === "ai");
     return {
       shouldStop: modelCalls.length >= maxSteps,
