@@ -1,7 +1,6 @@
 import { BaseContentBlock } from "../content/base.js";
 import { ContentBlock } from "../content/index.js";
 import {
-  $MessageToolDefinition,
   AIMessage,
   HumanMessage,
   isMessage,
