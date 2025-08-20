@@ -486,6 +486,7 @@ export abstract class BaseChatModelV1<
     }
   }
 
+  // TODO: implement
   async getNumTokens() {}
 
   /** @internal */
@@ -609,6 +610,7 @@ export abstract class BaseChatModelV1<
     }
 
     const parserAssign = RunnablePassthrough.assign({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parsed: (input: any, config) =>
         toolMessageParser.invoke(input.raw, config),
     });
@@ -659,6 +661,7 @@ export function convertChatModelInput(input: BaseChatModelInput): Message[] {
   return messages;
 }
 
+// TODO: implement correctly
 function formatMessagesForTracing(message: Message): Message {
   return message;
 }
