@@ -178,10 +178,6 @@ document_loaders/fs/text.cjs
 document_loaders/fs/text.js
 document_loaders/fs/text.d.ts
 document_loaders/fs/text.d.cts
-document_transformers/openai_functions.cjs
-document_transformers/openai_functions.js
-document_transformers/openai_functions.d.ts
-document_transformers/openai_functions.d.cts
 sql_db.cjs
 sql_db.js
 sql_db.d.ts
