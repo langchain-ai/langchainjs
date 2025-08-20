@@ -20,26 +20,7 @@ describe("types", () => {
     });
 
     void createAgent({
-      llm: (state, config) => {
-        // still allows to access messages
-        expectTypeOf(state.messages).toEqualTypeOf<BaseMessage[]>();
-        // allows to access state properties
-        expectTypeOf(state.foo).toEqualTypeOf<string>();
-        expectTypeOf(state.bar).toEqualTypeOf<number>();
-
-        // allows to access context properties
-        expectTypeOf(config.context?.foobar.baz).toEqualTypeOf<
-          string | undefined
-        >();
-
-        expectTypeOf(config.writer).toEqualTypeOf<
-          ((chunk: unknown) => void) | undefined
-        >();
-        expectTypeOf(config.store).toEqualTypeOf<BaseStore | undefined>();
-        expectTypeOf(config.signal).toEqualTypeOf<AbortSignal | undefined>();
-
-        return new FakeToolCallingModel();
-      },
+      llm: new FakeToolCallingModel(),
       prompt: (state, config) => {
         // still allows to access messages
         expectTypeOf(state.messages).toEqualTypeOf<BaseMessage[]>();

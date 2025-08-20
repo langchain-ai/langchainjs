@@ -159,16 +159,6 @@ export type AgentRuntime<
     | InteropZodObject = AnyAnnotationRoot
 > = Runtime<ToAnnotationRoot<AnnotationRoot>["State"]>;
 
-export type LLM<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> =
-  | LanguageModelLike
-  | ((
-      state: AgentState<StateSchema>,
-      runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
-    ) => Promise<LanguageModelLike> | LanguageModelLike);
-
 export type CreateReactAgentParams<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -188,7 +178,7 @@ export type CreateReactAgentParams<
     | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm: LLM<StateSchema, ContextSchema>;
+  llm: LanguageModelLike;
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];

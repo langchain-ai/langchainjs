@@ -191,22 +191,6 @@ describe("stopWhen Tests", () => {
       });
 
       let counter = 0;
-      const dynamicLlm = () => {
-        if (scenario.throwTimming === "immediate") {
-          throw new Error("llm error");
-        }
-
-        counter += 1;
-        if (scenario.throwTimming === "delayed") {
-          if (counter > THROW_DELAY_COUNT) {
-            throw new Error("llm error");
-          }
-        }
-
-        console.log("returning llm");
-        return llm;
-      };
-
       const dynamicPrompt = (state: any) => {
         if (scenario.throwTimming === "immediate") {
           throw new Error("prompt error");
@@ -237,7 +221,7 @@ describe("stopWhen Tests", () => {
 
       const agent = createAgent({
         tools: [pollJob],
-        llm: scenario.throwWithin === "llm" ? dynamicLlm : llm,
+        llm,
         prompt: scenario.throwWithin === "prompt" ? dynamicPrompt : prompt,
         preModelHook:
           scenario.throwWithin === "preModelHook"

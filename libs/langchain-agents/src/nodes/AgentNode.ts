@@ -23,7 +23,7 @@ import {
   hasSupportForJsonSchemaOutput,
 } from "../utils.js";
 import {
-  AgentState,
+  InternalAgentState,
   ClientTool,
   ServerTool,
   AnyAnnotationRoot,
@@ -70,7 +70,7 @@ export class AgentNode<
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
-  AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+  InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
   { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
 > {
   #options: AgentNodeOptions<
@@ -78,8 +78,6 @@ export class AgentNode<
     StructuredResponseFormat,
     ContextSchema
   >;
-
-  #cachedStaticModel?: Runnable;
 
   #stopWhen: PredicateFunction<StructuredResponseFormat>[];
 
@@ -119,7 +117,8 @@ export class AgentNode<
   }
 
   async #run(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
     config: RunnableConfig
   ) {
     /**
@@ -209,7 +208,8 @@ export class AgentNode<
   }
 
   async #invokeModel(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
     config: RunnableConfig,
     options: {
       lastMessage?: string;
@@ -219,7 +219,13 @@ export class AgentNode<
     | AIMessage
     | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
   > {
-    const model = await this.#getBaseModel(state, config);
+    const model = this.#options.llm;
+
+    /**
+     * Check if the LLM already has bound tools and throw if it does.
+     */
+    validateLLMHasNoBoundTools(model);
+
     const modelWithTools = await this.#bindTools(
       model,
       options?.isDirectReturn
@@ -297,7 +303,8 @@ export class AgentNode<
   }
 
   #areMoreStepsNeeded(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
     response: BaseMessage
   ): boolean {
     const allToolsReturnDirect =
@@ -315,56 +322,20 @@ export class AgentNode<
   }
 
   #getModelInputState(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"]
-  ): Omit<AgentState<StructuredResponseFormat>, "llmInputMessages"> {
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"]
+  ): Omit<InternalAgentState<StructuredResponseFormat>, "llmInputMessages"> {
     const { messages, llmInputMessages, ...rest } = state;
     if (llmInputMessages && llmInputMessages.length > 0) {
       return { messages: llmInputMessages, ...rest } as Omit<
-        AgentState<StructuredResponseFormat>,
+        InternalAgentState<StructuredResponseFormat>,
         "llmInputMessages"
       >;
     }
     return { messages, ...rest } as Omit<
-      AgentState<StructuredResponseFormat>,
+      InternalAgentState<StructuredResponseFormat>,
       "llmInputMessages"
     >;
-  }
-
-  /**
-   * Get the base model from the options with bound tools
-   * @param state - The state of the agent
-   * @param config - The config of the agent
-   * @returns The base model
-   */
-  async #getBaseModel(
-    state: AgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-    config: RunnableConfig
-  ): Promise<LanguageModelLike> {
-    /**
-     * If the model has already been cached, return it
-     */
-    if (this.#cachedStaticModel) {
-      return this.#cachedStaticModel;
-    }
-
-    const model: LanguageModelLike =
-      typeof this.#options.llm === "function"
-        ? await this.#options.llm(state, config)
-        : this.#options.llm;
-
-    /**
-     * Check if the LLM already has bound tools and throw if it does.
-     */
-    validateLLMHasNoBoundTools(model);
-
-    /**
-     * cache the model for future use if it is NOT a dynamic model
-     */
-    if (typeof this.#options.llm !== "function") {
-      this.#cachedStaticModel = model;
-    }
-
-    return model;
   }
 
   async #bindTools(
