@@ -2,8 +2,7 @@ import type {
   BaseLanguageModel,
   BaseLanguageModelInterface,
 } from "@langchain/core/language_models/base";
-import type { TiktokenModel } from "js-tiktoken/lite";
-import type { OpenAI } from "@langchain/openai";
+import type { OpenAI, TiktokenModel } from "@langchain/openai";
 import { ChainValues } from "@langchain/core/utils/types";
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {

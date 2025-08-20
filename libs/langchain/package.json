@@ -99,7 +99,6 @@
   "dependencies": {
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
-    "js-tiktoken": "^1.0.12",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "openapi-types": "^12.1.3",
