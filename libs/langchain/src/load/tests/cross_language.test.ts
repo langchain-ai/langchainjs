@@ -31,7 +31,6 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain_core/agents/AgentAction",
   "langchain_core/agents/AgentFinish",
   "langchain_core/agents/AgentActionMessageLog",
-  "langchain/agents/output_parsers/openai_tools/OpenAIToolAgentAction",
   "langchain_core/outputs/chat_generation/ChatGeneration",
   "langchain_core/outputs/generation/Generation",
   "langchain_core/runnables/configurable/DynamicRunnable",

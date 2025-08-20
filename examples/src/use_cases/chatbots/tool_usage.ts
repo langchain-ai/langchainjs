@@ -31,24 +31,21 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
-const agent = await createOpenAIToolsAgent({
+const agent = await createReactAgent({
   llm: chat,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({ agent, tools });
-
 import { HumanMessage } from "@langchain/core/messages";
 
-console.log(
-  await agentExecutor.invoke({ messages: [new HumanMessage("I'm Nemo!")] })
-);
+console.log(await agent.invoke({ messages: [new HumanMessage("I'm Nemo!")] }));
 
 console.log(
-  await agentExecutor.invoke({
+  await agent.invoke({
     messages: [
       new HumanMessage(
         "What is the current conservation status of the Great Barrier Reef?"
@@ -60,7 +57,7 @@ console.log(
 import { AIMessage } from "@langchain/core/messages";
 
 console.log(
-  await agentExecutor.invoke({
+  await agent.invoke({
     messages: [
       new HumanMessage("I'm Nemo!"),
       new AIMessage("Hello Nemo! How can I assist you today?"),
@@ -80,21 +77,19 @@ const prompt2 = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-const agent2 = await createOpenAIToolsAgent({
+const agent2 = await createReactAgent({
   llm: chat,
   tools,
   prompt: prompt2,
 });
-
-const agentExecutor2 = new AgentExecutor({ agent: agent2, tools });
 
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();
 
-const conversationalAgentExecutor = new RunnableWithMessageHistory({
-  runnable: agentExecutor2,
+const conversationalAgent = new RunnableWithMessageHistory({
+  runnable: agent2,
   getMessageHistory: (_sessionId) => demoEphemeralChatMessageHistory,
   inputMessagesKey: "input",
   outputMessagesKey: "output",
@@ -102,14 +97,14 @@ const conversationalAgentExecutor = new RunnableWithMessageHistory({
 });
 
 console.log(
-  await conversationalAgentExecutor.invoke(
+  await conversationalAgent.invoke(
     { input: "I'm Nemo!" },
     { configurable: { sessionId: "unused" } }
   )
 );
 
 console.log(
-  await conversationalAgentExecutor.invoke(
+  await conversationalAgent.invoke(
     { input: "What is my name?" },
     { configurable: { sessionId: "unused" } }
   )

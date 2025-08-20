@@ -14,7 +14,6 @@ import {
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { ChatAgent } from "langchain/agents";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -28,7 +27,6 @@ export default async function handler(req: NextRequest) {
   const emb = new OpenAIEmbeddings({
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
-  const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), []);
 
   // Set up a streaming LLM
   const encoder = new TextEncoder();

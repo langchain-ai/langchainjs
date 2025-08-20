@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { AgentExecutor } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentFinish, AgentAction } from "@langchain/core/agents";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { SearchApi } from "@langchain/community/tools/searchapi";
@@ -32,12 +32,12 @@ const customOutputParser = (
   },
 });
 // Replace this placeholder agent with your actual implementation.
-const agent = RunnableSequence.from([prefix, model, customOutputParser]);
-const executor = AgentExecutor.fromAgentAndTools({
-  agent,
+const agent = createReactAgent({
+  llm: model,
   tools,
+  prompt: prefix,
 });
-const res = await executor.invoke({
+const res = await agent.invoke({
   input: "What's happening in Ukraine today?",
 });
 console.log(res);

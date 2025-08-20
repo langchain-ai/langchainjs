@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import { tool } from "@langchain/core/tools";
-import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
@@ -29,19 +30,14 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createToolCallingAgent({
+const agent = await createReactAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools: [currentWeatherTool],
-});
-
 const input = "What's the weather like in Paris?";
-const { output } = await agentExecutor.invoke({ input });
+const { output } = await agent.invoke({ input });
 
 console.log(output);
 

@@ -1,4 +1,5 @@
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { OpenAI } from "@langchain/openai";
 import {
   GmailCreateDraft,
@@ -35,7 +36,7 @@ export async function run() {
     new GmailSendMessage(),
   ];
 
-  const gmailAgent = await initializeAgentExecutorWithOptions(tools, model, {
+  const gmailAgent = await createReactAgent(tools, model, {
     agentType: "structured-chat-zero-shot-react-description",
     verbose: true,
   });

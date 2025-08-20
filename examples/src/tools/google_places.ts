@@ -1,6 +1,7 @@
 import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
 import { OpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
 export async function run() {
   const model = new OpenAI({
@@ -9,7 +10,7 @@ export async function run() {
 
   const tools = [new GooglePlacesAPI()];
 
-  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+  const executor = await createReactAgent(tools, model, {
     agentType: "zero-shot-react-description",
     verbose: true,
   });

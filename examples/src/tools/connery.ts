@@ -1,6 +1,7 @@
 import { ConneryService } from "@langchain/community/tools/connery";
 import { ChatOpenAI } from "@langchain/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
 // Specify your Connery Runner credentials.
 process.env.CONNERY_RUNNER_URL = "";
@@ -28,9 +29,9 @@ console.log(manualRunResult);
 
 // Run the action using the OpenAI Functions agent.
 const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
-const agent = await initializeAgentExecutorWithOptions([sendEmailAction], llm, {
-  agentType: "openai-functions",
-  verbose: true,
+const agent = await createReactAgent({
+  llm,
+  tools: [sendEmailAction],
 });
 const agentRunResult = await agent.invoke({
   input: `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,

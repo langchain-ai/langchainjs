@@ -1,5 +1,6 @@
 import { ChatAnthropic } from "@langchain/anthropic";
-import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { Calculator } from "@langchain/community/tools/calculator";
@@ -19,18 +20,13 @@ const llm = new ChatAnthropic({
   temperature: 0,
 });
 
-const agent = await createToolCallingAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-const result = await agentExecutor.invoke({
+const result = await agent.invoke({
   input:
     "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });

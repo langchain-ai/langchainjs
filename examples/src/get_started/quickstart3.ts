@@ -81,7 +81,8 @@ const searchTool = new TavilySearchResults();
 const tools = [retrieverTool, searchTool];
 
 import { pull } from "langchain/hub";
-import { createOpenAIFunctionsAgent, AgentExecutor } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 // Get the prompt to use - you can modify this!
@@ -96,31 +97,25 @@ const agentModel = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm: agentModel,
   tools,
   prompt: agentPrompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-  verbose: true,
-});
-
-const agentResult = await agentExecutor.invoke({
+const agentResult = await agent.invoke({
   input: "how can LangSmith help with testing?",
 });
 
 console.log(agentResult);
 
-const agentResult2 = await agentExecutor.invoke({
+const agentResult2 = await agent.invoke({
   input: "what is the weather in SF?",
 });
 
 console.log(agentResult2);
 
-const agentResult3 = await agentExecutor.invoke({
+const agentResult3 = await agent.invoke({
   chat_history: [
     new HumanMessage("Can LangSmith help test my LLM applications?"),
     new AIMessage("Yes!"),
