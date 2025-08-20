@@ -650,7 +650,7 @@ export class AIMessage<
   readonly type = "ai" as const;
 
   /** Unique identifier for this message */
-  id: string;
+  id?: string;
 
   /** Optional name/identifier for the AI that generated this message */
   name?: string;
@@ -827,7 +827,7 @@ export class HumanMessage<
   readonly type = "human" as const;
 
   /** Unique identifier for the message */
-  id: string;
+  id?: string;
 
   /** Optional name identifier for the message sender */
   name?: string;
@@ -971,7 +971,7 @@ export class SystemMessage<
   readonly type = "system" as const;
 
   /** Unique identifier for this message */
-  id: string;
+  id?: string;
 
   /** Optional name/identifier for the system that generated this message */
   name?: string;
@@ -1114,7 +1114,7 @@ export class ToolMessage<
   readonly type = "tool" as const;
 
   /** Unique identifier for this message */
-  id: string;
+  id?: string;
 
   /** Optional name/identifier for the tool that generated this message */
   name?: string;
