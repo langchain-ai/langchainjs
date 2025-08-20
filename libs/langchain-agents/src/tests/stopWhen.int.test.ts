@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
-import type { InteropZodType } from "@langchain/core/utils/types";
 import z from "zod";
 
 import {
@@ -18,7 +17,7 @@ interface TestScenario {
   stopWhen: PredicateFunction<any>[];
   toolParams?: PollToolParams;
   expectedToolCalls: number;
-  responseFormat?: InteropZodType;
+  responseFormat?: z.ZodSchema<any>;
   expectedLastMessage: string;
   expectedStructuredResponse: any;
   only?: boolean;
@@ -192,7 +191,7 @@ describe("stopWhen Tests", () => {
         tools: [pollJob],
         prompt: AGENT_PROMPT,
         stopWhen: scenario.stopWhen,
-        responseFormat: scenario.responseFormat as InteropZodType,
+        responseFormat: scenario.responseFormat!,
       });
 
       const result = await agent.invoke({

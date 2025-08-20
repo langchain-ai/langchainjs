@@ -139,6 +139,23 @@ export function createReactAgent<
   }
 ): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
 
+// Overload 4.5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    Record<string, unknown>,
+    ContextSchema,
+    JsonSchemaFormat | JsonSchemaFormat[]
+  > & {
+    responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
+  }
+): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
+
 // Overload 5: With responseFormat as TypedToolOutput (for union types from toolOutput)
 export function createReactAgent<
   StateSchema extends
@@ -193,7 +210,25 @@ export function createReactAgent<
   }
 ): ReactAgent<StateSchema, T, ContextSchema>;
 
-// Overload 8: Without responseFormat
+// Overload 8: Without responseFormat property at all
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: Omit<
+    CreateReactAgentParams<
+      StateSchema,
+      ResponseFormatUndefined,
+      ContextSchema,
+      never
+    >,
+    "responseFormat"
+  >
+): ReactAgent<StateSchema, ResponseFormatUndefined, ContextSchema>;
+
+// Overload 9: With responseFormat explicitly undefined
 export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot
@@ -213,7 +248,7 @@ export function createReactAgent<
   }
 ): ReactAgent<StateSchema, ResponseFormatUndefined, ContextSchema>;
 
-// Overload 9: For other ResponseFormat values (failsafe)
+// Overload 10: For other ResponseFormat values (failsafe)
 export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot

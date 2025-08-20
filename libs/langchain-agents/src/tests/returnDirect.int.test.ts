@@ -83,7 +83,7 @@ describe("return_direct Matrix Tests", () => {
       const { tool, mock } = makePollTool(testCase.returnDirect);
 
       // Create agent with specified configuration
-      const agentConfig = {
+      const baseConfig = {
         llm,
         tools: [tool],
         prompt: AGENT_PROMPT,
@@ -96,10 +96,10 @@ describe("return_direct Matrix Tests", () => {
 
       const agent = testCase.responseFormat
         ? createReactAgent({
-            ...agentConfig,
+            ...baseConfig,
             responseFormat: testCase.responseFormat,
           })
-        : createReactAgent(agentConfig);
+        : createReactAgent(baseConfig);
 
       // Invoke the agent
       const result = await agent.invoke({

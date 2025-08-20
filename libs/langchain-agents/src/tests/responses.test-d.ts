@@ -1,7 +1,15 @@
 import { describe, expectTypeOf, it } from "vitest";
-import { createReactAgent, toolOutput, nativeOutput } from "../index.js";
-import type { JsonSchemaFormat } from "../types.js";
+import { LanguageModelLike } from "@langchain/core/language_models/base";
+import { Tool } from "@langchain/core/tools";
 import { z } from "zod";
+
+import {
+  createReactAgent,
+  toolOutput,
+  nativeOutput,
+  stopWhenMaxSteps,
+} from "../index.js";
+import type { JsonSchemaFormat } from "../types.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
 const prompt = {
@@ -26,6 +34,73 @@ describe("response format", () => {
     });
     const res = await agent.invoke(prompt);
     expectTypeOf(res).not.toHaveProperty("structuredResponse");
+  });
+
+  it("makes it simple to pass in the parameter as variable", async () => {
+    interface CreateReactAgentParameters {
+      llm: LanguageModelLike;
+      tools: Tool[];
+      responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
+    }
+
+    const createReactAgentParameters: CreateReactAgentParameters = {
+      llm: new FakeToolCallingChatModel({}),
+      tools: [],
+      responseFormat: {
+        type: "object",
+        properties: {
+          capital: { type: "string" },
+        },
+        required: ["capital"],
+      },
+    };
+    const agent = createReactAgent(createReactAgentParameters);
+    const res = await agent.invoke(prompt);
+    expectTypeOf(res.structuredResponse).toEqualTypeOf<
+      Record<string, unknown>
+    >();
+
+    interface CreateReactAgentParametersWithZod {
+      llm: LanguageModelLike;
+      tools: Tool[];
+      responseFormat: z.ZodSchema<{ capital: string }>;
+    }
+
+    const createReactAgentParametersWithZod: CreateReactAgentParametersWithZod =
+      {
+        llm: new FakeToolCallingChatModel({}),
+        tools: [],
+        responseFormat: z.object({ capital: z.string() }),
+      };
+    const agentWithZod = createReactAgent(createReactAgentParametersWithZod);
+    const resWithZod = await agentWithZod.invoke(prompt);
+    expectTypeOf(resWithZod.structuredResponse).toEqualTypeOf<{
+      capital: string;
+    }>();
+  });
+
+  it("does not allow to have responseFormat be optional", async () => {
+    interface CreateReactAgentParameters {
+      llm: LanguageModelLike;
+      tools: Tool[];
+      responseFormat?: z.ZodSchema<{ capital: string }>;
+    }
+
+    const createReactAgentParameters: CreateReactAgentParameters = {
+      llm: new FakeToolCallingChatModel({}),
+      tools: [],
+      responseFormat: undefined,
+    };
+    // This should now be valid since responseFormat can be optional
+    createReactAgent(createReactAgentParameters);
+  });
+
+  it("supports to use stopWhen without responseFormat", async () => {
+    createReactAgent({
+      llm: new FakeToolCallingChatModel({}),
+      tools: [],
+      stopWhen: [stopWhenMaxSteps(1)],
+    });
   });
 
   describe("responseFormat as raw zod schemas", () => {

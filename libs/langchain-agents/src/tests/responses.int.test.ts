@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, ToolOutput } from "../index.js";
+import { createReactAgent, JsonSchemaFormat } from "../index.js";
 
 import responsesSpec from "./specifications/responses.json";
 
@@ -36,10 +36,7 @@ const AGENT_PROMPT = `You are an HR assistant.`;
 
 interface TestCase {
   name: string;
-  responseFormat:
-    | { schema: Record<string, unknown> }
-    | { schema: Record<string, unknown> }[]
-    | undefined;
+  responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
   assertionsByInvocation: {
     prompt: string;
     toolsWithExpectedCalls: Record<string, number>;
@@ -114,14 +111,8 @@ describe("responses Matrix Tests", () => {
         llm,
         tools: [getEmployeeRoleTool, getEmployeeDepartmentTool],
         prompt: AGENT_PROMPT,
-        ...(testCase.responseFormat && {
-          responseFormat: Array.isArray(testCase.responseFormat)
-            ? testCase.responseFormat.map((schema) =>
-                ToolOutput.fromSchema(schema.schema)
-              )
-            : ToolOutput.fromSchema(testCase.responseFormat.schema),
-        }),
-      } as any);
+        responseFormat: testCase.responseFormat,
+      });
 
       for (const assertion of testCase.assertionsByInvocation) {
         // Invoke the agent

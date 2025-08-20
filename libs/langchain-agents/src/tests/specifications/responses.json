@@ -3,24 +3,20 @@
     "name": "updated structured response",
     "responseFormat": [
       {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" },
-            "role": { "type": "string" }
-          },
-          "required": ["name", "role"]
-        }
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string" }
+        },
+        "required": ["name", "role"]
       },
       {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" },
-            "department": { "type": "string" }
-          },
-          "required": ["name", "department"]
-        }
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "department": { "type": "string" }
+        },
+        "required": ["name", "department"]
       }
     ],
     "assertionsByInvocation": [
