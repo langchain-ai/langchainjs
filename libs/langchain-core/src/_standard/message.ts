@@ -1,6 +1,6 @@
 import { BaseContentBlock } from "./content/base.js";
 import { SerializedConstructor } from "../load/serializable.js";
-import type { ContentBlock } from "./content/index.js";
+import type { ContentBlock, MessageContent } from "./content/index.js";
 import {
   iife,
   type $MergeDiscriminatedUnion,
@@ -302,9 +302,8 @@ export type $MergeMessageStructure<
   properties: $MergeObjects<T["properties"], U["properties"]>;
 };
 
-const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
-  "langchain.message.std-structure"
-);
+/** @internal */
+const __STANDARD_STRUCTURE = Symbol.for("langchain.message.std-structure");
 
 /**
  * Standard message structured used to define the most basic message structure that's
@@ -314,7 +313,7 @@ const STANDARD_MESSAGE_STRUCTURE_TYPE = Symbol.for(
  */
 export type $StandardMessageStructure = {
   /** @internal Discriminator to give TS a hint when evaluating if a type is a standard message structure */
-  [STANDARD_MESSAGE_STRUCTURE_TYPE]: never;
+  [__STANDARD_STRUCTURE]: never;
   content: {
     /** Text content for AI messages */
     ai: ContentBlock.Text;
@@ -570,11 +569,11 @@ export interface Message {
   /** The message type/role, determines the content structure and available properties */
   readonly type: $MessageType;
   /** Unique identifier for this message */
-  id: string;
+  id?: string;
   /** Optional name/identifier for the entity that created this message */
   name?: string;
   /** Array of content blocks that make up the message content, typed based on the structure and role */
-  content: string | Array<BaseContentBlock>;
+  content: MessageContent;
 }
 
 /**
@@ -601,6 +600,8 @@ export type AIMessageParams<
   id?: string;
   /** Optional name/identifier for the AI that generated this message */
   name?: string;
+  /** The content of the message which can be a string or an iterable of content blocks */
+  content: string | Iterable<BaseContentBlock>;
   /** Optional metadata about the AI model response (model provider, model name, etc.) */
   responseMetadata?: $InferMessageProperty<
     TStructure,
@@ -609,16 +610,7 @@ export type AIMessageParams<
   >;
   /** Optional usage statistics for the AI response (token counts, etc.) */
   usageMetadata?: $InferMessageProperty<TStructure, "ai", "usageMetadata">;
-} & (
-  | {
-      /** Text content for the message */
-      content: string;
-    }
-  | {
-      /** Content blocks that make up the message */
-      content: Iterable<BaseContentBlock>;
-    }
-);
+};
 
 /**
  * Represents a message from an AI assistant or model.
@@ -664,7 +656,7 @@ export class AIMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: string | Array<BaseContentBlock>;
+  content: MessageContent;
 
   /** Metadata about the AI model response (model provider, model name, etc.) */
   responseMetadata?: $InferMessageProperty<
@@ -679,12 +671,9 @@ export class AIMessage<
   constructor(
     arg: string | Iterable<BaseContentBlock> | AIMessageParams<TStructure>
   ) {
-    const textContent = (text: string) => [
-      { type: "text", text } as $InferMessageContent<TStructure, "ai">,
-    ];
     if (typeof arg === "string") {
       // new AIMessage("Hello")
-      this.content = textContent(arg);
+      this.content = arg;
     } else if (Symbol.iterator in arg) {
       // new AIMessage([{ type: "text", text: "Hello" }])
       this.content = Array.from(arg);
@@ -696,7 +685,7 @@ export class AIMessage<
       this.usageMetadata = arg.usageMetadata;
       if (typeof arg.content === "string") {
         // new AIMessage({ content: "Hello" })
-        this.content = textContent(arg.content);
+        this.content = arg.content;
       } else {
         // new AIMessage({ content: [{ type: "text", text: "Hello" }] })
         this.content = Array.from(arg.content);
@@ -706,7 +695,7 @@ export class AIMessage<
 
   get contentBlocks(): Array<$InferMessageContent<TStructure, "ai">> {
     // TODO: v0 conversions go here
-    return [];
+    return this.content as Array<$InferMessageContent<TStructure, "ai">>;
   }
 
   /**
@@ -725,6 +714,9 @@ export class AIMessage<
    * ```
    */
   get text(): string {
+    if (typeof this.content === "string") {
+      return this.content;
+    }
     const content: Array<
       $InferMessageContent<$StandardMessageStructure, "ai">
     > = this.contentBlocks;
@@ -793,18 +785,11 @@ export type HumanMessageParams<
   id?: string;
   /** Optional name identifier for the message sender */
   name?: string;
+  /** The content of the message which can be a string or an iterable of content blocks */
+  content: string | Iterable<BaseContentBlock>;
   /** Optional metadata associated with the human message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
-} & (
-  | {
-      /** Simple string content for the message */
-      content: string;
-    }
-  | {
-      /** Iterable of structured content blocks that make up the message content */
-      content: Iterable<BaseContentBlock>;
-    }
-);
+};
 
 /**
  * Represents a message from a human user in a conversation.
@@ -848,7 +833,7 @@ export class HumanMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: string | Array<BaseContentBlock>;
+  content: MessageContent;
 
   /** Metadata associated with the human message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
@@ -856,12 +841,9 @@ export class HumanMessage<
   constructor(
     arg: string | Iterable<BaseContentBlock> | HumanMessageParams<TStructure>
   ) {
-    const textContent = (text: string) => [
-      { type: "text", text } as $InferMessageContent<TStructure, "human">,
-    ];
     if (typeof arg === "string") {
       // new HumanMessage("Hello")
-      this.content = textContent(arg);
+      this.content = arg;
     } else if (Symbol.iterator in arg) {
       // new HumanMessage([{ type: "text", text: "Hello" }])
       this.content = Array.from(arg);
@@ -872,7 +854,7 @@ export class HumanMessage<
       this.metadata = arg.metadata;
       if (typeof arg.content === "string") {
         // new HumanMessage({ content: "Hello" })
-        this.content = textContent(arg.content);
+        this.content = arg.content;
       } else {
         // new HumanMessage({ content: [{ type: "text", text: "Hello" }] })
         this.content = Array.from(arg.content);
@@ -882,7 +864,7 @@ export class HumanMessage<
 
   get contentBlocks(): Array<$InferMessageContent<TStructure, "ai">> {
     // TODO: v0 conversions go here
-    return [];
+    return this.content as Array<$InferMessageContent<TStructure, "ai">>;
   }
 
   /**
@@ -901,6 +883,9 @@ export class HumanMessage<
    * ```
    */
   get text(): string {
+    if (typeof this.content === "string") {
+      return this.content;
+    }
     const content: Array<
       $InferMessageContent<$StandardMessageStructure, "human">
     > = this.contentBlocks;
@@ -944,18 +929,11 @@ export type SystemMessageParams<
   id?: string;
   /** Optional name/identifier for the system that generated this message */
   name?: string;
+  /** The content of the message which can be a string or an iterable of content blocks */
+  content: string | Iterable<BaseContentBlock>;
   /** Optional metadata associated with the system message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
-} & (
-  | {
-      /** Text content for the message */
-      content: string;
-    }
-  | {
-      /** Content blocks that make up the message */
-      content: Iterable<BaseContentBlock>;
-    }
-);
+};
 
 /**
  * Represents a system message that provides context, instructions, or configuration to the AI.
@@ -999,7 +977,7 @@ export class SystemMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: string | Array<BaseContentBlock>;
+  content: MessageContent;
 
   /** Metadata associated with the system message */
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
@@ -1030,7 +1008,7 @@ export class SystemMessage<
 
   get contentBlocks(): Array<$InferMessageContent<TStructure, "ai">> {
     // TODO: v0 conversions go here
-    return [];
+    return this.content as Array<$InferMessageContent<TStructure, "ai">>;
   }
 
   /**
@@ -1049,6 +1027,9 @@ export class SystemMessage<
    * ```
    */
   get text(): string {
+    if (typeof this.content === "string") {
+      return this.content;
+    }
     const content: Array<
       $InferMessageContent<$StandardMessageStructure, "system">
     > = this.contentBlocks;
@@ -1092,17 +1073,9 @@ export type ToolMessageParams<
   name?: string;
   toolCallId: string;
   status: "success" | "error";
+  content: string | Iterable<BaseContentBlock>;
   metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
-} & (
-  | {
-      /** Text content for the message */
-      content: string;
-    }
-  | {
-      /** Content blocks that make up the message */
-      content: Iterable<BaseContentBlock>;
-    }
-);
+};
 
 /**
  * Represents a message from a tool execution or tool call result.
@@ -1153,7 +1126,7 @@ export class ToolMessage<
   status: "success" | "error";
 
   /** Array of content blocks that make up the message content */
-  content: string | Array<BaseContentBlock>;
+  content: MessageContent;
 
   /** Metadata associated with the tool message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
@@ -1186,7 +1159,7 @@ export class ToolMessage<
 
   get contentBlocks(): Array<$InferMessageContent<TStructure, "ai">> {
     // TODO: v0 conversions go here
-    return [];
+    return this.content as Array<$InferMessageContent<TStructure, "ai">>;
   }
 
   /**
@@ -1209,6 +1182,9 @@ export class ToolMessage<
    * ```
    */
   get result(): string {
+    if (typeof this.content === "string") {
+      return this.content;
+    }
     const content: Array<
       $InferMessageContent<$StandardMessageStructure, "tool">
     > = this.contentBlocks;

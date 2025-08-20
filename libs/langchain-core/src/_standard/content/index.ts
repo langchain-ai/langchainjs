@@ -2,6 +2,8 @@ import type { BaseContentBlock } from "./base.js";
 import type { Tools } from "./tools.js";
 import type { Multimodal } from "./multimodal.js";
 
+export type MessageContent = string | Array<BaseContentBlock>;
+
 export type ContentBlock = BaseContentBlock;
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
