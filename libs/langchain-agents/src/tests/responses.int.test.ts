@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, JsonSchemaFormat } from "../index.js";
+import { createAgent, JsonSchemaFormat } from "../index.js";
 
 import responsesSpec from "./specifications/responses.json";
 
@@ -107,7 +107,7 @@ describe("responses Matrix Tests", () => {
       );
 
       // Create agent with specified configuration
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm,
         tools: [getEmployeeRoleTool, getEmployeeDepartmentTool],
         prompt: AGENT_PROMPT,

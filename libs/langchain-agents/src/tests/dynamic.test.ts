@@ -9,7 +9,7 @@ import {
 import { tool } from "@langchain/core/tools";
 import { Runtime, MessagesAnnotation, Annotation } from "@langchain/langgraph";
 
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
 import { FakeToolCallingChatModel } from "./utils.js";
 
@@ -26,7 +26,7 @@ describe("Dynamic Model", () => {
       return new FakeToolCallingChatModel({ responses: [] });
     };
 
-    const agent = createReactAgent({ llm: dynamicModel, tools: [] });
+    const agent = createAgent({ llm: dynamicModel, tools: [] });
 
     const result = await agent.invoke({ messages: "hello" });
     expect(result.messages.at(-1)?.text).toBe("hello");
@@ -80,7 +80,7 @@ describe("Dynamic Model", () => {
       return basicModel;
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: dynamicModel,
       tools: [basicTool, advancedTool],
     });
@@ -120,7 +120,7 @@ describe("Dynamic Model", () => {
       });
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: dynamicModel,
       tools: [],
       contextSchema: context,
@@ -169,7 +169,7 @@ describe("Dynamic Model", () => {
       });
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: dynamicModel,
       tools: [],
       stateSchema: CustomDynamicState,
@@ -192,7 +192,7 @@ describe("Dynamic Model", () => {
     const spyInvoke = vi.spyOn(model, "invoke");
 
     // Test with string prompt
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: () => model,
       tools: [],
       prompt: "system_msg",
@@ -217,7 +217,7 @@ describe("Dynamic Model", () => {
       return [new SystemMessage("system_msg"), ...state.messages];
     };
 
-    const agent2 = createReactAgent({
+    const agent2 = createAgent({
       llm: () => model,
       tools: [],
       prompt: dynamicPrompt,
@@ -278,7 +278,7 @@ describe("Dynamic Model", () => {
       return modelA;
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: dynamicModel,
       tools: [toolA, toolB],
     });
@@ -315,7 +315,7 @@ describe("Dynamic Model", () => {
       });
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: failingDynamicModel,
       tools: [],
     });
@@ -333,7 +333,7 @@ describe("Dynamic Model", () => {
 
   it("should produce equivalent results when configured the same", async () => {
     // Static model
-    const staticAgent = createReactAgent({
+    const staticAgent = createAgent({
       llm: new FakeToolCallingChatModel({
         responses: [new AIMessage("ai response")],
       }),
@@ -341,7 +341,7 @@ describe("Dynamic Model", () => {
     });
 
     // Dynamic model returning the same model
-    const dynamicAgent = createReactAgent({
+    const dynamicAgent = createAgent({
       llm: () =>
         new FakeToolCallingChatModel({
           responses: [new AIMessage("ai response")],
@@ -377,7 +377,7 @@ describe("Dynamic Model", () => {
         })
     );
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: dynamicModel,
       tools: [],
       stateSchema: CustomAgentState,

@@ -243,7 +243,7 @@ export type CreateReactAgentParams<
    * Can be passed in as:
    *   - Zod schema
    *     ```ts
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: z.object({
    *         capital: z.string(),
    *       }),
@@ -252,7 +252,7 @@ export type CreateReactAgentParams<
    *     ```
    *   - JSON schema
    *     ```ts
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: {
    *         type: "json_schema",
    *         schema: {
@@ -269,7 +269,7 @@ export type CreateReactAgentParams<
    *   - Create React Agent ResponseFormat
    *     ```ts
    *     import { nativeOutput, toolOutput } from "langchain";
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: nativeOutput(
    *         z.object({
    *           capital: z.string(),

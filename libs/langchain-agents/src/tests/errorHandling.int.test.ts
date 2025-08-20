@@ -8,7 +8,7 @@ import {
 } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
 interface TestScenario {
   name: string;
@@ -235,7 +235,7 @@ describe("stopWhen Tests", () => {
         };
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         tools: [pollJob],
         llm: scenario.throwWithin === "llm" ? dynamicLlm : llm,
         prompt: scenario.throwWithin === "prompt" ? dynamicPrompt : prompt,

@@ -19,7 +19,7 @@ export const PreHookAnnotation = Annotation.Root({
 export type PreHookAnnotation = typeof PreHookAnnotation;
 
 // Base annotation without structuredResponse (for ResponseFormatUndefined)
-export const createReactAgentBaseAnnotation = () =>
+export const createAgentBaseAnnotation = () =>
   Annotation.Root({
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
@@ -28,7 +28,7 @@ export const createReactAgentBaseAnnotation = () =>
   });
 
 // Full annotation with structuredResponse (for regular cases)
-const createReactAgentAnnotation = <
+const createAgentAnnotation = <
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
 >() =>
@@ -41,7 +41,7 @@ const createReactAgentAnnotation = <
   });
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
-export function createReactAgentAnnotationConditional<
+export function createAgentAnnotationConditional<
   T extends Record<string, any> | ResponseFormatUndefined
 >(hasStructuredResponse: boolean = true) {
   const baseAnnotation = {
@@ -66,7 +66,7 @@ export function createReactAgentAnnotationConditional<
 export type ReactAgentAnnotation<
   T extends Record<string, any> | ResponseFormatUndefined
 > = T extends ResponseFormatUndefined
-  ? ReturnType<typeof createReactAgentBaseAnnotation>
+  ? ReturnType<typeof createAgentBaseAnnotation>
   : T extends Record<string, any>
-  ? ReturnType<typeof createReactAgentAnnotation<T>>
+  ? ReturnType<typeof createAgentAnnotation<T>>
   : never;

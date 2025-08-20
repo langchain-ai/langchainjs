@@ -27,7 +27,7 @@ import {
 
 import { stopWhen, stopWhenMaxSteps, stopWhenToolCall } from "../stopWhen.js";
 import { type Prompt } from "../types.js";
-import { nativeOutput, createReactAgent } from "../index.js";
+import { nativeOutput, createAgent } from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -36,7 +36,7 @@ import {
   SearchAPI,
 } from "./utils.js";
 
-describe("createReactAgent", () => {
+describe("createAgent", () => {
   let syncCheckpointer: BaseCheckpointSaver;
 
   beforeEach(() => {
@@ -46,7 +46,7 @@ describe("createReactAgent", () => {
   it("should work with no prompt", async () => {
     const model = new FakeToolCallingModel();
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [],
       preModelHook: (state) => state,
@@ -89,20 +89,20 @@ describe("createReactAgent", () => {
 
     // Should throw when trying to create agent with bound tools
     expect(() => {
-      createReactAgent({
+      createAgent({
         llm: modelWithTools,
         tools: [searchTool],
       });
     }).toThrow(
       "The provided LLM already has bound tools. " +
-        "Please provide an LLM without bound tools to createReactAgent. " +
+        "Please provide an LLM without bound tools to createAgent. " +
         "The agent will bind the tools provided in the 'tools' parameter."
     );
   });
 
   it("should work with system message prompt", async () => {
     const prompt = new SystemMessage("Foo");
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
       prompt,
@@ -127,7 +127,7 @@ describe("createReactAgent", () => {
 
   it("should work with string prompt", async () => {
     const prompt = "Foo";
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
       prompt,
@@ -158,7 +158,7 @@ describe("createReactAgent", () => {
       return [new HumanMessage(modifiedMessage)];
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
       prompt,
@@ -184,7 +184,7 @@ describe("createReactAgent", () => {
       return [new HumanMessage(modifiedMessage)];
     };
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
       prompt,
@@ -211,7 +211,7 @@ describe("createReactAgent", () => {
       ],
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
       prompt,
@@ -265,7 +265,7 @@ describe("createReactAgent", () => {
     const model = new FakeToolCallingModel();
 
     // Test state modifier that uses store works
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [add],
       prompt: promptWithStore,
@@ -281,7 +281,7 @@ describe("createReactAgent", () => {
     expect(response.messages[1].content).toBe("User name is Alice-hi");
 
     // Test state modifier that doesn't use store works
-    const agentNoStore = createReactAgent({
+    const agentNoStore = createAgent({
       llm: model,
       tools: [add],
       prompt: promptNoStore,
@@ -331,7 +331,7 @@ describe("createReactAgent", () => {
     const model = new FakeToolCallingModel();
 
     // Test async state modifier that uses store works
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [add],
       prompt: asyncPromptWithStore,
@@ -353,7 +353,7 @@ describe("createReactAgent", () => {
     };
 
     // Test async state modifier that doesn't use store works
-    const agentNoStore = createReactAgent({
+    const agentNoStore = createAgent({
       llm: model,
       tools: [add],
       prompt: asyncPromptNoStore,
@@ -417,30 +417,30 @@ describe("createReactAgent", () => {
 
         // Should throw when trying to create agent with bound tools
         expect(() => {
-          createReactAgent({
+          createAgent({
             llm: model.bindTools(tools),
             tools,
           });
         }).toThrow(
           "The provided LLM already has bound tools. " +
-            "Please provide an LLM without bound tools to createReactAgent. " +
+            "Please provide an LLM without bound tools to createAgent. " +
             "The agent will bind the tools provided in the 'tools' parameter."
         );
 
         // Test mismatching tool lengths should also throw
         expect(() => {
-          createReactAgent({
+          createAgent({
             llm: model.bindTools([tool1]),
             tools: [tool1, tool2],
           });
         }).toThrow(
           "The provided LLM already has bound tools. " +
-            "Please provide an LLM without bound tools to createReactAgent. " +
+            "Please provide an LLM without bound tools to createAgent. " +
             "The agent will bind the tools provided in the 'tools' parameter."
         );
 
         // Should work without bound tools
-        const agent = createReactAgent({
+        const agent = createAgent({
           llm: model,
           tools,
         });
@@ -448,7 +448,7 @@ describe("createReactAgent", () => {
 
         // Test missing bound tools - Note: Implementation may not throw in all cases
         try {
-          createReactAgent({
+          createAgent({
             llm: model.bindTools([tool1]),
             tools: [tool2],
           });
@@ -464,7 +464,7 @@ describe("createReactAgent", () => {
   it("should validate messages correctly", () => {
     // The validation function isn't exported, so we'll test it through agent creation
     // Empty input should work
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingModel(),
       tools: [],
     });
@@ -517,7 +517,7 @@ describe("createReactAgent", () => {
       structuredResponse: expectedStructuredResponse,
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [getWeather],
       responseFormat: WeatherResponseSchema,
@@ -552,7 +552,7 @@ describe("createReactAgent", () => {
       structuredResponse: expectedStructuredResponse,
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [getWeather],
       responseFormat: nativeOutput(WeatherResponseSchema),
@@ -573,7 +573,7 @@ describe("createReactAgent", () => {
     const model = new FakeToolCallingModel();
     const asyncCheckpointer = createCheckpointer();
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [],
       checkpointer: asyncCheckpointer,
@@ -639,7 +639,7 @@ describe("createReactAgent", () => {
       toolCalls: [firstToolCall, []],
     });
 
-    let agent = createReactAgent({
+    let agent = createAgent({
       llm: model,
       tools: [toolReturnDirect, toolNormal],
     });
@@ -679,7 +679,7 @@ describe("createReactAgent", () => {
       toolCalls: [secondToolCall, []],
     });
 
-    agent = createReactAgent({
+    agent = createAgent({
       llm: model,
       tools: [toolReturnDirect, toolNormal],
     });
@@ -717,7 +717,7 @@ describe("createReactAgent", () => {
     const model = new FakeToolCallingModel();
 
     // Test state modifier works
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [add],
       prompt,
@@ -735,7 +735,7 @@ describe("createReactAgent", () => {
   describe("postModelHook", () => {
     it("should work with postModelHook", async () => {
       const model = new FakeToolCallingModel();
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
         postModelHook: (state) => {
@@ -756,7 +756,7 @@ describe("createReactAgent", () => {
   describe("preModelHook", () => {
     it("should work with preModelHook", async () => {
       const model = new FakeToolCallingModel();
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
         preModelHook: (state) => {
@@ -787,7 +787,7 @@ describe("createReactAgent", () => {
 
       const sequenceLlm = RunnableSequence.from([passthrough, baseModel]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [],
         checkpointer: syncCheckpointer,
@@ -831,7 +831,7 @@ describe("createReactAgent", () => {
         baseModel.bindTools([tool1]),
       ]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [tool1],
       });
@@ -862,7 +862,7 @@ describe("createReactAgent", () => {
 
       const sequenceLlm = RunnableSequence.from([passthrough, baseModel]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [],
         prompt: "You are a helpful assistant",
@@ -889,7 +889,7 @@ describe("createReactAgent", () => {
 
       const sequenceLlm = RunnableSequence.from([passthrough, baseModel]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [],
         postModelHook: (state) => {
@@ -925,7 +925,7 @@ describe("createReactAgent", () => {
 
       const sequenceLlm = RunnableSequence.from([step1, step2, baseModel]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [],
       });
@@ -951,7 +951,7 @@ describe("createReactAgent", () => {
 
       const sequenceLlm = RunnableSequence.from([passthrough, baseModel]);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequenceLlm,
         tools: [],
       });
@@ -993,7 +993,7 @@ describe("createReactAgent", () => {
         kwargs: {},
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [tool1],
       });
@@ -1068,7 +1068,7 @@ describe("createReactAgent", () => {
         kwargs: {},
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: wrappedModel,
         tools: [tool1],
       });
@@ -1139,7 +1139,7 @@ describe("createReactAgent", () => {
       toolCalls: [mixedToolCalls],
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [commandTool, normalTool],
     });
@@ -1224,7 +1224,7 @@ describe("createReactAgent", () => {
 
     const model = new FakeModelWithName();
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: [],
       name: "test-agent",
@@ -1250,7 +1250,7 @@ describe("createReactAgent", () => {
       sleep: 500, // Add delay to allow cancellation
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [],
       prompt: "You are a helpful assistant",
@@ -1301,7 +1301,7 @@ describe("createReactAgent", () => {
       ],
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [new SearchAPIWithArtifact()],
       prompt: "You are a helpful assistant",
@@ -1346,7 +1346,7 @@ describe("createReactAgent", () => {
       ],
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [runnableToolLikeTool],
       prompt: "You are a helpful assistant",
@@ -1373,7 +1373,7 @@ describe("createReactAgent", () => {
         return new FakeToolCallingChatModel({ responses: [] });
       };
 
-      const agent = createReactAgent({ llm: dynamicModel, tools: [] });
+      const agent = createAgent({ llm: dynamicModel, tools: [] });
 
       const result = await agent.invoke({ messages: "hello" });
       expect(result.messages.at(-1)?.text).toBe("hello");
@@ -1430,7 +1430,7 @@ describe("createReactAgent", () => {
         return basicModel;
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [basicTool, advancedTool],
       });
@@ -1470,7 +1470,7 @@ describe("createReactAgent", () => {
         });
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [],
         contextSchema: context,
@@ -1519,7 +1519,7 @@ describe("createReactAgent", () => {
         });
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [],
         stateSchema: CustomDynamicState,
@@ -1542,7 +1542,7 @@ describe("createReactAgent", () => {
       const spyInvoke = vi.spyOn(model, "invoke");
 
       // Test with string prompt
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: () => model,
         tools: [],
         prompt: "system_msg",
@@ -1567,7 +1567,7 @@ describe("createReactAgent", () => {
         return [new SystemMessage("system_msg"), ...state.messages];
       };
 
-      const agent2 = createReactAgent({
+      const agent2 = createAgent({
         llm: () => model,
         tools: [],
         prompt: dynamicPrompt,
@@ -1603,7 +1603,7 @@ describe("createReactAgent", () => {
         });
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [],
         responseFormat: TestResponse,
@@ -1666,7 +1666,7 @@ describe("createReactAgent", () => {
         return modelA;
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [toolA, toolB],
       });
@@ -1703,7 +1703,7 @@ describe("createReactAgent", () => {
         });
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: failingDynamicModel,
         tools: [],
       });
@@ -1721,7 +1721,7 @@ describe("createReactAgent", () => {
 
     it("should produce equivalent results when configured the same", async () => {
       // Static model
-      const staticAgent = createReactAgent({
+      const staticAgent = createAgent({
         llm: new FakeToolCallingChatModel({
           responses: [new AIMessage("ai response")],
         }),
@@ -1729,7 +1729,7 @@ describe("createReactAgent", () => {
       });
 
       // Dynamic model returning the same model
-      const dynamicAgent = createReactAgent({
+      const dynamicAgent = createAgent({
         llm: () =>
           new FakeToolCallingChatModel({
             responses: [new AIMessage("ai response")],
@@ -1767,7 +1767,7 @@ describe("createReactAgent", () => {
           })
       );
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModel,
         tools: [],
         stateSchema: CustomAgentState,
@@ -1794,7 +1794,7 @@ describe("createReactAgent", () => {
         return model.bindTools([searchTool]);
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: dynamicModelWithBoundTools,
         tools: [searchTool],
       });
@@ -1857,7 +1857,7 @@ describe("createReactAgent", () => {
       });
       const stopOnKeyword = stopWhen(conditionMock);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [dummyTool],
         stopWhen: stopOnKeyword,
@@ -1925,7 +1925,7 @@ describe("createReactAgent", () => {
       });
 
       const stopWhen = vi.fn(stopWhenToolCall("get_weather", 2));
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [weatherTool],
         stopWhen,
@@ -1959,7 +1959,7 @@ describe("createReactAgent", () => {
         ],
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
         stopWhen: stopWhenMaxSteps(1),
@@ -2013,7 +2013,7 @@ describe("createReactAgent", () => {
         return stopWhenMaxSteps(1)(state);
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [searchTool],
         stopWhen: combinedStop,
@@ -2059,7 +2059,7 @@ describe("createReactAgent", () => {
         };
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
         stopWhen: asyncStop,
@@ -2085,7 +2085,7 @@ describe("createReactAgent", () => {
       });
 
       const abortController = new AbortController();
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
         signal: abortController.signal,
@@ -2132,7 +2132,7 @@ describe("createReactAgent", () => {
         ],
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm,
         tools: [abortableTool],
         signal: abortController.signal,
@@ -2206,7 +2206,7 @@ describe("createReactAgent", () => {
         ],
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm,
         tools: [signalCheckTool],
         signal: agentAbortController.signal,

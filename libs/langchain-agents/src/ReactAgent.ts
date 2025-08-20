@@ -16,7 +16,7 @@ import {
 } from "@langchain/core/messages";
 
 import {
-  createReactAgentAnnotationConditional,
+  createAgentAnnotationConditional,
   ReactAgentAnnotation,
 } from "./annotation.js";
 import type { ResponseFormatUndefined } from "./types.js";
@@ -88,7 +88,7 @@ export class ReactAgent<
 
     const schema =
       this.options.stateSchema ??
-      createReactAgentAnnotationConditional<StructuredResponseFormat>(
+      createAgentAnnotationConditional<StructuredResponseFormat>(
         this.options.responseFormat !== undefined
       );
 

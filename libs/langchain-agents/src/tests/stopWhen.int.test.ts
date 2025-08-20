@@ -6,7 +6,7 @@ import z from "zod";
 
 import {
   type PredicateFunction,
-  createReactAgent,
+  createAgent,
   stopWhen,
   stopWhenToolCall,
   stopWhenMaxSteps,
@@ -186,7 +186,7 @@ describe("stopWhen Tests", () => {
     testFn(scenario.name, async () => {
       const { tool: pollJob, mock } = makePollTool(scenario.toolParams);
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm,
         tools: [pollJob],
         prompt: AGENT_PROMPT,

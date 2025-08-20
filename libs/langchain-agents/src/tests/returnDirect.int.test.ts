@@ -4,11 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import {
-  createReactAgent,
-  stopWhenToolCall,
-  JsonSchemaFormat,
-} from "../index.js";
+import { createAgent, stopWhenToolCall, JsonSchemaFormat } from "../index.js";
 
 import returnDirectSpec from "./specifications/returnDirect.json";
 
@@ -95,11 +91,11 @@ describe("return_direct Matrix Tests", () => {
       };
 
       const agent = testCase.responseFormat
-        ? createReactAgent({
+        ? createAgent({
             ...baseConfig,
             responseFormat: testCase.responseFormat,
           })
-        : createReactAgent(baseConfig);
+        : createAgent(baseConfig);
 
       // Invoke the agent
       const result = await agent.invoke({
