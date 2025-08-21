@@ -25,3 +25,24 @@ test("BM25Retriever", async () => {
     "The quick brown fox jumps over the lazy dog"
   );
 });
+
+test("getTermFrequency escapes regex metacharacters", async () => {
+  // Import directly from the inlined BM25 util to test the helper.
+  const { getTermFrequency } = await import(
+    "../../utils/@furkantoprak/bm25/BM25.js"
+  );
+
+  const corpus = "**Version 1:** What is the country of origin for the person in question?";
+  const term = "**Version 1:**";
+
+  // Should not throw and should find at least one match
+  const freq = getTermFrequency(term, corpus);
+  expect(freq).toBeGreaterThanOrEqual(1);
+
+  // Also test other metacharacters
+  const corpus2 = "Does this match (maybe)? [yes] *stars* +plus+";
+  expect(getTermFrequency("(maybe)?", corpus2)).toBeGreaterThanOrEqual(1);
+  expect(getTermFrequency("[yes]", corpus2)).toBeGreaterThanOrEqual(1);
+  expect(getTermFrequency("*stars*", corpus2)).toBeGreaterThanOrEqual(1);
+  expect(getTermFrequency("+plus+", corpus2)).toBeGreaterThanOrEqual(1);
+});
