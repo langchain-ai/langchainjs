@@ -37,7 +37,8 @@ type AgentGraph<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends
     | Record<string, any>
-    | ResponseFormatUndefined = Record<string, any>
+    | ResponseFormatUndefined = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = CompiledStateGraph<
   ToAnnotationRoot<StateSchema>["State"],
   ToAnnotationRoot<StateSchema>["Update"],
@@ -45,7 +46,9 @@ type AgentGraph<
   any,
   typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
   ReactAgentAnnotation<StructuredResponseFormat>["spec"] &
-    ToAnnotationRoot<StateSchema>["spec"]
+    ToAnnotationRoot<StateSchema>["spec"],
+  ToAnnotationRoot<ContextSchema>["spec"],
+  unknown
 >;
 
 export class ReactAgent<
@@ -55,7 +58,7 @@ export class ReactAgent<
     | ResponseFormatUndefined = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > {
-  #graph: AgentGraph<StateSchema, StructuredResponseFormat>;
+  #graph: AgentGraph<StateSchema, StructuredResponseFormat, ContextSchema>;
 
   #inputSchema?: AnnotationRoot<ToAnnotationRoot<StateSchema>["spec"]>;
 
@@ -100,16 +103,12 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    const schema =
-      this.options.stateSchema ??
+    const schema = (this.options.stateSchema ??
       createAgentAnnotationConditional<StructuredResponseFormat>(
         this.options.responseFormat !== undefined
-      );
+      )) as AnyAnnotationRoot;
 
-    const workflow = new StateGraph(
-      schema as AnyAnnotationRoot,
-      this.options.contextSchema
-    );
+    const workflow = new StateGraph(schema, this.options.contextSchema);
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
       "pre_model_hook" | "post_model_hook" | "tools" | "agent",
@@ -230,7 +229,11 @@ export class ReactAgent<
   /**
    * Get the compiled graph.
    */
-  get graph(): AgentGraph<StateSchema, StructuredResponseFormat> {
+  get graph(): AgentGraph<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema
+  > {
     return this.#graph;
   }
 

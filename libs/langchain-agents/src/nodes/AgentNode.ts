@@ -305,10 +305,6 @@ export class AgentNode<
       const toolCalls = this.#extractToolCalls(state.messages);
       const llmCalls = this.#extractLLMCalls(state.messages);
 
-      const runtime = {
-        ...config,
-        context: config.configurable,
-      };
       preparedCall = await this.#options.prepareCall(
         {
           stepNumber,
@@ -318,7 +314,7 @@ export class AgentNode<
           messages: state.messages,
           state,
         },
-        runtime
+        config
       );
 
       /**

@@ -62,7 +62,7 @@ describe("prepareCall hook", () => {
         messages: [new HumanMessage("Hello, how are you?")],
       },
       {
-        configurable: {
+        context: {
           model: "gpt-4o-mini",
         },
       }
