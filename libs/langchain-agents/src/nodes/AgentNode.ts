@@ -4,6 +4,7 @@ import {
   AIMessage,
   isAIMessage,
   ToolMessage,
+  SystemMessage,
 } from "@langchain/core/messages";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -29,6 +30,9 @@ import {
   AnyAnnotationRoot,
   CreateReactAgentParams,
   PredicateFunction,
+  ExecutedToolCall,
+  LLMCall,
+  PreparedCall,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import {
@@ -52,6 +56,7 @@ interface AgentNodeOptions<
     >,
     | "llm"
     | "prompt"
+    | "prepareCall"
     | "includeAgentName"
     | "name"
     | "stopWhen"
@@ -207,6 +212,72 @@ export class AgentNode<
     return { messages: [response] };
   }
 
+  #extractToolCalls(messages: BaseMessage[]): ExecutedToolCall[] {
+    const toolCalls: ExecutedToolCall[] = [];
+
+    // Track which tool calls we've seen results for
+    const toolCallResults: Record<string, unknown> = {};
+
+    // First pass: collect tool results
+    messages.forEach((message) => {
+      if (message instanceof ToolMessage && message.tool_call_id) {
+        toolCallResults[message.tool_call_id] = message.content;
+      }
+    });
+
+    // Second pass: extract tool calls with their results
+    messages
+      .filter(
+        (message): message is AIMessage =>
+          isAIMessage(message) && Boolean(message.tool_calls)
+      )
+      .forEach((message) => {
+        message.tool_calls?.forEach((toolCall) => {
+          if (toolCall.id) {
+            toolCalls.push({
+              name: toolCall.name,
+              args: toolCall.args,
+              tool_id: toolCall.id,
+              result: toolCallResults[toolCall.id],
+            });
+          }
+        });
+      });
+
+    return toolCalls;
+  }
+
+  #extractLLMCalls(messages: BaseMessage[]): LLMCall[] {
+    const llmCalls: LLMCall[] = [];
+    let currentMessages: BaseMessage[] = [];
+
+    for (const message of messages) {
+      if (isAIMessage(message)) {
+        // Found an AI message, create LLM call with preceding messages
+        llmCalls.push({
+          messages: [...currentMessages],
+          response: message,
+        });
+        currentMessages = [];
+      } else {
+        currentMessages.push(message);
+      }
+    }
+
+    // If there are remaining messages, create LLM call without response
+    if (currentMessages.length > 0) {
+      llmCalls.push({
+        messages: currentMessages,
+      });
+    }
+
+    return llmCalls;
+  }
+
+  #calculateStepNumber(messages: BaseMessage[]): number {
+    return messages.filter(isAIMessage).length;
+  }
+
   async #invokeModel(
     state: InternalAgentState<StructuredResponseFormat> &
       PreHookAnnotation["State"],
@@ -219,25 +290,89 @@ export class AgentNode<
     | AIMessage
     | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
   > {
-    const model = this.#options.llm;
+    let model = this.#options.llm;
+    let preparedCall: PreparedCall = {};
 
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
     validateLLMHasNoBoundTools(model);
 
+    /**
+     * Call prepareCall hook if provided
+     */
+    if (this.#options.prepareCall) {
+      const stepNumber = this.#calculateStepNumber(state.messages);
+      const toolCalls = this.#extractToolCalls(state.messages);
+      const llmCalls = this.#extractLLMCalls(state.messages);
+
+      const runtime = {
+        ...config,
+        context: config.configurable,
+      };
+      preparedCall = await this.#options.prepareCall(
+        {
+          stepNumber,
+          toolCalls,
+          llmCalls,
+          model,
+          messages: state.messages,
+          state,
+        },
+        runtime
+      );
+
+      /**
+       * Apply model override if provided
+       */
+      if (preparedCall.model) {
+        model = preparedCall.model;
+        validateLLMHasNoBoundTools(model);
+      }
+    }
+
+    const toolChoiceOverride = preparedCall.toolChoice
+      ? { tool_choice: preparedCall.toolChoice }
+      : options?.isDirectReturn
+      ? {
+          tool_choice: {
+            type: "tool",
+            name: Object.keys(this.#structuredToolInfo)[0],
+          },
+        }
+      : {};
+
     const modelWithTools = await this.#bindTools(
       model,
-      options?.isDirectReturn
-        ? {
-            tool_choice: {
-              type: "tool",
-              name: Object.keys(this.#structuredToolInfo)[0],
-            },
-          }
-        : {}
+      toolChoiceOverride,
+      preparedCall.tools
     );
-    const modelInput = this.#getModelInputState(state);
+
+    /**
+     * Apply message overrides
+     */
+    let modelInput = preparedCall.messages
+      ? { ...state, messages: preparedCall.messages }
+      : this.#getModelInputState(state);
+
+    /**
+     * Apply system message override if provided
+     */
+    if (preparedCall.systemMessage) {
+      const { messages, ...rest } = modelInput;
+      const systemMessage = new SystemMessage(preparedCall.systemMessage);
+      modelInput = {
+        messages: [
+          systemMessage,
+          ...messages.filter((m) => m.getType() !== "system"),
+        ],
+        ...rest,
+      } as Omit<
+        InternalAgentState<StructuredResponseFormat>,
+        "llmInputMessages"
+      >;
+    }
+
     const signal = mergeAbortSignals(this.#options.signal, config.signal);
     const invokeConfig = {
       ...config,
@@ -340,13 +475,46 @@ export class AgentNode<
 
   async #bindTools(
     model: LanguageModelLike,
-    bindOptions?: Partial<BaseChatModelCallOptions>
+    bindOptions?: Partial<BaseChatModelCallOptions>,
+    toolsOverride?: (string | ClientTool | ServerTool)[]
   ): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
-    const allTools = this.#options.toolClasses.concat(
+
+    let allTools = this.#options.toolClasses.concat(
       ...structuredTools.map((toolOutput) => toolOutput.tool)
     );
+
+    /**
+     * Apply tools override if provided
+     */
+    if (toolsOverride) {
+      allTools = toolsOverride
+        .filter((tool) => {
+          if (typeof tool === "string") {
+            // Filter by tool name
+            return this.#options.toolClasses.some(
+              (t) => "name" in t && t.name === tool
+            );
+          }
+          return true;
+        })
+        .map((tool) => {
+          if (typeof tool === "string") {
+            // Find tool by name
+            return (
+              this.#options.toolClasses.find(
+                (t) => "name" in t && t.name === tool
+              ) || tool
+            );
+          }
+          return tool;
+        })
+        .filter((tool) => typeof tool !== "string") as (
+        | ClientTool
+        | ServerTool
+      )[];
+    }
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"

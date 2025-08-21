@@ -47,6 +47,115 @@ export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 export type N = typeof START | "agent" | "tools";
 
 /**
+ * Information about a tool call that has been executed.
+ */
+export interface ExecutedToolCall {
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, unknown>;
+  /**
+   * The ID of the tool call.
+   */
+  tool_id: string;
+  /**
+   * The result of the tool call (if available).
+   */
+  result?: unknown;
+}
+
+/**
+ * Information about an LLM invocation.
+ */
+export interface LLMCall {
+  /**
+   * The messages that were sent to the LLM.
+   */
+  messages: BaseMessage[];
+  /**
+   * The response from the LLM.
+   */
+  response?: BaseMessage;
+}
+
+/**
+ * Configuration for modifying a model call at runtime.
+ * All fields are optional and only provided fields will override defaults.
+ */
+export interface PreparedCall {
+  /**
+   * The model to use for this step.
+   */
+  model?: LanguageModelLike;
+  /**
+   * The messages to send to the model.
+   */
+  messages?: BaseMessage[];
+  /**
+   * The system message for this step.
+   */
+  systemMessage?: string;
+  /**
+   * Tool choice configuration (model-specific format).
+   * Can be "auto" | "none" | "required" | { type: "tool", toolName: string }
+   */
+  toolChoice?:
+    | "auto"
+    | "none"
+    | "required"
+    | { type: "tool"; toolName: string }
+    | { type: "function"; function: { name: string } };
+
+  /**
+   * The tools to make available for this step.
+   * Can be tool names (strings) or tool instances.
+   */
+  tools?: (string | ClientTool | ServerTool)[];
+  // TODO: add response_format when standard output is ready
+  // responseFormat?: unknown;
+}
+
+/**
+ * Hook function that allows setup of the agent context before every LLM invocation.
+ */
+export type PrepareCall<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> = (
+  options: {
+    /**
+     * The number of the step that is being executed.
+     */
+    stepNumber: number;
+    /**
+     * List of tool calls including their results.
+     */
+    toolCalls: ExecutedToolCall[];
+    /**
+     * List of LLM invocations including messages and response.
+     */
+    llmCalls: LLMCall[];
+    /**
+     * The current model being used (default model).
+     */
+    model: LanguageModelLike;
+    /**
+     * The current list of messages.
+     */
+    messages: BaseMessage[];
+    /**
+     * The current state of the agent.
+     */
+    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"];
+  },
+  runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
+) => PreparedCall | Promise<PreparedCall>;
+
+/**
  * Special type to indicate that no response format is provided.
  * When this type is used, the structuredResponse property should not be present in the result.
  */
@@ -196,8 +305,53 @@ export type CreateReactAgentParams<
    * Note:
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
+   *
+   * Cannot be used together with `prepareCall`.
    */
   prompt?: Prompt<StateSchema, ContextSchema>;
+
+  /**
+   * A hook that allows setup of the agent context before every LLM invocation.
+   *
+   * This function is called before each model invocation and can dynamically override:
+   * - model: The LLM to use for this step
+   * - messages: The messages to send to the model
+   * - systemMessage: The system message for this step
+   * - toolChoice: Tool selection strategy for this step
+   * - tools: Which tools are available for this step
+   *
+   * All fields in the return object are optional. Any provided field will override the default.
+   *
+   * Cannot be used together with a callable `prompt`.
+   *
+   * @example
+   * ```ts
+   * const agent = createAgent({
+   *   llm: model,
+   *   tools: [getWeather],
+   *   prepareCall: async (options, runtime) => {
+   *     const { stepNumber, messages, state } = options;
+   *
+   *     // Dynamically set system message based on state
+   *     if (state.userType === "premium") {
+   *       return {
+   *         systemMessage: "You are a helpful assistant with access to premium features."
+   *       };
+   *     }
+   *
+   *     // Force specific tool on first step
+   *     if (stepNumber === 0) {
+   *       return {
+   *         toolChoice: { type: "tool", toolName: "get_weather" }
+   *       };
+   *     }
+   *
+   *     return {};
+   *   }
+   * });
+   * ```
+   */
+  prepareCall?: PrepareCall<StateSchema, ContextSchema>;
 
   /**
    * Additional state schema for the agent.

@@ -27,7 +27,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, type AgentState, type AgentRuntime } from "langchain";
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -42,46 +42,42 @@ const context = z.object({
   model: z.enum(["gpt-4o", "gpt-4o-mini"]).optional(),
 });
 
-/**
- * Dynamic model selection using either agent state (messages) or runtime context.
- *
- * @param state - The state of the agent.
- * @param runtime - The agent runtime, including provided context.
- * @returns The model to use for the next call.
- */
-function dynamicModel(
-  state: AgentState,
-  runtime: AgentRuntime<typeof context>
-) {
-  /**
-   * if model preference is provided by content, use it
-   */
-  if (runtime.context?.model) {
-    console.log("\n🧠 Using model from context:", runtime.context.model);
-    return new ChatOpenAI({
-      model: runtime.context.model,
-    });
-  }
-
-  const last = state.messages[state.messages.length - 1];
-  const content = typeof last.content === "string" ? last.content : "";
-  const text = content.toLowerCase();
-  const isComplex = /algorithm|architecture|optimi(?:s|z)e|system design/.test(
-    text
-  );
-  const modelId = isComplex ? "gpt-4o" : "gpt-4o-mini";
-  console.log(
-    `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
-  );
-  return new ChatOpenAI({
-    model: modelId,
-    temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
-  });
-}
-
 const agent = createAgent({
-  llm: dynamicModel,
+  llm: model,
   tools: [],
+  /**
+   * Custom dynamic model selection before the model call.
+   */
+  prepareCall: (state, runtime) => {
+    console.log("prepareCall called", runtime);
+    /**
+     * if model preference is provided by content, use it
+     */
+    if (runtime.context?.model) {
+      console.log("\n🧠 Using model from context:", runtime.context.model);
+      return {
+        model: new ChatOpenAI({
+          model: runtime.context.model,
+        }),
+      };
+    }
+
+    const last = state.messages[state.messages.length - 1];
+    const content = typeof last.content === "string" ? last.content : "";
+    const text = content.toLowerCase();
+    const isComplex =
+      /algorithm|architecture|optimi(?:s|z)e|system design/.test(text);
+    const modelId = isComplex ? "gpt-4o" : "gpt-4o-mini";
+    console.log(
+      `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
+    );
+    return {
+      model: new ChatOpenAI({
+        model: modelId,
+        temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
+      }),
+    };
+  },
   prompt: `You are a concise coding assistant. Answer clearly.`,
   contextSchema: context,
 });
