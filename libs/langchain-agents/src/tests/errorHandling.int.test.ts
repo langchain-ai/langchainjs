@@ -10,15 +10,52 @@ import z from "zod";
 
 import { createAgent } from "../index.js";
 
+import errorHandlingSpec from "./specifications/errorHandling.json" with { type: "json" };
+
 interface TestScenario {
+  /**
+   * The name of the test scenario.
+   */
   name: string;
-  throwWithin: "toolCall" | "llm" | "prompt" | "preModelHook" | "postModelHook";
+  /**
+   * The location where the error is thrown.
+   * - `toolCall`: The error is thrown in the tool call.
+   * - `prompt`: The error is thrown in the prompt call.
+   * - `preModelHook`: The error is thrown in the preModelHook.
+   * - `postModelHook`: The error is thrown in the postModelHook.
+   */
+  throwWithin: "toolCall" | "prompt" | "preModelHook" | "postModelHook";
+  /**
+   * The timing of the error.
+   * - `immediate`: The error is thrown immediately.
+   * - `delayed`: The error is thrown after a couple of tool calls.
+   */
   throwTimming?: "immediate" | "delayed";
+  /**
+   * How the error should be handled.
+   * - `bubbleUp`: rethrow the error in the handler.
+   * - `cached`: return a cached result.
+   */
   errorHandler?: "bubbleUp" | "cached";
+  /**
+   * The expected number of tool calls.
+   */
   expectedToolCalls: number;
+  /**
+   * The expected error message.
+   */
   expectedError?: string;
+  /**
+   * The expected result.
+   */
   expectedResult?: string;
+  /**
+   * Whether to only run this test scenario.
+   */
   only?: boolean;
+  /**
+   * Whether to skip this test scenario.
+   */
   skip?: boolean;
 }
 
@@ -69,10 +106,18 @@ function makePollTool(params?: ToolParams) {
   };
 }
 
+/**
+ * A simple error handler that throws the error.
+ * @param toolCall - The tool call that caused the error.
+ */
 function bubbleUpErrorHandler(toolCall: { error: unknown }) {
   throw toolCall.error;
 }
 
+/**
+ * A simple error handler that returns a cached result.
+ * @param toolCall - The tool call that caused the error.
+ */
 function cachedErrorHandler(toolCall: {
   error: unknown;
   name: string;
@@ -90,92 +135,7 @@ const prompt = `You are a helpful assistant.
 Use the addRandom tool to add random numbers to 1 until your result is 10.
 Note, don't come up with any numbers yourself, ensure you are using the tool as often as you can.`;
 
-const testScenarios: TestScenario[] = [
-  {
-    name: "throw immediate in tool call",
-    throwWithin: "toolCall",
-    throwTimming: "immediate",
-    errorHandler: "bubbleUp",
-    expectedToolCalls: 1,
-    expectedError: "tool call error",
-  },
-  {
-    name: "throw delayed in tool call",
-    throwWithin: "toolCall",
-    throwTimming: "delayed",
-    errorHandler: "bubbleUp",
-    expectedToolCalls: 4,
-    expectedError: "tool call error",
-  },
-  {
-    name: "throw immediate in tool call",
-    throwWithin: "toolCall",
-    throwTimming: "immediate",
-    errorHandler: "cached",
-    expectedToolCalls: 1,
-    expectedResult: "123",
-  },
-  {
-    name: "throw delayed in tool call",
-    throwWithin: "toolCall",
-    throwTimming: "delayed",
-    errorHandler: "cached",
-    expectedToolCalls: 4,
-    expectedResult: "123",
-  },
-  /**
-   * `llm` if provided as a function, it will be called only once.
-   */
-  {
-    name: "throw immediate in llm",
-    throwWithin: "llm",
-    throwTimming: "immediate",
-    expectedToolCalls: 0,
-    expectedError: "llm error",
-  },
-  {
-    name: "throw immediate in prompt",
-    throwWithin: "prompt",
-    throwTimming: "immediate",
-    expectedToolCalls: 0,
-    expectedError: "prompt error",
-  },
-  {
-    name: "throw delayed in prompt",
-    throwWithin: "prompt",
-    throwTimming: "delayed",
-    expectedToolCalls: THROW_DELAY_COUNT,
-    expectedError: "prompt error",
-  },
-  {
-    name: "throw immediate in preModelHook",
-    throwWithin: "preModelHook",
-    throwTimming: "immediate",
-    expectedToolCalls: 0,
-    expectedError: "preModelHook error",
-  },
-  {
-    name: "throw delayed in preModelHook",
-    throwWithin: "preModelHook",
-    throwTimming: "delayed",
-    expectedToolCalls: THROW_DELAY_COUNT,
-    expectedError: "preModelHook error",
-  },
-  {
-    name: "throw immediate in postModelHook",
-    throwWithin: "postModelHook",
-    throwTimming: "immediate",
-    expectedToolCalls: 0,
-    expectedError: "postModelHook error",
-  },
-  {
-    name: "throw delayed in postModelHook",
-    throwWithin: "postModelHook",
-    throwTimming: "delayed",
-    expectedToolCalls: THROW_DELAY_COUNT,
-    expectedError: "postModelHook error",
-  },
-];
+const testScenarios: TestScenario[] = errorHandlingSpec as TestScenario[];
 
 describe("stopWhen Tests", () => {
   testScenarios.forEach((scenario) => {
