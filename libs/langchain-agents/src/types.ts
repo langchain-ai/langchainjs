@@ -69,20 +69,6 @@ export interface ExecutedToolCall {
 }
 
 /**
- * Information about an LLM invocation.
- */
-export interface LLMCall {
-  /**
-   * The messages that were sent to the LLM.
-   */
-  messages: BaseMessage[];
-  /**
-   * The response from the LLM.
-   */
-  response?: BaseMessage;
-}
-
-/**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
  */
@@ -101,13 +87,16 @@ export interface PreparedCall {
   systemMessage?: string;
   /**
    * Tool choice configuration (model-specific format).
-   * Can be "auto" | "none" | "required" | { type: "tool", toolName: string }
+   * Can be one of:
+   * - `"auto"`: means the model can pick between generating a message or calling one or more tools.
+   * - `"none"`: means the model will not call any tool and instead generates a message.
+   * - `"required"`: means the model must call one or more tools.
+   * - `{ type: "function", function: { name: string } }`: The model will use the specified function.
    */
   toolChoice?:
     | "auto"
     | "none"
     | "required"
-    | { type: "tool"; toolName: string }
     | { type: "function"; function: { name: string } };
 
   /**
@@ -115,8 +104,20 @@ export interface PreparedCall {
    * Can be tool names (strings) or tool instances.
    */
   tools?: (string | ClientTool | ServerTool)[];
-  // TODO: add response_format when standard output is ready
-  // responseFormat?: unknown;
+}
+
+/**
+ * Information about an LLM invocation.
+ */
+export interface LLMCall {
+  /**
+   * The messages that were sent to the LLM.
+   */
+  messages: BaseMessage[];
+  /**
+   * The response from the LLM.
+   */
+  response?: BaseMessage;
 }
 
 /**

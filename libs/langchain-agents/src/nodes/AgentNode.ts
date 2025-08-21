@@ -284,7 +284,6 @@ export class AgentNode<
     config: RunnableConfig,
     options: {
       lastMessage?: string;
-      isDirectReturn?: boolean;
     } = {}
   ): Promise<
     | AIMessage
@@ -333,13 +332,6 @@ export class AgentNode<
 
     const toolChoiceOverride = preparedCall.toolChoice
       ? { tool_choice: preparedCall.toolChoice }
-      : options?.isDirectReturn
-      ? {
-          tool_choice: {
-            type: "tool",
-            name: Object.keys(this.#structuredToolInfo)[0],
-          },
-        }
       : {};
 
     const modelWithTools = await this.#bindTools(
@@ -489,31 +481,46 @@ export class AgentNode<
      * Apply tools override if provided
      */
     if (toolsOverride) {
-      allTools = toolsOverride
-        .filter((tool) => {
-          if (typeof tool === "string") {
-            // Filter by tool name
-            return this.#options.toolClasses.some(
+      if (toolsOverride.length === 0) {
+        throw new Error(
+          "No tools were provided to override. Please provide at least one tool."
+        );
+      }
+
+      /**
+       * Find out if user has provided tool names that are not in the toolClasses
+       */
+      const hasUnknownToolStrings = toolsOverride
+        .filter((tool) => typeof tool === "string")
+        .filter((tool) =>
+          this.#options.toolClasses.some((t) => "name" in t && t.name === tool)
+        );
+      if (hasUnknownToolStrings) {
+        const availableToolNames =
+          this.#options.toolClasses.length > 0
+            ? this.#options.toolClasses.map((t) => t.name).join(", ")
+            : "none";
+        throw new Error(
+          `Unknown tool names were used to override tools: ${toolsOverride.join(
+            ", "
+          )}, available tools: ${availableToolNames}`
+        );
+      }
+
+      /**
+       * Map tool names to tool instances
+       */
+      allTools = toolsOverride.map((tool) => {
+        if (typeof tool === "string") {
+          // Find tool by name
+          return (
+            this.#options.toolClasses.find(
               (t) => "name" in t && t.name === tool
-            );
-          }
-          return true;
-        })
-        .map((tool) => {
-          if (typeof tool === "string") {
-            // Find tool by name
-            return (
-              this.#options.toolClasses.find(
-                (t) => "name" in t && t.name === tool
-              ) || tool
-            );
-          }
-          return tool;
-        })
-        .filter((tool) => typeof tool !== "string") as (
-        | ClientTool
-        | ServerTool
-      )[];
+            ) || tool
+          );
+        }
+        return tool;
+      }) as (ClientTool | ServerTool)[];
     }
 
     /**
