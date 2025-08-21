@@ -1,14 +1,14 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { createHash } from "crypto";
+import { env } from "node:process";
+import { expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import oracledb from "oracledb";
-import { env } from "node:process";
-import { createHash } from "crypto";
 import {
-  OracleEmbeddings,
   createIndex,
-  dropTablePurge,
   DistanceStrategy,
+  dropTablePurge,
+  OracleEmbeddings,
   type OracleDBVSArgs,
 } from "../index.js";
 import { OracleVS, type Metadata } from "../vectorstores.js";
@@ -104,7 +104,7 @@ describe("OracleVectorStore", () => {
       expect.objectContaining({ metadata: { a: 2 }, pageContent: "hello" }),
     ]);
 
-    const dbFilter = { key: "a", oper: "EQ", value: 1 }; // { a:1 }
+    const dbFilter = { a: 1 };
     const results2 = await oraclevs.similaritySearchWithScore(
       "hello!",
       1,
@@ -113,7 +113,7 @@ describe("OracleVectorStore", () => {
     expect(results2).toHaveLength(1);
   });
 
-  test("Test vectorstore addDocuments and find using filter IN Clause", async () => {
+  test("Test vectorstore addDocuments and find using filter IN and NIN Clause", async () => {
     oraclevs = new OracleVS(embedder, dbConfig);
     await oraclevs.initialize();
 
@@ -153,8 +153,9 @@ describe("OracleVectorStore", () => {
 
     await oraclevs.addDocuments(docs);
 
-    const filter = { author: { IN: ["Andrew Ng", "Demis Hassabis"] } };
-    const results = await oraclevs.similaritySearch(
+    // $in clause
+    let filter: Metadata = { author: { $in: ["Andrew Ng", "Demis Hassabis"] } };
+    let results = await oraclevs.similaritySearch(
       "latest advances in AI research for education",
       1,
       filter
@@ -173,9 +174,76 @@ describe("OracleVectorStore", () => {
           "Andrew Ng shares insights on scaling AI education to democratize access to machine learning tools.",
       }),
     ]);
+
+    // without $in clause
+    filter = { author: ["Andrew Ng", "Demis Hassabis"] };
+    results = await oraclevs.similaritySearch(
+      "latest advances in AI research for education",
+      1,
+      filter
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results).toEqual([
+      expect.objectContaining({
+        metadata: {
+          category: "research/AI",
+          author: ["Andrew Ng"],
+          tags: ["AI", "ML"],
+          status: "release",
+        },
+        pageContent:
+          "Andrew Ng shares insights on scaling AI education to democratize access to machine learning tools.",
+      }),
+    ]);
+
+    // with $nin clause
+    filter = { author: { $nin: ["Andrew Ng", "Demis Hassabis"] } };
+    results = await oraclevs.similaritySearch(
+      "latest advances in AI research for education",
+      5,
+      filter
+    );
+
+    expect(results).toHaveLength(3);
+    expect(results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          metadata: {
+            category: "research/AI",
+            author: ["Geoffrey Hinton"],
+            tags: ["AI", "ML"],
+            status: "release",
+          },
+          pageContent:
+            "Geoffrey Hinton explores the future of deep learning and its impact on AI research.",
+        }),
+        expect.objectContaining({
+          metadata: {
+            category: "research/AI",
+            author: ["Yoshua Bengio"],
+            tags: ["AI", "ML"],
+            status: "release",
+          },
+          pageContent:
+            "Yoshua Bengio presents breakthroughs in neural network architectures for natural language understanding.",
+        }),
+
+        expect.objectContaining({
+          metadata: {
+            category: "sports",
+            author: ["Alice", "Bob"],
+            tags: ["AI", "ML"],
+            status: "release",
+          },
+          pageContent:
+            "Alice discusses the application of machine learning and AI research in predicting football match outcomes.",
+        }),
+      ])
+    );
   });
 
-  test("should handle a simple _and clause", async () => {
+  test("should handle simple conditions with and without _and clause", async () => {
     oraclevs = new OracleVS(embedder, dbConfig);
     await oraclevs.initialize();
 
@@ -194,7 +262,7 @@ describe("OracleVectorStore", () => {
         metadata: { category: "games", price: 40 },
       }),
       new Document({
-        pageContent: "A romantic novel set in Paris.",
+        pageContent: "A suspense narrative in Paris.",
         metadata: { category: "books", price: 10 },
       }),
     ];
@@ -203,12 +271,9 @@ describe("OracleVectorStore", () => {
 
     // FilterCondition to have keywords , key, oper, value..
     let filter: Metadata = {
-      _and: [
-        { key: "category", oper: "EQ", value: "books" },
-        { key: "price", oper: "LTE", value: 20 },
-      ],
+      $and: [{ category: "books" }, { price: { $lte: 20 } }],
     };
-    let results = await oraclevs.similaritySearch("test", 2, filter);
+    let results = await oraclevs.similaritySearch("test", 5, filter);
     expect(results).toBeInstanceOf(Array);
     expect(results).toHaveLength(2);
     results.forEach((doc) => {
@@ -218,15 +283,73 @@ describe("OracleVectorStore", () => {
 
     // FilterCondition to have a simple filter
     filter = {
-      _and: [{ category: "books" }],
+      $and: [{ category: "books" }],
     };
-    results = await oraclevs.similaritySearch("test", 2, filter);
+    results = await oraclevs.similaritySearch("test", 4, filter);
     expect(results).toBeInstanceOf(Array);
-    expect(results).toHaveLength(2);
+    expect(results).toHaveLength(3); // gives all rows with category books
 
     results.forEach((doc) => {
       expect(doc.metadata.category).toBe("books");
     });
+
+    // filter with out _and keyword
+    filter = { category: "books" };
+    results = await oraclevs.similaritySearch("test", 4, filter);
+    expect(results).toBeInstanceOf(Array);
+    expect(results).toHaveLength(3); // gives all rows with category books
+    results.forEach((doc) => {
+      expect(doc.metadata.category).toBe("books");
+    });
+
+    // filter with simple key/value and comparision with out _and keyword
+    filter = { category: "books", price: 10 };
+    results = await oraclevs.similaritySearch("test", 4, filter);
+    expect(results).toBeInstanceOf(Array);
+    expect(results).toHaveLength(1); // gives all rows with category books and price 10
+    results.forEach((doc) => {
+      expect(doc.metadata.category).toBe("books");
+      expect(doc.metadata.price).toBe(10);
+    });
+
+    // filter with simple key/value
+    filter = { price: 10 };
+    results = await oraclevs.similaritySearch("test", 4, filter);
+    expect(results).toBeInstanceOf(Array);
+    expect(results).toHaveLength(1); // gives all rows with price 10
+    results.forEach((doc) => {
+      expect(doc.metadata.category).toBe("books");
+      expect(doc.metadata.price).toBe(10);
+    });
+
+    // filter with $between
+    filter = { price: { $between: [10, 25] } };
+    results = await oraclevs.similaritySearch("test", 4, filter);
+    expect(results).toBeInstanceOf(Array);
+    expect(results).toHaveLength(3); // gives all rows with price between [10, 25]
+    results.forEach((doc) => {
+      expect(doc.metadata.category).toBe("books");
+      expect(doc.metadata.price).toBeGreaterThanOrEqual(10);
+      expect(doc.metadata.price).toBeLessThanOrEqual(25);
+    });
+
+    // filter with $exists
+    filter = { price: { $exists: true } };
+    results = await oraclevs.similaritySearch("test", 10, filter);
+    expect(results).toBeInstanceOf(Array);
+    expect(results).toHaveLength(4); // gives all rows with price key
+
+    // filter with $exists to return rows which do not contain price
+    filter = { price: { $exists: false } };
+    await expect(oraclevs.similaritySearch("test", 10, filter)).rejects.toThrow(
+      "No rows found"
+    );
+
+    // filter with $exists for non-existing key
+    filter = { cost: { $exists: true } };
+    await expect(oraclevs.similaritySearch("test", 10, filter)).rejects.toThrow(
+      "No rows found"
+    );
   });
 
   test("should handle a simple _or clause", async () => {
@@ -248,7 +371,7 @@ describe("OracleVectorStore", () => {
         metadata: { category: "games", price: 15 },
       }),
       new Document({
-        pageContent: "A romantic novel set in Paris.",
+        pageContent: "A suspense narrative in Paris.",
         metadata: { category: "books", price: 10 },
       }),
       new Document({
@@ -259,10 +382,7 @@ describe("OracleVectorStore", () => {
     ];
     await oraclevs.addDocuments(docs);
     const filter: Metadata = {
-      _or: [
-        { key: "category", oper: "EQ", value: "books" },
-        { key: "price", oper: "LTE", value: 20 },
-      ],
+      $or: [{ category: "books" }, { price: { $lte: 20 } }],
     };
     const results = await oraclevs.similaritySearch("test", 6, filter);
     expect(results).toBeInstanceOf(Array);
@@ -315,23 +435,17 @@ describe("OracleVectorStore", () => {
     await oraclevs.addDocuments(docs, { ids: ["1", "2", "3", "4", "5"] });
 
     const filter: Metadata = {
-      _or: [
+      $or: [
         // First OR branch: simple AND group
         {
-          _and: [
-            { key: "category", oper: "EQ", value: "books" },
-            { key: "price", oper: "LTE", value: 20 },
-          ],
+          $and: [{ category: "books" }, { price: { $lte: 20 } }],
         },
         // Second OR branch: nested OR inside AND
         {
-          _and: [
-            { key: "category", oper: "EQ", value: "electronics" },
+          $and: [
+            { category: "electronics" },
             {
-              _or: [
-                { key: "price", oper: "LTE", value: 20 },
-                { key: "rating", oper: "GTE", value: 4.5 },
-              ],
+              $or: [{ price: { $lte: 20 } }, { rating: { $gte: 4.5 } }],
             },
           ],
         },
@@ -341,16 +455,15 @@ describe("OracleVectorStore", () => {
     // Complex filter example with _or and nested _and/_or
     const results = await oraclevs.similaritySearch("test", 10, filter);
     const expectedId = (id: string) => {
-      return String(
-        Buffer.from(
-          createHash("sha256")
-            .update(id)
-            .digest("hex")
-            .substring(0, 16)
-            .toUpperCase(),
-          "hex"
-        )
+      const buf = Buffer.from(
+        createHash("sha256")
+          .update(id)
+          .digest("hex")
+          .substring(0, 16)
+          .toUpperCase(),
+        "hex"
       );
+      return buf.toString("hex");
     };
     expect(results).toHaveLength(3);
     expect(results).toEqual(

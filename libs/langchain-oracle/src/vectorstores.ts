@@ -8,156 +8,127 @@ import { Document, type DocumentInterface } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
-export type Metadata = FilterCondition | FilterGroup | Record<string, unknown>;
+export type Metadata = Record<string, unknown>;
 
-export interface FilterCondition {
-  key: string; // JSON field inside metadata
-  oper: string; // Logical operator name: EQ, GT, LT, GTE, LTE
-  value: unknown; // Value to compare against
-}
-
-export interface FilterGroup {
-  _and?: Array<Metadata>;
-  _or?: Array<Metadata>;
-}
-
-/**
- * Convert high-level operation codes to SQL-compatible operators
- */
-function convertOperToSql(oper: string): string {
-  const operMap: Record<string, string> = {
-    EQ: "==",
-    GT: ">",
-    LT: "<",
-    GTE: ">=",
-    LTE: "<=",
-  };
-  if (!(oper in operMap)) {
-    throw new Error(`Filter operation ${oper} not supported`);
-  }
-  return operMap[oper];
-}
-
-/**
- * Generate JSON_EXISTS condition from a FilterCondition
- */
-function generateCondition(
-  condition: FilterCondition,
-  bindValues: unknown[]
-): string {
-  const { key } = condition;
-  const oper = convertOperToSql(condition.oper);
-  const { value } = condition;
-
-  bindValues.push(value);
-  const pos = bindValues.length;
-  return `JSON_EXISTS(metadata, '$.${key}?(@ ${oper} $bindName)' PASSING :${pos} AS "bindName")`;
-}
-
-/**
- * Generate OR chain of JSON_EXISTS for array values (IN-style)
- */
-function generateInCondition(
-  column: string,
-  values: string[],
-  bindValues: unknown[]
-): string {
-  const clauses = values.map((v) => {
-    bindValues.push(v);
-    const pos = bindValues.length; // 1-based bind position
-    return `JSON_EXISTS(metadata, '$.${column}?(@ == $bindName)' PASSING :${pos} AS "bindName")`;
-  });
-
-  return clauses.join(" OR ");
-}
-
-function buildJsonPath(column: string): string {
-  // Quote each path segment so keys with dots/spaces/hyphens are safe
-  // e.g. category.sub -> $."category"."sub"
-  const segs = column.split(".").map((s) => `"${s.replace(/"/g, '""')}"`);
-  return `$.${segs.join(".")}`;
-}
-
-/**
- * Generate OR chain of JSON_EQUAL for { k: val}
- */
-export function generateEqualCondition(
-  column: string,
-  value: string,
-  bindValues: unknown[]
-): string {
-  bindValues.push(value);
-  const pos = bindValues.length;
-
-  const path = buildJsonPath(column);
-  // For string scalars:
-  return `JSON_VALUE(metadata, '${path}') = :${pos}`;
-}
-
-/**
- * Recursively generate WHERE clause
- */
 export function generateWhereClause(
   dbFilter: Metadata,
   bindValues: unknown[]
 ): string {
-  // Case 1: Single FilterCondition
-  if ("key" in dbFilter) {
-    return generateCondition(dbFilter as FilterCondition, bindValues);
-  }
-
-  // Case 2: Shorthand IN-style filter { column: ["v1", "v2"] }
-
-  if (!("_and" in dbFilter) && !("_or" in dbFilter)) {
-    const entries = Object.entries(dbFilter);
-    if (entries.length === 1) {
-      const [col, val] = entries[0];
-
-      // Case 1: Array directly → { author: ["a", "b"] }
-      if (Array.isArray(val)) {
-        return generateInCondition(col, val as string[], bindValues);
-      }
-
-      // value is a string -> { author: "a"}
-      if (typeof val === "string") {
-        return generateEqualCondition(col, val, bindValues);
-      }
-
-      // Case 2: Object with IN → { author: { IN: ["a", "b"] } }
-      if (typeof val === "object" && val !== null && "IN" in val) {
-        const inVals = (val as { IN: string[] }).IN;
-        if (Array.isArray(inVals)) {
-          return generateInCondition(col, inVals, bindValues);
-        }
-      }
-    }
-  }
-
-  // Case 3: AND group
-  if (
-    "_and" in dbFilter &&
-    Array.isArray(dbFilter._and) &&
-    dbFilter._and.length > 0
-  ) {
-    const andConditions = dbFilter._and.map((cond) =>
-      generateWhereClause(cond as any, bindValues)
+  // Handle $and
+  if ("$and" in dbFilter && Array.isArray(dbFilter.$and)) {
+    const andConditions = dbFilter.$and.map((cond) =>
+      generateWhereClause(cond as Metadata, bindValues)
     );
     return `(${andConditions.join(" AND ")})`;
   }
 
-  // Case 4: OR group
-  if (
-    "_or" in dbFilter &&
-    Array.isArray(dbFilter._or) &&
-    dbFilter._or.length > 0
-  ) {
-    const orConditions = dbFilter._or.map((cond) =>
-      generateWhereClause(cond as any, bindValues)
+  // Handle $or
+  if ("$or" in dbFilter && Array.isArray(dbFilter.$or)) {
+    const orConditions = dbFilter.$or.map((cond) =>
+      generateWhereClause(cond as Metadata, bindValues)
     );
     return `(${orConditions.join(" OR ")})`;
   }
 
-  throw new Error(`Invalid filter structure: ${JSON.stringify(dbFilter)}`);
+  // Otherwise, normal object with key: condition(s)
+  const conditions: string[] = [];
+  for (const [col, val] of Object.entries(dbFilter)) {
+    if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+      // Operator-based filters ($eq, $lte, $in,...)
+      for (const [op, operand] of Object.entries(val)) {
+        conditions.push(
+          generateOperatorCondition(col, op, operand, bindValues)
+        );
+      }
+    } else if (Array.isArray(val)) {
+      // shorthand { tags: ["a","b"] } → IN
+      conditions.push(generateOperatorCondition(col, "$in", val, bindValues));
+    } else {
+      // shorthand { name: "John" } → equality
+      conditions.push(generateOperatorCondition(col, "$eq", val, bindValues));
+    }
+  }
+
+  return conditions.length > 1
+    ? `(${conditions.join(" AND ")})`
+    : conditions[0];
+}
+
+function generateOperatorCondition(
+  column: string,
+  operator: string,
+  value: unknown,
+  bindValues: unknown[]
+): string {
+  switch (operator) {
+    case "$eq":
+      return jsonCompare(column, "=", value, bindValues);
+
+    case "$ne":
+      return jsonCompare(column, "!=", value, bindValues);
+
+    case "$lt":
+      return jsonCompare(column, "<", value, bindValues);
+
+    case "$lte":
+      return jsonCompare(column, "<=", value, bindValues);
+
+    case "$gt":
+      return jsonCompare(column, ">", value, bindValues);
+
+    case "$gte":
+      return jsonCompare(column, ">=", value, bindValues);
+
+    case "$in": {
+      if (!Array.isArray(value)) throw new Error("$in requires array");
+      const inClauses = value.map((v) =>
+        jsonCompare(column, "=", v, bindValues)
+      );
+      return `(${inClauses.join(" OR ")})`;
+    }
+
+    case "$nin": {
+      if (!Array.isArray(value)) throw new Error("$nin requires array");
+      const ninClauses = value.map((v) =>
+        jsonCompare(column, "!=", v, bindValues)
+      );
+      return `(${ninClauses.join(" AND ")})`;
+    }
+
+    case "$between": {
+      if (!Array.isArray(value) || value.length !== 2)
+        throw new Error("$between requires [low, high]");
+      const [low, high] = value;
+      bindValues.push(low, high);
+      const posLow = bindValues.length - 1;
+      const posHigh = bindValues.length;
+      return `JSON_EXISTS(metadata, '$.${column}?(@ >= $low && @ <= $high)' PASSING :${posLow} AS "low", :${posHigh} AS "high")`;
+    }
+
+    case "$exists":
+      if (value) {
+        return `JSON_EXISTS(metadata, '$.${column}')`;
+      } else {
+        return `NOT JSON_EXISTS(metadata, '$.${column}')`;
+      }
+
+    default:
+      throw new Error(`Unsupported operator: ${operator}`);
+  }
+}
+
+// Helper: build JSON_EXISTS clause for comparison
+function jsonCompare(
+  column: string,
+  op: string,
+  value: unknown,
+  bindValues: unknown[]
+): string {
+  bindValues.push(value);
+  const pos = bindValues.length;
+  const alias = `val${pos}`; // unique bind alias
+  const operator = op === "=" ? "==" : op; // Oracle requires '==' for equality
+  return `JSON_EXISTS(metadata, '$.${column}?(@ ${operator} $${alias})' PASSING :${pos} AS "${alias}")`;
 }
 
 export interface OracleDBVSArgs {
@@ -663,7 +634,7 @@ export class OracleVS extends VectorStore {
           const document = new Document({
             pageContent: text || "",
             metadata: metadata || {},
-            id: String(row[0]),
+            id: (row[0] as Buffer).toString("hex"),
           });
           docsScoresAndEmbeddings.push([document, distance, embedding]);
         }
