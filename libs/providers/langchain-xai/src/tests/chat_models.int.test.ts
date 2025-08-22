@@ -1,4 +1,6 @@
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
+import { z } from "zod";
+
 import {
   AIMessage,
   AIMessageChunk,
@@ -6,8 +8,8 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
 import { concat } from "@langchain/core/utils/stream";
+
 import { ChatXAI } from "../chat_models.js";
 
 test("invoke", async () => {

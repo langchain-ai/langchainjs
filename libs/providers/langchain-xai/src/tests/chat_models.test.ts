@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect, beforeEach } from "vitest";
 import { ChatXAI } from "../chat_models.js";
 
 beforeEach(() => {
