@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatYandexGPT } from "../chat_models.js";
 
 test("Test YandexGPT generation", async () => {

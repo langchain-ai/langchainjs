@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { YandexGPTEmbeddings } from "../embeddings.js";
 
 test("Test YandexGPTEmbeddings.embedQuery", async () => {
