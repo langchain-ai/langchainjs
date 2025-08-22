@@ -7,10 +7,8 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    # Only run when LangChain Core, or integration package code changes.
     paths:
-      - "langchain-core/**"
-      - "libs/**/**"
+      - "libs/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
 # If another push to the same PR or branch happens while this workflow is still running,

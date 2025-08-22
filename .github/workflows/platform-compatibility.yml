@@ -7,8 +7,6 @@ on:
   pull_request:
     # Only run this workflow if the following directories have changed.
     paths:
-      - "langchain/**"
-      - "langchain-core/**"
       - "libs/**"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 
