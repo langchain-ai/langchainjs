@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, describe, expect, vi } from "vitest";
+import { test, describe, expect, it, vi } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { PineconeStore } from "../vectorstores.js";
 
