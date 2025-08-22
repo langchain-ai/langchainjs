@@ -1488,6 +1488,7 @@ export class ChatOpenAIResponses<
                 name: format.json_schema.name,
                 strict: format.json_schema.strict,
               },
+              verbosity: options?.verbosity,
             };
           }
           return undefined;
