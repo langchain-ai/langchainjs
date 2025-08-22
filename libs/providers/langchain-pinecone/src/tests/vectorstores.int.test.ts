@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, expect, test } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { faker } from "@faker-js/faker";
 import { Pinecone } from "@pinecone-database/pinecone";
-import * as uuid from "uuid";
+import { v4 as uuid } from "uuid";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";
 import { PineconeStoreParams, PineconeStore } from "../vectorstores.js";
@@ -53,7 +54,7 @@ describe("PineconeStore", () => {
   });
 
   test("user-provided ids", async () => {
-    const documentId = uuid.v4();
+    const documentId = uuid();
     const pageContent = faker.lorem.sentence(5);
 
     await pineconeStore.addDocuments(
@@ -107,7 +108,7 @@ describe("PineconeStore", () => {
 
   test("metadata filtering", async () => {
     const pageContent = faker.lorem.sentence(5);
-    const id = uuid.v4();
+    const id = uuid();
 
     await pineconeStore.addDocuments([
       { pageContent, metadata: { foo: "bar" } },
@@ -131,7 +132,7 @@ describe("PineconeStore", () => {
 
   test("max marginal relevance", async () => {
     const pageContent = faker.lorem.sentence(5);
-    const id = uuid.v4();
+    const id = uuid();
 
     await pineconeStore.addDocuments([
       { pageContent, metadata: { foo: id } },
@@ -154,7 +155,7 @@ describe("PineconeStore", () => {
 
   test("delete by id", async () => {
     const pageContent = faker.lorem.sentence(5);
-    const id = uuid.v4();
+    const id = uuid();
 
     const ids = await pineconeStore.addDocuments([
       { pageContent, metadata: { foo: id } },
@@ -180,8 +181,8 @@ describe("PineconeStore", () => {
 
   test("delete all", async () => {
     const pageContent = faker.lorem.sentence(5);
-    const id = uuid.v4();
-    const id2 = uuid.v4();
+    const id = uuid();
+    const id2 = uuid();
 
     await pineconeStore.addDocuments(
       [
@@ -212,8 +213,8 @@ describe("PineconeStore", () => {
 
   test("query based on passed namespace", async () => {
     const pageContent = "Can we make namespaces work!";
-    const id1 = uuid.v4();
-    const id2 = uuid.v4();
+    const id1 = uuid();
+    const id2 = uuid();
     namespaces = ["test-1", "test-2"];
     await pineconeStore.addDocuments(
       [{ pageContent, metadata: { foo: id1 } }],
@@ -236,7 +237,7 @@ describe("PineconeStore", () => {
   });
 
   test("auto instantiated pinecone index class", async () => {
-    const documentId = uuid.v4();
+    const documentId = uuid();
     const pageContent = faker.lorem.sentence(5);
     const embeddings = new SyntheticEmbeddings({
       vectorSize: 1024,

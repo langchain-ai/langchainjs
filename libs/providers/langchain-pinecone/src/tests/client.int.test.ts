@@ -1,4 +1,7 @@
+import { test, expect } from "vitest";
+
 import { Pinecone } from "@pinecone-database/pinecone";
+
 import { getPineconeClient } from "../client.js";
 
 describe("Tests for getPineconeClient", () => {
