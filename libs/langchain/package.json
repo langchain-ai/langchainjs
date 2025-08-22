@@ -636,17 +636,6 @@
       },
       "input": "./src/document_loaders/fs/text.ts"
     },
-    "./document_transformers/openai_functions": {
-      "import": {
-        "types": "./dist/document_transformers/openai_functions.d.ts",
-        "default": "./dist/document_transformers/openai_functions.js"
-      },
-      "require": {
-        "types": "./dist/document_transformers/openai_functions.d.cts",
-        "default": "./dist/document_transformers/openai_functions.cjs"
-      },
-      "input": "./src/document_transformers/openai_functions.ts"
-    },
     "./sql_db": {
       "import": {
         "types": "./dist/sql_db.d.ts",

@@ -28,7 +28,6 @@ const memory = require("langchain/memory");
 const memory_chat_memory = require("langchain/memory/chat_memory");
 const document = require("langchain/document");
 const document_loaders_base = require("langchain/document_loaders/base");
-const document_transformers_openai_functions = require("langchain/document_transformers/openai_functions");
 const output_parsers = require("langchain/output_parsers");
 const retrievers_contextual_compression = require("langchain/retrievers/contextual_compression");
 const retrievers_document_compressors = require("langchain/retrievers/document_compressors");

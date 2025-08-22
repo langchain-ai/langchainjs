@@ -45,7 +45,6 @@ export * as document_loaders__fs__directory from "../document_loaders/fs/directo
 export * as document_loaders__fs__json from "../document_loaders/fs/json.js";
 export * as document_loaders__fs__multi_file from "../document_loaders/fs/multi_file.js";
 export * as document_loaders__fs__text from "../document_loaders/fs/text.js";
-export * as document_transformers__openai_functions from "../document_transformers/openai_functions.js";
 export * as sql_db from "../sql_db.js";
 export * as output_parsers from "../output_parsers/index.js";
 export * as output_parsers__expression from "../output_parsers/expression.js";
