@@ -1,12 +1,11 @@
 /* eslint-disable no-process-env */
 /* eslint-disable no-promise-executor-return */
 
-import { beforeAll, expect, jest, test } from "@jest/globals";
+import { beforeAll, expect, vi, test, type MockInstance } from "vitest";
 import { Collection, MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
 import { OpenAIEmbeddings, AzureOpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { Document as BSONDocument } from "bson";
 
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -412,7 +411,7 @@ describe("addDocuments method", () => {
     });
   });
   test("correctly embeds and stores documents", async () => {
-    const spy = jest.spyOn(embeddings, "embedDocuments");
+    const spy = vi.spyOn(embeddings, "embedDocuments");
     await vectorStore.addDocuments(documents);
 
     const results = await collection
@@ -598,7 +597,7 @@ describe("maxMarginalRelevanceSearch method", () => {
 
   let vectorStore: PatchedVectorStore;
 
-  let spy: jest.SpiedFunction<
+  let spy: MockInstance<
     (
       query: number[],
       k: number,
@@ -614,7 +613,7 @@ describe("maxMarginalRelevanceSearch method", () => {
       }
     );
 
-    spy = jest
+    spy = vi
       .spyOn(vectorStore, "similaritySearchVectorWithScore")
       .mockImplementation(async () =>
         documents.map((doc) => {
@@ -747,10 +746,10 @@ describe("delete method", () => {
     // since we're only testing the delete functionality
     // and not the embedding process.
     const embeddings = {
-      embedDocuments: jest
+      embedDocuments: vi
         .fn<() => Promise<number[][]>>()
         .mockResolvedValue(Array(100).fill(Array(1536).fill(0.1))),
-      embedQuery: jest
+      embedQuery: vi
         .fn<() => Promise<number[][]>>()
         .mockResolvedValue(Array(1536).fill(0.1)),
     };
