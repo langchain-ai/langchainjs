@@ -28,7 +28,6 @@ export const optionalEntrypoints: Record<string, string[]> = {
     "storage/file_system",
     "hub",
     "hub/node",
-    "experimental/prompts/handlebars",
   ],
 };
 
