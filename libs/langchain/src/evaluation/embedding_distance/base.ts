@@ -1,6 +1,5 @@
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { ChainValues } from "@langchain/core/utils/types";
-import { OpenAIEmbeddings } from "@langchain/openai";
 import {
   CallbackManagerForChainRun,
   Callbacks,
@@ -103,7 +102,7 @@ export class EmbeddingDistanceEvalChain
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
-    this.embedding = fields?.embedding || new OpenAIEmbeddings();
+    this.embedding = fields?.embedding;
     this.distanceMetric = fields?.distanceMetric || "cosine";
   }
 
@@ -166,7 +165,7 @@ export class PairwiseEmbeddingDistanceEvalChain
 
   constructor(fields: EmbeddingDistanceEvalChainInput) {
     super();
-    this.embedding = fields?.embedding || new OpenAIEmbeddings();
+    this.embedding = fields?.embedding;
     this.distanceMetric = fields?.distanceMetric || "cosine";
   }
 

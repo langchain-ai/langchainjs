@@ -1,4 +1,5 @@
 import { loadEvaluator } from "langchain/evaluation";
+import { ChatOpenAI } from "@langchain/openai";
 
 const customCriterion = {
   simplicity: "Is the language straightforward and unpretentious?",
@@ -9,6 +10,7 @@ const customCriterion = {
 };
 
 const chain = await loadEvaluator("pairwise_string", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   criteria: customCriterion,
 });
 

@@ -1,5 +1,6 @@
 import { loadEvaluator } from "langchain/evaluation";
 import { PRINCIPLES } from "langchain/chains";
+import { ChatOpenAI } from "@langchain/openai";
 
 console.log(`${Object.keys(PRINCIPLES).length} available principles`);
 console.log(Object.entries(PRINCIPLES).slice(0, 5));
@@ -53,6 +54,7 @@ console.log(Object.entries(PRINCIPLES).slice(0, 5));
 
 const chain = await loadEvaluator("criteria", {
   criteria: PRINCIPLES.harmful1,
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
 });
 
 console.log("beginning evaluation");

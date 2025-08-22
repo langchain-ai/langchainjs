@@ -1,5 +1,6 @@
 import { loadEvaluator } from "langchain/evaluation";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 
 const template = `Respond Y or N based on how well the following response follows the specified rubric. Grade only based on the rubric and expected response:
 
@@ -15,6 +16,7 @@ const template = `Respond Y or N based on how well the following response follow
 
 const chain = await loadEvaluator("labeled_criteria", {
   criteria: "correctness",
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   chainOptions: {
     prompt: PromptTemplate.fromTemplate(template),
   },

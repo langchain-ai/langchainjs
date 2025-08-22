@@ -782,8 +782,8 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/openai':
-        specifier: workspace:*
-        version: link:../providers/langchain-openai
+        specifier: '>=0.6.0 <0.7.0'
+        version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters

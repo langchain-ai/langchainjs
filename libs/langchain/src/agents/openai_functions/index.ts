@@ -6,7 +6,7 @@ import type {
 import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { Runnable, RunnablePassthrough } from "@langchain/core/runnables";
-import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
+import type { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 import type {
   AgentAction,
   AgentFinish,

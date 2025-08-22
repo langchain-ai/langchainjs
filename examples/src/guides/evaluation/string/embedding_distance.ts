@@ -1,7 +1,10 @@
 import { loadEvaluator } from "langchain/evaluation";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import { ChatOpenAI } from "@langchain/openai";
 
-const chain = await loadEvaluator("embedding_distance");
+const chain = await loadEvaluator("embedding_distance", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+});
 
 const res = await chain.evaluateStrings({
   prediction: "I shall go",
@@ -29,6 +32,7 @@ console.log({ res1 });
 // By default, the evalutor uses cosine distance. You can choose a different distance metric if you'd like.
 const evaluator = await loadEvaluator("embedding_distance", {
   distanceMetric: "euclidean",
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
 });
 
 // Select Embeddings to Use
@@ -37,6 +41,7 @@ const evaluator = await loadEvaluator("embedding_distance", {
 const embedding = new FakeEmbeddings();
 
 const customEmbeddingEvaluator = await loadEvaluator("embedding_distance", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   embedding,
 });
 

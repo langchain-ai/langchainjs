@@ -3,7 +3,9 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({ temperature: 0 });
 
-const chain = await loadEvaluator("labeled_pairwise_string", { llm: model });
+const chain = await loadEvaluator("labeled_pairwise_string", {
+  llm: model,
+});
 
 const res = await chain.evaluateStringPairs({
   prediction: "there are three dogs",

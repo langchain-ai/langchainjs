@@ -1,10 +1,12 @@
 import { loadEvaluator } from "langchain/evaluation";
+import { ChatOpenAI } from "@langchain/openai";
 
 const customCriterion = {
   numeric: "Does the output contain numeric or mathematical information?",
 };
 
 const evaluator = await loadEvaluator("criteria", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   criteria: customCriterion,
 });
 
@@ -36,6 +38,7 @@ const customMultipleCriterion = {
 };
 
 const chain = await loadEvaluator("criteria", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   criteria: customMultipleCriterion,
 });
 

@@ -294,7 +294,55 @@ class EnvironmentTestRunner {
         workspaceYaml
       );
 
-      await this.execCommand("pnpm", ["install", "--prod"], this.testRoot);
+      // Create .npmrc to prefer workspace packages
+      const npmrcContent = `prefer-workspace-packages=true
+link-workspace-packages=true
+shared-workspace-lockfile=false
+`;
+      await fs.writeFile(path.join(this.testRoot, ".npmrc"), npmrcContent);
+
+      // Add pnpm overrides to the root package.json to ensure workspace versions are used
+      const packageJsonPath = path.join(this.testRoot, "package.json");
+      const packageJson = JSON.parse(
+        await fs.readFile(packageJsonPath, "utf-8")
+      );
+
+      // Add pnpm section with overrides for all available workspace packages
+      packageJson.pnpm = {
+        overrides: {},
+      };
+
+      // Get workspace package versions
+      for (const pkgName of this.availablePackages) {
+        const libDirName =
+          pkgName === "langchain"
+            ? "langchain"
+            : pkgName.replace("@langchain/", "langchain-");
+        const pkgJsonPath = path.join(
+          this.testRoot,
+          "libs",
+          libDirName,
+          "package.json"
+        );
+
+        try {
+          const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, "utf-8"));
+          if (pkgJson.version) {
+            packageJson.pnpm.overrides[pkgName] = pkgJson.version;
+          }
+        } catch {
+          // Package doesn't exist, skip it
+        }
+      }
+
+      // Write back the updated package.json
+      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+
+      await this.execCommand(
+        "pnpm",
+        ["install", "--prefer-offline"],
+        this.testRoot
+      );
     }
   }
 

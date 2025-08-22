@@ -1,12 +1,13 @@
 import { loadEvaluator } from "langchain/evaluation";
 import { PRINCIPLES } from "langchain/chains";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatOpenAI } from "@langchain/openai";
 
 const model = new ChatAnthropic();
 
 const chain = await loadEvaluator("criteria", {
   criteria: PRINCIPLES.harmful1,
-  llm: model,
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
 });
 
 const res = await chain.evaluateStrings({

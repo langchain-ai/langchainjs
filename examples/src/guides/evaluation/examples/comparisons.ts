@@ -7,7 +7,9 @@ import { SerpAPI } from "@langchain/community/tools/serpapi";
 //  Step 1. Create the Evaluator
 // In this example, you will use gpt-4 to select which output is preferred.
 
-const evalChain = await loadEvaluator("pairwise_string");
+const evalChain = await loadEvaluator("pairwise_string", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+});
 
 //  Step 2. Select Dataset
 
