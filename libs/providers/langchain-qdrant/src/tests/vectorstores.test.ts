@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { jest, test, expect } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 import { QdrantVectorStore } from "../vectorstores.js";
 
 test("QdrantVectorStore works", async () => {
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({ points: [] }),
-    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
-    createCollection: jest.fn(),
+    upsert: vi.fn(),
+    query: vi.fn<any>().mockResolvedValue({ points: [] }),
+    getCollections: vi.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
   };
 
   const embeddings = new FakeEmbeddings();
@@ -38,10 +38,10 @@ test("QdrantVectorStore works", async () => {
 test("QdrantVectorStore adds vectors with custom payload", async () => {
   // Mock Qdrant client
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({ points: [] }),
-    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
-    createCollection: jest.fn(),
+    upsert: vi.fn(),
+    query: vi.fn<any>().mockResolvedValue({ points: [] }),
+    getCollections: vi.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
   };
 
   // Mock embeddings
@@ -93,10 +93,10 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
 test("QdrantVectorStore adds vectors with multiple custom payload", async () => {
   // Mock Qdrant client
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({ points: [] }),
-    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
-    createCollection: jest.fn(),
+    upsert: vi.fn(),
+    query: vi.fn<any>().mockResolvedValue({ points: [] }),
+    getCollections: vi.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
   };
 
   // Mock embeddings
@@ -172,10 +172,10 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
 test("QdrantVectorStore adds vectors with no custom payload", async () => {
   // Mock Qdrant client
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({ points: [] }),
-    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
-    createCollection: jest.fn(),
+    upsert: vi.fn(),
+    query: vi.fn<any>().mockResolvedValue({ points: [] }),
+    getCollections: vi.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
   };
 
   // Mock embeddings
@@ -212,10 +212,10 @@ test("QdrantVectorStore adds vectors with no custom payload", async () => {
 
 test("QdrantVectorStore MMR works", async () => {
   const client = {
-    upsert: jest.fn(),
-    query: jest.fn<any>().mockResolvedValue({ points: [] }),
-    getCollections: jest.fn<any>().mockResolvedValue({ collections: [] }),
-    createCollection: jest.fn(),
+    upsert: vi.fn(),
+    query: vi.fn<any>().mockResolvedValue({ points: [] }),
+    getCollections: vi.fn<any>().mockResolvedValue({ collections: [] }),
+    createCollection: vi.fn(),
   };
 
   const embeddings = new FakeEmbeddings();
