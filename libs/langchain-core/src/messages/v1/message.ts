@@ -1,6 +1,6 @@
-import { BaseContentBlock } from "./content/base.js";
-import { SerializedConstructor } from "../load/serializable.js";
-import type { ContentBlock, MessageContent } from "./content/index.js";
+import { BaseContentBlock } from "../content/base.js";
+import { SerializedConstructor } from "../../load/serializable.js";
+import type { ContentBlock } from "../content/index.js";
 import {
   iife,
   type $MergeDiscriminatedUnion,
@@ -27,7 +27,7 @@ interface $BrandedMessage {
  * @param role - The role of the message
  * @returns true if the value is a branded message, false otherwise
  */
-function isBrandedMessage(
+export function isBrandedMessage(
   message: unknown,
   role?: $MessageType
 ): message is $BrandedMessage {
@@ -523,6 +523,8 @@ export type $InferMessageProperty<
   ? $InferMessageProperties<TStructure, TRole>[K]
   : never;
 
+type MessageContent = string | Array<ContentBlock>;
+
 /**
  * Represents a message object that organizes context for an LLM.
  *
@@ -540,7 +542,7 @@ export type $InferMessageProperty<
  * interface MyMessage extends Message<$StandardMessageStructure, "ai"> {
  *   // Additional AI-specific properties can be added here
  * }
- *
+ *`
  * // Custom message structure
  * interface CustomStructure extends $MessageStructure {
  *   content: {

@@ -2,6 +2,16 @@ import { BaseContentBlock } from "./base.js";
 
 export type Tools = never;
 
+export const KNOWN_BLOCK_TYPES = [
+  "tool_call",
+  "tool_call_chunk",
+  "invalid_tool_call",
+  "web_search_call",
+  "web_search_result",
+  "code_interpreter",
+  "code_interpreter_result",
+];
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Tools {
   /**
@@ -19,10 +29,8 @@ export declare namespace Tools {
    * This represents a request to call the tool named "foo" with arguments {"a": 1}
    * and an identifier of "123".
    */
-  export interface ToolCall<
-    TName extends string = string,
-    TArgs = Record<string, unknown>
-  > extends BaseContentBlock {
+  export interface ToolCall<TName extends string = string, TArgs = unknown>
+    extends BaseContentBlock {
     /**
      * Type of the content block
      */
@@ -37,12 +45,58 @@ export declare namespace Tools {
     args: TArgs;
   }
 
+  /** Content block to represent partial data of a tool call */
+  export interface ToolCallChunk<TName extends string = string>
+    extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "tool_call_chunk";
+    /**
+     * The name of the tool being called
+     */
+    name?: TName;
+    /**
+     * The arguments to the tool call
+     */
+    args?: string;
+    /**
+     * The index of the tool call chunk
+     */
+    index?: number;
+  }
+
+  /** Content block to represent an invalid tool call */
+  export interface InvalidToolCall<TName extends string = string>
+    extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "invalid_tool_call";
+    /**
+     * The name of the tool being called
+     */
+    name?: TName;
+    /**
+     * The arguments to the tool call
+     */
+    args?: string;
+    /**
+     * An error message associated with the tool call
+     */
+    error?: string;
+    /**
+     * Index of block in aggregate response
+     */
+    index?: string | number;
+  }
+
   /** Content block for a built-in web search tool call. */
   export interface WebSearchCall extends BaseContentBlock {
     /**
      * Type of the content block
      */
-    readonly type: "search_call";
+    readonly type: "web_search_call";
     /**
      * The search query used in the web search tool call
      */
@@ -54,7 +108,7 @@ export declare namespace Tools {
     /**
      * Type of the content block
      */
-    readonly type: "search_result";
+    readonly type: "web_search_result";
     /**
      * List of URLs returned by the web search tool call
      */
@@ -78,10 +132,7 @@ export declare namespace Tools {
   }
 
   /** Content block for the output of a singular code interpreter tool call */
-  export interface CodeInterpreterOutput extends BaseContentBlock {
-    /**
-     * Type of the content block
-     */
+  export interface CodeInterpreterOutput {
     readonly type: "code_interpreter_output";
     /**
      * The return code of the code interpreter tool call
@@ -116,9 +167,10 @@ export declare namespace Tools {
 
   export type ContentBlock =
     | ToolCall
+    | ToolCallChunk
+    | InvalidToolCall
     | WebSearchCall
     | WebSearchResult
     | CodeInterpreterCall
-    | CodeInterpreterOutput
     | CodeInterpreterResult;
 }
