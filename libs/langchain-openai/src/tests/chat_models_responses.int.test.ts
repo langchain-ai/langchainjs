@@ -871,6 +871,22 @@ describe("gpt-5", () => {
       const response = await model.invoke([storyPrompt]);
       expect(response).toBeDefined();
     });
+
+    // https://github.com/langchain-ai/langchainjs/issues/8718
+    it("with response format", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: true,
+        verbosity: "low",
+      }).withStructuredOutput(
+        z.object({
+          story: z.string(),
+        })
+      );
+
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
   });
 });
 
