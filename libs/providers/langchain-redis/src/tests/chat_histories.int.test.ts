@@ -1,6 +1,4 @@
-/* eslint-disable no-promise-executor-return */
-
-import { test, expect } from "@jest/globals";
+import { test, expect, afterAll } from "vitest";
 import { createClient } from "redis";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { RedisChatMessageHistory } from "../chat_histories.js";
@@ -80,7 +78,9 @@ test("Test Redis history with a TTL", async () => {
   const resultWithHistory = await chatHistory.getMessages();
   expect(resultWithHistory).toEqual(expectedMessages);
 
-  await new Promise((resolve) => setTimeout(resolve, 6000));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 6000);
+  });
 
   const expiredResult = await chatHistory.getMessages();
   expect(expiredResult).toStrictEqual([]);
