@@ -138,8 +138,10 @@ export interface AnthropicInput {
    * from 0 to 1. Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
    * and generative tasks.
+   * To not set this field, pass `null`. If `undefined` is passed,
+   * the default (1) will be used.
    */
-  temperature?: number;
+  temperature?: number | null;
 
   /** Only sample from the top K options for each subsequent
    * token. Used to remove "long tail" low probability
@@ -154,8 +156,13 @@ export interface AnthropicInput {
    * specified by top_p. Defaults to -1, which disables it.
    * Note that you should either alter temperature or top_p,
    * but not both.
+   *
+   * To not set this field, pass `null`. If `undefined` is passed,
+   * the default (-1) will be used.
+   *
+   * For Opus 4.1, this defaults to `null`.
    */
-  topP?: number;
+  topP?: number | null;
 
   /** A maximum number of tokens to generate before stopping. */
   maxTokens?: number;
@@ -652,11 +659,11 @@ export class ChatAnthropicMessages<
 
   apiUrl?: string;
 
-  temperature = 1;
+  temperature: number | undefined = 1;
 
   topK = -1;
 
-  topP = -1;
+  topP: number | undefined = -1;
 
   maxTokens = 2048;
 
@@ -713,9 +720,20 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    this.temperature = fields?.temperature ?? this.temperature;
+    if (this.model.includes("opus-4-1")) {
+      // Default to `undefined` for `topP` for Opus 4.1 models
+      this.topP = fields?.topP === null ? undefined : fields?.topP;
+    } else {
+      this.topP = fields?.topP ?? this.topP;
+    }
+
+    // If the user passes `null`, set it to `undefined`. Otherwise, use their value or the default. We have to check for null, because
+    // there's no way for us to know if they explicitly set it to `undefined`, or never passed a value
+    this.temperature =
+      fields?.temperature === null
+        ? undefined
+        : fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
-    this.topP = fields?.topP ?? this.topP;
     this.maxTokens =
       fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;

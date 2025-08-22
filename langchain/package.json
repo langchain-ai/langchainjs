@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.30",
+  "version": "0.3.31",
   "description": "Typescript bindings for langchain",
   "type": "module",
   "engines": {
@@ -440,7 +440,7 @@
     "@types/ws": "^8",
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
-    "axios": "^0.26.0",
+    "axios": "^1.11.0",
     "cheerio": "1.0.0-rc.12",
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",

@@ -4,12 +4,13 @@ import { z as z4 } from "zod/v4";
 
 import {
   DynamicStructuredTool,
+  DynamicTool,
   StructuredToolParams,
   ToolInputParsingException,
   isStructuredToolParams,
   tool,
 } from "../index.js";
-import { ToolMessage } from "../../messages/tool.js";
+import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
@@ -445,5 +446,32 @@ describe("isStructuredToolParams", () => {
       schema: "not a schema",
     };
     expect(isStructuredToolParams(nonStructuredToolParams)).toBe(false);
+  });
+});
+
+describe("DynamicTool", () => {
+  test("will thread metadata through to a resulting ToolMessage", async () => {
+    const tool = new DynamicTool({
+      name: "test",
+      description: "test",
+      metadata: {
+        foo: "bar",
+      },
+      func: async () => "test",
+    });
+
+    const input: ToolCall = {
+      id: "test_id",
+      name: "test",
+      args: { input: "test" },
+      type: "tool_call",
+    };
+
+    const result = await tool.invoke(input);
+
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect(result.metadata).toEqual({
+      foo: "bar",
+    });
   });
 });

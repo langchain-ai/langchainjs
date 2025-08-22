@@ -81,12 +81,18 @@ export interface ToolParams extends BaseLangChainParams {
    * @default false
    */
   verboseParsingErrors?: boolean;
+  /**
+   * Metadata for the tool.
+   */
+  metadata?: Record<string, unknown>;
 }
 
 export type ToolRunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>
-> = RunnableConfig<ConfigurableFieldType> & { toolCall?: ToolCall };
+> = RunnableConfig<ConfigurableFieldType> & {
+  toolCall?: ToolCall;
+};
 
 /**
  * Schema for defining tools.

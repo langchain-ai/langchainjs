@@ -6688,15 +6688,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ibm-cloud/watsonx-ai@npm:^1.6.4":
-  version: 1.6.4
-  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.4"
+"@ibm-cloud/watsonx-ai@npm:^1.6.10":
+  version: 1.6.10
+  resolution: "@ibm-cloud/watsonx-ai@npm:1.6.10"
   dependencies:
-    "@langchain/textsplitters": ^0.1.0
     "@types/node": ^18.0.0
     extend: 3.0.2
     ibm-cloud-sdk-core: ^5.3.2
-  checksum: 995638aa134dd54da3694bdc20aab6563a87fb4fcdf5a88e5fe48ca4505c44954bc398f9a82904ef5091db61fa1ebc7b0f17c2a241227f8f37f4b94f202d46d3
+  checksum: 8eb1d7b714918d51f9a3a6e21e37ccc5baac67807348969338d6caad5574c58a78d2f54bf43ce367b0fb2ae8bcd90e64d75762e42adfe920cb17e5d54cea1b24
   languageName: node
   linkType: hard
 
@@ -8269,7 +8268,7 @@ __metadata:
     "@gradientai/nodejs-sdk": ^1.2.0
     "@huggingface/inference": ^4.0.5
     "@huggingface/transformers": ^3.5.2
-    "@ibm-cloud/watsonx-ai": ^1.6.4
+    "@ibm-cloud/watsonx-ai": ^1.6.10
     "@jest/globals": ^29.5.0
     "@lancedb/lancedb": ^0.13.0
     "@langchain/core": "workspace:*"
@@ -8288,7 +8287,7 @@ __metadata:
     "@planetscale/database": ^1.8.0
     "@playwright/test": ^1.48.2
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.8.2
+    "@qdrant/js-client-rest": ^1.15.0
     "@raycast/api": ^1.83.1
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -8338,7 +8337,7 @@ __metadata:
     cassandra-driver: ^4.7.2
     cborg: ^4.1.1
     cheerio: ^1.0.0-rc.12
-    chromadb: ^1.9.1
+    chromadb: ^3.0.10
     closevector-common: 0.1.3
     closevector-node: 0.1.6
     closevector-web: 0.1.6
@@ -8467,7 +8466,7 @@ __metadata:
     "@pinecone-database/pinecone": "*"
     "@planetscale/database": ^1.8.0
     "@premai/prem-sdk": ^0.3.25
-    "@qdrant/js-client-rest": ^1.8.2
+    "@qdrant/js-client-rest": ^1.15.0
     "@raycast/api": ^1.55.2
     "@rockset/client": ^0.9.1
     "@smithy/eventstream-codec": ^2.0.5
@@ -9188,7 +9187,7 @@ __metadata:
     eslint-plugin-import: ^2.27.5
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
-    groq-sdk: ^0.19.0
+    groq-sdk: ^0.29.0
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     prettier: ^2.8.3
@@ -9527,7 +9526,7 @@ __metadata:
     jest: ^29.5.0
     jest-environment-node: ^29.6.4
     js-tiktoken: ^1.0.12
-    openai: ^5.3.0
+    openai: 5.12.2
     prettier: ^2.8.3
     release-it: ^18.1.2
     rimraf: ^5.0.1
@@ -9535,7 +9534,7 @@ __metadata:
     typescript: ~5.8.3
     zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.3.58 <0.4.0"
+    "@langchain/core": ">=0.3.68 <0.4.0"
   languageName: unknown
   linkType: soft
 
@@ -9586,7 +9585,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@qdrant/js-client-rest": ^1.9.0
+    "@qdrant/js-client-rest": ^1.15.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9775,7 +9774,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@^0.1.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
+"@langchain/textsplitters@>=0.0.0 <0.2.0, @langchain/textsplitters@workspace:*, @langchain/textsplitters@workspace:libs/langchain-textsplitters":
   version: 0.0.0-use.local
   resolution: "@langchain/textsplitters@workspace:libs/langchain-textsplitters"
   dependencies:
@@ -10309,6 +10308,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/env@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/env@npm:14.2.30"
+  checksum: 3ea103d4f1f82e5d971af460e909ef014c6973555d449049e073ad16a091383167889a7e438d45b3e0bf702fbc9116ba78b175215331378457147e2a0f8e8080
+  languageName: node
+  linkType: hard
+
 "@next/eslint-plugin-next@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/eslint-plugin-next@npm:14.2.28"
@@ -10325,9 +10331,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/swc-darwin-arm64@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-darwin-arm64@npm:14.2.30"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@next/swc-darwin-x64@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/swc-darwin-x64@npm:14.2.28"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@next/swc-darwin-x64@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-darwin-x64@npm:14.2.30"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
@@ -10339,9 +10359,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/swc-linux-arm64-gnu@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-linux-arm64-gnu@npm:14.2.30"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@next/swc-linux-arm64-musl@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/swc-linux-arm64-musl@npm:14.2.28"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@next/swc-linux-arm64-musl@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-linux-arm64-musl@npm:14.2.30"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
@@ -10353,9 +10387,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/swc-linux-x64-gnu@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-linux-x64-gnu@npm:14.2.30"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
 "@next/swc-linux-x64-musl@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/swc-linux-x64-musl@npm:14.2.28"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@next/swc-linux-x64-musl@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-linux-x64-musl@npm:14.2.30"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
@@ -10367,6 +10415,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/swc-win32-arm64-msvc@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-win32-arm64-msvc@npm:14.2.30"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
 "@next/swc-win32-ia32-msvc@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/swc-win32-ia32-msvc@npm:14.2.28"
@@ -10374,9 +10429,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@next/swc-win32-ia32-msvc@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-win32-ia32-msvc@npm:14.2.30"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
 "@next/swc-win32-x64-msvc@npm:14.2.28":
   version: 14.2.28
   resolution: "@next/swc-win32-x64-msvc@npm:14.2.28"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@next/swc-win32-x64-msvc@npm:14.2.30":
+  version: 14.2.30
+  resolution: "@next/swc-win32-x64-msvc@npm:14.2.30"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -11360,16 +11429,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@qdrant/js-client-rest@npm:^1.8.2, @qdrant/js-client-rest@npm:^1.9.0":
-  version: 1.9.0
-  resolution: "@qdrant/js-client-rest@npm:1.9.0"
+"@qdrant/js-client-rest@npm:^1.15.0":
+  version: 1.15.0
+  resolution: "@qdrant/js-client-rest@npm:1.15.0"
   dependencies:
     "@qdrant/openapi-typescript-fetch": 1.2.6
     "@sevinf/maybe": 0.5.0
-    undici: ~5.28.4
+    undici: ^6.0.0
   peerDependencies:
     typescript: ">=4.7"
-  checksum: 3ac6526a961f85e96eaa0cd17059cafcca208c7aaa6df96fa99caab75c53c79903eafa611be99b52732970f4bef65d93922537916194fe0b9edf0f256e42fa9a
+  checksum: edc691c08d7a95a579922b9e472586cd6d823410f0fc873874f15df202b2ce077a0dd9ef9dbdb51eeb3e2f5ff83d49bc0c09ba35402cc233eb9b6f08b807f2f2
   languageName: node
   linkType: hard
 
@@ -14949,7 +15018,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.0.0, @types/node@npm:^18.11.18, @types/node@npm:^18.19.80":
+"@types/node@npm:^18.0.0":
+  version: 18.19.120
+  resolution: "@types/node@npm:18.19.120"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: d38430484d1de03a754ae192b28e76588b69036a4ff0f134eefdaca40a2b423536ebdb2c6eb3b460b7d78061c459fc5a4d2d593c01e77f78d5391715b3d0c179
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.18, @types/node@npm:^18.19.80":
   version: 18.19.110
   resolution: "@types/node@npm:18.19.110"
   dependencies:
@@ -16796,7 +16874,7 @@ __metadata:
     eslint: ^8
     eslint-config-next: 14.2.28
     glob: ^10.3.10
-    next: 14.2.28
+    next: 14.2.30
     postcss: ^8
     prettier: ^2.8.3
     react: ^18
@@ -17322,6 +17400,17 @@ __metadata:
     form-data: ^4.0.0
     proxy-from-env: ^1.1.0
   checksum: e901dc1730bdcd769839b3d93ae6d6457a53d79b19a0eb623ebfea333441259ab51e63ca118baa47a5156567401466ac739f31087b4ee5e6770ab2e227484538
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "axios@npm:1.11.0"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.4
+    proxy-from-env: ^1.1.0
+  checksum: 0a33dc600b588bfd3111b198d5985527ed89f722817455d7cdb66c1d055e5f8859cc2bebb7320888957fc8458ebe77d5f83af02af9cd260217c91c4e92b6dfb6
   languageName: node
   linkType: hard
 
@@ -18018,12 +18107,12 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.11
-  resolution: "brace-expansion@npm:1.1.11"
+  version: 1.1.12
+  resolution: "brace-expansion@npm:1.1.12"
   dependencies:
     balanced-match: ^1.0.0
     concat-map: 0.0.1
-  checksum: faf34a7bb0c3fcf4b59c7808bc5d2a96a40988addf2e7e09dfbb67a2251800e0d14cd2bfc1aa79174f2f5095c54ff27f46fb1289fe2d77dac755b5eb3434cc07
+  checksum: 12cb6d6310629e3048cadb003e1aca4d8c9bb5c67c3c321bafdd7e7a50155de081f78ea3e0ed92ecc75a9015e784f301efc8132383132f4f7904ad1ac529c562
   languageName: node
   linkType: hard
 
@@ -18748,7 +18837,42 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromadb@npm:^1.5.3, chromadb@npm:^1.9.1":
+"chromadb-js-bindings-darwin-arm64@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chromadb-js-bindings-darwin-arm64@npm:1.0.1"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"chromadb-js-bindings-darwin-x64@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chromadb-js-bindings-darwin-x64@npm:1.0.1"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"chromadb-js-bindings-linux-arm64-gnu@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chromadb-js-bindings-linux-arm64-gnu@npm:1.0.1"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"chromadb-js-bindings-linux-x64-gnu@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chromadb-js-bindings-linux-x64-gnu@npm:1.0.1"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"chromadb-js-bindings-win32-x64-msvc@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "chromadb-js-bindings-win32-x64-msvc@npm:1.0.1"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"chromadb@npm:^1.5.3":
   version: 1.9.1
   resolution: "chromadb@npm:1.9.1"
   dependencies:
@@ -18766,6 +18890,33 @@ __metadata:
     openai:
       optional: true
   checksum: 9903891ee5811ec5a50d9c94057ea54d8f09d528749478f6ce1cbed4831544788f96d2c1301f7c3453f4ac5a2dd38380f1383686003d80a09e4e7dbc0d8b11f5
+  languageName: node
+  linkType: hard
+
+"chromadb@npm:^3.0.10":
+  version: 3.0.10
+  resolution: "chromadb@npm:3.0.10"
+  dependencies:
+    chromadb-js-bindings-darwin-arm64: ^1.0.1
+    chromadb-js-bindings-darwin-x64: ^1.0.1
+    chromadb-js-bindings-linux-arm64-gnu: ^1.0.1
+    chromadb-js-bindings-linux-x64-gnu: ^1.0.1
+    chromadb-js-bindings-win32-x64-msvc: ^1.0.1
+    semver: ^7.7.1
+  dependenciesMeta:
+    chromadb-js-bindings-darwin-arm64:
+      optional: true
+    chromadb-js-bindings-darwin-x64:
+      optional: true
+    chromadb-js-bindings-linux-arm64-gnu:
+      optional: true
+    chromadb-js-bindings-linux-x64-gnu:
+      optional: true
+    chromadb-js-bindings-win32-x64-msvc:
+      optional: true
+  bin:
+    chroma: dist/cli.mjs
+  checksum: 192dab531c15b87f349512c63c7be24bb01da575e65b7ecbedf0f3f5d9eaad775be171bfd19e2a33db79dac825eb671fc75f643a3d65dff98289dcae45e155fe
   languageName: node
   linkType: hard
 
@@ -23252,7 +23403,7 @@ __metadata:
     "@pinecone-database/pinecone": ^5.0.2
     "@planetscale/database": ^1.8.0
     "@prisma/client": ^4.11.0
-    "@qdrant/js-client-rest": ^1.9.0
+    "@qdrant/js-client-rest": ^1.15.0
     "@rockset/client": ^0.9.1
     "@supabase/supabase-js": ^2.45.0
     "@tensorflow/tfjs-backend-cpu": ^4.4.0
@@ -24279,6 +24430,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "form-data@npm:4.0.4"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    es-set-tostringtag: ^2.1.0
+    hasown: ^2.0.2
+    mime-types: ^2.1.12
+  checksum: 9b7788836df9fa5a6999e0c02515b001946b2a868cfe53f026c69e2c537a2ff9fbfb8e9d2b678744628f3dc7a2d6e14e4e45dfaf68aa6239727f0bdb8ce0abf2
+  languageName: node
+  linkType: hard
+
 "formdata-node@npm:^4.3.2":
   version: 4.4.1
   resolution: "formdata-node@npm:4.4.1"
@@ -25220,9 +25384,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"groq-sdk@npm:^0.19.0":
-  version: 0.19.0
-  resolution: "groq-sdk@npm:0.19.0"
+"groq-sdk@npm:^0.29.0":
+  version: 0.29.0
+  resolution: "groq-sdk@npm:0.29.0"
   dependencies:
     "@types/node": ^18.11.18
     "@types/node-fetch": ^2.6.4
@@ -25231,7 +25395,7 @@ __metadata:
     form-data-encoder: 1.7.2
     formdata-node: ^4.3.2
     node-fetch: ^2.6.7
-  checksum: 34ea4c3c0d55d2730961bc12aa655af596c3df80347a3a9d46fb8efd5eeb64f7c5905ef7b1e8ce5929918596a43239f86c27a1f6e16809ab27470f1732ef13d2
+  checksum: dfe6811db1411ed80c9a9889a4c87315837925b0b5d5ef1e081c7495df5a88a37dd46b7a52990481fedbcc1745f7b522fb9ed23b7a052c5265da7a32c45d648a
   languageName: node
   linkType: hard
 
@@ -25914,7 +26078,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ibm-cloud-sdk-core@npm:^5.0.2, ibm-cloud-sdk-core@npm:^5.3.2":
+"ibm-cloud-sdk-core@npm:^5.0.2":
   version: 5.3.2
   resolution: "ibm-cloud-sdk-core@npm:5.3.2"
   dependencies:
@@ -25934,6 +26098,29 @@ __metadata:
     retry-axios: ^2.6.0
     tough-cookie: ^4.1.3
   checksum: b5c85a946d7ad6882a17ed6a01bdbbd5a645ff63daaa721b6641970dd9ac5e76bcb3279d66a9d8537ed38a111d6f9d175a571526667dab601ea61f41ab51cbdf
+  languageName: node
+  linkType: hard
+
+"ibm-cloud-sdk-core@npm:^5.3.2":
+  version: 5.4.2
+  resolution: "ibm-cloud-sdk-core@npm:5.4.2"
+  dependencies:
+    "@types/debug": ^4.1.12
+    "@types/node": ^18.19.80
+    "@types/tough-cookie": ^4.0.0
+    axios: ^1.11.0
+    camelcase: ^6.3.0
+    debug: ^4.3.4
+    dotenv: ^16.4.5
+    extend: 3.0.2
+    file-type: 16.5.4
+    form-data: ^4.0.4
+    isstream: 0.1.2
+    jsonwebtoken: ^9.0.2
+    mime-types: 2.1.35
+    retry-axios: ^2.6.0
+    tough-cookie: ^4.1.3
+  checksum: e79501cd817a4e01ed10eec4495f5b3f71b4b505d2b7e0c1fa4aae467add68b0ed8faa0b80d70e839c15ab9e92875be44178cec78e06642c8b5ab6f4d7cad2bd
   languageName: node
   linkType: hard
 
@@ -28586,7 +28773,7 @@ __metadata:
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.58.0
     "@typescript-eslint/parser": ^5.58.0
-    axios: ^0.26.0
+    axios: ^1.11.0
     cheerio: 1.0.0-rc.12
     dotenv: ^16.0.3
     dpdm: ^3.14.0
@@ -30733,6 +30920,64 @@ __metadata:
   languageName: node
   linkType: hard
 
+"next@npm:14.2.30":
+  version: 14.2.30
+  resolution: "next@npm:14.2.30"
+  dependencies:
+    "@next/env": 14.2.30
+    "@next/swc-darwin-arm64": 14.2.30
+    "@next/swc-darwin-x64": 14.2.30
+    "@next/swc-linux-arm64-gnu": 14.2.30
+    "@next/swc-linux-arm64-musl": 14.2.30
+    "@next/swc-linux-x64-gnu": 14.2.30
+    "@next/swc-linux-x64-musl": 14.2.30
+    "@next/swc-win32-arm64-msvc": 14.2.30
+    "@next/swc-win32-ia32-msvc": 14.2.30
+    "@next/swc-win32-x64-msvc": 14.2.30
+    "@swc/helpers": 0.5.5
+    busboy: 1.6.0
+    caniuse-lite: ^1.0.30001579
+    graceful-fs: ^4.2.11
+    postcss: 8.4.31
+    styled-jsx: 5.1.1
+  peerDependencies:
+    "@opentelemetry/api": ^1.1.0
+    "@playwright/test": ^1.41.2
+    react: ^18.2.0
+    react-dom: ^18.2.0
+    sass: ^1.3.0
+  dependenciesMeta:
+    "@next/swc-darwin-arm64":
+      optional: true
+    "@next/swc-darwin-x64":
+      optional: true
+    "@next/swc-linux-arm64-gnu":
+      optional: true
+    "@next/swc-linux-arm64-musl":
+      optional: true
+    "@next/swc-linux-x64-gnu":
+      optional: true
+    "@next/swc-linux-x64-musl":
+      optional: true
+    "@next/swc-win32-arm64-msvc":
+      optional: true
+    "@next/swc-win32-ia32-msvc":
+      optional: true
+    "@next/swc-win32-x64-msvc":
+      optional: true
+  peerDependenciesMeta:
+    "@opentelemetry/api":
+      optional: true
+    "@playwright/test":
+      optional: true
+    sass:
+      optional: true
+  bin:
+    next: dist/bin/next
+  checksum: 60add50e630872ef83392757d239817a328f49457b1b1880f1eeee78eef4c26dc7d1050eb17110683ba06eee4115e5581e22e76cda8613fbbac1d7e945b2ca5e
+  languageName: node
+  linkType: hard
+
 "nice-grpc-client-middleware-retry@npm:^3.1.10":
   version: 3.1.11
   resolution: "nice-grpc-client-middleware-retry@npm:3.1.11"
@@ -31572,7 +31817,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openai@npm:*, openai@npm:^5.3.0":
+"openai@npm:*":
   version: 5.3.0
   resolution: "openai@npm:5.3.0"
   peerDependencies:
@@ -31605,6 +31850,23 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: bc572c9ac2a149722193d9f8e88a95fc2da021be9d18e36d5e840ce673dab78943f5b406e2a20d1044453fb259c7d1e10d2e2e34a92d94d73afc24832a183249
+  languageName: node
+  linkType: hard
+
+"openai@npm:5.12.2":
+  version: 5.12.2
+  resolution: "openai@npm:5.12.2"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: b48116979c0666b1438d68a71df2c57833bca8c20c5d43e0c17e4d8594ca72294a1b62f40c7e3b8e5d5be644c2de5ba27fe97b8136f1de36e0490fd49c552a70
   languageName: node
   linkType: hard
 
@@ -35740,7 +36002,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.7.2":
+"semver@npm:^7.7.1, semver@npm:^7.7.2":
   version: 7.7.2
   resolution: "semver@npm:7.7.2"
   bin:
@@ -37402,14 +37664,14 @@ __metadata:
   linkType: hard
 
 "tar-fs@npm:^2.0.0, tar-fs@npm:~2.1.2":
-  version: 2.1.2
-  resolution: "tar-fs@npm:2.1.2"
+  version: 2.1.3
+  resolution: "tar-fs@npm:2.1.3"
   dependencies:
     chownr: ^1.1.1
     mkdirp-classic: ^0.5.2
     pump: ^3.0.0
     tar-stream: ^2.1.4
-  checksum: 6b4fcd38a644b5cd3325f687b9f1f48cd19809b63cbc8376fe794f68361849a17120d036833b3a97de6acb1df588844476309b8c2d0bcaf53f19da2d56ac07de
+  checksum: 8dd66c20779c1fe535df5cf2ab5132705c12aba3ab95283f225a798329c5aaa8bbe92144c8e21bc9404f46a0d3ce59fc4997f5c42bafc55b6a225d4ad15aa966
   languageName: node
   linkType: hard
 
@@ -38832,12 +39094,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^5.19.1, undici@npm:^5.22.1, undici@npm:^5.28.5, undici@npm:~5.28.4":
+"undici@npm:^5.19.1, undici@npm:^5.22.1, undici@npm:^5.28.5":
   version: 5.28.5
   resolution: "undici@npm:5.28.5"
   dependencies:
     "@fastify/busboy": ^2.0.0
   checksum: a402d699a602a8feee1c0f78267467c8ffcbd7682267fec7a1307fd11554a32976a2307bf1cc8bf6ef7a667654336592fbd66d675df20ce28357536fb55a3a7d
+  languageName: node
+  linkType: hard
+
+"undici@npm:^6.0.0":
+  version: 6.21.3
+  resolution: "undici@npm:6.21.3"
+  checksum: a2af0601deece36acbcc11ef722f36ad3c1e035d3065b9fbb36987487f7b69904046fa95c18f228a872ca45441f156fcaacd948fc920b0a97d0c1ab78ea63c04
   languageName: node
   linkType: hard
 

@@ -71,7 +71,7 @@
     "@pinecone-database/pinecone": "^5.0.2",
     "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.11.0",
-    "@qdrant/js-client-rest": "^1.9.0",
+    "@qdrant/js-client-rest": "^1.15.0",
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.45.0",
     "@tensorflow/tfjs-backend-cpu": "^4.4.0",
