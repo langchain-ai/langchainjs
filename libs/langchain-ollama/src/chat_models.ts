@@ -752,8 +752,9 @@ export class ChatOllama
       lastMetadata = rest;
 
       // when think is enabled, try thinking first
-      const token = this.think ? responseMessage.thinking ?? responseMessage.content ?? ""
-        : responseMessage.content ?? "" 
+      const token = this.think
+        ? responseMessage.thinking ?? responseMessage.content ?? ""
+        : responseMessage.content ?? "";
 
       yield new ChatGenerationChunk({
         text: token,

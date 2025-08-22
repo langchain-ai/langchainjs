@@ -22,7 +22,7 @@ test("test deep seek model with think=false", async () => {
   const responseContent = res.content;
 
   // Validate that the response does not include any <think>...</think> blocks
-  // s means allow . to match new line character 
+  // s means allow . to match new line character
   expect(responseContent).not.toMatch(/<think>.*?<\/think>/is);
 
   // Ensure the response is concise and directly answers the question
