@@ -1,4 +1,4 @@
-import { test, expect, jest, describe } from "@jest/globals";
+import { test, expect, vi, describe } from "vitest";
 import { TavilyCrawl } from "../tavily-crawl.js";
 import {
   TavilyCrawlAPIWrapper,
@@ -90,7 +90,7 @@ describe("TavilyCrawl", () => {
 
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -126,7 +126,7 @@ describe("TavilyCrawl", () => {
 
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -163,7 +163,7 @@ describe("TavilyCrawl", () => {
 
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -195,7 +195,7 @@ describe("TavilyCrawl", () => {
   test("handles API errors", async () => {
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("API error"))
@@ -218,7 +218,7 @@ describe("TavilyCrawl", () => {
 
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -245,7 +245,7 @@ describe("TavilyCrawl", () => {
 
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -281,7 +281,7 @@ describe("TavilyCrawl", () => {
   test("handles non-standard errors", async () => {
     const mockWrapper = new TestTavilyCrawlAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("String error without message property"))
@@ -300,7 +300,7 @@ describe("TavilyCrawl", () => {
   test("converts camelCase parameters to snake_case in API requests", async () => {
     // Mock fetch to intercept the actual API request
     const originalFetch = global.fetch;
-    const mockFetch = jest.fn().mockImplementation(() =>
+    const mockFetch = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,
         json: () =>

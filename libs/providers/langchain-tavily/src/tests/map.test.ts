@@ -1,4 +1,4 @@
-import { test, expect, jest, describe } from "@jest/globals";
+import { test, expect, vi, describe } from "vitest";
 import { TavilyMap } from "../tavily-map.js";
 import {
   TavilyExtractResponse,
@@ -78,7 +78,7 @@ describe("TavilyMap", () => {
 
     const mockWrapper = new TestTavilyMapAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -99,7 +99,7 @@ describe("TavilyMap", () => {
   test("handles API errors", async () => {
     const mockWrapper = new TestTavilyMapAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("API error"))
@@ -122,7 +122,7 @@ describe("TavilyMap", () => {
 
     const mockWrapper = new TestTavilyMapAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -149,7 +149,7 @@ describe("TavilyMap", () => {
 
     const mockWrapper = new TestTavilyMapAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -170,7 +170,7 @@ describe("TavilyMap", () => {
   test("handles non-standard errors", async () => {
     const mockWrapper = new TestTavilyMapAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("String error without message property"))
