@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { describe, expect, test } from "@jest/globals";
+
+import { describe, expect, test } from "vitest";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
@@ -21,13 +21,10 @@ describe("QdrantVectorStore testcase", () => {
 
     const pageContent = faker.lorem.sentence(5);
     const id = v4();
-
     await qdrantVectorStore.addDocuments([{ pageContent, metadata: {}, id }]);
 
     const results = await qdrantVectorStore.similaritySearch(pageContent, 1);
-
     expect(results[0]).toEqual(new Document({ metadata: {}, pageContent, id }));
-
     expect(qdrantVectorStore.maxMarginalRelevanceSearch).toBeDefined();
 
     const mmrResults = await qdrantVectorStore.maxMarginalRelevanceSearch(
