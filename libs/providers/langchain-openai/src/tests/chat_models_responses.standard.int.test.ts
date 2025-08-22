@@ -1,6 +1,4 @@
-/* eslint-disable no-process-env */
-import { test } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
 
@@ -36,8 +34,4 @@ class ChatOpenAIResponsesStandardIntegrationTests extends ChatModelIntegrationTe
 }
 
 const testClass = new ChatOpenAIResponsesStandardIntegrationTests();
-
-test("ChatOpenAIResponsesStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatOpenAIResponsesStandardIntegrationTests");

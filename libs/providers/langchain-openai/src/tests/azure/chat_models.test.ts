@@ -1,5 +1,5 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-process-env */
+import { test, expect, beforeEach } from "vitest";
+
 import { env } from "../utils.js";
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 

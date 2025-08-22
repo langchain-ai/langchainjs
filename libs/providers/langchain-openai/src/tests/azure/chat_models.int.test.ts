@@ -1,7 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-process-env */
-
-import { test, jest, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { z } from "zod";
 import {
   BaseMessage,
@@ -25,6 +22,7 @@ import {
   ClientSecretCredential,
   getBearerTokenProvider,
 } from "@azure/identity";
+
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { env } from "../utils.js";
 

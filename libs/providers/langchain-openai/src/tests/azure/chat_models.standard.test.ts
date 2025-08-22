@@ -1,7 +1,6 @@
-/* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
+
 import { AzureChatOpenAI } from "../../azure/chat_models.js";
 import { ChatOpenAICallOptions } from "../../chat_models.js";
 
@@ -30,8 +29,4 @@ class AzureChatOpenAIStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new AzureChatOpenAIStandardUnitTests();
-
-test("AzureChatOpenAIStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("AzureChatOpenAIStandardUnitTests");

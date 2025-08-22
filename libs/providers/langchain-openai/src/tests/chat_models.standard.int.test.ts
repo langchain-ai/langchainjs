@@ -1,9 +1,8 @@
-/* eslint-disable no-process-env */
-import { test } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import fs from "node:fs";
+import path from "node:path";
+
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { concat } from "@langchain/core/utils/stream";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI, ChatOpenAICallOptions } from "../chat_models.js";
@@ -68,7 +67,10 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   }
 
   async invokeWithCacheReadInput(stream = false): Promise<AIMessage> {
-    const readme = readFileSync(join(REPO_ROOT_DIR, "README.md"), "utf-8");
+    const readme = fs.readFileSync(
+      path.join(REPO_ROOT_DIR, "README.md"),
+      "utf-8"
+    );
 
     const input = `What's langchain? Here's the langchain README:
     
@@ -115,11 +117,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatOpenAIStandardIntegrationTests();
-
-test("ChatOpenAIStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatOpenAIStandardIntegrationTests");
 
 async function invoke(
   chatModel: ChatOpenAI,

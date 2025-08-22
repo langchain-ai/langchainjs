@@ -1,9 +1,9 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { test, expect, jest } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
+
 import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI JSON mode", async () => {

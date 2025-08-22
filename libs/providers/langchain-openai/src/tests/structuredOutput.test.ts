@@ -1,4 +1,4 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect } from "vitest";
 import { getStructuredOutputMethod } from "../utils/structuredOutput.js";
 
 describe("getStructuredOutputMethod", () => {
