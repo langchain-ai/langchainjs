@@ -1,13 +1,19 @@
-import { test, expect } from "@jest/globals";
-import * as fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import * as path from "node:path";
+import { test, expect } from "vitest";
+
+import fs from "node:fs/promises";
+import url from "node:url";
+import path from "node:path";
+
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
   BytesOutputParser,
   StringOutputParser,
 } from "@langchain/core/output_parsers";
+
 import { Ollama } from "../llms.js";
+
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 test("test call", async () => {
   const ollama = new Ollama({});
@@ -111,8 +117,6 @@ test("JSON mode", async () => {
 });
 
 test("Test Ollama with an image", async () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const model = new Ollama({
     model: "llava",

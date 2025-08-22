@@ -1,6 +1,4 @@
-/* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelUnitTests } from "@langchain/standard-tests";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatOllama, ChatOllamaCallOptions } from "../chat_models.js";
 
@@ -29,8 +27,4 @@ class ChatOllamaStandardUnitTests extends ChatModelUnitTests<
 }
 
 const testClass = new ChatOllamaStandardUnitTests();
-
-test("ChatOllamaStandardUnitTests", () => {
-  const testResults = testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatOllamaStandardUnitTests");

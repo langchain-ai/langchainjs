@@ -1,7 +1,9 @@
-import { test, expect } from "@jest/globals";
-import * as fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import * as path from "node:path";
+import { test, expect } from "vitest";
+
+import fs from "node:fs/promises";
+import url from "node:url";
+import path from "node:path";
+
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { PromptTemplate } from "@langchain/core/prompts";
 import {
@@ -9,7 +11,11 @@ import {
   StringOutputParser,
 } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
+
 import { ChatOllama } from "../chat_models.js";
+
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 test("test invoke", async () => {
   const ollama = new ChatOllama({
@@ -162,8 +168,6 @@ AI:`;
 });
 
 test.skip("Test ChatOllama with an image", async () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new ChatOllama({
     model: "llava",

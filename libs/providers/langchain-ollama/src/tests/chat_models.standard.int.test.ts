@@ -1,6 +1,5 @@
-/* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { test, expect } from "vitest";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";

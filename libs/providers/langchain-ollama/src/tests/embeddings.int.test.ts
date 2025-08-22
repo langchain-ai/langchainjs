@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { OllamaEmbeddings } from "../embeddings.js";
 
 test("Test OllamaEmbeddings.embedQuery", async () => {
