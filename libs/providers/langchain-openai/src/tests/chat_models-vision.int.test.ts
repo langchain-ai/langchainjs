@@ -1,13 +1,16 @@
-import { test } from "@jest/globals";
+import fs from "node:fs/promises";
+import url from "node:url";
+import path from "node:path";
+
+import { test } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
-import * as fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import * as path from "node:path";
+
 import { ChatOpenAI } from "../chat_models.js";
 
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 test("Test ChatOpenAI with a file", async () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
   const imageData = await fs.readFile(path.join(__dirname, "/data/hotdog.jpg"));
   const chat = new ChatOpenAI({
     model: "gpt-4o-mini",

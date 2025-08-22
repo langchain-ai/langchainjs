@@ -6,7 +6,7 @@
 // * FIXME: This is a temporary solution to avoid adding a dependency on @langchain/test-helpers and not having to publish an internal package.
 // * We should fix dep range tests to allow for workspace deps to be used in tests.
 
-import { beforeEach, afterEach } from "@jest/globals";
+import { beforeEach, afterEach } from "vitest";
 
 export const passthrough = Symbol("langchain.test-helpers.env-passthrough");
 

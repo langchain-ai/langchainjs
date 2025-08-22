@@ -1,5 +1,9 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { randomUUID } from "node:crypto";
+
+import { z } from "zod";
+import { test, expect } from "vitest";
+
 import {
   AIMessage,
   AIMessageChunk,
@@ -11,11 +15,10 @@ import {
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { randomUUID } from "node:crypto";
-import { ChatOpenAI } from "../chat_models.js";
+
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
+import { ChatOpenAI } from "../chat_models.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
