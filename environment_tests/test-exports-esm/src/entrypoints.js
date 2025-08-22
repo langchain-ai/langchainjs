@@ -52,4 +52,3 @@ import * as util_document from "langchain/util/document";
 import * as util_math from "langchain/util/math";
 import * as util_time from "langchain/util/time";
 import * as evaluation from "langchain/evaluation";
-import * as indexes from "langchain/indexes";

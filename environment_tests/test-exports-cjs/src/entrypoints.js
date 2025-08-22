@@ -52,4 +52,3 @@ const util_document = require("langchain/util/document");
 const util_math = require("langchain/util/math");
 const util_time = require("langchain/util/time");
 const evaluation = require("langchain/evaluation");
-const indexes = require("langchain/indexes");

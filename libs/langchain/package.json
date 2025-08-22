@@ -988,17 +988,6 @@
       },
       "input": "./src/evaluation/index.ts"
     },
-    "./indexes": {
-      "import": {
-        "types": "./dist/indexes/index.d.ts",
-        "default": "./dist/indexes/index.js"
-      },
-      "require": {
-        "types": "./dist/indexes/index.d.cts",
-        "default": "./dist/indexes/index.cjs"
-      },
-      "input": "./src/indexes/index.ts"
-    },
     "./package.json": "./package.json"
   }
 }

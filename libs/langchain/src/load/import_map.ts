@@ -75,7 +75,6 @@ export * as util__document from "../util/document.js";
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
 export * as evaluation from "../evaluation/index.js";
-export * as indexes from "../indexes/index.js";
 import {
   ChatOpenAI,
   AzureChatOpenAI,
