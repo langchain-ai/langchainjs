@@ -21,10 +21,6 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
    */
   apiKey?: string;
   /**
-   * @deprecated Use `model` instead
-   */
-  modelName?: string;
-  /**
    * The name of the model to use.
    * @default {"mistral-embed"}
    */
@@ -83,9 +79,6 @@ export class MistralAIEmbeddings
   extends Embeddings
   implements MistralAIEmbeddingsParams
 {
-  /** @deprecated Use `model` instead */
-  modelName = "mistral-embed";
-
   model = "mistral-embed";
 
   encodingFormat = "float";
@@ -119,8 +112,7 @@ export class MistralAIEmbeddings
     }
     this.apiKey = apiKey;
     this.serverURL = fields?.serverURL ?? this.serverURL;
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;

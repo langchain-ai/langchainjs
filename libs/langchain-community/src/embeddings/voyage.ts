@@ -7,9 +7,6 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  * parameters specific to the VoyageEmbeddings class.
  */
 export interface VoyageEmbeddingsParams extends EmbeddingsParams {
-  /** @deprecated Use `model` instead */
-  modelName?: string;
-
   /** Model name to use */
   model?: string;
 
@@ -95,9 +92,6 @@ export class VoyageEmbeddings
   extends Embeddings
   implements VoyageEmbeddingsParams
 {
-  /** @deprecated Use `model` instead */
-  modelName = "voyage-01";
-
   model = "voyage-01";
 
   batchSize = 8;
@@ -142,9 +136,7 @@ export class VoyageEmbeddings
       throw new Error("Voyage AI API key not found");
     }
 
-    this.model =
-      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;

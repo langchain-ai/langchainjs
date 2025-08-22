@@ -689,7 +689,6 @@ export abstract class BaseChatOpenAI<
       "streaming",
       "streamUsage",
       "model",
-      "modelName",
       "modelKwargs",
       "stop",
       "stopSequences",
@@ -752,7 +751,7 @@ export abstract class BaseChatOpenAI<
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = fields?.model ?? this.model;
     this.modelKwargs = fields?.modelKwargs ?? {};
     this.timeout = fields?.timeout;
 

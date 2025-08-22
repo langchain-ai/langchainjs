@@ -11,9 +11,6 @@ export type BaiduQianfanEmbeddingsModelId =
   | (string & NonNullable<unknown>);
 
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
-  /** @deprecated Use `model` instead. */
-  modelName?: BaiduQianfanEmbeddingsModelId;
-
   /** Model name to use */
   model?: BaiduQianfanEmbeddingsModelId;
 
@@ -64,9 +61,6 @@ export class BaiduQianfanEmbeddings
   implements BaiduQianfanEmbeddingsParams
 {
   model: BaiduQianfanEmbeddingsModelId = "Embedding-V1";
-
-  /** @deprecated Use `model` instead. */
-  modelName: BaiduQianfanEmbeddingsModelId = "Embedding-V1";
 
   batchSize = 16;
 
@@ -126,9 +120,7 @@ export class BaiduQianfanEmbeddings
       throw new Error("Please provide AK/SK");
     }
 
-    this.model =
-      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fieldsWithDefaults?.model ?? this.model;
 
     if (this.model === "tao-8k") {
       if (fieldsWithDefaults?.batchSize && fieldsWithDefaults.batchSize !== 1) {

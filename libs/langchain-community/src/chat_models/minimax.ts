@@ -97,10 +97,6 @@ export declare interface ConfigurationParameters {
  */
 declare interface MinimaxChatInputBase {
   /**
-   * @deprecated Use `model` instead.
-   */
-  modelName?: string;
-  /**
    * Model name to use
    * @default "abab5.5-chat"
    */
@@ -354,9 +350,6 @@ export class ChatMinimax
 
   prompt?: string;
 
-  /** @deprecated Use `model` instead. */
-  modelName = "abab5.5-chat";
-
   model = "abab5.5-chat";
 
   defaultBotName?: string = "Assistant";
@@ -437,8 +430,7 @@ export class ChatMinimax
     this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
     this.defaultBotName = fields?.defaultBotName ?? this.defaultBotName;
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.headers = fields?.configuration?.headers ?? this.headers;
     this.proVersion = fields?.proVersion ?? this.proVersion;

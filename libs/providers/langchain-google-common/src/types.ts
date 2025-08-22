@@ -214,11 +214,6 @@ export type GoogleSpeechConfigSimplified =
 export interface GoogleModelParams {
   /** Model to use */
   model?: string;
-
-  /**
-   * @deprecated Use `model` instead
-   */
-  modelName?: string;
 }
 
 export interface GoogleAIModelParams extends GoogleModelParams {

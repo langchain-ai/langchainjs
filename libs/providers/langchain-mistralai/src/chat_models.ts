@@ -943,7 +943,7 @@ export class ChatMistralAI<
     this.seed = this.randomSeed;
     this.maxRetries = fields?.maxRetries;
     this.httpClient = fields?.httpClient;
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = fields?.model ?? this.model;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     this.beforeRequestHooks =
       fields?.beforeRequestHooks ?? this.beforeRequestHooks;

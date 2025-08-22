@@ -16,10 +16,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   binding: Ai;
 
   /**
-   * @deprecated Use `model` instead.
-   */
-  modelName?: string;
-  /**
    * Model name to use
    */
   model?: string;
@@ -37,9 +33,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 }
 
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
-  /** @deprecated Use `model` instead. */
-  modelName = "@cf/baai/bge-base-en-v1.5";
-
   model = "@cf/baai/bge-base-en-v1.5";
 
   batchSize = 50;
@@ -57,8 +50,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = fields.binding;
-    this.model = fields?.model ?? fields.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 

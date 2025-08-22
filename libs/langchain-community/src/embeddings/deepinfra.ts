@@ -41,9 +41,6 @@ export interface DeepInfraEmbeddingsParams extends EmbeddingsParams {
    */
   model?: string;
 
-  /** @deprecated Use `model` instead */
-  modelName?: string;
-
   /**
    * The maximum number of texts to embed in a single request. This is
    * limited by the DeepInfra API to a maximum of 1024.
@@ -91,9 +88,6 @@ export class DeepInfraEmbeddings
 
   model: string;
 
-  /** @deprecated Use `model` instead */
-  modelName: string;
-
   /**
    * Constructor for the DeepInfraEmbeddings class.
    * @param fields - An optional object with properties to configure the instance.
@@ -104,7 +98,6 @@ export class DeepInfraEmbeddings
     }
   ) {
     const fieldsWithDefaults = {
-      modelName: DEFAULT_MODEL_NAME,
       model: DEFAULT_MODEL_NAME,
       batchSize: DEFAULT_BATCH_SIZE,
       ...fields,
@@ -119,8 +112,7 @@ export class DeepInfraEmbeddings
       throw new Error("DeepInfra API token not found");
     }
 
-    this.model = fieldsWithDefaults?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiToken = apiKey;
   }

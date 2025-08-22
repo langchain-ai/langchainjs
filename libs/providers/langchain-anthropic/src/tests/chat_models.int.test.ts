@@ -1422,7 +1422,7 @@ test("Test redacted thinking blocks multiturn streaming", async () => {
 
 test("Can handle google function calling blocks in content", async () => {
   const chat = new ChatAnthropic({
-    modelName: "claude-3-7-sonnet-latest",
+    model: "claude-3-7-sonnet-latest",
     maxRetries: 0,
   });
   const toolCallId = "tool_call_id";

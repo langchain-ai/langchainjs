@@ -7,8 +7,6 @@ type AlibabaTongyiEmbeddingsModelId =
   | (string & NonNullable<unknown>);
 
 export interface AlibabaTongyiEmbeddingsParams extends EmbeddingsParams {
-  /** @deprecated Use `model` instead */
-  modelName?: AlibabaTongyiEmbeddingsModelId;
   /** Model name to use */
   model?: AlibabaTongyiEmbeddingsModelId;
 
@@ -73,9 +71,6 @@ export class AlibabaTongyiEmbeddings
 {
   model: AlibabaTongyiEmbeddingsModelId = "text-embedding-v2";
 
-  /** @deprecated Use `model` instead */
-  modelName: AlibabaTongyiEmbeddingsModelId = "text-embedding-v2";
-
   batchSize = 24;
 
   stripNewLines = true;
@@ -100,9 +95,7 @@ export class AlibabaTongyiEmbeddings
 
     this.apiKey = apiKey;
 
-    this.model =
-      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fieldsWithDefaults?.model ?? this.model;
 
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =

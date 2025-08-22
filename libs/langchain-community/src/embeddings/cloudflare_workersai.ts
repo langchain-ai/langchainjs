@@ -17,12 +17,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
   /** Binding */
   binding: Fetcher;
 
-  /**
-   * Model name to use
-   * Alias for `model`
-   * @deprecated Use `model` instead.
-   */
-  modelName?: string;
   /** Model name to use */
   model?: string;
 
@@ -40,8 +34,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 
 /** @deprecated Install and import from "@langchain/cloudflare" instead. */
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
-  modelName = "@cf/baai/bge-base-en-v1.5";
-
   model = "@cf/baai/bge-base-en-v1.5";
 
   batchSize = 50;
@@ -59,8 +51,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = new Ai(fields.binding);
-    this.modelName = fields?.model ?? fields.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 

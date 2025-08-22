@@ -189,11 +189,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   lc_serializable = true;
 
-  // Set based on modelName
   model: string;
-
-  /** @deprecated Use `model` instead */
-  modelName = "gemini-pro";
 
   temperature: number;
 

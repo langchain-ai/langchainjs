@@ -93,11 +93,6 @@ interface ChatCompletionResponse {
  * Interface defining the input to the ChatAlibabaTongyi class.
  */
 interface AlibabaTongyiChatInput {
-  /**
-   * @deprecated Use `model` instead.
-   */
-  modelName?: string;
-
   /** Model name to use. Available options are: qwen-turbo, qwen-plus, qwen-max, or Other compatible models.
    * @default "qwen-turbo"
    */
@@ -235,9 +230,6 @@ export class ChatAlibabaTongyi
 
   prefixMessages?: TongyiMessage[];
 
-  /** @deprecated Use `model` instead. */
-  modelName: ChatCompletionRequest["model"];
-
   model: ChatCompletionRequest["model"];
 
   apiUrl: string;
@@ -279,8 +271,7 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
-    this.model = fields?.model ?? fields.modelName ?? "qwen-turbo";
-    this.modelName = this.model;
+    this.model = fields?.model ?? "qwen-turbo";
   }
 
   /**

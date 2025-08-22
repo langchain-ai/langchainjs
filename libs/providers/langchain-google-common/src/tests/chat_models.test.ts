@@ -2257,7 +2257,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-2.5-pro-preview-tts",
+      model: "gemini-2.5-pro-preview-tts",
       speechConfig: "Zubenelgenubi",
       responseModalities: ["AUDIO"],
     });
@@ -2293,7 +2293,7 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-2.5-pro-preview-tts",
+      model: "gemini-2.5-pro-preview-tts",
       speechConfig: [
         {
           speaker: "Joe",

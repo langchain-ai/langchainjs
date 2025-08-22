@@ -64,9 +64,6 @@ export declare interface OpenAIBaseInput {
    */
   streamUsage?: boolean;
 
-  /** @deprecated Use "model" instead. */
-  modelName: string;
-
   /** Model name to use */
   model: OpenAIChatModelId;
 

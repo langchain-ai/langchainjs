@@ -29,14 +29,6 @@ export interface DallEAPIWrapperParams extends ToolParams {
   apiKey?: string;
   /**
    * The model to use.
-   * Alias for `model`
-   * @params "dall-e-2" | "dall-e-3"
-   * @default "dall-e-3"
-   * @deprecated Use `model` instead.
-   */
-  modelName?: OpenAIImageModelId;
-  /**
-   * The model to use.
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
    */
@@ -156,7 +148,7 @@ export class DallEAPIWrapper extends Tool {
       baseURL: fields?.baseUrl,
     };
     this.client = new OpenAIClient(clientConfig);
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
+    this.model = fields?.model ?? this.model;
     this.style = fields?.style ?? this.style;
     this.quality = fields?.quality ?? this.quality;
     this.n = fields?.n ?? this.n;

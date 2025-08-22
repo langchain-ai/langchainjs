@@ -15,13 +15,6 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  */
 export interface HuggingFaceTransformersEmbeddingsParams
   extends EmbeddingsParams {
-  /**
-   * Model name to use
-   * Alias for `model`
-   * @deprecated Use `model` instead.
-   */
-  modelName: string;
-
   /** Model name to use */
   model: string;
 
@@ -60,8 +53,6 @@ export class HuggingFaceTransformersEmbeddings
   extends Embeddings
   implements HuggingFaceTransformersEmbeddingsParams
 {
-  modelName = "Xenova/all-MiniLM-L6-v2";
-
   model = "Xenova/all-MiniLM-L6-v2";
 
   batchSize = 512;
@@ -78,8 +69,7 @@ export class HuggingFaceTransformersEmbeddings
 
   constructor(fields?: Partial<HuggingFaceTransformersEmbeddingsParams>) {
     super(fields ?? {});
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.timeout = fields?.timeout;
     this.pretrainedOptions = fields?.pretrainedOptions ?? {};

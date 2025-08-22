@@ -10,10 +10,6 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
  */
 export interface GooglePaLMTextInput extends BaseLLMParams {
   /**
-   * @deprecated Use `model` instead
-   */
-  modelName?: string;
-  /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `models/{model}`
@@ -100,9 +96,6 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     };
   }
 
-  /** @deprecated Use `model` instead */
-  modelName = "models/text-bison-001";
-
   model = "models/text-bison-001";
 
   temperature?: number; // default value chosen based on model
@@ -124,8 +117,7 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   constructor(fields?: GooglePaLMTextInput) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {

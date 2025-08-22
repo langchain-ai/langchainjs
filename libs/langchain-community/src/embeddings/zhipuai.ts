@@ -12,11 +12,6 @@ type ZhipuAIEmbeddingModelId = "embedding-2" | (string & NonNullable<unknown>);
  */
 export interface ZhipuAIEmbeddingsParams extends EmbeddingsParams {
   /**
-   * @deprecated Use `model` instead
-   */
-  modelName?: ZhipuAIEmbeddingModelId;
-
-  /**
    * Model Name to use
    */
   model?: ZhipuAIEmbeddingModelId;
@@ -54,9 +49,6 @@ export class ZhipuAIEmbeddings
   extends Embeddings
   implements ZhipuAIEmbeddingsParams
 {
-  /** @deprecated Use `model` instead */
-  modelName: ZhipuAIEmbeddingModelId = "embedding-2";
-
   model: ZhipuAIEmbeddingModelId = "embedding-2";
 
   apiKey?: string;
@@ -68,8 +60,7 @@ export class ZhipuAIEmbeddings
   constructor(fields?: ZhipuAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
 

@@ -5,7 +5,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 /** @deprecated Install and import from @langchain/baidu-qianfan instead. */
 export interface BaiduQianfanEmbeddingsParams extends EmbeddingsParams {
   /** Model name to use */
-  modelName: "embedding-v1" | "bge_large_zh" | "bge_large_en" | "tao-8k";
+  model: "embedding-v1" | "bge_large_zh" | "bge_large_en" | "tao-8k";
 
   /**
    * Timeout to use when making requests to BaiduQianfan.
@@ -53,7 +53,7 @@ export class BaiduQianfanEmbeddings
   extends Embeddings
   implements BaiduQianfanEmbeddingsParams
 {
-  modelName: BaiduQianfanEmbeddingsParams["modelName"] = "embedding-v1";
+  model: BaiduQianfanEmbeddingsParams["model"] = "embedding-v1";
 
   batchSize = 16;
 
@@ -94,9 +94,9 @@ export class BaiduQianfanEmbeddings
     this.baiduApiKey = baiduApiKey;
     this.baiduSecretKey = baiduSecretKey;
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
 
-    if (this.modelName === "tao-8k") {
+    if (this.model === "tao-8k") {
       if (fieldsWithDefaults?.batchSize && fieldsWithDefaults.batchSize !== 1) {
         throw new Error(
           "tao-8k model supports only a batchSize of 1. Please adjust your batchSize accordingly"
@@ -186,7 +186,7 @@ export class BaiduQianfanEmbeddings
     }
 
     return fetch(
-      `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/${this.modelName}?access_token=${this.accessToken}`,
+      `https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/embeddings/${this.model}?access_token=${this.accessToken}`,
       {
         method: "POST",
         headers: {

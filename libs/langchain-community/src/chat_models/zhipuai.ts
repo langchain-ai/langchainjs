@@ -99,10 +99,6 @@ interface ChatCompletionResponse extends ZhipuAIError {
  */
 export interface ChatZhipuAIParams {
   /**
-   * @deprecated Use `model` instead.
-   */
-  modelName?: ModelName;
-  /**
    * @default "glm-3-turbo"
    */
   model: ModelName;
@@ -214,9 +210,6 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   requestId?: string;
 
-  /** @deprecated Use `model` instead. */
-  modelName: ChatCompletionRequest["model"];
-
   model: ChatCompletionRequest["model"];
 
   apiUrl: string;
@@ -247,8 +240,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.model = fields?.model ?? fields.modelName ?? "glm-3-turbo";
-    this.modelName = this.model;
+    this.model = fields?.model ?? "glm-3-turbo";
     this.doSample = fields.doSample;
   }
 

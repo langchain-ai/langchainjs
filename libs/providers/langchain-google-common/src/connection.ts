@@ -272,8 +272,7 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.model = fields?.model ?? fields?.modelName ?? this.model;
-    this.modelName = this.model;
+    this.model = fields?.model ?? this.model;
 
     this._apiName = fields?.apiName;
     this.apiConfig = {

@@ -9,7 +9,7 @@ import { CohereClient, type Cohere } from "cohere-ai";
  * @deprecated Use `CohereEmbeddingsParams` from `@langchain/cohere` instead.
  */
 export interface CohereEmbeddingsParams extends EmbeddingsParams {
-  modelName: string;
+  model: string;
 
   /**
    * The maximum number of documents to embed in a single request. This is
@@ -35,7 +35,7 @@ export class CohereEmbeddings
   extends Embeddings
   implements CohereEmbeddingsParams
 {
-  modelName = "small";
+  model = "small";
 
   batchSize = 48;
 
@@ -64,7 +64,7 @@ export class CohereEmbeddings
       throw new Error("Cohere API key not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model = fieldsWithDefaults?.model ?? this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.client = new CohereClient({ token: this.apiKey });
@@ -80,7 +80,7 @@ export class CohereEmbeddings
 
     const batchRequests = batches.map((batch) =>
       this.embeddingWithRetry({
-        model: this.modelName,
+        model: this.model,
         texts: batch,
       })
     );
@@ -110,7 +110,7 @@ export class CohereEmbeddings
    */
   async embedQuery(text: string): Promise<number[]> {
     const result = await this.embeddingWithRetry({
-      model: this.modelName,
+      model: this.model,
       texts: [text],
     });
     return (result as Cohere.EmbedResponse.EmbeddingsFloats).embeddings[0];
