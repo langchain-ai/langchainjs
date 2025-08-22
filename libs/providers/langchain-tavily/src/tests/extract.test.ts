@@ -1,4 +1,4 @@
-import { test, expect, jest, describe } from "@jest/globals";
+import { test, expect, vi, describe } from "vitest";
 import { TavilyExtract } from "../tavily-extract.js";
 import { TavilyExtractAPIWrapper, TavilyExtractResponse } from "../utils.js";
 
@@ -67,7 +67,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -100,7 +100,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -135,7 +135,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -165,7 +165,7 @@ describe("TavilyExtract", () => {
   test("handles API errors", async () => {
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("API error"))
@@ -188,7 +188,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -215,7 +215,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -242,7 +242,7 @@ describe("TavilyExtract", () => {
 
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.resolve(mockResult)
@@ -264,7 +264,7 @@ describe("TavilyExtract", () => {
   test("handles non-standard errors", async () => {
     const mockWrapper = new TestTavilyExtractAPIWrapper();
     // Override the rawResults method for this test
-    mockWrapper.rawResults = jest
+    mockWrapper.rawResults = vi
       .fn()
       .mockImplementation(() =>
         Promise.reject(new Error("String error without message property"))

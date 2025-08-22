@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { TavilyMap } from "../tavily-map.js";
 
 test("TavilyMap can perform a map given a url", async () => {

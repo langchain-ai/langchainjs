@@ -1,4 +1,5 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { TavilyCrawl } from "../tavily-crawl.js";
 
 test("TavilyCrawl can perform a crawl given a url", async () => {
