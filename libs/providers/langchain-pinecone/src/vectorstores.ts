@@ -1,4 +1,4 @@
-import * as uuid from "uuid";
+import { v4 as uuid } from "uuid";
 import flatten from "flat";
 
 import {
@@ -289,7 +289,7 @@ export class PineconeStore extends VectorStore {
     options?: { ids?: string[]; namespace?: string } | string[]
   ) {
     const ids = Array.isArray(options) ? options : options?.ids;
-    const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
+    const documentIds = ids == null ? documents.map(() => uuid()) : ids;
     const pineconeVectors = vectors.map((values, idx) => {
       // Pinecone doesn't support nested objects, so we flatten them
       const documentMetadata = { ...documents[idx].metadata };

@@ -1,22 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, jest, test } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { PineconeStore } from "../vectorstores.js";
 
 test("PineconeStore with external ids", async () => {
-  const upsert = jest.fn();
+  const upsert = vi.fn();
   const client = {
-    namespace: jest.fn<any>().mockReturnValue({
+    namespace: vi.fn().mockReturnValue({
       upsert,
-      query: jest.fn<any>().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         matches: [],
       }),
     }),
   };
   const embeddings = new FakeEmbeddings();
-
   const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
-
   expect(store).toBeDefined();
 
   await store.addDocuments(
@@ -31,9 +29,7 @@ test("PineconeStore with external ids", async () => {
     ],
     ["id1"]
   );
-
   expect(upsert).toHaveBeenCalledTimes(1);
-
   expect(upsert).toHaveBeenCalledWith([
     {
       id: "id1",
@@ -43,16 +39,15 @@ test("PineconeStore with external ids", async () => {
   ]);
 
   const results = await store.similaritySearch("hello", 1);
-
   expect(results).toHaveLength(0);
 });
 
 test("PineconeStore with generated ids", async () => {
-  const upsert = jest.fn();
+  const upsert = vi.fn();
   const client = {
-    namespace: jest.fn<any>().mockReturnValue({
+    namespace: vi.fn().mockReturnValue({
       upsert,
-      query: jest.fn<any>().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         matches: [],
       }),
     }),
@@ -60,30 +55,26 @@ test("PineconeStore with generated ids", async () => {
   const embeddings = new FakeEmbeddings();
 
   const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
-
   expect(store).toBeDefined();
 
   await store.addDocuments([{ pageContent: "hello", metadata: { a: 1 } }]);
-
   expect(upsert).toHaveBeenCalledTimes(1);
 
   const results = await store.similaritySearch("hello", 1);
-
   expect(results).toHaveLength(0);
 });
 
 test("PineconeStore with string arrays", async () => {
-  const upsert = jest.fn();
+  const upsert = vi.fn();
   const client = {
-    namespace: jest.fn<any>().mockReturnValue({
+    namespace: vi.fn().mockReturnValue({
       upsert,
-      query: jest.fn<any>().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         matches: [],
       }),
     }),
   };
   const embeddings = new FakeEmbeddings();
-
   const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
 
   await store.addDocuments(
@@ -132,12 +123,11 @@ describe("PineconeStore with null pageContent", () => {
     };
 
     const client = {
-      namespace: jest.fn<any>().mockReturnValue({
-        query: jest.fn<any>().mockResolvedValue(mockQueryResponse),
+      namespace: vi.fn().mockReturnValue({
+        query: vi.fn().mockResolvedValue(mockQueryResponse),
       }),
     };
     const embeddings = new FakeEmbeddings();
-
     const store = new PineconeStore(embeddings, {
       pineconeIndex: client as any,
     });
@@ -149,7 +139,6 @@ describe("PineconeStore with null pageContent", () => {
 
 test("PineconeStore can instantiate without passing in client", async () => {
   const embeddings = new FakeEmbeddings();
-
   const store = new PineconeStore(embeddings, {
     pineconeConfig: {
       indexName: "indexName",
@@ -158,22 +147,20 @@ test("PineconeStore can instantiate without passing in client", async () => {
       },
     },
   });
-
   expect(store.pineconeIndex).toBeDefined();
 });
 
 test("PineconeStore throws when no config or index is passed", async () => {
   const embeddings = new FakeEmbeddings();
-
   expect(() => new PineconeStore(embeddings, {})).toThrow();
 });
 
 test("PineconeStore throws when config and index is passed", async () => {
-  const upsert = jest.fn();
+  const upsert = vi.fn();
   const client = {
-    namespace: jest.fn<any>().mockReturnValue({
+    namespace: vi.fn().mockReturnValue({
       upsert,
-      query: jest.fn<any>().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         matches: [],
       }),
     }),
