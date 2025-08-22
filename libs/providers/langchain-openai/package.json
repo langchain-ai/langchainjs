@@ -41,6 +41,7 @@
     "@azure/identity": "^4.2.1",
     "@langchain/core": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
+    "@tsconfig/recommended": "^1.0.10",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^17.2.1",
     "dpdm": "^3.14.0",
