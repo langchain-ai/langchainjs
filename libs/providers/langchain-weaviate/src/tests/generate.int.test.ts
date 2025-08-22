@@ -1,12 +1,14 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect, beforeAll, afterAll } from "vitest";
 import weaviate, {
   WeaviateClient,
   dataType,
   vectorizer,
 } from "weaviate-client";
+import dotenv from "dotenv";
+
 import { OpenAIEmbeddings } from "@langchain/openai";
-import * as dotenv from "dotenv";
+
 import { WeaviateStore } from "../vectorstores.js";
 
 dotenv.config();
