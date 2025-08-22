@@ -1,6 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { BM25Retriever } from "../bm25.js";
+import { getTermFrequency } from "../../utils/@furkantoprak/bm25/BM25.js";
 
 test("BM25Retriever", async () => {
   const docs = [
@@ -26,12 +27,7 @@ test("BM25Retriever", async () => {
   );
 });
 
-test("getTermFrequency escapes regex metacharacters", async () => {
-  // Import directly from the inlined BM25 util to test the helper.
-  const { getTermFrequency } = await import(
-    "../../utils/@furkantoprak/bm25/BM25.js"
-  );
-
+test("getTermFrequency escapes regex metacharacters", () => {
   const corpus = "**Version 1:** What is the country of origin for the person in question?";
   const term = "**Version 1:**";
 
