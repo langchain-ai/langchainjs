@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect, beforeEach } from "vitest";
 
 import { env } from "../utils.js";

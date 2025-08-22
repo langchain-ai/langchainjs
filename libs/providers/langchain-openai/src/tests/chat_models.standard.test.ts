@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 

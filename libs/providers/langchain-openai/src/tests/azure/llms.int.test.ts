@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 
 import { LLMResult } from "@langchain/core/outputs";

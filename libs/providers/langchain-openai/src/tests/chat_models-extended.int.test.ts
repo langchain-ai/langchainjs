@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
@@ -640,7 +641,9 @@ test.skip("system prompt caching", async () => {
   expect(res.response_metadata?.usage.prompt_tokens_details.cached_tokens).toBe(
     0
   );
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await new Promise((resolve) => {
+    setTimeout(resolve, 5000);
+  });
   const res2 = await model.invoke(messages);
   expect(
     res2.response_metadata?.usage.prompt_tokens_details.cached_tokens

@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { afterAll } from "vitest";
 
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
