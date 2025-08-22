@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { NomicEmbeddings } from "../embeddings.js";
 
 test("NomicEmbeddings can embed docs", async () => {
