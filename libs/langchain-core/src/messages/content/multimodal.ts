@@ -2,6 +2,14 @@ import { BaseContentBlock } from "./base.js";
 
 export type Multimodal = never;
 
+export const KNOWN_BLOCK_TYPES = [
+  "image",
+  "video",
+  "audio",
+  "text-plain",
+  "file",
+];
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
   type BaseDataRecord = {
