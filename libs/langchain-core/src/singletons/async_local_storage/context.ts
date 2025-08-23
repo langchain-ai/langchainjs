@@ -55,7 +55,6 @@ import {
  * @param name The name of the context variable.
  * @param value The value to set.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setContextVariable<T>(name: PropertyKey, value: T): void {
   // Avoid using global singleton due to circuluar dependency issues
   const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();

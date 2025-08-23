@@ -119,7 +119,6 @@ describe("Mock Google LLM", () => {
       record,
       projectId,
     };
-    // eslint-disable-next-line no-new
     new GoogleLLM({
       authOptions,
     });
@@ -140,7 +139,6 @@ describe("Mock Google LLM", () => {
       record,
       projectId,
     };
-    // eslint-disable-next-line no-new
     new GoogleLLM({
       authOptions,
       platformType: "gai",
@@ -163,7 +161,6 @@ describe("Mock Google LLM", () => {
       projectId,
       scopes: ["https://example.com/bogus"],
     };
-    // eslint-disable-next-line no-new
     new GoogleLLM({
       authOptions,
     });

@@ -111,7 +111,6 @@ export class PipelinePromptTemplate<
     requiredValueNames: string[]
   ) {
     return requiredValueNames.reduce((requiredValues, valueName) => {
-      // eslint-disable-next-line no-param-reassign
       requiredValues[valueName] = allValues[valueName];
       return requiredValues;
     }, {} as InputValues);

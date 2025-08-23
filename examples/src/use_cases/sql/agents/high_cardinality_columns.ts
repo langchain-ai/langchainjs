@@ -22,7 +22,7 @@ const db = await SqlDatabase.fromDataSourceParams({
 async function queryAsList(query: string): Promise<string[]> {
   const res: Array<{ [key: string]: string }> = JSON.parse(await db.run(query))
     .flat()
-    .filter((el: any) => el != null);
+    .filter((el: unknown) => el != null);
   const justValues: Array<string> = res.map((item) =>
     Object.values(item)[0]
       .replace(/\b\d+\b/g, "")

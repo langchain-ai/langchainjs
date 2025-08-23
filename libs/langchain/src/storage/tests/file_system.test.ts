@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test } from "@jest/globals";
 import * as fs from "node:fs";
 import * as path from "node:path";

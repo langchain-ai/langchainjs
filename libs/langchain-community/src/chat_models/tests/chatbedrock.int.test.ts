@@ -1,6 +1,4 @@
-// libs/langchain-community/src/chat_models/tests/chatbedrock.int.test.ts
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test, expect } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
@@ -13,6 +11,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { BedrockChat as BedrockChatWeb } from "../bedrock/web.js";
 import { TavilySearchResults } from "../../tools/tavily_search.js";
 
+// eslint-disable-next-line no-void
 void testChatModel(
   "Test Bedrock chat model Generating search queries: Command-r",
   "us-west-2",
@@ -23,6 +22,7 @@ void testChatModel(
   }
 );
 
+// eslint-disable-next-line no-void
 void testChatModel(
   "Test Bedrock chat model: Command-r",
   "us-west-2",
@@ -31,6 +31,7 @@ void testChatModel(
   {}
 );
 
+// eslint-disable-next-line no-void
 void testChatModel(
   "Test Bedrock chat model: Command-r",
   "us-west-2",
@@ -47,6 +48,7 @@ void testChatModel(
   }
 );
 
+// eslint-disable-next-line no-void
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Command-r",
   "us-west-2",
@@ -55,6 +57,7 @@ void testChatStreamingModel(
   {}
 );
 
+// eslint-disable-next-line no-void
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Command-r",
   "us-west-2",
@@ -71,6 +74,7 @@ void testChatStreamingModel(
   }
 );
 
+// eslint-disable-next-line no-void
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Command-r",
   "us-west-2",
@@ -78,6 +82,7 @@ void testChatHandleLLMNewToken(
   "What is your name and something about yourself?"
 );
 
+// eslint-disable-next-line no-void
 void testChatModel(
   "Test Bedrock chat model: Mistral-7b-instruct",
   "us-west-2",
@@ -86,6 +91,7 @@ void testChatModel(
   {}
 );
 
+// eslint-disable-next-line no-void
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Mistral-7b-instruct",
   "us-west-2",
@@ -94,6 +100,7 @@ void testChatStreamingModel(
   {}
 );
 
+// eslint-disable-next-line no-void
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Mistral-7b-instruct",
   "us-west-2",
@@ -101,6 +108,7 @@ void testChatHandleLLMNewToken(
   "What is your name and something about yourself?"
 );
 
+// eslint-disable-next-line no-void
 void testChatModel(
   "Test Bedrock chat model: Claude-3",
   "us-west-2",
@@ -113,6 +121,7 @@ void testChatModel(
   // { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
+// eslint-disable-next-line no-void
 void testChatStreamingModel(
   "Test Bedrock chat model streaming: Claude-3",
   "us-west-2",
@@ -125,6 +134,7 @@ void testChatStreamingModel(
   // { tagSuffix: "test", streamProcessingMode: "SYNCHRONOUS" }
 );
 
+// eslint-disable-next-line no-void
 void testChatHandleLLMNewToken(
   "Test Bedrock chat model HandleLLMNewToken: Claude-3",
   "us-west-2",

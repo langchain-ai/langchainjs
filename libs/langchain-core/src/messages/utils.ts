@@ -293,7 +293,6 @@ export function mapChatMessagesToStoredMessages(
 export function convertToChunk(message: BaseMessage) {
   const type = message._getType();
   if (type === "human") {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new HumanMessageChunk({ ...message });
   } else if (type === "ai") {
     let aiChunkFields: AIMessageChunkFields = {
@@ -310,17 +309,12 @@ export function convertToChunk(message: BaseMessage) {
         })),
       };
     }
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new AIMessageChunk({ ...aiChunkFields });
   } else if (type === "system") {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });
   } else if (type === "function") {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new FunctionMessageChunk({ ...message });
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
   } else if (ChatMessage.isInstance(message)) {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new ChatMessageChunk({ ...message });
   } else {
     throw new Error("Unknown message type.");

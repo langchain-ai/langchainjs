@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test, expect } from "vitest";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CloudflareWorkersAI } from "../llms.js";

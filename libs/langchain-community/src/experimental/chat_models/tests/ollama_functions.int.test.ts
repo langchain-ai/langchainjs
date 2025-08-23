@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { HumanMessage } from "@langchain/core/messages";
 import { OllamaFunctions } from "../ollama_functions.js";

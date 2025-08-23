@@ -315,6 +315,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                   choice.message.content += content;
                   choice.finishReason = part.finishReason ?? "length";
                 }
+                // eslint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(content, {
                   prompt: part.index,
                   completion: part.index,

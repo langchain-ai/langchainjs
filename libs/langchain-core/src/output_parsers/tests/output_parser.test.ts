@@ -1,6 +1,3 @@
-/* eslint-disable no-loop-func */
-/* eslint-disable no-promise-executor-return */
-
 import { test, expect } from "vitest";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { BytesOutputParser } from "../bytes.js";

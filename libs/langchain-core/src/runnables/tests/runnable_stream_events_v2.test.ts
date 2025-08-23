@@ -1,7 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { test, expect, afterEach } from "vitest";
 import { z } from "zod";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -149,7 +145,7 @@ test("Runnable streamEvents call nested in another runnable + passed callbacks s
     responses: ["abc"],
   });
 
-  const events: any[] = [];
+  const events: unknown[] = [];
   const container = RunnableLambda.from(async (_) => {
     const eventStream = model.streamEvents("hello", { version: "v2" });
     for await (const event of eventStream) {
@@ -158,7 +154,18 @@ test("Runnable streamEvents call nested in another runnable + passed callbacks s
     return events;
   });
 
-  await container.invoke({}, { callbacks: [{ handleLLMStart: () => {} }] });
+  await container.invoke(
+    {},
+    {
+      callbacks: [
+        {
+          handleLLMStart: () => {
+            // empty
+          },
+        },
+      ],
+    }
+  );
 
   // used here to avoid casting every ID
   const anyString = expect.any(String) as unknown as string;
@@ -2271,7 +2278,6 @@ test("streamEvents method handles errors", async () => {
   });
 
   try {
-    // eslint-disable-next-line no-unreachable-loop
     for await (const _ of model.streamEvents("Hello! Tell me about yourself.", {
       version: "v2",
     })) {

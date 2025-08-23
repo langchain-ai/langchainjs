@@ -1,7 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { test, expect, afterEach } from "vitest";
 import { z } from "zod";
 import {

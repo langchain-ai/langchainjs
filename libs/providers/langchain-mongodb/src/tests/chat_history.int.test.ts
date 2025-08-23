@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { Collection, MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
@@ -25,7 +24,6 @@ afterAll(async () => {
 test("nothing is inserted into the database until messages are added", async () => {
   const sessionId = new ObjectId().toString();
   // we explicitly test that there are no side effects
-  // eslint-disable-next-line no-new
   new MongoDBChatMessageHistory({
     collection,
     sessionId,

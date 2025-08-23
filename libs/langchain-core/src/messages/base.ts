@@ -296,11 +296,9 @@ export abstract class BaseMessage
     }
     // Make sure the default value for additional_kwargs is passed into super() for serialization
     if (!fields.additional_kwargs) {
-      // eslint-disable-next-line no-param-reassign
       fields.additional_kwargs = {};
     }
     if (!fields.response_metadata) {
-      // eslint-disable-next-line no-param-reassign
       fields.response_metadata = {};
     }
     super(fields);
@@ -313,7 +311,7 @@ export abstract class BaseMessage
 
   toDict(): StoredMessage {
     return {
-      type: this._getType(),
+      type: this.getType(),
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };

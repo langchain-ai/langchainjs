@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { describe, test, expect } from "@jest/globals";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod";

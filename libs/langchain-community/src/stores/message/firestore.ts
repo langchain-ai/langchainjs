@@ -132,7 +132,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
 
     try {
       this.ensureFirestore();
-    } catch (error) {
+    } catch {
       throw new Error(`Unknown response type`);
     }
   }

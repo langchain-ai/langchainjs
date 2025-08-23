@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import rockset from "@rockset/client";
 import { test, expect } from "@jest/globals";
 import { OpenAIEmbeddings } from "@langchain/openai";

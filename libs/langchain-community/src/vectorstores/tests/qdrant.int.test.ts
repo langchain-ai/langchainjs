@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, expect, test } from "@jest/globals";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { faker } from "@faker-js/faker";

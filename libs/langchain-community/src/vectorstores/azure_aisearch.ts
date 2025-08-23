@@ -152,13 +152,10 @@ export class AzureAISearchVectorStore extends VectorStore {
     this.indexName = config.indexName ?? "vectorsearch";
 
     if (!config.client) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       credentials ??= new AzureKeyCredential(key!);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.client = new SearchClient(endpoint!, this.indexName, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const indexClient = new SearchIndexClient(endpoint!, credentials, {
         userAgentOptions: { userAgentPrefix: USER_AGENT_PREFIX },
       });
@@ -617,7 +614,7 @@ export class AzureAISearchVectorStore extends VectorStore {
   ): Promise<void> {
     try {
       await indexClient.getIndex(this.indexName);
-    } catch (e) {
+    } catch {
       // Index does not exists, create it
       const searchIndex = await this.createSearchIndexDefinition(
         this.indexName

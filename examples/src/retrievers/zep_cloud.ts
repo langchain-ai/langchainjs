@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import { ZepClient, type Zep } from "@getzep/zep-cloud";
 
 function sleep(ms: number) {
-  // eslint-disable-next-line no-promise-executor-return
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

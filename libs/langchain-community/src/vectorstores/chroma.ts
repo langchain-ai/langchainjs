@@ -476,7 +476,7 @@ export class Chroma extends VectorStore {
     try {
       const { ChromaClient } = await import("chromadb");
       return { ChromaClient };
-    } catch (e) {
+    } catch {
       throw new Error(
         "Please install chromadb as a dependency with, e.g. `npm install -S chromadb`"
       );

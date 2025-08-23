@@ -3,7 +3,6 @@ import { test, expect } from "vitest";
 import { getPineconeClient } from "../client.js";
 
 test("confirm getPineconeClient throws error when PINECONE_API_KEY is not set", async () => {
-  /* eslint-disable-next-line no-process-env */
   process.env.PINECONE_API_KEY = "";
   const errorThrown = async () => {
     getPineconeClient();

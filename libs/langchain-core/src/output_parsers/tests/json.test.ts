@@ -17,7 +17,7 @@ async function* streamChunks(chunks: string[]): AsyncGenerator<string> {
   for (const chunk of chunks) {
     yield chunk;
     await new Promise<void>((resolve) => {
-      void setTimeout(() => {
+      setTimeout(() => {
         resolve();
       }, 0);
     });
@@ -504,7 +504,6 @@ const EXPECTED_JSON = {
 };
 
 for (const test_case of TEST_CASES) {
-  // eslint-disable-next-line no-loop-func
   test(`JSONOutputParser parses ${test_case}`, async () => {
     async function* generator() {
       for (const token of test_case) {
@@ -528,7 +527,6 @@ const EXPECTED_JSON_ESCAPED_QUOTES = {
 };
 
 for (const test_case of TEST_CASES_ESCAPED_QUOTES) {
-  // eslint-disable-next-line no-loop-func
   test(`JSONOutputParser parses ${test_case}`, async () => {
     async function* generator() {
       for (const token of test_case) {

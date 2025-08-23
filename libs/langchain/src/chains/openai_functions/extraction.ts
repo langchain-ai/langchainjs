@@ -80,7 +80,6 @@ export function createExtractionChain(
  * @returns A LLMChain instance configured to return data matching the schema.
  */
 export function createExtractionChainFromZod(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>
 ): LLMChain<object, BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>> {

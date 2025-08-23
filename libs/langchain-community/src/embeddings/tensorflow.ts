@@ -36,7 +36,7 @@ export class TensorFlowEmbeddings extends Embeddings {
 
     try {
       tf.backend();
-    } catch (e) {
+    } catch {
       throw new Error("No TensorFlow backend found, see instructions at ...");
     }
   }

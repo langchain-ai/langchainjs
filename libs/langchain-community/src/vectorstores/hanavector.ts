@@ -436,7 +436,7 @@ export class HanaDB extends VectorStore {
           }
           const [whereLogical, paramsLogical] =
             this.processFilterObject(operand);
-          whereStr += "(" + whereLogical + ")";
+          whereStr += `(${whereLogical})`;
           queryTuple.push(...paramsLogical);
         });
 

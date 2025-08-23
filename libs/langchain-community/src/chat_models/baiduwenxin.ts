@@ -645,7 +645,7 @@ export class ChatBaiduWenxin
   private _deserialize(json: string) {
     try {
       return JSON.parse(json);
-    } catch (e) {
+    } catch {
       console.warn(`Received a non-JSON parseable chunk: ${json}`);
     }
   }
