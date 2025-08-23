@@ -14,7 +14,7 @@
     "start": "tsx --experimental-wasm-modules -r dotenv/config src/index.ts",
     "postinstall": "prisma generate --schema ./src/indexes/vector_stores/prisma_vectorstore/prisma/schema.prisma",
     "start:dist": "pnpm build && node -r dotenv/config dist/index.js",
-    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:eslint": "eslint --cache  src/",
     "lint": "pnpm lint:eslint",
     "lint:fix": "pnpm lint --fix",
     "precommit": "lint-staged",
@@ -123,16 +123,10 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/uuid": "^9",
-    "@typescript-eslint/eslint-plugin": "^5.51.0",
-    "@typescript-eslint/parser": "^5.51.0",
-    "eslint": "^8.33.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-unused-imports": "^3.0.0",
+    "eslint": "^9.34.0",
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "@langchain/eslint": "workspace:*"
   }
 }
