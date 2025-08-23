@@ -1,58 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import { z } from "zod";
-import { AIMessageChunk } from '../../messages/ai.js';
-import { Runnable } from '../../runnables/base.js';
-import { tool } from "../../tools/index.js";
 import { FakeChatModel } from "../../utils/testing/index.js";
-import { BaseLanguageModelInput } from '../base.js';
 import type {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "../chat_models.js";
-
-async function problemDemo() {
-  // This can be any child of BaseChatModel that supports bindTools,
-  // e.g. ChatOpenAI, ChatAnthropic, etc. Unfortunately FakeChatModel
-  // doesn't implement bindTools, so I created FakeChatModelWithBindTools
-  // below as a placeholder.
-  const model = new FakeChatModelWithBindTools({});
-
-  const echoTool = tool((input) => String(input), {
-    name: "echo",
-    description: "Echos the input",
-    schema: z.string(),
-  });
-  
-  const config = {
-    // `FakeChatModel` always responds with the configured stop token, but
-    // in actual practice this could be any arbitrary config.
-    stop: ["stop"],
-  };
-  
-  const tools = [echoTool];
-  
-  // Here's the important part 👇
-  
-  const configuredBoundModel = model.withConfig(config).bindTools(tools);
-  const boundConfiguredModel = model.bindTools(tools).withConfig(config);
-
-  const configuredBoundModelResult = await configuredBoundModel
-    .invoke("Any arbitrary input");
-  const boundConfiguredModelResult = await boundConfiguredModel
-    .invoke("Any arbitrary input");
-
-    console.log("Configured then bound result:", configuredBoundModelResult);
-    console.log("Bound then configured result:", boundConfiguredModelResult);
-
-  // The results should be identical, but if the order independence is broken,
-  // this will throw an error.
-  
-  if (
-    configuredBoundModelResult.content !== boundConfiguredModelResult.content
-  ) {
-    throw new Error("The results are not equal");
-  }
-}
 
 // class FakeChatModelWithBindTools extends FakeChatModel {
 //   // It's not a requirement that your solution keep this stubbed method
@@ -118,8 +70,6 @@ describe("bindTools + withConfig order independence", () => {
 
     const resultA = await configuredThenBound.invoke(input);
     const resultB = await boundThenConfigured.invoke(input);
-
-    await problemDemo();
 
     // Core assertion: contents are identical
     expect(resultA.content).toEqual(resultB.content);
