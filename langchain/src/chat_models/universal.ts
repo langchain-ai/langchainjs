@@ -347,7 +347,7 @@ export class ConfigurableModel<
   ): ConfigurableModel<RunInput, CallOptions> {
     const newQueuedOperations = [
       ...this._queuedMethodOperations,
-      { method: "bindTools", args: [tools, params] }
+      { method: "bindTools", args: [tools, params] },
     ];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
@@ -364,7 +364,7 @@ export class ConfigurableModel<
   ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
     const newQueuedOperations = [
       ...this._queuedMethodOperations,
-      { method: "withStructuredOutput", args: [schema, ...args] }
+      { method: "withStructuredOutput", args: [schema, ...args] },
     ];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
