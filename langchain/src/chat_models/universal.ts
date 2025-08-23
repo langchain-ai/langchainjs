@@ -223,6 +223,12 @@ export function _inferModelProvider(modelName: string): string | undefined {
   }
 }
 
+interface QueuedMethodOperation {
+  method: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: any[];
+}
+
 interface ConfigurableModelFields extends BaseChatModelParams {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   defaultConfig?: Record<string, any>;
@@ -236,10 +242,9 @@ interface ConfigurableModelFields extends BaseChatModelParams {
   configPrefix?: string;
   /**
    * Methods which should be called after the model is initialized.
-   * The key will be the method name, and the value will be the arguments.
+   * Operations are stored in an ordered array to ensure predictable execution order.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  queuedMethodOperations?: Record<string, any>;
+  queuedMethodOperations?: QueuedMethodOperation[];
 }
 
 /**
@@ -272,10 +277,9 @@ export class ConfigurableModel<
 
   /**
    * Methods which should be called after the model is initialized.
-   * The key will be the method name, and the value will be the arguments.
+   * Operations are stored in an ordered array to ensure predictable execution order.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _queuedMethodOperations: Record<string, any> = {};
+  _queuedMethodOperations: QueuedMethodOperation[] = [];
 
   constructor(fields: ConfigurableModelFields) {
     super(fields);
@@ -310,12 +314,9 @@ export class ConfigurableModel<
       params
     );
 
-    // Apply queued method operations
-    const queuedMethodOperationsEntries = Object.entries(
-      this._queuedMethodOperations
-    );
-    if (queuedMethodOperationsEntries.length > 0) {
-      for (const [method, args] of queuedMethodOperationsEntries) {
+    // Apply queued method operations in order
+    if (this._queuedMethodOperations.length > 0) {
+      for (const { method, args } of this._queuedMethodOperations) {
         if (
           method in initializedModel &&
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -332,24 +333,27 @@ export class ConfigurableModel<
 
   async _generate(
     messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
+    options?: CallOptions,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     const model = await this._model(options);
     return model._generate(messages, options ?? {}, runManager);
   }
 
-  override bindTools(
+  bindTools(
     tools: BindToolsInput[],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): ConfigurableModel<RunInput, CallOptions> {
-    this._queuedMethodOperations.bindTools = [tools, params];
+    const newQueuedOperations = [
+      ...this._queuedMethodOperations,
+      { method: "bindTools", args: [tools, params] }
+    ];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
-      queuedMethodOperations: this._queuedMethodOperations,
+      queuedMethodOperations: newQueuedOperations,
     });
   }
 
@@ -358,12 +362,15 @@ export class ConfigurableModel<
     schema,
     ...args
   ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
-    this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
+    const newQueuedOperations = [
+      ...this._queuedMethodOperations,
+      { method: "withStructuredOutput", args: [schema, ...args] }
+    ];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
-      queuedMethodOperations: this._queuedMethodOperations,
+      queuedMethodOperations: newQueuedOperations,
     }) as unknown as ReturnType<BaseChatModel["withStructuredOutput"]>;
   };
 
@@ -426,7 +433,7 @@ export class ConfigurableModel<
         ? [...this._configurableFields]
         : this._configurableFields,
       configPrefix: this._configPrefix,
-      queuedMethodOperations: this._queuedMethodOperations,
+      queuedMethodOperations: [...this._queuedMethodOperations],
     });
 
     return new RunnableBinding<RunInput, AIMessageChunk, CallOptions>({
