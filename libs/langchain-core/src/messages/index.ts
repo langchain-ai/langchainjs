@@ -19,4 +19,5 @@ export {
   isToolMessageChunk,
 } from "./tool.js";
 
-export * as v1 from "../_standard/index.js";
+export * from "./content/index.js";
+export * as v1 from "./v1/index.js";
