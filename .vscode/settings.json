@@ -12,7 +12,11 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": ["AILLM", "Upstash"],
   "cSpell.enabledFileTypes": {
-    "mdx": true
+    "mdx": true,
+    "typescript": false,
+    "javascript": false,
+    "typescriptreact": false,
+    "javascriptreact": false
   },
   "editor.formatOnSave": true,
   "files.exclude": {
