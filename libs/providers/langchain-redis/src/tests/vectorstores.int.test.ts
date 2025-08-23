@@ -1,12 +1,12 @@
 /* eslint-disable no-process-env */
-/* eslint-disable no-promise-executor-return */
+import { test, expect, afterAll, beforeAll, describe } from "vitest";
 
 import { RedisClientType, createClient } from "redis";
 import { v4 as uuidv4 } from "uuid";
-import { test, expect } from "@jest/globals";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+
 import { RedisVectorStore } from "../vectorstores.js";
 
 describe("RedisVectorStore", () => {
