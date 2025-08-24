@@ -35,4 +35,9 @@ pnpm install --no-frozen-lockfile
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_vertexai_dir"
 
+# Install @langchain/google-gauth dependency explicitly
+# This is needed because the update script converts the workspace dependency
+# to use the minimum version, but in the test environment we need to install
+# it as a regular dependency since workspace packages aren't available
+pnpm add @langchain/google-gauth
 pnpm test
