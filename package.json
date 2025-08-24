@@ -1,9 +1,8 @@
 {
   "name": "langchainjs",
+  "author": "LangChain",
+  "license": "MIT",
   "private": true,
-  "engines": {
-    "node": ">=18"
-  },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/",
   "repository": {
     "type": "git",
@@ -35,8 +34,6 @@
     "docs:api_refs": "pnpm --filter api_refs start",
     "release": "node release_workspace.js --workspace"
   },
-  "author": "LangChain",
-  "license": "MIT",
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^29.5.3",
