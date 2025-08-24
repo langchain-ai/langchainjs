@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { Octokit } from "@octokit/rest";
 
 async function spamContentFilter() {
@@ -48,4 +49,4 @@ async function spamContentFilter() {
   }
 }
 
-void spamContentFilter();
+await spamContentFilter();

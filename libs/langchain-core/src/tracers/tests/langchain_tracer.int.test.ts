@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import * as uuid from "uuid";
 import { test, expect } from "vitest";
 

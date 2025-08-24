@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable no-plusplus */
 import {
   BaseChatModel,
   type BaseChatModelParams,

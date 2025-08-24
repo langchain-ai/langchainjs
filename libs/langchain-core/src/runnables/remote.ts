@@ -604,7 +604,6 @@ export class RemoteRunnable<
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose"> | undefined
   ): AsyncGenerator<StreamEvent> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
     const generator = async function* () {
       const [config, kwargs] =

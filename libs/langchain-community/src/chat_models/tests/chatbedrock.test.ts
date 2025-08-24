@@ -1,6 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import { BedrockChat } from "../bedrock/web.js";
 
 test("Test Bedrock identifying params", async () => {
@@ -116,7 +113,6 @@ describe("Test model provider detection", () => {
     ({ modelId, expectedProvider, shouldThrow, region }) => {
       if (shouldThrow) {
         expect(() => {
-          // eslint-disable-next-line no-new
           new BedrockChat({
             model: modelId,
             region,

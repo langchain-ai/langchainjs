@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 
 import { Document } from "@langchain/core/documents";

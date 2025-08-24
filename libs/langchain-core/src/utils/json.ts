@@ -37,7 +37,7 @@ export function parsePartialJson(s: string) {
   // Attempt to parse the string as-is.
   try {
     return JSON.parse(s);
-  } catch (error) {
+  } catch {
     // Pass
   }
 
@@ -95,7 +95,7 @@ export function parsePartialJson(s: string) {
   // Attempt to parse the modified string as JSON.
   try {
     return JSON.parse(new_s);
-  } catch (error) {
+  } catch {
     // If we still can't parse the string as JSON, return null to indicate failure.
     return null;
   }

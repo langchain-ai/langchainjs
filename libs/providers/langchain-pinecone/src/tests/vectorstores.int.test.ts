@@ -1,6 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "vitest";
 
@@ -14,7 +11,6 @@ import { PineconeStoreParams, PineconeStore } from "../vectorstores.js";
 const PINECONE_SLEEP_LENGTH = 40000;
 
 function sleep(ms: number) {
-  // eslint-disable-next-line no-promise-executor-return
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

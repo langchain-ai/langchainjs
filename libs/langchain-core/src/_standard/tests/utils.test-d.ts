@@ -159,9 +159,7 @@ describe("$MergeDiscriminatedUnion", () => {
   });
 
   it("should support string, number, and symbol discriminator values", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const S1 = Symbol("S1");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const S2 = Symbol("S2");
     type A =
       | { type: "a"; a: 1 }

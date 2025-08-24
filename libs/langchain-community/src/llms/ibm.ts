@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { BaseLLM, BaseLLMParams } from "@langchain/core/language_models/llms";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
@@ -452,6 +451,7 @@ export class WatsonxLLM<
               chunk?.generationInfo?.stop_reason;
             geneartionsArray[completion].text += chunk.text;
             if (chunk.text)
+              // eslint-disable-next-line no-void
               void runManager?.handleLLMNewToken(chunk.text, {
                 prompt: promptIdx,
                 completion: 0,
@@ -561,6 +561,7 @@ export class WatsonxLLM<
           },
         });
         if (!this.streaming)
+          // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(item.generated_text);
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

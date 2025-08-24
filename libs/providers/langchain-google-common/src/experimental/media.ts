@@ -685,7 +685,6 @@ export abstract class BlobStoreAIStudioFileBase<
 
   async _regetMetadata(key: string): Promise<AIStudioFileObject> {
     // Sleep for some time period
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, this.retryTime));
 
     // Fetch the latest metadata
@@ -709,14 +708,11 @@ export abstract class BlobStoreAIStudioFileBase<
     // The response should contain the name (and valid URI), so we need to
     // update the blob with this. We can't return a new blob, since mset()
     // doesn't return anything.
-    /* eslint-disable no-param-reassign */
     blob.path = file.uri;
     blob.metadata = {
       ...blob.metadata,
       ...file,
     };
-    /* eslint-enable no-param-reassign */
-
     return response;
   }
 

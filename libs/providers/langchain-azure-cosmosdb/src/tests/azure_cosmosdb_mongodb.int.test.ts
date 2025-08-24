@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test, expect, beforeEach, describe } from "vitest";
 import { MongoClient } from "mongodb";
 import { Document } from "@langchain/core/documents";
@@ -44,7 +42,6 @@ describe("AzureCosmosDBMongoDBVectorStore", () => {
     ).toBeDefined();
 
     const client = new MongoClient(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
     );
     await client.connect();

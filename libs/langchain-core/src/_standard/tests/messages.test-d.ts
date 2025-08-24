@@ -38,7 +38,9 @@ describe("$MessageType", () => {
 
     // generic string should also be assignable
     const someString = "anything";
-    const accept = (_t: $MessageType) => {};
+    const accept = (_t: $MessageType) => {
+      // empty
+    };
     accept(someString);
   });
 
@@ -136,7 +138,9 @@ describe("$MessageToolSet", () => {
   });
 
   it("should reject values that are not $MessageToolDefinition", async () => {
-    const accept = (_: $MessageToolSet) => {};
+    const accept = (_: $MessageToolSet) => {
+      // empty
+    };
     // @ts-expect-error values must conform to $MessageToolDefinition
     accept({ notATool: 123 });
 
@@ -1149,6 +1153,7 @@ describe("MessageLike", () => {
           expectTypeOf<typeof x>().not.toEqualTypeOf<string>();
         }
       };
+      // eslint-disable-next-line no-void
       void accept;
     });
     it("should narrow using isMessage", async () => {
@@ -1157,6 +1162,7 @@ describe("MessageLike", () => {
           expectTypeOf<typeof x>().toEqualTypeOf<Message>();
         }
       };
+      // eslint-disable-next-line no-void
       void accept;
     });
     it("should narrow using isMessageTuple", async () => {
@@ -1165,6 +1171,7 @@ describe("MessageLike", () => {
           expectTypeOf<typeof x>().toEqualTypeOf<MessageTuple>();
         }
       };
+      // eslint-disable-next-line no-void
       void accept;
     });
   });

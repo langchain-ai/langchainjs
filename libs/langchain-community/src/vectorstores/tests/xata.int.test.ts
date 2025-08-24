@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { BaseClient } from "@xata.io/client";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
@@ -46,7 +44,6 @@ test.skip("XataVectorSearch integration", async () => {
   // returned
   for (let i = 0; i < 5 && results1.length === 0; i += 1) {
     results1 = await store.similaritySearch("hello!", 1);
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 1000));
   }
 
@@ -87,7 +84,6 @@ test.skip("XataVectorSearch integration", async () => {
     results4 = await store.similaritySearchWithScore("testing!", 3, {
       a: createdAt,
     });
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 1000));
   }
 
@@ -97,7 +93,6 @@ test.skip("XataVectorSearch integration", async () => {
   let results5 = await store.similaritySearch("hello!", 1);
   for (let i = 0; i < 5 && results1.length > 0; i += 1) {
     results5 = await store.similaritySearch("hello!", 1);
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 1000));
   }
   expect(results5).toHaveLength(0);
@@ -137,7 +132,6 @@ test.skip("Search a XataVectorSearch using a metadata filter", async () => {
   let results1 = await store.similaritySearch("hello!", 1);
   for (let i = 0; i < 5 && results1.length < 4; i += 1) {
     results1 = await store.similaritySearch("hello", 6);
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 1000));
   }
 
@@ -159,7 +153,6 @@ test.skip("Search a XataVectorSearch using a metadata filter", async () => {
   let results5 = await store.similaritySearch("hello!", 1);
   for (let i = 0; i < 5 && results1.length > 0; i += 1) {
     results5 = await store.similaritySearch("hello", 1);
-    // eslint-disable-next-line no-promise-executor-return
     await new Promise((r) => setTimeout(r, 1000));
   }
   expect(results5).toHaveLength(0);

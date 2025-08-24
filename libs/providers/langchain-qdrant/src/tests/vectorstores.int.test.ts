@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { describe, expect, test } from "vitest";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { faker } from "@faker-js/faker";

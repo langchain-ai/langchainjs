@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {
   AIMessage,

@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build All Projects
-        run: pnpm build --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration
+        run: pnpm build --filter=!examples --filter=!api_refs --filter=!create-langchain-integration
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel

@@ -10,7 +10,6 @@ test("Test TrajectoryEvalChain", async () => {
   const model = new OpenAI({ temperature: 0 });
 
   const tools = [
-    // eslint-disable-next-line no-process-env
     new SerpAPI(process.env.SERPAPI_API_KEY, {
       location: "Austin,Texas,United States",
       hl: "en",

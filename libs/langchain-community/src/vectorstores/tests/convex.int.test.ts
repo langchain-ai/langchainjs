@@ -1,9 +1,6 @@
-/* eslint-disable no-process-env */
-
 import { ConvexHttpClient } from "convex/browser";
 
 import { expect, test } from "@jest/globals";
-// eslint-disable-next-line import/no-relative-packages
 import { api } from "./convex/convex/_generated/api.js";
 
 // To run these tests at least once, follow these steps:

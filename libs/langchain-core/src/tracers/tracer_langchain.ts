@@ -74,7 +74,9 @@ export class LangChainTracer
     }
   }
 
-  protected async persistRun(_run: Run): Promise<void> {}
+  protected async persistRun(_run: Run): Promise<void> {
+    // empty
+  }
 
   async onRunCreate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);

@@ -145,7 +145,6 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
 
     if (!dbConfig.client) {
       if (connectionString) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         let [endpoint, key] = connectionString!.split(";");
         [, endpoint] = endpoint.split("=");
         [, key] = key.split("=");
@@ -458,7 +457,6 @@ export class AzureCosmosDBNoSQLVectorStore extends VectorStore {
     initOptions: AzureCosmosDBNoSQLInitOptions
   ): Promise<void> {
     // Determine vector dimensions if not provided
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const vectorEmbeddingPolicy = initOptions.vectorEmbeddingPolicy!;
     const needDimensions = vectorEmbeddingPolicy.vectorEmbeddings.some(
       (v) => !v.dimensions

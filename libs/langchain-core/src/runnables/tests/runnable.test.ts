@@ -1,7 +1,4 @@
-/* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -385,7 +382,6 @@ test("Listeners work with async handlers", async () => {
         await promise;
         mockStart(run);
       },
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEnd: async (run: Run) => {
         const promise = new Promise((resolve) => setTimeout(resolve, 2000));
         await promise;
@@ -534,7 +530,9 @@ describe("runId config", () => {
   });
 
   test("batch", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {
+      // empty
+    });
 
     const tracer = new SingleRunExtractor();
     const llm = new FakeChatModel({});

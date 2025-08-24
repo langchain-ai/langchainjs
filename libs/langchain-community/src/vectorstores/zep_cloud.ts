@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ZepClient } from "@getzep/zep-cloud";
 import {
   CreateDocumentRequest,
@@ -153,7 +152,6 @@ export class ZepCloudVectorStore extends VectorStore {
     return this.client.document.addDocuments(this.collectionName, docs);
   }
 
-  // eslint-disable-next-line class-methods-use-this,no-underscore-dangle
   _vectorstoreType(): string {
     return "zep";
   }
@@ -167,7 +165,6 @@ export class ZepCloudVectorStore extends VectorStore {
   async delete(params: IZepCloudDeleteParams): Promise<void> {
     // Wait for collection to be initialized
     await this.initPromise;
-    // eslint-disable-next-line no-restricted-syntax
     for await (const uuid of params.uuids) {
       await this.client.document.deleteDocument(this.collectionName, uuid);
     }
@@ -177,7 +174,6 @@ export class ZepCloudVectorStore extends VectorStore {
     throw new Error("Unsupported in Zep Cloud.");
   }
 
-  // eslint-disable-next-line no-underscore-dangle
   async _similaritySearchWithScore(
     query: string,
     k: number,
@@ -196,7 +192,6 @@ export class ZepCloudVectorStore extends VectorStore {
     query: string,
     k = 4,
     filter: Record<string, unknown> | undefined = undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _callbacks = undefined // implement passing to embedQuery later
   ): Promise<[Document, number][]> {
     return this._similaritySearchWithScore(query, k, filter);
@@ -217,7 +212,6 @@ export class ZepCloudVectorStore extends VectorStore {
     query: string,
     k = 4,
     filter: this["FilterType"] | undefined = undefined,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
   ): Promise<Document[]> {
     await this.initPromise;

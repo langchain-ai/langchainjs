@@ -60,7 +60,7 @@ export function deepEqual(a: unknown, b: unknown): boolean {
     if (typeof value !== "string") return value;
     try {
       return JSON.parse(value);
-    } catch (e) {
+    } catch {
       return value;
     }
   };

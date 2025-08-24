@@ -48,7 +48,6 @@ import {
   type BaseLanguageModelInput,
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
-  type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {

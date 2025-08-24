@@ -573,7 +573,6 @@ export class MatchingEngine extends VectorStore implements MatchingEngineArgs {
    */
   buildDatapoint(vector: number[], document: IdDocument): IndexDatapoint {
     if (!document.id) {
-      // eslint-disable-next-line no-param-reassign
       document.id = uuid.v4();
     }
     const ret: IndexDatapoint = {

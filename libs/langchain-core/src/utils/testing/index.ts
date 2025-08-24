@@ -1,7 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
   BaseCallbackConfig,
   CallbackManagerForLLMRun,
@@ -68,7 +64,7 @@ export class FakeSplitIntoListParser extends BaseOutputParser<string[]> {
   }
 }
 
-export class FakeRunnable extends Runnable<string, Record<string, any>> {
+export class FakeRunnable extends Runnable<string, Record<string, unknown>> {
   lc_namespace = ["tests", "fake"];
 
   returnOptions?: boolean;
@@ -81,7 +77,7 @@ export class FakeRunnable extends Runnable<string, Record<string, any>> {
   async invoke(
     input: string,
     options?: Partial<BaseCallbackConfig>
-  ): Promise<Record<string, any>> {
+  ): Promise<Record<string, unknown>> {
     if (this.returnOptions) {
       return options ?? {};
     }
@@ -566,6 +562,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       }
       const chunk = this._createResponseChunk(text);
       yield chunk;
+      // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
     }
   }
@@ -717,17 +714,14 @@ export class FakeTracer extends BaseTracer {
   }
 }
 
-export interface FakeToolParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends InteropZodObject = InteropZodObject
-> extends ToolParams {
+export interface FakeToolParams<T extends InteropZodObject = InteropZodObject>
+  extends ToolParams {
   name: string;
   description: string;
   schema: T;
 }
 
 export class FakeTool<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends InteropZodObject = InteropZodObject
 > extends StructuredTool<T> {
   name: string;

@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
@@ -62,18 +61,14 @@ test("Initialize non-configurable models", async () => {
 });
 
 test("Works with model provider in model name", async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let error: any;
   const o3Mini = await initChatModel("openai:o3-mini", {
     temperature: 0.25,
     apiKey: openAIApiKey,
   });
-  try {
-    await o3Mini.invoke("what's your name");
-  } catch (e) {
-    error = e;
-  }
-  expect(error.message).toContain("temperature");
+  const error = await o3Mini
+    .invoke("what's your name")
+    .catch((err) => err as Error);
+  expect((error as Error).message).toContain("temperature");
 });
 
 test("Create a partially configurable model with no default model", async () => {

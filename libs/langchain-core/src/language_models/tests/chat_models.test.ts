@@ -1,5 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-
 import { test, expect } from "vitest";
 import { z } from "zod/v3";
 import { zodToJsonSchema } from "zod-to-json-schema";

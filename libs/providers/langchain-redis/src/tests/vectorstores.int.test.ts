@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect, afterAll, beforeAll, describe } from "vitest";
 
 import { RedisClientType, createClient } from "redis";

@@ -74,7 +74,7 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
           extracted = extracted.slice(0, -this.outputDelimiter.length);
         }
         parsed = await p.parse(extracted, callbacks);
-      } catch (e) {
+      } catch {
         parsed = await p.parse(input.trim(), callbacks);
       }
       Object.assign(ret, parsed);

@@ -1,6 +1,3 @@
-/*  eslint-disable no-promise-executor-return  */
-/* eslint-disable no-process-env */
-
 import { test, expect, beforeEach } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { CosmosClient } from "@azure/cosmos";

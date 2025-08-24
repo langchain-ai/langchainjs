@@ -366,7 +366,7 @@ export class AzionVectorStore extends VectorStore {
     if (mode === "hybrid") {
       return (
         tables?.includes(this.tableName) &&
-        tables?.includes(this.tableName + "_fts")
+        tables?.includes(`${this.tableName}_fts`)
       );
     }
 
@@ -434,7 +434,7 @@ export class AzionVectorStore extends VectorStore {
     if (this.expandedMetadata && columns) {
       createTableColumns =
         columns.length > 0
-          ? "," + columns.map((key) => `${key} TEXT`).join(",")
+          ? `,${columns.map((key) => `${key} TEXT`).join(",")}`
           : "";
     }
 
@@ -455,7 +455,7 @@ export class AzionVectorStore extends VectorStore {
     if (this.expandedMetadata && columns) {
       createFtsColumns =
         columns.length > 0
-          ? "," + columns.map((key) => `${key}`).join(",")
+          ? `,${columns.map((key) => `${key}`).join(",")}`
           : "";
     }
 
@@ -472,14 +472,14 @@ export class AzionVectorStore extends VectorStore {
     let updateTriggersColumns = ",metadata = new.metadata";
 
     if (this.expandedMetadata && columns) {
-      createTriggersColumns = columns.length > 0 ? "," + columns.join(",") : "";
+      createTriggersColumns = columns.length > 0 ? `,${columns.join(",")}` : "";
       insertTriggersValues =
         columns.length > 0
-          ? "," + columns.map((key) => `new.${key}`).join(",")
+          ? `,${columns.map((key) => `new.${key}`).join(",")}`
           : "";
       updateTriggersColumns =
         columns.length > 0
-          ? "," + columns.map((key) => `${key} = new.${key}`).join(",")
+          ? `,${columns.map((key) => `${key} = new.${key}`).join(",")}`
           : "";
     }
 
@@ -947,19 +947,17 @@ export class AzionVectorStore extends VectorStore {
       return "";
     }
 
-    return (
-      filters
-        .map(({ operator, column, value }) => {
-          const columnRef = this.expandedMetadata
-            ? this.sanitizeItem(column)
-            : `metadata->>'$.${this.sanitizeItem(column)}'`;
-          if (["IN", "NOT IN"].includes(operator.toUpperCase())) {
-            return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
-          }
-          return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
-        })
-        .join(" AND ") + " AND "
-    );
+    return `${filters
+      .map(({ operator, column, value }) => {
+        const columnRef = this.expandedMetadata
+          ? this.sanitizeItem(column)
+          : `metadata->>'$.${this.sanitizeItem(column)}'`;
+        if (["IN", "NOT IN"].includes(operator.toUpperCase())) {
+          return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
+        }
+        return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
+      })
+      .join(" AND ")} AND `;
   }
 
   /**

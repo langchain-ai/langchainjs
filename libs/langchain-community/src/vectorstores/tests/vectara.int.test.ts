@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-process-env */
 import fs from "fs";
 import { expect, beforeAll } from "@jest/globals";
 import { insecureHash } from "@langchain/core/utils/hash";
@@ -167,9 +165,7 @@ describe("VectaraStore", () => {
       expect(results[0].pageContent.length).toBeGreaterThan(0);
       // Query filtered on French, so we expect only French results
       const hasEnglish = results.some(
-        (result) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          result.metadata.lang === "eng"
+        (result) => result.metadata.lang === "eng"
       );
       expect(hasEnglish).toBe(false);
     });

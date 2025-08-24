@@ -96,7 +96,6 @@ export class ZepVectorStore extends VectorStore {
       );
 
       // If the Embedding passed in is fake, but the collection is not auto embedded, throw an error
-      // eslint-disable-next-line no-instanceof/no-instanceof
       if (!this.collection.is_auto_embedded && this.autoEmbed) {
         throw new Error(`You can't pass in FakeEmbeddings when collection ${args.collectionName} 
  is not set to auto-embed.`);

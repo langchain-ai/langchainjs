@@ -47,9 +47,7 @@ const convertRunTreeToRun = (runTree?: RunTree): Run | undefined => {
   // is mutated in other places.
   // TODO: Remove places where this is being done.
 
-  // eslint-disable-next-line no-param-reassign
   runTree.events = runTree.events ?? [];
-  // eslint-disable-next-line no-param-reassign
   runTree.child_runs = runTree.child_runs ?? [];
   // TODO: Remove this cast and just use the LangSmith RunTree type.
   return runTree as unknown as Run;

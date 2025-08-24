@@ -8,10 +8,7 @@ import {
   ChatPromptTemplateInput,
 } from "./chat.js";
 
-function isWithStructuredOutput(
-  x: unknown
-  // eslint-disable-next-line @typescript-eslint/ban-types
-): x is {
+function isWithStructuredOutput(x: unknown): x is {
   withStructuredOutput: (...arg: unknown[]) => Runnable;
 } {
   return (

@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable import/no-extraneous-dependencies */
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -167,7 +166,7 @@ export class CouchbaseVectorStore extends VectorStore {
       store._bucket = store.cluster.bucket(store.bucketName);
       store._scope = store._bucket.scope(store.scopeName);
       store._collection = store._scope.collection(store.collectionName);
-    } catch (err) {
+    } catch {
       throw new Error(
         "Error connecting to couchbase, Please check connection and credentials"
       );
@@ -229,7 +228,7 @@ export class CouchbaseVectorStore extends VectorStore {
     try {
       await bucketManager.getBucket(this.bucketName);
       return true;
-    } catch (error) {
+    } catch {
       throw new Error(
         `Bucket ${this.bucketName} does not exist. Please create the bucket before searching.`
       );
@@ -287,10 +286,9 @@ export class CouchbaseVectorStore extends VectorStore {
   private formatMetadata = (fields: any) => {
     delete fields[this.textKey];
     const metadataFields: { [key: string]: any } = {};
-    // eslint-disable-next-line guard-for-in
-    for (const key in fields) {
+    for (const key of Object.keys(fields)) {
       const newKey = key.replace(`${this.metadataKey}.`, "");
-      metadataFields[newKey] = fields[key];
+      metadataFields[newKey] = fields[key as keyof typeof fields];
     }
     return metadataFields;
   };

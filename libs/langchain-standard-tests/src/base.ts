@@ -4,7 +4,7 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { BaseMessageChunk } from "@langchain/core/messages";
 
-export type RecordStringAny = Record<string, any>;
+export type RecordStringAny = Record<string, unknown>;
 
 export type BaseChatModelConstructor<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,

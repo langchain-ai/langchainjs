@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 
 import { PromptTemplate } from "../../prompts/prompt.js";

@@ -41,6 +41,7 @@ const dockerPackages: WorkspacePackage[] = [
     path: "/langchain-textsplitters",
   },
   { pkg: { name: "@langchain/build" }, path: "/langchain-build" },
+  { pkg: { name: "@langchain/eslint" }, path: "/langchain-eslint" },
 ];
 
 class EnvironmentTestRunner {

@@ -81,10 +81,8 @@ export class EnsembleRetriever extends BaseRetriever {
         while (rank <= retrieverDoc.length) {
           const { pageContent } = retrieverDoc[rank - 1];
           if (!rffScore[pageContent]) {
-            // eslint-disable-next-line no-param-reassign
             rffScore[pageContent] = 0;
           }
-          // eslint-disable-next-line no-param-reassign
           rffScore[pageContent] += weight / (rank + this.c);
           rank += 1;
         }

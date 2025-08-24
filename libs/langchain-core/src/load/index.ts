@@ -14,7 +14,6 @@ import { getEnvironmentVariable } from "../utils/env.js";
 function combineAliasesAndInvert(constructor: typeof Serializable) {
   const aliases: { [key: string]: string } = {};
   for (
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let current = constructor;
     current && current.prototype;
     current = Object.getPrototypeOf(current)
@@ -193,7 +192,7 @@ async function reviver(
 
     // Construct the object
     if (serialized.type === "constructor") {
-      // eslint-disable-next-line new-cap, @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const instance = new (builder as any)(
         mapKeys(
           kwargs as SerializedFields,

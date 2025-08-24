@@ -67,7 +67,7 @@ export const convertToLLMonitorMessages = (
         text,
         ...(obj.additional_kwargs ?? {}),
       };
-    } catch (e) {
+    } catch {
       // if parsing fails, return the original message
       return message.text ?? message;
     }

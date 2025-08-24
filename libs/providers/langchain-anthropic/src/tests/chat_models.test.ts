@@ -1,5 +1,10 @@
 import { vi, test, expect } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  ToolMessage,
+  AIMessageChunk,
+} from "@langchain/core/messages";
 import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatAnthropic } from "../chat_models.js";
@@ -11,7 +16,7 @@ test("withStructuredOutput with output validation", async () => {
     temperature: 0,
     anthropicApiKey: "testing",
   });
-  vi.spyOn(model as any, "invoke").mockResolvedValue(
+  vi.spyOn(model, "invoke").mockResolvedValue(
     new AIMessage({
       content: [
         {
@@ -21,7 +26,7 @@ test("withStructuredOutput with output validation", async () => {
           input: "Incorrect string tool call input",
         },
       ],
-    })
+    }) as AIMessageChunk
   );
   const schema = z.object({
     alerts: z

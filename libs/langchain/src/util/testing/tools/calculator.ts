@@ -25,7 +25,7 @@ export class Calculator extends Tool {
   async _call(_input: string) {
     try {
       return `42`;
-    } catch (error) {
+    } catch {
       return "I don't know how to do that.";
     }
   }

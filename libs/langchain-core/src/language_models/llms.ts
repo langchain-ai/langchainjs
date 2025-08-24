@@ -415,7 +415,6 @@ export abstract class BaseLLM<
         if (promiseResult.status === "fulfilled") {
           const result = promiseResult.value as Generation[];
           generations[i] = result.map((result) => {
-            // eslint-disable-next-line no-param-reassign
             result.generationInfo = {
               ...result.generationInfo,
               tokenUsage: {},

@@ -142,7 +142,7 @@ export class Neo4jVectorStore extends VectorStore {
     try {
       this.driver = neo4j.driver(url, neo4j.auth.basic(username, password));
       this.database = database;
-    } catch (error) {
+    } catch {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
       );
@@ -393,7 +393,6 @@ export class Neo4jVectorStore extends VectorStore {
       }
     }
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const fetchQuery = `
         MATCH (n:\`${nodeLabel}\`)
@@ -493,7 +492,7 @@ export class Neo4jVectorStore extends VectorStore {
         const embeddingDimension =
           index.options.indexConfig["vector.dimensions"];
         return Number(embeddingDimension);
-      } catch (error) {
+      } catch {
         return null;
       }
     }
@@ -539,7 +538,7 @@ export class Neo4jVectorStore extends VectorStore {
         this.nodeLabel = labelOrType;
 
         return labelOrType;
-      } catch (error) {
+      } catch {
         return null;
       }
     }
@@ -737,11 +736,7 @@ export class Neo4jVectorStore extends VectorStore {
       if (results.some((result) => result.text == null)) {
         if (!this.retrievalQuery) {
           throw new Error(
-            "Make sure that none of the '" +
-              this.textNodeProperty +
-              "' properties on nodes with label '" +
-              this.nodeLabel +
-              "' are missing or empty"
+            `Make sure that none of the '${this.textNodeProperty}' properties on nodes with label '${this.nodeLabel}' are missing or empty`
           );
         } else {
           throw new Error(
@@ -1025,7 +1020,6 @@ function handleFieldFilter(
       `);
     }
 
-    // eslint-disable-next-line prefer-destructuring
     operator = keys[0];
     filterValue = value[operator];
 

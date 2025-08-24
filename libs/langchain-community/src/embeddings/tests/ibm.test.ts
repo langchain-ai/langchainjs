@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { testProperties } from "../../llms/tests/ibm.test.js";
 import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
 

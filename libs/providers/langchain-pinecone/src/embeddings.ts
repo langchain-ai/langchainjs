@@ -1,5 +1,3 @@
-/* eslint-disable arrow-body-style */
-
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {
   EmbeddingsList,

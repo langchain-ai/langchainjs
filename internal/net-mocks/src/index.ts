@@ -1,3 +1,3 @@
-export * from "./env";
-export * from "./mock";
-export * from "./spec";
+export * from "./env.js";
+export * from "./mock.js";
+export * from "./spec.js";

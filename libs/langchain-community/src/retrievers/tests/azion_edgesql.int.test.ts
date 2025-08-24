@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { jest, test, expect } from "@jest/globals";
 import { AzionRetriever } from "../azion_edgesql.js";

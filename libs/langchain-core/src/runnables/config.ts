@@ -135,13 +135,11 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
   if (implicitConfig) {
     // Don't allow runId and runName to be loaded implicitly, as this can cause
     // child runs to improperly inherit their parents' run ids.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { runId, runName, ...rest } = implicitConfig;
     empty = Object.entries(rest).reduce(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (currentConfig: Record<string, any>, [key, value]) => {
         if (value !== undefined) {
-          // eslint-disable-next-line no-param-reassign
           currentConfig[key] = value;
         }
         return currentConfig;
@@ -154,7 +152,6 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (currentConfig: Record<string, any>, [key, value]) => {
         if (value !== undefined) {
-          // eslint-disable-next-line no-param-reassign
           currentConfig[key] = value;
         }
         return currentConfig;

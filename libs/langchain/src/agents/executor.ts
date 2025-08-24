@@ -135,10 +135,12 @@ export class AgentExecutorIterator
 
         const result = await this._callNext();
         yield result;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (
+          typeof e === "object" &&
+          e !== null &&
           "message" in e &&
+          typeof e.message === "string" &&
           e.message.startsWith("Final outputs already reached: ")
         ) {
           if (!this.finalOutputs) {

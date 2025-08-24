@@ -258,6 +258,7 @@ export class ProxyParamsDuplicator {
   ) {
     const proxiedDuplicator = new ProxyParamsDuplicator();
     const proxiedRpc = new Proxy(rpc, proxiedDuplicator.buildProxyHandler());
+    // eslint-disable-next-line no-void
     void filter(proxiedRpc);
     return proxiedDuplicator.flattenedParams();
   }

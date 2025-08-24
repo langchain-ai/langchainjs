@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-param-reassign */
 
 // Duplicate of core
 // TODO: Remove once we stop supporting 0.2.x core versions

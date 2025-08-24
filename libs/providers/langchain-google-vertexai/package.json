@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "^0.2.10",
     "@langchain/standard-tests": "workspace:*",
     "@swc/core": "^1.3.90",
@@ -47,8 +48,7 @@
     "rollup": "^4.5.2",
     "ts-jest": "^29.1.0",
     "typescript": "~5.8.3",
-    "zod": "^3.22.4",
-    "@langchain/eslint": "workspace:*"
+    "zod": "^3.22.4"
   },
   "publishConfig": {
     "access": "public"

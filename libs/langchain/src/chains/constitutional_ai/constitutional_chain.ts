@@ -176,10 +176,8 @@ export class ConstitutionalChain
       return output;
     }
 
-    // eslint-disable-next-line prefer-destructuring
     output = output.split("Revision request:")[0];
     if (output.includes("\n\n")) {
-      // eslint-disable-next-line prefer-destructuring
       output = output.split("\n\n")[0];
     }
     return output;

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-process-env */
-
 import { test } from "@jest/globals";
 import { createClient } from "@vercel/kv";
 import { VercelKVStore } from "../vercel_kv.js";

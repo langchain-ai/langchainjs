@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import {
   BaseLanguageModelInput,
   ToolDefinition,
@@ -184,7 +183,6 @@ async function _initChatModelHelper(
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { modelProvider: _unused, ...passedParams } = params;
   const ProviderClass = await getChatModelByClassName(config.className);
   return new ProviderClass({ model, ...passedParams });
@@ -540,7 +538,6 @@ export class ConfigurableModel<
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
     async function* wrappedGenerator() {
       const model = await outerThis._model(options);

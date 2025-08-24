@@ -71,7 +71,6 @@ export class AzureCosmosDBNoSQLSemanticCache extends BaseCache {
 
     if (!dbConfig.client) {
       if (connectionString) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         let [endpoint, key] = connectionString!.split(";");
         [, endpoint] = endpoint.split("=");
         [, key] = key.split("=");

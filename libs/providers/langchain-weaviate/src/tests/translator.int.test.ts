@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, beforeAll, afterAll, expect } from "vitest";
 import weaviate, { Filters, WeaviateClient } from "weaviate-client";
 

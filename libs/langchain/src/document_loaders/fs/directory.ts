@@ -11,7 +11,6 @@ export const UnknownHandling = {
   Warn: "warn",
   Error: "error",
 } as const;
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 /**
  * An enumeration of possible handling strategies for unknown file types.
  */

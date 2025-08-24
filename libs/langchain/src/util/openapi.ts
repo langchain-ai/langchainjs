@@ -236,7 +236,7 @@ export class OpenAPISpec {
     let document;
     try {
       document = JSON.parse(rawString);
-    } catch (e) {
+    } catch {
       document = yaml.load(rawString);
     }
     return OpenAPISpec.fromObject(document);

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
   InteropZodType,
   isInteropZodSchema,
@@ -14,7 +12,6 @@ import {
   GeminiJsonSchemaDirty,
 } from "../types.js";
 
-/* eslint-disable no-param-reassign */
 export function adjustObjectType(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
@@ -48,7 +45,6 @@ export function adjustObjectType(
   }
   return obj;
 }
-/* eslint-enable no-param-reassign */
 
 export function removeAdditionalProperties(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,7 +97,6 @@ export function jsonSchemaToGeminiParameters(
 ): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsonSchema = removeAdditionalProperties(
     schema as GeminiJsonSchemaDirty
   );

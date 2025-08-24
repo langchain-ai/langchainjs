@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAI as OpenAIClient } from "openai";
 import { Tool, ToolParams } from "@langchain/core/tools";

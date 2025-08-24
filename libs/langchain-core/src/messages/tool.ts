@@ -102,7 +102,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     name?: string
   ) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line no-param-reassign
       fields = { content: fields, name, tool_call_id: tool_call_id! };
     }
     super(fields);
@@ -301,7 +301,7 @@ export function defaultToolCallParser(
           id: toolCall.id,
         };
         toolCalls.push(parsed);
-      } catch (error) {
+      } catch {
         invalidToolCalls.push({
           name: functionName,
           args: toolCall.function.arguments,

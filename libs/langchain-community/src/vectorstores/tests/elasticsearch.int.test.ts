@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { Client, ClientOptions } from "@elastic/elasticsearch";
 import { OpenAIEmbeddings } from "@langchain/openai";

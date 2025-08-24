@@ -1,6 +1,5 @@
 /* eslint-disable prefer-template */
 /* eslint-disable default-case */
-/* eslint-disable no-plusplus */
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
@@ -43,7 +42,6 @@ export async function getBytes(
     //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this
     //          mechanism, we risk ignoring a possibly significant last message.
     //          See https://github.com/langchain-ai/langchainjs/issues/1299 for details.
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const result = await reader.read();
       if (result.done) {
@@ -130,8 +128,7 @@ export function getLines(
               fieldLength = position - lineStart;
             }
             break;
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore:7029 \r case below should fallthrough to \n:
+          // @ts-expect-error \r case below should fallthrough to \n:
           case ControlChars.CarriageReturn:
             discardTrailingNewline = true;
           // eslint-disable-next-line no-fallthrough

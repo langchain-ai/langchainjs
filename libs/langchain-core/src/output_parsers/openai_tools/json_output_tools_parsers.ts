@@ -55,7 +55,7 @@ export function parseToolCall(
   if (options?.partial) {
     try {
       functionArgs = parsePartialJson(rawToolCall.function.arguments ?? "{}");
-    } catch (e) {
+    } catch {
       return undefined;
     }
   } else {

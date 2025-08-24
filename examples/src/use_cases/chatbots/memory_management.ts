@@ -1,7 +1,3 @@
-/* eslint-disable import/first */
-/* eslint-disable arrow-body-style */
-/* eslint-disable import/no-duplicates */
-
 import { ChatOpenAI } from "@langchain/openai";
 
 const chat = new ChatOpenAI({
@@ -147,7 +143,7 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 
-const trimMessages = async (_chainInput: Record<string, any>) => {
+const trimMessages = async (_chainInput: Record<string, unknown>) => {
   const storedMessages = await demoEphemeralChatMessageHistory.getMessages();
   if (storedMessages.length <= 2) {
     return false;

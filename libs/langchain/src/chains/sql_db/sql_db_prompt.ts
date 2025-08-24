@@ -1,4 +1,3 @@
-/* eslint-disable spaced-comment */
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 
 export const DEFAULT_SQL_DATABASE_PROMPT = /*#__PURE__*/ new PromptTemplate({

@@ -134,7 +134,6 @@ describe("JiraProjectLoader Integration Tests", () => {
   });
 
   function requireEnvVar(name: string): string {
-    // eslint-disable-next-line no-process-env
     const value = process.env[name];
     if (!value) {
       throw new Error(`environment variable "${name}" must be set`);

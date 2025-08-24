@@ -10,7 +10,6 @@
  * 3. Structured handling of complex multi-file operations
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import {
   StateGraph,

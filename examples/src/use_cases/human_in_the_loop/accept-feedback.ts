@@ -17,7 +17,7 @@ function askQuestion(question: string): Promise<string> {
   });
 }
 
-async function humanApproval(toolInvocations: any[]): Promise<any[]> {
+async function humanApproval(toolInvocations: unknown[]): Promise<unknown[]> {
   const toolStrs = toolInvocations
     .map((toolCall) => JSON.stringify(toolCall, null, 2))
     .join("\n\n");

@@ -34,7 +34,7 @@ export class ChatMessage
 
   constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line no-param-reassign
       fields = { content: fields, role: role! };
     }
     super(fields);
@@ -74,7 +74,7 @@ export class ChatMessageChunk extends BaseMessageChunk {
 
   constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line no-param-reassign
       fields = { content: fields, role: role! };
     }
     super(fields);

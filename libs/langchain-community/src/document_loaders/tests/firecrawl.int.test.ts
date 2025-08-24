@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { FireCrawlLoader } from "../web/firecrawl.js";

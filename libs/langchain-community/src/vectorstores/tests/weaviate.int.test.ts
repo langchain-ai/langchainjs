@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import weaviate, { Filters } from "weaviate-client";
 import { OpenAIEmbeddings } from "@langchain/openai";

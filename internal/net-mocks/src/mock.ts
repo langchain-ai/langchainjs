@@ -1,18 +1,18 @@
-import { HARArchive, HAREntry } from "./spec";
+import { HARArchive, HAREntry } from "./spec.js";
 import {
   encodeHARRequest,
   encodeHARResponse,
   entryIsStale,
   matchRequestEntryPredicate,
   readableHARResponseStream,
-} from "./request";
-import { iife, PromiseOrValue } from "./utils";
+} from "./request.js";
+import { iife, PromiseOrValue } from "./utils.js";
 import {
   EnvironmentBatchInterceptor,
   getArchiveStore,
   getEnvironmentVariable,
   getInterceptor,
-} from "./env";
+} from "./env.js";
 
 /**
  * Interface representing a storage mechanism for HAR archives.

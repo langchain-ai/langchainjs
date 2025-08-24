@@ -225,7 +225,7 @@ export class XataChatMessageHistory<
     let schema: GetTableSchemaResponse | null = null;
     try {
       schema = await this.apiClient.tables.getTableSchema(tableParams);
-    } catch (e) {
+    } catch {
       // pass
     }
     if (schema == null) {

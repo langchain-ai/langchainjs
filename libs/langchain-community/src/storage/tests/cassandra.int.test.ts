@@ -1,5 +1,4 @@
-// /* eslint-disable no-process-env */
-// Hangs when run with other tests, uncomment for development
+// // Hangs when run with other tests, uncomment for development
 
 // import { test, expect, describe } from "@jest/globals";
 // import { CassandraClientFactory } from "../../utils/cassandra.js";

@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { afterEach, beforeAll, expect, test } from "vitest";
 
 import { registerConfigureHook, setContextVariable } from "../../context.js";

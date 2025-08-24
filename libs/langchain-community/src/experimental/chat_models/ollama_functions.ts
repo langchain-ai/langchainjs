@@ -114,7 +114,7 @@ export class OllamaFunctions extends BaseChatModel<ChatOllamaFunctionsCallOption
     let parsedChatResult;
     try {
       parsedChatResult = JSON.parse(chatGenerationContent);
-    } catch (e) {
+    } catch {
       throw new Error(
         `"${this.llm.model}" did not respond with valid JSON. Please try again.`
       );

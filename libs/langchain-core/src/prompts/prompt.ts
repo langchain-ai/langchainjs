@@ -49,7 +49,6 @@ export interface PromptTemplateInput<
    * the message content array if using a complex message
    * content.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalContentFields?: MessageContentComplex;
 }
 
@@ -90,9 +89,7 @@ export type ParamsFromFString<T extends string> = {
 
 export type ExtractedFStringParams<
   T extends string,
-  // eslint-disable-next-line @typescript-eslint/ban-types
   RunInput extends InputValues = Symbol
-  // eslint-disable-next-line @typescript-eslint/ban-types
 > = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
 
 /**
@@ -134,7 +131,6 @@ export class PromptTemplate<
    * the message content array if using a complex message
    * content.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalContentFields?: MessageContentComplex;
 
   constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
@@ -215,7 +211,6 @@ export class PromptTemplate<
    * Load prompt template from a template f-string
    */
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -227,7 +222,6 @@ export class PromptTemplate<
   ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -239,7 +233,6 @@ export class PromptTemplate<
   ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -251,7 +244,6 @@ export class PromptTemplate<
   ): PromptTemplate<InputValues>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(

@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatAnthropic, ChatAnthropicCallOptions } from "../chat_models.js";

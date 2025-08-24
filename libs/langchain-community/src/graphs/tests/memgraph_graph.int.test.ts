@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test } from "@jest/globals";
 import { MemgraphGraph } from "../memgraph_graph.js";
 

@@ -130,7 +130,7 @@ export async function checkNotebookTypeErrors() {
   } finally {
     try {
       fs.rmSync(tempFilepath);
-    } catch (e) {
+    } catch {
       // Do nothing
     }
   }

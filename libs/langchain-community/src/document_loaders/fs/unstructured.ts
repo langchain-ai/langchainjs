@@ -420,7 +420,6 @@ export class UnstructuredDirectoryLoader extends DirectoryLoader {
     const loader = (p: string) => new UnstructuredLoader(p, options);
     const loaders = UNSTRUCTURED_API_FILETYPES.reduce(
       (loadersObject: LoadersMapping, filetype: string) => {
-        // eslint-disable-next-line no-param-reassign
         loadersObject[filetype] = loader;
         return loadersObject;
       },

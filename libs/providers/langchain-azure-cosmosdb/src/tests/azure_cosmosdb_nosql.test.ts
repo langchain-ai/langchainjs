@@ -22,7 +22,6 @@ const createMockClient = () => {
         },
         items: {
           create: vi.fn().mockImplementation((doc: any) => ({
-            // eslint-disable-next-line no-plusplus
             resource: { id: doc.id ?? `${id++}` },
           })),
           query: vi.fn().mockReturnThis(),

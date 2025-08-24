@@ -227,9 +227,7 @@ test.skip("Test Milvus.addDocuments with auto ID", async () => {
 });
 
 afterAll(async () => {
-  // eslint-disable-next-line no-process-env
   if (!process.env.MILVUS_URL) return;
-  // eslint-disable-next-line no-process-env
   const client = new MilvusClient(process.env.MILVUS_URL as string);
   const dropRes = await client.dropCollection({
     collection_name: collectionName,

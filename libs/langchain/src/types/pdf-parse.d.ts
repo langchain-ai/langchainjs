@@ -672,7 +672,6 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
     addEventListener(name: any, listener: any): void;
     removeEventListener(name: any, listener: any): void;
     terminate(): void;
-    #private;
   }
   /**
    * @typedef {Object} OnProgressParameters
@@ -1305,7 +1304,6 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
      *   otherwise.
      */
     get stats(): StatTimer | null;
-    #private;
   }
   /**
    * PDF.js web worker abstraction that controls the instantiation of PDF
@@ -1402,7 +1400,6 @@ declare module "pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js" {
      * @type {boolean}
      */
     get separateAnnots(): boolean;
-    #private;
   }
   /** @type {string} */
   export const version: string;

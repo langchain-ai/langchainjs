@@ -122,7 +122,7 @@ export abstract class GmailBaseTool extends StructuredTool {
         // Gmail uses URL-safe base64 encoding, so we need to handle it properly
         // Replace URL-safe characters and decode
         return atob(body.replace(/-/g, "+").replace(/_/g, "/"));
-      } catch (error) {
+      } catch {
         // Keep the original encoded body if decoding fails
         return body;
       }

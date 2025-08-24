@@ -175,7 +175,7 @@ function _stringify(x: string | KVMap): string {
   } else {
     try {
       return JSON.stringify(x, null, 2);
-    } catch (error) {
+    } catch {
       return String(x);
     }
   }

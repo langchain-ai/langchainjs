@@ -328,6 +328,7 @@ export class AzureOpenAI<
               choice.finishReason = part.finishReason;
               choice.logprobs = part.logprobs;
             }
+            // eslint-disable-next-line no-void
             void runManager?.handleLLMNewToken(part.text, {
               prompt: Math.floor(part.index / this.n),
               completion: part.index % this.n,
@@ -397,6 +398,7 @@ export class AzureOpenAI<
 
       const generations = chunkArray(choices, this.n).map((promptChoices) =>
         promptChoices.map((choice) => {
+          // eslint-disable-next-line no-void
           void runManager?.handleLLMNewToken(choice.text, {
             prompt: Math.floor(choice.index / this.n),
             completion: choice.index % this.n,

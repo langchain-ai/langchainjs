@@ -85,7 +85,6 @@ export interface RunnableConfig<
    * Runtime values for attributes previously made configurable on this Runnable,
    * or sub-Runnables.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   configurable?: ConfigurableFieldType;
 
   /**

@@ -333,7 +333,6 @@ test("Test MessagesPlaceholder optional", async () => {
     variableName: "foo",
     optional: true,
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages = await prompt.formatMessages({} as any);
   expect(messages).toEqual([]);
 });
@@ -353,7 +352,6 @@ test("Test MessagesPlaceholder not optional", async () => {
   const prompt = new MessagesPlaceholder({
     variableName: "foo",
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(prompt.formatMessages({} as any)).rejects.toThrow(
     'Field "foo" in prompt uses a MessagesPlaceholder, which expects an array of BaseMessages as an input value. Received: undefined'
   );
@@ -842,14 +840,12 @@ test("Format complex messages and keep additional fields", async () => {
 
   expect(formatted[0]._getType()).toBe("human");
   expect(formatted[0].content[0]).toHaveProperty("cache_control");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((formatted[0].content[0] as any).cache_control).toEqual({
     type: "ephemeral",
   });
 
   expect(formatted[1]._getType()).toBe("ai");
   expect(formatted[1].content[0]).toHaveProperty("cache_control");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((formatted[1].content[0] as any).cache_control).toEqual({
     type: "ephemeral",
   });
@@ -876,7 +872,6 @@ test("Format image content messages and keep additional fields", async () => {
 
   expect(formatted[0]._getType()).toBe("human");
   expect(formatted[0].content[0]).toHaveProperty("cache_control");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((formatted[0].content[0] as any).cache_control).toEqual({
     type: "ephemeral",
   });

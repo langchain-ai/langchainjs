@@ -1,4 +1,4 @@
-/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { z } from "zod";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -266,9 +266,9 @@ test("Test OpenAI serialization doesn't pass along extra params", async () => {
   const chat = new ChatOpenAI({
     apiKey: "test-key",
     model: "o3-mini",
+    // @ts-expect-error unused var
     somethingUnexpected: true,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  });
   expect(JSON.stringify(chat)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","openai","ChatOpenAI"],"kwargs":{"openai_api_key":{"lc":1,"type":"secret","id":["OPENAI_API_KEY"]},"model":"o3-mini"}}`
   );

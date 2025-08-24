@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, expect } from "@jest/globals";
 import { randomUUID } from "crypto";
 import { Mem0Memory } from "../mem0.js";

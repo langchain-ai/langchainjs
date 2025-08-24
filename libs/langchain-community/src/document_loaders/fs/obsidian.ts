@@ -76,7 +76,7 @@ class ObsidianFileLoader extends BaseDocumentLoader {
       }
 
       return frontMatter;
-    } catch (e) {
+    } catch {
       console.warn("Encountered non-yaml frontmatter");
       return {};
     }

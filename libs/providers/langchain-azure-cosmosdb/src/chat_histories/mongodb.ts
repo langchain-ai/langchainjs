@@ -69,13 +69,11 @@ export class AzureCosmosDBMongoChatMessageHistory extends BaseListChatMessageHis
     }
 
     if (!dbConfig.client) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.client = new MongoClient(connectionString!, {
         appName: "langchainjs",
       });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const client = dbConfig.client || this.client!;
     const databaseName = dbConfig.databaseName ?? "chatHistoryDB";
     const collectionName = dbConfig.collectionName ?? "chatHistory";

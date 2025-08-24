@@ -205,7 +205,6 @@ export class FaissStore extends SaveableVectorStore {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const indexIdToDelete = documentIds.map((id) => reversedMappings.get(id)!);
 
     // remove from index

@@ -359,7 +359,7 @@ export class GoogleVertexAIStream {
         // We only get here if it parsed it ok
         // If we did turn it into an object, remove it from the buffer
         this._buffer = this._buffer.slice(index + 1);
-      } catch (xx) {
+      } catch {
         // It didn't parse it correctly, so we swallow the exception and continue
       }
     }

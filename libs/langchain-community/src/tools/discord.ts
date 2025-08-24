@@ -110,7 +110,7 @@ export class DiscordGetMessagesTool extends Tool {
         })) ?? [];
 
       return JSON.stringify(results);
-    } catch (err) {
+    } catch {
       await this.client.destroy();
       return "Error getting messages.";
     }
@@ -172,7 +172,7 @@ export class DiscordGetGuildsTool extends Tool {
         })) ?? [];
 
       return JSON.stringify(results);
-    } catch (err) {
+    } catch {
       await this.client.destroy();
       return "Error getting guilds.";
     }
@@ -237,7 +237,7 @@ export class DiscordGetTextChannelsTool extends Tool {
           })) ?? [];
 
       return JSON.stringify(results);
-    } catch (err) {
+    } catch {
       await this.client.destroy();
       return "Error getting text channels.";
     }
@@ -320,7 +320,7 @@ export class DiscordSendMessagesTool extends Tool {
       await this.client.destroy();
 
       return "Message sent successfully.";
-    } catch (err) {
+    } catch {
       await this.client.destroy();
       return "Error sending message.";
     }
@@ -411,7 +411,7 @@ export class DiscordChannelSearchTool extends Tool {
         })) ?? [];
 
       return JSON.stringify(results);
-    } catch (err) {
+    } catch {
       await this.client.destroy();
       return "Error searching through channel.";
     }

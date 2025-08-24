@@ -1,6 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import * as url from "node:url";
 import * as path from "node:path";
 import { readFile } from "node:fs/promises";

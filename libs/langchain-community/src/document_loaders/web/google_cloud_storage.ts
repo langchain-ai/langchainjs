@@ -67,7 +67,7 @@ export class GoogleCloudStorageLoader extends BaseDocumentLoader {
     this.storageOptions = storageOptions;
   }
 
-  async load(): Promise<Document<Record<string, any>>[]> {
+  async load(): Promise<Document<Record<string, unknown>>[]> {
     const tempDir = this._fs.mkdtempSync(
       path.join(os.tmpdir(), "googlecloudstoragefileloader-")
     );

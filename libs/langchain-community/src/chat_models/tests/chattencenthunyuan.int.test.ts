@@ -35,7 +35,6 @@ const runTest = async ({
   let nrNewTokens = 0;
   let streamedCompletion = "";
   if (config.streaming) {
-    // eslint-disable-next-line no-param-reassign
     config.callbacks = [
       {
         async handleLLMNewToken(token: string) {

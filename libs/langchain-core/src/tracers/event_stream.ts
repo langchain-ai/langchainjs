@@ -91,7 +91,6 @@ export type StreamEvent = {
    *
    * The contents of the event data depend on the event type.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: StreamEventData;
 };
 
@@ -260,7 +259,7 @@ export class EventStreamCallbackHandler
     let tappedPromise = this.tappedPromises.get(runId);
     // if we are the first to tap, issue stream events
     if (tappedPromise === undefined) {
-      let tappedPromiseResolver;
+      let tappedPromiseResolver: (() => void) | undefined;
       tappedPromise = new Promise((resolve) => {
         tappedPromiseResolver = resolve;
       });
@@ -300,8 +299,7 @@ export class EventStreamCallbackHandler
           yield chunk;
         }
       } finally {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        tappedPromiseResolver!();
+        tappedPromiseResolver?.();
         // Don't delete from the promises map to keep track of which runs have been tapped.
       }
     } else {
@@ -322,7 +320,9 @@ export class EventStreamCallbackHandler
   async sendEndEvent(payload: StreamEvent, run: RunInfo) {
     const tappedPromise = this.tappedPromises.get(payload.run_id);
     if (tappedPromise !== undefined) {
+      // eslint-disable-next-line no-void
       void tappedPromise.then(() => {
+        // eslint-disable-next-line no-void
         void this.send(payload, run);
       });
     } else {
@@ -650,7 +650,9 @@ export class EventStreamCallbackHandler
 
   async finish() {
     const pendingPromises = [...this.tappedPromises.values()];
+    // eslint-disable-next-line no-void
     void Promise.all(pendingPromises).finally(() => {
+      // eslint-disable-next-line no-void
       void this.writer.close();
     });
   }

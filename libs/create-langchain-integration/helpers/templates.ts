@@ -7,7 +7,13 @@ import { copy } from "./copy.js";
 /**
  * Install a internal template to a given `root` directory.
  */
-export async function installTemplate({ appName, root }: any) {
+export async function installTemplate({
+  appName,
+  root,
+}: {
+  appName: string;
+  root: string;
+}) {
   /**
    * Copy the template files to the target directory.
    */
@@ -25,7 +31,8 @@ export async function installTemplate({ appName, root }: any) {
    * Update the package.json scripts.
    */
   const packageJsonFile = path.join(root, "package.json");
-  const packageJson: any = JSON.parse(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const packageJson: Record<string, any> = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8")
   );
 

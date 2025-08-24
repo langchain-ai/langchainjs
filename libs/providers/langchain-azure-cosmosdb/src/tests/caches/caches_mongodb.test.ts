@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { vi, it, describe, expect } from "vitest";
 import { FakeEmbeddings, FakeLLM } from "@langchain/core/utils/testing";
 import { Document } from "@langchain/core/documents";

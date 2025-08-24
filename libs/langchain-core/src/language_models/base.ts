@@ -125,7 +125,7 @@ export const calculateMaxTokens = async ({
     numTokens = (
       await encodingForModel(getModelNameForTiktoken(modelName))
     ).encode(prompt).length;
-  } catch (error) {
+  } catch {
     console.warn(
       "Failed to calculate number of tokens, falling back to approximate count"
     );

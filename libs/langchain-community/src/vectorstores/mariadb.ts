@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mariadb, { type Pool, type PoolConfig } from "mariadb";
 import { VectorStore } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -626,7 +627,6 @@ export class MariaDBStore extends VectorStore {
 
     for (const [key, value] of Object.entries(filter)) {
       if (typeof value === "object" && value !== null) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const _value: Record<string, any> = value;
         for (const [type, subvalue] of Object.entries(_value)) {
           let realvalue = subvalue;
@@ -678,7 +678,7 @@ export class MariaDBStore extends VectorStore {
     }
     if (sqlFilterPart.length > 1) {
       return `(${sqlFilterPart.join(
-        " " + GROUP_OPERATORS.get(groupOperator) + " "
+        ` ${GROUP_OPERATORS.get(groupOperator)} `
       )})`;
     } else {
       return sqlFilterPart[0];
@@ -700,7 +700,6 @@ export class MariaDBStore extends VectorStore {
     k: number,
     filter?: Record<string, unknown>
   ): Promise<[Document, number][]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parameters: unknown[] = [this.getFloat32Buffer(query)];
     const whereClauses = [];
 
@@ -759,7 +758,7 @@ export class MariaDBStore extends VectorStore {
     } TEXT,${this.metadataColumnName} JSON,${
       this.vectorColumnName
     } VECTOR(${dimensions}) NOT NULL, VECTOR INDEX ${this.printable(
-      this.tableName + "_" + this.vectorColumnName
+      `${this.tableName}_${this.vectorColumnName}`
     )}_idx (${this.vectorColumnName}) ) ENGINE=InnoDB`;
     await this.pool.query(tableQuery);
   }

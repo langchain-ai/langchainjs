@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
 import { DataSource } from "typeorm";
 import {

@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test, expect } from "@jest/globals";
 import { MongoClient } from "mongodb";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -44,7 +42,6 @@ describe.skip("AzureCosmosDBVectorStore", () => {
     ).toBeDefined();
 
     const client = new MongoClient(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       process.env.AZURE_COSMOSDB_CONNECTION_STRING!
     );
     await client.connect();

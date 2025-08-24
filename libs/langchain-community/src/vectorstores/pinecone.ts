@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import * as uuid from "uuid";
 import flatten from "flat";
 
@@ -22,7 +21,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
 /** @deprecated Install and import from @langchain/pinecone instead. */
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PineconeMetadata = Record<string, any>;
 
 /** @deprecated Install and import from @langchain/pinecone instead. */
@@ -120,7 +119,7 @@ export class PineconeStore extends VectorStore {
       for (const key of Object.keys(documentMetadata)) {
         if (
           Array.isArray(documentMetadata[key]) &&
-          // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           documentMetadata[key].every((el: any) => typeof el === "string")
         ) {
           stringArrays[key] = documentMetadata[key];

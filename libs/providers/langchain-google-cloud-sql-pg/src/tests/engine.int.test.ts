@@ -63,7 +63,6 @@ describe("PostgresEngine Instance creation", () => {
   test.skip("should create a PostgresEngine Instance with IAM email", async () => {
     const pgArgs: PostgresEngineArgs = {
       ipType: IpAddressTypes.PUBLIC,
-      // eslint-disable-next-line no-process-env
       iamAccountEmail: process.env.EMAIL ?? "",
     };
 

@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { ChromaClient } from "chromadb";
 import { faker } from "@faker-js/faker";

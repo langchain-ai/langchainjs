@@ -10,7 +10,6 @@
  * 3. Structured handling of complex multi-tool operations
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import {
   StateGraph,
@@ -41,6 +40,7 @@ export async function runExample(client?: MultiServerMCPClient) {
   try {
     console.log("Initializing MCP client...");
 
+    // eslint-disable-next-line no-void
     void calculatorServerMain();
 
     // Wait for the server to start

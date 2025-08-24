@@ -30,7 +30,7 @@ export class Calculator extends Tool {
   async _call(input: string) {
     try {
       return Parser.evaluate(input).toString();
-    } catch (error) {
+    } catch {
       return "I don't know how to do that.";
     }
   }

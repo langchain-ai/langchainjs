@@ -2,13 +2,9 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "../dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "target": "ES2021",
-    "lib": [
-      "ES2021",
-      "ES2022.Object",
-      "DOM"
-    ],
+    "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "ES2020",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
@@ -22,12 +18,6 @@
     "allowJs": true,
     "strict": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "docs"
-  ]
+  "include": ["src/**/*", "vitest.setup.ts"],
+  "exclude": ["node_modules", "dist", "docs"]
 }

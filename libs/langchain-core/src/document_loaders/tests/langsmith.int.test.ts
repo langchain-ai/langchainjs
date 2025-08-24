@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 import { Client } from "langsmith";
 import { LangSmithLoader } from "../langsmith.js";

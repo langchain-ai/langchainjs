@@ -1,5 +1,3 @@
-/* eslint-disable no-promise-executor-return, no-process-env */
-
 import { test, expect } from "vitest";
 import { Cohere } from "../llms.js";
 

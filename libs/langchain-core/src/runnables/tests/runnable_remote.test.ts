@@ -1,4 +1,3 @@
-/* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi, test, expect, describe, beforeEach, afterEach } from "vitest";
 import {

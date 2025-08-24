@@ -1,6 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { test, describe, expect } from "vitest";
 import {
   Runnable,
@@ -49,7 +46,9 @@ const TEST_CASES = {
       RunnablePassthrough.assign({
         test: () => chatModel,
       }),
-      () => {},
+      () => {
+        // empty
+      },
     ]),
     input: { question: "testing" },
   },
@@ -74,7 +73,7 @@ describe.each(Object.keys(TEST_CASES))("Test runnable %s", (name) => {
     runnable,
     input,
     skipStream,
-  }: { runnable: Runnable; input: any; skipStream?: boolean } =
+  }: { runnable: Runnable; input: unknown; skipStream?: boolean } =
     TEST_CASES[name as keyof typeof TEST_CASES];
   test("Test invoke with signal", async () => {
     await expect(async () => {

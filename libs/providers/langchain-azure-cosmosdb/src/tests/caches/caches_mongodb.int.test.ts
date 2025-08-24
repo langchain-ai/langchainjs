@@ -1,6 +1,4 @@
-/* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-process-env */
 import { it, expect, beforeEach, describe } from "vitest";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MongoClient } from "mongodb";
@@ -24,7 +22,6 @@ async function initializeCache(
 
   const indexOptions: AzureCosmosDBMongoDBIndexOptions = {
     indexType,
-    // eslint-disable-next-line no-nested-ternary
     similarity:
       distanceFunction === "cosine"
         ? AzureCosmosDBMongoDBSimilarityType.COS

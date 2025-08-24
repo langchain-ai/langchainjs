@@ -15,7 +15,6 @@ test("QdrantVectorStore works", async () => {
   const embeddings = new FakeEmbeddings();
 
   const store = new QdrantVectorStore(embeddings, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     client: client as any,
   });
 
@@ -49,7 +48,6 @@ test("QdrantVectorStore adds vectors with custom payload", async () => {
 
   // Create QdrantVectorStore instance with the mock client
   const qdrantVectorStore = new QdrantVectorStore(embeddings, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     client: client as any,
   });
 
@@ -104,7 +102,6 @@ test("QdrantVectorStore adds vectors with multiple custom payload", async () => 
 
   // Create QdrantVectorStore instance with the mock client
   const qdrantVectorStore = new QdrantVectorStore(embeddings, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     client: client as any,
   });
 
@@ -183,7 +180,6 @@ test("QdrantVectorStore adds vectors with no custom payload", async () => {
 
   // Create QdrantVectorStore instance with the mock client
   const qdrantVectorStore = new QdrantVectorStore(embeddings, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     client: client as any,
   });
 
@@ -221,7 +217,6 @@ test("QdrantVectorStore MMR works", async () => {
   const embeddings = new FakeEmbeddings();
 
   const store = new QdrantVectorStore(embeddings, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     client: client as any,
   });
 

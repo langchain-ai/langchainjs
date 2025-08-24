@@ -548,7 +548,6 @@ export abstract class Agent extends BaseSingleActionAgent {
   static fromLLMAndTools(
     _llm: BaseLanguageModelInterface,
     _tools: StructuredToolInterface[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _args?: AgentArgs
   ): Agent {
     throw new Error("Not implemented");
@@ -557,7 +556,9 @@ export abstract class Agent extends BaseSingleActionAgent {
   /**
    * Validate that appropriate tools are passed in
    */
-  static validateTools(_tools: StructuredToolInterface[]): void {}
+  static validateTools(_tools: StructuredToolInterface[]): void {
+    // empty
+  }
 
   _stop(): string[] {
     return [`\n${this.observationPrefix()}`];

@@ -145,5 +145,6 @@ const testConfigs: TestConfig[] = [
 ];
 
 testConfigs.forEach((testConfig) => {
+  // eslint-disable-next-line no-void
   void runTest(testConfig);
 });

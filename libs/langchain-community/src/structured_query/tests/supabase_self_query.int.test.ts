@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { createClient } from "@supabase/supabase-js";
 import { Document } from "@langchain/core/documents";

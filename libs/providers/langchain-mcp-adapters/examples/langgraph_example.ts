@@ -22,7 +22,6 @@
  * - Ability to expand the graph with additional nodes for more complex workflows
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import {
   StateGraph,

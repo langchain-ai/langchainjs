@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-process-env */
 import { describe, test } from "@jest/globals";
 import { Cluster } from "couchbase";
 import { OpenAIEmbeddings } from "@langchain/openai";

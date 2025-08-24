@@ -92,7 +92,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const delay = testGeminiModelDelay[modelName] ?? 0;
     if (delay) {
       console.log(`Delaying for ${delay}ms`);
-      // eslint-disable-next-line no-promise-executor-return
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });

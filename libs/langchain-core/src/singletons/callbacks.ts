@@ -46,6 +46,7 @@ export async function consumeCallback<T>(
     }
   } else {
     queue = getQueue();
+    // eslint-disable-next-line no-void
     void queue.add(async () => {
       const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
       if (asyncLocalStorageInstance !== undefined) {

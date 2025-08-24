@@ -630,7 +630,6 @@ export class PGVectorStore extends VectorStore {
       collectionId = await this.getOrCreateCollection();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parameters: unknown[] = [embeddingString, k];
     const whereClauses = [];
 
