@@ -368,9 +368,6 @@ export class RunnableMultiActionAgent extends BaseMultiActionAgent {
   }
 }
 
-/** @deprecated Renamed to RunnableMultiActionAgent. */
-export class RunnableAgent extends RunnableMultiActionAgent {}
-
 /**
  * Interface for input data for creating a LLMSingleActionAgent.
  */

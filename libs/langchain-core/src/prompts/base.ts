@@ -173,48 +173,4 @@ export abstract class BasePromptTemplate<
    * Return the string type key uniquely identifying this class of prompt template.
    */
   abstract _getPromptType(): string;
-
-  /**
-   * Return a json-like object representing this prompt template.
-   * @deprecated
-   */
-  serialize(): SerializedBasePromptTemplate {
-    throw new Error("Use .toJSON() instead");
-  }
-
-  /**
-   * @deprecated
-   * Load a prompt template from a json-like object describing it.
-   *
-   * @remarks
-   * Deserializing needs to be async because templates (e.g. {@link FewShotPromptTemplate}) can
-   * reference remote resources that we read asynchronously with a web
-   * request.
-   */
-  static async deserialize(
-    data: SerializedBasePromptTemplate
-  ): Promise<
-    BasePromptTemplate<InputValues, BasePromptValueInterface, string>
-  > {
-    switch (data._type) {
-      case "prompt": {
-        const { PromptTemplate } = await import("./prompt.js");
-        return PromptTemplate.deserialize(data);
-      }
-      case undefined: {
-        const { PromptTemplate } = await import("./prompt.js");
-        return PromptTemplate.deserialize({ ...data, _type: "prompt" });
-      }
-      case "few_shot": {
-        const { FewShotPromptTemplate } = await import("./few_shot.js");
-        return FewShotPromptTemplate.deserialize(data);
-      }
-      default:
-        throw new Error(
-          `Invalid prompt type in config: ${
-            (data as SerializedBasePromptTemplate)._type
-          }`
-        );
-    }
-  }
 }

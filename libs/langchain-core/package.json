@@ -534,17 +534,6 @@
       },
       "input": "./src/tracers/console.ts"
     },
-    "./tracers/initialize": {
-      "require": {
-        "types": "./dist/tracers/initialize.d.cts",
-        "default": "./dist/tracers/initialize.cjs"
-      },
-      "import": {
-        "types": "./dist/tracers/initialize.d.ts",
-        "default": "./dist/tracers/initialize.js"
-      },
-      "input": "./src/tracers/initialize.ts"
-    },
     "./tracers/log_stream": {
       "require": {
         "types": "./dist/tracers/log_stream.d.cts",

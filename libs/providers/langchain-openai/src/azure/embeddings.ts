@@ -97,8 +97,8 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
       params.defaultHeaders = {
         ...params.defaultHeaders,
         "User-Agent": defaultHeaders["User-Agent"]
-          ? `${defaultHeaders["User-Agent"]}: langchainjs-azure-openai-v2`
-          : `langchainjs-azure-openai-v2`,
+          ? `${defaultHeaders["User-Agent"]}: langchainjs-openai-v2`
+          : `langchainjs-openai-v2`,
       };
 
       this.client = new AzureOpenAIClient({

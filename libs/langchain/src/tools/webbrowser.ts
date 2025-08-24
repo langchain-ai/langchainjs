@@ -175,9 +175,6 @@ export interface WebBrowserArgs extends ToolParams {
 
   requestConfig?: RequestConfig;
 
-  /** @deprecated */
-  callbackManager?: CallbackManager;
-
   textSplitter?: TextSplitter;
 }
 

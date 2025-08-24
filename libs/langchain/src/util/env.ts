@@ -6,6 +6,6 @@ export {
   isNode,
   getEnv,
   type RuntimeEnvironment,
-  getRuntimeEnvironment,
+  getRuntimeEnvironmentSync as getRuntimeEnvironment,
   getEnvironmentVariable,
 } from "@langchain/core/utils/env";

@@ -75,11 +75,6 @@ export interface DallEAPIWrapperParams extends ToolParams {
    */
   dallEResponseFormat?: "url" | "b64_json";
   /**
-   * @deprecated Use dallEResponseFormat instead for the Dall-E response type.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  responseFormat?: any;
-  /**
    * A unique identifier representing your end-user, which will help
    * OpenAI to monitor and detect abuse.
    */
@@ -131,15 +126,6 @@ export class DallEAPIWrapper extends Tool {
   private user?: string;
 
   constructor(fields?: DallEAPIWrapperParams) {
-    // Shim for new base tool param name
-    if (
-      fields?.responseFormat !== undefined &&
-      ["url", "b64_json"].includes(fields.responseFormat)
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      fields.dallEResponseFormat = fields.responseFormat as any;
-      fields.responseFormat = "content";
-    }
     super(fields);
     const openAIApiKey =
       fields?.apiKey ??

@@ -147,7 +147,11 @@ export abstract class BaseRetriever<
   }
 
   /**
-   * Executes a retrieval operation.
+   * Main method used to retrieve relevant documents. It takes a query
+   * string and an optional configuration object, and returns a promise that
+   * resolves to an array of `Document` objects. This method handles the
+   * retrieval process, including starting and ending callbacks, and error
+   * handling.
    *
    * @param input - The query string used to search for relevant documents.
    * @param options - (optional) Configuration options for the retrieval run,
@@ -156,27 +160,8 @@ export abstract class BaseRetriever<
    *          representing the most relevant documents to the query.
    */
   async invoke(
-    input: string,
-    options?: RunnableConfig
-  ): Promise<DocumentInterface<Metadata>[]> {
-    return this.getRelevantDocuments(input, ensureConfig(options));
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
-   *
-   * Main method used to retrieve relevant documents. It takes a query
-   * string and an optional configuration object, and returns a promise that
-   * resolves to an array of `Document` objects. This method handles the
-   * retrieval process, including starting and ending callbacks, and error
-   * handling.
-   * @param query The query string to retrieve relevant documents for.
-   * @param config Optional configuration object for the retrieval process.
-   * @returns A promise that resolves to an array of `Document` objects.
-   */
-  async getRelevantDocuments(
     query: string,
-    config?: Callbacks | BaseCallbackConfig
+    config?: RunnableConfig
   ): Promise<DocumentInterface<Metadata>[]> {
     const parsedConfig = ensureConfig(parseCallbackConfigArg(config));
     const callbackManager_ = await CallbackManager.configure(

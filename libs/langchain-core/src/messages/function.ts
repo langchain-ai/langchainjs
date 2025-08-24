@@ -7,10 +7,6 @@ import {
   type MessageType,
 } from "./base.js";
 
-export interface FunctionMessageFieldsWithName extends BaseMessageFields {
-  name: string;
-}
-
 /**
  * Represents a function message in a conversation.
  */
@@ -19,24 +15,10 @@ export class FunctionMessage extends BaseMessage {
     return "FunctionMessage";
   }
 
-  constructor(fields: FunctionMessageFieldsWithName);
+  constructor(fields: BaseMessageFields);
 
-  constructor(
-    fields: string | BaseMessageFields,
-    /** @deprecated */
-    name: string
-  );
-
-  constructor(
-    fields: string | FunctionMessageFieldsWithName,
-    /** @deprecated */
-    name?: string
-  ) {
-    if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
-      fields = { content: fields, name: name! };
-    }
-    super(fields);
+  constructor(fields: string | BaseMessageFields) {
+    super(typeof fields === "string" ? { content: fields } : fields);
   }
 
   _getType(): MessageType {

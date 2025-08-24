@@ -4,7 +4,7 @@ import {
   AsyncCaller,
   AsyncCallerCallOptions,
 } from "@langchain/core/utils/async_caller";
-import { getRuntimeEnvironment } from "@langchain/core/utils/env";
+import { getRuntimeEnvironmentSync } from "@langchain/core/utils/env";
 import { BaseRunManager } from "@langchain/core/callbacks/manager";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type {
@@ -70,7 +70,7 @@ export abstract class GoogleConnection<
     userAgent: string;
     clientLibraryVersion: string;
   }> {
-    const env = await getRuntimeEnvironment();
+    const env = getRuntimeEnvironmentSync();
     const langchain = env?.library ?? "langchain-js";
     // TODO: Add an API for getting the current LangChain version
     const langchainVersion = "0";
