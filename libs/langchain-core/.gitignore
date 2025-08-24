@@ -158,10 +158,6 @@ tracers/console.cjs
 tracers/console.js
 tracers/console.d.ts
 tracers/console.d.cts
-tracers/initialize.cjs
-tracers/initialize.js
-tracers/initialize.d.ts
-tracers/initialize.d.cts
 tracers/log_stream.cjs
 tracers/log_stream.js
 tracers/log_stream.d.ts

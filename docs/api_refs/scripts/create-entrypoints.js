@@ -44,7 +44,6 @@ const updateJsonFile = (relativePath, updateFunction) => {
 };
 
 const BLACKLISTED_WORKSPACES = [
-  "@langchain/azure-openai",
   "@langchain/google-gauth",
   "@langchain/google-webauth",
 ];

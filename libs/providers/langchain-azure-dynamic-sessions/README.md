@@ -1,4 +1,4 @@
-# @langchain/azure-dynamic-sessions 
+# @langchain/azure-dynamic-sessions
 
 This package contains the [Azure Container Apps dynamic sessions](https://learn.microsoft.com/azure/container-apps/sessions) tool integration.
 
@@ -19,7 +19,6 @@ You can do so by adding appropriate fields to your project's `package.json` like
   "name": "your-project",
   "version": "0.0.0",
   "dependencies": {
-    "@langchain/azure-openai": "^0.0.4",
     "@langchain/core": "^0.3.0"
   },
   "resolutions": {
