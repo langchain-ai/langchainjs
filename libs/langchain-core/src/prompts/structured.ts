@@ -8,9 +8,7 @@ import {
   ChatPromptTemplateInput,
 } from "./chat.js";
 
-function isWithStructuredOutput(
-  x: unknown
-  ): x is {
+function isWithStructuredOutput(x: unknown): x is {
   withStructuredOutput: (...arg: unknown[]) => Runnable;
 } {
   return (
