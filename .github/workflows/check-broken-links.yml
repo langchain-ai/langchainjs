@@ -22,4 +22,4 @@ jobs:
       - name: Build scripts
         run: pnpm build --filter @langchain/scripts
       - name: Check broken links
-        run: pnpm --filter core_docs check:broken-links:ci
+        run: pnpm check:broken-links:ci
