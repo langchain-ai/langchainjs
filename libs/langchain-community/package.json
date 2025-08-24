@@ -69,7 +69,6 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.51.0",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "^2.5.0",
     "@google-cloud/storage": "^7.15.2",
@@ -243,7 +242,6 @@
     "@getmetal/metal-sdk": "*",
     "@getzep/zep-cloud": "^1.0.6",
     "@getzep/zep-js": "^0.9.0",
-    "@gomomento/sdk": "^1.51.0",
     "@gomomento/sdk-core": "^1.51.1",
     "@google-ai/generativelanguage": "*",
     "@google-cloud/storage": "^6.10.1 || ^7.7.0",
@@ -416,9 +414,6 @@
       "optional": true
     },
     "@getzep/zep-js": {
-      "optional": true
-    },
-    "@gomomento/sdk": {
       "optional": true
     },
     "@gomomento/sdk-core": {

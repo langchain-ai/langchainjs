@@ -27,7 +27,6 @@
     "@tsconfig/recommended": "^1.0.10",
     "@xenova/transformers": "^2.17.2",
     "cheerio": "^1.1.2",
-    "handlebars": "^4.7.8",
     "typeorm": "^0.3.25",
     "langchain": "workspace:*",
     "typescript": "^5.0.0"

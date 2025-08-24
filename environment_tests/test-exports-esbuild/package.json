@@ -24,7 +24,6 @@
     "@types/node": "^18.15.11",
     "cheerio": "^1.1.2",
     "esbuild": "^0.17.18",
-    "handlebars": "^4.7.8",
     "langchain": "workspace:*",
     "typeorm": "^0.3.25",
     "typescript": "^5.0.0"

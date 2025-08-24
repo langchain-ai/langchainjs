@@ -52,13 +52,9 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "jest": "^29.5.0",
     "vitest": "^3.2.4"
   },
   "peerDependenciesMeta": {
-    "jest": {
-      "optional": true
-    },
     "vitest": {
       "optional": true
     }
