@@ -523,8 +523,6 @@ export type $InferMessageProperty<
   ? $InferMessageProperties<TStructure, TRole>[K]
   : never;
 
-type MessageContent = string | Array<ContentBlock>;
-
 /**
  * Represents a message object that organizes context for an LLM.
  *
@@ -575,7 +573,7 @@ export interface Message {
   /** Optional name/identifier for the entity that created this message */
   name?: string;
   /** Array of content blocks that make up the message content, typed based on the structure and role */
-  content: MessageContent;
+  content: string | Array<ContentBlock>;
 }
 
 /**
@@ -658,7 +656,7 @@ export class AIMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: MessageContent;
+  content: string | Array<ContentBlock>;
 
   /** Metadata about the AI model response (model provider, model name, etc.) */
   responseMetadata?: $InferMessageProperty<
@@ -835,7 +833,7 @@ export class HumanMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: MessageContent;
+  content: string | Array<ContentBlock>;
 
   /** Metadata associated with the human message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "human", "metadata">;
@@ -979,7 +977,7 @@ export class SystemMessage<
   name?: string;
 
   /** Array of content blocks that make up the message content */
-  content: MessageContent;
+  content: string | Array<ContentBlock>;
 
   /** Metadata associated with the system message */
   metadata?: $InferMessageProperty<TStructure, "system", "metadata">;
@@ -1128,7 +1126,7 @@ export class ToolMessage<
   status: "success" | "error";
 
   /** Array of content blocks that make up the message content */
-  content: MessageContent;
+  content: string | Array<ContentBlock>;
 
   /** Metadata associated with the tool message, as defined by the message structure */
   metadata?: $InferMessageProperty<TStructure, "tool", "metadata">;
