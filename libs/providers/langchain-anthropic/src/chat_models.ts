@@ -13,16 +13,11 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import {
   type StructuredOutputMethodOptions,
-  type BaseLanguageModelInput,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
   InteropZodType,
   isInteropZodSchema,
@@ -622,9 +617,10 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
  * <br />
  */
 export class ChatAnthropicMessages<
-    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions
+    CallOptions extends ChatAnthropicCallOptions = ChatAnthropicCallOptions,
+    RunOutput = AIMessageChunk
   >
-  extends BaseChatModel<CallOptions, AIMessageChunk>
+  extends BaseChatModel<CallOptions, RunOutput>
   implements AnthropicInput
 {
   static lc_name() {
@@ -791,7 +787,7 @@ export class ChatAnthropicMessages<
   override bindTools(
     tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): this {
     return this.withConfig({
       tools: this.formatStructuredToolToAnthropic(tools),
       ...kwargs,
@@ -1093,7 +1089,7 @@ export class ChatAnthropicMessages<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): ChatAnthropicMessages<CallOptions, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1104,7 +1100,10 @@ export class ChatAnthropicMessages<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): ChatAnthropicMessages<
+    CallOptions,
+    { raw: AIMessageChunk; parsed: RunOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1116,10 +1115,10 @@ export class ChatAnthropicMessages<
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
+    | BaseChatModel<CallOptions, RunOutput>
+    | BaseChatModel<
+        CallOptions,
+        { raw: AIMessageChunk; parsed: RunOutput | null }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: InteropZodType<RunOutput> | Record<string, any> =
@@ -1130,6 +1129,12 @@ export class ChatAnthropicMessages<
     if (method === "jsonMode") {
       throw new Error(`Anthropic only supports "functionCalling" as a method.`);
     }
+    const thinkingAdmonition =
+      "Anthropic structured output relies on forced tool calling, " +
+      "which is not supported when `thinking` is enabled. This method will raise " +
+      "OutputParserException if tool calls are not " +
+      "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
+      "the tool is called.";
 
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
@@ -1148,6 +1153,8 @@ export class ChatAnthropicMessages<
         returnSingle: true,
         keyName: functionName,
         zodSchema: schema,
+        errorMsgIfNoToolCalls:
+          this.thinking?.type === "enabled" ? thinkingAdmonition : undefined,
       });
     } else {
       let anthropicTools: Anthropic.Messages.Tool;
@@ -1170,19 +1177,13 @@ export class ChatAnthropicMessages<
       outputParser = new AnthropicToolsOutputParser<RunOutput>({
         returnSingle: true,
         keyName: functionName,
+        errorMsgIfNoToolCalls:
+          this.thinking?.type === "enabled" ? thinkingAdmonition : undefined,
       });
     }
-    let llm;
+    let llm: this;
     if (this.thinking?.type === "enabled") {
-      const thinkingAdmonition =
-        "Anthropic structured output relies on forced tool calling, " +
-        "which is not supported when `thinking` is enabled. This method will raise " +
-        "OutputParserException if tool calls are not " +
-        "generated. Consider disabling `thinking` or adjust your prompt to ensure " +
-        "the tool is called.";
-
       console.warn(thinkingAdmonition);
-
       llm = this.withConfig({
         tools,
         ls_structured_output_format: {
@@ -1190,15 +1191,6 @@ export class ChatAnthropicMessages<
           schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
-
-      const raiseIfNoToolCalls = (message: AIMessageChunk) => {
-        if (!message.tool_calls || message.tool_calls.length === 0) {
-          throw new Error(thinkingAdmonition);
-        }
-        return message;
-      };
-
-      llm = llm.pipe(raiseIfNoToolCalls);
     } else {
       llm = this.withConfig({
         tools,
@@ -1214,32 +1206,16 @@ export class ChatAnthropicMessages<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatAnthropicStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+      return llm.withOutputParser(outputParser);
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AIMessageChunk, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config).catch(() => null),
+      })
+    );
+    return llm.withOutputParser(parserWithRaw);
   }
 }
 
