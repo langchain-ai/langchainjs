@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { StructuredTool, tool } from "@langchain/core/tools";
 
 import {
@@ -776,9 +776,9 @@ describe("ToolNode with Commands", () => {
   });
 });
 
-describe("ToolNode should raise GraphInterrupt", () => {
+describe("ToolNode error handling", () => {
   it("should raise GraphInterrupt", async () => {
-    const toolWithInterrupt = tool(
+    const toolWithError = tool(
       async (_) => {
         throw new GraphInterrupt();
       },
@@ -788,7 +788,7 @@ describe("ToolNode should raise GraphInterrupt", () => {
         schema: z.object({}),
       }
     );
-    const toolNode = new ToolNode([toolWithInterrupt]);
+    const toolNode = new ToolNode([toolWithError]);
     await expect(
       toolNode.invoke({
         messages: [
@@ -801,5 +801,36 @@ describe("ToolNode should raise GraphInterrupt", () => {
         ],
       })
     ).rejects.toThrow(GraphInterrupt);
+  });
+
+  it("should throw if handleToolErrors is false", async () => {
+    const onToolCallError = vi.fn();
+    const toolWithError = tool(
+      async (_) => {
+        throw new Error("some error");
+      },
+      {
+        name: "tool_with_interrupt",
+        description: "A tool that returns an interrupt",
+        schema: z.object({}),
+      }
+    );
+    const toolNode = new ToolNode([toolWithError], {
+      handleToolErrors: false,
+      onToolCallError,
+    });
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { name: "tool_with_interrupt", args: {}, id: "testid" },
+            ],
+          }),
+        ],
+      })
+    ).rejects.toThrow(/some error/);
+    expect(onToolCallError).toHaveBeenCalledTimes(0);
   });
 });

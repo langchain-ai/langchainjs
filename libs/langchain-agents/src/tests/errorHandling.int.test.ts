@@ -1,3 +1,5 @@
+"use strict";
+
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
@@ -10,7 +12,7 @@ import z from "zod";
 
 import { createAgent } from "../index.js";
 
-import errorHandlingSpec from "./specifications/errorHandling.json" with { type: "json" };
+import errorHandlingSpec from "./specifications/errorHandling.json";
 
 interface TestScenario {
   /**

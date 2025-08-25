@@ -39,9 +39,31 @@ export interface ToolNodeOptions<
     >,
     "onToolCallError"
   > {
+  /**
+   * The name of the tool node.
+   */
   name?: string;
+  /**
+   * The tags to add to the tool call.
+   */
   tags?: string[];
+  /**
+   * The abort signal to cancel the tool call.
+   */
   signal?: AbortSignal;
+  /**
+   * Whether to throw the error immediately if the tool fails or handle it by the `onToolError` function or via ToolMessage.
+   *
+   * If `true` (default):
+   *   - the error can be handled by the `onToolError` function if provided or
+   *   - a tool message with the error message will be returned to the LLM
+   *
+   * If `false`:
+   *   - the error will be thrown immediately
+   *
+   * @default true
+   */
+  handleToolErrors?: boolean;
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -186,11 +208,13 @@ export class ToolNode<
 
   signal?: AbortSignal;
 
+  handleToolErrors = true;
+
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
     public options?: ToolNodeOptions
   ) {
-    const { name, tags } = options ?? {};
+    const { name, tags, handleToolErrors } = options ?? {};
     super({
       name,
       tags,
@@ -202,6 +226,7 @@ export class ToolNode<
         ),
     });
     this.tools = tools;
+    this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
     this.signal = options?.signal;
   }
 
@@ -237,6 +262,13 @@ export class ToolNode<
         tool_call_id: call.id!,
       });
     } catch (e: unknown) {
+      /**
+       * throw the error if user prefers not to handle tool errors
+       */
+      if (!this.handleToolErrors) {
+        throw e;
+      }
+
       if (isGraphInterrupt(e)) {
         /**
          * `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
