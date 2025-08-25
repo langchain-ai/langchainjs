@@ -1,5 +1,6 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
+import { convertV0ContentBlockToV1 } from "./block_translators/legacy.js";
 import { ContentBlock } from "./content/index.js";
 import { isDataContentBlock } from "./content/data.js";
 
@@ -60,8 +61,9 @@ export interface FunctionCall {
 }
 
 export type BaseMessageFields = {
-  content: MessageContent;
   name?: string;
+  content?: MessageContent;
+  contentBlocks?: Array<ContentBlock.Standard>;
   additional_kwargs?: {
     /**
      * @deprecated Use "tool_calls" field on AIMessages instead
@@ -103,7 +105,7 @@ export function mergeContent(
           type: "text",
           source_type: "text",
           text: firstContent,
-        } as PlainTextContentBlock,
+        },
         ...secondContent,
       ];
     } else {
@@ -130,7 +132,7 @@ export function mergeContent(
           type: "file",
           source_type: "text",
           text: secondContent,
-        } as PlainTextContentBlock,
+        },
       ];
     } else {
       return [...firstContent, { type: "text", text: secondContent }];
@@ -189,10 +191,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
  */
-export abstract class BaseMessage
-  extends Serializable
-  implements BaseMessageFields
-{
+export abstract class BaseMessage extends Serializable {
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -283,10 +282,28 @@ export abstract class BaseMessage
     }
     super(fields);
     this.name = fields.name;
-    this.content = fields.content;
+    this.content = fields.content ?? fields.contentBlocks ?? [];
     this.additional_kwargs = fields.additional_kwargs;
     this.response_metadata = fields.response_metadata;
     this.id = fields.id;
+  }
+
+  get contentBlocks(): Array<ContentBlock.Standard> {
+    const blocks: Array<ContentBlock> = [];
+    if (typeof this.content === "string") {
+      blocks.push({ type: "text", text: this.content });
+    } else {
+      for (const item of this.content) {
+        if (typeof item === "string") {
+          blocks.push({ type: "text", text: item });
+        } else {
+          const converted = convertV0ContentBlockToV1(item);
+          if (converted !== item) blocks.push(converted);
+          else blocks.push(item as ContentBlock.Standard);
+        }
+      }
+    }
+    return blocks as Array<ContentBlock.Standard>;
   }
 
   toDict(): StoredMessage {

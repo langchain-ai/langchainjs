@@ -5,19 +5,16 @@ import {
   _mergeDicts,
   type MessageType,
   type BaseMessageFields,
-  type MessageContentComplex,
+  type MessageContent,
 } from "./base.js";
-import type { DataContentBlock } from "./content_blocks.js";
 
-export type SystemMessageFields = BaseMessageFields & {
-  content: string | (MessageContentComplex | DataContentBlock)[];
-};
+export type SystemMessageFields = BaseMessageFields;
 
 /**
  * Represents a system message in a conversation.
  */
 export class SystemMessage extends BaseMessage {
-  declare content: string | (MessageContentComplex | DataContentBlock)[];
+  declare content: MessageContent;
 
   static lc_name() {
     return "SystemMessage";
@@ -41,7 +38,7 @@ export class SystemMessage extends BaseMessage {
  * other system message chunks.
  */
 export class SystemMessageChunk extends BaseMessageChunk {
-  declare content: string | (MessageContentComplex | DataContentBlock)[];
+  declare content: MessageContent;
 
   static lc_name() {
     return "SystemMessageChunk";

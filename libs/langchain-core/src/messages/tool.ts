@@ -7,13 +7,10 @@ import {
   type MessageType,
   _mergeObj,
   _mergeStatus,
-  type MessageContentComplex,
+  type MessageContent,
 } from "./base.js";
-import type { DataContentBlock } from "./content_blocks.js";
 
-export interface ToolMessageFields extends BaseMessageFields {
-  content: string | (MessageContentComplex | DataContentBlock)[];
-}
+export type ToolMessageFields = BaseMessageFields;
 
 export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
   /**
@@ -57,7 +54,7 @@ export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
  * Represents a tool message in a conversation.
  */
 export class ToolMessage extends BaseMessage implements DirectToolOutput {
-  declare content: string | (MessageContentComplex | DataContentBlock)[];
+  declare content: MessageContent;
 
   static lc_name() {
     return "ToolMessage";
@@ -133,7 +130,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
  * with other tool message chunks.
  */
 export class ToolMessageChunk extends BaseMessageChunk {
-  declare content: string | (MessageContentComplex | DataContentBlock)[];
+  declare content: MessageContent;
 
   tool_call_id: string;
 
