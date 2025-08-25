@@ -1,7 +1,4 @@
-import type {
-  StructuredToolInterface,
-  ToolInterface,
-} from "@langchain/core/tools";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { CallbackManager, Callbacks } from "@langchain/core/callbacks/manager";
 import { BasePromptTemplate } from "@langchain/core/prompts";
@@ -673,7 +670,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   static async deserialize(
     data: SerializedAgent & {
       llm?: BaseLanguageModelInterface;
-      tools?: ToolInterface[];
+      tools?: StructuredToolInterface[];
     }
   ): Promise<Agent> {
     switch (data._type) {

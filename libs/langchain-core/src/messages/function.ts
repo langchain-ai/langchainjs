@@ -15,8 +15,6 @@ export class FunctionMessage extends BaseMessage {
     return "FunctionMessage";
   }
 
-  constructor(fields: BaseMessageFields);
-
   constructor(fields: string | BaseMessageFields) {
     super(typeof fields === "string" ? { content: fields } : fields);
   }
