@@ -235,7 +235,14 @@ export class ChatBaiduQianfan
   constructor(fields?: Partial<BaiduQianfanChatInput> & BaseChatModelParams) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
 
     if (!this.model) {
       throw new Error(`Please provide a "model" parameter`);

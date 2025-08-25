@@ -120,10 +120,6 @@ export interface ChatMistralAIInput
    */
   apiKey?: string;
   /**
-   * @deprecated Use `model` instead.
-   */
-  modelName?: string;
-  /**
    * The name of the model to use.
    * @default {"mistral-small-latest"}
    */
@@ -988,7 +984,14 @@ export class ChatMistralAI<
     this.seed = this.randomSeed;
     this.maxRetries = fields?.maxRetries;
     this.httpClient = fields?.httpClient;
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     this.beforeRequestHooks =
       fields?.beforeRequestHooks ?? this.beforeRequestHooks;

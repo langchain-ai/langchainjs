@@ -88,7 +88,14 @@ export class GoogleGenerativeAIEmbeddings
 
   constructor(fields?: GoogleGenerativeAIEmbeddingsParams) {
     super(fields ?? {});
-    this.model = fields?.model?.replace(/^models\//, "") ?? this.model;
+    /**
+     * ToDo: remove in v2
+     */
+    const modelName =
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName?.replace(/^models\//, "") ?? this.modelName;
+    this.model =
+      fields?.model?.replace(/^models\//, "") ?? modelName ?? this.model;
     this.taskType = fields?.taskType ?? this.taskType;
     this.title = fields?.title ?? this.title;
 

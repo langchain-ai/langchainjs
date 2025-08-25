@@ -147,7 +147,14 @@ export class DallEAPIWrapper extends Tool {
       baseURL: fields?.baseUrl,
     };
     this.client = new OpenAIClient(clientConfig);
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.style = fields?.style ?? this.style;
     this.quality = fields?.quality ?? this.quality;
     this.n = fields?.n ?? this.n;

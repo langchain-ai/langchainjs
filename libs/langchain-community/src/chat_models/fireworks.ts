@@ -498,7 +498,13 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     super({
       ...fields,
       model:
-        fields?.model || "accounts/fireworks/models/llama-v3p1-8b-instruct",
+        fields?.model ??
+        /**
+         * ToDo: remove in v2
+         */
+        // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+        fields?.modelName ??
+        "accounts/fireworks/models/llama-v3p1-8b-instruct",
       apiKey: fireworksApiKey,
       configuration: {
         baseURL: "https://api.fireworks.ai/inference/v1",

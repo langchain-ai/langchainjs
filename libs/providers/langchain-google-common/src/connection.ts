@@ -255,9 +255,6 @@ export abstract class GoogleAIConnection<
 {
   model: string;
 
-  /** @deprecated Use `model` instead */
-  modelName: string;
-
   client: GoogleAbstractedClient;
 
   _apiName?: string;
@@ -272,7 +269,14 @@ export abstract class GoogleAIConnection<
   ) {
     super(fields, caller, client, streaming);
     this.client = client;
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
 
     this._apiName = fields?.apiName;
     this.apiConfig = {

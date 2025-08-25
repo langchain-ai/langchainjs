@@ -240,7 +240,14 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.model = fields?.model ?? "glm-3-turbo";
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      "glm-3-turbo";
     this.doSample = fields.doSample;
   }
 

@@ -60,7 +60,14 @@ export class ZhipuAIEmbeddings
   constructor(fields?: ZhipuAIEmbeddingsParams) {
     super(fields ?? {});
 
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
     this.apiKey = fields?.apiKey ?? getEnvironmentVariable("ZHIPUAI_API_KEY");
 

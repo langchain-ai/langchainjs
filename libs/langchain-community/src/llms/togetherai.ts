@@ -180,7 +180,14 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
     this.topP = inputs?.topP ?? this.topP;
-    this.model = inputs.model ?? "";
+    this.model =
+      inputs.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      inputs?.modelName ??
+      "";
     this.streaming = inputs.streaming ?? this.streaming;
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;

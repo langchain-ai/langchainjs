@@ -151,7 +151,13 @@ export function copyAIModelParamsInto(
   target: GoogleAIModelParams
 ): GoogleAIModelRequestParams {
   const ret: GoogleAIModelRequestParams = target || {};
-  ret.model = options?.model ?? params?.model ?? target.model;
+  /**
+   * ToDo: remove in v2
+   */
+  // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+  const modelName = options?.modelName ?? params?.modelName ?? target.modelName;
+  ret.model = options?.model ?? params?.model ?? target.model ?? modelName;
+
   ret.temperature =
     options?.temperature ?? params?.temperature ?? target.temperature;
   ret.maxOutputTokens =

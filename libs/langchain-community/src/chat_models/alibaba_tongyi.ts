@@ -271,7 +271,14 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
-    this.model = fields?.model ?? "qwen-turbo";
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      "qwen-turbo";
   }
 
   /**

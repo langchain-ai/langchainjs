@@ -120,7 +120,14 @@ export class BaiduQianfanEmbeddings
       throw new Error("Please provide AK/SK");
     }
 
-    this.model = fieldsWithDefaults?.model ?? this.model;
+    this.model =
+      fieldsWithDefaults?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fieldsWithDefaults?.modelName ??
+      this.model;
 
     if (this.model === "tao-8k") {
       if (fieldsWithDefaults?.batchSize && fieldsWithDefaults.batchSize !== 1) {

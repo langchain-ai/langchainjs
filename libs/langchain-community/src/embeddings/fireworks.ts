@@ -77,7 +77,14 @@ export class FireworksEmbeddings
       throw new Error("Fireworks AI API key not found");
     }
 
-    this.model = fieldsWithDefaults?.model ?? this.model;
+    this.model =
+      fieldsWithDefaults?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fieldsWithDefaults?.modelName ??
+      this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;

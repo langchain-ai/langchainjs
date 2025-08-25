@@ -146,7 +146,14 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     if (
       (this.model?.startsWith("gpt-3.5-turbo") ||
         this.model?.startsWith("gpt-4") ||

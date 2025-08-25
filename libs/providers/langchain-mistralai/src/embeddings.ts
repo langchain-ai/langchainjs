@@ -112,7 +112,14 @@ export class MistralAIEmbeddings
     }
     this.apiKey = apiKey;
     this.serverURL = fields?.serverURL ?? this.serverURL;
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.encodingFormat = fields?.encodingFormat ?? this.encodingFormat;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;

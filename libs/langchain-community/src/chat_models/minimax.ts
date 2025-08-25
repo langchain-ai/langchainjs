@@ -430,7 +430,14 @@ export class ChatMinimax
     this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
     this.defaultBotName = fields?.defaultBotName ?? this.defaultBotName;
 
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;
     this.headers = fields?.configuration?.headers ?? this.headers;
     this.proVersion = fields?.proVersion ?? this.proVersion;

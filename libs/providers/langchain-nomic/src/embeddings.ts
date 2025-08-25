@@ -88,7 +88,14 @@ export class NomicEmbeddings
       throw new Error("NOMIC_API_KEY is required.");
     }
     this.client = new AtlasUser({ apiKey });
-    this.model = fields?.model ?? this.model;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.taskType = fields?.taskType ?? this.taskType;
     this.batchSize = fields?.batchSize ?? this.batchSize;
     this.stripNewLines = fields?.stripNewLines ?? this.stripNewLines;
