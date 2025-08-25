@@ -383,7 +383,7 @@ export abstract class BaseChatOpenAI<
   get lc_aliases(): Record<string, string> {
     return {
       apiKey: "openai_api_key",
-      modelName: "model",
+      model: "model_name",
     };
   }
 
