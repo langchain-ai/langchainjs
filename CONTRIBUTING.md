@@ -44,7 +44,7 @@ prepare-matrix:
   needs: get-changed-files
   runs-on: ubuntu-latest
   env:
-    PACKAGES: "anthropic,azure-openai,cloudflare,<your-package>"
+    PACKAGES: "anthropic,cloudflare,<your-package>"
     ...
 ```
 

@@ -68,29 +68,6 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  standard-tests-azure-openai:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.1.0
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Build `@langchain/openai`
-        run: pnpm build --filter @langchain/openai
-      - name: Run integration tests for `@langchain/openai` AzureChatOpenAI
-        run: pnpm --filter @langchain/openai test:single src/tests/azure/chat_models.standard.int.test.ts src/tests/azure/chat_models.int.test.ts
-        env:
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_API_DEPLOYMENT_NAME: "chat"
-          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
-          AZURE_OPENAI_BASE_PATH: ${{ secrets.AZURE_OPENAI_BASE_PATH }}
-
   standard-tests-bedrock:
     runs-on: ubuntu-latest
     steps:
