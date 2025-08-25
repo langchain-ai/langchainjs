@@ -591,7 +591,7 @@ export function tool<SchemaT extends ZodStringV3, ToolOutputT = ToolOutputType>(
     ToolOutputT,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ): DynamicTool<ToolOutputT>;
 
 export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
@@ -600,7 +600,7 @@ export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
     ToolOutputT,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ): DynamicTool<ToolOutputT>;
 
 export function tool<
@@ -610,7 +610,7 @@ export function tool<
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
@@ -620,7 +620,7 @@ export function tool<
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
@@ -634,7 +634,7 @@ export function tool<
     ToolOutputT,
     ToolRunnableConfig
   >,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ): DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>;
 
 export function tool<
@@ -647,13 +647,13 @@ export function tool<
   ToolOutputT = ToolOutputType
 >(
   func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
-  fields: ToolWrapperParams<SchemaT>
+  fields?: ToolWrapperParams<SchemaT>
 ):
   | DynamicStructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT>
   | DynamicTool<ToolOutputT> {
-  const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
-  const isStringJSONSchema = validatesOnlyStrings(fields.schema);
-  const toolName = fields.name ?? func.name;
+  const isSimpleStringSchema = isSimpleStringZodSchema(fields?.schema);
+  const isStringJSONSchema = validatesOnlyStrings(fields?.schema);
+  const toolName = fields?.name ?? func.name;
 
   if (!toolName) {
     throw new Error(
@@ -662,13 +662,13 @@ export function tool<
   }
 
   // If the schema is not provided, or it's a simple string schema, create a DynamicTool
-  if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
+  if (!fields?.schema || isSimpleStringSchema || isStringJSONSchema) {
     return new DynamicTool<ToolOutputT>({
       ...fields,
       name: toolName,
       description:
-        fields.description ??
-        (fields.schema as { description?: string } | undefined)?.description ??
+        fields?.description ??
+        (fields?.schema as { description?: string } | undefined)?.description ??
         `${toolName} tool`,
       func: async (input, runManager, config) => {
         return new Promise<ToolOutputT>((resolve, reject) => {
@@ -692,7 +692,7 @@ export function tool<
     });
   }
 
-  const schema = fields.schema as InteropZodObject | JSONSchema;
+  const schema = fields?.schema as InteropZodObject | JSONSchema;
 
   const description =
     fields.description ??

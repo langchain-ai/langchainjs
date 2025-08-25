@@ -12,6 +12,13 @@ import {
 import { ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 
+test("should not require any fields", () => {
+  const t = tool(function myTool() {
+    return "Sunny";
+  });
+  expect(t.name).toBe("myTool");
+});
+
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
     location: z.string(),
