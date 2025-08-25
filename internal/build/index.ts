@@ -79,7 +79,7 @@ async function buildProject(
    */
   const buildChecks = {
     unused:
-      !watch && !opts.skipUnused && false
+      !watch && !opts.skipUnused
         ? ({
             root: path,
             level: "error" as const,

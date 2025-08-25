@@ -30,8 +30,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.56.0",
-    "fast-xml-parser": "^4.4.1"
+    "@anthropic-ai/sdk": "^0.56.0"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
