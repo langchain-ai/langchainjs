@@ -1,3 +1,3 @@
-import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
+const { awaitAllCallbacks } = require("@langchain/core/callbacks/promises");
 
 afterAll(awaitAllCallbacks);
