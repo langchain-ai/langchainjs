@@ -1,6 +1,4 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
-import type { ZodType as ZodTypeV3 } from "zod/v3";
-import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 
 import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
@@ -26,6 +24,7 @@ import {
   InteropZodObject,
   InteropZodType,
 } from "../utils/types/zod.js";
+import { type AIMessage, type AIMessageChunk } from "../messages/ai.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -279,6 +278,8 @@ export type BaseLanguageModelInput =
   | BasePromptValueInterface
   | string
   | BaseMessageLike[];
+
+export type AnyAIMessage = AIMessage | AIMessageChunk;
 
 export type StructuredOutputType = InferInteropZodOutput<InteropZodObject>;
 
@@ -560,15 +561,15 @@ export abstract class BaseLanguageModel<
     throw new Error("Use .toJSON() instead");
   }
 
-  withStructuredOutput?<Output>(
+  withStructuredOutput?<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): BaseLanguageModel<BaseMessage, CallOptions>;
+  ): BaseLanguageModel<Output, CallOptions>;
 
-  withStructuredOutput?<Output>(
+  withStructuredOutput?<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
-    config?: StructuredOutputMethodOptions<true>
-  ): BaseLanguageModel<{ raw: BaseMessage; parsed: Output }, CallOptions>;
+    config: StructuredOutputMethodOptions<true>
+  ): BaseLanguageModel<{ raw: AnyAIMessage; parsed: Output }, CallOptions>;
 
   /**
    * Model wrapper that returns outputs formatted to match the given schema.
@@ -581,14 +582,14 @@ export abstract class BaseLanguageModel<
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
    * @param {boolean | undefined} [includeRaw=false] Whether to include the raw output in the result. Defaults to false.
-   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
+   * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: AnyAIMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
-  withStructuredOutput?<Output>(
+  withStructuredOutput?<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
   ):
-    | BaseLanguageModel<BaseMessage, CallOptions>
-    | BaseLanguageModel<{ raw: BaseMessage; parsed: Output }, CallOptions>;
+    | BaseLanguageModel<Output, CallOptions>
+    | BaseLanguageModel<{ raw: AnyAIMessage; parsed: Output }, CallOptions>;
 }
 
 /**

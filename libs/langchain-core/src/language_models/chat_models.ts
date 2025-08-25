@@ -5,7 +5,6 @@ import {
   type BaseMessageLike,
   HumanMessage,
   coerceMessageLikeToMessage,
-  AIMessageChunk,
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
@@ -29,13 +28,14 @@ import {
   type BaseLanguageModelCallOptions,
   type BaseLanguageModelInput,
   type BaseLanguageModelParams,
+  type AnyAIMessage,
 } from "./base.js";
 import {
   CallbackManager,
   type CallbackManagerForLLMRun,
   type Callbacks,
 } from "../callbacks/manager.js";
-import type { RunnableConfig } from "../runnables/config.js";
+import { mergeConfigs, type RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/base.js";
 import {
   StructuredToolInterface,
@@ -180,10 +180,10 @@ export type BindToolsInput =
   | RunnableToolLike
   | StructuredToolParams;
 
-export type ChatModelOutputParser<T = unknown> = Runnable<BaseMessage, T>;
-export type InferChatModelOutputParser<TOutput> = TOutput extends BaseMessage
-  ? ChatModelOutputParser<TOutput>
-  : undefined;
+export type ChatModelOutputParser<T = unknown> = Runnable<AnyAIMessage, T>;
+export type InferChatModelOutputParser<TOutput> = TOutput extends AnyAIMessage
+  ? undefined
+  : ChatModelOutputParser<TOutput>;
 
 /**
  * Base class for chat models. It extends the BaseLanguageModel class and
@@ -191,7 +191,7 @@ export type InferChatModelOutputParser<TOutput> = TOutput extends BaseMessage
  */
 export abstract class BaseChatModel<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
-  TOutput = BaseMessage
+  TOutput = AnyAIMessage
 > extends BaseLanguageModel<TOutput, CallOptions> {
   // Backwards compatibility since fields have been moved to RunnableConfig
   declare ParsedCallOptions: Omit<
@@ -214,11 +214,8 @@ export abstract class BaseChatModel<
 
   protected _combineCallOptions(
     additionalOptions?: Partial<CallOptions>
-  ): CallOptions {
-    return {
-      ...this.defaultOptions,
-      ...additionalOptions,
-    };
+  ): Partial<CallOptions> {
+    return mergeConfigs(this.defaultOptions, additionalOptions);
   }
 
   protected async _parseOutput(output: BaseMessage): Promise<TOutput> {
@@ -237,7 +234,9 @@ export abstract class BaseChatModel<
   ): [RunnableConfig, this["ParsedCallOptions"]] {
     // For backwards compat, keep `signal` in both runnableConfig and callOptions
     const [runnableConfig, callOptions] =
-      super._separateRunnableConfigFromCallOptions(options);
+      super._separateRunnableConfigFromCallOptions(
+        this._combineCallOptions(options)
+      );
     (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
@@ -250,10 +249,7 @@ export abstract class BaseChatModel<
    * matching the provider's specific tool schema.
    * @param kwargs Any additional parameters to bind.
    */
-  abstract bindTools?(
-    tools: BindToolsInput[],
-    options?: Partial<CallOptions>
-  ): BaseChatModel<CallOptions, TOutput>;
+  bindTools?(tools: BindToolsInput[], options?: Partial<CallOptions>): this;
 
   /**
    * Invokes the chat model with a single input.
@@ -298,9 +294,8 @@ export abstract class BaseChatModel<
     } else {
       const prompt = BaseChatModel._convertInputToPromptValue(input);
       const messages = prompt.toChatMessages();
-      const combinedOptions = this._combineCallOptions(options);
       const [runnableConfig, callOptions] =
-        this._separateRunnableConfigFromCallOptionsCompat(combinedOptions);
+        this._separateRunnableConfigFromCallOptionsCompat(options);
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
@@ -936,7 +931,7 @@ export abstract class BaseChatModel<
   }
 
   /** @internal */
-  protected withOutputParser<TOutput>(
+  protected withOutputParser<TOutput extends Record<string, unknown>>(
     outputParser: ChatModelOutputParser<TOutput>
   ): BaseChatModel<CallOptions, TOutput> {
     const Cls = this.constructor as Constructor<
@@ -948,29 +943,29 @@ export abstract class BaseChatModel<
     return instance;
   }
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
   ): BaseChatModel<CallOptions, Output>;
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
-    config?: StructuredOutputMethodOptions<true>
-  ): BaseChatModel<CallOptions, { raw: BaseMessage; parsed: Output }>;
+    config: StructuredOutputMethodOptions<true>
+  ): BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: Output }>;
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | BaseChatModel<CallOptions, Output>
-    | BaseChatModel<CallOptions, { raw: BaseMessage; parsed: Output }>;
+    | BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: Output }>;
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
   ):
     | BaseChatModel<CallOptions, Output>
-    | BaseChatModel<CallOptions, { raw: BaseMessage; parsed: Output }> {
+    | BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: Output }> {
     if (typeof this.bindTools !== "function") {
       throw new Error(
         `Chat model must implement ".bindTools()" to use withStructuredOutput.`
@@ -1022,8 +1017,8 @@ export abstract class BaseChatModel<
     }
 
     const llm = this.bindTools(tools);
-    const toolMessageParser = RunnableLambda.from<AIMessageChunk, Output>(
-      (input: AIMessageChunk): Output => {
+    const toolMessageParser = RunnableLambda.from<AnyAIMessage, Output>(
+      (input: AnyAIMessage): Output => {
         if (!input.tool_calls || input.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }
@@ -1046,12 +1041,12 @@ export abstract class BaseChatModel<
     }
 
     const rawOutputParser = RunnableLambda.from<
-      AIMessageChunk,
-      { raw: BaseMessage; parsed: Output }
+      AnyAIMessage,
+      { raw: AnyAIMessage; parsed: Output }
     >(
       async (
-        input: AIMessageChunk
-      ): Promise<{ raw: BaseMessage; parsed: Output }> => {
+        input: AnyAIMessage
+      ): Promise<{ raw: AnyAIMessage; parsed: Output }> => {
         return {
           raw: input,
           parsed: await toolMessageParser.invoke(input),

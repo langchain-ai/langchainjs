@@ -60,27 +60,23 @@ class SimpleChatModel<
     }
   }
 
-  withConfig(config: SimpleChatModelCallOptions) {
-    return super.withConfig(config);
-  }
-
   bindTools(tools: BindToolsInput[]) {
     return this.withConfig({
-      tools: [...(this.defaultOptions.tools ?? []), ...tools],
+      tools: [...(this.defaultOptions?.tools ?? []), ...tools],
     });
   }
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
   ): SimpleChatModel<CallOptions, Output>;
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
-    config?: StructuredOutputMethodOptions<true>
+    config: StructuredOutputMethodOptions<true>
   ): SimpleChatModel<CallOptions, { raw: BaseMessage; parsed: Output }>;
 
-  withStructuredOutput<Output>(
+  withStructuredOutput<Output extends Record<string, unknown>>(
     schema: InteropZodType<Output> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -114,7 +110,7 @@ describe("SimpleChatModel", () => {
           bar: z.string(),
         })
       );
-    expect(model.defaultOptions.tools?.length).toBe(2);
+    expect(model.defaultOptions.tools?.length).toBe(3); // + 1 structured output
     expect(model.outputParser).toBeDefined();
   });
 
