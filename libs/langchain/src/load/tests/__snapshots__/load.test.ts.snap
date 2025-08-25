@@ -122,7 +122,7 @@ kwargs:
       - openai
       - ChatOpenAI
     kwargs:
-      model_name: gpt-4o-mini
+      model: gpt-4o-mini
       openai_api_key:
         lc: 1
         type: secret
