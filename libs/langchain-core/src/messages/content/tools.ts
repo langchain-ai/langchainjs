@@ -120,7 +120,7 @@ export declare namespace Tools {
     /**
      * Type of the content block
      */
-    readonly type: "code_interpreter";
+    readonly type: "code_interpreter_call";
     /**
      * The language of the code executed by the code interpreter tool call
      */
@@ -165,7 +165,7 @@ export declare namespace Tools {
     output: CodeInterpreterOutput[];
   }
 
-  export type ContentBlock =
+  export type Standard =
     | ToolCall
     | ToolCallChunk
     | InvalidToolCall
