@@ -28,7 +28,6 @@ node "update_resolutions_latest.js"
 
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
-cat ./package.json
 pnpm install --no-frozen-lockfile
 
 # Navigate into `@langchain/google-vertexai` to build and run tests
