@@ -11,10 +11,12 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+} from "../messages/index.js";
+import {
   convertToOpenAIImageBlock,
   isURLContentBlock,
   isBase64ContentBlock,
-} from "../messages/index.js";
+} from "../messages/content/data.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,

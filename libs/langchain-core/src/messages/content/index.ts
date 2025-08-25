@@ -7,6 +7,7 @@ import {
   KNOWN_BLOCK_TYPES as KNOWN_MULTIMODAL_BLOCK_TYPES,
   type Multimodal,
 } from "./multimodal.js";
+import { type Data } from "./data.js";
 
 export type ContentBlock = BaseContentBlock;
 
@@ -103,6 +104,7 @@ export declare namespace ContentBlock {
 
   export { Tools };
   export { Multimodal };
+  export { Data };
 
   export type Standard =
     | Text
