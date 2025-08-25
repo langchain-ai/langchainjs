@@ -29,6 +29,10 @@ export declare namespace ContentBlock {
      */
     readonly type: "citation";
     /**
+     * Source type for the citation.
+     */
+    source?: string;
+    /**
      * URL of the document source
      */
     url?: string;
@@ -109,6 +113,6 @@ export declare namespace ContentBlock {
   export type Standard =
     | Text
     | Reasoning
-    | Tools.ContentBlock
-    | Multimodal.ContentBlock;
+    | Tools.Standard
+    | Multimodal.Standard;
 }
