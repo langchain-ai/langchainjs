@@ -13,6 +13,7 @@ import { ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 
 test("should not require any fields", () => {
+  // eslint-disable-next-line prefer-arrow-callback
   const t = tool(function myTool() {
     return "Sunny";
   });
@@ -433,6 +434,7 @@ describe("Tool name", () => {
   });
 
   test("is inferred from the function name", () => {
+    // eslint-disable-next-line prefer-arrow-callback
     const t = tool(function myTool() {
       return "Sunny";
     }, {});
@@ -451,6 +453,7 @@ describe("Tool name", () => {
 
   it("name option takes precedence over the function name", () => {
     const t = tool(
+      // eslint-disable-next-line prefer-arrow-callback
       function myTool() {
         return "Sunny";
       },
