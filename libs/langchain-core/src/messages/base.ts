@@ -1,9 +1,7 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
-import {
-  type PlainTextContentBlock,
-  isDataContentBlock,
-} from "./content_blocks.js";
+import { ContentBlock } from "./content/index.js";
+import { isDataContentBlock } from "./content/data.js";
 
 export interface StoredMessageData {
   content: string;
@@ -44,27 +42,7 @@ export type MessageType =
   | "tool"
   | "remove";
 
-export type ImageDetail = "auto" | "low" | "high";
-
-export type MessageContentText = {
-  type: "text";
-  text: string;
-};
-
-export type MessageContentImageUrl = {
-  type: "image_url";
-  image_url: string | { url: string; detail?: ImageDetail };
-};
-
-export type MessageContentComplex =
-  | MessageContentText
-  | MessageContentImageUrl
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: "text" | "image_url" | string })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: never });
-
-export type MessageContent = string | MessageContentComplex[];
+export type MessageContent = string | Array<ContentBlock>;
 
 export interface FunctionCall {
   /**

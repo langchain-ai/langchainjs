@@ -7,7 +7,6 @@ export * from "./system.js";
 export * from "./utils.js";
 export * from "./transformers.js";
 export * from "./modifier.js";
-export * from "./content_blocks.js";
 // TODO: Use a star export when we deprecate the
 // existing "ToolCall" type in "base.js".
 export {
@@ -18,6 +17,10 @@ export {
   isToolMessage,
   isToolMessageChunk,
 } from "./tool.js";
+
+// This is an old export for backwards compatibility with existing multimodal content blocks
+// TODO: remove this in v2
+export * from "./content/data.js";
 
 export * from "./content/index.js";
 export * as v1 from "./v1/index.js";
