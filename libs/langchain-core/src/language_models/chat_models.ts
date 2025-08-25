@@ -213,9 +213,12 @@ export abstract class BaseChatModel<
   }
 
   protected _combineCallOptions(
-    additionalOptions?: Partial<CallOptions>
+    additionalOptions?: Partial<CallOptions | this["ParsedCallOptions"]>
   ): Partial<CallOptions> {
-    return mergeConfigs(this.defaultOptions, additionalOptions);
+    return mergeConfigs(
+      this.defaultOptions,
+      additionalOptions
+    ) as Partial<CallOptions>;
   }
 
   protected async _parseOutput(output: BaseMessage): Promise<TOutput> {
