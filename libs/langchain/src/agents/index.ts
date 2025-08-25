@@ -3,7 +3,6 @@ export {
   type AgentArgs,
   BaseSingleActionAgent,
   BaseMultiActionAgent,
-  RunnableAgent,
   LLMSingleActionAgent,
   type LLMSingleActionAgentInput,
   type OutputParserArgs,
@@ -97,8 +96,3 @@ export {
   type CreateReactAgentParams,
   createReactAgent,
 } from "./react/index.js";
-export type {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
-} from "@langchain/core/agents";

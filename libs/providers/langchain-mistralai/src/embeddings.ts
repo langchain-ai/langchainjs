@@ -38,11 +38,6 @@ export interface MistralAIEmbeddingsParams extends EmbeddingsParams {
   encodingFormat?: string;
   /**
    * Override the default server URL used by the Mistral SDK.
-   * @deprecated use serverURL instead
-   */
-  endpoint?: string;
-  /**
-   * Override the default server URL used by the Mistral SDK.
    */
   serverURL?: string;
   /**
@@ -96,11 +91,6 @@ export class MistralAIEmbeddings
   stripNewLines = true;
 
   apiKey: string;
-
-  /**
-   * @deprecated use serverURL instead
-   */
-  endpoint: string;
 
   serverURL?: string;
 
@@ -196,7 +186,6 @@ export class MistralAIEmbeddings
     const embeddingsRequest: MistralAIEmbeddingsRequest = {
       model: this.model,
       inputs,
-      encodingFormat: this.encodingFormat,
     };
     return this.caller.call(async () => {
       const res = await client.embeddings.create(embeddingsRequest);

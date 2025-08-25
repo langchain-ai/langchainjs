@@ -41,11 +41,6 @@ export interface MistralAIInput extends BaseLLMParams {
   apiKey?: string;
   /**
    * Override the default server URL used by the Mistral SDK.
-   * @deprecated use serverURL instead
-   */
-  endpoint?: string;
-  /**
-   * Override the default server URL used by the Mistral SDK.
    */
   serverURL?: string;
   /**
@@ -132,11 +127,6 @@ export class MistralAI
   batchSize = 20;
 
   apiKey: string;
-
-  /**
-   * @deprecated use serverURL instead
-   */
-  endpoint: string;
 
   serverURL?: string;
 

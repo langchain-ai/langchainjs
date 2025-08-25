@@ -130,8 +130,8 @@ function _getAzureClientOptions(
     params.defaultHeaders = {
       ...params.defaultHeaders,
       "User-Agent": defaultHeaders["User-Agent"]
-        ? `langchainjs-azure-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
-        : `langchainjs-azure-openai/2.0.0 (${env})`,
+        ? `langchainjs-openai/2.0.0 (${env})${defaultHeaders["User-Agent"]}`
+        : `langchainjs-openai/2.0.0 (${env})`,
     };
 
     this.client = new AzureOpenAIClient({

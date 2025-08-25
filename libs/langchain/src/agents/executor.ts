@@ -1,6 +1,5 @@
 import {
   type StructuredToolInterface,
-  type ToolInterface,
   ToolInputParsingException,
   Tool,
 } from "@langchain/core/tools";
@@ -90,7 +89,7 @@ export class AgentExecutorIterator
 
   iterations = 0;
 
-  get nameToToolMap(): Record<string, ToolInterface> {
+  get nameToToolMap(): Record<string, StructuredToolInterface> {
     const toolMap = this.agentExecutor.tools.map((tool) => ({
       [tool.name]: tool,
     }));
@@ -583,7 +582,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
               } else {
                 throw e;
               }
-              observation = await new ExceptionTool().call(
+              observation = await new ExceptionTool().invoke(
                 observation,
                 runManager?.getChild()
               );
@@ -622,7 +621,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   }
 
   async _takeNextStep(
-    nameToolMap: Record<string, ToolInterface>,
+    nameToolMap: Record<string, StructuredToolInterface>,
     inputs: ChainValues,
     intermediateSteps: AgentStep[],
     runManager?: CallbackManagerForChainRun,
@@ -685,7 +684,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
       if (agentAction.tool in nameToolMap) {
         const tool = nameToolMap[agentAction.tool];
         try {
-          observation = await tool.call(
+          observation = await tool.invoke(
             agentAction.toolInput,
             runManager?.getChild()
           );
@@ -707,7 +706,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
             } else {
               throw e;
             }
-            observation = await new ExceptionTool().call(
+            observation = await new ExceptionTool().invoke(
               observation,
               runManager?.getChild()
             );

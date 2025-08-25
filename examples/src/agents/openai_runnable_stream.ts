@@ -32,7 +32,7 @@ const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
   steps.flatMap(({ action, observation }) => {
     if ("messageLog" in action && action.messageLog !== undefined) {
       const log = action.messageLog as BaseMessage[];
-      return log.concat(new FunctionMessage(observation, action.tool));
+      return log.concat(new FunctionMessage(observation));
     } else {
       return [new AIMessage(action.log)];
     }

@@ -381,8 +381,3 @@ export {
   convertMessagesToPromptAnthropic,
   convertMessagesToPrompt,
 } from "./web.js";
-
-/**
- * @deprecated Use `BedrockChat` instead.
- */
-export const ChatBedrock = BedrockChat;

@@ -133,11 +133,6 @@ export interface ChatMistralAIInput
   model?: string;
   /**
    * Override the default server URL used by the Mistral SDK.
-   * @deprecated use serverURL instead
-   */
-  endpoint?: string;
-  /**
-   * Override the default server URL used by the Mistral SDK.
    */
   serverURL?: string;
   /**
@@ -163,12 +158,6 @@ export interface ChatMistralAIInput
    * @default {false}
    */
   streaming?: boolean;
-  /**
-   * Whether to inject a safety prompt before all conversations.
-   * @default {false}
-   * @deprecated use safePrompt instead
-   */
-  safeMode?: boolean;
   /**
    * Whether to inject a safety prompt before all conversations.
    * @default {false}
@@ -394,9 +383,9 @@ function mistralAIResponseToChatMessage(
         additional_kwargs: {},
         usage_metadata: usage
           ? {
-              input_tokens: usage.promptTokens,
-              output_tokens: usage.completionTokens,
-              total_tokens: usage.totalTokens,
+              input_tokens: usage.promptTokens!,
+              output_tokens: usage.completionTokens!,
+              total_tokens: usage.totalTokens!,
             }
           : undefined,
       });
@@ -420,9 +409,9 @@ function _convertDeltaToMessageChunk(
         content: "",
         usage_metadata: usage
           ? {
-              input_tokens: usage.promptTokens,
-              output_tokens: usage.completionTokens,
-              total_tokens: usage.totalTokens,
+              input_tokens: usage.promptTokens!,
+              output_tokens: usage.completionTokens!,
+              total_tokens: usage.totalTokens!,
             }
           : undefined,
       });
@@ -479,9 +468,9 @@ function _convertDeltaToMessageChunk(
       additional_kwargs,
       usage_metadata: usage
         ? {
-            input_tokens: usage.promptTokens,
-            output_tokens: usage.completionTokens,
-            total_tokens: usage.totalTokens,
+            input_tokens: usage.promptTokens!,
+            output_tokens: usage.completionTokens!,
+            total_tokens: usage.totalTokens!,
           }
         : undefined,
     });
@@ -881,11 +870,6 @@ export class ChatMistralAI<
 
   apiKey: string;
 
-  /**
-   * @deprecated use serverURL instead
-   */
-  endpoint: string;
-
   serverURL?: string;
 
   temperature = 0.7;
@@ -895,11 +879,6 @@ export class ChatMistralAI<
   topP = 1;
 
   maxTokens: number;
-
-  /**
-   * @deprecated use safePrompt instead
-   */
-  safeMode = false;
 
   safePrompt = false;
 

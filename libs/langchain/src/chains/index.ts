@@ -44,10 +44,6 @@ export {
   type SummarizationChainParams,
 } from "./summarization/load.js";
 export {
-  ConversationalRetrievalQAChain,
-  type ConversationalRetrievalQAChainInput,
-} from "./conversational_retrieval_chain.js";
-export {
   RetrievalQAChain,
   type RetrievalQAChainInput,
 } from "./retrieval_qa.js";

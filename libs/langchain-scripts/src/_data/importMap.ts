@@ -363,11 +363,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
   {
     old: "langchain/util/env",
     new: "@langchain/core/utils/env",
-    namedImport: "getRuntimeEnvironment",
-  },
-  {
-    old: "langchain/util/env",
-    new: "@langchain/core/utils/env",
     namedImport: "getEnvironmentVariable",
   },
   {
@@ -619,16 +614,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     old: "langchain/callbacks/handlers/log_stream",
     new: "@langchain/core/tracers/log_stream",
     namedImport: "LogStreamCallbackHandler",
-  },
-  {
-    old: "langchain/callbacks/handlers/initialize",
-    new: "@langchain/core/tracers/initialize",
-    namedImport: "getTracingCallbackHandler",
-  },
-  {
-    old: "langchain/callbacks/*",
-    new: "@langchain/core/tracers/initialize",
-    namedImport: "getTracingV2CallbackHandler",
   },
   {
     old: "langchain/callbacks/*",

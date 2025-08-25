@@ -1235,15 +1235,4 @@ export class ChatPromptTemplate<
       templateFormat: extra?.templateFormat,
     });
   }
-
-  /** @deprecated Renamed to .fromMessages */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromPromptMessages<RunInput extends InputValues = any>(
-    promptMessages: (
-      | ChatPromptTemplate<InputValues, string>
-      | BaseMessagePromptTemplateLike
-    )[]
-  ): ChatPromptTemplate<RunInput> {
-    return this.fromMessages(promptMessages);
-  }
 }

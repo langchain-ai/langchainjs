@@ -1,8 +1,8 @@
 import { test, expect } from "vitest";
-import { getRuntimeEnvironment } from "../env.js";
+import { getRuntimeEnvironmentSync } from "../env.js";
 
-test("test getRuntimeEnvironment", async () => {
-  const runtimeEnvironment = await getRuntimeEnvironment();
+test("test getRuntimeEnvironmentSync", async () => {
+  const runtimeEnvironment = getRuntimeEnvironmentSync();
   console.log(runtimeEnvironment);
   expect(runtimeEnvironment.runtime).toEqual("node");
 });
