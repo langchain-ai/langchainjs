@@ -512,10 +512,32 @@ export abstract class BaseToolkit {
 interface ToolWrapperParams<RunInput = ToolInputSchemaBase | undefined>
   extends ToolParams {
   /**
-   * The name of the tool. If using with an LLM, this
-   * will be passed as the tool name.
+   * The name of the tool. If using with an LLM, this will be passed as the tool name.
+   * If your tool contains a named function, you can omit this parameter. The `name`
+   * option takes precedence over the function name.
+   *
+   * @example
+   * ```ts
+   * const tool = tool(
+   *   (input) => {
+   *     return input;
+   *   },
+   *   { name: "my_tool" }
+   * );
+   * ```
+   *
+   * or
+   *
+   * @example
+   * ```ts
+   * const tool = tool(
+   *   function myTool(input) {
+   *     return input;
+   *   }
+   * );
+   * ```
    */
-  name: string;
+  name?: string;
   /**
    * The description of the tool.
    * @default `${fields.name} tool`
@@ -631,15 +653,23 @@ export function tool<
   | DynamicTool<ToolOutputT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
+  const toolName = fields.name ?? func.name;
+
+  if (!toolName) {
+    throw new Error(
+      "Tool name is required, either provide a name or use a named function"
+    );
+  }
 
   // If the schema is not provided, or it's a simple string schema, create a DynamicTool
   if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
     return new DynamicTool<ToolOutputT>({
       ...fields,
+      name: toolName,
       description:
         fields.description ??
         (fields.schema as { description?: string } | undefined)?.description ??
-        `${fields.name} tool`,
+        `${toolName} tool`,
       func: async (input, runManager, config) => {
         return new Promise<ToolOutputT>((resolve, reject) => {
           const childConfig = patchConfig(config, {
@@ -678,6 +708,7 @@ export function tool<
     ...fields,
     description,
     schema,
+    name: toolName,
     func: async (input, runManager, config) => {
       return new Promise<ToolOutputT>((resolve, reject) => {
         const childConfig = patchConfig(config, {

@@ -416,6 +416,43 @@ Details: [
 ]`);
 });
 
+describe("Tool name", () => {
+  test("is required", () => {
+    expect(() => {
+      tool(() => {
+        return "Sunny";
+      }, {});
+    }).toThrow("Tool name is required");
+  });
+
+  test("is inferred from the function name", () => {
+    const t = tool(function myTool() {
+      return "Sunny";
+    }, {});
+    expect(t.name).toBe("myTool");
+  });
+
+  it("is inferred from the option", () => {
+    const t = tool(
+      () => {
+        return "Sunny";
+      },
+      { name: "myTool" }
+    );
+    expect(t.name).toBe("myTool");
+  });
+
+  it("name option takes precedence over the function name", () => {
+    const t = tool(
+      function myTool() {
+        return "Sunny";
+      },
+      { name: "myTool2" }
+    );
+    expect(t.name).toBe("myTool2");
+  });
+});
+
 describe("isStructuredToolParams", () => {
   test("returns true for a tool with a zod schema", () => {
     const zodToolParams: StructuredToolParams = {
