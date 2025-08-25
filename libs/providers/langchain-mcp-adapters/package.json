@@ -80,7 +80,7 @@
     "vitest": "^3.1.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "directories": {
     "example": "examples"

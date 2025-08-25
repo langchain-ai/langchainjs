@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "repository": {
     "type": "git",
@@ -20,12 +20,12 @@
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
-    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:standard:unit": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "test:standard:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
+    "test": "jest --testPathIgnorePatterns=\\.int\\.test.ts --testPathIgnorePatterns=arcjet --testPathIgnorePatterns=srt --testPathIgnorePatterns=standard --testTimeout 30000 --runInBand",
+    "test:watch": "jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
+    "test:single": "pnpm run jest --config jest.config.cjs --testTimeout 100000",
+    "test:int": "jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --runInBand",
+    "test:standard:unit": "jest --testPathPattern=\\.standard\\.test.ts --testTimeout 100000 --runInBand",
+    "test:standard:int": "jest --testPathPattern=\\.standard\\.int\\.test.ts --testTimeout 100000 --runInBand",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""

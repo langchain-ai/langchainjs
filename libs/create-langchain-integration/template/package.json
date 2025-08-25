@@ -4,7 +4,7 @@
   "description": "Sample INTEGRATION_SHORT_NAME integration for LangChain.js",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "main": "./index.js",
   "types": "./index.d.ts",

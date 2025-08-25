@@ -25,7 +25,6 @@ pnpm install
 # Run the updater script
 node "update_resolutions_lowest.js"
 
-
 # Navigate back to monorepo root and install dependencies
 cd "$monorepo_dir"
 pnpm install --no-frozen-lockfile
@@ -35,4 +34,7 @@ pnpm install --no-frozen-lockfile
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_vertexai_dir"
 
+# Clean and reinstall to avoid dependency conflicts
+pnpm install --no-frozen-lockfile
+pnpm add @langchain/core @langchain/google-gauth
 pnpm test
