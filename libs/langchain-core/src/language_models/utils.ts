@@ -2,6 +2,8 @@ import { BaseMessage } from "../messages/base.js";
 
 type Constructor<T> = new (...args: unknown[]) => T;
 
+export const iife = <T>(fn: () => T): T => fn();
+
 function castStandardMessageContent<T extends BaseMessage>(message: T) {
   const Cls = message.constructor as Constructor<T>;
   return new Cls({

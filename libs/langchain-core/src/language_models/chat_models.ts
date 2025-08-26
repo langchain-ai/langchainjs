@@ -61,8 +61,7 @@ import {
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { iife } from "../utils/misc.js";
-import { castStandardMessageContent } from "./utils.js";
+import { castStandardMessageContent, iife } from "./utils.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
