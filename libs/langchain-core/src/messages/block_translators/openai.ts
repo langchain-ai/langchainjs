@@ -11,6 +11,42 @@ import {
   iife,
 } from "./utils.js";
 
+/**
+ * Converts a ChatOpenAICompletions message to an array of v1 standard content blocks.
+ *
+ * This function processes an AI message from ChatOpenAICompletions API format
+ * and converts it to the standardized v1 content block format. It handles both
+ * string content and structured content blocks, as well as tool calls.
+ *
+ * @param message - The AI message containing ChatOpenAICompletions formatted content
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const message = new AIMessage("Hello world");
+ * const standardBlocks = convertToV1FromChatCompletions(message);
+ * // Returns: [{ type: "text", text: "Hello world" }]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const message = new AIMessage([
+ *   { type: "text", text: "Hello" },
+ *   { type: "image_url", image_url: { url: "https://example.com/image.png" } }
+ * ]);
+ * message.tool_calls = [
+ *   { id: "call_123", name: "calculator", args: { a: 1, b: 2 } }
+ * ];
+ *
+ * const standardBlocks = convertToV1FromChatCompletions(message);
+ * // Returns:
+ * // [
+ * //   { type: "text", text: "Hello" },
+ * //   { type: "image", url: "https://example.com/image.png" },
+ * //   { type: "tool_call", id: "call_123", name: "calculator", args: { a: 1, b: 2 } }
+ * // ]
+ * ```
+ */
 export function convertToV1FromChatCompletions(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
@@ -34,6 +70,40 @@ export function convertToV1FromChatCompletions(
   return blocks;
 }
 
+/**
+ * Converts a ChatOpenAICompletions message chunk to an array of v1 standard content blocks.
+ *
+ * This function processes an AI message chunk from OpenAI's chat completions API and converts
+ * it to the standardized v1 content block format. It handles both string and array content,
+ * as well as tool calls that may be present in the chunk.
+ *
+ * @param message - The AI message chunk containing OpenAI-formatted content blocks
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const chunk = new AIMessage("Hello");
+ * const standardBlocks = convertToV1FromChatCompletionsChunk(chunk);
+ * // Returns: [{ type: "text", text: "Hello" }]
+ * ```
+ *
+ * @example
+ * ```typescript
+ * const chunk = new AIMessage([
+ *   { type: "text", text: "Processing..." }
+ * ]);
+ * chunk.tool_calls = [
+ *   { id: "call_456", name: "search", args: { query: "test" } }
+ * ];
+ *
+ * const standardBlocks = convertToV1FromChatCompletionsChunk(chunk);
+ * // Returns:
+ * // [
+ * //   { type: "text", text: "Processing..." },
+ * //   { type: "tool_call", id: "call_456", name: "search", args: { query: "test" } }
+ * // ]
+ * ```
+ */
 export function convertToV1FromChatCompletionsChunk(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
@@ -59,6 +129,32 @@ export function convertToV1FromChatCompletionsChunk(
   return blocks;
 }
 
+/**
+ * Converts an array of ChatOpenAICompletions content blocks to v1 standard content blocks.
+ *
+ * This function processes content blocks from OpenAI's Chat Completions API format
+ * and converts them to the standardized v1 content block format. It handles both
+ * OpenAI-specific data blocks (which require conversion) and standard blocks
+ * (which are passed through with type assertion).
+ *
+ * @param blocks - Array of content blocks in ChatOpenAICompletions format
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const openaiBlocks = [
+ *   { type: "text", text: "Hello world" },
+ *   { type: "image_url", image_url: { url: "https://example.com/image.png" } }
+ * ];
+ *
+ * const standardBlocks = convertToV1FromChatCompletionsInput(openaiBlocks);
+ * // Returns:
+ * // [
+ * //   { type: "text", text: "Hello world" },
+ * //   { type: "image", url: "https://example.com/image.png" }
+ * // ]
+ * ```
+ */
 export function convertToV1FromChatCompletionsInput(
   blocks: Array<ContentBlock>
 ): Array<ContentBlock.Standard> {
@@ -99,6 +195,45 @@ function convertResponsesAnnotation(
   return annotation;
 }
 
+/**
+ * Converts a ChatOpenAIResponses message to an array of v1 standard content blocks.
+ *
+ * This function processes an AI message containing OpenAI Responses-specific content blocks
+ * and converts them to the standardized v1 content block format. It handles reasoning summaries,
+ * text content with annotations, tool calls, and various tool outputs including code interpreter,
+ * web search, file search, computer calls, and MCP-related blocks.
+ *
+ * @param message - The AI message containing OpenAI Responses-formatted content blocks
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const message = new AIMessage({
+ *   content: [{ type: "text", text: "Hello world", annotations: [] }],
+ *   tool_calls: [{ id: "123", name: "calculator", args: { a: 1, b: 2 } }],
+ *   additional_kwargs: {
+ *     reasoning: { summary: [{ text: "Let me calculate this..." }] },
+ *     tool_outputs: [
+ *       {
+ *         type: "code_interpreter_call",
+ *         code: "print('hello')",
+ *         outputs: [{ type: "logs", logs: "hello" }]
+ *       }
+ *     ]
+ *   }
+ * });
+ *
+ * const standardBlocks = convertToV1FromResponses(message);
+ * // Returns:
+ * // [
+ * //   { type: "reasoning", reasoning: "Let me calculate this..." },
+ * //   { type: "text", text: "Hello world", annotations: [] },
+ * //   { type: "tool_call", id: "123", name: "calculator", args: { a: 1, b: 2 } },
+ * //   { type: "code_interpreter_call", code: "print('hello')" },
+ * //   { type: "code_interpreter_result", output: [{ type: "code_interpreter_output", returnCode: 0, stdout: "hello" }] }
+ * // ]
+ * ```
+ */
 export function convertToV1FromResponses(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
@@ -208,6 +343,33 @@ export function convertToV1FromResponses(
   return Array.from(iterateContent());
 }
 
+/**
+ * Converts a ChatOpenAIResponses message chunk to an array of v1 standard content blocks.
+ *
+ * This function processes an AI message chunk containing OpenAI-specific content blocks
+ * and converts them to the standardized v1 content block format. It handles both the
+ * regular message content and tool call chunks that are specific to streaming responses.
+ *
+ * @param message - The AI message chunk containing OpenAI-formatted content blocks
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const messageChunk = new AIMessageChunk({
+ *   content: [{ type: "text", text: "Hello" }],
+ *   tool_call_chunks: [
+ *     { id: "call_123", name: "calculator", args: '{"a": 1' }
+ *   ]
+ * });
+ *
+ * const standardBlocks = convertToV1FromResponsesChunk(messageChunk);
+ * // Returns:
+ * // [
+ * //   { type: "text", text: "Hello" },
+ * //   { type: "tool_call_chunk", id: "call_123", name: "calculator", args: '{"a": 1' }
+ * // ]
+ * ```
+ */
 export function convertToV1FromResponsesChunk(
   message: AIMessageChunk
 ): Array<ContentBlock.Standard> {
