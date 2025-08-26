@@ -2,18 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   isDataContentBlock,
   convertToOpenAIImageBlock,
-  type URLContentBlock,
-  type Base64ContentBlock,
-  type StandardContentBlockConverter,
-  type StandardTextBlock,
-  type DataContentBlock,
-  type StandardImageBlock,
-  type StandardAudioBlock,
-  type StandardFileBlock,
-  type IDContentBlock,
-  PlainTextContentBlock,
   convertToProviderContentBlock,
-} from "../content_blocks.js";
+  type Data,
+  type StandardContentBlockConverter,
+} from "../data.js";
 
 describe("isDataContentBlock", () => {
   it("should return true for valid DataContentBlock objects", () => {
@@ -70,7 +62,7 @@ describe("isDataContentBlock", () => {
 
 describe("convertToOpenAIImageBlock", () => {
   it("should convert a valid DataContentBlock to OpenAI image block", () => {
-    const inputBlock: URLContentBlock = {
+    const inputBlock: Data.URLContentBlock = {
       type: "image",
       source_type: "url",
       url: "https://...",
@@ -83,7 +75,7 @@ describe("convertToOpenAIImageBlock", () => {
     const result = convertToOpenAIImageBlock(inputBlock);
     expect(result).toEqual(expected);
 
-    const inputBlock2: Base64ContentBlock = {
+    const inputBlock2: Data.Base64ContentBlock = {
       type: "image",
       source_type: "base64",
       data: "<base64 data>",
@@ -103,37 +95,45 @@ describe("convertToOpenAIImageBlock", () => {
 
 describe("DataContentBlockAdapter", () => {
   const adapter: StandardContentBlockConverter<{
-    text: StandardTextBlock;
-    image: StandardImageBlock;
-    audio: StandardAudioBlock;
-    file: StandardFileBlock;
+    text: Data.StandardTextBlock;
+    image: Data.StandardImageBlock;
+    audio: Data.StandardAudioBlock;
+    file: Data.StandardFileBlock;
   }> = {
     providerName: "test",
 
-    fromStandardTextBlock(block: StandardTextBlock): StandardTextBlock {
+    fromStandardTextBlock(
+      block: Data.StandardTextBlock
+    ): Data.StandardTextBlock {
       return block;
     },
 
-    fromStandardImageBlock(block: StandardImageBlock): StandardImageBlock {
+    fromStandardImageBlock(
+      block: Data.StandardImageBlock
+    ): Data.StandardImageBlock {
       return block;
     },
 
-    fromStandardAudioBlock(block: StandardAudioBlock): StandardAudioBlock {
+    fromStandardAudioBlock(
+      block: Data.StandardAudioBlock
+    ): Data.StandardAudioBlock {
       return block;
     },
 
-    fromStandardFileBlock(block: StandardFileBlock): StandardFileBlock {
+    fromStandardFileBlock(
+      block: Data.StandardFileBlock
+    ): Data.StandardFileBlock {
       return block;
     },
   };
 
-  const textBlocks: StandardTextBlock[] = [
+  const textBlocks: Data.StandardTextBlock[] = [
     {
       type: "text",
       source_type: "text",
       text: "foo",
       mime_type: "text/plain",
-    } as StandardTextBlock,
+    } as Data.StandardTextBlock,
   ];
 
   const imageBlocks = [
@@ -142,66 +142,66 @@ describe("DataContentBlockAdapter", () => {
       source_type: "url",
       url: "http://...",
       mime_type: "image/jpeg",
-    } as URLContentBlock,
+    } as Data.URLContentBlock,
     {
       type: "image",
       source_type: "base64",
       data: "<base64 data>",
       mime_type: "image/jpeg",
-    } as Base64ContentBlock,
+    } as Data.Base64ContentBlock,
     {
       type: "image",
       source_type: "id",
       id: "123",
       mime_type: "image/jpeg",
-    } as IDContentBlock,
-  ] as StandardImageBlock[];
+    } as Data.IDContentBlock,
+  ] as Data.StandardImageBlock[];
 
   const audioBlocks = [
     {
       type: "audio",
       source_type: "url",
       url: "http://...",
-    } as URLContentBlock,
+    } as Data.URLContentBlock,
     {
       type: "audio",
       source_type: "base64",
       data: "<base64 data>",
       mime_type: "audio/mpeg",
-    } as Base64ContentBlock,
+    } as Data.Base64ContentBlock,
     {
       type: "audio",
       source_type: "id",
       id: "123",
       mime_type: "audio/mpeg",
-    } as IDContentBlock,
-  ] as StandardAudioBlock[];
+    } as Data.IDContentBlock,
+  ] as Data.StandardAudioBlock[];
 
   const fileBlocks = [
     {
       type: "file",
       source_type: "url",
       url: "http://...",
-    } as URLContentBlock,
+    } as Data.URLContentBlock,
     {
       type: "file",
       source_type: "base64",
       data: "<base64 data>",
       mime_type: "application/pdf",
-    } as Base64ContentBlock,
+    } as Data.Base64ContentBlock,
     {
       type: "file",
       source_type: "id",
       id: "123",
       mime_type: "application/pdf",
-    } as IDContentBlock,
+    } as Data.IDContentBlock,
     {
       type: "file",
       source_type: "text",
       text: "foo",
       mime_type: "text/plain",
-    } as PlainTextContentBlock,
-  ] as StandardFileBlock[];
+    } as Data.PlainTextContentBlock,
+  ] as Data.StandardFileBlock[];
 
   describe("convertToProviderContentBlock", () => {
     it("should convert text blocks", () => {
@@ -239,7 +239,7 @@ describe("DataContentBlockAdapter", () => {
             type: "unknown",
             source_type: "text",
             text: "foo",
-          } as unknown as DataContentBlock,
+          } as unknown as Data.DataContentBlock,
           adapter
         )
       ).toThrow();
