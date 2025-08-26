@@ -62,6 +62,8 @@ export class ReactAgent<
 
   #inputSchema?: AnnotationRoot<ToAnnotationRoot<StateSchema>["spec"]>;
 
+  #toolBehaviorVersion: "v1" | "v2" = "v2";
+
   constructor(
     public options: CreateReactAgentParams<
       StateSchema,
@@ -69,6 +71,8 @@ export class ReactAgent<
       ContextSchema
     >
   ) {
+    this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
+
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
@@ -266,6 +270,19 @@ export class ReactAgent<
       );
 
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * The tool node processes a single message.
+         * All tool calls in the message are executed in parallel within the tool node.
+         * @deprecated likely to be removed in the next version of the agent
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return "tools";
+        }
+
+        /**
+         * The tool node processes a single tool call. Tool calls are distributed across
+         * multiple instances of the tool node using the Send API.
+         */
         return pendingToolCalls.map(
           (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
         );
@@ -322,6 +339,13 @@ export class ReactAgent<
 
       if (this.options.postModelHook) {
         return "post_model_hook";
+      }
+
+      /**
+       * The tool node processes a single message.
+       */
+      if (this.#toolBehaviorVersion === "v1") {
+        return "tools";
       }
 
       /**

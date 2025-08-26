@@ -580,6 +580,19 @@ export type CreateReactAgentParams<
    * An optional abort signal that indicates that the overall operation should be aborted.
    */
   signal?: AbortSignal;
+
+  /**
+   * Determines the version of the graph to create.
+   *
+   * Can be one of
+   * - `"v1"`: The tool node processes a single message. All tool calls in the message are
+   *           executed in parallel within the tool node.
+   * - `"v2"`: The tool node processes a single tool call. Tool calls are distributed across
+   *           multiple instances of the tool node using the Send API.
+   *
+   * @default `"v2"`
+   */
+  version?: "v1" | "v2";
 };
 
 export interface ConfigurableModelInterface {
