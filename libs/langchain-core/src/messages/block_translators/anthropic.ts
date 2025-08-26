@@ -52,7 +52,7 @@ type AnthropicCitation =
       cited_text: string;
     };
 
-export function convertToV1CitationFromAnthropic(
+function convertAnthropicAnnotation(
   citation: AnthropicCitation
 ): ContentBlock | ContentBlock.Citation {
   if (citation.type === "char_location") {
@@ -276,7 +276,7 @@ export function convertToV1FromAnthropicMessage(
             ...rest,
             type: "text",
             text,
-            annotations: _annotations.map(convertToV1CitationFromAnthropic),
+            annotations: _annotations.map(convertAnthropicAnnotation),
           };
         } else {
           yield {

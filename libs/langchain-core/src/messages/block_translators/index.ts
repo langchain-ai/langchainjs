@@ -2,6 +2,7 @@ import type { AIMessage, AIMessageChunk } from "../ai.js";
 import type { ContentBlock } from "../content/index.js";
 
 import { anthropicTranslator } from "./anthropic.js";
+import { openaiTranslator } from "./openai.js";
 
 export interface StandardContentBlockTranslator {
   translateContent(message: AIMessage): Array<ContentBlock.Standard>;
@@ -17,6 +18,7 @@ declare global {
 
 globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", anthropicTranslator],
+  ["openai", openaiTranslator],
 ]);
 
 export function registerTranslator(
