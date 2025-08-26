@@ -284,9 +284,20 @@ export abstract class BaseMessage extends Serializable {
     }
     super(fields);
     this.name = fields.name;
-    this.content = fields.content ?? fields.contentBlocks ?? [];
+    if (fields.content === undefined && fields.contentBlocks !== undefined) {
+      this.content = fields.contentBlocks;
+      this.response_metadata = {
+        output_version: "v1",
+        ...fields.response_metadata,
+      };
+    } else if (fields.content !== undefined) {
+      this.content = fields.content ?? [];
+      this.response_metadata = fields.response_metadata;
+    } else {
+      this.content = [];
+      this.response_metadata = fields.response_metadata;
+    }
     this.additional_kwargs = fields.additional_kwargs;
-    this.response_metadata = fields.response_metadata;
     this.id = fields.id;
   }
 
