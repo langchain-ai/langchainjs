@@ -55,11 +55,6 @@ export interface TogetherAIInputs extends BaseLLMParams {
   apiKey?: string;
   /**
    * The name of the model to query.
-   * Alias for `model`
-   */
-  modelName?: string;
-  /**
-   * The name of the model to query.
    */
   model?: string;
   /**
@@ -117,7 +112,6 @@ export interface TogetherAICallOptions
   extends BaseLLMCallOptions,
     Pick<
       TogetherAIInputs,
-      | "modelName"
       | "model"
       | "temperature"
       | "topP"
@@ -139,8 +133,6 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
   topP = 0.7;
 
   topK = 50;
-
-  modelName: string;
 
   model: string;
 
@@ -171,15 +163,21 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     if (!apiKey) {
       throw new Error("TOGETHER_AI_API_KEY not found.");
     }
-    if (!inputs.model && !inputs.modelName) {
+    if (!inputs.model) {
       throw new Error("Model name is required for TogetherAI.");
     }
     this.apiKey = apiKey;
     this.temperature = inputs?.temperature ?? this.temperature;
     this.topK = inputs?.topK ?? this.topK;
     this.topP = inputs?.topP ?? this.topP;
-    this.modelName = inputs.model ?? inputs.modelName ?? "";
-    this.model = this.modelName;
+    this.model =
+      inputs.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      inputs?.modelName ??
+      "";
     this.streaming = inputs.streaming ?? this.streaming;
     this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;
@@ -202,7 +200,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
 
   private constructBody(prompt: string, options?: this["ParsedCallOptions"]) {
     const body = {
-      model: options?.model ?? options?.modelName ?? this?.model,
+      model: options?.model ?? this?.model,
       prompt,
       temperature: this?.temperature ?? options?.temperature,
       top_k: this?.topK ?? options?.topK,

@@ -65,7 +65,7 @@ export type CreateToolCallingAgentParams = {
  *
  *
  * const llm = new ChatAnthropic({
- *   modelName: "claude-3-opus-20240229",
+ *   model: "claude-3-opus-20240229",
  *   temperature: 0,
  * });
  *

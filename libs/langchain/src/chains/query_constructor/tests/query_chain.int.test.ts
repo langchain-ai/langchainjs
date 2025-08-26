@@ -86,7 +86,7 @@ test("Query Chain Test", async () => {
   const allowedComparators = Object.values(Comparators);
   const allowedOperators = Object.values(Operators);
   const llm = new OpenAI({
-    modelName: "gpt-3.5-turbo-instruct",
+    model: "gpt-3.5-turbo-instruct",
     temperature: 0,
   });
   const queryChain = loadQueryConstructorRunnable({

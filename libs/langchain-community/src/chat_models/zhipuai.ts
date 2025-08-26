@@ -39,6 +39,7 @@ type ModelName =
   // ChatGLM-Turbo
   | "glm-3-turbo" // context size: 128k
   | "chatglm_turbo"; // context size: 32k
+
 interface ChatCompletionRequest {
   model: ModelName;
   messages?: ZhipuMessage[];
@@ -97,11 +98,6 @@ interface ChatCompletionResponse extends ZhipuAIError {
  * Interface defining the input to the ZhipuAIChatInput class.
  */
 export interface ChatZhipuAIParams {
-  /**
-   * @default "glm-3-turbo"
-   * Alias for `model`
-   */
-  modelName: ModelName;
   /**
    * @default "glm-3-turbo"
    */
@@ -214,8 +210,6 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
 
   requestId?: string;
 
-  modelName: ChatCompletionRequest["model"];
-
   model: ChatCompletionRequest["model"];
 
   apiUrl: string;
@@ -246,8 +240,14 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
-    this.modelName = fields?.model ?? fields.modelName ?? "glm-3-turbo";
-    this.model = this.modelName;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      "glm-3-turbo";
     this.doSample = fields.doSample;
   }
 

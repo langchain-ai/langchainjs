@@ -17,11 +17,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 
   /**
    * Model name to use
-   * Alias for `model`
-   */
-  modelName?: string;
-  /**
-   * Model name to use
    */
   model?: string;
 
@@ -38,8 +33,6 @@ export interface CloudflareWorkersAIEmbeddingsParams extends EmbeddingsParams {
 }
 
 export class CloudflareWorkersAIEmbeddings extends Embeddings {
-  modelName = "@cf/baai/bge-base-en-v1.5";
-
   model = "@cf/baai/bge-base-en-v1.5";
 
   batchSize = 50;
@@ -57,8 +50,14 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
       );
     }
     this.ai = fields.binding;
-    this.modelName = fields?.model ?? fields.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
     this.stripNewLines = fields.stripNewLines ?? this.stripNewLines;
   }
 

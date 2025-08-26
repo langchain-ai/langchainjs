@@ -12,14 +12,6 @@ export interface GooglePaLMTextInput extends BaseLLMParams {
   /**
    * Model Name to use
    *
-   * Alias for `model`
-   *
-   * Note: The format must follow the pattern - `models/{model}`
-   */
-  modelName?: string;
-  /**
-   * Model Name to use
-   *
    * Note: The format must follow the pattern - `models/{model}`
    */
   model?: string;
@@ -104,8 +96,6 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
     };
   }
 
-  modelName = "models/text-bison-001";
-
   model = "models/text-bison-001";
 
   temperature?: number; // default value chosen based on model
@@ -127,8 +117,14 @@ export class GooglePaLM extends LLM implements GooglePaLMTextInput {
   constructor(fields?: GooglePaLMTextInput) {
     super(fields ?? {});
 
-    this.modelName = fields?.model ?? fields?.modelName ?? this.model;
-    this.model = this.modelName;
+    this.model =
+      fields?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fields?.modelName ??
+      this.model;
 
     this.temperature = fields?.temperature ?? this.temperature;
     if (this.temperature && (this.temperature < 0 || this.temperature > 1)) {

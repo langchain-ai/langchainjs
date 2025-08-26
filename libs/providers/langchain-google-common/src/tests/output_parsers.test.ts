@@ -27,7 +27,7 @@ describe("GoogleSearchOutputParsers", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -68,7 +68,7 @@ describe("GoogleSearchOutputParsers", () => {
     };
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
       temperature: 0,
       maxRetries: 0,
     }).bindTools([searchRetrievalTool]);
@@ -226,7 +226,7 @@ describe("GoogleSearchOutputParsers", () => {
 
     const model = new ChatGoogle({
       authOptions,
-      modelName: "gemini-1.5-pro-002",
+      model: "gemini-1.5-pro-002",
     });
     const parser = new SimpleGoogleSearchOutputParser();
     const chain = model.pipe(parser);

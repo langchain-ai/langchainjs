@@ -18,12 +18,6 @@ export type OpenAIEmbeddingModelId =
  * defines additional parameters specific to the OpenAIEmbeddings class.
  */
 export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
-  /**
-   * Model name to use
-   * Alias for `model`
-   * @deprecated Use "model" instead.
-   */
-  modelName: OpenAIEmbeddingModelId;
   /** Model name to use */
   model: OpenAIEmbeddingModelId;
 
@@ -74,9 +68,6 @@ export class OpenAIEmbeddings
 {
   model = "text-embedding-ada-002";
 
-  /** @deprecated Use "model" instead */
-  modelName: string;
-
   batchSize = 512;
 
   // TODO: Update to `false` on next minor release (see: https://github.com/langchain-ai/langchainjs/pull/3612)
@@ -123,8 +114,13 @@ export class OpenAIEmbeddings
       getEnvironmentVariable("OPENAI_ORGANIZATION");
 
     this.model =
-      fieldsWithDefaults?.model ?? fieldsWithDefaults?.modelName ?? this.model;
-    this.modelName = this.model;
+      fieldsWithDefaults?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fieldsWithDefaults?.modelName ??
+      this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.stripNewLines =
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;

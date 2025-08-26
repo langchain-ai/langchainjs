@@ -39,7 +39,7 @@ export interface DeepInfraEmbeddingsParams extends EmbeddingsParams {
    * The model ID to use for generating completions.
    * Default: `sentence-transformers/clip-ViT-B-32`
    */
-  modelName?: string;
+  model?: string;
 
   /**
    * The maximum number of texts to embed in a single request. This is
@@ -86,7 +86,7 @@ export class DeepInfraEmbeddings
 
   batchSize: number;
 
-  modelName: string;
+  model: string;
 
   /**
    * Constructor for the DeepInfraEmbeddings class.
@@ -98,7 +98,7 @@ export class DeepInfraEmbeddings
     }
   ) {
     const fieldsWithDefaults = {
-      modelName: DEFAULT_MODEL_NAME,
+      model: DEFAULT_MODEL_NAME,
       batchSize: DEFAULT_BATCH_SIZE,
       ...fields,
     };
@@ -112,7 +112,14 @@ export class DeepInfraEmbeddings
       throw new Error("DeepInfra API token not found");
     }
 
-    this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
+    this.model =
+      fieldsWithDefaults?.model ??
+      /**
+       * ToDo: remove in v2
+       */
+      // @ts-expect-error - modelName has been removed from public types, keeping it to reduce the user impact
+      fieldsWithDefaults?.modelName ??
+      this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiToken = apiKey;
   }
@@ -167,7 +174,7 @@ export class DeepInfraEmbeddings
     request: DeepInfraEmbeddingsRequest
   ): Promise<DeepInfraEmbeddingsResponse> {
     const response = await this.caller.call(() =>
-      fetch(`https://api.deepinfra.com/v1/inference/${this.modelName}`, {
+      fetch(`https://api.deepinfra.com/v1/inference/${this.model}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiToken}`,

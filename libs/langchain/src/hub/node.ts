@@ -33,14 +33,14 @@ export async function pull<T extends Runnable>(
   let modelClass;
   if (options?.includeModel) {
     if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
-      const modelName =
+      const model =
         promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
 
-      if (modelName) {
-        modelClass = await getChatModelByClassName(modelName);
+      if (model) {
+        modelClass = await getChatModelByClassName(model);
         if (!modelClass) {
           console.warn(
-            `Received unknown model name from prompt hub: "${modelName}"`
+            `Received unknown model name from prompt hub: "${model}"`
           );
         }
       }

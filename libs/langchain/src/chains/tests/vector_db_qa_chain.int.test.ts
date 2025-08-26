@@ -8,7 +8,7 @@ import { VectorDBQAChain } from "../vector_db_qa.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 test("Test VectorDBQAChain", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const prompt = new PromptTemplate({
     template: "Print {foo}",
     inputVariables: ["foo"],
@@ -34,7 +34,7 @@ test("Test VectorDBQAChain", async () => {
 });
 
 test("Test VectorDBQAChain from LLM", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],
@@ -48,7 +48,7 @@ test("Test VectorDBQAChain from LLM", async () => {
 });
 
 test("Test VectorDBQAChain from LLM with a filter function", async () => {
-  const model = new OpenAI({ modelName: "gpt-3.5-turbo-instruct" });
+  const model = new OpenAI({ model: "gpt-3.5-turbo-instruct" });
   const vectorStore = await MemoryVectorStore.fromTexts(
     ["Hello world", "Bye bye", "hello nice world", "bye", "hi"],
     [{ id: 2 }, { id: 1 }, { id: 3 }, { id: 4 }, { id: 5 }],

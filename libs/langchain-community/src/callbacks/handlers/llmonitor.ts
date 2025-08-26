@@ -121,10 +121,9 @@ const parseExtraAndName = (
     ...(metadata || {}),
   };
 
-  const { model, model_name, modelName, model_id, userId, userProps, ...rest } =
-    params;
+  const { model, model_name, model_id, userId, userProps, ...rest } = params;
 
-  const name = model || modelName || model_name || model_id || llm.id.at(-1);
+  const name = model || model_name || model_id || llm.id.at(-1);
 
   // Filter rest to only include params we want to capture
   const extra = Object.fromEntries(

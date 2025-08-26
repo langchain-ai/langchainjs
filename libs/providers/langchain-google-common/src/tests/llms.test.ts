@@ -594,7 +594,5 @@ describe("Mock Google LLM", () => {
     expect(record.opts.data.generationConfig.responseMimeType).toEqual(
       "application/json"
     );
-
-    // console.log("record", JSON.stringify(record, null, 2));
   });
 });
