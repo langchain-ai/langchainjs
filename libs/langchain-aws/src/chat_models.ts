@@ -821,7 +821,7 @@ export class ChatBedrockConverse
       additionalModelRequestFields:
         this.additionalModelRequestFields ??
         options?.additionalModelRequestFields,
-      guardrailConfig: options?.guardrailConfig,
+      guardrailConfig: this.guardrailConfig ?? options?.guardrailConfig,
       performanceConfig: options?.performanceConfig,
     };
   }
