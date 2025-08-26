@@ -26,3 +26,5 @@ export function safeParseJson<T = unknown>(value: string): T | undefined {
     return undefined;
   }
 }
+
+export const iife = <T>(fn: () => T): T => fn();

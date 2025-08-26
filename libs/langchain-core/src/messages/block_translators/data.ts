@@ -43,7 +43,20 @@ export function convertToV1FromDataContent(
   return content.map(convertToV1FromDataContentBlock);
 }
 
-export function convertToV1FromOpenAIMultimodalBlock(
+export function isOpenAIDataBlock(block: ContentBlock): boolean {
+  if (_isContentBlock(block, "image_url") && _isObject(block.image_url)) {
+    return true;
+  }
+  if (_isContentBlock(block, "input_audio") && _isObject(block.input_audio)) {
+    return true;
+  }
+  if (_isContentBlock(block, "file") && _isObject(block.file)) {
+    return true;
+  }
+  return false;
+}
+
+export function convertToV1FromOpenAIDataBlock(
   block: ContentBlock
 ): ContentBlock.Standard {
   if (
