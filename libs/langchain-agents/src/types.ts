@@ -325,6 +325,7 @@ export type CreateReactAgentParams<
    *
    * Cannot be used together with a callable `prompt`.
    *
+   * @experimental this API is experimental and may change in the future, use with caution
    * @example
    * ```ts
    * const agent = createAgent({
@@ -361,6 +362,7 @@ export type CreateReactAgentParams<
 
   /**
    * An optional predicate function to stop the agent.
+   * @experimental this API is experimental and may change in the future, use with caution
    */
   stopWhen?:
     | PredicateFunction<StructuredResponseType>
@@ -475,6 +477,7 @@ export type CreateReactAgentParams<
 
   /**
    * An optional function to handle tool call errors.
+   * @experimental this API is experimental and may change in the future, use with caution
    */
   onToolCallError?: (
     toolCall: ToolCallData,
