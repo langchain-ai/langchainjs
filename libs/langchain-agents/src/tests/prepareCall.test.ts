@@ -32,7 +32,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [],
-      prepareCall: (state, runtime) => {
+      experimental_prepareCall: (state, runtime) => {
         expect(runtime).toBeDefined();
         expect(runtime.context).toBeDefined();
         expect(runtime.context?.model).toBe("gpt-4o-mini");
@@ -75,7 +75,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [],
-      prepareCall: () => {
+      experimental_prepareCall: () => {
         return {
           tools: ["get_weather"],
         };
@@ -96,7 +96,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather],
-      prepareCall: () => {
+      experimental_prepareCall: () => {
         return {
           tools: ["foobar"],
         };

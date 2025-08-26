@@ -353,7 +353,7 @@ export type CreateReactAgentParams<
    * });
    * ```
    */
-  prepareCall?: PrepareCall<StateSchema, ContextSchema>;
+  experimental_prepareCall?: PrepareCall<StateSchema, ContextSchema>;
 
   /**
    * Additional state schema for the agent. It allows to define additional state keys that will be
@@ -404,9 +404,39 @@ export type CreateReactAgentParams<
 
   /**
    * An optional predicate function to stop the agent.
-   * @experimental this API is experimental and may change in the future, use with caution
+   *
+   * The predicate function can an object with the following properties:
+   * - `shouldStop`: A boolean value to indicate if the agent should stop.
+   * - `description`: A string to describe the reason for stopping the agent.
+   *
+   * There are two prebuilt predicate functions:
+   * - `stopWhenMaxSteps`: Stops the agent when the number of AI messages in the state exceeds the given number.
+   * - `stopWhenToolCall`: Stops the agent when the number of tool calls in the state exceeds the given number.
+   *
+   * @experimental this API is experimental and may change in the future, use with caution.
+   *
+   * @example
+   * ```ts
+   * import { stopWhen, stopWhenMaxSteps } from "langchain";
+   *
+   * const agent = createAgent({
+   *   llm: model,
+   *   tools: [getWeather],
+   *   stopWhen: [
+   *     // use a prebuilt predicate function
+   *     stopWhenMaxSteps(10),
+   *     // or use a custom predicate function
+   *     stopWhen((state, config) => {
+   *       return {
+   *         shouldStop: state.messages.length > 10,
+   *         description: "The agent has reached the maximum number of messages.",
+   *       };
+   *     })
+   *   ],
+   * });
+   * ```
    */
-  stopWhen?:
+  experimental_stopWhen?:
     | PredicateFunction<StructuredResponseType>
     | PredicateFunction<StructuredResponseType>[];
 
@@ -570,7 +600,7 @@ export type CreateReactAgentParams<
    *   },
    * });
    */
-  onToolCallError?: (
+  experimental_onToolCallError?: (
     toolCall: ToolCallData,
     state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>

@@ -24,6 +24,21 @@ import type {
   ToAnnotationRoot,
 } from "../types.js";
 
+export interface ExperimentalToolNodeOptions<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> {
+  onToolCallError?: CreateReactAgentParams<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema
+  >["experimental_onToolCallError"];
+}
+
 export interface ToolNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
@@ -31,13 +46,10 @@ export interface ToolNodeOptions<
     unknown
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> extends Pick<
-    CreateReactAgentParams<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema
-    >,
-    "onToolCallError"
+> extends ExperimentalToolNodeOptions<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema
   > {
   /**
    * The name of the tool node.

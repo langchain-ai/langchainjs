@@ -1405,7 +1405,7 @@ describe("createAgent", () => {
       const agent = createAgent({
         llm: model,
         tools: [dummyTool],
-        stopWhen: stopOnKeyword,
+        experimental_stopWhen: stopOnKeyword,
       } as any);
 
       const result = await agent.invoke({
@@ -1473,7 +1473,7 @@ describe("createAgent", () => {
       const agent = createAgent({
         llm: model,
         tools: [weatherTool],
-        stopWhen,
+        experimental_stopWhen: stopWhen,
       });
 
       const result = await agent.invoke({
@@ -1507,7 +1507,7 @@ describe("createAgent", () => {
       const agent = createAgent({
         llm: model,
         tools: [],
-        stopWhen: stopWhenMaxSteps(1),
+        experimental_stopWhen: stopWhenMaxSteps(1),
       });
 
       const result = await agent.invoke({
@@ -1561,7 +1561,7 @@ describe("createAgent", () => {
       const agent = createAgent({
         llm: model,
         tools: [searchTool],
-        stopWhen: combinedStop,
+        experimental_stopWhen: combinedStop,
       } as any);
 
       const result = await agent.invoke({
@@ -1607,7 +1607,7 @@ describe("createAgent", () => {
       const agent = createAgent({
         llm: model,
         tools: [],
-        stopWhen: asyncStop,
+        experimental_stopWhen: asyncStop,
       } as any);
 
       const result = await agent.invoke({

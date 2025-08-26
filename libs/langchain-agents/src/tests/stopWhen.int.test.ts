@@ -190,7 +190,7 @@ describe("stopWhen Tests", () => {
         llm,
         tools: [pollJob],
         prompt: AGENT_PROMPT,
-        stopWhen: scenario.stopWhen,
+        experimental_stopWhen: scenario.stopWhen,
         responseFormat: scenario.responseFormat!,
       });
 

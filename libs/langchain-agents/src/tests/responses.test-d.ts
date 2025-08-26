@@ -98,7 +98,7 @@ describe("response format", () => {
     createAgent({
       llm: new FakeToolCallingChatModel({}),
       tools: [],
-      stopWhen: [stopWhenMaxSteps(1)],
+      experimental_stopWhen: [stopWhenMaxSteps(1)],
     });
   });
 

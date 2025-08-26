@@ -84,7 +84,7 @@ export class ReactAgent<
      * Check if prepareCall is co-specified with callable prompt
      */
     if (
-      options.prepareCall &&
+      options.experimental_prepareCall &&
       options.prompt &&
       typeof options.prompt === "function"
     ) {
@@ -129,10 +129,10 @@ export class ReactAgent<
       new AgentNode({
         llm: this.options.llm,
         prompt: this.options.prompt,
-        prepareCall: this.options.prepareCall,
+        prepareCall: this.options.experimental_prepareCall,
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
-        stopWhen: this.options.stopWhen,
+        stopWhen: this.options.experimental_stopWhen,
         responseFormat: this.options.responseFormat,
         toolClasses,
         shouldReturnDirect,
@@ -148,7 +148,7 @@ export class ReactAgent<
      */
     if (toolClasses.length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
-        onToolCallError: this.options.onToolCallError,
+        onToolCallError: this.options.experimental_onToolCallError,
         signal: this.options.signal,
       });
       allNodeWorkflows.addNode("tools", toolNode);

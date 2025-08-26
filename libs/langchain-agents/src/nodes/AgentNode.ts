@@ -52,7 +52,27 @@ type ResponseHandlerResult<StructuredResponseFormat> =
     }
   | Promise<Command>;
 
-interface AgentNodeOptions<
+export interface ExperimentalAgentNodeOptions<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StructuredResponseFormat extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> {
+  prepareCall?: CreateReactAgentParams<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema
+  >["experimental_prepareCall"];
+  stopWhen?: CreateReactAgentParams<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema
+  >["experimental_stopWhen"];
+}
+
+export interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
@@ -60,19 +80,18 @@ interface AgentNodeOptions<
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateReactAgentParams<
+      CreateReactAgentParams<
+        StateSchema,
+        StructuredResponseFormat,
+        ContextSchema
+      >,
+      "llm" | "prompt" | "includeAgentName" | "name" | "responseFormat"
+    >,
+    ExperimentalAgentNodeOptions<
       StateSchema,
       StructuredResponseFormat,
       ContextSchema
-    >,
-    | "llm"
-    | "prompt"
-    | "prepareCall"
-    | "includeAgentName"
-    | "name"
-    | "stopWhen"
-    | "responseFormat"
-  > {
+    > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;

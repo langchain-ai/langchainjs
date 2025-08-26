@@ -56,7 +56,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather, getTime],
-      prepareCall: async (options) => {
+      experimental_prepareCall: async (options) => {
         const { stepNumber } = options;
 
         // Capture the system message for testing
@@ -97,7 +97,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather, getTime],
-      prepareCall: async (options) => {
+      experimental_prepareCall: async (options) => {
         const { stepNumber } = options;
 
         if (stepNumber === 0) {
@@ -134,7 +134,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather, getTime],
-      prepareCall: async (options) => {
+      experimental_prepareCall: async (options) => {
         const { messages } = options;
 
         // Only allow weather tool if user asks about weather
@@ -203,7 +203,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather],
-      prepareCall: async (options) => {
+      experimental_prepareCall: async (options) => {
         const { llmCalls } = options;
 
         trackedLLMCalls = llmCalls.length;
@@ -230,7 +230,7 @@ describe("prepareCall hook", () => {
         prompt: async () => {
           return [new HumanMessage("Custom prompt")];
         },
-        prepareCall: async () => {
+        experimental_prepareCall: async () => {
           return {};
         },
       });
@@ -249,7 +249,7 @@ describe("prepareCall hook", () => {
     const agent = createAgent({
       llm: model,
       tools: [getWeather],
-      prepareCall: async (_, runtime) => {
+      experimental_prepareCall: async (_, runtime) => {
         expect(runtime).toBe(customRuntime);
         return {};
       },
