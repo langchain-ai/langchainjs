@@ -13,13 +13,16 @@ import {
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
 } from "../chat_models.js";
-import { OpenAIEndpointConfig, getEndpoint } from "../utils/azure.js";
+import {
+  OpenAIEndpointConfig,
+  getEndpoint,
+  normalizeHeaders,
+} from "../utils/azure.js";
 import {
   AzureOpenAIChatInput,
   AzureOpenAIInput,
   OpenAICoreRequestOptions,
 } from "../types.js";
-import { normalizeHeaders } from "../utils/headers.js";
 
 export type { AzureOpenAIInput };
 
