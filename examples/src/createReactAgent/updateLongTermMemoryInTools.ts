@@ -17,7 +17,7 @@
 
 import fs from "node:fs/promises";
 import {
-  createAgent,
+  createReactAgent,
   tool,
   InMemoryStore,
   type CreateAgentToolConfig,
@@ -394,7 +394,7 @@ const memoryStats = {
   categories: new Set<string>(),
 };
 
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.3 }),
   tools: [
     customerPreferencesTool,

@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { createAgent, tool, HumanMessage } from "langchain";
+import { createReactAgent, tool, HumanMessage } from "langchain";
 
 import { ChatOpenAI } from "@langchain/openai";
 import z from "zod";
@@ -13,7 +13,7 @@ const sumTool = tool(({ a, b }: { a: number; b: number }) => a + b, {
   }),
 });
 
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [sumTool],
   responseFormat: z.object({

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";
 import { BaseStore } from "@langchain/langgraph-checkpoint";
 
-import { createAgent } from "../index.js";
+import { createReactAgent } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("types", () => {
@@ -19,7 +19,7 @@ describe("types", () => {
       }),
     });
 
-    void createAgent({
+    void createReactAgent({
       llm: new FakeToolCallingModel(),
       prompt: (state, config) => {
         // still allows to access messages

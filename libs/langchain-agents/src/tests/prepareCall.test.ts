@@ -5,7 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 
 import { FakeToolCallingChatModel } from "./utils.js";
-import { createAgent } from "../index.js";
+import { createReactAgent } from "../index.js";
 
 const getWeather = tool(
   (input: { city: string }) => {
@@ -29,7 +29,7 @@ describe("prepareCall hook", () => {
     });
 
     const model = new FakeToolCallingChatModel({});
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [],
       experimental_prepareCall: (state, runtime) => {
@@ -72,7 +72,7 @@ describe("prepareCall hook", () => {
 
   it("throws if toolChoice is used even though there are no tools", async () => {
     const model = new FakeToolCallingChatModel({});
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [],
       experimental_prepareCall: () => {
@@ -93,7 +93,7 @@ describe("prepareCall hook", () => {
 
   it("throws if toolChoice references an unknown tool", async () => {
     const model = new FakeToolCallingChatModel({});
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather],
       experimental_prepareCall: () => {

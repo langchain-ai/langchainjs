@@ -19,7 +19,7 @@
 
 import fs from "node:fs/promises";
 import {
-  createAgent,
+  createReactAgent,
   tool,
   AIMessage,
   interrupt,
@@ -148,7 +148,7 @@ const stats = {
 /**
  * Agent with post-model hook
  */
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
   tools: [productInfoTool],
   checkpointer: new MemorySaver(),

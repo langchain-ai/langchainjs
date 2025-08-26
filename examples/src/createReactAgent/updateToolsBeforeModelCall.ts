@@ -31,7 +31,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -134,7 +134,7 @@ function updateToolAvailabilityAndDescriptions() {
  * about which tools are currently enabled. This avoids re-binding a different tool set every turn,
  * while still achieving the desired behavior.
  */
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
   tools: [listFilesTool, readFileTool],
   preModelHook: (state) => {

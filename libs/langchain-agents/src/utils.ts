@@ -49,7 +49,7 @@ export type AgentNameMode = "inline";
  * This is useful for making a message history with multiple agents more coherent.
  *
  * NOTE: agent name is consumed from the message.name field.
- * If you're using an agent built with createAgent, name is automatically set.
+ * If you're using an agent built with createReactAgent, name is automatically set.
  * If you're building a custom agent, make sure to set the name on the AI message returned by the LLM.
  *
  * @param message - Message to add agent name formatting to
@@ -334,7 +334,7 @@ export async function shouldBindTools(
   // Check if tools count matches
   if (tools.length !== boundTools.length) {
     throw new Error(
-      "Number of tools in the model.bindTools() and tools passed to createAgent must match"
+      "Number of tools in the model.bindTools() and tools passed to createReactAgent must match"
     );
   }
 
@@ -373,7 +373,7 @@ export async function shouldBindTools(
   if (missingTools.length > 0) {
     throw new Error(
       `Missing tools '${missingTools}' in the model.bindTools().` +
-        `Tools in the model.bindTools() must match the tools passed to createAgent.`
+        `Tools in the model.bindTools() must match the tools passed to createReactAgent.`
     );
   }
 

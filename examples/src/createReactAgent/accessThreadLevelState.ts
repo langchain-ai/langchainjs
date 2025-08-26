@@ -16,7 +16,7 @@
  * prompt always includes the current TODOs so the model can plan next steps.
  */
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -59,7 +59,7 @@ const removeTodo = tool(
 /**
  * Create agent that injects thread-level state into the prompt
  */
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [addTodo, removeTodo],
   prompt: async (state) => {

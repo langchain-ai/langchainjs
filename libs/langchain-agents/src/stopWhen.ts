@@ -49,8 +49,8 @@ import {
  *   };
  * });
  *
- * // Use with createAgent
- * const agent = createAgent({
+ * // Use with createReactAgent
+ * const agent = createReactAgent({
  *   model: yourModel,
  *   tools: [yourTool],
  *   beforeReturnHook: stopAfterTenMessages
@@ -104,8 +104,8 @@ export function stopWhen<
  * // Stop after calculator is used once
  * const stopAfterCalculation = stopWhenToolCall("calculator", 1);
  *
- * // Use with createAgent
- * const agent = createAgent({
+ * // Use with createReactAgent
+ * const agent = createReactAgent({
  *   model: yourModel,
  *   tools: [webSearchTool, calculatorTool],
  *   beforeReturnHook: stopAfterFirstSearch
@@ -166,8 +166,8 @@ export function stopWhenToolCall(toolName: string, toolCallCount = 1) {
  * // Stop after a single response (useful for one-shot tasks)
  * const oneStepOnly = stopWhenMaxSteps(1);
  *
- * // Use with createAgent
- * const agent = createAgent({
+ * // Use with createReactAgent
+ * const agent = createReactAgent({
  *   model: yourModel,
  *   tools: [searchTool, calculatorTool],
  *   beforeReturnHook: limitToFiveSteps

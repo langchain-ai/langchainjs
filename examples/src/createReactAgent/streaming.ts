@@ -1,7 +1,7 @@
 /**
- * Streaming with createAgent
+ * Streaming with createReactAgent
  *
- * This example demonstrates various streaming capabilities of createAgent.
+ * This example demonstrates various streaming capabilities of createReactAgent.
  * Streaming allows you to observe agent execution in real-time, which is
  * particularly useful for:
  * - Providing immediate feedback to users
@@ -17,7 +17,7 @@
  */
 
 import fs from "fs/promises";
-import { createAgent, tool, HumanMessage } from "langchain";
+import { createReactAgent, tool, HumanMessage } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -77,7 +77,7 @@ const calculateTool = tool(
 /**
  * Create the agent
  */
-const agent = createAgent({
+const agent = createReactAgent({
   llm: new ChatOpenAI({
     model: "gpt-4o-mini",
     temperature: 0,
@@ -203,7 +203,7 @@ const WeatherReport = z.object({
   conditions: z.string(),
 });
 
-const weatherAgent = createAgent({
+const weatherAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [weatherTool],
   responseFormat: WeatherReport,

@@ -27,7 +27,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent } from "langchain";
+import { createReactAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -42,7 +42,7 @@ const context = z.object({
   model: z.enum(["gpt-4o", "gpt-4o-mini"]).optional(),
 });
 
-const agent = createAgent({
+const agent = createReactAgent({
   llm: model,
   tools: [],
   /**

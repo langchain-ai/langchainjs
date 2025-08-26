@@ -1,7 +1,7 @@
 import { describe, it } from "vitest";
 import { z } from "zod";
 
-import { createAgent, toolOutput } from "../index.js";
+import { createReactAgent, toolOutput } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("structured output handling", () => {
@@ -19,7 +19,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput([
@@ -51,7 +51,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -85,7 +85,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -124,7 +124,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -160,7 +160,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -195,7 +195,7 @@ describe("structured output handling", () => {
             [{ name: "extract-11", args: { bar: "foo" }, id: "call_1" }],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -221,7 +221,7 @@ describe("structured output handling", () => {
             ],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput(
@@ -244,7 +244,7 @@ describe("structured output handling", () => {
             [{ name: "extract-14", args: { bar: "foo" }, id: "call_1" }],
           ],
         });
-        const agent = createAgent({
+        const agent = createReactAgent({
           llm: model,
           tools: [],
           responseFormat: toolOutput([

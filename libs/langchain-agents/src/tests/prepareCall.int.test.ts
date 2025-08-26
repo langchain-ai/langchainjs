@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 
-import { createAgent } from "../index.js";
+import { createReactAgent } from "../index.js";
 
 // Mock tool for testing
 const getWeather = tool(
@@ -53,7 +53,7 @@ describe("prepareCall hook", () => {
       },
     });
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather, getTime],
       experimental_prepareCall: async (options) => {
@@ -94,7 +94,7 @@ describe("prepareCall hook", () => {
       function: { name: "get_weather" },
     } as const;
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather, getTime],
       experimental_prepareCall: async (options) => {
@@ -131,7 +131,7 @@ describe("prepareCall hook", () => {
       },
     });
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather, getTime],
       experimental_prepareCall: async (options) => {
@@ -200,7 +200,7 @@ describe("prepareCall hook", () => {
 
     let trackedLLMCalls = 0;
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather],
       experimental_prepareCall: async (options) => {
@@ -224,7 +224,7 @@ describe("prepareCall hook", () => {
     });
 
     expect(() => {
-      createAgent({
+      createReactAgent({
         llm: model,
         tools: [getWeather],
         prompt: async () => {
@@ -246,7 +246,7 @@ describe("prepareCall hook", () => {
 
     const customRuntime = { userId: "123", sessionId: "abc" };
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm: model,
       tools: [getWeather],
       experimental_prepareCall: async (_, runtime) => {

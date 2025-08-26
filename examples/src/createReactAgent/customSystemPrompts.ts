@@ -16,7 +16,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -51,7 +51,7 @@ const checkAccount = tool(
  * Template-based prompt with variables from external context
  * This is the most common pattern - populate a template with context variables
  */
-const customerServiceAgent = createAgent({
+const customerServiceAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkAccount],
   prompt: `You are a customer service representative for our software company.
@@ -74,7 +74,7 @@ Guidelines:
  * Dynamic template function - Use when variables come from state or need computation
  * This pattern is useful when variables need to be determined at runtime
  */
-const contextAwareAgent = createAgent({
+const contextAwareAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkAccount],
   prompt: async (state) => {

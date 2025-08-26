@@ -328,7 +328,7 @@ export type CreateReactAgentParams<
    * @experimental this API is experimental and may change in the future, use with caution
    * @example
    * ```ts
-   * const agent = createAgent({
+   * const agent = createReactAgent({
    *   llm: model,
    *   tools: [getWeather],
    *   prepareCall: async (options, runtime) => {
@@ -374,7 +374,7 @@ export type CreateReactAgentParams<
    * // Context schema defines runtime parameters passed per invocation
    * const contextSchema = z.object({ ... });
    *
-   * const agent = createAgent({
+   * const agent = createReactAgent({
    *   llm: model,
    *   tools: [updatePreferences, addTask],
    *   stateSchema,    // Persisted: preferences, e.g. task history, workflow state
@@ -419,7 +419,7 @@ export type CreateReactAgentParams<
    * ```ts
    * import { stopWhen, stopWhenMaxSteps } from "langchain";
    *
-   * const agent = createAgent({
+   * const agent = createReactAgent({
    *   llm: model,
    *   tools: [getWeather],
    *   stopWhen: [
@@ -448,7 +448,7 @@ export type CreateReactAgentParams<
    *
    * @example
    * ```ts
-   * const agent = createAgent({
+   * const agent = createReactAgent({
    *   llm: model,
    *   tools: [getWeather],
    *   contextSchema: z.object({
@@ -586,9 +586,9 @@ export type CreateReactAgentParams<
    * @experimental This API is experimental and may change in the future, use with caution.
    * @example
    * ```ts
-   * import { createAgent, tool, ToolMessage } from "langchain";
+   * import { createReactAgent, tool, ToolMessage } from "langchain";
    *
-   * const agent = createAgent({
+   * const agent = createReactAgent({
    *   llm: model,
    *   tools: [getWeather],
    *   onToolCallError: (toolCall, state, config) => {

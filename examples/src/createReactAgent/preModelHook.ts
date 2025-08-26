@@ -37,7 +37,7 @@
  */
 
 import fs from "node:fs/promises";
-import { BaseMessage, createAgent, tool } from "langchain";
+import { BaseMessage, createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -108,7 +108,7 @@ function summarizeMessages(messages: BaseMessage[]) {
 /**
  * Create agent with pre-model hook for permanent transformations
  */
-const supportAgent = createAgent({
+const supportAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [createTicket],
   preModelHook: (state) => {

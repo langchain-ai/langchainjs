@@ -20,7 +20,7 @@
 
 import fs from "node:fs/promises";
 import {
-  createAgent,
+  createReactAgent,
   tool,
   InMemoryStore,
   type CreateAgentToolConfig,
@@ -239,7 +239,7 @@ This information will be used to personalize future interactions.`;
 /**
  * Create the agent with memory-aware tools
  */
-const agent = createAgent({
+const agent = createReactAgent({
   llm,
   tools: [knowledgeRetrievalTool, preferencelearningTool],
   store, // Pass the store to the agent

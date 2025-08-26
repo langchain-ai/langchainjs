@@ -16,7 +16,7 @@ import {
 } from "@langchain/core/messages";
 
 import {
-  createAgentAnnotationConditional,
+  createReactAgentAnnotationConditional,
   ReactAgentAnnotation,
 } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
@@ -110,7 +110,7 @@ export class ReactAgent<
     );
 
     const schema = (this.options.stateSchema ??
-      createAgentAnnotationConditional<StructuredResponseFormat>(
+      createReactAgentAnnotationConditional<StructuredResponseFormat>(
         this.options.responseFormat !== undefined
       )) as AnyAnnotationRoot;
 

@@ -40,7 +40,12 @@
  * - Infinite loop prevention
  */
 import { ChatOpenAI } from "@langchain/openai";
-import { createAgent, tool, HumanMessage, type PreparedCall } from "langchain";
+import {
+  createReactAgent,
+  tool,
+  HumanMessage,
+  type PreparedCall,
+} from "langchain";
 import { z } from "zod";
 
 // Define some practical tools
@@ -140,7 +145,7 @@ const runtime = z.object({
 });
 
 // Create agent with prepareCall hook
-const agent = createAgent({
+const agent = createReactAgent({
   llm: basicModel, // Default model
   tools: [calculator, searchWeb, sendEmail],
   contextSchema: runtime,

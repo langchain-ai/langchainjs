@@ -20,7 +20,7 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
 export {
   interrupt,
   resume,
-  createAgent,
+  createReactAgent,
   stopWhenToolCall,
   stopWhen,
   toolOutput,

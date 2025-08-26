@@ -14,7 +14,7 @@ import {
  * This is useful for making a message history with multiple agents more coherent.
  *
  * NOTE: agent name is consumed from the message.name field.
- * If you're using an agent built with createAgent, name is automatically set.
+ * If you're using an agent built with createReactAgent, name is automatically set.
  * If you're building a custom agent, make sure to set the name on the AI message returned by the LLM.
  *
  * @param model - Language model to add agent name formatting to

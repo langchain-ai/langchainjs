@@ -23,7 +23,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -83,7 +83,7 @@ const accountInfoTool = tool(
 /**
  * Create agent that uses runtime context to customize behavior
  */
-const supportAgent = createAgent({
+const supportAgent = createReactAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [accountInfoTool],
   prompt: async (state) => {

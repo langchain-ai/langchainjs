@@ -5,9 +5,9 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createAgent, nativeOutput } from "../index.js";
+import { createReactAgent, nativeOutput } from "../index.js";
 
-describe("createAgent Integration Tests", () => {
+describe("createReactAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
     return `It's always sunny in ${input.city}!`;
   });
@@ -37,7 +37,7 @@ describe("createAgent Integration Tests", () => {
   });
 
   it("should work with Anthropic and return structured response", async () => {
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm,
       tools: [getWeather],
       responseFormat: answerSchema,
@@ -60,7 +60,7 @@ describe("createAgent Integration Tests", () => {
   });
 
   it("should throw if a user tries to use native response format with Anthropic", async () => {
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm,
       tools: [getWeather],
       responseFormat: nativeOutput(answerSchema),
@@ -83,7 +83,7 @@ describe("createAgent Integration Tests", () => {
       },
     });
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm,
       tools: [getWeather],
       responseFormat: nativeOutput(answerSchema),
@@ -142,7 +142,7 @@ describe("createAgent Integration Tests", () => {
     let preHookMessageCount = 0;
     let postHookMessageCount = 0;
 
-    const agent = createAgent({
+    const agent = createReactAgent({
       llm,
       tools: [calculator],
       responseFormat: resultSchema,

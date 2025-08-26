@@ -19,7 +19,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool } from "langchain";
+import { createReactAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -327,7 +327,7 @@ ${projectState.tasks
 );
 
 // Create the agent with stateful tools
-const agent = createAgent({
+const agent = createReactAgent({
   llm,
   tools: [createTaskTool, updateTaskStatusTool, projectOverviewTool],
   prompt: `You are a project management assistant that helps teams organize and track their work.
