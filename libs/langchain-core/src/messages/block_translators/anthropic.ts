@@ -1,7 +1,7 @@
 import { iife } from "../v1/utils.js";
 import type { StandardContentBlockTranslator } from "./index.js";
 import type { ContentBlock } from "../content/index.js";
-import type { AIMessage } from "../ai.js";
+import { isAIMessageChunk, type AIMessage } from "../ai.js";
 import {
   _isArray,
   _isContentBlock,
@@ -9,6 +9,7 @@ import {
   _isString,
   safeParseJson,
 } from "./utils.js";
+import { isBaseMessageChunk } from "../base.js";
 
 type AnthropicCitation =
   | {
@@ -54,7 +55,7 @@ type AnthropicCitation =
 
 function convertAnthropicAnnotation(
   citation: AnthropicCitation
-): ContentBlock | ContentBlock.Citation {
+): ContentBlock.Citation | undefined {
   if (citation.type === "char_location") {
     const {
       document_title,
@@ -67,7 +68,7 @@ function convertAnthropicAnnotation(
       ...rest,
       type: "citation",
       source: "char",
-      title: document_title,
+      title: document_title ?? undefined,
       startIndex: start_char_index,
       endIndex: end_char_index,
       citedText: cited_text,
@@ -85,9 +86,9 @@ function convertAnthropicAnnotation(
       ...rest,
       type: "citation",
       source: "page",
-      title: document_title,
+      title: document_title ?? undefined,
       startIndex: start_page_number,
-      endIndex: end_page_number,
+      endIndex: Number(end_page_number),
       citedText: cited_text,
     };
   }
@@ -103,7 +104,7 @@ function convertAnthropicAnnotation(
       ...rest,
       type: "citation",
       source: "block",
-      title: document_title,
+      title: document_title ?? undefined,
       startIndex: start_block_index,
       endIndex: end_block_index,
       citedText: cited_text,
@@ -117,8 +118,8 @@ function convertAnthropicAnnotation(
       source: "url",
       url,
       title,
-      startIndex: encrypted_index,
-      endIndex: encrypted_index,
+      startIndex: Number(encrypted_index),
+      endIndex: Number(encrypted_index),
       citedText: cited_text,
     };
   }
@@ -136,13 +137,13 @@ function convertAnthropicAnnotation(
       type: "citation",
       source: "search",
       url: source,
-      title,
+      title: title ?? undefined,
       startIndex: start_block_index,
       endIndex: end_block_index,
       citedText: cited_text,
     };
   }
-  return citation;
+  return undefined;
 }
 
 /**
@@ -274,6 +275,7 @@ export function convertToV1FromAnthropicInput(
 
 type AnthropicCodeExecutionToolResult = {
   type: "code_execution_tool_result";
+  tool_use_id: string;
   content:
     | {
         // BetaCodeExecutionToolResultError
@@ -331,14 +333,16 @@ export function convertToV1FromAnthropicMessage(
     for (const block of content) {
       // TextBlock
       if (_isContentBlock(block, "text") && _isString(block.text)) {
-        const { text, annotations, ...rest } = block;
-        if (_isArray(annotations) && annotations.length) {
-          const _annotations = annotations as AnthropicCitation[];
+        const { text, citations, ...rest } = block;
+        if (_isArray(citations) && citations.length) {
+          const _citations = citations
+            .map(convertAnthropicAnnotation)
+            .filter(Boolean) as ContentBlock.Citation[];
           yield {
             ...rest,
             type: "text",
             text,
-            annotations: _annotations.map(convertAnthropicAnnotation),
+            annotations: _citations,
           };
         } else {
           yield {
@@ -349,12 +353,16 @@ export function convertToV1FromAnthropicMessage(
         }
       }
       // ThinkingBlock
-      else if (_isContentBlock(block, "thinking") && _isString(block.text)) {
-        const { text, ...rest } = block;
+      else if (
+        _isContentBlock(block, "thinking") &&
+        _isString(block.thinking)
+      ) {
+        const { thinking, signature, ...rest } = block;
         yield {
           ...rest,
           type: "reasoning",
-          reasoning: text,
+          reasoning: thinking,
+          signature,
         };
       }
       // RedactedThinkingBlock
@@ -376,6 +384,20 @@ export function convertToV1FromAnthropicMessage(
       }
       // message chunks can have input_json_delta contents
       else if (_isContentBlock(block, "input_json_delta")) {
+        if (
+          isBaseMessageChunk(message) &&
+          isAIMessageChunk(message) &&
+          message.tool_call_chunks?.length
+        ) {
+          const tool_call_chunk = message.tool_call_chunks[0];
+          yield {
+            type: "tool_call_chunk",
+            id: tool_call_chunk.id,
+            name: tool_call_chunk.name,
+            args: tool_call_chunk.args,
+            index: tool_call_chunk.index,
+          };
+        }
         // TODO: implement
       }
       // ServerToolUseBlock
@@ -384,7 +406,7 @@ export function convertToV1FromAnthropicMessage(
         _isString(block.name) &&
         _isString(block.id)
       ) {
-        const { name, id, ...rest } = block;
+        const { name, id } = block;
         if (name === "web_search") {
           const query = iife(() => {
             if (typeof block.input === "string") {
@@ -402,7 +424,7 @@ export function convertToV1FromAnthropicMessage(
             return "";
           });
           yield {
-            ...rest,
+            id,
             type: "web_search_call",
             query,
           };
@@ -421,7 +443,7 @@ export function convertToV1FromAnthropicMessage(
             return "";
           });
           yield {
-            ...rest,
+            id,
             type: "code_interpreter_call",
             code,
           };
@@ -430,20 +452,31 @@ export function convertToV1FromAnthropicMessage(
       // WebSearchToolResultBlock
       else if (
         _isContentBlock(block, "web_search_tool_result") &&
-        _isString(block.url)
+        _isString(block.tool_use_id) &&
+        _isArray(block.content)
       ) {
-        const { url, ...rest } = block;
+        const { content, tool_use_id } = block;
+        const urls = content.reduce<string[]>((acc, content) => {
+          if (_isContentBlock(content, "web_search_result")) {
+            return [...acc, content.url as string];
+          }
+          return acc;
+        }, []);
         yield {
-          ...rest,
+          id: tool_use_id,
           type: "web_search_result",
-          urls: [url],
+          urls,
         };
       }
       // CodeExecutionToolResultBlock
-      else if (_isContentBlock(block, "code_execution_tool_result")) {
+      else if (
+        _isContentBlock(block, "code_execution_tool_result") &&
+        _isString(block.tool_use_id)
+      ) {
         // We just make a type assertion here instead of deep checking every property
         // since `code_execution_tool_result` is an anthropic only block
-        const { content, ...rest } = block as AnthropicCodeExecutionToolResult;
+        const { content, tool_use_id } =
+          block as AnthropicCodeExecutionToolResult;
         const output = iife(() => {
           if (content.type === "code_execution_tool_result_error") {
             return [
@@ -455,13 +488,15 @@ export function convertToV1FromAnthropicMessage(
             ];
           }
           if (content.type === "code_execution_result") {
-            const fileIds = content.content
-              .filter((content) => content.type === "code_execution_output")
-              .map((content) => content.file_id);
+            const fileIds = Array.isArray(content.content)
+              ? content.content
+                  .filter((content) => content.type === "code_execution_output")
+                  .map((content) => content.file_id)
+              : [];
             return [
               {
                 type: "code_interpreter_output" as const,
-                returnCode: content.return_code,
+                returnCode: content.return_code ?? 0,
                 stderr: content.stderr,
                 stdout: content.stdout,
                 fileIds,
@@ -471,7 +506,7 @@ export function convertToV1FromAnthropicMessage(
           return [];
         });
         yield {
-          ...rest,
+          id: tool_use_id,
           type: "code_interpreter_result",
           output,
         };

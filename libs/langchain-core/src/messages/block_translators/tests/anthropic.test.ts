@@ -123,11 +123,12 @@ describe("anthropicTranslator", () => {
             {
               type: "citation",
               title: "Document Title",
-              cited_text: "The weather is sunny.",
-              source: "source_123",
+              citedText: "The weather is sunny.",
+              source: "search",
               search_result_index: 1,
-              start_block_index: 0,
-              end_block_index: 2,
+              startIndex: 0,
+              endIndex: 2,
+              url: "source_123",
             },
           ],
         },
@@ -136,27 +137,10 @@ describe("anthropicTranslator", () => {
           id: "srvtoolu_abc123",
           query: "web search query",
         },
-
         {
           type: "web_search_result",
           id: "srvtoolu_abc123",
           urls: ["<page url 1>", "<page url 2>"],
-          content: [
-            {
-              type: "web_search_result",
-              title: "Page Title 1",
-              url: "<page url 1>",
-              page_age: "January 1, 2025",
-              encrypted_content: "<encrypted content 1>",
-            },
-            {
-              type: "web_search_result",
-              title: "Page Title 2",
-              url: "<page url 2>",
-              page_age: "January 2, 2025",
-              encrypted_content: "<encrypted content 2>",
-            },
-          ],
         },
         {
           type: "code_interpreter_call",
@@ -169,8 +153,10 @@ describe("anthropicTranslator", () => {
           output: [
             {
               type: "code_interpreter_output",
+              fileIds: [],
               returnCode: 0,
               stdout: "Mean: 5.5\nStandard deviation...",
+              stderr: "",
             },
           ],
         },
@@ -351,6 +337,7 @@ describe("anthropicTranslator", () => {
         expectedChunkContents[i],
       ]);
       for (const [chunk, expectedChunk] of chunkPairs) {
+        console.log(chunk);
         expect(chunk.contentBlocks).toEqual([expectedChunk]);
       }
 
@@ -476,7 +463,7 @@ describe("anthropicTranslator", () => {
         },
         {
           type: "file",
-          url: "<document url>",
+          url: "https://example.com",
         },
         // {
         //   type: "document",
