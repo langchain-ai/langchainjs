@@ -13,7 +13,6 @@ export default {
     try {
       const cache = new CloudflareKVCache(env.KV_NAMESPACE);
       const model = new ChatOpenAI({
-        // @ts-expect-error - CloudflareKVCache is not typed correctly
         cache,
         model: "gpt-3.5-turbo",
         apiKey: env.OPENAI_API_KEY,

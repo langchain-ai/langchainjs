@@ -1,2 +1,4 @@
 prefer-workspace-packages=true
 link-workspace-packages=true
+auto-install-peers=false
+strict-peer-dependencies=false
