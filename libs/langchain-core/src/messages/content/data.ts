@@ -1,3 +1,5 @@
+import { BaseContentBlock } from "./base.js";
+
 /**
  * @deprecated
  * Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
@@ -42,7 +44,7 @@ export declare namespace Data {
    * @deprecated
    * Use {@link ContentBlock.Multimodal.Data} instead
    */
-  export interface BaseDataContentBlock {
+  export interface BaseDataContentBlock extends BaseContentBlock {
     mime_type?: string;
     metadata?: Record<string, unknown>;
   }

@@ -45,7 +45,11 @@ export type MessageType =
   | "tool"
   | "remove";
 
-export type MessageContent = string | Array<ContentBlock>;
+export type MessageContent =
+  | string
+  // FIXME: Allowing for .Text and .Data.URLContentBlock is a temporary backwards
+  // compat fix. We should remove this when we migrate away from data blocks.
+  | Array<ContentBlock | ContentBlock.Text | ContentBlock.Data.URLContentBlock>;
 
 export interface FunctionCall {
   /**
