@@ -18,39 +18,9 @@ import {
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "../utils.js";
-import type {
-  CreateReactAgentParams,
-  AnyAnnotationRoot,
-  ToAnnotationRoot,
-} from "../types.js";
+import type { AnyAnnotationRoot, ToAnnotationRoot } from "../types.js";
 
-export interface ExperimentalToolNodeOptions<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseFormat extends Record<string, unknown> = Record<
-    string,
-    unknown
-  >,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> {
-  onToolCallError?: CreateReactAgentParams<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema
-  >["experimental_onToolCallError"];
-}
-
-export interface ToolNodeOptions<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  StructuredResponseFormat extends Record<string, unknown> = Record<
-    string,
-    unknown
-  >,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> extends ExperimentalToolNodeOptions<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema
-  > {
+export interface ToolNodeOptions {
   /**
    * The name of the tool node.
    */
@@ -244,7 +214,6 @@ export class ToolNode<
 
   protected async runTool(
     call: ToolCall,
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
     config: RunnableConfig
   ): Promise<ToolMessage | Command> {
     const tool = this.tools.find((tool) => tool.name === call.name);
@@ -297,29 +266,6 @@ export class ToolNode<
         throw e;
       }
 
-      /**
-       * If the onToolCallError function is provided, call it with the tool call data and the state.
-       */
-      if (this.options?.onToolCallError) {
-        const update = await this.options.onToolCallError(
-          {
-            id: call.id ?? "",
-            name: call.name,
-            args: call.args,
-            error: e,
-          },
-          state,
-          config
-        );
-
-        /**
-         * only do something if the onToolCallError function returns a value
-         */
-        if (update) {
-          return update as ToolMessage;
-        }
-      }
-
       const error = e instanceof Error ? e : new Error(String(e));
       return new ToolMessage({
         content: `Error: ${error.message}\n Please fix your mistakes.`,
@@ -336,7 +282,7 @@ export class ToolNode<
     let outputs: (ToolMessage | Command)[];
 
     if (isSendInput(state)) {
-      outputs = [await this.runTool(state.lg_tool_call, state, config)];
+      outputs = [await this.runTool(state.lg_tool_call, config)];
     } else {
       let messages: BaseMessage[];
       if (isBaseMessageArray(state)) {
@@ -371,7 +317,7 @@ export class ToolNode<
       outputs = await Promise.all(
         aiMessage.tool_calls
           ?.filter((call) => call.id == null || !toolMessageIds.has(call.id))
-          .map((call) => this.runTool(call, state, config)) ?? []
+          .map((call) => this.runTool(call, config)) ?? []
       );
     }
 

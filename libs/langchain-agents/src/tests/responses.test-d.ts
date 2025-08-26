@@ -3,12 +3,7 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-import {
-  createReactAgent,
-  toolOutput,
-  nativeOutput,
-  stopWhenMaxSteps,
-} from "../index.js";
+import { createReactAgent, toolOutput, nativeOutput } from "../index.js";
 import type { JsonSchemaFormat } from "../types.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
@@ -99,7 +94,6 @@ describe("response format", () => {
     createReactAgent({
       llm: new FakeToolCallingChatModel({}),
       tools: [],
-      experimental_stopWhen: [stopWhenMaxSteps(1)],
     });
   });
 

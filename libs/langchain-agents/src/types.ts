@@ -16,7 +16,6 @@ import type {
   SystemMessage,
   BaseMessageLike,
   BaseMessage,
-  ToolMessage,
 } from "@langchain/core/messages";
 import type {
   All,
@@ -30,7 +29,6 @@ import type {
 import type {
   Runnable,
   RunnableLike,
-  RunnableConfig,
   RunnableToolLike,
 } from "@langchain/core/runnables";
 import type { ToolNode } from "./nodes/ToolNode.js";
@@ -69,44 +67,6 @@ export interface ExecutedToolCall {
 }
 
 /**
- * Configuration for modifying a model call at runtime.
- * All fields are optional and only provided fields will override defaults.
- */
-export interface PreparedCall {
-  /**
-   * The model to use for this step.
-   */
-  model?: LanguageModelLike;
-  /**
-   * The messages to send to the model.
-   */
-  messages?: BaseMessage[];
-  /**
-   * The system message for this step.
-   */
-  systemMessage?: string;
-  /**
-   * Tool choice configuration (model-specific format).
-   * Can be one of:
-   * - `"auto"`: means the model can pick between generating a message or calling one or more tools.
-   * - `"none"`: means the model will not call any tool and instead generates a message.
-   * - `"required"`: means the model must call one or more tools.
-   * - `{ type: "function", function: { name: string } }`: The model will use the specified function.
-   */
-  toolChoice?:
-    | "auto"
-    | "none"
-    | "required"
-    | { type: "function"; function: { name: string } };
-
-  /**
-   * The tools to make available for this step.
-   * Can be tool names (strings) or tool instances.
-   */
-  tools?: (string | ClientTool | ServerTool)[];
-}
-
-/**
  * Information about an LLM invocation.
  */
 export interface LLMCall {
@@ -119,42 +79,6 @@ export interface LLMCall {
    */
   response?: BaseMessage;
 }
-
-/**
- * Hook function that allows setup of the agent context before every LLM invocation.
- */
-export type PrepareCall<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> = (
-  options: {
-    /**
-     * The number of the step that is being executed.
-     */
-    stepNumber: number;
-    /**
-     * List of tool calls including their results.
-     */
-    toolCalls: ExecutedToolCall[];
-    /**
-     * List of LLM invocations including messages and response.
-     */
-    llmCalls: LLMCall[];
-    /**
-     * The current model being used (default model).
-     */
-    model: LanguageModelLike;
-    /**
-     * The current list of messages.
-     */
-    messages: BaseMessage[];
-    /**
-     * The current state of the agent.
-     */
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"];
-  },
-  runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
-) => PreparedCall | Promise<PreparedCall>;
 
 /**
  * Special type to indicate that no response format is provided.
@@ -312,50 +236,6 @@ export type CreateReactAgentParams<
   prompt?: Prompt<StateSchema, ContextSchema>;
 
   /**
-   * A hook that allows setup of the agent context before every LLM invocation.
-   *
-   * This function is called before each model invocation and can dynamically override:
-   * - model: The LLM to use for this step
-   * - messages: The messages to send to the model
-   * - systemMessage: The system message for this step
-   * - toolChoice: Tool selection strategy for this step
-   * - tools: Which tools are available for this step
-   *
-   * All fields in the return object are optional. Any provided field will override the default.
-   *
-   * Cannot be used together with a callable `prompt`.
-   *
-   * @experimental this API is experimental and may change in the future, use with caution
-   * @example
-   * ```ts
-   * const agent = createReactAgent({
-   *   llm: model,
-   *   tools: [getWeather],
-   *   prepareCall: async (options, runtime) => {
-   *     const { stepNumber, messages, state } = options;
-   *
-   *     // Dynamically set system message based on state
-   *     if (state.userType === "premium") {
-   *       return {
-   *         systemMessage: "You are a helpful assistant with access to premium features."
-   *       };
-   *     }
-   *
-   *     // Force specific tool on first step
-   *     if (stepNumber === 0) {
-   *       return {
-   *         toolChoice: { type: "tool", toolName: "get_weather" }
-   *       };
-   *     }
-   *
-   *     return {};
-   *   }
-   * });
-   * ```
-   */
-  experimental_prepareCall?: PrepareCall<StateSchema, ContextSchema>;
-
-  /**
    * Additional state schema for the agent. It allows to define additional state keys that will be
    * persisted between agent invocations.
    *
@@ -401,44 +281,6 @@ export type CreateReactAgentParams<
    * ```
    */
   stateSchema?: StateSchema;
-
-  /**
-   * An optional predicate function to stop the agent.
-   *
-   * The predicate function can an object with the following properties:
-   * - `shouldStop`: A boolean value to indicate if the agent should stop.
-   * - `description`: A string to describe the reason for stopping the agent.
-   *
-   * There are two prebuilt predicate functions:
-   * - `stopWhenMaxSteps`: Stops the agent when the number of AI messages in the state exceeds the given number.
-   * - `stopWhenToolCall`: Stops the agent when the number of tool calls in the state exceeds the given number.
-   *
-   * @experimental this API is experimental and may change in the future, use with caution.
-   *
-   * @example
-   * ```ts
-   * import { stopWhen, stopWhenMaxSteps } from "langchain";
-   *
-   * const agent = createReactAgent({
-   *   llm: model,
-   *   tools: [getWeather],
-   *   stopWhen: [
-   *     // use a prebuilt predicate function
-   *     stopWhenMaxSteps(10),
-   *     // or use a custom predicate function
-   *     stopWhen((state, config) => {
-   *       return {
-   *         shouldStop: state.messages.length > 10,
-   *         description: "The agent has reached the maximum number of messages.",
-   *       };
-   *     })
-   *   ],
-   * });
-   * ```
-   */
-  experimental_stopWhen?:
-    | PredicateFunction<StructuredResponseType>
-    | PredicateFunction<StructuredResponseType>[];
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
@@ -578,35 +420,6 @@ export type CreateReactAgentParams<
   >;
 
   /**
-   * An optional function to handle tool call errors.
-   *
-   * You can use this hook to handle tool call errors more gracefully and have the agent retry
-   * the tool call with an updated tool call message.
-   *
-   * @experimental This API is experimental and may change in the future, use with caution.
-   * @example
-   * ```ts
-   * import { createReactAgent, tool, ToolMessage } from "langchain";
-   *
-   * const agent = createReactAgent({
-   *   llm: model,
-   *   tools: [getWeather],
-   *   onToolCallError: (toolCall, state, config) => {
-   *     console.error(toolCall.error);
-   *     return new ToolMessage({
-   *       content: `An error occurred while calling the tool: ${toolCall.error}, please try again.`,
-   *       tool_call_id: toolCall.id,
-   *     });
-   *   },
-   * });
-   */
-  experimental_onToolCallError?: (
-    toolCall: ToolCallData,
-    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
-    config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
-  ) => void | ToolMessage | Promise<ToolMessage>;
-
-  /**
    * An optional abort signal that indicates that the overall operation should be aborted.
    */
   signal?: AbortSignal;
@@ -660,47 +473,6 @@ export type WithStateGraphNodes<
 >
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
-
-export interface ToolCallData {
-  /**
-   * The id of the tool call.
-   */
-  id: string;
-  /**
-   * The name of the tool that was called.
-   */
-  name: string;
-  /**
-   * The arguments that were passed to the tool.
-   */
-  args: Record<string, unknown>;
-  /**
-   * The error that occurred if the tool call failed.
-   */
-  error: unknown;
-}
-
-/**
- * A predicate function that determines when to stop the agent.
- * @param state - The state of the agent.
- * @param config - The config of the agent.
- * @returns A predicate function that can be used to stop the agent.
- */
-export type PredicateFunction<
-  StructuredResponseFormat extends Record<string, unknown> | undefined = Record<
-    string,
-    unknown
-  >
-> = (
-  state: InternalAgentState<StructuredResponseFormat> &
-    PreHookAnnotation["State"],
-  config: RunnableConfig
-) => PredicateFunctionReturn | Promise<PredicateFunctionReturn>;
-
-export interface PredicateFunctionReturn {
-  shouldStop: boolean;
-  description?: string;
-}
 
 /**
  * @deprecated likely to be removed in the next version of the agent

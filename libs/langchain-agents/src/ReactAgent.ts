@@ -80,20 +80,6 @@ export class ReactAgent<
       validateLLMHasNoBoundTools(options.llm);
     }
 
-    /**
-     * Check if prepareCall is co-specified with callable prompt
-     */
-    if (
-      options.experimental_prepareCall &&
-      options.prompt &&
-      typeof options.prompt === "function"
-    ) {
-      throw new Error(
-        "Cannot specify both 'prepareCall' and a callable 'prompt'. " +
-          "Use 'prepareCall' to dynamically modify all aspects of the model call."
-      );
-    }
-
     const toolClasses = Array.isArray(options.tools)
       ? options.tools
       : options.tools.tools;
@@ -129,10 +115,8 @@ export class ReactAgent<
       new AgentNode({
         llm: this.options.llm,
         prompt: this.options.prompt,
-        prepareCall: this.options.experimental_prepareCall,
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
-        stopWhen: this.options.experimental_stopWhen,
         responseFormat: this.options.responseFormat,
         toolClasses,
         shouldReturnDirect,
@@ -148,7 +132,6 @@ export class ReactAgent<
      */
     if (toolClasses.length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
-        onToolCallError: this.options.experimental_onToolCallError,
         signal: this.options.signal,
       });
       allNodeWorkflows.addNode("tools", toolNode);

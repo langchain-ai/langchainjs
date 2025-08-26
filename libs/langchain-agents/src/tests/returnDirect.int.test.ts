@@ -4,11 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import {
-  createReactAgent,
-  stopWhenToolCall,
-  JsonSchemaFormat,
-} from "../index.js";
+import { createReactAgent, JsonSchemaFormat } from "../index.js";
 
 import returnDirectSpec from "./specifications/returnDirect.json";
 
@@ -37,10 +33,6 @@ function makePollTool(returnDirect: boolean) {
   };
 }
 
-const predicateMap = {
-  stopWhenToolCall,
-} as const;
-
 // Agent prompt used across all tests
 const AGENT_PROMPT = `You are a strict polling bot.
 
@@ -52,12 +44,6 @@ interface TestCase {
   name: string;
   returnDirect: boolean;
   responseFormat?: JsonSchemaFormat;
-  stopWhen:
-    | {
-        predicate: keyof typeof predicateMap;
-        args: any[];
-      }[]
-    | undefined;
   expectedToolCalls: number;
   expectedLastMessage: string | RegExp;
   expectedStructuredResponse: any;
@@ -87,11 +73,6 @@ describe("return_direct Matrix Tests", () => {
         llm,
         tools: [tool],
         prompt: AGENT_PROMPT,
-        ...(testCase.stopWhen && {
-          stopWhen: testCase.stopWhen.map((stopWhen) =>
-            predicateMap[stopWhen.predicate](stopWhen.args[0], stopWhen.args[1])
-          ),
-        }),
       };
 
       const agent = testCase.responseFormat

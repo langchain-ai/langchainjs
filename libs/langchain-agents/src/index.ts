@@ -283,8 +283,6 @@ export function createReactAgent<
 }
 
 export * from "./types.js";
-export * from "./resume.js";
-export * from "./stopWhen.js";
 export * from "./errors.js";
 export type LangGraphRunnableConfig = ReturnType<typeof getConfig>;
 export { interrupt } from "@langchain/langgraph";

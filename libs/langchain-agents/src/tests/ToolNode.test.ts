@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { StructuredTool, tool } from "@langchain/core/tools";
 
 import {
@@ -804,7 +804,6 @@ describe("ToolNode error handling", () => {
   });
 
   it("should throw if handleToolErrors is false", async () => {
-    const onToolCallError = vi.fn();
     const toolWithError = tool(
       async (_) => {
         throw new Error("some error");
@@ -817,7 +816,6 @@ describe("ToolNode error handling", () => {
     );
     const toolNode = new ToolNode([toolWithError], {
       handleToolErrors: false,
-      onToolCallError,
     });
     await expect(
       toolNode.invoke({
@@ -831,6 +829,5 @@ describe("ToolNode error handling", () => {
         ],
       })
     ).rejects.toThrow(/some error/);
-    expect(onToolCallError).toHaveBeenCalledTimes(0);
   });
 });
