@@ -1,8 +1,10 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
-import { convertV0ContentBlockToV1 } from "./block_translators/legacy.js";
 import { ContentBlock } from "./content/index.js";
 import { isDataContentBlock } from "./content/data.js";
+import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
+import { convertToV1FromDataContent } from "./block_translators/data.js";
+import { convertToV1FromChatCompletionsInput } from "./block_translators/openai.js";
 
 export interface StoredMessageData {
   content: string;
@@ -289,21 +291,22 @@ export abstract class BaseMessage extends Serializable {
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
-    const blocks: Array<ContentBlock> = [];
-    if (typeof this.content === "string") {
-      blocks.push({ type: "text", text: this.content });
-    } else {
-      for (const item of this.content) {
-        if (typeof item === "string") {
-          blocks.push({ type: "text", text: item });
-        } else {
-          const converted = convertV0ContentBlockToV1(item);
-          if (converted !== item) blocks.push(converted);
-          else blocks.push(item as ContentBlock.Standard);
-        }
-      }
-    }
-    return blocks as Array<ContentBlock.Standard>;
+    const blocks: Array<ContentBlock> =
+      typeof this.content === "string"
+        ? [{ type: "text", text: this.content }]
+        : this.content;
+    const parsingSteps = [
+      convertToV1FromDataContent,
+      convertToV1FromChatCompletionsInput,
+      convertToV1FromAnthropicInput,
+    ];
+    const parsedBlocks = parsingSteps.reduce(
+      (blocks, step) => step(blocks),
+      blocks
+    );
+    // this assertion is safe since we're planning to allow
+    // untyped content blocks for v1 messages (directed through message structures).
+    return parsedBlocks as Array<ContentBlock.Standard>;
   }
 
   toDict(): StoredMessage {
