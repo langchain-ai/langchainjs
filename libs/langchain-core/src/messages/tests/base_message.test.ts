@@ -238,36 +238,51 @@ describe("Complex AIMessageChunk concat", () => {
 
   it("merges content arrays with same index", () => {
     expect(
-      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
-        new AIMessageChunk({ content: [{ index: 0, text: " indeed." }] })
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ index: 0, type: "text", text: " indeed." }],
+        })
       )
     ).toEqual(
-      new AIMessageChunk({ content: [{ index: 0, text: "I am indeed." }] })
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am indeed." }],
+      })
     );
   });
 
   it("does not merge when one chunk is missing an index", () => {
     expect(
-      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
-        new AIMessageChunk({ content: [{ text: " indeed." }] })
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({ content: [{ type: "text", text: " indeed." }] })
       )
     ).toEqual(
       new AIMessageChunk({
-        content: [{ index: 0, text: "I am" }, { text: " indeed." }],
+        content: [
+          { index: 0, type: "text", text: "I am" },
+          { type: "text", text: " indeed." },
+        ],
       })
     );
   });
 
   it("does not create a holey array when there's a gap between indexes", () => {
     expect(
-      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
-        new AIMessageChunk({ content: [{ index: 2, text: " indeed." }] })
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ index: 2, type: "text", text: " indeed." }],
+        })
       )
     ).toEqual(
       new AIMessageChunk({
         content: [
-          { index: 0, text: "I am" },
-          { index: 2, text: " indeed." },
+          { index: 0, type: "text", text: "I am" },
+          { index: 2, type: "text", text: " indeed." },
         ],
       })
     );
@@ -275,14 +290,18 @@ describe("Complex AIMessageChunk concat", () => {
 
   it("does not merge content arrays with separate indexes", () => {
     expect(
-      new AIMessageChunk({ content: [{ index: 0, text: "I am" }] }).concat(
-        new AIMessageChunk({ content: [{ index: 1, text: " indeed." }] })
+      new AIMessageChunk({
+        content: [{ index: 0, type: "text", text: "I am" }],
+      }).concat(
+        new AIMessageChunk({
+          content: [{ index: 1, type: "text", text: " indeed." }],
+        })
       )
     ).toEqual(
       new AIMessageChunk({
         content: [
-          { index: 0, text: "I am" },
-          { index: 1, text: " indeed." },
+          { index: 0, type: "text", text: "I am" },
+          { index: 1, type: "text", text: " indeed." },
         ],
       })
     );

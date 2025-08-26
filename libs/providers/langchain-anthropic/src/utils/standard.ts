@@ -1,6 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { ContentBlock } from "@langchain/core/messages";
-import type { ToolCall } from "@langchain/core/messages/tool";
+import type { BaseMessage, ContentBlock } from "@langchain/core/messages";
 import { iife } from "./index.js";
 
 function _isStandardAnnotation(
@@ -73,18 +72,19 @@ function _formatStandardCitations(
 }
 
 export function _formatStandardContent(
-  blocks: ContentBlock.Standard[],
-  toolCalls: ToolCall[],
-  modelProvider?: string
+  message: BaseMessage
 ): Anthropic.Beta.BetaContentBlockParam[] {
   const result: Anthropic.Beta.BetaContentBlockParam[] = [];
-  for (const block of blocks) {
+  const modelProvider = message.response_metadata?.model_provider;
+  for (const block of message.contentBlocks) {
     if (block.type === "text") {
-      if (citations) {
+      if (block.annotations) {
         result.push({
           type: "text",
           text: block.text,
-          citations: _formatStandardCitations(block.annotations),
+          citations: _formatStandardCitations(
+            block.annotations as ContentBlock.Citation[]
+          ),
         });
       } else {
         result.push({

@@ -1,6 +1,7 @@
 /**
  * This util file contains functions for converting LangChain messages to Anthropic messages.
  */
+import type Anthropic from "@anthropic-ai/sdk";
 import {
   type BaseMessage,
   type SystemMessage,
@@ -153,7 +154,9 @@ export function _convertLangChainToolCallToAnthropic(
   };
 }
 
-function* _formatContentBlocks(content: ContentBlock[]) {
+function* _formatContentBlocks(
+  content: ContentBlock[]
+): Generator<Anthropic.Messages.ContentBlockParam> {
   const toolTypes = [
     "tool_use",
     "tool_result",
@@ -319,22 +322,9 @@ export function _convertMessagesToAnthropicPayload(
       isAIMessage(message) &&
       message.response_metadata?.output_version === "v1"
     ) {
-      const toolCalls: Array<ToolCall> =
-        isAIMessage(message) && message.tool_calls
-          ? message.tool_calls.map((toolCall) => ({
-              type: "tool_call",
-              id: toolCall.id ?? "",
-              name: toolCall.name,
-              args: toolCall.args,
-            }))
-          : [];
       return {
         role,
-        content: _formatStandardContent(
-          message.content,
-          toolCalls,
-          "anthropic"
-        ),
+        content: _formatStandardContent(message),
       };
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {

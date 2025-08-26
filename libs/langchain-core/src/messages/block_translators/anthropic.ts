@@ -5,58 +5,23 @@ import { isAIMessageChunk, type AIMessage } from "../ai.js";
 import {
   _isArray,
   _isContentBlock,
+  _isNumber,
   _isObject,
   _isString,
   safeParseJson,
 } from "./utils.js";
 import { isBaseMessageChunk } from "../base.js";
 
-type AnthropicCitation =
-  | {
-      type: "char_location";
-      start_char_index: number;
-      end_char_index: number;
-      document_title: string | null;
-      document_index: number;
-      cited_text: string;
-    }
-  | {
-      type: "page_location";
-      start_page_number: number;
-      end_page_number: string;
-      document_title: string | null;
-      document_index: number;
-      cited_text: string;
-    }
-  | {
-      type: "content_block_location";
-      start_block_index: number;
-      end_block_index: number;
-      document_title: string | null;
-      document_index: number;
-      cited_text: string;
-    }
-  | {
-      type: "web_search_result_location";
-      url: string;
-      title: string;
-      encrypted_index: string;
-      cited_text: string;
-    }
-  | {
-      type: "search_result_location";
-      title: string | null;
-      start_block_index: number;
-      end_block_index: number;
-      search_result_index: number;
-      source: string;
-      cited_text: string;
-    };
-
 function convertAnthropicAnnotation(
-  citation: AnthropicCitation
+  citation: ContentBlock
 ): ContentBlock.Citation | undefined {
-  if (citation.type === "char_location") {
+  if (
+    citation.type === "char_location" &&
+    _isString(citation.document_title) &&
+    _isNumber(citation.start_char_index) &&
+    _isNumber(citation.end_char_index) &&
+    _isString(citation.cited_text)
+  ) {
     const {
       document_title,
       start_char_index,
@@ -74,7 +39,13 @@ function convertAnthropicAnnotation(
       citedText: cited_text,
     };
   }
-  if (citation.type === "page_location") {
+  if (
+    citation.type === "page_location" &&
+    _isString(citation.document_title) &&
+    _isNumber(citation.start_page_number) &&
+    _isNumber(citation.end_page_number) &&
+    _isString(citation.cited_text)
+  ) {
     const {
       document_title,
       start_page_number,
@@ -88,11 +59,17 @@ function convertAnthropicAnnotation(
       source: "page",
       title: document_title ?? undefined,
       startIndex: start_page_number,
-      endIndex: Number(end_page_number),
+      endIndex: end_page_number,
       citedText: cited_text,
     };
   }
-  if (citation.type === "content_block_location") {
+  if (
+    citation.type === "content_block_location" &&
+    _isString(citation.document_title) &&
+    _isNumber(citation.start_block_index) &&
+    _isNumber(citation.end_block_index) &&
+    _isString(citation.cited_text)
+  ) {
     const {
       document_title,
       start_block_index,
@@ -110,7 +87,13 @@ function convertAnthropicAnnotation(
       citedText: cited_text,
     };
   }
-  if (citation.type === "web_search_result_location") {
+  if (
+    citation.type === "web_search_result_location" &&
+    _isString(citation.url) &&
+    _isString(citation.title) &&
+    _isString(citation.encrypted_index) &&
+    _isString(citation.cited_text)
+  ) {
     const { url, title, encrypted_index, cited_text, ...rest } = citation;
     return {
       ...rest,
@@ -123,7 +106,14 @@ function convertAnthropicAnnotation(
       citedText: cited_text,
     };
   }
-  if (citation.type === "search_result_location") {
+  if (
+    citation.type === "search_result_location" &&
+    _isString(citation.source) &&
+    _isString(citation.title) &&
+    _isNumber(citation.start_block_index) &&
+    _isNumber(citation.end_block_index) &&
+    _isString(citation.cited_text)
+  ) {
     const {
       source,
       title,
@@ -335,9 +325,16 @@ export function convertToV1FromAnthropicMessage(
       if (_isContentBlock(block, "text") && _isString(block.text)) {
         const { text, citations, ...rest } = block;
         if (_isArray(citations) && citations.length) {
-          const _citations = citations
-            .map(convertAnthropicAnnotation)
-            .filter(Boolean) as ContentBlock.Citation[];
+          const _citations = citations.reduce<ContentBlock.Citation[]>(
+            (acc, item) => {
+              const citation = convertAnthropicAnnotation(item as ContentBlock);
+              if (citation) {
+                return [...acc, citation];
+              }
+              return acc;
+            },
+            []
+          );
           yield {
             ...rest,
             type: "text",

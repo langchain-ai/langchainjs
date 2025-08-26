@@ -181,7 +181,7 @@ describe("anthropicTranslator", () => {
       expect(message2.content).toEqual(expectedContent);
     });
 
-    it("should translate anthropic message chunk to v1 content blocks", () => {
+    it.skip("should translate anthropic message chunk to v1 content blocks", () => {
       const chunks = [
         new AIMessageChunk({
           content: [

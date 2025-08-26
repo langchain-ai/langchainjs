@@ -19,6 +19,10 @@ export function _isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
+export function _isNumber(value: unknown): value is number {
+  return typeof value === "number";
+}
+
 export function safeParseJson<T = unknown>(value: string): T | undefined {
   try {
     return JSON.parse(value);
