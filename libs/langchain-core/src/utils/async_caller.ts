@@ -1,6 +1,8 @@
 import pRetry from "p-retry";
 import PQueueMod from "p-queue";
 
+import { getAbortSignalError } from "./signal.js";
+
 const STATUS_NO_RETRY = [
   400, // Bad Request
   401, // Unauthorized
@@ -142,7 +144,7 @@ export class AsyncCaller {
         this.call<A, T>(callable, ...args),
         new Promise<never>((_, reject) => {
           options.signal?.addEventListener("abort", () => {
-            reject(new Error("AbortError"));
+            reject(getAbortSignalError(options.signal));
           });
         }),
       ]);

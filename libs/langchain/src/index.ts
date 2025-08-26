@@ -6,6 +6,7 @@ export {
   AIMessage,
   SystemMessage,
   HumanMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 
 /**
@@ -20,9 +21,14 @@ export {
   interrupt,
   resume,
   createReactAgent,
-  type CreateReactAgentState,
-  type CreateReactAgentRuntime,
-  type LangGraphRunnableConfig as CreateReactAgentToolConfig,
+  stopWhenToolCall,
+  stopWhen,
+  toolOutput,
+  nativeOutput,
+  type AgentState,
+  type AgentRuntime,
+  type PreparedCall,
+  type LangGraphRunnableConfig as CreateAgentToolConfig,
 } from "@langchain/agents";
 export { type Runtime } from "@langchain/langgraph";
 

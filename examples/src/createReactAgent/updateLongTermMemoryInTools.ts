@@ -15,11 +15,12 @@
  * interactions with this customer can emphasize sustainable options automatically.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentToolConfig,
+  type CreateAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -112,7 +113,7 @@ interface MarketInsight {
  * Customer relationship management tool that learns preferences
  */
 const customerPreferencesTool = tool(
-  async (input, config: CreateReactAgentToolConfig) => {
+  async (input, config: CreateAgentToolConfig) => {
     console.log(`💾 Storing customer preference for ${input.customerId}...`);
 
     const key = input.customerId;
@@ -145,7 +146,7 @@ const customerPreferencesTool = tool(
  * Product recommendation tool that uses stored preferences
  */
 const productRecommendationTool = tool(
-  async (input, config: CreateReactAgentToolConfig) => {
+  async (input, config: CreateAgentToolConfig) => {
     console.log(
       `🔍 Looking up preferences for customer ${input.customerId}...`
     );
@@ -270,7 +271,7 @@ ${products
  * Market research tool that accumulates insights
  */
 const marketInsightTool = tool(
-  async (input, config: CreateReactAgentToolConfig) => {
+  async (input, config: CreateAgentToolConfig) => {
     console.log(
       `📊 Recording market insight: ${input.insight.slice(0, 50)}...`
     );
@@ -323,7 +324,7 @@ Insight: ${input.insight}`;
  * Meeting notes tool that stores key decisions and actions
  */
 const meetingNotesTool = tool(
-  async (input, config: CreateReactAgentToolConfig) => {
+  async (input, config: CreateAgentToolConfig) => {
     console.log(`📝 Storing meeting notes for: ${input.meeting}...`);
 
     const storeInstance = config.store ?? store;
@@ -561,6 +562,14 @@ Memory utilization: ${memoryStats.retrievalCount > 0 ? "High" : "Low"}
 
 💡 The agent is continuously learning and improving its responses based on accumulated knowledge!
 `);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:

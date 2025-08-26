@@ -26,11 +26,8 @@
  * like "Design a distributed caching algorithm" are routed to a more powerful model.
  */
 
-import {
-  createReactAgent,
-  type CreateReactAgentState,
-  type CreateReactAgentRuntime,
-} from "langchain";
+import fs from "node:fs/promises";
+import { createReactAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -45,46 +42,42 @@ const context = z.object({
   model: z.enum(["gpt-4o", "gpt-4o-mini"]).optional(),
 });
 
-/**
- * Dynamic model selection using either agent state (messages) or runtime context.
- *
- * @param state - The state of the agent.
- * @param runtime - The agent runtime, including provided context.
- * @returns The model to use for the next call.
- */
-function dynamicModel(
-  state: CreateReactAgentState,
-  runtime: CreateReactAgentRuntime<typeof context>
-) {
-  /**
-   * if model preference is provided by content, use it
-   */
-  if (runtime.context?.model) {
-    console.log("\n🧠 Using model from context:", runtime.context.model);
-    return new ChatOpenAI({
-      model: runtime.context.model,
-    });
-  }
-
-  const last = state.messages[state.messages.length - 1];
-  const content = typeof last.content === "string" ? last.content : "";
-  const text = content.toLowerCase();
-  const isComplex = /algorithm|architecture|optimi(?:s|z)e|system design/.test(
-    text
-  );
-  const modelId = isComplex ? "gpt-4o" : "gpt-4o-mini";
-  console.log(
-    `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
-  );
-  return new ChatOpenAI({
-    model: modelId,
-    temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
-  });
-}
-
 const agent = createReactAgent({
-  llm: dynamicModel,
+  llm: model,
   tools: [],
+  /**
+   * Custom dynamic model selection before the model call.
+   */
+  prepareCall: (state, runtime) => {
+    console.log("prepareCall called", runtime);
+    /**
+     * if model preference is provided by content, use it
+     */
+    if (runtime.context?.model) {
+      console.log("\n🧠 Using model from context:", runtime.context.model);
+      return {
+        model: new ChatOpenAI({
+          model: runtime.context.model,
+        }),
+      };
+    }
+
+    const last = state.messages[state.messages.length - 1];
+    const content = typeof last.content === "string" ? last.content : "";
+    const text = content.toLowerCase();
+    const isComplex =
+      /algorithm|architecture|optimi(?:s|z)e|system design/.test(text);
+    const modelId = isComplex ? "gpt-4o" : "gpt-4o-mini";
+    console.log(
+      `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
+    );
+    return {
+      model: new ChatOpenAI({
+        model: modelId,
+        temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
+      }),
+    };
+  },
   prompt: `You are a concise coding assistant. Answer clearly.`,
   contextSchema: context,
 });
@@ -127,6 +120,14 @@ const contextPrefer = await agent.invoke(
   }
 );
 console.log("Context Prefer:", contextPrefer.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Expected: first query routes to gpt-4o-mini, second to gpt-4o.

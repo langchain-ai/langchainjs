@@ -23,11 +23,12 @@
  * system prompt to maintain consistent behavior.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentToolConfig,
+  type CreateAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -88,7 +89,7 @@ await store.put(["procedural_memory"], "user456", {
  * Tool to get user's procedural memory
  */
 const getProceduralMemoryTool = tool(
-  async (_: never, config: CreateReactAgentToolConfig): Promise<string> => {
+  async (_: never, config: CreateAgentToolConfig): Promise<string> => {
     const storeInstance = config.store;
     if (!storeInstance) {
       throw new Error("Store is required when compiling the graph");
@@ -115,7 +116,7 @@ const getProceduralMemoryTool = tool(
  * Tool to update user's procedural memory
  */
 const updateProceduralMemoryTool = tool(
-  async (input, config: CreateReactAgentToolConfig): Promise<string> => {
+  async (input, config: CreateAgentToolConfig): Promise<string> => {
     const storeInstance = config.store;
     if (!storeInstance) {
       throw new Error("Store is required when compiling the graph");
@@ -302,6 +303,14 @@ console.log(
   "Direct store access:",
   JSON.stringify(directMemory?.value, null, 2)
 );
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await codingAssistant.drawMermaidPng());
 
 /**
  * Example Output:

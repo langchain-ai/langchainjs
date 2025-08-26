@@ -1,35 +1,151 @@
-import { InteropZodObject, InteropZodType } from "@langchain/core/utils/types";
-import {
+import type {
+  InteropZodObject,
+  InteropZodType,
+} from "@langchain/core/utils/types";
+import type {
   LangGraphRunnableConfig,
   AnnotationRoot,
-  MessagesAnnotation,
   START,
   Runtime,
+  StateGraph,
 } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
-import { SystemMessage, BaseMessageLike } from "@langchain/core/messages";
-import {
+import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type {
+  SystemMessage,
+  BaseMessageLike,
+  BaseMessage,
+} from "@langchain/core/messages";
+import type {
   All,
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
-import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
-import {
+import type {
+  DynamicTool,
+  StructuredToolInterface,
+} from "@langchain/core/tools";
+import type {
   Runnable,
   RunnableLike,
   RunnableToolLike,
 } from "@langchain/core/runnables";
-
-import { ToolNode } from "./ToolNode.js";
-import { PreHookAnnotation } from "./PreHookAnnotation.js";
+import type { ToolNode } from "./nodes/ToolNode.js";
+import type { PreHookAnnotation } from "./annotation.js";
+import type {
+  ResponseFormat,
+  ToolOutput,
+  TypedToolOutput,
+  NativeOutput,
+} from "./responses.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
 export type N = typeof START | "agent" | "tools";
 
+/**
+ * Information about a tool call that has been executed.
+ */
+export interface ExecutedToolCall {
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, unknown>;
+  /**
+   * The ID of the tool call.
+   */
+  tool_id: string;
+  /**
+   * The result of the tool call (if available).
+   */
+  result?: unknown;
+}
+
+/**
+ * Information about an LLM invocation.
+ */
+export interface LLMCall {
+  /**
+   * The messages that were sent to the LLM.
+   */
+  messages: BaseMessage[];
+  /**
+   * The response from the LLM.
+   */
+  response?: BaseMessage;
+}
+
+/**
+ * Special type to indicate that no response format is provided.
+ * When this type is used, the structuredResponse property should not be present in the result.
+ */
+export type ResponseFormatUndefined = {
+  __responseFormatUndefined: true;
+};
+
+/**
+ * Type representing a JSON Schema object format.
+ * This is a strict type that excludes ToolOutput and NativeOutput instances.
+ */
+export type JsonSchemaFormat = {
+  type:
+    | "null"
+    | "boolean"
+    | "object"
+    | "array"
+    | "number"
+    | "string"
+    | "integer";
+  properties?: Record<string, unknown>;
+  required?: string[];
+  additionalProperties?: boolean;
+  [key: string]: unknown;
+} & {
+  // Brand to ensure this is not a ToolOutput or NativeOutput
+  __brand?: never;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAnnotationRoot = AnnotationRoot<any>;
+
+/**
+ * Type helper to extract the inferred type from a single Zod schema or array of schemas
+ */
+export type ExtractZodType<T> = T extends InteropZodType<infer U>
+  ? U
+  : T extends readonly InteropZodType<any>[]
+  ? ExtractZodArrayTypes<T>
+  : never;
+
+/**
+ * Type helper to extract union type from an array of Zod schemas
+ */
+export type ExtractZodArrayTypes<T extends readonly InteropZodType<any>[]> =
+  T extends readonly [InteropZodType<infer A>, ...infer Rest]
+    ? Rest extends readonly InteropZodType<any>[]
+      ? A | ExtractZodArrayTypes<Rest>
+      : A
+    : never;
+
+/**
+ * Type helper to extract the structured response type from responseFormat
+ */
+export type InferResponseFormatType<T> = T extends InteropZodType<infer U>
+  ? U extends Record<string, any>
+    ? U
+    : Record<string, any>
+  : T extends readonly InteropZodType<any>[]
+  ? ExtractZodArrayTypes<T>
+  : T extends ToolOutput[]
+  ? Record<string, any> // ToolOutput arrays will be handled at runtime
+  : T extends ResponseFormat
+  ? Record<string, any> // Single ResponseFormat will be handled at runtime
+  : Record<string, any>;
 
 export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
   A extends AnyAnnotationRoot
@@ -52,53 +168,51 @@ export type ClientTool =
   | DynamicTool
   | RunnableToolLike;
 
-export type Prompt =
+export type Prompt<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> =
   | SystemMessage
   | string
   | ((
-      state: typeof MessagesAnnotation.State,
-      config: LangGraphRunnableConfig
-    ) => BaseMessageLike[])
-  | ((
-      state: typeof MessagesAnnotation.State,
-      config: LangGraphRunnableConfig
-    ) => Promise<BaseMessageLike[]>)
+      state: ToAnnotationRoot<StateSchema>["State"] &
+        PreHookAnnotation["State"],
+      config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
+    ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
   | Runnable;
 
-export type StructuredResponseSchemaOptions<StructuredResponseType> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodType<StructuredResponseType> | Record<string, any>;
-  prompt?: string;
-
-  strict?: boolean;
-  [key: string]: unknown;
-};
-
-export type CreateReactAgentState<
+export type AgentState<
   AnnotationRoot extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot
 > = ToAnnotationRoot<AnnotationRoot>["State"] & PreHookAnnotation["State"];
 
-export type CreateReactAgentRuntime<
+export type AgentRuntime<
   AnnotationRoot extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot
 > = Runtime<ToAnnotationRoot<AnnotationRoot>["State"]>;
 
 export type CreateReactAgentParams<
-  A extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,
-  C extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
+  ResponseFormatType =
+    | InteropZodType<StructuredResponseType>
+    | InteropZodType<unknown>[]
+    | JsonSchemaFormat
+    | JsonSchemaFormat[]
+    | ResponseFormat
+    | TypedToolOutput<StructuredResponseType>
+    | ToolOutput<StructuredResponseType>
+    | NativeOutput<StructuredResponseType>
+    | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm:
-    | LanguageModelLike
-    | ((
-        state: CreateReactAgentState<A>,
-        runtime: Runtime<ToAnnotationRoot<C>["State"]>
-      ) => Promise<LanguageModelLike> | LanguageModelLike);
+  llm: LanguageModelLike | DynamicLLMFunction<StateSchema, ContextSchema>;
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];
@@ -116,18 +230,92 @@ export type CreateReactAgentParams<
    * Note:
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
+   *
+   * Cannot be used together with `prepareCall`.
    */
-  prompt?: Prompt;
+  prompt?: Prompt<StateSchema, ContextSchema>;
 
   /**
-   * Additional state schema for the agent.
+   * Additional state schema for the agent. It allows to define additional state keys that will be
+   * persisted between agent invocations.
+   *
+   * @example
+   * ```ts
+   * // State schema defines data that persists across agent invocations
+   * const stateSchema = z.object({
+   *   userPreferences: z.object({
+   *     theme: z.enum(["light", "dark"]),
+   *     language: z.string(),
+   *   }),
+   *   taskHistory: z.array(z.string()),
+   *   currentWorkflow: z.string().optional(),
+   * });
+   *
+   * // Context schema defines runtime parameters passed per invocation
+   * const contextSchema = z.object({ ... });
+   *
+   * const agent = createReactAgent({
+   *   llm: model,
+   *   tools: [updatePreferences, addTask],
+   *   stateSchema,    // Persisted: preferences, e.g. task history, workflow state
+   *   contextSchema,  // Per-invocation: user ID, session, API keys, etc.
+   *   prompt: (state, config) => {
+   *     // ...
+   *   },
+   * });
+   *
+   * // First invocation - state starts empty, context provided
+   * await agent.invoke({
+   *   messages: [new HumanMessage("Set my theme to dark")],
+   * }, {
+   *   context: { userId: "user123", sessionId: "sess456", apiKeys: {...} }
+   * });
+   *
+   * // Second invocation - state persists, new context
+   * await agent.invoke({
+   *   messages: [new HumanMessage("Add a task to review code")],
+   * }, {
+   *   context: { userId: "user123", sessionId: "sess789", apiKeys: {...} }
+   * });
+   * // State now contains: userPreferences.theme="dark", taskHistory=["review code"]
+   * ```
    */
-  stateSchema?: A;
+  stateSchema?: StateSchema;
 
   /**
-   * An optional schema for the context.
+   * An optional schema for the context. It allows to pass in a typed context object into the agent
+   * invocation and allows to access it in hooks such as `prompt`, `preModelHook`, `postModelHook`, etc.
+   * As opposed to the agent state, defined in `stateSchema`, the context is not persisted between
+   * agent invocations.
+   *
+   * @example
+   * ```ts
+   * const agent = createReactAgent({
+   *   llm: model,
+   *   tools: [getWeather],
+   *   contextSchema: z.object({
+   *     capital: z.string(),
+   *   }),
+   *   prompt: (state, config) => {
+   *     return [
+   *       new SystemMessage(`You are a helpful assistant. The capital of France is ${config.context.capital}.`),
+   *     ];
+   *   },
+   * });
+   *
+   * const result = await agent.invoke({
+   *   messages: [
+   *     new SystemMessage("You are a helpful assistant."),
+   *     new HumanMessage("What is the capital of France?"),
+   *   ],
+   * }, {
+   *   context: {
+   *     capital: "Paris",
+   *   },
+   * });
+   * ```
    */
-  contextSchema?: C;
+  contextSchema?: ContextSchema;
   /** An optional checkpoint saver to persist the agent's state. */
   checkpointSaver?: BaseCheckpointSaver | boolean;
   /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
@@ -145,26 +333,63 @@ export type CreateReactAgentParams<
    *
    * Can be passed in as:
    *   - Zod schema
+   *     ```ts
+   *     const agent = createReactAgent({
+   *       responseFormat: z.object({
+   *         capital: z.string(),
+   *       }),
+   *       // ...
+   *     });
+   *     ```
    *   - JSON schema
-   *   - { prompt, schema }, where schema is one of the above.
-   *        The prompt will be used together with the model that is being used to generate the structured response.
-   *
-   * @remarks
-   * **Important**: `responseFormat` requires the model to support `.withStructuredOutput()`.
+   *     ```ts
+   *     const agent = createReactAgent({
+   *       responseFormat: {
+   *         type: "json_schema",
+   *         schema: {
+   *           type: "object",
+   *           properties: {
+   *             capital: { type: "string" },
+   *           },
+   *           required: ["capital"],
+   *         },
+   *       },
+   *       // ...
+   *     });
+   *     ```
+   *   - Create React Agent ResponseFormat
+   *     ```ts
+   *     import { nativeOutput, toolOutput } from "langchain";
+   *     const agent = createReactAgent({
+   *       responseFormat: nativeOutput(
+   *         z.object({
+   *           capital: z.string(),
+   *         })
+   *       ),
+   *       // or
+   *       responseFormat: [
+   *         toolOutput({ ... }),
+   *         toolOutput({ ... }),
+   *       ]
+   *       // ...
+   *     });
+   *     ```
    *
    * **Note**: The graph will make a separate call to the LLM to generate the structured response after the agent loop is finished.
    * This is not the only strategy to get structured responses, see more options in [this guide](https://langchain-ai.github.io/langgraph/how-tos/react-agent-structured-output/).
    */
-  responseFormat?:
-    | InteropZodType<StructuredResponseType>
-    | StructuredResponseSchemaOptions<StructuredResponseType>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Record<string, any>;
+  responseFormat?: ResponseFormatType;
 
   /**
    * An optional name for the agent.
    */
   name?: string;
+
+  /**
+   * An optional description for the agent.
+   * This can be used to describe the agent to the underlying supervisor LLM.
+   */
+  description?: string;
 
   /**
    * Use to specify how to expose the agent name to the underlying supervisor LLM.
@@ -179,9 +404,9 @@ export type CreateReactAgentParams<
    * Useful for managing long message histories (e.g., message trimming, summarization, etc.).
    */
   preModelHook?: RunnableLike<
-    ToAnnotationRoot<A>["State"] & PreHookAnnotation["State"],
-    ToAnnotationRoot<A>["Update"] & PreHookAnnotation["Update"],
-    LangGraphRunnableConfig
+    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
+    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   >;
 
   /**
@@ -189,8 +414,73 @@ export type CreateReactAgentParams<
    * Useful for implementing human-in-the-loop, guardrails, validation, or other post-processing.
    */
   postModelHook?: RunnableLike<
-    ToAnnotationRoot<A>["State"],
-    ToAnnotationRoot<A>["Update"],
-    LangGraphRunnableConfig
+    ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    ToAnnotationRoot<StateSchema>["Update"] & PreHookAnnotation["Update"],
+    LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
   >;
+
+  /**
+   * An optional abort signal that indicates that the overall operation should be aborted.
+   */
+  signal?: AbortSignal;
+
+  /**
+   * Determines the version of the graph to create.
+   *
+   * Can be one of
+   * - `"v1"`: The tool node processes a single message. All tool calls in the message are
+   *           executed in parallel within the tool node.
+   * - `"v2"`: The tool node processes a single tool call. Tool calls are distributed across
+   *           multiple instances of the tool node using the Send API.
+   *
+   * @default `"v2"`
+   */
+  version?: "v1" | "v2";
 };
+
+export interface ConfigurableModelInterface {
+  _queuedMethodOperations: Record<string, unknown>;
+  _model: () => Promise<BaseChatModel>;
+}
+
+export type InternalAgentState<
+  StructuredResponseType extends Record<string, unknown> | undefined = Record<
+    string,
+    unknown
+  >
+> = {
+  messages: BaseMessage[];
+  // TODO: This won't be set until we
+  // implement managed values in LangGraphJS
+  // Will be useful for inserting a message on
+  // graph recursion end
+  // is_last_step: boolean;
+} & (StructuredResponseType extends ResponseFormatUndefined
+  ? Record<string, never>
+  : { structuredResponse: StructuredResponseType });
+
+export type WithStateGraphNodes<
+  K extends string,
+  Graph
+> = Graph extends StateGraph<
+  infer SD,
+  infer S,
+  infer U,
+  infer N,
+  infer I,
+  infer O,
+  infer C
+>
+  ? StateGraph<SD, S, U, N | K, I, O, C>
+  : never;
+
+/**
+ * @deprecated likely to be removed in the next version of the agent
+ */
+type DynamicLLMFunction<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> = (
+  state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+  runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
+) => Promise<LanguageModelLike> | LanguageModelLike;

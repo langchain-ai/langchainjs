@@ -17,8 +17,8 @@
  * passes the full message history plus a task to the sub-agent. The sub-agent
  * returns a polished result back to the supervisor.
  */
-
-import { createReactAgent, tool, CreateReactAgentToolConfig } from "langchain";
+import fs from "node:fs/promises";
+import { createReactAgent, tool, CreateAgentToolConfig } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -44,7 +44,7 @@ const subAgent = createReactAgent({
  * Tool that delegates to the sub-agent, passing full thread messages
  */
 const delegateToSubAgentTool = tool(
-  async (input: { task: string }, config: CreateReactAgentToolConfig) => {
+  async (input: { task: string }, config: CreateAgentToolConfig) => {
     /**
      * Access full thread messages from state
      */
@@ -125,6 +125,14 @@ const actions = await agent.invoke({
   ],
 });
 console.log(actions.messages[actions.messages.length - 1].content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:

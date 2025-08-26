@@ -3,27 +3,63 @@ import {
   ToolMessage,
   AIMessage,
   isBaseMessage,
+  isToolMessage,
 } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
-import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
-import type { ToolCall } from "@langchain/core/messages/tool";
 import {
-  END,
+  DynamicTool,
+  StructuredToolInterface,
+  ToolInputParsingException,
+} from "@langchain/core/tools";
+import type { ToolCall } from "@langchain/core/messages/tool";
+import type { InteropZodObject } from "@langchain/core/utils/types";
+import {
   isCommand,
   Command,
   Send,
   isGraphInterrupt,
-  MessagesAnnotation,
+  type NodeInterrupt,
 } from "@langchain/langgraph";
 
-import { RunnableCallable } from "./RunnableCallable.js";
-import { isSend } from "./utils.js";
+import { RunnableCallable } from "../RunnableCallable.js";
+import { PreHookAnnotation } from "../annotation.js";
+import { mergeAbortSignals } from "../utils.js";
+import { ToolInvocationError } from "../errors.js";
+import type { AnyAnnotationRoot, ToAnnotationRoot } from "../types.js";
 
-export type ToolNodeOptions = {
+export interface ToolNodeOptions {
+  /**
+   * The name of the tool node.
+   */
   name?: string;
+  /**
+   * The tags to add to the tool call.
+   */
   tags?: string[];
-  handleToolErrors?: boolean;
-};
+  /**
+   * The abort signal to cancel the tool call.
+   */
+  signal?: AbortSignal;
+  /**
+   * Whether to throw the error immediately if the tool fails or handle it by the `onToolError` function or via ToolMessage.
+   *
+   * If `true` (default):
+   *   - the error can be handled by the `onToolError` function if provided or
+   *   - a tool message with the error message will be returned to the LLM
+   *
+   * If `false`:
+   *   - the error will be thrown immediately
+   *
+   * If a function is provided:
+   *   - you can catch the error and return a {@link ToolMessage} as result
+   *   - throw if the function returns undefined
+   *
+   * @default true
+   */
+  handleToolErrors?:
+    | boolean
+    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined);
+}
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
   Array.isArray(input) && input.every(isBaseMessage);
@@ -157,25 +193,38 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class ToolNode<T = any> extends RunnableCallable<T, T> {
+export class ToolNode<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
+> extends RunnableCallable<StateSchema, ContextSchema> {
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
-
-  handleToolErrors = true;
 
   trace = false;
 
+  signal?: AbortSignal;
+
+  handleToolErrors:
+    | boolean
+    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) = true;
+
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
-    options?: ToolNodeOptions
+    public options?: ToolNodeOptions
   ) {
     const { name, tags, handleToolErrors } = options ?? {};
     super({
       name,
       tags,
-      func: (input, config) => this.run(input, config as RunnableConfig),
+      func: (state, config) =>
+        this.run(
+          state as ToAnnotationRoot<StateSchema>["State"] &
+            PreHookAnnotation["State"],
+          config as RunnableConfig
+        ),
     });
     this.tools = tools;
     this.handleToolErrors = handleToolErrors ?? this.handleToolErrors;
+    this.signal = options?.signal;
   }
 
   protected async runTool(
@@ -187,7 +236,14 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
       if (tool === undefined) {
         throw new Error(`Tool "${call.name}" not found.`);
       }
-      const output = await tool.invoke({ ...call, type: "tool_call" }, config);
+
+      const output = await tool.invoke(
+        { ...call, type: "tool_call" },
+        {
+          ...config,
+          signal: mergeAbortSignals(this.signal, config.signal),
+        }
+      );
 
       if (
         (isBaseMessage(output) && output.getType() === "tool") ||
@@ -201,37 +257,69 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
         content: typeof output === "string" ? output : JSON.stringify(output),
         tool_call_id: call.id!,
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      if (!this.handleToolErrors) throw e;
+    } catch (e: unknown) {
+      /**
+       * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
+       */
+      if (e instanceof ToolInputParsingException) {
+        throw new ToolInvocationError(e, call);
+      }
 
-      if (isGraphInterrupt(e)) {
-        // `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
-        // As such, they are not recoverable by the agent and shouldn't be fed
-        // back. Instead, re-throw these errors even when `handleToolErrors = true`.
+      /**
+       * throw the error if user prefers not to handle tool errors
+       */
+      if (!this.handleToolErrors) {
         throw e;
       }
 
-      return new ToolMessage({
-        content: `Error: ${e.message}\n Please fix your mistakes.`,
-        name: call.name,
-        tool_call_id: call.id ?? "",
-      });
+      if (isGraphInterrupt(e)) {
+        /**
+         * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
+         * As such, they are not recoverable by the agent and shouldn't be fed
+         * back. Instead, re-throw these errors even when `handleToolErrors = true`.
+         */
+        throw e;
+      }
+
+      /**
+       * If the signal is aborted, we want to bubble up the error to the invoke caller.
+       */
+      if (this.signal?.aborted) {
+        throw e;
+      }
+
+      /**
+       * if the user provides a function, call it with the error and tool call
+       * and return the result if it is a {@link ToolMessage}
+       */
+      if (typeof this.handleToolErrors === "function") {
+        const result = this.handleToolErrors(e, call);
+        if (result && isToolMessage(result)) {
+          return result;
+        }
+      }
+
+      /**
+       * If the user doesn't handle the error, throw it
+       */
+      throw e;
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async run(input: unknown, config: RunnableConfig): Promise<T> {
+  protected async run(
+    state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+    config: RunnableConfig
+  ): Promise<ContextSchema> {
     let outputs: (ToolMessage | Command)[];
 
-    if (isSendInput(input)) {
-      outputs = [await this.runTool(input.lg_tool_call, config)];
+    if (isSendInput(state)) {
+      outputs = [await this.runTool(state.lg_tool_call, config)];
     } else {
       let messages: BaseMessage[];
-      if (isBaseMessageArray(input)) {
-        messages = input;
-      } else if (isMessagesState(input)) {
-        messages = input.messages;
+      if (isBaseMessageArray(state)) {
+        messages = state;
+      } else if (isMessagesState(state)) {
+        messages = state.messages;
       } else {
         throw new Error(
           "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
@@ -266,7 +354,9 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
 
     // Preserve existing behavior for non-command tool outputs for backwards compatibility
     if (!outputs.some(isCommand)) {
-      return (Array.isArray(input) ? outputs : { messages: outputs }) as T;
+      return (Array.isArray(state)
+        ? outputs
+        : { messages: outputs }) as unknown as ContextSchema;
     }
 
     // Handle mixed Command and non-Command outputs
@@ -297,7 +387,7 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
         }
       } else {
         combinedOutputs.push(
-          Array.isArray(input) ? [output] : { messages: [output] }
+          Array.isArray(state) ? [output] : { messages: [output] }
         );
       }
     }
@@ -306,24 +396,11 @@ export class ToolNode<T = any> extends RunnableCallable<T, T> {
       combinedOutputs.push(parentCommand);
     }
 
-    return combinedOutputs as T;
+    return combinedOutputs as unknown as ContextSchema;
   }
 }
 
-export function toolsCondition(
-  state: BaseMessage[] | typeof MessagesAnnotation.State
-): "tools" | typeof END {
-  const message = Array.isArray(state)
-    ? state[state.length - 1]
-    : state.messages[state.messages.length - 1];
-
-  if (
-    message !== undefined &&
-    "tool_calls" in message &&
-    ((message as AIMessage).tool_calls?.length ?? 0) > 0
-  ) {
-    return "tools";
-  } else {
-    return END;
-  }
+export function isSend(x: unknown): x is Send {
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  return x instanceof Send;
 }

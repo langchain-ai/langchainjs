@@ -1,33 +1,42 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
+import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent } from "../index.js";
+import { createReactAgent, nativeOutput } from "../index.js";
 
 describe("createReactAgent Integration Tests", () => {
+  const toolMock = vi.fn(async (input: { city: string }) => {
+    return `It's always sunny in ${input.city}!`;
+  });
+  const toolSchema = {
+    name: "getWeather",
+    schema: z.object({
+      city: z.string().describe("The city to get the weather for"),
+    }),
+    description: "Get weather for a given city",
+  };
+  const getWeather = tool(toolMock, toolSchema);
+  const fetchMock = vi.fn(fetch);
+  const llm = new ChatAnthropic({
+    model: "claude-3-5-sonnet-20240620",
+    clientOptions: {
+      fetch: fetchMock,
+    },
+  });
+
+  const answerSchema = z.object({
+    answer: z.enum(["yes", "no"]).describe("Whether the weather is sunny"),
+    city: z.string().describe("The city that was queried"),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should work with Anthropic and return structured response", async () => {
-    const llm = new ChatAnthropic({ model: "claude-3-5-sonnet-20240620" });
-
-    const getWeather = tool(
-      async (input: { city: string }) => {
-        return `It's always sunny in ${input.city}!`;
-      },
-      {
-        name: "getWeather",
-        schema: z.object({
-          city: z.string().describe("The city to get the weather for"),
-        }),
-        description: "Get weather for a given city",
-      }
-    );
-
-    const answerSchema = z.object({
-      answer: z.enum(["yes", "no"]).describe("Whether the weather is sunny"),
-      city: z.string().describe("The city that was queried"),
-    });
-
     const agent = createReactAgent({
       llm,
       tools: [getWeather],
@@ -43,6 +52,57 @@ describe("createReactAgent Integration Tests", () => {
     expect(result.structuredResponse?.city).toBe("Tokyo");
     expect(result.messages).toBeDefined();
     expect(result.messages.length).toBeGreaterThan(0);
+
+    // validate that the tool was called at least once
+    expect(toolMock).toHaveBeenCalledTimes(1);
+    // given we are using tool output as response format, we expect at least 2 LLM calls
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("should throw if a user tries to use native response format with Anthropic", async () => {
+    const agent = createReactAgent({
+      llm,
+      tools: [getWeather],
+      responseFormat: nativeOutput(answerSchema),
+    });
+
+    await expect(
+      agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      })
+    ).rejects.toThrow(
+      /Model does not support native structured output responses/
+    );
+  });
+
+  it("should support native response format with OpenAI", async () => {
+    const llm = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      configuration: {
+        fetch: fetchMock,
+      },
+    });
+
+    const agent = createReactAgent({
+      llm,
+      tools: [getWeather],
+      responseFormat: nativeOutput(answerSchema),
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse?.answer).toBe("yes");
+    expect(result.structuredResponse?.city).toBe("Tokyo");
+    expect(result.messages).toBeDefined();
+    expect(result.messages.length).toBeGreaterThan(0);
+
+    // validate that the tool was called at least once
+    expect(toolMock).toHaveBeenCalledTimes(1);
+    // given we are using tool output as response format, we expect at least 2 LLM calls
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("should work with preModelHook and postModelHook", async () => {

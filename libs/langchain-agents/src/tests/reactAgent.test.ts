@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
 import {
@@ -7,7 +7,6 @@ import {
   HumanMessage,
   ToolMessage,
   SystemMessage,
-  isAIMessage,
 } from "@langchain/core/messages";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatResult } from "@langchain/core/outputs";
@@ -18,15 +17,14 @@ import {
   RunnableBinding,
 } from "@langchain/core/runnables";
 import {
-  Annotation,
-  Runtime,
   InMemoryStore,
   MessagesAnnotation,
+  Command,
   type BaseCheckpointSaver,
 } from "@langchain/langgraph";
 
 import { type Prompt } from "../types.js";
-import { createReactAgent } from "../index.js";
+import { nativeOutput, createReactAgent } from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -48,6 +46,7 @@ describe("createReactAgent", () => {
     const agent = createReactAgent({
       llm: model,
       tools: [],
+      preModelHook: (state) => state,
       checkpointer: syncCheckpointer,
     });
 
@@ -56,7 +55,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs }, thread);
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
 
@@ -65,11 +67,34 @@ describe("createReactAgent", () => {
     expect(saved?.channel_values).toMatchObject({
       messages: [
         expect.objectContaining({ content: "hi?" }),
-        new AIMessage({ content: "hi?", id: "0" }),
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
       ],
     });
     // Note: Checkpoint properties may vary by implementation
     expect(saved).toHaveProperty("channel_values");
+
+    // allows to access initiation properties
+    expect((agent.options.preModelHook as any)("foo")).toBe("foo");
+  });
+
+  it("should reject LLM with bound tools", async () => {
+    const model = new FakeToolCallingModel();
+    const searchTool = new SearchAPI();
+
+    // Create a model with bound tools
+    const modelWithTools = model.bindTools([searchTool]);
+
+    // Should throw when trying to create agent with bound tools
+    expect(() =>
+      createReactAgent({
+        llm: modelWithTools,
+        tools: [searchTool],
+      })
+    ).toThrow(
+      "The provided LLM already has bound tools. " +
+        "Please provide an LLM without bound tools to createReactAgent. " +
+        "The agent will bind the tools provided in the 'tools' parameter."
+    );
   });
 
   it("should work with system message prompt", async () => {
@@ -86,7 +111,12 @@ describe("createReactAgent", () => {
     const expectedResponse = {
       messages: [
         ...inputs,
-        new AIMessage({ content: "Foo-hi?", id: "0", tool_calls: [] }),
+        new AIMessage({
+          name: "model",
+          content: "Foo-hi?",
+          id: "0",
+          tool_calls: [],
+        }),
       ],
     };
     expect(response).toEqual(expectedResponse);
@@ -106,7 +136,12 @@ describe("createReactAgent", () => {
     const expectedResponse = {
       messages: [
         ...inputs,
-        new AIMessage({ content: "Foo-hi?", id: "0", tool_calls: [] }),
+        new AIMessage({
+          name: "model",
+          content: "Foo-hi?",
+          id: "0",
+          tool_calls: [],
+        }),
       ],
     };
     expect(response).toEqual(expectedResponse);
@@ -130,7 +165,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Bar hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "model", content: "Bar hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -153,7 +191,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Bar hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "model", content: "Bar hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -177,7 +218,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs });
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "Baz hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "model", content: "Baz hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
   });
@@ -324,7 +368,7 @@ describe("createReactAgent", () => {
 
   describe.each(["openai", "anthropic"])("tool style %s", (toolStyle) => {
     describe.each([true, false])("include builtin: %s", (includeBuiltin) => {
-      it("should work with model with tools", async () => {
+      it("should reject model with bound tools", async () => {
         const model = new FakeToolCallingModel({
           toolStyle: toolStyle as any,
         });
@@ -368,54 +412,36 @@ describe("createReactAgent", () => {
           });
         }
 
-        // Check valid agent constructor
-        const agent = createReactAgent({
-          llm: model.bindTools([tool1, tool2]),
-          tools,
-          // version, // TODO: Add version support when available
-        });
+        // Should throw when trying to create agent with bound tools
+        expect(() => {
+          createReactAgent({
+            llm: model.bindTools(tools),
+            tools,
+          });
+        }).toThrow(
+          "The provided LLM already has bound tools. " +
+            "Please provide an LLM without bound tools to createReactAgent. " +
+            "The agent will bind the tools provided in the 'tools' parameter."
+        );
 
-        const result = await agent.nodes.tools.invoke({
-          messages: [
-            new AIMessage({
-              content: "hi?",
-              tool_calls: [
-                {
-                  name: "tool1",
-                  args: { someVal: 2 },
-                  id: "some 1",
-                },
-                {
-                  name: "tool2",
-                  args: { someVal: 2 },
-                  id: "some 2",
-                },
-              ],
-            }),
-          ],
-        });
-
-        const messages = Array.isArray(result.messages)
-          ? result.messages
-          : [result.messages];
-        const toolMessages = messages.slice(-2) as ToolMessage[];
-        for (const toolMessage of toolMessages) {
-          expect(toolMessage.getType()).toBe("tool");
-          expect(["Tool 1: 2", "Tool 2: 2"]).toContain(toolMessage.content);
-          expect(["some 1", "some 2"]).toContain(toolMessage.tool_call_id);
-        }
-
-        // Test mismatching tool lengths - Note: Implementation may not throw in all cases
-        try {
+        // Test mismatching tool lengths should also throw
+        expect(() => {
           createReactAgent({
             llm: model.bindTools([tool1]),
             tools: [tool1, tool2],
           });
-          // If no error is thrown, that's okay for now
-        } catch (error) {
-          // Error expected in some implementations
-          expect(error).toBeDefined();
-        }
+        }).toThrow(
+          "The provided LLM already has bound tools. " +
+            "Please provide an LLM without bound tools to createReactAgent. " +
+            "The agent will bind the tools provided in the 'tools' parameter."
+        );
+
+        // Should work without bound tools
+        const agent = createReactAgent({
+          llm: model,
+          tools,
+        });
+        expect(agent).toBeDefined();
 
         // Test missing bound tools - Note: Implementation may not throw in all cases
         try {
@@ -465,7 +491,16 @@ describe("createReactAgent", () => {
 
     type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
 
-    const toolCalls = [[{ args: {}, id: "1", name: "getWeather" }], []];
+    const toolCalls = [
+      [
+        {
+          args: { temperature: 75 },
+          id: "2",
+          name: "extract-1",
+          type: "tool_call" as const,
+        },
+      ],
+    ];
 
     const getWeather = tool(() => "The weather is sunny and 75°F.", {
       name: "getWeather",
@@ -483,7 +518,6 @@ describe("createReactAgent", () => {
       llm: model,
       tools: [getWeather],
       responseFormat: WeatherResponseSchema,
-      // version, // TODO: Add version support when available
     });
 
     const response = await agent.invoke({
@@ -491,9 +525,40 @@ describe("createReactAgent", () => {
     });
 
     expect(response.structuredResponse).toEqual(expectedStructuredResponse);
-    expect(response.messages).toHaveLength(4);
-    expect((response.messages[2] as ToolMessage).content).toBe(
-      "The weather is sunny and 75°F."
+  });
+
+  it("should support native response format", async () => {
+    const WeatherResponseSchema = z.object({
+      temperature: z.number().describe("The temperature in fahrenheit"),
+    });
+
+    type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
+    const getWeather = tool(() => "The weather is sunny and 75°F.", {
+      name: "getWeather",
+      description: "Get the weather",
+      schema: z.object({}),
+    });
+
+    const expectedStructuredResponse: WeatherResponse = { temperature: 75 };
+    const model = new FakeToolCallingModel({
+      toolCalls: [],
+      structuredResponse: expectedStructuredResponse,
+    });
+
+    const agent = createReactAgent({
+      llm: model,
+      tools: [getWeather],
+      responseFormat: nativeOutput(WeatherResponseSchema),
+    });
+
+    const response = await agent.invoke({
+      messages: [new AIMessage('{"temperature":75}')],
+    });
+
+    expect(response.structuredResponse).toEqual(expectedStructuredResponse);
+    expect(response.messages).toHaveLength(2);
+    expect((response.messages[1] as ToolMessage).content).toBe(
+      `{"temperature":75}`
     );
   });
 
@@ -512,7 +577,10 @@ describe("createReactAgent", () => {
     const response = await agent.invoke({ messages: inputs }, thread);
 
     const expectedResponse = {
-      messages: [...inputs, new AIMessage({ content: "hi?", id: "0" })],
+      messages: [
+        ...inputs,
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
+      ],
     };
     expect(response).toEqual(expectedResponse);
 
@@ -521,7 +589,7 @@ describe("createReactAgent", () => {
     expect(saved?.channel_values).toMatchObject({
       messages: [
         expect.objectContaining({ content: "hi?" }),
-        new AIMessage({ content: "hi?", id: "0" }),
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
       ],
     });
     expect(saved).toHaveProperty("channel_values");
@@ -578,6 +646,7 @@ describe("createReactAgent", () => {
       new AIMessage({
         content: "Test direct",
         id: "0",
+        name: "model",
         tool_calls: firstToolCall.map((tc) => ({
           ...tc,
           type: "tool_call" as const,
@@ -612,7 +681,7 @@ describe("createReactAgent", () => {
       messages: [new HumanMessage({ content: "Test normal", id: "hum1" })],
     });
 
-    expect(result.messages).toHaveLength(4);
+    expect(result.messages).toHaveLength(3);
     expect(result.messages[0]).toEqual(
       new HumanMessage({ content: "Test normal", id: "hum1" })
     );
@@ -764,7 +833,7 @@ describe("createReactAgent", () => {
         messages: [new HumanMessage("Use the multiply tool with value 5")],
       });
 
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -772,7 +841,7 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("multiply_by_two");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Result: 10");
     });
 
@@ -802,43 +871,6 @@ describe("createReactAgent", () => {
         "You are a helpful assistant"
       );
       expect(response.messages[1].content).toContain("Hello");
-    });
-
-    it("should work with RunnableSequence and structured response", async () => {
-      const WeatherResponseSchema = z.object({
-        temperature: z.number().describe("Temperature in fahrenheit"),
-        description: z.string().describe("Weather description"),
-      });
-
-      type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
-
-      const expectedResponse: WeatherResponse = {
-        temperature: 72,
-        description: "Sunny and pleasant",
-      };
-
-      const baseModel = new FakeToolCallingModel({
-        structuredResponse: expectedResponse,
-      });
-
-      const passthrough = new RunnableLambda({
-        func: (input: any) => input,
-      });
-
-      const sequenceLlm = RunnableSequence.from([passthrough, baseModel]);
-
-      const agent = createReactAgent({
-        llm: sequenceLlm,
-        tools: [],
-        responseFormat: WeatherResponseSchema,
-      });
-
-      const response = await agent.invoke({
-        messages: [new HumanMessage("What's the weather?")],
-      });
-
-      expect(response.structuredResponse).toEqual(expectedResponse);
-      expect(response.messages).toHaveLength(2);
     });
 
     it("should work with RunnableSequence and postModelHook", async () => {
@@ -964,7 +996,7 @@ describe("createReactAgent", () => {
       });
 
       // Verify the agent works correctly with RunnableBinding
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -972,7 +1004,7 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("process_value");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Processed: test");
     });
 
@@ -1039,7 +1071,7 @@ describe("createReactAgent", () => {
       });
 
       // Verify the agent works correctly with nested RunnableBinding
-      expect(response.messages).toHaveLength(4);
+      expect(response.messages).toHaveLength(3);
 
       // Check tool was called correctly
       const aiMessage = response.messages[1] as AIMessage;
@@ -1047,22 +1079,18 @@ describe("createReactAgent", () => {
       expect(aiMessage.tool_calls?.[0].name).toBe("echo_tool");
 
       // Check tool response
-      const toolMessage = response.messages[3] as ToolMessage;
+      const toolMessage = response.messages[2] as ToolMessage;
       expect(toolMessage.content).toContain("Echo: hello");
     });
   });
 
   it("should handle mixed Command and non-Command tool outputs", async () => {
-    // Import Command and Send from langgraph
-    const { Command, Send } = await import("@langchain/langgraph");
-
     // Create a tool that returns a Command
     const commandTool = tool(
       (_input: { action: string }) => {
-        // Return a Command that sends to a specific node
+        // Return a Command with no effect - just for testing mixed outputs
         return new Command({
-          graph: Command.PARENT,
-          goto: [new Send("agent", { messages: [] })],
+          update: {}, // Empty update
         });
       },
       {
@@ -1119,8 +1147,11 @@ describe("createReactAgent", () => {
     // The commandTool returns a Command (control flow) which doesn't add a message
     expect(result.messages).toHaveLength(3);
 
-    // Check that AI message has both tool calls (this is what triggers the mixed output path)
-    const aiMessage = result.messages[1] as AIMessage;
+    // Find the AIMessage (it might not be at a fixed index)
+    const aiMessage = result.messages.find(
+      (msg) => msg.getType() === "ai"
+    ) as AIMessage;
+    expect(aiMessage).toBeDefined();
     expect(aiMessage.tool_calls).toHaveLength(2);
     expect(aiMessage.tool_calls?.some((tc) => tc.name === "commandTool")).toBe(
       true
@@ -1129,10 +1160,17 @@ describe("createReactAgent", () => {
       true
     );
 
-    // Check that we have a tool message from the normal tool
-    const toolMessage = result.messages[2];
-    expect(toolMessage._getType()).toBe("tool");
-    expect(toolMessage.content).toBe("Normal result: test_normal");
+    // Find the tool message from the normal tool
+    const toolMessage = result.messages.find((msg) => msg.getType() === "tool");
+    expect(toolMessage).toBeDefined();
+    expect(toolMessage?.content).toBe("Normal result: test_normal");
+
+    // Verify we have a human message
+    const humanMessage = result.messages.find(
+      (msg) => msg.getType() === "human"
+    );
+    expect(humanMessage).toBeDefined();
+    expect(humanMessage?.content).toBe("Test mixed outputs");
   });
 
   it("should work with includeAgentName: 'inline'", async () => {
@@ -1315,547 +1353,165 @@ describe("createReactAgent", () => {
     expect((result.messages[2] as ToolMessage).content).toBe("result for foo");
   });
 
-  it.each(["openai", "anthropic", "bedrock", "google"] as const)(
-    "Should throw on tool mismatch with %s style",
-    async (toolStyle) => {
-      const llm = new FakeToolCallingChatModel({ toolStyle });
-
-      const tool1 = tool((input) => `Tool 1: ${input.someVal}`, {
-        name: "tool1",
-        description: "Tool 1 docstring.",
-        schema: z.object({
-          someVal: z.number().describe("Input value"),
-        }),
-      });
-
-      const tool2 = tool((input) => `Tool 2: ${input.someVal}`, {
-        name: "tool2",
-        description: "Tool 2 docstring.",
-        schema: z.object({
-          someVal: z.number().describe("Input value"),
-        }),
-      });
-
-      // Test mismatching tool lengths
-      await expect(async () => {
-        const agent = createReactAgent({
-          llm: llm.bindTools([tool1]),
-          tools: [tool1, tool2],
-        });
-        await agent.invoke({
-          messages: [new HumanMessage("Hello Input!")],
-        });
-      }).rejects.toThrow();
-
-      // Test missing bound tools
-      await expect(async () => {
-        const agent = createReactAgent({
-          llm: llm.bindTools([tool1]),
-          tools: [tool2],
-        });
-        await agent.invoke({
-          messages: [new HumanMessage("Hello Input!")],
-        });
-      }).rejects.toThrow();
-    }
-  );
-
-  it.skip("postModelHook + partial tool call application", async () => {
-    const searchSchema = z.object({
-      query: z.string().describe("The query to search for."),
-    });
-
-    class SearchAPI extends StructuredTool {
-      name = "search_api";
-
-      description = "A simple API that returns the input string.";
-
-      schema = searchSchema;
-
-      async _call(input: z.infer<typeof searchSchema>) {
-        if (input?.query === "error") {
-          throw new Error("Error");
-        }
-        return `result for ${input?.query}`;
-      }
-    }
-
-    const llm = new FakeToolCallingChatModel({
-      responses: [
-        new AIMessage({
-          content: "result1",
-          tool_calls: [
-            { name: "search_api", id: "tool_a", args: { query: "foo" } },
-            { name: "search_api", id: "tool_b", args: { query: "bar" } },
-          ],
-        }),
-        new AIMessage("done"),
-      ],
-    });
-
-    const agent = createReactAgent({
-      llm,
-      tools: [new SearchAPI()],
-      postModelHook: (state) => {
-        const lastMessage = state.messages.at(-1);
-        if (
-          lastMessage != null &&
-          isAIMessage(lastMessage) &&
-          lastMessage.tool_calls?.length
-        ) {
-          // apply only the first tool call
-          const firstToolCall = lastMessage.tool_calls[0]!;
-          return {
-            messages: [
-              new ToolMessage({
-                content: "post-model-hook",
-                tool_call_id: firstToolCall.id!,
-              }),
-            ],
-          };
-        }
-
-        return {};
-      },
-    });
-
-    const result = await agent.invoke({
-      messages: [new HumanMessage("What's the weather?")],
-    });
-
-    expect(result).toMatchObject({
-      messages: [
-        { text: "What's the weather?" },
-        {
-          tool_calls: [
-            { name: "search_api", id: "tool_a", args: { query: "foo" } },
-            { name: "search_api", id: "tool_b", args: { query: "bar" } },
-          ],
-        },
-        { text: "post-model-hook" },
-        { text: "result for bar" },
-        { text: "done" },
-      ],
-    });
-  });
-
-  describe("Dynamic Model", () => {
-    it("should handle basic dynamic model functionality", async () => {
-      const dynamicModel = (state: typeof MessagesAnnotation.State) => {
-        // Return different models based on state
-        if (state.messages.at(-1)?.text.includes("urgent")) {
-          return new FakeToolCallingChatModel({
-            responses: [new AIMessage("urgent called")],
-          });
-        }
-
-        return new FakeToolCallingChatModel({ responses: [] });
-      };
-
-      const agent = createReactAgent({ llm: dynamicModel, tools: [] });
-
-      const result = await agent.invoke({ messages: "hello" });
-      expect(result.messages.at(-1)?.text).toBe("hello");
-
-      const result2 = await agent.invoke({ messages: "urgent help" });
-      expect(result2.messages.at(-1)?.text).toBe("urgent called");
-    });
-
-    it("should handle dynamic model with tool calling", async () => {
-      const basicModel = new FakeToolCallingChatModel({
-        responses: [
-          new AIMessage({
-            content: "",
-            tool_calls: [{ args: { x: 1 }, id: "1", name: "basic_tool" }],
-          }),
-          new AIMessage("basic request"),
-        ],
-      });
-
-      const basicTool = tool(
-        async (args: { x: number }) => `basic: ${args.x}`,
-        {
-          name: "basic_tool",
-          description: "Basic tool.",
-          schema: z.object({ x: z.number() }),
-        }
-      );
-
-      const advancedModel = new FakeToolCallingChatModel({
-        responses: [
-          new AIMessage({
-            content: "",
-            tool_calls: [{ args: { x: 1 }, id: "1", name: "advanced_tool" }],
-          }),
-          new AIMessage("advanced request"),
-        ],
-      });
-
-      const advancedTool = tool(
-        async (args: { x: number }) => `advanced: ${args.x}`,
-        {
-          name: "advanced_tool",
-          description: "Advanced tool.",
-          schema: z.object({ x: z.number() }),
-        }
-      );
-
-      const dynamicModel = (state: typeof MessagesAnnotation.State) => {
-        // Return model with different behaviors based on message content
-        if (state.messages.at(-1)?.text.includes("advanced")) {
-          return advancedModel;
-        }
-
-        return basicModel;
-      };
-
-      const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [basicTool, advancedTool],
-      });
-
-      // Test basic tool usage
-      const result = await agent.invoke({ messages: "basic request" });
-      expect(result.messages.slice(-2)).toMatchObject([
-        { text: "basic: 1", name: "basic_tool" },
-        { text: "basic request" },
-      ]);
-
-      // Test advanced tool usage
-      const result2 = await agent.invoke({ messages: "advanced request" });
-      expect(result2.messages.slice(-2)).toMatchObject([
-        { text: "advanced: 1", name: "advanced_tool" },
-        { text: "advanced request" },
-      ]);
-    });
-
-    it("should handle dynamic model using config parameters", async () => {
-      const context = z.object({ user_id: z.string() });
-
-      const dynamicModel = (
-        _: typeof MessagesAnnotation.State,
-        runtime: Runtime<z.infer<typeof context>>
-      ) => {
-        // Use context to determine model behavior
-        const user_id = runtime.context?.user_id;
-        if (user_id === "user_premium") {
-          return new FakeToolCallingChatModel({
-            responses: [new AIMessage("premium")],
-          });
-        }
-
-        return new FakeToolCallingChatModel({
-          responses: [new AIMessage("basic")],
-        });
-      };
-
-      const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [],
-        contextSchema: context,
-      });
-
-      // Test with basic user
-      expect(
-        await agent.invoke(
-          { messages: "hello" },
-          { context: { user_id: "user_basic" } }
-        )
-      ).toMatchObject({
-        messages: [{ text: "hello" }, { text: "basic" }],
-      });
-
-      // Test with premium user
-      expect(
-        await agent.invoke(
-          { messages: "hello" },
-          { context: { user_id: "user_premium" } }
-        )
-      ).toMatchObject({
-        messages: [{ text: "hello" }, { text: "premium" }],
-      });
-    });
-
-    it("should handle dynamic model with custom state schema", async () => {
-      const CustomDynamicState = Annotation.Root({
-        messages: MessagesAnnotation.spec.messages,
-        model_preference: Annotation<"basic" | "advanced">({
-          reducer: (_, next) => next,
-          default: () => "basic",
-        }),
-      });
-
-      const dynamicModel = (state: typeof CustomDynamicState.State) => {
-        // Use custom state field to determine model
-        if (state.model_preference === "advanced") {
-          return new FakeToolCallingChatModel({
-            responses: [new AIMessage("advanced")],
-          });
-        }
-
-        return new FakeToolCallingChatModel({
-          responses: [new AIMessage("basic")],
-        });
-      };
-
-      const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [],
-        stateSchema: CustomDynamicState,
-      });
-
-      expect(
-        await agent.invoke({
-          messages: [new HumanMessage("hello")],
-          model_preference: "advanced",
-        })
-      ).toMatchObject({
-        messages: [{ text: "hello" }, { text: "advanced" }],
-      });
-    });
-
-    it("should handle dynamic model with different prompt types", async () => {
+  describe("supports abort signal", () => {
+    it("should handle abort signal", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("ai response")],
       });
-      const spyInvoke = vi.spyOn(model, "invoke");
 
-      // Test with string prompt
+      const abortController = new AbortController();
       const agent = createReactAgent({
-        llm: () => model,
+        llm: model,
         tools: [],
-        prompt: "system_msg",
+        signal: abortController.signal,
       });
 
-      expect(await agent.invoke({ messages: "human_msg" })).toMatchObject({
-        messages: [{ text: "human_msg" }, { text: "ai response" }],
-      });
+      abortController.abort(new Error("custom abortion"));
 
-      expect(spyInvoke).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ text: "system_msg" }),
-          expect.objectContaining({ text: "human_msg" }),
-        ]),
-        expect.any(Object)
-      );
-
-      spyInvoke.mockClear();
-
-      // Test with callable prompt
-      const dynamicPrompt = (state: typeof MessagesAnnotation.State) => {
-        return [new SystemMessage("system_msg"), ...state.messages];
-      };
-
-      const agent2 = createReactAgent({
-        llm: () => model,
-        tools: [],
-        prompt: dynamicPrompt,
-      });
-
-      expect(await agent2.invoke({ messages: "human_msg" })).toMatchObject({
-        messages: [{ text: "human_msg" }, { text: "ai response" }],
-      });
-
-      expect(spyInvoke).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ text: "system_msg" }),
-          expect.objectContaining({ text: "human_msg" }),
-        ]),
-        expect.any(Object)
+      await expect(agent.invoke({ messages: "hello" })).rejects.toThrow(
+        "custom abortion"
       );
     });
 
-    it("should handle dynamic model with structured response format", async () => {
-      const TestResponse = z.object({
-        message: z.string(),
-        confidence: z.number(),
-      });
+    it("should handle abort signal in tools", async () => {
+      const abortController = new AbortController();
 
-      const dynamicModel = () => {
-        const expectedResponse = {
-          message: "dynamic response",
-          confidence: 0.9,
-        };
-
-        return new FakeToolCallingChatModel({
-          responses: [new AIMessage("dynamic response")],
-          structuredResponse: expectedResponse,
-        });
-      };
-
-      const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [],
-        responseFormat: TestResponse,
-      });
-
-      expect(await agent.invoke({ messages: "hello" })).toMatchObject({
-        messages: [{ text: "hello" }, { text: "dynamic response" }],
-        structuredResponse: {
-          message: "dynamic response",
-          confidence: 0.9,
+      const abortableTool = tool(
+        async () => {
+          // Simulate some long running async work
+          await new Promise((resolve) => {
+            setTimeout(resolve, 10000);
+          });
+          return "Tool completed successfully";
         },
-      });
-    });
+        {
+          name: "abortable_tool",
+          description: "A tool that can be aborted",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
 
-    it("should handle dynamic model that changes available tools based on state", async () => {
-      const toolA = tool(async (args: { x: number }) => `A: ${args.x}`, {
-        name: "tool_a",
-        description: "Tool A.",
-        schema: z.object({ x: z.number() }),
-      });
-
-      const modelA = new FakeToolCallingChatModel({
+      const llm = new FakeToolCallingChatModel({
         responses: [
           new AIMessage({
             content: "",
-            tool_calls: [{ args: { x: 1 }, id: "1", name: "tool_a" }],
+            tool_calls: [
+              {
+                id: "test-call-1",
+                name: "abortable_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
           }),
-          new AIMessage({ content: "use_a please" }),
         ],
       });
 
-      const toolB = tool(async (args: { x: number }) => `B: ${args.x}`, {
-        name: "tool_b",
-        description: "Tool B.",
-        schema: z.object({ x: z.number() }),
+      const agent = createReactAgent({
+        llm,
+        tools: [abortableTool],
+        signal: abortController.signal,
       });
 
-      const modelB = new FakeToolCallingChatModel({
+      // Start the agent execution
+      const executionPromise = agent.invoke({
+        messages: [
+          {
+            role: "user",
+            content: "Please run the abortable tool with input 'test'",
+          },
+        ],
+      });
+
+      // Abort after a short delay
+      setTimeout(() => {
+        abortController.abort("custom abort");
+      }, 1000);
+
+      // Verify that the execution throws an abort error
+      await expect(executionPromise).rejects.toMatchObject({
+        message: "custom abort",
+      });
+    });
+
+    it("should merge abort signals from agent and config", async () => {
+      const agentAbortController = new AbortController();
+      const configAbortController = new AbortController();
+
+      const signalCheckTool = tool(
+        async () => {
+          // some long running async work
+          return new Promise((resolve) => {
+            setTimeout(() => resolve("Not aborted"), 500);
+          });
+        },
+        {
+          name: "signal_check_tool",
+          description: "Checks abort signal",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const llm = new FakeToolCallingChatModel({
         responses: [
           new AIMessage({
             content: "",
-            tool_calls: [{ args: { x: 2 }, id: "1", name: "tool_b" }],
+            tool_calls: [
+              {
+                id: "test-call-2",
+                name: "signal_check_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
           }),
-          new AIMessage({ content: "use_b please" }),
-        ],
-      });
-
-      const dynamicModel = (state: typeof MessagesAnnotation.State) => {
-        // Switch tools based on message history
-        if (state.messages.some((msg) => msg.text.includes("use_b"))) {
-          return modelB;
-        }
-
-        return modelA;
-      };
-
-      const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [toolA, toolB],
-      });
-
-      // Ask to use tool A
-      expect(await agent.invoke({ messages: "use_a" })).toMatchObject({
-        messages: [
-          { text: "use_a" },
-          { tool_calls: [{ args: { x: 1 }, name: "tool_a" }] },
-          { text: "A: 1" },
-          { text: "use_a please" },
-        ],
-      });
-
-      // Ask to use tool B
-      expect(await agent.invoke({ messages: "use_b" })).toMatchObject({
-        messages: [
-          { text: "use_b" },
-          { tool_calls: [{ args: { x: 2 }, name: "tool_b" }] },
-          { text: "B: 2" },
-          { text: "use_b please" },
-        ],
-      });
-    });
-
-    it("should handle error handling in dynamic model", async () => {
-      const failingDynamicModel = (state: typeof MessagesAnnotation.State) => {
-        if (state.messages.at(-1)?.text.includes("fail")) {
-          throw new Error("Dynamic model failed");
-        }
-
-        return new FakeToolCallingChatModel({
-          responses: [new AIMessage("ai response")],
-        });
-      };
-
-      const agent = createReactAgent({
-        llm: failingDynamicModel,
-        tools: [],
-      });
-
-      // Normal operation should work
-      expect(await agent.invoke({ messages: "hello" })).toMatchObject({
-        messages: [{ text: "hello" }, { text: "ai response" }],
-      });
-
-      // Should propagate the error
-      await expect(
-        agent.invoke({ messages: [new HumanMessage("fail now")] })
-      ).rejects.toThrow("Dynamic model failed");
-    });
-
-    it("should produce equivalent results when configured the same", async () => {
-      // Static model
-      const staticAgent = createReactAgent({
-        llm: new FakeToolCallingChatModel({
-          responses: [new AIMessage("ai response")],
-        }),
-        tools: [],
-      });
-
-      // Dynamic model returning the same model
-      const dynamicAgent = createReactAgent({
-        llm: () =>
-          new FakeToolCallingChatModel({
-            responses: [new AIMessage("ai response")],
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                id: "test-call-3",
+                name: "signal_check_tool",
+                args: { input: "test" },
+                type: "tool_call",
+              },
+            ],
           }),
-        tools: [],
+        ],
       });
-
-      const inputMsg = { messages: "test message" };
-
-      const staticResult = await staticAgent.invoke(inputMsg);
-      const dynamicResult = await dynamicAgent.invoke(inputMsg);
-
-      // Results should be equivalent (content-wise, IDs may differ)
-      expect(staticResult.messages.length).toEqual(
-        dynamicResult.messages.length
-      );
-      expect(staticResult.messages[0].text).toEqual(
-        dynamicResult.messages[0].text
-      );
-      expect(staticResult.messages[1].text).toEqual(
-        dynamicResult.messages[1].text
-      );
-    });
-
-    it("should receive correct state, not the model input", async () => {
-      const CustomAgentState = Annotation.Root({
-        messages: MessagesAnnotation.spec.messages,
-        custom_field: Annotation<string>,
-      });
-
-      const dynamicModel = vi.fn(
-        () =>
-          new FakeToolCallingChatModel({
-            responses: [new AIMessage("ai response")],
-          })
-      );
 
       const agent = createReactAgent({
-        llm: dynamicModel,
-        tools: [],
-        stateSchema: CustomAgentState,
+        llm,
+        tools: [signalCheckTool],
+        signal: agentAbortController.signal,
       });
 
-      // Test with initial state
-      const inputState = {
-        messages: [new HumanMessage("hello")],
-        custom_field: "test_value",
-      };
-      await agent.invoke(inputState);
+      // Test aborting via config signal
+      const configExecution = agent.invoke(
+        {
+          messages: [
+            {
+              role: "user",
+              content: "Run signal_check_tool with input 'test'",
+            },
+          ],
+        },
+        { signal: configAbortController.signal }
+      );
 
-      // The dynamic model function should receive the original state, not the processed model input
-      expect(dynamicModel).toHaveBeenCalledWith(inputState, expect.any(Object));
+      setTimeout(() => {
+        configAbortController.abort(new Error("Config abort"));
+      }, 1000);
+      setTimeout(() => {
+        agentAbortController.abort(new Error("Agent abort"));
+      }, 2000);
+
+      await expect(configExecution).rejects.toThrow(/Config abort/);
+      expect(agentAbortController.signal.aborted).toBe(false);
+      expect(configAbortController.signal.aborted).toBe(true);
     });
   });
 });

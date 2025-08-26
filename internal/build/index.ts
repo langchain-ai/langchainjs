@@ -46,10 +46,12 @@ async function buildProject(
   const sourcemap = !opts.skipSourcemap;
 
   /**
-   * don't clean if user passes `--skipClean` or if `--noEmit` is enabled
-   * as we don't want to clean previous builds if we're not emitting anything
+   * don't clean if we:
+   * - user passes `--skipClean` or
+   * - have watch mode enabled (it would confuse the IDE due to missing type for a short moment)
+   * - if `--noEmit` is enabled (we don't want to clean previous builds if we're not emitting anything)
    */
-  const clean = !opts.skipClean && !opts.noEmit;
+  const clean = !opts.skipClean && !watch && !opts.noEmit;
 
   /**
    * generate type declarations if not disabled

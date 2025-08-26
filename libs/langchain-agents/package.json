@@ -17,7 +17,7 @@
     "build": "pnpm --filter @langchain/build compile @langchain/agents",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --transform --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "release": "release-it --only-version --config .release-it.json",
@@ -31,12 +31,13 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/core": "workspace:*",
-    "@langchain/langgraph": "^0.4.3",
+    "@langchain/langgraph": "^0.4.5",
     "@langchain/langgraph-checkpoint": "^0.1.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",
     "@langchain/anthropic": "workspace:*",
+    "@langchain/openai": "workspace:*",
     "dpdm": "^3.14.0",
     "eslint": "^8.33.0",
     "eslint-config-airbnb-base": "^15.0.0",

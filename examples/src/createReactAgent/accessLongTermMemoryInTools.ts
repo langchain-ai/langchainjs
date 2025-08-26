@@ -18,11 +18,12 @@
  * over time, enabling stable, user-specific behavior across sessions.
  */
 
+import fs from "node:fs/promises";
 import {
   createReactAgent,
   tool,
   InMemoryStore,
-  type CreateReactAgentToolConfig,
+  type CreateAgentToolConfig,
 } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -78,7 +79,7 @@ await store.put(["interactions"], "sarah_456", []);
 const knowledgeRetrievalTool = tool(
   async (
     input: { query: string; userId?: string },
-    config: CreateReactAgentToolConfig
+    config: CreateAgentToolConfig
   ) => {
     const storeInstance = config.store;
     if (!storeInstance) {
@@ -182,7 +183,7 @@ This information helps me provide more personalized and contextually relevant re
 const preferencelearningTool = tool(
   async (
     input: { observation: string; userId: string; category: string },
-    config: CreateReactAgentToolConfig
+    config: CreateAgentToolConfig
   ) => {
     const storeInstance = config.store;
     if (!storeInstance) {
@@ -324,6 +325,14 @@ const johnResult3 = await agent.invoke(
 );
 
 console.log(johnResult3.messages.at(-1)?.content);
+
+/**
+ * Get the current file's path and derive the output PNG path
+ */
+const currentFilePath = new URL(import.meta.url).pathname;
+const outputPath = currentFilePath.replace(/\.ts$/, ".png");
+console.log(`\nSaving visualization to: ${outputPath}`);
+await fs.writeFile(outputPath, await agent.drawMermaidPng());
 
 /**
  * Example Output:
