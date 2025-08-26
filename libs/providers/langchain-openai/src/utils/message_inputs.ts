@@ -17,6 +17,7 @@ import type {
   ChatCompletionContentPartInputAudio,
   ChatCompletionContentPart,
 } from "openai/resources/chat/completions";
+import { _convertToCompletionsMessageFromV1 } from "./standard";
 
 export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
 
@@ -239,8 +240,13 @@ export function _convertMessagesToOpenAIParams(
   messages: BaseMessage[],
   model?: string
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
-  // TODO: Function messages do not support array content, fix cast
   return messages.flatMap((message) => {
+    if (
+      isAIMessage(message) &&
+      message.response_metadata?.output_version === "v1"
+    ) {
+      return _convertToCompletionsMessageFromV1(message);
+    }
     let role = messageToOpenAIRole(message);
     if (role === "system" && isReasoningModel(model)) {
       role = "developer";
