@@ -263,14 +263,21 @@ export function convertToV1FromResponses(
         : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "text")) {
-        const annotations = Array.isArray(block.annotations)
-          ? block.annotations.map(convertResponsesAnnotation)
-          : [];
-        yield {
-          type: "text",
-          text: String(block.text),
-          annotations,
-        };
+        const { text, annotations, ...rest } = block;
+        if (Array.isArray(annotations)) {
+          yield {
+            ...rest,
+            type: "text",
+            text: String(text),
+            annotations: annotations.map(convertResponsesAnnotation),
+          };
+        } else {
+          yield {
+            ...rest,
+            type: "text",
+            text: String(text),
+          };
+        }
       }
     }
     for (const toolCall of message.tool_calls ?? []) {
