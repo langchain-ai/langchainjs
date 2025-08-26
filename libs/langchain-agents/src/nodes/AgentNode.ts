@@ -451,8 +451,7 @@ export class AgentNode<
   async #bindTools(model: LanguageModelLike): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
-
-    let allTools = this.#options.toolClasses.concat(
+    const allTools = this.#options.toolClasses.concat(
       ...structuredTools.map((toolOutput) => toolOutput.tool)
     );
 
