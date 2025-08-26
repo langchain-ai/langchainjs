@@ -6,13 +6,16 @@ import {
   ToolMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { Command } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
   getSchemaDescription,
 } from "@langchain/core/utils/types";
+import type { ToolCall } from "@langchain/core/messages/tool";
 
+import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import {
@@ -39,7 +42,15 @@ import {
   ToolOutput,
   NativeOutput,
   transformResponseFormat,
+  ToolOutputError,
 } from "../responses.js";
+
+type ResponseHandlerResult<StructuredResponseFormat> =
+  | {
+      structuredResponse: StructuredResponseFormat;
+      message: AIMessage;
+    }
+  | Promise<Command>;
 
 interface AgentNodeOptions<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
@@ -187,10 +198,21 @@ export class AgentNode<
 
     const response:
       | AIMessage
+      | Command
       | { structuredResponse: StructuredResponseFormat } =
       await this.#invokeModel(state, config);
 
+    /**
+     * if we were able to generate a structured response, return it
+     */
     if ("structuredResponse" in response) {
+      return response;
+    }
+
+    /**
+     * if we need to direct the agent to the model, return the update
+     */
+    if (response instanceof Command) {
       return response;
     }
 
@@ -287,6 +309,7 @@ export class AgentNode<
     } = {}
   ): Promise<
     | AIMessage
+    | Command
     | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
   > {
     let model = this.#options.llm;
@@ -403,26 +426,177 @@ export class AgentNode<
      * scenario is not defined/supported.
      */
     if (toolCalls.length > 1) {
-      throw new Error("Multiple structured tool calls are not supported");
+      return this.#handleMultipleStructuredOutputs(response, toolCalls);
     }
 
-    const toolCall = toolCalls[0];
-    const tool = this.#structuredToolInfo[toolCall.name];
-    const structuredResponse = tool.parse(
-      toolCall.args
-    ) as StructuredResponseFormat;
+    return this.#handleSingleStructuredOutput(
+      response,
+      toolCalls[0],
+      options.lastMessage
+    );
+  }
 
-    return {
-      structuredResponse,
-      messages: [
-        new AIMessage(
-          options.lastMessage ??
+  /**
+   * If the model returns multiple structured outputs, we need to handle it.
+   * @param response - The response from the model
+   * @param toolCalls - The tool calls that were made
+   * @returns The response from the model
+   */
+  #handleMultipleStructuredOutputs(
+    response: AIMessage,
+    toolCalls: ToolCall[]
+  ): Promise<Command> {
+    /**
+     * the following should never happen, let's throw an error if it does
+     */
+    if (this.#options.responseFormat instanceof NativeOutput) {
+      throw new Error(
+        "Multiple structured outputs should not apply to native structured output responses"
+      );
+    }
+
+    const multipleStructuredOutputsError = new MultipleStructuredOutputsError(
+      toolCalls.map((call) => call.name)
+    );
+
+    return this.#handleToolOutputError(
+      multipleStructuredOutputsError,
+      response,
+      toolCalls[0]
+    );
+  }
+
+  /**
+   * If the model returns a single structured output, we need to handle it.
+   * @param toolCall - The tool call that was made
+   * @returns The structured response and a message to the LLM if needed
+   */
+  #handleSingleStructuredOutput(
+    response: AIMessage,
+    toolCall: ToolCall,
+    lastMessage?: string
+  ): ResponseHandlerResult<StructuredResponseFormat> {
+    const tool = this.#structuredToolInfo[toolCall.name];
+
+    try {
+      const structuredResponse = tool.parse(
+        toolCall.args
+      ) as StructuredResponseFormat;
+
+      return {
+        structuredResponse,
+        message: new AIMessage(
+          lastMessage ??
             `Returning structured response: ${JSON.stringify(
               structuredResponse
             )}`
         ),
-      ],
-    };
+      };
+    } catch (error) {
+      return this.#handleToolOutputError(
+        error as ToolOutputError,
+        response,
+        toolCall
+      );
+    }
+  }
+
+  async #handleToolOutputError(
+    error: ToolOutputError,
+    response: AIMessage,
+    toolCall: ToolCall
+  ): Promise<Command> {
+    /**
+     * Using the `errorHandler` option of the first `ToolOutput` entry is sufficient here.
+     * There is technically only one `ToolOutput` entry in `structuredToolInfo` if the user
+     * uses `toolOutput` to define the response format. If the user applies a list of json
+     * schema objects, these will be transformed into multiple `ToolOutput` entries but all
+     * with the same `handleError` option.
+     */
+    const errorHandler = Object.values(this.#structuredToolInfo).at(0)?.options
+      ?.handleError;
+
+    const toolCallId = toolCall.id;
+    if (!toolCallId) {
+      throw new Error(
+        "Tool call ID is required to handle tool output errors. Please provide a tool call ID."
+      );
+    }
+
+    /**
+     * retry if:
+     */
+    if (
+      /**
+       * if the user has provided `true` as the `errorHandler` option, return a new AIMessage
+       * with the error message and retry the tool call.
+       */
+      (typeof errorHandler === "boolean" && errorHandler) ||
+      /**
+       * if `errorHandler` is an array and contains MultipleStructuredOutputsError
+       */
+      (Array.isArray(errorHandler) &&
+        errorHandler.some((h) => h instanceof MultipleStructuredOutputsError))
+    ) {
+      return new Command({
+        update: {
+          messages: [
+            response,
+            new ToolMessage({
+              content: error.message,
+              tool_call_id: toolCallId,
+            }),
+          ],
+        },
+        goto: "model",
+      });
+    }
+
+    /**
+     * if `errorHandler` is a string, retry the tool call with given string
+     */
+    if (typeof errorHandler === "string") {
+      return new Command({
+        update: {
+          messages: [
+            response,
+            new ToolMessage({
+              content: errorHandler,
+              tool_call_id: toolCallId,
+            }),
+          ],
+        },
+        goto: "model",
+      });
+    }
+
+    /**
+     * if `errorHandler` is a function, retry the tool call with the function
+     */
+    if (typeof errorHandler === "function") {
+      const content = await errorHandler(error);
+      if (typeof content !== "string") {
+        throw new Error("Error handler must return a string.");
+      }
+
+      return new Command({
+        update: {
+          messages: [
+            response,
+            new ToolMessage({
+              content,
+              tool_call_id: toolCallId,
+            }),
+          ],
+        },
+        goto: "model",
+      });
+    }
+
+    /**
+     * throw otherwise, e.g. if `errorHandler` is not defined or set to `false`
+     */
+    throw error;
   }
 
   #areMoreStepsNeeded(

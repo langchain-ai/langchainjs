@@ -8,6 +8,10 @@ import { type AIMessage } from "@langchain/core/messages";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 
+import {
+  StructuredOutputParsingError,
+  MultipleStructuredOutputsError,
+} from "./errors.js";
 import type { JsonSchemaFormat, ResponseFormatUndefined } from "./types.js";
 
 /**
@@ -34,7 +38,12 @@ export class ToolOutput<_T = unknown> {
     public readonly tool: {
       type: "function";
       function: FunctionDefinition;
-    }
+    },
+
+    /**
+     * The options to use for the tool output.
+     */
+    public readonly options?: ToolOutputOptions
   ) {}
 
   get name() {
@@ -47,7 +56,8 @@ export class ToolOutput<_T = unknown> {
       name?: string;
       description?: string;
       strict?: boolean;
-    }
+    },
+    outputOptions?: ToolOutputOptions
   ): ToolOutput<S extends InteropZodType<infer U> ? U : unknown>;
 
   static fromSchema(
@@ -56,7 +66,8 @@ export class ToolOutput<_T = unknown> {
       name?: string;
       description?: string;
       strict?: boolean;
-    }
+    },
+    outputOptions?: ToolOutputOptions
   ): ToolOutput<Record<string, unknown>>;
 
   static fromSchema(
@@ -65,19 +76,23 @@ export class ToolOutput<_T = unknown> {
       name?: string;
       description?: string;
       strict?: boolean;
-    }
+    },
+    outputOptions?: ToolOutputOptions
   ): ToolOutput<any> {
     /**
      * It is required for tools to have a name so we can map the tool call to the correct tool
      * when parsing the response.
      */
-    let functionName = options?.name ?? `extract-${++bindingIdentifier}`;
+    function getFunctionName(name?: string) {
+      return name ?? options?.name ?? `extract-${++bindingIdentifier}`;
+    }
+
     if (isInteropZodSchema(schema)) {
       const asJsonSchema = toJsonSchema(schema);
       const tool = {
         type: "function" as const,
         function: {
-          name: functionName,
+          name: getFunctionName(),
           strict: options?.strict,
           description:
             options?.description ??
@@ -86,7 +101,7 @@ export class ToolOutput<_T = unknown> {
           parameters: asJsonSchema,
         },
       };
-      return new ToolOutput(asJsonSchema, tool);
+      return new ToolOutput(asJsonSchema, tool, outputOptions);
     }
 
     let functionDefinition: FunctionDefinition;
@@ -96,11 +111,9 @@ export class ToolOutput<_T = unknown> {
       schema.parameters != null
     ) {
       functionDefinition = schema as unknown as FunctionDefinition;
-      functionName = schema.name;
     } else {
-      functionName = (schema.title as string) ?? functionName;
       functionDefinition = {
-        name: functionName,
+        name: getFunctionName(schema.title as string),
         description: (schema.description as string) ?? "",
         parameters: schema,
       };
@@ -108,15 +121,16 @@ export class ToolOutput<_T = unknown> {
     const asJsonSchema = toJsonSchema(schema);
     const tool = {
       type: "function" as const,
+      name: getFunctionName(),
       function: functionDefinition,
     };
-    return new ToolOutput(asJsonSchema, tool);
+    return new ToolOutput(asJsonSchema, tool, outputOptions);
   }
 
   /**
    * Parse tool arguments according to the schema.
    *
-   * @throws Error if the response is not valid
+   * @throws {StructuredOutputParsingError} if the response is not valid
    * @param toolArgs - The arguments from the tool call
    * @returns The parsed response according to the schema type
    */
@@ -124,10 +138,9 @@ export class ToolOutput<_T = unknown> {
     const validator = new Validator(this.schema);
     const result = validator.validate(toolArgs);
     if (!result.valid) {
-      throw new Error(
-        `Response format for ${this.name} is invalid: ${JSON.stringify(
-          result.errors
-        )}`
+      throw new StructuredOutputParsingError(
+        this.name,
+        result.errors.map((e) => e.error)
       );
     }
     return toolArgs;
@@ -205,7 +218,8 @@ export function transformResponseFormat(
     | JsonSchemaFormat[]
     | ResponseFormat
     | ToolOutput<any>[]
-    | ResponseFormatUndefined
+    | ResponseFormatUndefined,
+  options?: ToolOutputOptions
 ): ResponseFormat[] {
   if (!responseFormat) {
     return [];
@@ -225,23 +239,23 @@ export function transformResponseFormat(
    * not ToolOutput or NativeOutput instances.
    */
   if (Array.isArray(responseFormat)) {
-    // Check if any item is a ToolOutput or NativeOutput instance
+    /**
+     * if every entry is a ToolOutput or NativeOutput instance, return the array as is
+     */
     if (
-      responseFormat.some(
+      responseFormat.every(
         (item) => item instanceof ToolOutput || item instanceof NativeOutput
       )
     ) {
-      throw new Error(
-        `Invalid response format: arrays cannot contain ToolOutput or NativeOutput instances.\n` +
-          `Arrays should only contain raw Zod schemas or JSON schema objects.\n` +
-          `Use individual ToolOutput or NativeOutput instances, not arrays of them.`
-      );
+      return responseFormat as unknown as ResponseFormat[];
     }
 
-    // Check if all items are Zod schemas
+    /**
+     * Check if all items are Zod schemas
+     */
     if (responseFormat.every((item) => isInteropZodObject(item))) {
       return responseFormat.map((item) =>
-        ToolOutput.fromSchema(item as InteropZodObject)
+        ToolOutput.fromSchema(item as InteropZodObject, undefined, options)
       );
     }
 
@@ -255,7 +269,7 @@ export function transformResponseFormat(
       )
     ) {
       return responseFormat.map((item) =>
-        ToolOutput.fromSchema(item as JsonSchemaFormat)
+        ToolOutput.fromSchema(item as JsonSchemaFormat, undefined, options)
       );
     }
 
@@ -266,7 +280,7 @@ export function transformResponseFormat(
   }
 
   if (isInteropZodObject(responseFormat)) {
-    return [ToolOutput.fromSchema(responseFormat)];
+    return [ToolOutput.fromSchema(responseFormat, undefined, options)];
   }
 
   if (
@@ -284,7 +298,13 @@ export function transformResponseFormat(
     responseFormat !== null &&
     "properties" in responseFormat
   ) {
-    return [ToolOutput.fromSchema(responseFormat as JsonSchemaFormat)];
+    return [
+      ToolOutput.fromSchema(
+        responseFormat as JsonSchemaFormat,
+        undefined,
+        options
+      ),
+    ];
   }
 
   throw new Error(`Invalid response format: ${String(responseFormat)}`);
@@ -296,29 +316,64 @@ export function transformResponseFormat(
 export interface TypedToolOutput<T = unknown> extends Array<ToolOutput<any>> {
   _schemaType?: T;
 }
+export type ToolOutputError =
+  | StructuredOutputParsingError
+  | MultipleStructuredOutputsError;
+export interface ToolOutputOptions {
+  /**
+   * Handle errors from the structured output tool call. Using tools to generate structured output
+   * can cause errors, e.g. if:
+   * - you provide multiple structured output schemas and the model calls multiple structured output tools
+   * - if the structured output generated by the tool call doesn't match provided schema
+   *
+   * This property allows to handle these errors in different ways:
+   * - `true` - retry the tool call
+   * - `false` - throw an error
+   * - `string` - retry the tool call with the provided message
+   * - `(error: ToolOutputError) => Promise<string> | string` - retry with the provided message or throw the error
+   */
+  handleError?:
+    | boolean
+    | string
+    | ((error: ToolOutputError) => Promise<string> | string);
+}
 
 export function toolOutput<T extends InteropZodType<any>>(
-  responseFormat: T
+  responseFormat: T,
+  options?: ToolOutputOptions
 ): TypedToolOutput<T extends InteropZodType<infer U> ? U : never>;
 export function toolOutput<T extends readonly InteropZodType<any>[]>(
-  responseFormat: T
+  responseFormat: T,
+  options?: ToolOutputOptions
 ): TypedToolOutput<
   { [K in keyof T]: T[K] extends InteropZodType<infer U> ? U : never }[number]
 >;
 export function toolOutput(
-  responseFormat: JsonSchemaFormat
+  responseFormat: JsonSchemaFormat,
+  options?: ToolOutputOptions
 ): TypedToolOutput<Record<string, unknown>>;
 export function toolOutput(
-  responseFormat: JsonSchemaFormat[]
+  responseFormat: JsonSchemaFormat[],
+  options?: ToolOutputOptions
 ): TypedToolOutput<Record<string, unknown>>;
+
+/**
+ * Define how to transform the response format from a tool call.
+ *
+ * @param responseFormat - The response format to transform
+ * @param options - The options to use for the transformation
+ * @param options.handleError - Whether to handle errors from the tool call
+ * @returns The transformed response format
+ */
 export function toolOutput(
   responseFormat:
     | InteropZodType<any>
     | InteropZodType<any>[]
     | JsonSchemaFormat
-    | JsonSchemaFormat[]
+    | JsonSchemaFormat[],
+  options?: ToolOutputOptions
 ): TypedToolOutput {
-  return transformResponseFormat(responseFormat) as TypedToolOutput;
+  return transformResponseFormat(responseFormat, options) as TypedToolOutput;
 }
 
 export function nativeOutput<T extends InteropZodType<any>>(
