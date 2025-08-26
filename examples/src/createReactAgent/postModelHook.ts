@@ -18,14 +18,8 @@
  */
 
 import fs from "node:fs/promises";
-import {
-  createReactAgent,
-  tool,
-  AIMessage,
-  interrupt,
-  resume,
-  MemorySaver,
-} from "langchain";
+import { createReactAgent, tool, AIMessage, MemorySaver } from "langchain";
+import { interrupt } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -337,7 +331,9 @@ await agent.invoke(
   { configurable }
 );
 
-const case1Resumed = await agent.invoke(resume("it's ok!"), { configurable });
+const case1Resumed = await agent.invoke(null, {
+  configurable,
+});
 console.log("Product Inquiry:", case1Resumed.messages.at(-1)?.content);
 
 /**
@@ -356,7 +352,9 @@ await agent.invoke(
   },
   { configurable }
 );
-const case2Resumed = await agent.invoke(resume("it's ok!"), { configurable });
+const case2Resumed = await agent.invoke(null, {
+  configurable,
+});
 console.log("Technical Query:", case2Resumed.messages.at(-1)?.content);
 
 /**
