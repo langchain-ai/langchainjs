@@ -419,6 +419,7 @@ export interface ToolSpec {
 /**
  * Interface specific to the Fake Streaming Chat model.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface FakeStreamingChatModelCallOptions
   extends BaseChatModelCallOptions {}
 /**

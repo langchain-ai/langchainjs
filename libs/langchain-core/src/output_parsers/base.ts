@@ -9,6 +9,7 @@ import { addLangChainErrorFields } from "../errors/index.js";
 /**
  * Options for formatting instructions.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface FormatInstructionsOptions {}
 
 /**

@@ -1,6 +1,6 @@
 import { addLangChainErrorFields } from "../errors/index.js";
 import { SerializedConstructor } from "../load/serializable.js";
-import { _isToolCall } from "../tools/utils.js";
+import { isToolCall } from "../tools/utils.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
@@ -32,7 +32,7 @@ import {
 function _coerceToolCall(
   toolCall: ToolCall | Record<string, unknown>
 ): ToolCall {
-  if (_isToolCall(toolCall)) {
+  if (isToolCall(toolCall)) {
     return toolCall;
   } else if (
     typeof toolCall.id === "string" &&

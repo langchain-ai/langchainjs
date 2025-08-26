@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-wrapper-object-types */
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
@@ -338,7 +339,6 @@ export class ChatMessagePromptTemplate<
   }
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(template: T, role: string, options?: { templateFormat?: TemplateFormat }) {
@@ -1116,7 +1116,6 @@ export class ChatPromptTemplate<
    * Load prompt template from a template f-string
    */
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -1128,7 +1127,6 @@ export class ChatPromptTemplate<
   ): ChatPromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -1140,7 +1138,6 @@ export class ChatPromptTemplate<
   ): ChatPromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -1152,7 +1149,6 @@ export class ChatPromptTemplate<
   ): ChatPromptTemplate<InputValues>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -1165,7 +1161,6 @@ export class ChatPromptTemplate<
     const prompt = PromptTemplate.fromTemplate(template, options);
     const humanTemplate = new HumanMessagePromptTemplate({ prompt });
     return this.fromMessages<
-      // eslint-disable-next-line @typescript-eslint/ban-types
       RunInput extends Symbol ? ParamsFromFString<T> : RunInput
     >([humanTemplate]);
   }

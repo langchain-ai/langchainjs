@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-wrapper-object-types */
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
@@ -90,9 +91,7 @@ export type ParamsFromFString<T extends string> = {
 
 export type ExtractedFStringParams<
   T extends string,
-  // eslint-disable-next-line @typescript-eslint/ban-types
   RunInput extends InputValues = Symbol
-  // eslint-disable-next-line @typescript-eslint/ban-types
 > = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
 
 /**
@@ -215,7 +214,6 @@ export class PromptTemplate<
    * Load prompt template from a template f-string
    */
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -227,7 +225,6 @@ export class PromptTemplate<
   ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -239,7 +236,6 @@ export class PromptTemplate<
   ): PromptTemplate<ExtractedFStringParams<T, RunInput>>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(
@@ -251,7 +247,6 @@ export class PromptTemplate<
   ): PromptTemplate<InputValues>;
 
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/ban-types
     RunInput extends InputValues = Symbol,
     T extends string = string
   >(

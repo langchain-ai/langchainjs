@@ -40,6 +40,7 @@ export interface BaseLLMParams extends BaseLanguageModelParams {
   concurrency?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
 /**

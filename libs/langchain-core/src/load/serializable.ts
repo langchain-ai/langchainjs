@@ -13,8 +13,10 @@ export interface SerializedConstructor extends BaseSerialized<"constructor"> {
   kwargs: SerializedFields;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SerializedSecret extends BaseSerialized<"secret"> {}
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SerializedNotImplemented
   extends BaseSerialized<"not_implemented"> {}
 
