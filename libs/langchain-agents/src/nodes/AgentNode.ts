@@ -316,6 +316,14 @@ export class AgentNode<
     let preparedCall: PreparedCall = {};
 
     /**
+     * If the model is a function, call it to get the model.
+     * @deprecated likely to be removed in the next version of the agent
+     */
+    if (typeof model === "function") {
+      model = await model(state, config);
+    }
+
+    /**
      * Check if the LLM already has bound tools and throw if it does.
      */
     validateLLMHasNoBoundTools(model);

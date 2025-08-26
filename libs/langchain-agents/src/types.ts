@@ -288,7 +288,7 @@ export type CreateReactAgentParams<
     | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm: LanguageModelLike;
+  llm: LanguageModelLike | DynamicLLMFunction<StateSchema, ContextSchema>;
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];
@@ -659,3 +659,14 @@ export interface PredicateFunctionReturn {
   shouldStop: boolean;
   description?: string;
 }
+
+/**
+ * @deprecated likely to be removed in the next version of the agent
+ */
+type DynamicLLMFunction<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+> = (
+  state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
+  runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
+) => Promise<LanguageModelLike> | LanguageModelLike;
