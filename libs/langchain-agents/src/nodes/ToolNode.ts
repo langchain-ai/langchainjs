@@ -3,9 +3,14 @@ import {
   ToolMessage,
   AIMessage,
   isBaseMessage,
+  isToolMessage,
 } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
-import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
+import {
+  DynamicTool,
+  StructuredToolInterface,
+  ToolInputParsingException,
+} from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { InteropZodObject } from "@langchain/core/utils/types";
 import {
@@ -13,11 +18,13 @@ import {
   Command,
   Send,
   isGraphInterrupt,
+  type NodeInterrupt,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation } from "../annotation.js";
 import { mergeAbortSignals } from "../utils.js";
+import { ToolInvocationError } from "../errors.js";
 import type { AnyAnnotationRoot, ToAnnotationRoot } from "../types.js";
 
 export interface ToolNodeOptions {
@@ -43,9 +50,15 @@ export interface ToolNodeOptions {
    * If `false`:
    *   - the error will be thrown immediately
    *
+   * If a function is provided:
+   *   - you can catch the error and return a {@link ToolMessage} as result
+   *   - throw if the function returns undefined
+   *
    * @default true
    */
-  handleToolErrors?: boolean;
+  handleToolErrors?:
+    | boolean
+    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined);
 }
 
 const isBaseMessageArray = (input: unknown): input is BaseMessage[] =>
@@ -190,7 +203,9 @@ export class ToolNode<
 
   signal?: AbortSignal;
 
-  handleToolErrors = true;
+  handleToolErrors:
+    | boolean
+    | ((error: unknown, toolCall: ToolCall) => ToolMessage | undefined) = true;
 
   constructor(
     tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[],
@@ -244,6 +259,13 @@ export class ToolNode<
       });
     } catch (e: unknown) {
       /**
+       * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
+       */
+      if (e instanceof ToolInputParsingException) {
+        throw new ToolInvocationError(e, call);
+      }
+
+      /**
        * throw the error if user prefers not to handle tool errors
        */
       if (!this.handleToolErrors) {
@@ -252,7 +274,7 @@ export class ToolNode<
 
       if (isGraphInterrupt(e)) {
         /**
-         * `NodeInterrupt` errors are a breakpoint to bring a human into the loop.
+         * {@link NodeInterrupt} errors are a breakpoint to bring a human into the loop.
          * As such, they are not recoverable by the agent and shouldn't be fed
          * back. Instead, re-throw these errors even when `handleToolErrors = true`.
          */
@@ -266,12 +288,21 @@ export class ToolNode<
         throw e;
       }
 
-      const error = e instanceof Error ? e : new Error(String(e));
-      return new ToolMessage({
-        content: `Error: ${error.message}\n Please fix your mistakes.`,
-        name: call.name,
-        tool_call_id: call.id ?? "",
-      });
+      /**
+       * if the user provides a function, call it with the error and tool call
+       * and return the result if it is a {@link ToolMessage}
+       */
+      if (typeof this.handleToolErrors === "function") {
+        const result = this.handleToolErrors(e, call);
+        if (result && isToolMessage(result)) {
+          return result;
+        }
+      }
+
+      /**
+       * If the user doesn't handle the error, throw it
+       */
+      throw e;
     }
   }
 

@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { StructuredTool, tool } from "@langchain/core/tools";
+import { describe, expect, it, vi } from "vitest";
+import {
+  StructuredTool,
+  tool,
+  ToolInputParsingException,
+} from "@langchain/core/tools";
 
 import {
   AIMessage,
@@ -25,6 +29,7 @@ import {
 
 import { ToolNode } from "../nodes/ToolNode.js";
 
+import { ToolInvocationError } from "../errors.js";
 import {
   _AnyIdAIMessage,
   _AnyIdHumanMessage,
@@ -52,19 +57,6 @@ class SearchAPI extends StructuredTool {
 }
 
 describe("ToolNode", () => {
-  it("Should support graceful error handling", async () => {
-    const toolNode = new ToolNode([new SearchAPI()]);
-    const res = await toolNode.invoke([
-      new AIMessage({
-        content: "",
-        tool_calls: [{ name: "badtool", args: {}, id: "testid" }],
-      }),
-    ]);
-    expect(res[0].content).toEqual(
-      `Error: Tool "badtool" not found.\n Please fix your mistakes.`
-    );
-  });
-
   it("Should work when nested with a callback manager passed", async () => {
     const toolNode = new ToolNode([new SearchAPI()]);
     const wrapper = RunnableLambda.from(async (_) => {
@@ -829,5 +821,90 @@ describe("ToolNode error handling", () => {
         ],
       })
     ).rejects.toThrow(/some error/);
+  });
+
+  it("should allow to handle tool errors with a function", async () => {
+    const errorToThrow = new Error("some error");
+    const toolCall = { name: "tool_with_interrupt", args: {}, id: "testid" };
+    const toolWithError = tool(
+      async (_) => {
+        console.log("throwing error");
+        throw errorToThrow;
+      },
+      {
+        name: "tool_with_interrupt",
+        description: "A tool that returns an interrupt",
+        schema: z.object({}),
+      }
+    );
+    const handleToolErrors = vi.fn();
+    const toolNode = new ToolNode([toolWithError], {
+      handleToolErrors,
+    });
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [toolCall],
+          }),
+        ],
+      })
+    ).rejects.toThrow(/some error/);
+    expect(handleToolErrors).toHaveBeenCalledWith(errorToThrow, toolCall);
+  });
+
+  it("should return a ToolMessage if handleToolErrors returns a ToolMessage", async () => {
+    const toolWithError = tool(
+      async (_) => {
+        throw new Error("some error");
+      },
+      {
+        name: "tool_with_error",
+      }
+    );
+    const toolNode = new ToolNode([toolWithError], {
+      handleToolErrors: (_, toolCall) => {
+        return new ToolMessage({
+          content: "handled error",
+          tool_call_id: toolCall.id!,
+        });
+      },
+    });
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ name: "tool_with_error", args: {}, id: "testid" }],
+        }),
+      ],
+    });
+    expect(result.messages[0].content).toBe("handled error");
+  });
+
+  it("should throw an ToolInvocationError if tool parameters aren't valid", async () => {
+    const handleToolErrors = vi.fn();
+    const toolWithArgs = tool(
+      async () => {
+        throw new ToolInputParsingException("foo", "bar");
+      },
+      {
+        name: "tool_with_error",
+      }
+    );
+    const toolNode = new ToolNode([toolWithArgs], {
+      handleToolErrors,
+    });
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [{ name: "tool_with_error", args: {}, id: "testid" }],
+          }),
+        ],
+      })
+    ).rejects.toThrow(ToolInvocationError);
+    expect(handleToolErrors).not.toHaveBeenCalled();
   });
 });

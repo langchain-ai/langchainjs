@@ -1,3 +1,5 @@
+import type { ToolCall } from "@langchain/core/messages/tool";
+
 export class MultipleToolsBoundError extends Error {
   constructor() {
     super(
@@ -41,5 +43,28 @@ export class StructuredOutputParsingError extends Error {
     );
     this.toolName = toolName;
     this.errors = errors;
+  }
+}
+
+/**
+ * Raised when a tool call is throwing an error.
+ */
+export class ToolInvocationError extends Error {
+  public readonly toolCall: ToolCall;
+
+  public readonly toolError: Error;
+
+  constructor(toolError: unknown, toolCall: ToolCall) {
+    const error =
+      toolError instanceof Error ? toolError : new Error(String(toolError));
+    super(
+      `Error invoking tool '${toolCall.name}' with kwargs ${JSON.stringify(
+        toolCall.args
+      )} ` +
+        `with error:\n ${error.stack}\n Please fix the error and try again.`
+    );
+
+    this.toolCall = toolCall;
+    this.toolError = error;
   }
 }
