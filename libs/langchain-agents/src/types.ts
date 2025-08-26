@@ -356,7 +356,49 @@ export type CreateReactAgentParams<
   prepareCall?: PrepareCall<StateSchema, ContextSchema>;
 
   /**
-   * Additional state schema for the agent.
+   * Additional state schema for the agent. It allows to define additional state keys that will be
+   * persisted between agent invocations.
+   *
+   * @example
+   * ```ts
+   * // State schema defines data that persists across agent invocations
+   * const stateSchema = z.object({
+   *   userPreferences: z.object({
+   *     theme: z.enum(["light", "dark"]),
+   *     language: z.string(),
+   *   }),
+   *   taskHistory: z.array(z.string()),
+   *   currentWorkflow: z.string().optional(),
+   * });
+   *
+   * // Context schema defines runtime parameters passed per invocation
+   * const contextSchema = z.object({ ... });
+   *
+   * const agent = createAgent({
+   *   llm: model,
+   *   tools: [updatePreferences, addTask],
+   *   stateSchema,    // Persisted: preferences, e.g. task history, workflow state
+   *   contextSchema,  // Per-invocation: user ID, session, API keys, etc.
+   *   prompt: (state, config) => {
+   *     // ...
+   *   },
+   * });
+   *
+   * // First invocation - state starts empty, context provided
+   * await agent.invoke({
+   *   messages: [new HumanMessage("Set my theme to dark")],
+   * }, {
+   *   context: { userId: "user123", sessionId: "sess456", apiKeys: {...} }
+   * });
+   *
+   * // Second invocation - state persists, new context
+   * await agent.invoke({
+   *   messages: [new HumanMessage("Add a task to review code")],
+   * }, {
+   *   context: { userId: "user123", sessionId: "sess789", apiKeys: {...} }
+   * });
+   * // State now contains: userPreferences.theme="dark", taskHistory=["review code"]
+   * ```
    */
   stateSchema?: StateSchema;
 
@@ -369,7 +411,37 @@ export type CreateReactAgentParams<
     | PredicateFunction<StructuredResponseType>[];
 
   /**
-   * An optional schema for the context.
+   * An optional schema for the context. It allows to pass in a typed context object into the agent
+   * invocation and allows to access it in hooks such as `prompt`, `preModelHook`, `postModelHook`, etc.
+   * As opposed to the agent state, defined in `stateSchema`, the context is not persisted between
+   * agent invocations.
+   *
+   * @example
+   * ```ts
+   * const agent = createAgent({
+   *   llm: model,
+   *   tools: [getWeather],
+   *   contextSchema: z.object({
+   *     capital: z.string(),
+   *   }),
+   *   prompt: (state, config) => {
+   *     return [
+   *       new SystemMessage(`You are a helpful assistant. The capital of France is ${config.context.capital}.`),
+   *     ];
+   *   },
+   * });
+   *
+   * const result = await agent.invoke({
+   *   messages: [
+   *     new SystemMessage("You are a helpful assistant."),
+   *     new HumanMessage("What is the capital of France?"),
+   *   ],
+   * }, {
+   *   context: {
+   *     capital: "Paris",
+   *   },
+   * });
+   * ```
    */
   contextSchema?: ContextSchema;
   /** An optional checkpoint saver to persist the agent's state. */
@@ -477,7 +549,26 @@ export type CreateReactAgentParams<
 
   /**
    * An optional function to handle tool call errors.
-   * @experimental this API is experimental and may change in the future, use with caution
+   *
+   * You can use this hook to handle tool call errors more gracefully and have the agent retry
+   * the tool call with an updated tool call message.
+   *
+   * @experimental This API is experimental and may change in the future, use with caution.
+   * @example
+   * ```ts
+   * import { createAgent, tool, ToolMessage } from "langchain";
+   *
+   * const agent = createAgent({
+   *   llm: model,
+   *   tools: [getWeather],
+   *   onToolCallError: (toolCall, state, config) => {
+   *     console.error(toolCall.error);
+   *     return new ToolMessage({
+   *       content: `An error occurred while calling the tool: ${toolCall.error}, please try again.`,
+   *       tool_call_id: toolCall.id,
+   *     });
+   *   },
+   * });
    */
   onToolCallError?: (
     toolCall: ToolCallData,
@@ -486,7 +577,7 @@ export type CreateReactAgentParams<
   ) => void | ToolMessage | Promise<ToolMessage>;
 
   /**
-   * An optional AbortSignal to abort the agent.
+   * An optional abort signal that indicates that the overall operation should be aborted.
    */
   signal?: AbortSignal;
 };
