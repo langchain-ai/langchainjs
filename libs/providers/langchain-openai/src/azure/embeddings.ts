@@ -6,9 +6,12 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { OpenAIEmbeddings, OpenAIEmbeddingsParams } from "../embeddings.js";
 import { AzureOpenAIInput, OpenAICoreRequestOptions } from "../types.js";
-import { getEndpoint, OpenAIEndpointConfig } from "../utils/azure.js";
-import { wrapOpenAIClientError } from "../utils/openai.js";
-import { normalizeHeaders } from "../utils/headers.js";
+import {
+  getEndpoint,
+  OpenAIEndpointConfig,
+  normalizeHeaders,
+} from "../utils/azure.js";
+import { wrapOpenAIClientError } from "../utils/client.js";
 
 export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   azureOpenAIApiVersion?: string;
