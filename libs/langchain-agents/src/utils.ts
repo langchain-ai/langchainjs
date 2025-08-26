@@ -23,6 +23,7 @@ import {
 import {
   Runnable,
   RunnableLike,
+  RunnableConfig,
   RunnableLambda,
   RunnableSequence,
   RunnableBinding,
@@ -420,7 +421,7 @@ export async function bindTools(
   options: Partial<BaseChatModelCallOptions> = {}
 ): Promise<
   | RunnableSequence<any, any>
-  | RunnableBinding<any, any, any>
+  | RunnableBinding<any, any, RunnableConfig<Record<string, any>>>
   | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
 > {
   const model = _simpleBindTools(llm, toolClasses, options);
@@ -465,7 +466,7 @@ export async function bindTools(
  * @param llm - The LLM to check.
  * @returns void
  */
-export function validateLLMHasNoBoundTools(llm: any): void {
+export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
   /**
    * If llm is a function, we can't validate until runtime, so skip
    */
@@ -480,7 +481,7 @@ export function validateLLMHasNoBoundTools(llm: any): void {
    */
   if (RunnableSequence.isRunnableSequence(model)) {
     model =
-      model.steps.find((step: any) =>
+      model.steps.find((step: RunnableLike) =>
         RunnableBinding.isRunnableBinding(step)
       ) || model;
   }
@@ -522,6 +523,7 @@ export function validateLLMHasNoBoundTools(llm: any): void {
    * Also check if model has tools property directly (e.g., FakeToolCallingModel)
    */
   if (
+    "tools" in model &&
     model.tools !== undefined &&
     Array.isArray(model.tools) &&
     model.tools.length > 0

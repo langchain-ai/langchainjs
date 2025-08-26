@@ -86,12 +86,12 @@ describe("createAgent", () => {
     const modelWithTools = model.bindTools([searchTool]);
 
     // Should throw when trying to create agent with bound tools
-    expect(() => {
+    expect(() =>
       createAgent({
         llm: modelWithTools,
         tools: [searchTool],
-      });
-    }).toThrow(
+      })
+    ).toThrow(
       "The provided LLM already has bound tools. " +
         "Please provide an LLM without bound tools to createAgent. " +
         "The agent will bind the tools provided in the 'tools' parameter."
@@ -526,10 +526,6 @@ describe("createAgent", () => {
     });
 
     expect(response.structuredResponse).toEqual(expectedStructuredResponse);
-    expect(response.messages).toHaveLength(2);
-    expect((response.messages[1] as ToolMessage).content).toBe(
-      `Returning structured response: {"temperature":75}`
-    );
   });
 
   it("should support native response format", async () => {

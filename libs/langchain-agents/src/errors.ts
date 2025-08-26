@@ -30,6 +30,7 @@ export class MultipleStructuredOutputsError extends Error {
  */
 export class StructuredOutputParsingError extends Error {
   public readonly toolName: string;
+
   public readonly errors: string[];
 
   constructor(toolName: string, errors: string[]) {

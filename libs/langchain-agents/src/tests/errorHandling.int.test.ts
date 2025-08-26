@@ -1,5 +1,3 @@
-"use strict";
-
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";

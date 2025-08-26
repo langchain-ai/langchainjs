@@ -583,8 +583,7 @@ export type CreateReactAgentParams<
 };
 
 export interface ConfigurableModelInterface {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  _queuedMethodOperations: Record<string, any>;
+  _queuedMethodOperations: Record<string, unknown>;
   _model: () => Promise<BaseChatModel>;
 }
 
@@ -601,7 +600,7 @@ export type InternalAgentState<
   // graph recursion end
   // is_last_step: boolean;
 } & (StructuredResponseType extends ResponseFormatUndefined
-  ? {}
+  ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
 
 export type WithStateGraphNodes<

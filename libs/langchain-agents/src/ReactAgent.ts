@@ -72,7 +72,9 @@ export class ReactAgent<
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
-    validateLLMHasNoBoundTools(options.llm);
+    if (typeof options.llm !== "function") {
+      validateLLMHasNoBoundTools(options.llm);
+    }
 
     /**
      * Check if prepareCall is co-specified with callable prompt

@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
 
-import { FakeToolCallingChatModel } from "./utils.js";
-import { createAgent } from "../index.js";
 import { HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+
+import { FakeToolCallingChatModel } from "./utils.js";
+import { createAgent } from "../index.js";
 
 const getWeather = tool(
   (input: { city: string }) => {
