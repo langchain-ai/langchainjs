@@ -38,7 +38,7 @@ const languageChain = RunnableSequence.from([
       (input: LanguageChainInput) => input.question,
       retriever,
       formatDocumentsAsString,
-    ] as any),
+    ]),
     question: (input: LanguageChainInput) => input.question,
     language: (input: LanguageChainInput) => input.language,
   },

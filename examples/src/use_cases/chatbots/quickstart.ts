@@ -149,7 +149,6 @@ import type { BaseMessage } from "@langchain/core/messages";
 import {
   RunnablePassthrough,
   RunnableSequence,
-  RunnableLambda,
 } from "@langchain/core/runnables";
 
 const parseRetrieverInput = (params: { messages: BaseMessage[] }) => {
@@ -157,12 +156,7 @@ const parseRetrieverInput = (params: { messages: BaseMessage[] }) => {
 };
 
 const retrievalChain = RunnablePassthrough.assign({
-  context: RunnableSequence.from([
-    parseRetrieverInput,
-    new RunnableLambda({
-      func: async (query: string) => retriever.invoke(query),
-    }),
-  ]),
+  context: RunnableSequence.from([parseRetrieverInput, retriever]),
 }).assign({
   answer: documentChain,
 });
@@ -188,12 +182,7 @@ console.log(
 );
 
 const retrievalChainWithOnlyAnswer = RunnablePassthrough.assign({
-  context: RunnableSequence.from([
-    parseRetrieverInput,
-    new RunnableLambda({
-      func: async (query: string) => retriever.invoke(query),
-    }),
-  ]),
+  context: RunnableSequence.from([parseRetrieverInput, retriever]),
 }).pipe(documentChain);
 
 console.log(
@@ -220,21 +209,12 @@ const queryTransformPrompt = ChatPromptTemplate.fromMessages([
 const queryTransformingRetrieverChain = RunnableBranch.from([
   [
     (params: { messages: BaseMessage[] }) => params.messages.length === 1,
-    RunnableSequence.from([
-      parseRetrieverInput,
-      new RunnableLambda({
-        func: async (query: string) => retriever.invoke(query),
-      }),
-    ]),
+    RunnableSequence.from([parseRetrieverInput, retriever]),
   ],
   queryTransformPrompt
     .pipe(chat)
     .pipe(new StringOutputParser())
-    .pipe(
-      new RunnableLambda({
-        func: async (query: string) => retriever.invoke(query),
-      })
-    ),
+    .pipe(retriever),
 ]).withConfig({ runName: "chat_retriever_chain" });
 
 const conversationalRetrievalChain = RunnablePassthrough.assign({

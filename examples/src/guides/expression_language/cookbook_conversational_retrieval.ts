@@ -64,7 +64,7 @@ const standaloneQuestionChain = RunnableSequence.from([
 
 const answerChain = RunnableSequence.from([
   {
-    context: retriever.pipe(formatDocumentsAsString) as any,
+    context: retriever.pipe(formatDocumentsAsString),
     question: new RunnablePassthrough(),
   },
   ANSWER_PROMPT,

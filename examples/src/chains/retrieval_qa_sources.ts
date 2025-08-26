@@ -44,9 +44,9 @@ const chain = RunnableSequence.from([
   {
     // Extract the "question" field from the input object and pass it to the retriever as a string
     sourceDocuments: RunnableSequence.from([
-      (input: { question: string }) => input.question,
+      (input) => input.question,
       vectorStoreRetriever,
-    ] as any),
+    ]),
     question: (input) => input.question,
   },
   {
