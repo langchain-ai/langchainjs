@@ -785,9 +785,6 @@ importers:
       '@langchain/langgraph':
         specifier: ^0.4.3
         version: 0.4.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
-      '@langchain/langgraph-checkpoint':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai

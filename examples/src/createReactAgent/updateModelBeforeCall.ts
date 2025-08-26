@@ -31,10 +31,6 @@ import { createReactAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-});
-
 /**
  * Define a custom static context
  */
@@ -43,23 +39,20 @@ const context = z.object({
 });
 
 const agent = createReactAgent({
-  llm: model,
   tools: [],
   /**
    * Custom dynamic model selection before the model call.
    */
-  prepareCall: (state, runtime) => {
-    console.log("prepareCall called", runtime);
+  llm: (state, runtime) => {
+    console.log("beforeModelCall called", runtime);
     /**
      * if model preference is provided by content, use it
      */
     if (runtime.context?.model) {
       console.log("\n🧠 Using model from context:", runtime.context.model);
-      return {
-        model: new ChatOpenAI({
-          model: runtime.context.model,
-        }),
-      };
+      return new ChatOpenAI({
+        model: runtime.context.model,
+      });
     }
 
     const last = state.messages[state.messages.length - 1];
@@ -71,12 +64,10 @@ const agent = createReactAgent({
     console.log(
       `\n🧠 Model router → ${modelId} | Query: "${content.slice(0, 60)}..."`
     );
-    return {
-      model: new ChatOpenAI({
-        model: modelId,
-        temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
-      }),
-    };
+    return new ChatOpenAI({
+      model: modelId,
+      temperature: modelId === "gpt-4o" ? 0.2 : 0.5,
+    });
   },
   prompt: `You are a concise coding assistant. Answer clearly.`,
   contextSchema: context,
