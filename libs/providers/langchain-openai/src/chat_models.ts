@@ -102,6 +102,7 @@ import {
   messageToOpenAIRole,
   ResponsesInputItem,
 } from "./utils/message_inputs.js";
+import { _convertToResponsesMessageFromV1 } from "./utils/standard.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
@@ -1277,6 +1278,7 @@ export class ChatOpenAIResponses<
     const tool_calls: ToolCall[] = [];
     const invalid_tool_calls: InvalidToolCall[] = [];
     const response_metadata: Record<string, unknown> = {
+      model_provider: "openai",
       model: response.model,
       created_at: response.created_at,
       id: response.id,
@@ -1286,7 +1288,6 @@ export class ChatOpenAIResponses<
       status: response.status,
       user: response.user,
       service_tier: response.service_tier,
-
       // for compatibility with chat completion calls.
       model_name: response.model,
     };
@@ -1376,7 +1377,9 @@ export class ChatOpenAIResponses<
     let generationInfo: Record<string, unknown> = {};
     let usage_metadata: UsageMetadata | undefined;
     const tool_call_chunks: ToolCallChunk[] = [];
-    const response_metadata: Record<string, unknown> = {};
+    const response_metadata: Record<string, unknown> = {
+      model_provider: "openai",
+    };
     const additional_kwargs: {
       [key: string]: unknown;
       reasoning?: Partial<ChatOpenAIReasoningSummary>;
@@ -1527,6 +1530,13 @@ export class ChatOpenAIResponses<
   protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
+        if (
+          isAIMessage(lcMsg) &&
+          lcMsg.response_metadata?.output_version === "v1"
+        ) {
+          return _convertToResponsesMessageFromV1(lcMsg);
+        }
+
         const additional_kwargs = lcMsg.additional_kwargs as
           | BaseMessageFields["additional_kwargs"] & {
               [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
