@@ -145,6 +145,31 @@ function convertAnthropicAnnotation(
   return citation;
 }
 
+/**
+ * Converts an Anthropic content block to a standard V1 content block.
+ *
+ * This function handles the conversion of Anthropic-specific content blocks
+ * (document and image blocks) to the standardized V1 format. It supports
+ * various source types including base64 data, URLs, file IDs, and text data.
+ *
+ * @param block - The Anthropic content block to convert
+ * @returns A standard V1 content block if conversion is successful, undefined otherwise
+ *
+ * @example
+ * ```typescript
+ * const anthropicBlock = {
+ *   type: "image",
+ *   source: {
+ *     type: "base64",
+ *     media_type: "image/png",
+ *     data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+ *   }
+ * };
+ *
+ * const standardBlock = convertToV1FromAnthropicContentBlock(anthropicBlock);
+ * // Returns: { type: "image", mimeType: "image/png", data: "..." }
+ * ```
+ */
 export function convertToV1FromAnthropicContentBlock(
   block: ContentBlock
 ): ContentBlock.Standard | undefined {
@@ -183,7 +208,7 @@ export function convertToV1FromAnthropicContentBlock(
         data: block.source.data,
       };
     } else {
-      // TODO: non standard?
+      return block as ContentBlock.Standard;
     }
   } else if (
     _isContentBlock(block, "image") &&
@@ -214,12 +239,23 @@ export function convertToV1FromAnthropicContentBlock(
         fileId: block.source.file_id,
       };
     } else {
-      // TODO: non standard?
+      return block as ContentBlock.Standard;
     }
   }
   return undefined;
 }
 
+/**
+ * Converts an array of content blocks from Anthropic format to v1 standard format.
+ *
+ * This function processes each content block in the input array, attempting to convert
+ * Anthropic-specific block formats (like image blocks with source objects, document blocks, etc.)
+ * to the standardized v1 content block format. If a block cannot be converted, it is
+ * passed through as-is with a type assertion to ContentBlock.Standard.
+ *
+ * @param content - Array of content blocks in Anthropic format to be converted
+ * @returns Array of content blocks in v1 standard format
+ */
 export function convertToV1FromAnthropicInput(
   content: Array<ContentBlock>
 ): Array<ContentBlock.Standard> {
@@ -229,7 +265,7 @@ export function convertToV1FromAnthropicInput(
       if (stdBlock) {
         yield stdBlock;
       } else {
-        // TODO: non standard?
+        yield block as ContentBlock.Standard;
       }
     }
   }
@@ -258,6 +294,32 @@ type AnthropicCodeExecutionToolResult = {
       };
 };
 
+/**
+ * Converts an Anthropic AI message to an array of v1 standard content blocks.
+ *
+ * This function processes an AI message containing Anthropic-specific content blocks
+ * and converts them to the standardized v1 content block format.
+ *
+ * @param message - The AI message containing Anthropic-formatted content blocks
+ * @returns Array of content blocks in v1 standard format
+ *
+ * @example
+ * ```typescript
+ * const message = new AIMessage([
+ *   { type: "text", text: "Hello world" },
+ *   { type: "thinking", text: "Let me think about this..." },
+ *   { type: "tool_use", id: "123", name: "calculator", input: { a: 1, b: 2 } }
+ * ]);
+ *
+ * const standardBlocks = convertToV1FromAnthropicMessage(message);
+ * // Returns:
+ * // [
+ * //   { type: "text", text: "Hello world" },
+ * //   { type: "reasoning", reasoning: "Let me think about this..." },
+ * //   { type: "tool_call", id: "123", name: "calculator", args: { a: 1, b: 2 } }
+ * // ]
+ * ```
+ */
 export function convertToV1FromAnthropicMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
