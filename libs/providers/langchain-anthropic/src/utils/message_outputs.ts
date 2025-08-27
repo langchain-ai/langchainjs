@@ -21,6 +21,7 @@ export function _makeMessageChunkFromAnthropicEvent(
 ): {
   chunk: AIMessageChunk;
 } | null {
+  const response_metadata = { model_provider: "anthropic" };
   if (data.type === "message_start") {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { content, usage, ...additionalKwargs } = data.message;
@@ -49,6 +50,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         additional_kwargs: filteredAdditionalKwargs,
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
         response_metadata: {
+          ...response_metadata,
           usage: {
             ...rest,
           },
@@ -71,6 +73,7 @@ export function _makeMessageChunkFromAnthropicEvent(
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
+        response_metadata,
         additional_kwargs: { ...data.delta },
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),
@@ -113,6 +116,7 @@ export function _makeMessageChunkFromAnthropicEvent(
                     : undefined,
               },
             ],
+        response_metadata,
         additional_kwargs: {},
         tool_call_chunks: toolCallChunks,
       }),
@@ -146,6 +150,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         return {
           chunk: new AIMessageChunk({
             content: [{ index: data.index, ...contentBlock, type: "thinking" }],
+            response_metadata,
           }),
         };
       }
@@ -153,6 +158,7 @@ export function _makeMessageChunkFromAnthropicEvent(
       return {
         chunk: new AIMessageChunk({
           content: [{ index: data.index, ...contentBlock, type: "text" }],
+          response_metadata,
         }),
       };
     }
@@ -171,6 +177,7 @@ export function _makeMessageChunkFromAnthropicEvent(
                 type: data.delta.type,
               },
             ],
+        response_metadata,
         additional_kwargs: {},
         tool_call_chunks: [
           {
@@ -196,6 +203,7 @@ export function _makeMessageChunkFromAnthropicEvent(
                   ...data.content_block,
                 },
               ],
+          response_metadata,
           additional_kwargs: {},
         }),
       };
@@ -209,6 +217,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         content: fields.coerceContentToString
           ? ""
           : [{ index: data.index, ...data.content_block }],
+        response_metadata,
       }),
     };
   } else if (
@@ -221,6 +230,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         content: fields.coerceContentToString
           ? content
           : [{ index: data.index, ...data.content_block }],
+        response_metadata,
       }),
     };
   }
@@ -231,6 +241,10 @@ export function anthropicResponseToChatMessages(
   messages: AnthropicMessageResponse[],
   additionalKwargs: Record<string, unknown>
 ): ChatGeneration[] {
+  const response_metadata = {
+    ...additionalKwargs,
+    model_provider: "anthropic",
+  };
   const usage: Record<string, number> | null | undefined =
     additionalKwargs.usage as Record<string, number> | null | undefined;
   const usageMetadata =
@@ -253,7 +267,7 @@ export function anthropicResponseToChatMessages(
           content: messages[0].text,
           additional_kwargs: additionalKwargs,
           usage_metadata: usageMetadata,
-          response_metadata: additionalKwargs,
+          response_metadata,
           id: additionalKwargs.id as string,
         }),
       },
@@ -269,7 +283,7 @@ export function anthropicResponseToChatMessages(
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,
           usage_metadata: usageMetadata,
-          response_metadata: additionalKwargs,
+          response_metadata,
           id: additionalKwargs.id as string,
         }),
       },

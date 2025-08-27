@@ -8,6 +8,8 @@ import {
   BaseMessageFields,
   _mergeLists,
 } from "./base.js";
+import { getTranslator } from "./block_translators/index.js";
+import { ContentBlock } from "./content/index.js";
 import {
   InvalidToolCall,
   ToolCall,
@@ -122,7 +124,7 @@ export type UsageMetadata = {
 /**
  * Represents an AI message in a conversation.
  */
-export class AIMessage extends BaseMessage {
+export class AIMessage extends BaseMessage implements AIMessageFields {
   // These are typed as optional to avoid breaking changes and allow for casting
   // from BaseMessage.
   tool_calls?: ToolCall[] = [];
@@ -189,6 +191,36 @@ export class AIMessage extends BaseMessage {
         initParams.tool_calls = [];
         initParams.invalid_tool_calls = [];
       }
+      if (initParams.contentBlocks !== undefined) {
+        // Add constructor tool calls as content blocks
+        initParams.contentBlocks.push(
+          ...initParams.tool_calls.map((toolCall) => ({
+            type: "tool_call" as const,
+            id: toolCall.id,
+            name: toolCall.name,
+            args: toolCall.args,
+          }))
+        );
+        // Add content block tool calls that aren't in the constructor tool calls
+        const missingToolCalls = initParams.contentBlocks
+          .filter<ContentBlock.Tools.ToolCall>(
+            (block) => block.type === "tool_call"
+          )
+          .filter(
+            (block) =>
+              !initParams.tool_calls?.some(
+                (toolCall) =>
+                  toolCall.id === block.id && toolCall.name === block.name
+              )
+          );
+        if (missingToolCalls.length > 0) {
+          initParams.tool_calls = missingToolCalls.map((block) => ({
+            id: block.id!,
+            name: block.name,
+            args: block.args as Record<string, unknown>,
+          }));
+        }
+      }
     }
     // Sadly, TypeScript only allows super() calls at root if the class has
     // properties with initializers, so we have to check types twice.
@@ -207,6 +239,40 @@ export class AIMessage extends BaseMessage {
 
   _getType(): MessageType {
     return "ai";
+  }
+
+  get contentBlocks(): Array<ContentBlock.Standard> {
+    if (this.response_metadata?.output_version === "v1") {
+      return this.content as Array<ContentBlock.Standard>;
+    }
+
+    const modelProvider = this.response_metadata?.model_provider;
+    if (modelProvider) {
+      const translator = getTranslator(modelProvider);
+      if (translator) {
+        return translator.translateContent(this);
+      }
+    }
+
+    const blocks = super.contentBlocks;
+
+    if (this.tool_calls) {
+      const missingToolCalls = this.tool_calls.filter(
+        (block) =>
+          !blocks.some((b) => b.id === block.id && b.name === block.name)
+      );
+      blocks.push(
+        ...missingToolCalls.map((block) => ({
+          ...block,
+          type: "tool_call" as const,
+          id: block.id,
+          name: block.name,
+          args: block.args,
+        }))
+      );
+    }
+
+    return blocks;
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -354,6 +420,43 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   _getType(): MessageType {
     return "ai";
+  }
+
+  get contentBlocks(): Array<ContentBlock.Standard> {
+    if (this.response_metadata?.output_version === "v1") {
+      return this.content as Array<ContentBlock.Standard>;
+    }
+
+    const modelProvider = this.response_metadata?.model_provider;
+    if (modelProvider) {
+      const translator = getTranslator(modelProvider);
+      if (translator) {
+        return translator.translateContent(this);
+      }
+    }
+
+    const blocks = super.contentBlocks;
+
+    if (this.tool_calls) {
+      if (typeof this.content !== "string") {
+        const contentToolCalls = this.content
+          .filter((block) => block.type === "tool_call")
+          .map((block) => block.id);
+        for (const toolCall of this.tool_calls) {
+          if (toolCall.id && !contentToolCalls.includes(toolCall.id)) {
+            blocks.push({
+              ...toolCall,
+              type: "tool_call",
+              id: toolCall.id,
+              name: toolCall.name,
+              args: toolCall.args,
+            });
+          }
+        }
+      }
+    }
+
+    return blocks;
   }
 
   override get _printableFields(): Record<string, unknown> {

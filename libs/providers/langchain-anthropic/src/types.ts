@@ -63,66 +63,6 @@ export type ChatAnthropicContentBlock =
   | AnthropicWebSearchResultBlockParam
   | AnthropicSearchResultBlockParam;
 
-export function isAnthropicImageBlockParam(
-  block: unknown
-): block is AnthropicImageBlockParam {
-  if (block == null) {
-    return false;
-  }
-  if (typeof block !== "object") {
-    return false;
-  }
-  if (!("type" in block) || block.type !== "image") {
-    return false;
-  }
-
-  if (!("source" in block) || typeof block.source !== "object") {
-    return false;
-  }
-
-  if (block.source == null) {
-    return false;
-  }
-
-  if (!("type" in block.source)) {
-    return false;
-  }
-
-  if (block.source.type === "base64") {
-    if (!("media_type" in block.source)) {
-      return false;
-    }
-
-    if (typeof block.source.media_type !== "string") {
-      return false;
-    }
-
-    if (!("data" in block.source)) {
-      return false;
-    }
-
-    if (typeof block.source.data !== "string") {
-      return false;
-    }
-
-    return true;
-  }
-
-  if (block.source.type === "url") {
-    if (!("url" in block.source)) {
-      return false;
-    }
-
-    if (typeof block.source.url !== "string") {
-      return false;
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
 // Type for built-in tools only (excludes custom Tool type)
 export type AnthropicBuiltInToolUnion = Exclude<
   Anthropic.Messages.ToolUnion,

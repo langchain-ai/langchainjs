@@ -11,10 +11,12 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+} from "../messages/index.js";
+import {
   convertToOpenAIImageBlock,
   isURLContentBlock,
   isBase64ContentBlock,
-} from "../messages/index.js";
+} from "../messages/content/data.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   LLMResult,
@@ -58,6 +60,8 @@ import {
 } from "../utils/types/zod.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
+import { getEnvironmentVariable } from "../utils/env.js";
+import { castStandardMessageContent, iife } from "./utils.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -95,6 +99,22 @@ export type BaseChatModelParams = BaseLanguageModelParams & {
    * - If false (default), will always use streaming case if available.
    */
   disableStreaming?: boolean;
+  /**
+   * Version of `AIMessage` output format to store in message content.
+   *
+   * `AIMessage.contentBlocks` will lazily parse the contents of `content` into a
+   * standard format. This flag can be used to additionally store the standard format
+   * as the message content, e.g., for serialization purposes.
+   *
+   * - "v0": provider-specific format in content (can lazily parse with `.contentBlocks`)
+   * - "v1": standardized format in content (consistent with `.contentBlocks`)
+   *
+   * You can also set `LC_OUTPUT_VERSION` as an environment variable to "v1" to
+   * enable this by default.
+   *
+   * @default "v0"
+   */
+  outputVersion?: "v0" | "v1";
 };
 
 /**
@@ -203,8 +223,18 @@ export abstract class BaseChatModel<
 
   disableStreaming = false;
 
+  outputVersion?: "v0" | "v1";
+
   constructor(fields: BaseChatModelParams) {
     super(fields);
+    this.outputVersion = iife(() => {
+      const outputVersion =
+        fields.outputVersion ?? getEnvironmentVariable("LC_OUTPUT_VERSION");
+      if (outputVersion && ["v0", "v1"].includes(outputVersion)) {
+        return outputVersion as "v0" | "v1";
+      }
+      return "v0";
+    });
   }
 
   _combineLLMOutput?(
@@ -326,7 +356,13 @@ export abstract class BaseChatModel<
             ...chunk.generationInfo,
             ...chunk.message.response_metadata,
           };
-          yield chunk.message as OutputMessageType;
+          if (this.outputVersion === "v1") {
+            yield castStandardMessageContent(
+              chunk.message
+            ) as OutputMessageType;
+          } else {
+            yield chunk.message as OutputMessageType;
+          }
           if (!generationChunk) {
             generationChunk = chunk;
           } else {
@@ -487,13 +523,21 @@ export abstract class BaseChatModel<
     } else {
       // generate results
       const results = await Promise.allSettled(
-        baseMessages.map((messageList, i) =>
-          this._generate(
+        baseMessages.map(async (messageList, i) => {
+          const generateResults = await this._generate(
             messageList,
             { ...parsedOptions, promptIndex: i },
             runManagers?.[i]
-          )
-        )
+          );
+          if (this.outputVersion === "v1") {
+            for (const generation of generateResults.generations) {
+              generation.message = castStandardMessageContent(
+                generation.message
+              );
+            }
+          }
+          return generateResults;
+        })
       );
       // handle results
       await Promise.all(
@@ -644,6 +688,10 @@ export abstract class BaseChatModel<
                 output_tokens: 0,
                 total_tokens: 0,
               };
+              if (this.outputVersion === "v1") {
+                // eslint-disable-next-line no-param-reassign
+                result.message = castStandardMessageContent(result.message);
+              }
             }
             // eslint-disable-next-line no-param-reassign
             result.generationInfo = {

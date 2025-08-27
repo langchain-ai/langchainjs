@@ -1,3 +1,5 @@
+import { iife } from "./misc.js";
+
 export interface OpenAIEndpointConfig {
   azureOpenAIApiDeploymentName?: string;
   azureOpenAIApiInstanceName?: string;
@@ -73,4 +75,86 @@ export function getEndpoint(config: OpenAIEndpointConfig) {
   }
 
   return baseURL;
+}
+
+type HeaderValue = string | undefined | null;
+export type HeadersLike =
+  | Headers
+  | readonly HeaderValue[][]
+  | Record<string, HeaderValue | readonly HeaderValue[]>
+  | undefined
+  | null
+  // NullableHeaders
+  | { values: Headers; [key: string]: unknown };
+
+export function isHeaders(headers: unknown): headers is Headers {
+  return (
+    typeof Headers !== "undefined" &&
+    headers !== null &&
+    typeof headers === "object" &&
+    Object.prototype.toString.call(headers) === "[object Headers]"
+  );
+}
+
+/**
+ * Normalizes various header formats into a consistent Record format.
+ *
+ * This function accepts headers in multiple formats and converts them to a
+ * Record<string, HeaderValue | readonly HeaderValue[]> for consistent handling.
+ *
+ * @param headers - The headers to normalize. Can be:
+ *   - A Headers instance
+ *   - An array of [key, value] pairs
+ *   - A plain object with string keys
+ *   - A NullableHeaders-like object with a 'values' property containing Headers
+ *   - null or undefined
+ * @returns A normalized Record containing the header key-value pairs
+ *
+ * @example
+ * ```ts
+ * // With Headers instance
+ * const headers1 = new Headers([['content-type', 'application/json']]);
+ * const normalized1 = normalizeHeaders(headers1);
+ *
+ * // With plain object
+ * const headers2 = { 'content-type': 'application/json' };
+ * const normalized2 = normalizeHeaders(headers2);
+ *
+ * // With array of pairs
+ * const headers3 = [['content-type', 'application/json']];
+ * const normalized3 = normalizeHeaders(headers3);
+ * ```
+ */
+export function normalizeHeaders(
+  headers: HeadersLike
+): Record<string, HeaderValue | readonly HeaderValue[]> {
+  const output = iife(() => {
+    // If headers is a Headers instance
+    if (isHeaders(headers)) {
+      return headers;
+    }
+    // If headers is an array of [key, value] pairs
+    else if (Array.isArray(headers)) {
+      return new Headers(headers);
+    }
+    // If headers is a NullableHeaders-like object (has 'values' property that is a Headers)
+    else if (
+      typeof headers === "object" &&
+      headers !== null &&
+      "values" in headers &&
+      isHeaders(headers.values)
+    ) {
+      return headers.values;
+    }
+    // If headers is a plain object
+    else if (typeof headers === "object" && headers !== null) {
+      const entries: [string, string][] = Object.entries(headers)
+        .filter(([, v]) => typeof v === "string")
+        .map(([k, v]) => [k, v as string]);
+      return new Headers(entries);
+    }
+    return new Headers();
+  });
+
+  return Object.fromEntries(output.entries());
 }

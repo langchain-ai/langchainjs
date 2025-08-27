@@ -1,10 +1,4 @@
 import { type ClientOptions, OpenAI as OpenAIClient } from "openai";
-import type {
-  ChatCompletionContentPartText,
-  ChatCompletionContentPartImage,
-  ChatCompletionContentPartInputAudio,
-  ChatCompletionContentPart,
-} from "openai/resources/chat/completions";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   AIMessage,
@@ -15,7 +9,6 @@ import {
   FunctionMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
-  ToolMessage,
   ToolMessageChunk,
   OpenAIToolCall,
   isAIMessage,
@@ -23,12 +16,9 @@ import {
   type BaseMessageFields,
   type MessageContent,
   type InvalidToolCall,
-  type MessageContentImageUrl,
-  StandardContentBlockConverter,
-  parseBase64DataUrl,
-  parseMimeType,
-  convertToProviderContentBlock,
+  MessageContentImageUrl,
   isDataContentBlock,
+  convertToProviderContentBlock,
 } from "@langchain/core/messages";
 import {
   ChatGenerationChunk,
@@ -38,7 +28,6 @@ import {
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
-  type BindToolsInput,
   type LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -48,7 +37,6 @@ import {
   type BaseLanguageModelInput,
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
-  type StructuredOutputMethodParams,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import {
@@ -63,22 +51,26 @@ import {
 } from "@langchain/core/output_parsers";
 import {
   JsonOutputKeyToolsParser,
-  convertLangChainToolCallToOpenAI,
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
-import type { ToolCall, ToolCallChunk } from "@langchain/core/messages/tool";
 import type {
-  ResponseFormatText,
-  ResponseFormatJSONObject,
-  ResponseFormatJSONSchema,
-} from "openai/resources/shared";
+  ToolCall,
+  ToolCallChunk,
+  ToolMessage,
+} from "@langchain/core/messages/tool";
 import {
   getSchemaDescription,
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
+import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -87,33 +79,32 @@ import {
   ChatOpenAIReasoningSummary,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
+import { wrapOpenAIClientError } from "./utils/client.js";
 import {
+  type FunctionDef,
+  formatFunctionDefinitions,
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
-  interopZodResponseFormat,
-  wrapOpenAIClientError,
-} from "./utils/openai.js";
+  _convertToOpenAITool,
+  ChatOpenAIToolType,
+  ResponsesToolChoice,
+  isBuiltInTool,
+  isBuiltInToolChoice,
+  ResponsesTool,
+} from "./utils/tools.js";
 import {
-  FunctionDef,
-  formatFunctionDefinitions,
-} from "./utils/openai-format-fndef.js";
-import { _convertToOpenAITool } from "./utils/tools.js";
-import { getStructuredOutputMethod } from "./utils/structuredOutput.js";
+  getStructuredOutputMethod,
+  interopZodResponseFormat,
+} from "./utils/output.js";
+import {
+  _convertMessagesToOpenAIParams,
+  completionsApiContentBlockConverter,
+  ResponsesInputItem,
+} from "./utils/message_inputs.js";
+import { _convertToResponsesMessageFromV1 } from "./utils/standard.js";
+import { iife, isReasoningModel, messageToOpenAIRole } from "./utils/misc.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
-
-type ResponsesTool = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tools"]
->[number];
-
-type ResponsesToolChoice = NonNullable<
-  OpenAIClient.Responses.ResponseCreateParams["tool_choice"]
->;
-
-type ChatOpenAIToolType =
-  | BindToolsInput
-  | OpenAIClient.Chat.ChatCompletionTool
-  | ResponsesTool;
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -124,308 +115,6 @@ interface OpenAILLMOutput {
 }
 
 export type { OpenAICallOptions, OpenAIChatInput };
-
-function isBuiltInTool(tool: ChatOpenAIToolType): tool is ResponsesTool {
-  return "type" in tool && tool.type !== "function";
-}
-
-function isBuiltInToolChoice(
-  tool_choice: OpenAIToolChoice | ResponsesToolChoice | undefined
-): tool_choice is ResponsesToolChoice {
-  return (
-    tool_choice != null &&
-    typeof tool_choice === "object" &&
-    "type" in tool_choice &&
-    tool_choice.type !== "function"
-  );
-}
-
-function isReasoningModel(model?: string) {
-  return model && /^o\d/.test(model);
-}
-
-function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (
-    message.role !== "system" &&
-    message.role !== "developer" &&
-    message.role !== "assistant" &&
-    message.role !== "user" &&
-    message.role !== "function" &&
-    message.role !== "tool"
-  ) {
-    console.warn(`Unknown message role: ${message.role}`);
-  }
-
-  return message.role as OpenAIClient.ChatCompletionRole;
-}
-
-export function messageToOpenAIRole(
-  message: BaseMessage
-): OpenAIClient.ChatCompletionRole {
-  const type = message._getType();
-  switch (type) {
-    case "system":
-      return "system";
-    case "ai":
-      return "assistant";
-    case "human":
-      return "user";
-    case "function":
-      return "function";
-    case "tool":
-      return "tool";
-    case "generic": {
-      if (!ChatMessage.isInstance(message))
-        throw new Error("Invalid generic chat message");
-      return extractGenericMessageCustomRole(message);
-    }
-    default:
-      throw new Error(`Unknown message type: ${type}`);
-  }
-}
-
-const completionsApiContentBlockConverter: StandardContentBlockConverter<{
-  text: ChatCompletionContentPartText;
-  image: ChatCompletionContentPartImage;
-  audio: ChatCompletionContentPartInputAudio;
-  file: ChatCompletionContentPart.File;
-}> = {
-  providerName: "ChatOpenAI",
-
-  fromStandardTextBlock(block): ChatCompletionContentPartText {
-    return { type: "text", text: block.text };
-  },
-
-  fromStandardImageBlock(block): ChatCompletionContentPartImage {
-    if (block.source_type === "url") {
-      return {
-        type: "image_url",
-        image_url: {
-          url: block.url,
-          ...(block.metadata?.detail
-            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
-            : {}),
-        },
-      };
-    }
-
-    if (block.source_type === "base64") {
-      const url = `data:${block.mime_type ?? ""};base64,${block.data}`;
-      return {
-        type: "image_url",
-        image_url: {
-          url,
-          ...(block.metadata?.detail
-            ? { detail: block.metadata.detail as "auto" | "low" | "high" }
-            : {}),
-        },
-      };
-    }
-
-    throw new Error(
-      `Image content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
-    );
-  },
-
-  fromStandardAudioBlock(block): ChatCompletionContentPartInputAudio {
-    if (block.source_type === "url") {
-      const data = parseBase64DataUrl({ dataUrl: block.url });
-      if (!data) {
-        throw new Error(
-          `URL audio blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
-        );
-      }
-
-      const rawMimeType = data.mime_type || block.mime_type || "";
-      let mimeType: { type: string; subtype: string };
-
-      try {
-        mimeType = parseMimeType(rawMimeType);
-      } catch {
-        throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
-        );
-      }
-
-      if (
-        mimeType.type !== "audio" ||
-        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
-      ) {
-        throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
-        );
-      }
-
-      return {
-        type: "input_audio",
-        input_audio: {
-          format: mimeType.subtype,
-          data: data.data,
-        },
-      };
-    }
-
-    if (block.source_type === "base64") {
-      let mimeType: { type: string; subtype: string };
-
-      try {
-        mimeType = parseMimeType(block.mime_type ?? "");
-      } catch {
-        throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
-        );
-      }
-
-      if (
-        mimeType.type !== "audio" ||
-        (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
-      ) {
-        throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
-        );
-      }
-
-      return {
-        type: "input_audio",
-        input_audio: {
-          format: mimeType.subtype,
-          data: block.data,
-        },
-      };
-    }
-
-    throw new Error(
-      `Audio content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
-    );
-  },
-
-  fromStandardFileBlock(block): ChatCompletionContentPart.File {
-    if (block.source_type === "url") {
-      const data = parseBase64DataUrl({ dataUrl: block.url });
-      if (!data) {
-        throw new Error(
-          `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
-        );
-      }
-
-      return {
-        type: "file",
-        file: {
-          file_data: block.url, // formatted as base64 data URL
-          ...(block.metadata?.filename || block.metadata?.name
-            ? {
-                filename: (block.metadata?.filename ||
-                  block.metadata?.name) as string,
-              }
-            : {}),
-        },
-      };
-    }
-
-    if (block.source_type === "base64") {
-      return {
-        type: "file",
-        file: {
-          file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
-          ...(block.metadata?.filename ||
-          block.metadata?.name ||
-          block.metadata?.title
-            ? {
-                filename: (block.metadata?.filename ||
-                  block.metadata?.name ||
-                  block.metadata?.title) as string,
-              }
-            : {}),
-        },
-      };
-    }
-
-    if (block.source_type === "id") {
-      return {
-        type: "file",
-        file: {
-          file_id: block.id,
-        },
-      };
-    }
-
-    throw new Error(
-      `File content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
-    );
-  },
-};
-
-// Used in LangSmith, export is important here
-// TODO: put this conversion elsewhere
-export function _convertMessagesToOpenAIParams(
-  messages: BaseMessage[],
-  model?: string
-): OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] {
-  // TODO: Function messages do not support array content, fix cast
-  return messages.flatMap((message) => {
-    let role = messageToOpenAIRole(message);
-    if (role === "system" && isReasoningModel(model)) {
-      role = "developer";
-    }
-
-    const content =
-      typeof message.content === "string"
-        ? message.content
-        : message.content.map((m) => {
-            if (isDataContentBlock(m)) {
-              return convertToProviderContentBlock(
-                m,
-                completionsApiContentBlockConverter
-              );
-            }
-            return m;
-          });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const completionParam: Record<string, any> = {
-      role,
-      content,
-    };
-    if (message.name != null) {
-      completionParam.name = message.name;
-    }
-    if (message.additional_kwargs.function_call != null) {
-      completionParam.function_call = message.additional_kwargs.function_call;
-      completionParam.content = "";
-    }
-    if (isAIMessage(message) && !!message.tool_calls?.length) {
-      completionParam.tool_calls = message.tool_calls.map(
-        convertLangChainToolCallToOpenAI
-      );
-      completionParam.content = "";
-    } else {
-      if (message.additional_kwargs.tool_calls != null) {
-        completionParam.tool_calls = message.additional_kwargs.tool_calls;
-      }
-      if ((message as ToolMessage).tool_call_id != null) {
-        completionParam.tool_call_id = (message as ToolMessage).tool_call_id;
-      }
-    }
-
-    if (
-      message.additional_kwargs.audio &&
-      typeof message.additional_kwargs.audio === "object" &&
-      "id" in message.additional_kwargs.audio
-    ) {
-      const audioMessage = {
-        role: "assistant",
-        audio: {
-          id: message.additional_kwargs.audio.id,
-        },
-      };
-      return [
-        completionParam,
-        audioMessage,
-      ] as OpenAIClient.Chat.Completions.ChatCompletionMessageParam[];
-    }
-
-    return completionParam as OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
-  });
-}
 
 export interface BaseChatOpenAICallOptions
   extends OpenAICallOptions,
@@ -1274,13 +963,13 @@ export abstract class BaseChatOpenAI<
           typeof schema.parameters === "object" &&
           schema.parameters != null
         ) {
-          openAIFunctionDefinition = schema as FunctionDefinition;
+          openAIFunctionDefinition = schema as unknown as FunctionDefinition;
           functionName = schema.name;
         } else {
-          functionName = schema.title ?? functionName;
+          functionName = (schema.title as string) ?? functionName;
           openAIFunctionDefinition = {
             name: functionName,
-            description: schema.description ?? "",
+            description: (schema.description as string) ?? "",
             parameters: schema,
           };
         }
@@ -1336,20 +1025,6 @@ export abstract class BaseChatOpenAI<
   }
 }
 
-type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
-
-type ExcludeController<T> = T extends { controller: unknown } ? never : T;
-
-type ResponsesCreate = OpenAIClient.Responses["create"];
-type ResponsesParse = OpenAIClient.Responses["parse"];
-
-type ResponsesCreateInvoke = ExcludeController<
-  Awaited<ReturnType<ResponsesCreate>>
->;
-type ResponsesParseInvoke = ExcludeController<
-  Awaited<ReturnType<ResponsesParse>>
->;
-
 export interface ChatOpenAIResponsesCallOptions
   extends BaseChatOpenAICallOptions {
   /**
@@ -1378,6 +1053,18 @@ export interface ChatOpenAIResponsesCallOptions
 type ChatResponsesInvocationParams = Omit<
   OpenAIClient.Responses.ResponseCreateParams,
   "input"
+>;
+
+type ExcludeController<T> = T extends { controller: unknown } ? never : T;
+
+type ResponsesCreate = OpenAIClient.Responses["create"];
+type ResponsesParse = OpenAIClient.Responses["parse"];
+
+type ResponsesCreateInvoke = ExcludeController<
+  Awaited<ReturnType<ResponsesCreate>>
+>;
+type ResponsesParseInvoke = ExcludeController<
+  Awaited<ReturnType<ResponsesParse>>
 >;
 
 /**
@@ -1591,6 +1278,7 @@ export class ChatOpenAIResponses<
     const tool_calls: ToolCall[] = [];
     const invalid_tool_calls: InvalidToolCall[] = [];
     const response_metadata: Record<string, unknown> = {
+      model_provider: "openai",
       model: response.model,
       created_at: response.created_at,
       id: response.id,
@@ -1600,7 +1288,6 @@ export class ChatOpenAIResponses<
       status: response.status,
       user: response.user,
       service_tier: response.service_tier,
-
       // for compatibility with chat completion calls.
       model_name: response.model,
     };
@@ -1690,7 +1377,9 @@ export class ChatOpenAIResponses<
     let generationInfo: Record<string, unknown> = {};
     let usage_metadata: UsageMetadata | undefined;
     const tool_call_chunks: ToolCallChunk[] = [];
-    const response_metadata: Record<string, unknown> = {};
+    const response_metadata: Record<string, unknown> = {
+      model_provider: "openai",
+    };
     const additional_kwargs: {
       [key: string]: unknown;
       reasoning?: Partial<ChatOpenAIReasoningSummary>;
@@ -1703,7 +1392,7 @@ export class ChatOpenAIResponses<
         text: chunk.delta,
         index: chunk.content_index,
       });
-    } else if (chunk.type === "response.output_text_annotation.added") {
+    } else if (chunk.type === "response.output_text.annotation.added") {
       content.push({
         type: "text",
         text: "",
@@ -1827,7 +1516,7 @@ export class ChatOpenAIResponses<
       text: content.map((part) => part.text).join(""),
       message: new AIMessageChunk({
         id,
-        content,
+        content: content as MessageContent,
         tool_call_chunks,
         usage_metadata,
         additional_kwargs,
@@ -1841,6 +1530,13 @@ export class ChatOpenAIResponses<
   protected _convertMessagesToResponsesParams(messages: BaseMessage[]) {
     return messages.flatMap(
       (lcMsg): ResponsesInputItem | ResponsesInputItem[] => {
+        if (
+          isAIMessage(lcMsg) &&
+          lcMsg.response_metadata?.output_version === "v1"
+        ) {
+          return _convertToResponsesMessageFromV1(lcMsg);
+        }
+
         const additional_kwargs = lcMsg.additional_kwargs as
           | BaseMessageFields["additional_kwargs"] & {
               [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
@@ -1959,28 +1655,26 @@ export class ChatOpenAIResponses<
             ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
               ? { id: lcMsg.id }
               : {}),
-            content:
-              typeof content === "string"
-                ? content
-                : content.flatMap((item) => {
-                    if (item.type === "text") {
-                      return {
-                        type: "output_text",
-                        text: item.text,
-                        // @ts-expect-error TODO: add types for `annotations`
-                        annotations: item.annotations ?? [],
-                      };
-                    }
+            content: iife(() => {
+              if (typeof content === "string") {
+                return content;
+              }
+              return content.flatMap((item) => {
+                if (item.type === "text") {
+                  return {
+                    type: "output_text",
+                    text: item.text,
+                    annotations: item.annotations ?? [],
+                  };
+                }
 
-                    if (
-                      item.type === "output_text" ||
-                      item.type === "refusal"
-                    ) {
-                      return item;
-                    }
+                if (item.type === "output_text" || item.type === "refusal") {
+                  return item;
+                }
 
-                    return [];
-                  }),
+                return [];
+              });
+            }) as ResponseInputMessageContentList,
           });
 
           const functionCallIds =
@@ -2050,8 +1744,8 @@ export class ChatOpenAIResponses<
             if (item.type === "mcp_approval_response") {
               messages.push({
                 type: "mcp_approval_response",
-                approval_request_id: item.approval_request_id,
-                approve: item.approve,
+                approval_request_id: item.approval_request_id as string,
+                approve: item.approve as boolean,
               });
             }
             if (isDataContentBlock(item)) {
@@ -2067,16 +1761,34 @@ export class ChatOpenAIResponses<
               };
             }
             if (item.type === "image_url") {
+              const imageUrl = iife(() => {
+                if (typeof item.image_url === "string") {
+                  return item.image_url;
+                } else if (
+                  typeof item.image_url === "object" &&
+                  item.image_url !== null &&
+                  "url" in item.image_url
+                ) {
+                  return item.image_url.url;
+                }
+                return undefined;
+              });
+              const detail = iife(() => {
+                if (typeof item.image_url === "string") {
+                  return "auto";
+                } else if (
+                  typeof item.image_url === "object" &&
+                  item.image_url !== null &&
+                  "detail" in item.image_url
+                ) {
+                  return item.image_url.detail;
+                }
+                return undefined;
+              });
               return {
                 type: "input_image",
-                image_url:
-                  typeof item.image_url === "string"
-                    ? item.image_url
-                    : item.image_url.url,
-                detail:
-                  typeof item.image_url === "string"
-                    ? "auto"
-                    : item.image_url.detail,
+                image_url: imageUrl,
+                detail,
               };
             }
             if (
@@ -2090,7 +1802,11 @@ export class ChatOpenAIResponses<
           });
 
           if (content.length > 0) {
-            messages.push({ type: "message", role, content });
+            messages.push({
+              type: "message",
+              role,
+              content: content as ResponseInputMessageContentList,
+            });
           }
           return messages;
         }
@@ -2605,6 +2321,7 @@ export class ChatOpenAICompletions<
           additional_kwargs.__raw_response = rawResponse;
         }
         const response_metadata: Record<string, unknown> | undefined = {
+          model_provider: "openai",
           model_name: rawResponse.model,
           ...(rawResponse.system_fingerprint
             ? {
@@ -2667,7 +2384,10 @@ export class ChatOpenAICompletions<
       };
     }
 
-    const response_metadata = { usage: { ...rawResponse.usage } };
+    const response_metadata = {
+      model_provider: "openai",
+      usage: { ...rawResponse.usage },
+    };
     if (role === "user") {
       return new HumanMessageChunk({ content, response_metadata });
     } else if (role === "assistant") {

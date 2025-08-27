@@ -2,6 +2,14 @@ import { BaseContentBlock } from "./base.js";
 
 export type Multimodal = never;
 
+export const KNOWN_BLOCK_TYPES = [
+  "image",
+  "video",
+  "audio",
+  "text-plain",
+  "file",
+];
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
   type BaseDataRecord = {
@@ -28,7 +36,7 @@ export declare namespace Multimodal {
     url: string;
     data?: never;
   };
-  type DataRecordData = BaseDataRecord & {
+  type DataRecordBase64 = BaseDataRecord & {
     fileId?: never;
     url?: never;
     /**
@@ -42,7 +50,7 @@ export declare namespace Multimodal {
      */
     data: string | Uint8Array;
   };
-  type DataRecord = DataRecordFileId | DataRecordUrl | DataRecordData;
+  type DataRecord = DataRecordFileId | DataRecordUrl | DataRecordBase64;
 
   /** Content block for multimodal data */
   export type Data<TMetadata = Record<string, unknown>> = BaseContentBlock &
@@ -106,5 +114,5 @@ export declare namespace Multimodal {
     readonly type: "file";
   };
 
-  export type ContentBlock = Image | Video | Audio | PlainText | File;
+  export type Standard = Image | Video | Audio | PlainText | File;
 }

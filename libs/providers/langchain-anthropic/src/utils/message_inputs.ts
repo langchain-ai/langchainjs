@@ -1,6 +1,7 @@
 /**
  * This util file contains functions for converting LangChain messages to Anthropic messages.
  */
+import type Anthropic from "@anthropic-ai/sdk";
 import {
   type BaseMessage,
   type SystemMessage,
@@ -8,14 +9,11 @@ import {
   type AIMessage,
   type ToolMessage,
   isAIMessage,
-  type StandardContentBlockConverter,
-  type StandardTextBlock,
-  type StandardImageBlock,
-  type StandardFileBlock,
   MessageContentComplex,
   isDataContentBlock,
   convertToProviderContentBlock,
   parseBase64DataUrl,
+  ContentBlock,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -29,10 +27,17 @@ import {
   AnthropicRedactedThinkingBlockParam,
   AnthropicServerToolUseBlockParam,
   AnthropicWebSearchToolResultBlockParam,
-  isAnthropicImageBlockParam,
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
 } from "../types.js";
+import {
+  _isAnthropicImageBlockParam,
+  _isAnthropicRedactedThinkingBlock,
+  _isAnthropicSearchResultBlock,
+  _isAnthropicThinkingBlock,
+  standardContentBlockConverter,
+} from "./content.js";
+import { _formatStandardContent } from "./standard.js";
 
 function _formatImage(imageUrl: string) {
   const parsed = parseBase64DataUrl({ dataUrl: imageUrl });
@@ -149,203 +154,9 @@ export function _convertLangChainToolCallToAnthropic(
   };
 }
 
-const standardContentBlockConverter: StandardContentBlockConverter<{
-  text: AnthropicTextBlockParam;
-  image: AnthropicImageBlockParam;
-  file: AnthropicDocumentBlockParam;
-}> = {
-  providerName: "anthropic",
-
-  fromStandardTextBlock(block: StandardTextBlock): AnthropicTextBlockParam {
-    return {
-      type: "text",
-      text: block.text,
-      ...("citations" in (block.metadata ?? {})
-        ? { citations: block.metadata!.citations }
-        : {}),
-      ...("cache_control" in (block.metadata ?? {})
-        ? { cache_control: block.metadata!.cache_control }
-        : {}),
-    } as AnthropicTextBlockParam;
-  },
-
-  fromStandardImageBlock(block: StandardImageBlock): AnthropicImageBlockParam {
-    if (block.source_type === "url") {
-      const data = parseBase64DataUrl({
-        dataUrl: block.url,
-        asTypedArray: false,
-      });
-      if (data) {
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            data: data.data,
-            media_type: data.mime_type,
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicImageBlockParam;
-      } else {
-        return {
-          type: "image",
-          source: {
-            type: "url",
-            url: block.url,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicImageBlockParam;
-      }
-    } else {
-      if (block.source_type === "base64") {
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            data: block.data,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-        } as AnthropicImageBlockParam;
-      } else {
-        throw new Error(`Unsupported image source type: ${block.source_type}`);
-      }
-    }
-  },
-
-  fromStandardFileBlock(block: StandardFileBlock): AnthropicDocumentBlockParam {
-    const mime_type = (block.mime_type ?? "").split(";")[0];
-
-    if (block.source_type === "url") {
-      if (mime_type === "application/pdf" || mime_type === "") {
-        return {
-          type: "document",
-          source: {
-            type: "url",
-            url: block.url,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-          ...("citations" in (block.metadata ?? {})
-            ? { citations: block.metadata!.citations }
-            : {}),
-          ...("context" in (block.metadata ?? {})
-            ? { context: block.metadata!.context }
-            : {}),
-          ...("title" in (block.metadata ?? {})
-            ? { title: block.metadata!.title }
-            : {}),
-        } as AnthropicDocumentBlockParam;
-      }
-      throw new Error(
-        `Unsupported file mime type for file url source: ${block.mime_type}`
-      );
-    } else if (block.source_type === "text") {
-      if (mime_type === "text/plain" || mime_type === "") {
-        return {
-          type: "document",
-          source: {
-            type: "text",
-            data: block.text,
-            media_type: block.mime_type ?? "",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-          ...("citations" in (block.metadata ?? {})
-            ? { citations: block.metadata!.citations }
-            : {}),
-          ...("context" in (block.metadata ?? {})
-            ? { context: block.metadata!.context }
-            : {}),
-          ...("title" in (block.metadata ?? {})
-            ? { title: block.metadata!.title }
-            : {}),
-        } as AnthropicDocumentBlockParam;
-      } else {
-        throw new Error(
-          `Unsupported file mime type for file text source: ${block.mime_type}`
-        );
-      }
-    } else if (block.source_type === "base64") {
-      if (mime_type === "application/pdf" || mime_type === "") {
-        return {
-          type: "document",
-          source: {
-            type: "base64",
-            data: block.data,
-            media_type: "application/pdf",
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-          ...("citations" in (block.metadata ?? {})
-            ? { citations: block.metadata!.citations }
-            : {}),
-          ...("context" in (block.metadata ?? {})
-            ? { context: block.metadata!.context }
-            : {}),
-          ...("title" in (block.metadata ?? {})
-            ? { title: block.metadata!.title }
-            : {}),
-        } as AnthropicDocumentBlockParam;
-      } else if (
-        ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
-          mime_type
-        )
-      ) {
-        return {
-          type: "document",
-          source: {
-            type: "content",
-            content: [
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  data: block.data,
-                  media_type: mime_type as
-                    | "image/jpeg"
-                    | "image/png"
-                    | "image/gif"
-                    | "image/webp",
-                },
-              },
-            ],
-          },
-          ...("cache_control" in (block.metadata ?? {})
-            ? { cache_control: block.metadata!.cache_control }
-            : {}),
-          ...("citations" in (block.metadata ?? {})
-            ? { citations: block.metadata!.citations }
-            : {}),
-          ...("context" in (block.metadata ?? {})
-            ? { context: block.metadata!.context }
-            : {}),
-          ...("title" in (block.metadata ?? {})
-            ? { title: block.metadata!.title }
-            : {}),
-        } as AnthropicDocumentBlockParam;
-      } else {
-        throw new Error(
-          `Unsupported file mime type for file base64 source: ${block.mime_type}`
-        );
-      }
-    } else {
-      throw new Error(`Unsupported file source type: ${block.source_type}`);
-    }
-  },
-};
-
-function _formatContent(message: BaseMessage) {
+function* _formatContentBlocks(
+  content: ContentBlock[]
+): Generator<Anthropic.Messages.ContentBlockParam> {
   const toolTypes = [
     "tool_use",
     "tool_result",
@@ -355,140 +166,124 @@ function _formatContent(message: BaseMessage) {
     "web_search_result",
   ];
   const textTypes = ["text", "text_delta"];
+  for (const contentPart of content) {
+    if (isDataContentBlock(contentPart)) {
+      yield convertToProviderContentBlock(
+        contentPart,
+        standardContentBlockConverter
+      );
+    }
+
+    const cacheControl =
+      "cache_control" in contentPart ? contentPart.cache_control : undefined;
+
+    if (contentPart.type === "image_url") {
+      let source;
+      if (typeof contentPart.image_url === "string") {
+        source = _formatImage(contentPart.image_url);
+      } else if (
+        typeof contentPart.image_url === "object" &&
+        contentPart.image_url !== null &&
+        "url" in contentPart.image_url &&
+        typeof contentPart.image_url.url === "string"
+      ) {
+        source = _formatImage(contentPart.image_url.url);
+      }
+      yield {
+        type: "image" as const, // Explicitly setting the type as "image"
+        source,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+    } else if (_isAnthropicImageBlockParam(contentPart)) {
+      return contentPart;
+    } else if (contentPart.type === "document") {
+      // PDF
+      yield {
+        ...contentPart,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+    } else if (_isAnthropicThinkingBlock(contentPart)) {
+      const block: AnthropicThinkingBlockParam = {
+        type: "thinking" as const, // Explicitly setting the type as "thinking"
+        thinking: contentPart.thinking,
+        signature: contentPart.signature,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+      yield block;
+    } else if (_isAnthropicRedactedThinkingBlock(contentPart)) {
+      const block: AnthropicRedactedThinkingBlockParam = {
+        type: "redacted_thinking" as const, // Explicitly setting the type as "redacted_thinking"
+        data: contentPart.data,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+      yield block;
+    } else if (_isAnthropicSearchResultBlock(contentPart)) {
+      const block: AnthropicSearchResultBlockParam = {
+        type: "search_result" as const, // Explicitly setting the type as "search_result"
+        title: contentPart.title,
+        source: contentPart.source,
+        ...("cache_control" in contentPart && contentPart.cache_control
+          ? { cache_control: contentPart.cache_control }
+          : {}),
+        ...("citations" in contentPart && contentPart.citations
+          ? { citations: contentPart.citations }
+          : {}),
+        content: contentPart.content,
+      };
+      yield block;
+    } else if (
+      textTypes.find((t) => t === contentPart.type) &&
+      "text" in contentPart
+    ) {
+      // Assuming contentPart is of type MessageContentText here
+      yield {
+        type: "text" as const, // Explicitly setting the type as "text"
+        text: contentPart.text,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+        ...("citations" in contentPart && contentPart.citations
+          ? { citations: contentPart.citations }
+          : {}),
+      };
+    } else if (toolTypes.find((t) => t === contentPart.type)) {
+      const contentPartCopy = { ...contentPart };
+      if ("index" in contentPartCopy) {
+        // Anthropic does not support passing the index field here, so we remove it.
+        delete contentPartCopy.index;
+      }
+
+      if (contentPartCopy.type === "input_json_delta") {
+        // `input_json_delta` type only represents yielding partial tool inputs
+        // and is not a valid type for Anthropic messages.
+        contentPartCopy.type = "tool_use";
+      }
+
+      if ("input" in contentPartCopy) {
+        // Anthropic tool use inputs should be valid objects, when applicable.
+        if (typeof contentPartCopy.input === "string") {
+          try {
+            contentPartCopy.input = JSON.parse(contentPartCopy.input);
+          } catch {
+            contentPartCopy.input = {};
+          }
+        }
+      }
+      // TODO: Fix when SDK types are fixed
+      yield {
+        ...contentPartCopy,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any;
+    }
+  }
+}
+
+function _formatContent(message: BaseMessage) {
   const { content } = message;
 
   if (typeof content === "string") {
     return content;
   } else {
-    const contentBlocks = content.map((contentPart) => {
-      if (isDataContentBlock(contentPart)) {
-        return convertToProviderContentBlock(
-          contentPart,
-          standardContentBlockConverter
-        );
-      }
-
-      const cacheControl =
-        "cache_control" in contentPart ? contentPart.cache_control : undefined;
-
-      if (contentPart.type === "image_url") {
-        let source;
-        if (typeof contentPart.image_url === "string") {
-          source = _formatImage(contentPart.image_url);
-        } else {
-          source = _formatImage(contentPart.image_url.url);
-        }
-        return {
-          type: "image" as const, // Explicitly setting the type as "image"
-          source,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-      } else if (isAnthropicImageBlockParam(contentPart)) {
-        return contentPart;
-      } else if (contentPart.type === "document") {
-        // PDF
-        return {
-          ...contentPart,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-      } else if (contentPart.type === "thinking") {
-        const block: AnthropicThinkingBlockParam = {
-          type: "thinking" as const, // Explicitly setting the type as "thinking"
-          thinking: contentPart.thinking,
-          signature: contentPart.signature,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-        return block;
-      } else if (contentPart.type === "redacted_thinking") {
-        const block: AnthropicRedactedThinkingBlockParam = {
-          type: "redacted_thinking" as const, // Explicitly setting the type as "redacted_thinking"
-          data: contentPart.data,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-        };
-        return block;
-      } else if (contentPart.type === "search_result") {
-        const block: AnthropicSearchResultBlockParam = {
-          type: "search_result" as const, // Explicitly setting the type as "search_result"
-          title: contentPart.title,
-          source: contentPart.source,
-          ...("cache_control" in contentPart && contentPart.cache_control
-            ? { cache_control: contentPart.cache_control }
-            : {}),
-          ...("citations" in contentPart && contentPart.citations
-            ? { citations: contentPart.citations }
-            : {}),
-          content: contentPart.content,
-        };
-        return block;
-      } else if (
-        textTypes.find((t) => t === contentPart.type) &&
-        "text" in contentPart
-      ) {
-        // Assuming contentPart is of type MessageContentText here
-        return {
-          type: "text" as const, // Explicitly setting the type as "text"
-          text: contentPart.text,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-          ...("citations" in contentPart && contentPart.citations
-            ? { citations: contentPart.citations }
-            : {}),
-        };
-      } else if (toolTypes.find((t) => t === contentPart.type)) {
-        const contentPartCopy = { ...contentPart };
-        if ("index" in contentPartCopy) {
-          // Anthropic does not support passing the index field here, so we remove it.
-          delete contentPartCopy.index;
-        }
-
-        if (contentPartCopy.type === "input_json_delta") {
-          // `input_json_delta` type only represents yielding partial tool inputs
-          // and is not a valid type for Anthropic messages.
-          contentPartCopy.type = "tool_use";
-        }
-
-        if ("input" in contentPartCopy) {
-          // Anthropic tool use inputs should be valid objects, when applicable.
-          if (typeof contentPartCopy.input === "string") {
-            try {
-              contentPartCopy.input = JSON.parse(contentPartCopy.input);
-            } catch {
-              contentPartCopy.input = {};
-            }
-          }
-        }
-
-        // TODO: Fix when SDK types are fixed
-        return {
-          ...contentPartCopy,
-          ...(cacheControl ? { cache_control: cacheControl } : {}),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
-      } else if (
-        "functionCall" in contentPart &&
-        contentPart.functionCall &&
-        typeof contentPart.functionCall === "object" &&
-        isAIMessage(message)
-      ) {
-        const correspondingToolCall = message.tool_calls?.find(
-          (toolCall) => toolCall.name === contentPart.functionCall.name
-        );
-        if (!correspondingToolCall) {
-          throw new Error(
-            `Could not find tool call for function call ${contentPart.functionCall.name}`
-          );
-        }
-        // Google GenAI models include a `functionCall` object inside content. We should ignore it as Anthropic will not support it.
-        return {
-          id: correspondingToolCall.id,
-          type: "tool_use",
-          name: correspondingToolCall.name,
-          input: contentPart.functionCall.args,
-        };
-      } else {
-        throw new Error("Unsupported message content format");
-      }
-    });
-    return contentBlocks;
+    return Array.from(_formatContentBlocks(content));
   }
 }
 
@@ -522,6 +317,15 @@ export function _convertMessagesToAnthropicPayload(
       );
     } else {
       throw new Error(`Message type "${message._getType()}" is not supported.`);
+    }
+    if (
+      isAIMessage(message) &&
+      message.response_metadata?.output_version === "v1"
+    ) {
+      return {
+        role,
+        content: _formatStandardContent(message),
+      };
     }
     if (isAIMessage(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {

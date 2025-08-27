@@ -1,72 +1,162 @@
-export interface BaseDataContentBlock {
-  mime_type?: string;
-  metadata?: Record<string, unknown>;
-}
+import { BaseContentBlock } from "./base.js";
 
-export interface URLContentBlock extends BaseDataContentBlock {
-  type: "image" | "audio" | "file";
-  source_type: "url";
-  url: string;
-}
+/**
+ * @deprecated
+ * Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
+export type ImageDetail = "auto" | "low" | "high";
 
-export interface Base64ContentBlock extends BaseDataContentBlock {
-  type: "image" | "audio" | "file";
-  source_type: "base64";
-  data: string;
-}
-
-export interface PlainTextContentBlock extends BaseDataContentBlock {
-  type: "file" | "text";
-  source_type: "text";
-  text: string;
-}
-
-export interface IDContentBlock extends BaseDataContentBlock {
-  type: "image" | "audio" | "file";
-  source_type: "id";
-  id: string;
-}
-
-export type DataContentBlock =
-  | URLContentBlock
-  | Base64ContentBlock
-  | PlainTextContentBlock
-  | IDContentBlock;
-
-export type StandardImageBlock = (
-  | URLContentBlock
-  | Base64ContentBlock
-  | IDContentBlock
-) & {
-  type: "image";
-};
-
-export type StandardAudioBlock = (
-  | URLContentBlock
-  | Base64ContentBlock
-  | IDContentBlock
-) & {
-  type: "audio";
-};
-
-export type StandardFileBlock = (
-  | URLContentBlock
-  | Base64ContentBlock
-  | IDContentBlock
-  | PlainTextContentBlock
-) & {
-  type: "file";
-};
-
-export type StandardTextBlock = PlainTextContentBlock & {
+/**
+ * @deprecated
+ * Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
+export type MessageContentText = {
   type: "text";
+  text: string;
 };
 
-export type DataContentBlockType = DataContentBlock["type"];
+/**
+ * @deprecated
+ * Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
+export type MessageContentImageUrl = {
+  type: "image_url";
+  image_url: string | { url: string; detail?: ImageDetail };
+};
 
+/**
+ * @deprecated
+ * Use {@link ContentBlock} instead.
+ */
+export type MessageContentComplex =
+  | MessageContentText
+  | MessageContentImageUrl
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | (Record<string, any> & { type?: "text" | "image_url" | string })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | (Record<string, any> & { type?: never });
+
+export type Data = never;
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export declare namespace Data {
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export interface BaseDataContentBlock extends BaseContentBlock {
+    mime_type?: string;
+    metadata?: Record<string, unknown>;
+  }
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export interface URLContentBlock extends BaseDataContentBlock {
+    type: "image" | "audio" | "file";
+    source_type: "url";
+    url: string;
+  }
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export interface Base64ContentBlock extends BaseDataContentBlock {
+    type: "image" | "audio" | "file";
+    source_type: "base64";
+    data: string;
+  }
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export interface PlainTextContentBlock extends BaseDataContentBlock {
+    type: "file" | "text";
+    source_type: "text";
+    text: string;
+  }
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export interface IDContentBlock extends BaseDataContentBlock {
+    type: "image" | "audio" | "file";
+    source_type: "id";
+    id: string;
+  }
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Standard} instead
+   */
+  export type DataContentBlock =
+    | URLContentBlock
+    | Base64ContentBlock
+    | PlainTextContentBlock
+    | IDContentBlock;
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Standard} instead
+   */
+  export type StandardImageBlock = (
+    | URLContentBlock
+    | Base64ContentBlock
+    | IDContentBlock
+  ) & {
+    type: "image";
+  };
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Standard} instead
+   */
+  export type StandardAudioBlock = (
+    | URLContentBlock
+    | Base64ContentBlock
+    | IDContentBlock
+  ) & {
+    type: "audio";
+  };
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Standard} instead
+   */
+  export type StandardFileBlock = (
+    | URLContentBlock
+    | Base64ContentBlock
+    | IDContentBlock
+    | PlainTextContentBlock
+  ) & {
+    type: "file";
+  };
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Standard} instead
+   */
+  export type StandardTextBlock = PlainTextContentBlock & {
+    type: "text";
+  };
+
+  /**
+   * @deprecated
+   * Use {@link ContentBlock.Multimodal.Data} instead
+   */
+  export type DataContentBlockType = DataContentBlock["type"];
+}
+
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function isDataContentBlock(
   content_block: object
-): content_block is DataContentBlock {
+): content_block is Data.DataContentBlock {
   return (
     typeof content_block === "object" &&
     content_block !== null &&
@@ -80,9 +170,12 @@ export function isDataContentBlock(
   );
 }
 
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function isURLContentBlock(
   content_block: object
-): content_block is URLContentBlock {
+): content_block is Data.URLContentBlock {
   return (
     isDataContentBlock(content_block) &&
     content_block.source_type === "url" &&
@@ -91,9 +184,12 @@ export function isURLContentBlock(
   );
 }
 
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function isBase64ContentBlock(
   content_block: object
-): content_block is Base64ContentBlock {
+): content_block is Data.Base64ContentBlock {
   return (
     isDataContentBlock(content_block) &&
     content_block.source_type === "base64" &&
@@ -102,9 +198,12 @@ export function isBase64ContentBlock(
   );
 }
 
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function isPlainTextContentBlock(
   content_block: object
-): content_block is PlainTextContentBlock {
+): content_block is Data.PlainTextContentBlock {
   return (
     isDataContentBlock(content_block) &&
     content_block.source_type === "text" &&
@@ -113,9 +212,12 @@ export function isPlainTextContentBlock(
   );
 }
 
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function isIDContentBlock(
   content_block: object
-): content_block is IDContentBlock {
+): content_block is Data.IDContentBlock {
   return (
     isDataContentBlock(content_block) &&
     content_block.source_type === "id" &&
@@ -124,8 +226,11 @@ export function isIDContentBlock(
   );
 }
 
+/**
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
+ */
 export function convertToOpenAIImageBlock(
-  content_block: URLContentBlock | Base64ContentBlock
+  content_block: Data.URLContentBlock | Data.Base64ContentBlock
 ) {
   if (isDataContentBlock(content_block)) {
     if (content_block.source_type === "url") {
@@ -159,6 +264,8 @@ export function convertToOpenAIImageBlock(
  *
  * @param mime_type - The mime type to parse.
  * @returns An object containing the type, subtype, and parameters.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function parseMimeType(mime_type: string): {
   type: string;
@@ -210,6 +317,8 @@ export function parseMimeType(mime_type: string): {
  * @param dataUrl - The base64 data URL to parse.
  * @param asTypedArray - Whether to return the data as a typed array.
  * @returns An object containing the parsed data and mime type, or undefined if the data URL is invalid.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function parseBase64DataUrl({
   dataUrl,
@@ -225,6 +334,8 @@ export function parseBase64DataUrl({
  * @param dataUrl - The base64 data URL to parse.
  * @param asTypedArray - Whether to return the data as a typed array.
  * @returns The parsed data and mime type, or undefined if the data URL is invalid.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function parseBase64DataUrl({
   dataUrl,
@@ -240,6 +351,8 @@ export function parseBase64DataUrl({
  * @param dataUrl - The base64 data URL to parse.
  * @param asTypedArray - Whether to return the data as a typed array.
  * @returns The parsed data and mime type, or undefined if the data URL is invalid.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function parseBase64DataUrl({
   dataUrl: data_url,
@@ -274,6 +387,8 @@ export function parseBase64DataUrl({
  * terms of the types they support. Also allows for forward compatibility as the set of known
  * standard types grows, as the set of types can be extended without breaking existing
  * implementations of the aforementioned interfaces.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export type ProviderFormatTypes<
   TextFormat = unknown,
@@ -295,6 +410,8 @@ export type ProviderFormatTypes<
  *
  * Meant to be used with {@link convertToProviderContentBlock} and
  * {@link convertToStandardContentBlock} rather than being consumed directly.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export interface StandardContentBlockConverter<
   Formats extends Partial<ProviderFormatTypes>
@@ -310,28 +427,28 @@ export interface StandardContentBlockConverter<
    * @param block - The standard image block to convert.
    * @returns The provider image block.
    */
-  fromStandardImageBlock?(block: StandardImageBlock): Formats["image"];
+  fromStandardImageBlock?(block: Data.StandardImageBlock): Formats["image"];
 
   /**
    * Convert from a standard audio block to a provider's proprietary audio block format.
    * @param block - The standard audio block to convert.
    * @returns The provider audio block.
    */
-  fromStandardAudioBlock?(block: StandardAudioBlock): Formats["audio"];
+  fromStandardAudioBlock?(block: Data.StandardAudioBlock): Formats["audio"];
 
   /**
    * Convert from a standard file block to a provider's proprietary file block format.
    * @param block - The standard file block to convert.
    * @returns The provider file block.
    */
-  fromStandardFileBlock?(block: StandardFileBlock): Formats["file"];
+  fromStandardFileBlock?(block: Data.StandardFileBlock): Formats["file"];
 
   /**
    * Convert from a standard text block to a provider's proprietary text block format.
    * @param block - The standard text block to convert.
    * @returns The provider text block.
    */
-  fromStandardTextBlock?(block: StandardTextBlock): Formats["text"];
+  fromStandardTextBlock?(block: Data.StandardTextBlock): Formats["text"];
 }
 
 /**
@@ -343,11 +460,13 @@ export interface StandardContentBlockConverter<
  * @param block - The standard data content block to convert.
  * @returns The provider data content block.
  * @throws An error if the standard data content block type is not supported.
+ *
+ * @deprecated Don't use data content blocks. Use {@link ContentBlock.Multimodal.Data} instead.
  */
 export function convertToProviderContentBlock<
   Formats extends Partial<ProviderFormatTypes>
 >(
-  block: DataContentBlock,
+  block: Data.DataContentBlock,
   converter: StandardContentBlockConverter<Formats>
 ): Formats[keyof Formats] {
   if (block.type === "text") {
@@ -356,7 +475,7 @@ export function convertToProviderContentBlock<
         `Converter for ${converter.providerName} does not implement \`fromStandardTextBlock\` method.`
       );
     }
-    return converter.fromStandardTextBlock(block as StandardTextBlock);
+    return converter.fromStandardTextBlock(block as Data.StandardTextBlock);
   }
   if (block.type === "image") {
     if (!converter.fromStandardImageBlock) {
@@ -364,7 +483,7 @@ export function convertToProviderContentBlock<
         `Converter for ${converter.providerName} does not implement \`fromStandardImageBlock\` method.`
       );
     }
-    return converter.fromStandardImageBlock(block as StandardImageBlock);
+    return converter.fromStandardImageBlock(block as Data.StandardImageBlock);
   }
   if (block.type === "audio") {
     if (!converter.fromStandardAudioBlock) {
@@ -372,7 +491,7 @@ export function convertToProviderContentBlock<
         `Converter for ${converter.providerName} does not implement \`fromStandardAudioBlock\` method.`
       );
     }
-    return converter.fromStandardAudioBlock(block as StandardAudioBlock);
+    return converter.fromStandardAudioBlock(block as Data.StandardAudioBlock);
   }
   if (block.type === "file") {
     if (!converter.fromStandardFileBlock) {
@@ -380,7 +499,7 @@ export function convertToProviderContentBlock<
         `Converter for ${converter.providerName} does not implement \`fromStandardFileBlock\` method.`
       );
     }
-    return converter.fromStandardFileBlock(block as StandardFileBlock);
+    return converter.fromStandardFileBlock(block as Data.StandardFileBlock);
   }
   throw new Error(
     `Unable to convert content block type '${block.type}' to provider-specific format: not recognized.`

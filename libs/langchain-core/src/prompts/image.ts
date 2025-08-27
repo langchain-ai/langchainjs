@@ -1,4 +1,4 @@
-import { MessageContent, MessageContentComplex } from "../messages/index.js";
+import { MessageContent, ContentBlock } from "../messages/index.js";
 import { ImagePromptValue, ImageContent } from "../prompt_values.js";
 import type { InputValues, PartialValues } from "../utils/types/index.js";
 import {
@@ -47,7 +47,7 @@ export interface ImagePromptTemplateInput<
    * content.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalContentFields?: MessageContentComplex;
+  additionalContentFields?: ContentBlock;
 }
 
 /**
@@ -77,7 +77,7 @@ export class ImagePromptTemplate<
    * content.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalContentFields?: MessageContentComplex;
+  additionalContentFields?: ContentBlock;
 
   constructor(input: ImagePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);

@@ -31,7 +31,7 @@ import {
   RecordStringAny,
 } from "../base.js";
 import { TestCallbackHandler } from "../utils.js";
-import { isMessageContentComplex } from "../utils/types.js";
+import { isContentBlock } from "../utils/types.js";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -198,7 +198,7 @@ export abstract class ChatModelIntegrationTests<
    * It verifies that:
    * 1. The stream produces at least one chunk.
    * 2. Each streamed chunk is defined and is an instance of AIMessageChunk.
-   * 3. The content of each chunk is a string or a valid array of MessageContentComplex.
+   * 3. The content of each chunk is a string or a valid array of ContentBlock.
    * 4. The total content received across all chunks is greater than zero.
    *
    * @param {any | undefined} callOptions Optional call options to pass to the model.
@@ -220,17 +220,21 @@ export abstract class ChatModelIntegrationTests<
         numChars += token.content.length;
       } else if (Array.isArray(token.content)) {
         for (const part of token.content) {
-          this.expect(isMessageContentComplex(part)).toBe(true);
+          this.expect(isContentBlock(part)).toBe(true);
           // We can still count this as received content.
           // Let's count text characters if available.
-          if (part.type === "text") {
+          if (
+            part.type === "text" &&
+            "text" in part &&
+            typeof part.text === "string"
+          ) {
             numChars += part.text.length;
           } else {
             numChars += 1; // Count non-text parts as "1" unit of content
           }
         }
       } else {
-        fail("token.content must be a string or MessageContentComplex[]");
+        fail("token.content must be a string or ContentBlock[]");
       }
     }
 

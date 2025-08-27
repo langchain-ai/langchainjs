@@ -114,6 +114,10 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        # FIXME: we shouldn't need this, but it's a workaround for a bug in the
+        # build system/ turbo where core doesn't get built.
+      - name: Build '@langchain/core' package
+        run: pnpm build --filter @langchain/core
         # Running `test:unit:ci` from root will build first, however debugging
         # in CI is easier if we separate the build step from the test step.
       - name: Build '@langchain/${{ matrix.package }}' package

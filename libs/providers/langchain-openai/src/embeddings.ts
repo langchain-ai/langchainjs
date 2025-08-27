@@ -4,7 +4,7 @@ import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { OpenAICoreRequestOptions } from "./types.js";
 import { getEndpoint, OpenAIEndpointConfig } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/openai.js";
+import { wrapOpenAIClientError } from "./utils/client.js";
 
 /**
  * @see https://platform.openai.com/docs/guides/embeddings#embedding-models

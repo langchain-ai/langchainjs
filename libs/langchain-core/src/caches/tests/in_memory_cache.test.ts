@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { MessageContentComplex } from "../../messages/base.js";
+import { ContentBlock } from "../../messages/index.js";
 import { InMemoryCache } from "../base.js";
 
 test("InMemoryCache works", async () => {
@@ -20,7 +20,7 @@ test("InMemoryCache works", async () => {
 });
 
 test("InMemoryCache works with complex message types", async () => {
-  const cache = new InMemoryCache<MessageContentComplex[]>();
+  const cache = new InMemoryCache<ContentBlock[]>();
 
   await cache.update("prompt", "key1", [
     {

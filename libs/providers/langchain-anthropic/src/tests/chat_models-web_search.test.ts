@@ -1,12 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { test, expect } from "vitest";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  ContentBlock,
+  HumanMessage,
+} from "@langchain/core/messages";
 import { anthropicResponseToChatMessages } from "../utils/message_outputs.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 test("Web Search Tool - Anthropic response to LangChain format", () => {
   // What Anthropic returns
-  const anthropicResponse: Anthropic.ContentBlock[] = [
+  const anthropicResponse: ContentBlock[] = [
     {
       type: "text",
       text: "I'll search for that information.",
@@ -49,9 +53,12 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
     },
   ];
 
-  const result = anthropicResponseToChatMessages(anthropicResponse, {
-    id: "msg_01ABC123",
-  });
+  const result = anthropicResponseToChatMessages(
+    anthropicResponse as unknown as Anthropic.ContentBlock[],
+    {
+      id: "msg_01ABC123",
+    }
+  );
 
   // What LangChain should produce
   expect(result[0].message).toEqual(
@@ -59,7 +66,7 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
       content: anthropicResponse,
       tool_calls: [],
       additional_kwargs: { id: "msg_01ABC123" },
-      response_metadata: { id: "msg_01ABC123" },
+      response_metadata: { id: "msg_01ABC123", model_provider: "anthropic" },
       id: "msg_01ABC123",
     })
   );
@@ -67,7 +74,7 @@ test("Web Search Tool - Anthropic response to LangChain format", () => {
 
 test("Web Search Tool - Only web_search server tools extracted", () => {
   // What Anthropic returns (multiple server tools)
-  const anthropicResponse: Anthropic.ContentBlock[] = [
+  const anthropicResponse: ContentBlock[] = [
     {
       type: "server_tool_use",
       id: "toolu_web_001",
@@ -82,7 +89,10 @@ test("Web Search Tool - Only web_search server tools extracted", () => {
     },
   ];
 
-  const result = anthropicResponseToChatMessages(anthropicResponse, {});
+  const result = anthropicResponseToChatMessages(
+    anthropicResponse as unknown as Anthropic.ContentBlock[],
+    {}
+  );
 
   // What LangChain should produce (only web_search extracted)
   expect(result[0].message).toEqual(
@@ -90,7 +100,10 @@ test("Web Search Tool - Only web_search server tools extracted", () => {
       content: anthropicResponse,
       tool_calls: [],
       additional_kwargs: {},
-      response_metadata: {},
+      response_metadata: {
+        model_provider: "anthropic",
+      },
+      usage_metadata: undefined,
       id: undefined,
     })
   );

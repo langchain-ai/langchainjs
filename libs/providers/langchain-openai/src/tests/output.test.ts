@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getStructuredOutputMethod } from "../utils/structuredOutput.js";
+import { getStructuredOutputMethod } from "../utils/output.js";
 
 describe("getStructuredOutputMethod", () => {
   it("should return the default method if no method is provided", () => {

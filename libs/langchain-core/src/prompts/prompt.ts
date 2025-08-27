@@ -14,7 +14,7 @@ import {
 } from "./template.js";
 import type { SerializedPromptTemplate } from "./serde.js";
 import type { InputValues, PartialValues } from "../utils/types/index.js";
-import { MessageContent, MessageContentComplex } from "../messages/index.js";
+import { MessageContent, ContentBlock } from "../messages/index.js";
 
 /**
  * Inputs to create a {@link PromptTemplate}
@@ -50,7 +50,7 @@ export interface PromptTemplateInput<
    * content.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalContentFields?: MessageContentComplex;
+  additionalContentFields?: ContentBlock;
 }
 
 type NonAlphanumeric =
@@ -135,7 +135,7 @@ export class PromptTemplate<
    * content.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalContentFields?: MessageContentComplex;
+  additionalContentFields?: ContentBlock;
 
   constructor(input: PromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);

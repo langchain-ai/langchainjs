@@ -1,10 +1,22 @@
 import type { BaseContentBlock } from "./base.js";
-import type { Tools } from "./tools.js";
-import type { Multimodal } from "./multimodal.js";
-
-export type MessageContent = string | Array<BaseContentBlock>;
+import {
+  KNOWN_BLOCK_TYPES as KNOWN_TOOL_BLOCK_TYPES,
+  type Tools,
+} from "./tools.js";
+import {
+  KNOWN_BLOCK_TYPES as KNOWN_MULTIMODAL_BLOCK_TYPES,
+  type Multimodal,
+} from "./multimodal.js";
+import { type Data } from "./data.js";
 
 export type ContentBlock = BaseContentBlock;
+
+export const KNOWN_BLOCK_TYPES = [
+  "text",
+  "reasoning",
+  ...KNOWN_TOOL_BLOCK_TYPES,
+  ...KNOWN_MULTIMODAL_BLOCK_TYPES,
+];
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace ContentBlock {
@@ -16,6 +28,10 @@ export declare namespace ContentBlock {
      * Type of the content block
      */
     readonly type: "citation";
+    /**
+     * Source type for the citation.
+     */
+    source?: string;
     /**
      * URL of the document source
      */
@@ -66,7 +82,7 @@ export declare namespace ContentBlock {
     /**
      * Citations and other annotations.
      */
-    annotations?: Citation[];
+    annotations?: Array<Citation | BaseContentBlock>;
   }
 
   /**
@@ -92,9 +108,11 @@ export declare namespace ContentBlock {
 
   export { Tools };
   export { Multimodal };
+  export { Data };
+
   export type Standard =
     | Text
     | Reasoning
-    | Tools.ContentBlock
-    | Multimodal.ContentBlock;
+    | Tools.Standard
+    | Multimodal.Standard;
 }

@@ -1,9 +1,10 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { StringWithAutocomplete } from "../utils/types/index.js";
-import {
-  type PlainTextContentBlock,
-  isDataContentBlock,
-} from "./content_blocks.js";
+import { ContentBlock } from "./content/index.js";
+import { isDataContentBlock } from "./content/data.js";
+import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
+import { convertToV1FromDataContent } from "./block_translators/data.js";
+import { convertToV1FromChatCompletionsInput } from "./block_translators/openai.js";
 
 export interface StoredMessageData {
   content: string;
@@ -44,27 +45,7 @@ export type MessageType =
   | "tool"
   | "remove";
 
-export type ImageDetail = "auto" | "low" | "high";
-
-export type MessageContentText = {
-  type: "text";
-  text: string;
-};
-
-export type MessageContentImageUrl = {
-  type: "image_url";
-  image_url: string | { url: string; detail?: ImageDetail };
-};
-
-export type MessageContentComplex =
-  | MessageContentText
-  | MessageContentImageUrl
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: "text" | "image_url" | string })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | (Record<string, any> & { type?: never });
-
-export type MessageContent = string | MessageContentComplex[];
+export type MessageContent = string | Array<ContentBlock>;
 
 export interface FunctionCall {
   /**
@@ -82,8 +63,9 @@ export interface FunctionCall {
 }
 
 export type BaseMessageFields = {
-  content: MessageContent;
   name?: string;
+  content?: MessageContent;
+  contentBlocks?: Array<ContentBlock.Standard>;
   additional_kwargs?: {
     /**
      * @deprecated Use "tool_calls" field on AIMessages instead
@@ -125,7 +107,7 @@ export function mergeContent(
           type: "text",
           source_type: "text",
           text: firstContent,
-        } as PlainTextContentBlock,
+        },
         ...secondContent,
       ];
     } else {
@@ -152,7 +134,7 @@ export function mergeContent(
           type: "file",
           source_type: "text",
           text: secondContent,
-        } as PlainTextContentBlock,
+        },
       ];
     } else {
       return [...firstContent, { type: "text", text: secondContent }];
@@ -211,10 +193,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
  */
-export abstract class BaseMessage
-  extends Serializable
-  implements BaseMessageFields
-{
+export abstract class BaseMessage extends Serializable {
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -305,10 +284,40 @@ export abstract class BaseMessage
     }
     super(fields);
     this.name = fields.name;
-    this.content = fields.content;
+    if (fields.content === undefined && fields.contentBlocks !== undefined) {
+      this.content = fields.contentBlocks;
+      this.response_metadata = {
+        output_version: "v1",
+        ...fields.response_metadata,
+      };
+    } else if (fields.content !== undefined) {
+      this.content = fields.content ?? [];
+      this.response_metadata = fields.response_metadata;
+    } else {
+      this.content = [];
+      this.response_metadata = fields.response_metadata;
+    }
     this.additional_kwargs = fields.additional_kwargs;
-    this.response_metadata = fields.response_metadata;
     this.id = fields.id;
+  }
+
+  get contentBlocks(): Array<ContentBlock.Standard> {
+    const blocks: Array<ContentBlock> =
+      typeof this.content === "string"
+        ? [{ type: "text", text: this.content }]
+        : this.content;
+    const parsingSteps = [
+      convertToV1FromDataContent,
+      convertToV1FromChatCompletionsInput,
+      convertToV1FromAnthropicInput,
+    ];
+    const parsedBlocks = parsingSteps.reduce(
+      (blocks, step) => step(blocks),
+      blocks
+    );
+    // this assertion is safe since we're planning to allow
+    // untyped content blocks for v1 messages (directed through message structures).
+    return parsedBlocks as Array<ContentBlock.Standard>;
   }
 
   toDict(): StoredMessage {
@@ -418,8 +427,12 @@ export function _mergeDicts(
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
+      } else if (["id", "output_version", "model_provider"].includes(key)) {
+        // Keep the incoming value for these fields
+        merged[key] = value;
+      } else {
+        merged[key] += value;
       }
-      merged[key] += value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {

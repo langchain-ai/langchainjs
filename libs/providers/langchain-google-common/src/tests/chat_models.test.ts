@@ -6,7 +6,7 @@ import {
   BaseMessageLike,
   HumanMessage,
   HumanMessageChunk,
-  MessageContentComplex,
+  ContentBlock,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
@@ -1129,7 +1129,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       model: "gemini-1.5-flash",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -1174,7 +1174,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       model: "gemini-1.5-flash",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -1210,7 +1210,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       model: "gemini-1.5-flash",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -1259,7 +1259,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       model: "gemini-2.5-flash",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -1313,7 +1313,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       model: "gemini-2.5-flash",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -1446,7 +1446,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       callbacks,
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -2439,15 +2439,15 @@ describe("Mock ChatGoogle - Anthropic", () => {
     console.log(JSON.stringify(response, null, 1));
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content).toHaveLength(2);
-    const content = response.content as MessageContentComplex[];
-    expect(
-      content.some((block) => "thinking" in (block as MessageContentComplex))
-    ).toBe(true);
+    const content = response.content as ContentBlock[];
+    expect(content.some((block) => "thinking" in (block as ContentBlock))).toBe(
+      true
+    );
 
     let thinkingCount = 0;
     for (const block of response.content) {
       expect(typeof block).toBe("object");
-      const complexBlock = block as MessageContentComplex;
+      const complexBlock = block as ContentBlock;
       if (complexBlock.type === "thinking") {
         thinkingCount += 1;
         expect(Object.keys(block).sort()).toEqual(
@@ -2524,12 +2524,12 @@ describe("Mock ChatGoogle - Anthropic", () => {
     console.log(JSON.stringify(response, null, 1));
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content).toHaveLength(2);
-    const content = response.content as MessageContentComplex[];
+    const content = response.content as ContentBlock[];
 
     let thinkingCount = 0;
     for (const block of content) {
       expect(typeof block).toBe("object");
-      const complexBlock = block as MessageContentComplex;
+      const complexBlock = block as ContentBlock;
       if (complexBlock.type === "redacted_thinking") {
         thinkingCount += 1;
         expect(Object.keys(block).sort()).toEqual(["type", "data"].sort());

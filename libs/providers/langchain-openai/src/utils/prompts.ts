@@ -2,7 +2,7 @@
 import type { BasePromptValue } from "@langchain/core/prompt_values";
 import type { OpenAI } from "openai";
 
-import { _convertMessagesToOpenAIParams } from "../chat_models.js";
+import { _convertMessagesToOpenAIParams } from "./message_inputs.js";
 
 /**
  * Convert a formatted LangChain prompt (e.g. pulled from the hub) into
