@@ -99,12 +99,10 @@ import {
 import {
   _convertMessagesToOpenAIParams,
   completionsApiContentBlockConverter,
-  isReasoningModel,
-  messageToOpenAIRole,
   ResponsesInputItem,
 } from "./utils/message_inputs.js";
 import { _convertToResponsesMessageFromV1 } from "./utils/standard.js";
-import { iife } from "./utils/misc.js";
+import { iife, isReasoningModel, messageToOpenAIRole } from "./utils/misc.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 

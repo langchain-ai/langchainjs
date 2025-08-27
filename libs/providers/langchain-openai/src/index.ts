@@ -16,4 +16,4 @@ export { convertPromptToOpenAI } from "./utils/prompts.js";
 export {
   _convertMessagesToOpenAIParams,
   messageToOpenAIRole,
-} from "./utils/message_inputs.js";
+} from "./utils/misc.js";
