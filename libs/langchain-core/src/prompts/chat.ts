@@ -12,7 +12,7 @@ import {
   coerceMessageLikeToMessage,
   isBaseMessage,
   MessageContent,
-  MessageContentComplex,
+  ContentBlock,
 } from "../messages/index.js";
 import {
   type ChatPromptValueInterface,
@@ -536,7 +536,7 @@ class _StringImageMessagePromptTemplate<
 
         const options = {
           ...additionalOptions,
-          additionalContentFields: item,
+          additionalContentFields: item as ContentBlock,
         };
         prompt.push(PromptTemplate.fromTemplate(text, options));
       } else if (isImageTemplateParam(item)) {
@@ -571,7 +571,7 @@ class _StringImageMessagePromptTemplate<
             template: imgTemplate,
             inputVariables,
             templateFormat: additionalOptions?.templateFormat,
-            additionalContentFields: item,
+            additionalContentFields: item as ContentBlock,
           });
         } else if (typeof imgTemplate === "object") {
           if ("url" in imgTemplate) {
@@ -592,7 +592,7 @@ class _StringImageMessagePromptTemplate<
             template: imgTemplate,
             inputVariables,
             templateFormat: additionalOptions?.templateFormat,
-            additionalContentFields: item,
+            additionalContentFields: item as ContentBlock,
           });
         } else {
           throw new Error("Invalid image template");
@@ -637,7 +637,7 @@ class _StringImageMessagePromptTemplate<
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          let additionalContentFields: MessageContentComplex | undefined;
+          let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
@@ -653,7 +653,7 @@ class _StringImageMessagePromptTemplate<
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          let additionalContentFields: MessageContentComplex | undefined;
+          let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
@@ -668,7 +668,7 @@ class _StringImageMessagePromptTemplate<
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
-          let additionalContentFields: MessageContentComplex | undefined;
+          let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
@@ -676,7 +676,7 @@ class _StringImageMessagePromptTemplate<
           content.push({
             ...additionalContentFields,
             ...formatted,
-          });
+          } as ContentBlock);
         }
       }
       return this.createMessage(content);
@@ -1020,7 +1020,12 @@ export class ChatPromptTemplate<
         let imageUrl = "";
         if (typeof item.image_url === "string") {
           imageUrl = item.image_url;
-        } else {
+        } else if (
+          typeof item.image_url === "object" &&
+          item.image_url !== null &&
+          "url" in item.image_url &&
+          typeof item.image_url.url === "string"
+        ) {
           imageUrl = item.image_url.url;
         }
 
@@ -1034,7 +1039,11 @@ export class ChatPromptTemplate<
           inputValues
         );
 
-        if (typeof item.image_url !== "string" && "url" in item.image_url) {
+        if (
+          typeof item.image_url === "object" &&
+          item.image_url !== null &&
+          "url" in item.image_url
+        ) {
           // eslint-disable-next-line no-param-reassign
           item.image_url.url = formattedUrl;
         } else {

@@ -1,7 +1,7 @@
 import { Runnable } from "../runnables/index.js";
 import type { RunnableConfig } from "../runnables/config.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
-import type { BaseMessage, MessageContentComplex } from "../messages/index.js";
+import type { BaseMessage, ContentBlock } from "../messages/index.js";
 import type { Callbacks } from "../callbacks/manager.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
 import { addLangChainErrorFields } from "../errors/index.js";
@@ -55,9 +55,7 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
       : this._baseMessageContentToString(message.content);
   }
 
-  protected _baseMessageContentToString(
-    content: MessageContentComplex[]
-  ): string {
+  protected _baseMessageContentToString(content: ContentBlock[]): string {
     return JSON.stringify(content);
   }
 

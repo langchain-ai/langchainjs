@@ -198,12 +198,21 @@ export const checkValidTemplate = (
     }, {} as Record<string, string>);
     if (Array.isArray(template)) {
       template.forEach((message) => {
-        if (message.type === "text") {
+        if (
+          message.type === "text" &&
+          "text" in message &&
+          typeof message.text === "string"
+        ) {
           renderTemplate(message.text, templateFormat, dummyInputs);
         } else if (message.type === "image_url") {
           if (typeof message.image_url === "string") {
             renderTemplate(message.image_url, templateFormat, dummyInputs);
-          } else {
+          } else if (
+            typeof message.image_url === "object" &&
+            message.image_url !== null &&
+            "url" in message.image_url &&
+            typeof message.image_url.url === "string"
+          ) {
             const imageUrl = message.image_url.url;
             renderTemplate(imageUrl, templateFormat, dummyInputs);
           }

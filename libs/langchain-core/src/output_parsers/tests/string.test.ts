@@ -1,10 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { StringOutputParser } from "../string.js";
-import {
-  AIMessage,
-  BaseMessage,
-  MessageContentComplex,
-} from "../../messages/index.js";
+import { AIMessage, BaseMessage, ContentBlock } from "../../messages/index.js";
 
 describe("StringOutputParser", () => {
   test("string input", async () => {
@@ -23,7 +19,7 @@ describe("StringOutputParser", () => {
 
   test("BaseMessage complex text type", async () => {
     const parser = new StringOutputParser();
-    const content: MessageContentComplex[] = [
+    const content: ContentBlock[] = [
       {
         type: "text",
         text: "hello",
@@ -38,7 +34,7 @@ describe("StringOutputParser", () => {
 
   test("BaseMessage multiple complex text type", async () => {
     const parser = new StringOutputParser();
-    const content: MessageContentComplex[] = [
+    const content: ContentBlock[] = [
       {
         type: "text",
         text: "hello",
@@ -57,7 +53,7 @@ describe("StringOutputParser", () => {
 
   test("BaseMessage complex text and image type fails", async () => {
     const parser = new StringOutputParser();
-    const content: MessageContentComplex[] = [
+    const content: ContentBlock[] = [
       {
         type: "text",
         text: "hello",

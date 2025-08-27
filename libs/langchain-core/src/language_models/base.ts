@@ -447,7 +447,7 @@ export abstract class BaseLanguageModel<
       textContent = content;
     } else {
       /**
-       * Content is an array of MessageContentComplex
+       * Content is an array of ContentBlock
        *
        * ToDo(@christian-bromann): This is a temporary fix to get the number of tokens for the content.
        * We need to find a better way to do this.
