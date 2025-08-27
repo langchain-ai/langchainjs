@@ -638,7 +638,7 @@ describe("reasoning summaries", () => {
   const testReasoningSummaries = async (
     requestType: "stream" | "invoke",
     extraConfig: Record<string, unknown> = {},
-    removePreviousOutputMetadata: boolean = false
+    removePreviousOutputMetadata = false
   ) => {
     const prompt = "What is 3 to the power of 3?";
     const llm = new ChatOpenAI({

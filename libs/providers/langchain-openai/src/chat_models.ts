@@ -3115,7 +3115,7 @@ export class ChatOpenAI<
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.
    */
-  useResponsesApi: boolean = false;
+  useResponsesApi = false;
 
   protected responses: ChatOpenAIResponses;
 
