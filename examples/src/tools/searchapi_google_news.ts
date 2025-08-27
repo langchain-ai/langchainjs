@@ -1,5 +1,4 @@
 import { ChatOpenAI } from "@langchain/openai";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { AgentFinish, AgentAction } from "@langchain/core/agents";
@@ -38,6 +37,6 @@ const agent = createReactAgent({
   prompt: prefix,
 });
 const res = await agent.invoke({
-  input: "What's happening in Ukraine today?",
+  messages: ["What's happening in Ukraine today?"],
 });
-console.log(res);
+console.log(res.messages.at(-1)?.content);

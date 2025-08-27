@@ -81,7 +81,6 @@ const searchTool = new TavilySearchResults();
 const tools = [retrieverTool, searchTool];
 
 import { pull } from "langchain/hub";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
@@ -104,23 +103,23 @@ const agent = await createReactAgent({
 });
 
 const agentResult = await agent.invoke({
-  input: "how can LangSmith help with testing?",
+  messages: "how can LangSmith help with testing?",
 });
 
 console.log(agentResult);
 
 const agentResult2 = await agent.invoke({
-  input: "what is the weather in SF?",
+  messages: "what is the weather in SF?",
 });
 
 console.log(agentResult2);
 
 const agentResult3 = await agent.invoke({
-  chat_history: [
+  messages: [
     new HumanMessage("Can LangSmith help test my LLM applications?"),
     new AIMessage("Yes!"),
+    "Tell me how",
   ],
-  input: "Tell me how",
 });
 
 console.log(agentResult3);

@@ -3,7 +3,7 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 
-import { MessagesAnnotation, getConfig } from "@langchain/langgraph";
+import { MessagesAnnotation } from "@langchain/langgraph";
 
 import type {
   AnyAnnotationRoot,
@@ -284,8 +284,7 @@ export function createReactAgent<
 
 export * from "./types.js";
 export * from "./errors.js";
-export type LangGraphRunnableConfig = ReturnType<typeof getConfig>;
-export { interrupt } from "@langchain/langgraph";
+export * from "./interrupt.js";
 export {
   toolStrategy,
   providerStrategy,
