@@ -5,18 +5,15 @@ import type {
 
 import { MessagesAnnotation } from "@langchain/langgraph";
 
-import type {
-  AnyAnnotationRoot,
-  CreateReactAgentParams,
-  ExtractZodArrayTypes,
-  JsonSchemaFormat,
-  ResponseFormatUndefined,
-} from "./types.js";
+import { type AnyAnnotationRoot } from "./annotation.js";
+import type { CreateReactAgentParams, ExtractZodArrayTypes } from "./types.js";
 import type {
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
   ResponseFormat,
+  ResponseFormatUndefined,
+  JsonSchemaFormat,
 } from "./responses.js";
 import { ReactAgent } from "./ReactAgent.js";
 
