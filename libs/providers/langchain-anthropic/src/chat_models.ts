@@ -725,7 +725,7 @@ export class ChatAnthropicMessages<
       // Default to `undefined` for `topP` for Opus 4.1 models
       this.topP = fields?.topP === null ? undefined : fields?.topP;
     } else {
-    this.topP = fields?.topP ?? this.topP;
+      this.topP = fields?.topP ?? this.topP;
     }
 
     // If the user passes `null`, set it to `undefined`. Otherwise, use their value or the default. We have to check for null, because
