@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";

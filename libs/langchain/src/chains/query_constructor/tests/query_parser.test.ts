@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { StructuredQueryOutputParser } from "../index.js";
 import {
   Comparators,

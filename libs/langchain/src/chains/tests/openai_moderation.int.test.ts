@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { OpenAIModerationChain } from "../openai_moderation.js";
 
 test("OpenAI Moderation Test", async () => {

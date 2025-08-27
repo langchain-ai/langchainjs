@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {

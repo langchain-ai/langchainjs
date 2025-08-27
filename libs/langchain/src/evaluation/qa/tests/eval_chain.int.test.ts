@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
