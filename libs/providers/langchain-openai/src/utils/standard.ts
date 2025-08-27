@@ -4,8 +4,7 @@ import {
   type AIMessage,
   type ContentBlock,
 } from "@langchain/core/messages";
-import { isReasoningModel, messageToOpenAIRole } from "./message_inputs.js";
-import { iife } from "./misc.js";
+import { iife, isReasoningModel, messageToOpenAIRole } from "./misc.js";
 
 type ChatCompletionContentData =
   | OpenAIClient.Chat.Completions.ChatCompletionContentPartImage

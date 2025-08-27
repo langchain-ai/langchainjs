@@ -1,6 +1,5 @@
 import {
   BaseMessage,
-  ChatMessage,
   convertToProviderContentBlock,
   isAIMessage,
   isDataContentBlock,
@@ -18,52 +17,9 @@ import type {
   ChatCompletionContentPart,
 } from "openai/resources/chat/completions";
 import { _convertToCompletionsMessageFromV1 } from "./standard.js";
+import { isReasoningModel, messageToOpenAIRole } from "./misc.js";
 
 export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
-
-export function isReasoningModel(model?: string) {
-  return model && /^o\d/.test(model);
-}
-
-export function extractGenericMessageCustomRole(message: ChatMessage) {
-  if (
-    message.role !== "system" &&
-    message.role !== "developer" &&
-    message.role !== "assistant" &&
-    message.role !== "user" &&
-    message.role !== "function" &&
-    message.role !== "tool"
-  ) {
-    console.warn(`Unknown message role: ${message.role}`);
-  }
-
-  return message.role as OpenAIClient.ChatCompletionRole;
-}
-
-export function messageToOpenAIRole(
-  message: BaseMessage
-): OpenAIClient.ChatCompletionRole {
-  const type = message._getType();
-  switch (type) {
-    case "system":
-      return "system";
-    case "ai":
-      return "assistant";
-    case "human":
-      return "user";
-    case "function":
-      return "function";
-    case "tool":
-      return "tool";
-    case "generic": {
-      if (!ChatMessage.isInstance(message))
-        throw new Error("Invalid generic chat message");
-      return extractGenericMessageCustomRole(message);
-    }
-    default:
-      throw new Error(`Unknown message type: ${type}`);
-  }
-}
 
 export const completionsApiContentBlockConverter: StandardContentBlockConverter<{
   text: ChatCompletionContentPartText;
