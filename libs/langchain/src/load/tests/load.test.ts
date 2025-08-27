@@ -16,11 +16,9 @@ import { Serializable } from "@langchain/core/load/serializable";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { CommaSeparatedListOutputParser } from "@langchain/core/output_parsers";
 import { LLMChain } from "../../chains/llm_chain.js";
-import { initializeAgentExecutorWithOptions } from "../../agents/initialize.js";
 import { Calculator } from "../../util/testing/tools/calculator.js";
 import { RequestsGetTool } from "../../tools/requests.js";
 import { JsonListKeysTool, JsonSpec } from "../../tools/json.js";
-import { AgentExecutor } from "../../agents/executor.js";
 import { StructuredOutputParser } from "../../output_parsers/structured.js";
 import { RegexParser } from "../../output_parsers/regex.js";
 import { load } from "../index.js";
@@ -427,36 +425,6 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   ).rejects.toThrow(
     'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
   );
-});
-
-test.skip("serialize + deserialize agent", async () => {
-  const llm = new ChatOpenAI({
-    temperature: 0,
-    model: "gpt-4",
-    openAIApiKey: "openai-key",
-  });
-  const executor = await initializeAgentExecutorWithOptions(
-    [
-      new Calculator(),
-      new RequestsGetTool(),
-      new JsonListKeysTool(new JsonSpec({ a: "b" })),
-    ],
-    llm,
-    {
-      agentType: "chat-conversational-react-description",
-    }
-  );
-  const str = JSON.stringify(executor, null, 2);
-  expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const executor2 = await load<AgentExecutor>(
-    str,
-    { OPENAI_API_KEY: "openai-key" },
-    {
-      "langchain/tools/calculator": { Calculator },
-    }
-  );
-  expect(executor2).toBeInstanceOf(AgentExecutor);
-  expect(JSON.stringify(executor2, null, 2)).toBe(str);
 });
 
 test("override name of objects when serialising", async () => {

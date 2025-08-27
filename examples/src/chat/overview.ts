@@ -1,4 +1,3 @@
-import { AgentExecutor, ChatAgent } from "langchain/agents";
 import { ConversationChain, LLMChain } from "langchain/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import { BufferMemory } from "langchain/memory";
@@ -9,7 +8,6 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
 
 export const run = async () => {
   const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
@@ -116,26 +114,4 @@ export const run = async () => {
   });
 
   console.log(responseF);
-
-  // Finally, we introduce Tools and Agents, which extend the model with
-  // other abilities, such as search, or a calculator
-
-  // Define the list of tools the agent can use
-  const tools = [
-    new SerpAPI(process.env.SERPAPI_API_KEY, {
-      location: "Austin,Texas,United States",
-      hl: "en",
-      gl: "us",
-    }),
-  ];
-  // Create the agent from the chat model and the tools
-  const agent = ChatAgent.fromLLMAndTools(new ChatOpenAI(), tools);
-  // Create an executor, which calls to the agent until an answer is found
-  const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
-
-  const responseG = await executor.invoke({
-    input: "How many people live in canada as of 2023?",
-  });
-
-  console.log(responseG);
 };

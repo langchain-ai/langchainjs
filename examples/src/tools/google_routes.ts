@@ -1,7 +1,8 @@
 import { GoogleRoutesAPI } from "@langchain/community/tools/google_routes";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
 export async function run() {
   const tools = [new GoogleRoutesAPI()];
@@ -17,18 +18,13 @@ export async function run() {
     ["placeholder", "{agent_scratchpad}"],
   ]);
 
-  const agent = await createToolCallingAgent({
+  const agent = await createReactAgent({
     llm,
     tools,
     prompt,
   });
 
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
-  });
-
-  const result = await agentExecutor.invoke({
+  const result = await agent.invoke({
     input: "How to go from the Eiffel Tower to the Louvre Museum by transit?",
   });
 

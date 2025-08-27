@@ -3,7 +3,8 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 import { pull } from "langchain/hub";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 
 // Define the tools the agent will have access to.
 const tools = [new TavilySearchResults({ maxResults: 1 })];
@@ -20,18 +21,13 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createOpenAIFunctionsAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-const result = await agentExecutor.invoke({
+const result = await agent.invoke({
   input: "what is the weather in wailea?",
 });
 

@@ -4,7 +4,8 @@ import {
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
 
@@ -34,16 +35,14 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const agentExecutor = new AgentExecutor({
-  agent: await createOpenAIFunctionsAgent({
-    llm,
-    tools,
-    prompt,
-  }),
+const agent = await createReactAgent({
+  llm,
   tools,
+  prompt,
 });
+
 console.log(
-  await agentExecutor.invoke({
+  await agent.invoke({
     input: "Summarize for me a fascinating article about cats.",
   })
 );

@@ -1,6 +1,7 @@
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { pull } from "langchain/hub";
-import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
 import { AzureChatOpenAI } from "@langchain/openai";
 
@@ -22,18 +23,13 @@ const llm = new AzureChatOpenAI({
 // https://smith.langchain.com/hub/jacob/tool-calling-agent
 const prompt = await pull<ChatPromptTemplate>("jacob/tool-calling-agent");
 
-const agent = await createToolCallingAgent({
+const agent = await createReactAgent({
   llm,
   tools,
   prompt,
 });
 
-const agentExecutor = new AgentExecutor({
-  agent,
-  tools,
-});
-
-const result = await agentExecutor.invoke({
+const result = await agent.invoke({
   input:
     "Create a Python program that prints the Python version and return the result.",
 });

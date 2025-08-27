@@ -3966,34 +3966,9 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "MomentoCache",
   },
   {
-    old: "langchain/agents/*",
-    new: "@langchain/community/agents/toolkits/base",
-    namedImport: "Toolkit",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "AWSSfnToolkitArgs",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "AWSSfnToolkit",
-  },
-  {
-    old: "langchain/agents/toolkits/aws_sfn",
-    new: "@langchain/community/agents/toolkits/aws_sfn",
-    namedImport: "createAWSSfnAgent",
-  },
-  {
     old: "langchain/stores/doc/gcs",
     new: "@langchain/community/stores/doc/gcs",
     namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/connery/*",
-    new: "@langchain/community/agents/toolkits/connery",
-    namedImport: "ConneryToolkit",
   },
   {
     old: "langchain/embeddings/base",
@@ -4993,16 +4968,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
   {
     old: "langchain/cache/base",
     new: "@langchain/core/caches",
-    namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/base",
-    new: "@langchain/community/agents/toolkits/base",
-    namedImport: null,
-  },
-  {
-    old: "langchain/agents/toolkits/connery/*",
-    new: "@langchain/community/agents/toolkits/connery",
     namedImport: null,
   },
 ];

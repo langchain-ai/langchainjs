@@ -1,4 +1,5 @@
-import { AgentExecutor, createReactAgent } from "langchain/agents";
+// @ts-expect-error - createReactAgent is not yet available
+import { createReactAgent } from "langchain";
 import { pull } from "langchain/hub";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
@@ -31,12 +32,7 @@ export const run = async () => {
     prompt,
   });
 
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools,
-  });
-
-  const result = await agentExecutor.invoke({
+  const result = await agent.invoke({
     input: "what is LangChain?",
   });
 

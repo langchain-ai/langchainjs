@@ -60,7 +60,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
-    "langsmith": "^0.3.46",
+    "langsmith": "^0.3.64",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
@@ -102,7 +102,7 @@
     "zod": "^3.25.32"
   },
   "optionalDependencies": {
-    "langsmith": "^0.3.46"
+    "langsmith": "^0.3.64"
   },
   "publishConfig": {
     "access": "public"
@@ -156,138 +156,6 @@
         "default": "./dist/load/serializable.cjs"
       },
       "input": "./src/load/serializable.ts"
-    },
-    "./agents": {
-      "import": {
-        "types": "./dist/agents/index.d.ts",
-        "default": "./dist/agents/index.js"
-      },
-      "require": {
-        "types": "./dist/agents/index.d.cts",
-        "default": "./dist/agents/index.cjs"
-      },
-      "input": "./src/agents/index.ts"
-    },
-    "./agents/load": {
-      "import": {
-        "types": "./dist/agents/load.d.ts",
-        "default": "./dist/agents/load.js"
-      },
-      "require": {
-        "types": "./dist/agents/load.d.cts",
-        "default": "./dist/agents/load.cjs"
-      },
-      "input": "./src/agents/load.ts"
-    },
-    "./agents/toolkits": {
-      "import": {
-        "types": "./dist/agents/toolkits/index.d.ts",
-        "default": "./dist/agents/toolkits/index.js"
-      },
-      "require": {
-        "types": "./dist/agents/toolkits/index.d.cts",
-        "default": "./dist/agents/toolkits/index.cjs"
-      },
-      "input": "./src/agents/toolkits/index.ts"
-    },
-    "./agents/toolkits/sql": {
-      "import": {
-        "types": "./dist/agents/toolkits/sql/index.d.ts",
-        "default": "./dist/agents/toolkits/sql/index.js"
-      },
-      "require": {
-        "types": "./dist/agents/toolkits/sql/index.d.cts",
-        "default": "./dist/agents/toolkits/sql/index.cjs"
-      },
-      "input": "./src/agents/toolkits/sql/index.ts"
-    },
-    "./agents/format_scratchpad": {
-      "import": {
-        "types": "./dist/agents/format_scratchpad/openai_functions.d.ts",
-        "default": "./dist/agents/format_scratchpad/openai_functions.js"
-      },
-      "require": {
-        "types": "./dist/agents/format_scratchpad/openai_functions.d.cts",
-        "default": "./dist/agents/format_scratchpad/openai_functions.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/openai_functions.ts"
-    },
-    "./agents/format_scratchpad/openai_tools": {
-      "import": {
-        "types": "./dist/agents/format_scratchpad/openai_tools.d.ts",
-        "default": "./dist/agents/format_scratchpad/openai_tools.js"
-      },
-      "require": {
-        "types": "./dist/agents/format_scratchpad/openai_tools.d.cts",
-        "default": "./dist/agents/format_scratchpad/openai_tools.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/openai_tools.ts"
-    },
-    "./agents/format_scratchpad/log": {
-      "import": {
-        "types": "./dist/agents/format_scratchpad/log.d.ts",
-        "default": "./dist/agents/format_scratchpad/log.js"
-      },
-      "require": {
-        "types": "./dist/agents/format_scratchpad/log.d.cts",
-        "default": "./dist/agents/format_scratchpad/log.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/log.ts"
-    },
-    "./agents/format_scratchpad/xml": {
-      "import": {
-        "types": "./dist/agents/format_scratchpad/xml.d.ts",
-        "default": "./dist/agents/format_scratchpad/xml.js"
-      },
-      "require": {
-        "types": "./dist/agents/format_scratchpad/xml.d.cts",
-        "default": "./dist/agents/format_scratchpad/xml.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/xml.ts"
-    },
-    "./agents/format_scratchpad/log_to_message": {
-      "import": {
-        "types": "./dist/agents/format_scratchpad/log_to_message.d.ts",
-        "default": "./dist/agents/format_scratchpad/log_to_message.js"
-      },
-      "require": {
-        "types": "./dist/agents/format_scratchpad/log_to_message.d.cts",
-        "default": "./dist/agents/format_scratchpad/log_to_message.cjs"
-      },
-      "input": "./src/agents/format_scratchpad/log_to_message.ts"
-    },
-    "./agents/react/output_parser": {
-      "import": {
-        "types": "./dist/agents/react/output_parser.d.ts",
-        "default": "./dist/agents/react/output_parser.js"
-      },
-      "require": {
-        "types": "./dist/agents/react/output_parser.d.cts",
-        "default": "./dist/agents/react/output_parser.cjs"
-      },
-      "input": "./src/agents/react/output_parser.ts"
-    },
-    "./agents/xml/output_parser": {
-      "import": {
-        "types": "./dist/agents/xml/output_parser.d.ts",
-        "default": "./dist/agents/xml/output_parser.js"
-      },
-      "require": {
-        "types": "./dist/agents/xml/output_parser.d.cts",
-        "default": "./dist/agents/xml/output_parser.cjs"
-      },
-      "input": "./src/agents/xml/output_parser.ts"
-    },
-    "./agents/openai/output_parser": {
-      "import": {
-        "types": "./dist/agents/openai/output_parser.d.ts",
-        "default": "./dist/agents/openai/output_parser.js"
-      },
-      "require": {
-        "types": "./dist/agents/openai/output_parser.d.cts",
-        "default": "./dist/agents/openai/output_parser.cjs"
-      },
-      "input": "./src/agents/openai/output_parser.ts"
     },
     "./tools": {
       "import": {

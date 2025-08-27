@@ -152,7 +152,7 @@ import {
 } from "@langchain/core/runnables";
 
 const parseRetrieverInput = (params: { messages: BaseMessage[] }) => {
-  return params.messages[params.messages.length - 1].content;
+  return params.messages[params.messages.length - 1].content as string;
 };
 
 const retrievalChain = RunnablePassthrough.assign({

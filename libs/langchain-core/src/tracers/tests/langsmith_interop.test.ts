@@ -120,21 +120,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       child_runs: [],
       parent_run_id: firstCallParams.id,
       trace_id: firstCallParams.id,
@@ -143,21 +128,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -275,21 +245,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       child_runs: [],
       parent_run_id: firstCallParams.id,
       trace_id: firstCallParams.id,
@@ -298,21 +253,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -417,21 +357,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       child_runs: [],
       parent_run_id: firstCallParams.id,
       trace_id: firstCallParams.id,
@@ -440,21 +365,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: {
         outputs: ["H", "e", "l", "l", "o", "!", "D", "a", "v", "i", "d"],
       },
@@ -536,21 +446,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       child_runs: [],
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
@@ -614,21 +509,6 @@ test.each(["true", "false"])(
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -689,21 +569,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       child_runs: [],
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
@@ -767,21 +632,6 @@ test.each(["true", "false"])(
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -849,21 +699,6 @@ test.each(["true", "false"])(
       run_type: "chain",
       extra: expect.any(Object),
       serialized: {},
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       child_runs: [],
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
@@ -916,21 +751,6 @@ test.each(["true", "false"])(
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: {
         outputs: [
           "H",
