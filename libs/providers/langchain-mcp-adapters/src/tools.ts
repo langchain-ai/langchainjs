@@ -7,17 +7,7 @@ import type {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import {
-  Base64ContentBlock,
-  DataContentBlock,
-  MessageContentComplex,
-  MessageContentImageUrl,
-  MessageContentText,
-  PlainTextContentBlock,
-  StandardAudioBlock,
-  StandardFileBlock,
-  StandardImageBlock,
-} from "@langchain/core/messages";
+import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import debug from "debug";
@@ -78,8 +68,9 @@ async function* _embeddedResourceToStandardFileBlocks(
     | ReadResourceResult["contents"][number],
   client: Client
 ): AsyncGenerator<
-  | (StandardFileBlock & Base64ContentBlock)
-  | (StandardFileBlock & PlainTextContentBlock)
+  | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
+  | (ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.PlainTextContentBlock)
 > {
   if (isResourceReference(resource)) {
     const response: ReadResourceResult = await client.readResource({
@@ -98,7 +89,8 @@ async function* _embeddedResourceToStandardFileBlocks(
       data: resource.blob,
       mime_type: resource.mimeType,
       ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as StandardFileBlock & Base64ContentBlock;
+    } as ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.Base64ContentBlock;
   }
   if (resource.text != null) {
     yield {
@@ -107,7 +99,8 @@ async function* _embeddedResourceToStandardFileBlocks(
       mime_type: resource.mimeType,
       text: resource.text,
       ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as StandardFileBlock & PlainTextContentBlock;
+    } as ContentBlock.Data.StandardFileBlock &
+      ContentBlock.Data.PlainTextContentBlock;
   }
 }
 
@@ -117,29 +110,29 @@ async function _toolOutputToContentBlocks(
   client: Client,
   toolName: string,
   serverName: string
-): Promise<DataContentBlock[]>;
+): Promise<ContentBlock.Data.DataContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: false | undefined,
   client: Client,
   toolName: string,
   serverName: string
-): Promise<MessageContentComplex[]>;
+): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
   client: Client,
   toolName: string,
   serverName: string
-): Promise<(MessageContentComplex | DataContentBlock)[]>;
+): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
   client: Client,
   toolName: string,
   serverName: string
-): Promise<(MessageContentComplex | DataContentBlock)[]> {
-  const blocks: StandardFileBlock[] = [];
+): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]> {
+  const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   switch (content.type) {
     case "text":
       return [
@@ -151,7 +144,7 @@ async function _toolOutputToContentBlocks(
               }
             : {}),
           text: content.text,
-        } as MessageContentText,
+        } as ContentBlock.Text,
       ];
     case "image":
       if (useStandardContentBlocks) {
@@ -161,7 +154,7 @@ async function _toolOutputToContentBlocks(
             source_type: "base64",
             data: content.data,
             mime_type: content.mimeType,
-          } as StandardImageBlock,
+          } as ContentBlock.Data.StandardImageBlock,
         ];
       }
       return [
@@ -170,7 +163,7 @@ async function _toolOutputToContentBlocks(
           image_url: {
             url: `data:${content.mimeType};base64,${content.data}`,
           },
-        } as MessageContentImageUrl,
+        } as ContentBlock,
       ];
     case "audio":
       // We don't check `useStandardContentBlocks` here because we only support audio via
@@ -181,7 +174,7 @@ async function _toolOutputToContentBlocks(
           source_type: "base64",
           data: content.data,
           mime_type: content.mimeType,
-        } as StandardAudioBlock,
+        } as ContentBlock.Data.StandardAudioBlock,
       ];
     case "resource":
       for await (const block of _embeddedResourceToStandardFileBlocks(
@@ -206,7 +199,7 @@ async function _embeddedResourceToArtifact(
   client: Client,
   toolName: string,
   serverName: string
-): Promise<(EmbeddedResource | DataContentBlock)[]> {
+): Promise<(EmbeddedResource | ContentBlock.Data.DataContentBlock)[]> {
   if (useStandardContentBlocks) {
     return _toolOutputToContentBlocks(
       resource,
@@ -299,8 +292,8 @@ async function _convertCallToolResult({
   outputHandling,
 }: ConvertCallToolResultArgs): Promise<
   [
-    (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
+    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
+    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
   ]
 > {
   if (!result) {
@@ -323,7 +316,10 @@ async function _convertCallToolResult({
     );
   }
 
-  const convertedContent: (MessageContentComplex | DataContentBlock)[] = (
+  const convertedContent: (
+    | ContentBlock
+    | ContentBlock.Data.DataContentBlock
+  )[] = (
     await Promise.all(
       result.content
         .filter(
@@ -365,7 +361,9 @@ async function _convertCallToolResult({
   ).flat();
 
   if (convertedContent.length === 1 && convertedContent[0].type === "text") {
-    return [convertedContent[0].text, artifacts];
+    // FIXME: get rid of this assertion
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return [convertedContent[0].text as any, artifacts];
   }
 
   return [convertedContent, artifacts];
@@ -425,8 +423,8 @@ async function _callTool({
   outputHandling,
 }: CallToolArgs): Promise<
   [
-    (MessageContentComplex | DataContentBlock)[],
-    (EmbeddedResource | DataContentBlock)[]
+    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
+    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
   ]
 > {
   try {
