@@ -57,7 +57,7 @@ describe("AIMessage", () => {
       ]);
     });
 
-    it("should include tool calls not included in constructor options", () => {
+    it("should include tool calls not included in constructor content blocks", () => {
       const message = new AIMessage({
         contentBlocks: [
           {
@@ -97,8 +97,26 @@ describe("AIMessage", () => {
           },
         ],
       });
-      expect(message.contentBlocks).toBe(
+      expect(message.contentBlocks).toEqual(
         expect.arrayContaining([
+          {
+            type: "reasoning",
+            reasoning: "foo",
+          },
+          {
+            type: "text",
+            text: "bar",
+          },
+          {
+            type: "text",
+            text: "baz",
+            annotations: [
+              {
+                type: "citation",
+                url: "https://example.com",
+              },
+            ],
+          },
           {
             type: "tool_call",
             id: "123",

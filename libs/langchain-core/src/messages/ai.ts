@@ -192,15 +192,34 @@ export class AIMessage extends BaseMessage implements AIMessageFields {
         initParams.invalid_tool_calls = [];
       }
       if (initParams.contentBlocks !== undefined) {
-        // Add tool call content blocks to the blocks array
+        // Add constructor tool calls as content blocks
         initParams.contentBlocks.push(
           ...initParams.tool_calls.map((toolCall) => ({
-            type: "tool_call",
+            type: "tool_call" as const,
             id: toolCall.id,
             name: toolCall.name,
             args: toolCall.args,
           }))
         );
+        // Add content block tool calls that aren't in the constructor tool calls
+        const missingToolCalls = initParams.contentBlocks
+          .filter<ContentBlock.Tools.ToolCall>(
+            (block) => block.type === "tool_call"
+          )
+          .filter(
+            (block) =>
+              !initParams.tool_calls?.some(
+                (toolCall) =>
+                  toolCall.id === block.id && toolCall.name === block.name
+              )
+          );
+        if (missingToolCalls.length > 0) {
+          initParams.tool_calls = missingToolCalls.map((block) => ({
+            id: block.id!,
+            name: block.name,
+            args: block.args as Record<string, unknown>,
+          }));
+        }
       }
     }
     // Sadly, TypeScript only allows super() calls at root if the class has
@@ -238,22 +257,19 @@ export class AIMessage extends BaseMessage implements AIMessageFields {
     const blocks = super.contentBlocks;
 
     if (this.tool_calls) {
-      if (typeof this.content !== "string") {
-        const contentToolCalls = this.content
-          .filter((block) => block.type === "tool_call")
-          .map((block) => block.id);
-        for (const toolCall of this.tool_calls) {
-          if (toolCall.id && !contentToolCalls.includes(toolCall.id)) {
-            blocks.push({
-              ...toolCall,
-              type: "tool_call",
-              id: toolCall.id,
-              name: toolCall.name,
-              args: toolCall.args,
-            });
-          }
-        }
-      }
+      const missingToolCalls = this.tool_calls.filter(
+        (block) =>
+          !blocks.some((b) => b.id === block.id && b.name === block.name)
+      );
+      blocks.push(
+        ...missingToolCalls.map((block) => ({
+          ...block,
+          type: "tool_call" as const,
+          id: block.id,
+          name: block.name,
+          args: block.args,
+        }))
+      );
     }
 
     return blocks;
