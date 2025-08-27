@@ -18,7 +18,13 @@ declare global {
 
 globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", anthropicTranslator],
+  // ["bedrock-converse", bedrockConverseTranslator],
+  // ["bedrock", bedrockTranslator],
+  // ["google-genai", googleGenaiTranslator],
+  // ["google-vertexai", googleVertexaiTranslator],
+  // ["groq", groqTranslator],
   ["openai", openaiTranslator],
+  // ["ollama", ollamaTranslator],
 ]);
 
 export function registerTranslator(
