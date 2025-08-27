@@ -1,7 +1,9 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { OpenAI } from "@langchain/openai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
+
 import { ConversationTokenBufferMemory } from "../buffer_token_memory.js";
 
 test("Test buffer token memory with LLM", async () => {

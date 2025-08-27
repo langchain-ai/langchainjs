@@ -2,6 +2,7 @@ import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { MasterHandler } from "./expression_type_handlers/factory.js";
 import { ParsedType } from "./expression_type_handlers/types.js";
 import { ASTParser } from "./expression_type_handlers/base.js";
+import type { ExpressionNode } from "../types/expression-parser.js";
 
 export type ParseFunction = Awaited<
   ReturnType<typeof ASTParser.importASTParser>

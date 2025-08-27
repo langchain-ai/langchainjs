@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";

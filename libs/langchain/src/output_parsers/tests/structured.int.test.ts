@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { z } from "zod";
 
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
@@ -7,6 +7,7 @@ import {
   PromptTemplate,
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
+
 import { LLMChain } from "../../chains/index.js";
 import { StructuredOutputParser } from "../structured.js";
 

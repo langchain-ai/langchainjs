@@ -1,6 +1,7 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+
 import { PRINCIPLES } from "../../../chains/index.js";
 import { loadEvaluator } from "../../loader.js";
 

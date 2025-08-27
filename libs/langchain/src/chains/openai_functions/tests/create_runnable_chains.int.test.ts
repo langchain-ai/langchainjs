@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { JsonOutputFunctionsParser } from "../../../output_parsers/openai_functions.js";
 import {
   createOpenAIFnRunnable,

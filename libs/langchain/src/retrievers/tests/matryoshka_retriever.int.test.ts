@@ -1,9 +1,11 @@
-import { test, expect } from "@jest/globals";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { faker } from "@faker-js/faker";
-import { Document } from "@langchain/core/documents";
+import { test, expect } from "vitest";
+
 import { v4 as uuidV4 } from "uuid";
+
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
+
 import { MatryoshkaRetriever } from "../matryoshka_retriever.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
@@ -28,7 +30,8 @@ test("MatryoshkaRetriever can retrieve", async () => {
   const irrelevantDocs = Array.from({ length: 250 }).map(
     () =>
       new Document({
-        pageContent: faker.lorem.words(7),
+        pageContent:
+          "debitis consectetur voluptatem non doloremque ipsum autem totam eum ratione",
         metadata: { id: uuidV4() },
       })
   );

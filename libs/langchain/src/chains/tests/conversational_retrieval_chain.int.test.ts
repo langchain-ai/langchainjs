@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { OpenAI, OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ConversationalRetrievalQAChain } from "../conversational_retrieval_chain.js";

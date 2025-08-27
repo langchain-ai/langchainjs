@@ -4,12 +4,11 @@ import type {
 } from "@langchain/core/utils/types";
 import type {
   LangGraphRunnableConfig,
-  AnnotationRoot,
   START,
   Runtime,
   StateGraph,
 } from "@langchain/langgraph";
-import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
+
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type {
@@ -32,12 +31,18 @@ import type {
   RunnableToolLike,
 } from "@langchain/core/runnables";
 import type { ToolNode } from "./nodes/ToolNode.js";
-import type { PreHookAnnotation } from "./annotation.js";
+import type {
+  PreHookAnnotation,
+  AnyAnnotationRoot,
+  ToAnnotationRoot,
+} from "./annotation.js";
 import type {
   ResponseFormat,
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
+  ResponseFormatUndefined,
+  JsonSchemaFormat,
 } from "./responses.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
@@ -81,39 +86,6 @@ export interface LLMCall {
 }
 
 /**
- * Special type to indicate that no response format is provided.
- * When this type is used, the structuredResponse property should not be present in the result.
- */
-export type ResponseFormatUndefined = {
-  __responseFormatUndefined: true;
-};
-
-/**
- * Type representing a JSON Schema object format.
- * This is a strict type that excludes ToolStrategy and ProviderStrategy instances.
- */
-export type JsonSchemaFormat = {
-  type:
-    | "null"
-    | "boolean"
-    | "object"
-    | "array"
-    | "number"
-    | "string"
-    | "integer";
-  properties?: Record<string, unknown>;
-  required?: string[];
-  additionalProperties?: boolean;
-  [key: string]: unknown;
-} & {
-  // Brand to ensure this is not a ToolStrategy or ProviderStrategy
-  __brand?: never;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyAnnotationRoot = AnnotationRoot<any>;
-
-/**
  * Type helper to extract the inferred type from a single Zod schema or array of schemas
  */
 export type ExtractZodType<T> = T extends InteropZodType<infer U>
@@ -146,13 +118,6 @@ export type InferResponseFormatType<T> = T extends InteropZodType<infer U>
   : T extends ResponseFormat
   ? Record<string, any> // Single ResponseFormat will be handled at runtime
   : Record<string, any>;
-
-export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
-  A extends AnyAnnotationRoot
-    ? A
-    : A extends InteropZodObject
-    ? AnnotationRoot<InteropZodToStateDefinition<A>>
-    : never;
 
 /** @internal */
 export type ReducedZodChannel<

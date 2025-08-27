@@ -1,9 +1,9 @@
-/* eslint-disable no-process-env */
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
-import { test } from "@jest/globals";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as os from "node:os";
+import { describe, expect, test } from "vitest";
+
 import { LocalFileStore } from "../file_system.js";
 
 describe("LocalFileStore", () => {

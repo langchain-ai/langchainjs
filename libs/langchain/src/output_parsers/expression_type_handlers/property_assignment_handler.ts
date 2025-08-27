@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { PropertyAssignmentType } from "./types.js";
+import type {
+  ExpressionNode,
+  PropertyAssignment,
+} from "../../types/expression-parser.js";
 
 /**
  * Handler for `PropertyAssignment` nodes in an AST. Extends the

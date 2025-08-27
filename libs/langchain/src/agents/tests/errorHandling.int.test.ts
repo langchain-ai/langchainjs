@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";

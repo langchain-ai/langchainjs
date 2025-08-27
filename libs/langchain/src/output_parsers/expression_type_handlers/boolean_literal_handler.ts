@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { BooleanLiteralType } from "./types.js";
+import type {
+  ExpressionNode,
+  BooleanLiteral,
+} from "../../types/expression-parser.js";
 
 /**
  * Handler for boolean literal nodes in the abstract syntax tree (AST).

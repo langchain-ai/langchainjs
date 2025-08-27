@@ -1,6 +1,8 @@
-import * as url from "node:url";
-import * as path from "node:path";
-import { test, expect } from "@jest/globals";
+import url from "node:url";
+import path from "node:path";
+
+import { test, expect } from "vitest";
+
 import { DirectoryLoader, UnknownHandling } from "../fs/directory.js";
 import { TextLoader } from "../fs/text.js";
 import { JSONLoader } from "../fs/json.js";

@@ -1,6 +1,8 @@
-import { test, expect } from "@jest/globals";
-import * as url from "node:url";
-import * as path from "node:path";
+import url from "node:url";
+import path from "node:path";
+
+import { test, expect } from "vitest";
+
 import { TextLoader } from "../fs/text.js";
 
 test("Test Text loader from file", async () => {

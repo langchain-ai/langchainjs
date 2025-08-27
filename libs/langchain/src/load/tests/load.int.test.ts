@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { load } from "../index.js";
 

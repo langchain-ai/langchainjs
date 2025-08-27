@@ -1,6 +1,8 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { SystemMessage } from "@langchain/core/messages";
+
 import { ConversationSummaryBufferMemory } from "../summary_buffer.js";
 
 test("Test summary buffer memory", async () => {

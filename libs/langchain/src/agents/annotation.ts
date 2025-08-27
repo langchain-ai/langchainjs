@@ -2,9 +2,12 @@ import { BaseMessage } from "@langchain/core/messages";
 import {
   Annotation,
   Messages,
+  AnnotationRoot,
   messagesStateReducer,
 } from "@langchain/langgraph";
-import type { ResponseFormatUndefined } from "./types.js";
+import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
+import type { InteropZodObject } from "@langchain/core/utils/types";
+import type { ResponseFormatUndefined } from "./responses.js";
 
 export const PreHookAnnotation = Annotation.Root({
   llmInputMessages: Annotation<BaseMessage[], Messages>({
@@ -70,3 +73,13 @@ export type ReactAgentAnnotation<
   : T extends Record<string, any>
   ? ReturnType<typeof createReactAgentAnnotation<T>>
   : never;
+
+export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
+  A extends AnyAnnotationRoot
+    ? A
+    : A extends InteropZodObject
+    ? AnnotationRoot<InteropZodToStateDefinition<A>>
+    : never;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyAnnotationRoot = AnnotationRoot<any>;

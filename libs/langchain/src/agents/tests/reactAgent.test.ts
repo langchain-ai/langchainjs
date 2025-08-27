@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
@@ -315,7 +316,7 @@ describe("createReactAgent", () => {
 
     const asyncPromptWithStore: Prompt = async (state, config) => {
       const userId = config.configurable?.user_id;
-      const store = config.store;
+      const { store } = config;
       if (!store || !userId) {
         throw new Error("Store or user_id not provided");
       }
@@ -1354,7 +1355,13 @@ describe("createReactAgent", () => {
   });
 
   describe("supports abort signal", () => {
-    it("should handle abort signal", async () => {
+    /**
+     * currently failing in dependency range tests as it depends on a fix in `@langchain/core`
+     * that hasn't been released yet.
+     */
+    const testFn = process.env.LC_DEPENDENCY_RANGE_TESTS ? it.skip : it;
+
+    testFn("should handle abort signal", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("ai response")],
       });
@@ -1373,7 +1380,7 @@ describe("createReactAgent", () => {
       );
     });
 
-    it("should handle abort signal in tools", async () => {
+    testFn("should handle abort signal in tools", async () => {
       const abortController = new AbortController();
 
       const abortableTool = tool(
@@ -1436,7 +1443,7 @@ describe("createReactAgent", () => {
       });
     });
 
-    it("should merge abort signals from agent and config", async () => {
+    testFn("should merge abort signals from agent and config", async () => {
       const agentAbortController = new AbortController();
       const configAbortController = new AbortController();
 

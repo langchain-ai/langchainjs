@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { OpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { loadSummarizationChain } from "../load.js";

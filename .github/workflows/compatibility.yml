@@ -57,6 +57,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build required workspace packages
+        run: pnpm build --filter=@langchain/openai --filter=@langchain/anthropic --filter=@langchain/cohere --filter=@langchain/textsplitters
       - name: Test LangChain with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-latest-deps
 
@@ -72,6 +76,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build required workspace packages
+        run: pnpm build --filter=@langchain/openai --filter=@langchain/anthropic --filter=@langchain/cohere --filter=@langchain/textsplitters
       - name: Test LangChain with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-lowest-deps
 

@@ -4,7 +4,8 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, JsonSchemaFormat } from "../index.js";
+import { createReactAgent } from "../index.js";
+import type { JsonSchemaFormat } from "../responses.js";
 
 import responsesSpec from "./specifications/responses.json";
 

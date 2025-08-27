@@ -1,10 +1,11 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { describe, expectTypeOf, it } from "vitest";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod";
 
 import { createReactAgent, toolStrategy, providerStrategy } from "../index.js";
-import type { JsonSchemaFormat } from "../types.js";
+import type { JsonSchemaFormat } from "../responses.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
 const prompt = {

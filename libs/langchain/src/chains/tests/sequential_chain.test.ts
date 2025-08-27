@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { BaseLLM } from "@langchain/core/language_models/llms";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
@@ -148,7 +148,7 @@ test("Test SequentialChain input/output chains' validation", () => {
       outputVariables: ["text"],
     });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Missing variables for chain "llm": "input2". Only got the following variables: "input1"."`
+    `[Error: Missing variables for chain "llm": "input2". Only got the following variables: "input1".]`
   );
   expect(() => {
     /* eslint-disable no-new */
@@ -158,7 +158,7 @@ test("Test SequentialChain input/output chains' validation", () => {
       outputVariables: ["nonexistent"],
     });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"The following output variables were expected to be in the final chain output but were not found: "nonexistent"."`
+    `[Error: The following output variables were expected to be in the final chain output but were not found: "nonexistent".]`
   );
 });
 
@@ -190,7 +190,7 @@ test("Test SequentialChain chains' intermediate variables validation", () => {
       outputVariables: ["text"],
     });
   }).toThrowErrorMatchingInlineSnapshot(
-    `"Missing variables for chain "llm": "input3". Only got the following variables: "input1", "input2", "nonexistent"."`
+    `[Error: Missing variables for chain "llm": "input3". Only got the following variables: "input1", "input2", "nonexistent".]`
   );
 });
 

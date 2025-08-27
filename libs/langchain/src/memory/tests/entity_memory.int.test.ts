@@ -1,5 +1,7 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
+
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
+
 import { EntityMemory } from "../entity_memory.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { ENTITY_MEMORY_CONVERSATION_TEMPLATE } from "../prompt.js";

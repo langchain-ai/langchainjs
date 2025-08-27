@@ -1,6 +1,8 @@
-import { test } from "@jest/globals";
+import { expect, test } from "vitest";
+
 import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+
 import { QAEvalChain } from "../eval_chain.js";
 
 test("Test QAEvalChain", async () => {

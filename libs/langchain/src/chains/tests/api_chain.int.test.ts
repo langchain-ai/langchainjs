@@ -1,5 +1,7 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
+
 import { OpenAI } from "@langchain/openai";
+
 import { LLMChain } from "../llm_chain.js";
 import { APIChain, APIChainInput } from "../api/api_chain.js";
 import {

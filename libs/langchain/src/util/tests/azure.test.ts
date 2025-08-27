@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { getEndpoint, OpenAIEndpointConfig } from "@langchain/openai";
 
 describe("getEndpoint", () => {
