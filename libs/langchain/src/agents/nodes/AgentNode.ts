@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
@@ -11,20 +12,19 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 
 import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation } from "../annotation.js";
+import { PreHookAnnotation, AnyAnnotationRoot } from "../annotation.js";
+import { mergeAbortSignals } from "./utils.js";
 import {
   bindTools,
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
-  mergeAbortSignals,
   hasSupportForJsonSchemaOutput,
 } from "../utils.js";
 import {
   InternalAgentState,
   ClientTool,
   ServerTool,
-  AnyAnnotationRoot,
   CreateReactAgentParams,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";

@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring, no-instanceof/no-instanceof */
 import { InteropZodObject } from "@langchain/core/utils/types";
 import {
   AnnotationRoot,
@@ -24,14 +25,13 @@ import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
 import type {
   CreateReactAgentParams,
-  AnyAnnotationRoot,
   ClientTool,
   ServerTool,
   InternalAgentState,
-  ToAnnotationRoot,
   WithStateGraphNodes,
-  ResponseFormatUndefined,
 } from "./types.js";
+import type { AnyAnnotationRoot, ToAnnotationRoot } from "./annotation.js";
+import type { ResponseFormatUndefined } from "./responses.js";
 
 type AgentGraph<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,

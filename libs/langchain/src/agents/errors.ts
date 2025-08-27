@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 import type { ToolCall } from "@langchain/core/messages/tool";
 
 export class MultipleToolsBoundError extends Error {

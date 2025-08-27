@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 import {
   InteropZodObject,
   isInteropZodSchema,
@@ -12,7 +13,6 @@ import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
-import type { JsonSchemaFormat, ResponseFormatUndefined } from "./types.js";
 
 /**
  * This is a global counter for generating unique names for tools.
@@ -391,3 +391,33 @@ export function providerStrategy(
     responseFormat as any
   ) as ProviderStrategy<any>;
 }
+
+/**
+ * Special type to indicate that no response format is provided.
+ * When this type is used, the structuredResponse property should not be present in the result.
+ */
+export type ResponseFormatUndefined = {
+  __responseFormatUndefined: true;
+};
+
+/**
+ * Type representing a JSON Schema object format.
+ * This is a strict type that excludes ToolStrategy and ProviderStrategy instances.
+ */
+export type JsonSchemaFormat = {
+  type:
+    | "null"
+    | "boolean"
+    | "object"
+    | "array"
+    | "number"
+    | "string"
+    | "integer";
+  properties?: Record<string, unknown>;
+  required?: string[];
+  additionalProperties?: boolean;
+  [key: string]: unknown;
+} & {
+  // Brand to ensure this is not a ToolStrategy or ProviderStrategy
+  __brand?: never;
+};

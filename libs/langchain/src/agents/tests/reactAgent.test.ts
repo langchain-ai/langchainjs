@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod";
 
@@ -315,7 +316,7 @@ describe("createReactAgent", () => {
 
     const asyncPromptWithStore: Prompt = async (state, config) => {
       const userId = config.configurable?.user_id;
-      const store = config.store;
+      const { store } = config;
       if (!store || !userId) {
         throw new Error("Store or user_id not provided");
       }
