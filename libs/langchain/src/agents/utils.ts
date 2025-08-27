@@ -10,6 +10,7 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isBaseMessageChunk,
+  MessageContentComplex,
 } from "@langchain/core/messages";
 import { MessagesAnnotation } from "@langchain/langgraph";
 import {
@@ -145,7 +146,7 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
 
   if (Array.isArray(message.content)) {
     updatedContent = message.content
-      .filter((block) => {
+      .filter((block: MessageContentComplex) => {
         if (block.type === "text") {
           const nameMatch = block.text.match(NAME_PATTERN);
           const contentMatch = block.text.match(CONTENT_PATTERN);
@@ -160,7 +161,7 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
         }
         return true;
       })
-      .map((block) => {
+      .map((block: MessageContentComplex) => {
         if (block.type === "text") {
           const nameMatch = block.text.match(NAME_PATTERN);
           const contentMatch = block.text.match(CONTENT_PATTERN);
