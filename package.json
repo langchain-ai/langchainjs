@@ -32,7 +32,7 @@
     "precommit": "turbo precommit",
     "docs": "pnpm --filter core_docs start",
     "docs:api_refs": "pnpm --filter api_refs start",
-    "release": "node release_workspace.js --workspace"
+    "release": "pnpm --filter @langchain/release run --workspace"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
