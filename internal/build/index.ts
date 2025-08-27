@@ -19,6 +19,8 @@ import type { CompilePackageOptions } from "./types.js";
 const __dirname = fileURLToPath(import.meta.url);
 const root = resolve(__dirname, "..", "..", "..");
 
+export { findWorkspacePackages, type WorkspacePackage } from "./utils.js";
+
 export async function compilePackages(opts: CompilePackageOptions) {
   const packages = await findWorkspacePackages(root, opts);
   if (packages.length === 0) {

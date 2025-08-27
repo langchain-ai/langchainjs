@@ -1,10 +1,12 @@
-const { execSync } = require("child_process");
-const { Command } = require("commander");
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
-const readline = require("readline");
-const semver = require("semver");
+import fs from "node:fs";
+import path from "node:path";
+import cp from "node:child_process";
+import readline from "node:readline";
+
+import { Command } from "commander";
+import semver from "semver";
+
+import { findWorkspacePackages, type WorkspacePackage } from "@langchain/build";
 
 const RELEASE_BRANCH = "release";
 const MAIN_BRANCH = "main";
@@ -15,13 +17,17 @@ const MAIN_BRANCH = "main";
  * @param {{ doNotExit?: boolean }} [options] - Optional configuration
  * @param {boolean} [options.doNotExit] - Whether or not to exit the process on error
  */
-function execSyncWithErrorHandling(command, options = {}) {
+function execSyncWithErrorHandling(
+  command: string,
+  options: { doNotExit?: boolean } = {}
+) {
   try {
-    execSync(
+    cp.execSync(
       command,
       { stdio: "inherit" } // This will stream output in real-time
     );
-  } catch (error) {
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
     console.error(error.message);
     if (!options.doNotExit) {
       process.exit(1);
@@ -35,58 +41,12 @@ function execSyncWithErrorHandling(command, options = {}) {
  * @param {string} workspaceDirectory
  * @returns {string} The version of the workspace in the input directory.
  */
-function getWorkspaceVersion(workspaceDirectory) {
+function getWorkspaceVersion(workspaceDirectory: string) {
   const pkgJsonFile = fs.readFileSync(
     path.join(process.cwd(), workspaceDirectory, "package.json")
   );
-  const parsedJSONFile = JSON.parse(pkgJsonFile);
+  const parsedJSONFile = JSON.parse(pkgJsonFile.toString());
   return parsedJSONFile.version;
-}
-
-/**
- * Finds all workspaces in the monorepo and returns an array of objects.
- * Each object in the return value contains the relative path to the workspace
- * directory, along with the full package.json file contents.
- *
- * @returns {Array<{ dir: string, packageJSON: Record<string, any>}>}
- */
-function getAllWorkspaces() {
-  const possibleWorkspaceDirectories = [
-    "./libs/*",
-    "./langchain",
-    "./langchain-core",
-  ];
-  const allWorkspaces = possibleWorkspaceDirectories.flatMap(
-    (workspaceDirectory) => {
-      if (workspaceDirectory.endsWith("*")) {
-        // List all folders inside directory, require, and return the package.json.
-        const allDirs = fs.readdirSync(
-          path.join(process.cwd(), workspaceDirectory.replace("*", ""))
-        );
-        const subDirs = allDirs.map((dir) => {
-          return {
-            dir: `${workspaceDirectory.replace("*", "")}${dir}`,
-            packageJSON: require(path.join(
-              process.cwd(),
-              `${workspaceDirectory.replace("*", "")}${dir}`,
-              "package.json"
-            )),
-          };
-        });
-        return subDirs;
-      }
-      const packageJSON = require(path.join(
-        process.cwd(),
-        workspaceDirectory,
-        "package.json"
-      ));
-      return {
-        dir: workspaceDirectory,
-        packageJSON,
-      };
-    }
-  );
-  return allWorkspaces;
 }
 
 /**
@@ -100,27 +60,26 @@ function getAllWorkspaces() {
  * @param {string} newVersion
  */
 function updateDependencies(
-  workspaces,
-  dependencyType,
-  workspaceName,
-  newVersion
+  workspaces: WorkspacePackage[],
+  dependencyType: "dependencies" | "devDependencies" | "peerDependencies",
+  workspaceName: string,
+  newVersion: string
 ) {
   const versionPrefixes = ["~", "^", ">", "<", ">=", "<=", "||", "*"];
   const skipVersions = ["latest", "workspace:*"];
 
   workspaces.forEach((workspace) => {
-    const currentVersion =
-      workspace.packageJSON[dependencyType]?.[workspaceName];
+    const currentVersion = workspace.pkg[dependencyType]?.[workspaceName];
     if (currentVersion) {
       const prefix = versionPrefixes.find((p) => currentVersion.startsWith(p));
       const shouldSkip = skipVersions.some((v) => currentVersion === v);
 
       if (!shouldSkip) {
         const versionToUpdate = prefix ? `${prefix}${newVersion}` : newVersion;
-        workspace.packageJSON[dependencyType][workspaceName] = versionToUpdate;
+        workspace.pkg[dependencyType]![workspaceName] = versionToUpdate;
         fs.writeFileSync(
-          path.join(workspace.dir, "package.json"),
-          JSON.stringify(workspace.packageJSON, null, 2) + "\n"
+          path.join(workspace.path, "package.json"),
+          JSON.stringify(workspace.pkg, null, 2) + "\n"
         );
       }
     }
@@ -137,8 +96,12 @@ function updateDependencies(
  * @param {string | undefined} tag An optional tag to publish to.
  * @returns {Promise<void>}
  */
-async function runPnpmRelease(packageDirectory, npm2FACode, tag) {
-  return new Promise((resolve, reject) => {
+async function runPnpmRelease(
+  packageDirectory: string,
+  npm2FACode: string,
+  tag?: string
+) {
+  return new Promise<void>((resolve, reject) => {
     const workingDirectory = path.join(process.cwd(), packageDirectory);
     const tagArg = tag ? `--npm.tag=${tag}` : "";
     const args = [
@@ -152,7 +115,7 @@ async function runPnpmRelease(packageDirectory, npm2FACode, tag) {
     console.log(`Running command: "pnpm ${args.join(" ")}"`);
 
     // Use 'inherit' for stdio to allow direct CLI interaction
-    const pnpmReleaseProcess = spawn("pnpm", args, {
+    const pnpmReleaseProcess = cp.spawn("pnpm", args, {
       stdio: "inherit",
       cwd: workingDirectory,
     });
@@ -161,12 +124,12 @@ async function runPnpmRelease(packageDirectory, npm2FACode, tag) {
       if (code === 0) {
         resolve();
       } else {
-        reject(`Process exited with code ${code}`);
+        reject(new Error(`Process exited with code ${code}`));
       }
     });
 
     pnpmReleaseProcess.on("error", (err) => {
-      reject(`Failed to start process: ${err.message}`);
+      reject(new Error(`Failed to start process: ${err.message}`));
     });
   });
 }
@@ -184,12 +147,12 @@ async function runPnpmRelease(packageDirectory, npm2FACode, tag) {
  * @returns {void}
  */
 function bumpDeps(
-  workspaceName,
-  workspaceDirectory,
-  allWorkspaces,
-  tag,
-  preReleaseVersion
-) {
+  workspaceName: string,
+  workspaceDirectory: string,
+  allWorkspaces: WorkspacePackage[],
+  tag?: string,
+  preReleaseVersion?: string
+): void {
   // Read workspace file, get version (edited by release-it), and bump pkgs to that version.
   let updatedWorkspaceVersion = getWorkspaceVersion(workspaceDirectory);
   if (!semver.valid(updatedWorkspaceVersion)) {
@@ -199,7 +162,10 @@ function bumpDeps(
 
   // If the updated version is not greater than the pre-release version,
   // the branch is out of sync. Pull from github and check again.
-  if (!semver.gt(updatedWorkspaceVersion, preReleaseVersion)) {
+  if (
+    preReleaseVersion &&
+    !semver.gt(updatedWorkspaceVersion, preReleaseVersion)
+  ) {
     console.log(
       "Updated version is not greater than the pre-release version. Pulling from github and checking again."
     );
@@ -227,16 +193,14 @@ function bumpDeps(
   console.log(`Checking out new branch: ${newBranchName}`);
   execSyncWithErrorHandling(`git checkout -b ${newBranchName}`);
 
-  const allWorkspacesWhichDependOn = allWorkspaces.filter(({ packageJSON }) =>
-    Object.keys(packageJSON.dependencies ?? {}).includes(workspaceName)
+  const allWorkspacesWhichDependOn = allWorkspaces.filter(({ pkg }) =>
+    Object.keys(pkg.dependencies ?? {}).includes(workspaceName)
   );
-  const allWorkspacesWhichDevDependOn = allWorkspaces.filter(
-    ({ packageJSON }) =>
-      Object.keys(packageJSON.devDependencies ?? {}).includes(workspaceName)
+  const allWorkspacesWhichDevDependOn = allWorkspaces.filter(({ pkg }) =>
+    Object.keys(pkg.devDependencies ?? {}).includes(workspaceName)
   );
-  const allWorkspacesWhichPeerDependOn = allWorkspaces.filter(
-    ({ packageJSON }) =>
-      Object.keys(packageJSON.peerDependencies ?? {}).includes(workspaceName)
+  const allWorkspacesWhichPeerDependOn = allWorkspaces.filter(({ pkg }) =>
+    Object.keys(pkg.peerDependencies ?? {}).includes(workspaceName)
   );
 
   // For console log, get all workspaces which depend and filter out duplicates.
@@ -245,7 +209,7 @@ function bumpDeps(
       ...allWorkspacesWhichDependOn,
       ...allWorkspacesWhichDevDependOn,
       ...allWorkspacesWhichPeerDependOn,
-    ].map(({ packageJSON }) => packageJSON.name)
+    ].map(({ pkg }) => pkg.name)
   );
 
   if (allWhichDependOn.size !== 0) {
@@ -307,7 +271,7 @@ Workspaces:
  * @param {string} workspaceName
  * @param {string} version
  */
-function createCommitMessage(workspaceName, version) {
+function createCommitMessage(workspaceName: string, version: string) {
   const cleanedWorkspaceName = workspaceName.replace("@langchain/", "");
   return `release(${cleanedWorkspaceName}): ${version}`;
 }
@@ -320,7 +284,11 @@ function createCommitMessage(workspaceName, version) {
  * @param {boolean} onlyPush Whether or not to only push the changes, and not commit
  * @returns {void}
  */
-function commitAndPushChanges(workspaceName, version, onlyPush) {
+function commitAndPushChanges(
+  workspaceName: string,
+  version: string,
+  onlyPush: boolean
+) {
   if (!onlyPush) {
     console.log("Committing changes...");
     const commitMsg = createCommitMessage(workspaceName, version);
@@ -350,7 +318,10 @@ function commitAndPushChanges(workspaceName, version, onlyPush) {
  * @throws {Error} If the current branch is not main.
  */
 function checkoutReleaseBranch() {
-  const currentBranch = execSync("git branch --show-current").toString().trim();
+  const currentBranch = cp
+    .execSync("git branch --show-current")
+    .toString()
+    .trim();
   if (currentBranch === MAIN_BRANCH || currentBranch === RELEASE_BRANCH) {
     console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
     execSyncWithErrorHandling(`git checkout -B ${RELEASE_BRANCH}`);
@@ -369,7 +340,7 @@ function checkoutReleaseBranch() {
  * @param {string} question The question to log to the users terminal.
  * @returns {Promise<string>} The user input.
  */
-async function getUserInput(question) {
+async function getUserInput(question: string) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -391,7 +362,7 @@ async function getUserInput(question) {
 function hasUncommittedChanges() {
   try {
     // Check for uncommitted changes (both staged and unstaged)
-    const uncommittedOutput = execSync("git status --porcelain").toString();
+    const uncommittedOutput = cp.execSync("git status --porcelain").toString();
 
     return uncommittedOutput.length > 0;
   } catch (error) {
@@ -409,7 +380,7 @@ function hasUncommittedChanges() {
 function hasStagedChanges() {
   try {
     // Check for staged but unpushed changes
-    const unPushedOutput = execSync("git log '@{u}..'").toString();
+    const unPushedOutput = cp.execSync("git log '@{u}..'").toString();
 
     return unPushedOutput.length > 0;
   } catch (error) {
@@ -440,71 +411,77 @@ async function main() {
     throw new Error("--workspace is a required flag.");
   }
 
+  const packages = await findWorkspacePackages(process.cwd(), {
+    packageQuery: options.workspace,
+  });
+
+  if (packages.length === 0) {
+    throw new Error(`No workspace found matching "${options.workspace}"`);
+  }
+
   if (hasUncommittedChanges()) {
     console.warn(
       "[WARNING]: You have uncommitted changes. These will be included in the release commit."
     );
   }
 
-  // Find the workspace package.json's.
-  const allWorkspaces = getAllWorkspaces();
-  const matchingWorkspace = allWorkspaces.find(
-    ({ packageJSON }) => packageJSON.name === options.workspace
-  );
-
-  if (!matchingWorkspace) {
-    throw new Error(`Could not find workspace ${options.workspace}`);
-  }
-
   // Checkout new "release" branch & push
   checkoutReleaseBranch();
 
-  // Run build, lint, tests
-  console.log("Running build, lint, and tests.");
-  execSyncWithErrorHandling(
-    `pnpm --filter ${options.workspace} build lint test --concurrency 1`
-  );
-  console.log("Successfully ran build, lint, and tests.");
+  for (const pkg of packages) {
+    // Run build, lint, tests
+    console.log(`[${pkg.pkg.name}] Running build, lint, and tests.`);
+    execSyncWithErrorHandling(`pnpm --filter ${pkg.pkg.name} build`);
+    execSyncWithErrorHandling(`pnpm --filter ${pkg.pkg.name} lint`);
+    execSyncWithErrorHandling(`pnpm --filter ${pkg.pkg.name} test`);
+    console.log(`[${pkg.pkg.name}] Successfully ran build, lint, and tests.`);
 
-  const npm2FACode = await getUserInput(
-    "Please enter your NPM 2FA authentication code:"
-  );
+    const npm2FACode = (await getUserInput(
+      "Please enter your NPM 2FA authentication code:"
+    )) as string;
 
-  const preReleaseVersion = getWorkspaceVersion(matchingWorkspace.dir);
+    const preReleaseVersion = getWorkspaceVersion(pkg.path);
 
-  // Run `release-it` on workspace
-  await runPnpmRelease(matchingWorkspace.dir, npm2FACode, options.tag);
+    // Run `release-it` on workspace
+    await runPnpmRelease(pkg.path, npm2FACode, options.tag);
 
-  const hasStaged = hasStagedChanges();
-  const hasUnCommitted = hasUncommittedChanges();
-  if (hasStaged || hasUnCommitted) {
-    const updatedVersion = getWorkspaceVersion(matchingWorkspace.dir);
-    // Only push and do not commit if there are staged changes and no uncommitted changes
-    const onlyPush = hasStaged && !hasUnCommitted;
-    commitAndPushChanges(options.workspace, updatedVersion, onlyPush);
-  }
+    const hasStaged = hasStagedChanges();
+    const hasUnCommitted = hasUncommittedChanges();
+    if (hasStaged || hasUnCommitted) {
+      const updatedVersion = getWorkspaceVersion(pkg.path);
+      // Only push and do not commit if there are staged changes and no uncommitted changes
+      const onlyPush = hasStaged && !hasUnCommitted;
+      commitAndPushChanges(options.workspace, updatedVersion, onlyPush);
+    }
 
-  // Log release branch URL
-  console.log(
-    "🔗 Open %s and merge the release PR.",
-    `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`
-  );
-
-  // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
-  // Then, update their package.json to use the new version of the input workspace.
-  // This will create a new branch, commit and push the changes and log the branch URL.
-  if (options.bumpDeps) {
-    bumpDeps(
-      options.workspace,
-      matchingWorkspace.dir,
-      allWorkspaces,
-      options.tag,
-      preReleaseVersion
+    // Log release branch URL
+    console.log(
+      "🔗 Open %s and merge the release PR.",
+      `\x1b[34mhttps://github.com/langchain-ai/langchainjs/compare/release?expand=1\x1b[0m`
     );
+
+    if (!pkg.pkg.name) {
+      throw new Error(
+        `Package ${pkg.path} has no "name" field in its package.json`
+      );
+    }
+
+    // If `bump-deps` flag is set, find all workspaces which depend on the input workspace.
+    // Then, update their package.json to use the new version of the input workspace.
+    // This will create a new branch, commit and push the changes and log the branch URL.
+    if (options.bumpDeps) {
+      bumpDeps(
+        pkg.pkg.name,
+        pkg.path,
+        packages,
+        options.tag,
+        preReleaseVersion
+      );
+    }
   }
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error("❌ release execution failed:", error);
   process.exit(1);
 });

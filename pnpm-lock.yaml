@@ -677,6 +677,15 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.0)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.43.1)(tsx@4.20.5)(yaml@2.8.1)
 
+  internal/release:
+    dependencies:
+      '@langchain/build':
+        specifier: workspace:*
+        version: link:../build
+      tsx:
+        specifier: ^4.20.5
+        version: 4.20.5
+
   internal/test-helpers:
     dependencies:
       '@jest/globals':

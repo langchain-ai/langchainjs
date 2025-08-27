@@ -1,0 +1,14 @@
+{
+  "name": "@langchain/release",
+  "description": "Release a workspace in the monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "tsx index.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.20.5",
+    "@langchain/build": "workspace:*"
+  }
+}
