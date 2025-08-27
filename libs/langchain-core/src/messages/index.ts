@@ -21,6 +21,4 @@ export {
 // This is an old export for backwards compatibility with existing multimodal content blocks
 // TODO: remove this in v2
 export * from "./content/data.js";
-
 export * from "./content/index.js";
-export * as v1 from "./v1/index.js";
