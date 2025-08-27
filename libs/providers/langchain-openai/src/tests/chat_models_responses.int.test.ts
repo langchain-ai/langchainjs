@@ -16,9 +16,7 @@ import {
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
 import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
@@ -318,7 +316,10 @@ test("Test stateful API", async () => {
   let text: string | undefined;
   if (typeof secondResponse.content === "string") {
     text = secondResponse.content;
-  } else if (secondResponse.content[0]?.type === "text") {
+  } else if (
+    secondResponse.content[0]?.type === "text" &&
+    typeof secondResponse.content[0].text === "string"
+  ) {
     text = secondResponse.content[0].text;
   }
 
