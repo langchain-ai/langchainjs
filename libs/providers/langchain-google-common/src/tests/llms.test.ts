@@ -2,7 +2,7 @@ import { expect, test, jest } from "@jest/globals";
 import {
   BaseMessage,
   HumanMessageChunk,
-  MessageContentComplex,
+  ContentBlock,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { GoogleBaseLLM, GoogleBaseLLMInput } from "../llms.js";
@@ -417,7 +417,7 @@ describe("Mock Google LLM", () => {
       model: "gemini-pro-vision",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -469,7 +469,7 @@ describe("Mock Google LLM", () => {
       model: "gemini-pro-vision",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
@@ -521,7 +521,7 @@ describe("Mock Google LLM", () => {
       model: "gemini-pro-image",
     });
 
-    const message: MessageContentComplex[] = [
+    const message: ContentBlock[] = [
       {
         type: "text",
         text: "What is in this image?",
