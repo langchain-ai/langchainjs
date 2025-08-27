@@ -16,12 +16,7 @@
  */
 
 import fs from "node:fs/promises";
-import {
-  createReactAgent,
-  tool,
-  InMemoryStore,
-  type CreateAgentToolConfig,
-} from "langchain";
+import { createReactAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -113,18 +108,18 @@ interface MarketInsight {
  * Customer relationship management tool that learns preferences
  */
 const customerPreferencesTool = tool(
-  async (input, config: CreateAgentToolConfig) => {
+  async (input) => {
     console.log(`💾 Storing customer preference for ${input.customerId}...`);
 
     const key = input.customerId;
-    const existing = await config.store?.get(["customer_preferences"], key);
+    const existing = await store.get(["customer_preferences"], key);
     const items = (existing?.value as CustomerPreference[]) || [];
     items.push({
       preference: input.preference,
       context: input.context,
       timestamp: new Date().toISOString(),
     });
-    await config.store?.put(["customer_preferences"], key, items);
+    await store.put(["customer_preferences"], key, items);
 
     return `✅ Stored preference for customer ${input.customerId}: "${input.preference}" (Context: ${input.context})`;
   },
@@ -146,13 +141,12 @@ const customerPreferencesTool = tool(
  * Product recommendation tool that uses stored preferences
  */
 const productRecommendationTool = tool(
-  async (input, config: CreateAgentToolConfig) => {
+  async (input) => {
     console.log(
       `🔍 Looking up preferences for customer ${input.customerId}...`
     );
 
-    const storeInstance = config.store ?? store;
-    const existing = await storeInstance.get(
+    const existing = await store.get(
       ["customer_preferences"],
       input.customerId
     );
@@ -271,14 +265,13 @@ ${products
  * Market research tool that accumulates insights
  */
 const marketInsightTool = tool(
-  async (input, config: CreateAgentToolConfig) => {
+  async (input) => {
     console.log(
       `📊 Recording market insight: ${input.insight.slice(0, 50)}...`
     );
 
-    const storeInstance = config.store ?? store;
     const key = input.category;
-    const existing = await storeInstance.get(["market_insights"], key);
+    const existing = await store.get(["market_insights"], key);
     const insights = (existing?.value as MarketInsight[]) || [];
     insights.push({
       insight: input.insight,
@@ -286,7 +279,7 @@ const marketInsightTool = tool(
       confidence: input.confidence,
       timestamp: new Date().toISOString(),
     });
-    await storeInstance.put(["market_insights"], key, insights);
+    await store.put(["market_insights"], key, insights);
 
     const relatedInsights = insights.slice(-3); // recent related
 
@@ -324,10 +317,9 @@ Insight: ${input.insight}`;
  * Meeting notes tool that stores key decisions and actions
  */
 const meetingNotesTool = tool(
-  async (input, config: CreateAgentToolConfig) => {
+  async (input) => {
     console.log(`📝 Storing meeting notes for: ${input.meeting}...`);
 
-    const storeInstance = config.store ?? store;
     const key = input.meeting;
     const note = {
       meeting: input.meeting,
@@ -336,14 +328,13 @@ const meetingNotesTool = tool(
       attendees: input.attendees.split(",").map((a) => a.trim()),
       timestamp: new Date().toISOString(),
     };
-    await storeInstance.put(["meeting_notes"], key, note);
+    await store.put(["meeting_notes"], key, note);
 
     // Maintain a simple meeting index
-    const index =
-      (await storeInstance.get(["meeting_index"], "all"))?.value || [];
+    const index = (await store.get(["meeting_index"], "all"))?.value || [];
     if (!index.includes(key)) {
       index.push(key);
-      await storeInstance.put(["meeting_index"], "all", index);
+      await store.put(["meeting_index"], "all", index);
     }
 
     const relatedMeetings: string[] = index

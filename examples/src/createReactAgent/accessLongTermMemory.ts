@@ -24,12 +24,7 @@
  */
 
 import fs from "node:fs/promises";
-import {
-  createReactAgent,
-  tool,
-  InMemoryStore,
-  type CreateAgentToolConfig,
-} from "langchain";
+import { createReactAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -89,9 +84,8 @@ await store.put(["procedural_memory"], "user456", {
  * Tool to get user's procedural memory
  */
 const getProceduralMemoryTool = tool(
-  async (_: never, config: CreateAgentToolConfig): Promise<string> => {
-    const storeInstance = config.store;
-    if (!storeInstance) {
+  async (_: never, config): Promise<string> => {
+    if (!store) {
       throw new Error("Store is required when compiling the graph");
     }
 
@@ -100,7 +94,7 @@ const getProceduralMemoryTool = tool(
       throw new Error("userId is required in the config");
     }
 
-    const memoryData = await storeInstance.get(["procedural_memory"], userId);
+    const memoryData = await store.get(["procedural_memory"], userId);
     return memoryData
       ? JSON.stringify(memoryData.value, null, 2)
       : "No procedural memory found";
@@ -116,9 +110,8 @@ const getProceduralMemoryTool = tool(
  * Tool to update user's procedural memory
  */
 const updateProceduralMemoryTool = tool(
-  async (input, config: CreateAgentToolConfig): Promise<string> => {
-    const storeInstance = config.store;
-    if (!storeInstance) {
+  async (input, config): Promise<string> => {
+    if (!store) {
       throw new Error("Store is required when compiling the graph");
     }
 
@@ -128,10 +121,7 @@ const updateProceduralMemoryTool = tool(
     }
 
     // Get existing memory
-    const existingMemory = await storeInstance.get(
-      ["procedural_memory"],
-      userId
-    );
+    const existingMemory = await store.get(["procedural_memory"], userId);
     const currentMemory = (existingMemory?.value as ProceduralMemory) || {
       userId,
       codingPreferences: [],
@@ -147,7 +137,7 @@ const updateProceduralMemoryTool = tool(
       lastUpdated: new Date().toISOString().split("T")[0],
     };
 
-    await storeInstance.put(["procedural_memory"], userId, updatedMemory);
+    await store.put(["procedural_memory"], userId, updatedMemory);
     return "Successfully updated procedural memory";
   },
   {
