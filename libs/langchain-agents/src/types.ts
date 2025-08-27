@@ -35,9 +35,9 @@ import type { ToolNode } from "./nodes/ToolNode.js";
 import type { PreHookAnnotation } from "./annotation.js";
 import type {
   ResponseFormat,
-  ToolOutput,
-  TypedToolOutput,
-  NativeOutput,
+  ToolStrategy,
+  TypedToolStrategy,
+  ProviderStrategy,
 } from "./responses.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
@@ -90,7 +90,7 @@ export type ResponseFormatUndefined = {
 
 /**
  * Type representing a JSON Schema object format.
- * This is a strict type that excludes ToolOutput and NativeOutput instances.
+ * This is a strict type that excludes ToolStrategy and ProviderStrategy instances.
  */
 export type JsonSchemaFormat = {
   type:
@@ -106,7 +106,7 @@ export type JsonSchemaFormat = {
   additionalProperties?: boolean;
   [key: string]: unknown;
 } & {
-  // Brand to ensure this is not a ToolOutput or NativeOutput
+  // Brand to ensure this is not a ToolStrategy or ProviderStrategy
   __brand?: never;
 };
 
@@ -141,8 +141,8 @@ export type InferResponseFormatType<T> = T extends InteropZodType<infer U>
     : Record<string, any>
   : T extends readonly InteropZodType<any>[]
   ? ExtractZodArrayTypes<T>
-  : T extends ToolOutput[]
-  ? Record<string, any> // ToolOutput arrays will be handled at runtime
+  : T extends ToolStrategy[]
+  ? Record<string, any> // ToolStrategy arrays will be handled at runtime
   : T extends ResponseFormat
   ? Record<string, any> // Single ResponseFormat will be handled at runtime
   : Record<string, any>;
@@ -206,9 +206,9 @@ export type CreateReactAgentParams<
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat
-    | TypedToolOutput<StructuredResponseType>
-    | ToolOutput<StructuredResponseType>
-    | NativeOutput<StructuredResponseType>
+    | TypedToolStrategy<StructuredResponseType>
+    | ToolStrategy<StructuredResponseType>
+    | ProviderStrategy<StructuredResponseType>
     | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
@@ -359,17 +359,17 @@ export type CreateReactAgentParams<
    *     ```
    *   - Create React Agent ResponseFormat
    *     ```ts
-   *     import { nativeOutput, toolOutput } from "langchain";
+   *     import { providerStrategy, toolStrategy } from "langchain";
    *     const agent = createReactAgent({
-   *       responseFormat: nativeOutput(
+   *       responseFormat: providerStrategy(
    *         z.object({
    *           capital: z.string(),
    *         })
    *       ),
    *       // or
    *       responseFormat: [
-   *         toolOutput({ ... }),
-   *         toolOutput({ ... }),
+   *         toolStrategy({ ... }),
+   *         toolStrategy({ ... }),
    *       ]
    *       // ...
    *     });

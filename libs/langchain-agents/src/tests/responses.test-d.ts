@@ -3,7 +3,7 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-import { createReactAgent, toolOutput, nativeOutput } from "../index.js";
+import { createReactAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../types.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
@@ -175,30 +175,30 @@ describe("response format", () => {
     });
   });
 
-  describe("using toolOutput", () => {
+  describe("using toolStrategy", () => {
     it("should allow single zod schema", async () => {
-      const toolOutputAgent = createReactAgent({
+      const toolStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: toolOutput(z.object({ capital: z.string() })),
+        responseFormat: toolStrategy(z.object({ capital: z.string() })),
       });
-      const toolOutputResult = await toolOutputAgent.invoke(prompt);
-      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<{
+      const toolStrategyResult = await toolStrategyAgent.invoke(prompt);
+      expectTypeOf(toolStrategyResult.structuredResponse).toEqualTypeOf<{
         capital: string;
       }>();
     });
 
     it("should allow multiple zod schemas", async () => {
-      const toolOutputAgent = createReactAgent({
+      const toolStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: toolOutput([
+        responseFormat: toolStrategy([
           z.object({ capital: z.string() }),
           z.object({ country: z.string() }),
         ]),
       });
-      const toolOutputResult = await toolOutputAgent.invoke(prompt);
-      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+      const toolStrategyResult = await toolStrategyAgent.invoke(prompt);
+      expectTypeOf(toolStrategyResult.structuredResponse).toEqualTypeOf<
         | {
             capital: string;
           }
@@ -207,25 +207,25 @@ describe("response format", () => {
     });
 
     it("should allow single json schema object", async () => {
-      const toolOutputAgent = createReactAgent({
+      const toolStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: toolOutput(jsonSchema),
+        responseFormat: toolStrategy(jsonSchema),
       });
-      const toolOutputResult = await toolOutputAgent.invoke(prompt);
-      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+      const toolStrategyResult = await toolStrategyAgent.invoke(prompt);
+      expectTypeOf(toolStrategyResult.structuredResponse).toEqualTypeOf<
         Record<string, unknown>
       >();
     });
 
     it("should allow multiple json schema objects", async () => {
-      const toolOutputAgent = createReactAgent({
+      const toolStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: toolOutput([jsonSchema, jsonSchema]),
+        responseFormat: toolStrategy([jsonSchema, jsonSchema]),
       });
-      const toolOutputResult = await toolOutputAgent.invoke(prompt);
-      expectTypeOf(toolOutputResult.structuredResponse).toEqualTypeOf<
+      const toolStrategyResult = await toolStrategyAgent.invoke(prompt);
+      expectTypeOf(toolStrategyResult.structuredResponse).toEqualTypeOf<
         Record<string, unknown>
       >();
     });
@@ -235,26 +235,29 @@ describe("response format", () => {
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
-        responseFormat: [toolOutput(jsonSchema)],
+        responseFormat: [toolStrategy(jsonSchema)],
       });
       createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
-        responseFormat: [toolOutput(jsonSchema), nativeOutput(jsonSchema)],
+        responseFormat: [
+          toolStrategy(jsonSchema),
+          providerStrategy(jsonSchema),
+        ],
       });
     });
   });
 
-  describe("using nativeOutput", () => {
+  describe("using providerStrategy", () => {
     it("should allow single zod schema", async () => {
-      const nativeOutputAgent = createReactAgent({
+      const providerStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: nativeOutput(z.object({ capital: z.string() })),
+        responseFormat: providerStrategy(z.object({ capital: z.string() })),
       });
-      const nativeOutputResult = await nativeOutputAgent.invoke(prompt);
-      expectTypeOf(nativeOutputResult.structuredResponse).toEqualTypeOf<{
+      const providerStrategyResult = await providerStrategyAgent.invoke(prompt);
+      expectTypeOf(providerStrategyResult.structuredResponse).toEqualTypeOf<{
         capital: string;
       }>();
     });
@@ -264,7 +267,7 @@ describe("response format", () => {
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
-        responseFormat: nativeOutput([
+        responseFormat: providerStrategy([
           z.object({ capital: z.string() }),
           z.object({ country: z.string() }),
         ]),
@@ -272,13 +275,13 @@ describe("response format", () => {
     });
 
     it("should allow single json schema object", async () => {
-      const nativeOutputAgent = createReactAgent({
+      const providerStrategyAgent = createReactAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        responseFormat: nativeOutput(jsonSchema),
+        responseFormat: providerStrategy(jsonSchema),
       });
-      const nativeOutputResult = await nativeOutputAgent.invoke(prompt);
-      expectTypeOf(nativeOutputResult.structuredResponse).toEqualTypeOf<
+      const providerStrategyResult = await providerStrategyAgent.invoke(prompt);
+      expectTypeOf(providerStrategyResult.structuredResponse).toEqualTypeOf<
         Record<string, unknown>
       >();
     });
@@ -288,7 +291,7 @@ describe("response format", () => {
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
-        responseFormat: nativeOutput([jsonSchema, jsonSchema]),
+        responseFormat: providerStrategy([jsonSchema, jsonSchema]),
       });
     });
   });

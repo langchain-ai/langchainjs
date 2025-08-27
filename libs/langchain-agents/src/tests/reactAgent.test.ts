@@ -24,7 +24,7 @@ import {
 } from "@langchain/langgraph";
 
 import { type Prompt } from "../types.js";
-import { nativeOutput, createReactAgent } from "../index.js";
+import { providerStrategy, createReactAgent } from "../index.js";
 
 import {
   FakeToolCallingChatModel,
@@ -548,7 +548,7 @@ describe("createReactAgent", () => {
     const agent = createReactAgent({
       llm: model,
       tools: [getWeather],
-      responseFormat: nativeOutput(WeatherResponseSchema),
+      responseFormat: providerStrategy(WeatherResponseSchema),
     });
 
     const response = await agent.invoke({

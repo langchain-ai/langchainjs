@@ -13,9 +13,9 @@ import type {
   ResponseFormatUndefined,
 } from "./types.js";
 import type {
-  ToolOutput,
-  TypedToolOutput,
-  NativeOutput,
+  ToolStrategy,
+  TypedToolStrategy,
+  ProviderStrategy,
   ResponseFormat,
 } from "./responses.js";
 import { ReactAgent } from "./ReactAgent.js";
@@ -156,7 +156,7 @@ export function createReactAgent<
   }
 ): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
 
-// Overload 5: With responseFormat as TypedToolOutput (for union types from toolOutput)
+// Overload 5: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
 export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot
@@ -168,13 +168,13 @@ export function createReactAgent<
     StateSchema,
     T,
     ContextSchema,
-    TypedToolOutput<T>
+    TypedToolStrategy<T>
   > & {
-    responseFormat: TypedToolOutput<T>;
+    responseFormat: TypedToolStrategy<T>;
   }
 ): ReactAgent<StateSchema, T, ContextSchema>;
 
-// Overload 6: With responseFormat as single ToolOutput instance
+// Overload 6: With responseFormat as single ToolStrategy instance
 export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot
@@ -186,13 +186,13 @@ export function createReactAgent<
     StateSchema,
     T,
     ContextSchema,
-    ToolOutput<T>
+    ToolStrategy<T>
   > & {
-    responseFormat: ToolOutput<T>;
+    responseFormat: ToolStrategy<T>;
   }
 ): ReactAgent<StateSchema, T, ContextSchema>;
 
-// Overload 7: With responseFormat as NativeOutput
+// Overload 7: With responseFormat as ProviderStrategy
 export function createReactAgent<
   StateSchema extends
     | AnyAnnotationRoot
@@ -204,9 +204,9 @@ export function createReactAgent<
     StateSchema,
     T,
     ContextSchema,
-    NativeOutput<T>
+    ProviderStrategy<T>
   > & {
-    responseFormat: NativeOutput<T>;
+    responseFormat: ProviderStrategy<T>;
   }
 ): ReactAgent<StateSchema, T, ContextSchema>;
 
@@ -287,9 +287,9 @@ export * from "./errors.js";
 export type LangGraphRunnableConfig = ReturnType<typeof getConfig>;
 export { interrupt } from "@langchain/langgraph";
 export {
-  toolOutput,
-  nativeOutput,
-  ToolOutput,
-  NativeOutput,
+  toolStrategy,
+  providerStrategy,
+  ToolStrategy,
+  ProviderStrategy,
   type ResponseFormat,
 } from "./responses.js";

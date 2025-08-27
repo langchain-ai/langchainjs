@@ -25,7 +25,7 @@ let bindingIdentifier = 0;
  * via tool calls, including the original schema, its type classification, and the
  * corresponding tool implementation used by the tools strategy.
  */
-export class ToolOutput<_T = unknown> {
+export class ToolStrategy<_T = unknown> {
   private constructor(
     /**
      * The original JSON Schema provided for structured output
@@ -43,7 +43,7 @@ export class ToolOutput<_T = unknown> {
     /**
      * The options to use for the tool output.
      */
-    public readonly options?: ToolOutputOptions
+    public readonly options?: ToolStrategyOptions
   ) {}
 
   get name() {
@@ -57,8 +57,8 @@ export class ToolOutput<_T = unknown> {
       description?: string;
       strict?: boolean;
     },
-    outputOptions?: ToolOutputOptions
-  ): ToolOutput<S extends InteropZodType<infer U> ? U : unknown>;
+    outputOptions?: ToolStrategyOptions
+  ): ToolStrategy<S extends InteropZodType<infer U> ? U : unknown>;
 
   static fromSchema(
     schema: Record<string, unknown>,
@@ -67,8 +67,8 @@ export class ToolOutput<_T = unknown> {
       description?: string;
       strict?: boolean;
     },
-    outputOptions?: ToolOutputOptions
-  ): ToolOutput<Record<string, unknown>>;
+    outputOptions?: ToolStrategyOptions
+  ): ToolStrategy<Record<string, unknown>>;
 
   static fromSchema(
     schema: InteropZodObject | Record<string, unknown>,
@@ -77,8 +77,8 @@ export class ToolOutput<_T = unknown> {
       description?: string;
       strict?: boolean;
     },
-    outputOptions?: ToolOutputOptions
-  ): ToolOutput<any> {
+    outputOptions?: ToolStrategyOptions
+  ): ToolStrategy<any> {
     /**
      * It is required for tools to have a name so we can map the tool call to the correct tool
      * when parsing the response.
@@ -101,7 +101,7 @@ export class ToolOutput<_T = unknown> {
           parameters: asJsonSchema,
         },
       };
-      return new ToolOutput(asJsonSchema, tool, outputOptions);
+      return new ToolStrategy(asJsonSchema, tool, outputOptions);
     }
 
     let functionDefinition: FunctionDefinition;
@@ -124,7 +124,7 @@ export class ToolOutput<_T = unknown> {
       name: getFunctionName(),
       function: functionDefinition,
     };
-    return new ToolOutput(asJsonSchema, tool, outputOptions);
+    return new ToolStrategy(asJsonSchema, tool, outputOptions);
   }
 
   /**
@@ -147,25 +147,25 @@ export class ToolOutput<_T = unknown> {
   }
 }
 
-export class NativeOutput<T = unknown> {
+export class ProviderStrategy<T = unknown> {
   // @ts-expect-error - _schemaType is used only for type inference
   private _schemaType?: T;
 
   private constructor(public readonly schema: Record<string, unknown>) {}
 
-  static fromSchema<T>(schema: InteropZodType<T>): NativeOutput<T>;
+  static fromSchema<T>(schema: InteropZodType<T>): ProviderStrategy<T>;
 
   static fromSchema(
     schema: Record<string, unknown>
-  ): NativeOutput<Record<string, unknown>>;
+  ): ProviderStrategy<Record<string, unknown>>;
 
   static fromSchema<T = unknown>(
     schema: InteropZodType<T> | Record<string, unknown>
-  ): NativeOutput<T> | NativeOutput<Record<string, unknown>> {
+  ): ProviderStrategy<T> | ProviderStrategy<Record<string, unknown>> {
     const asJsonSchema = toJsonSchema(schema);
-    return new NativeOutput(asJsonSchema) as
-      | NativeOutput<T>
-      | NativeOutput<Record<string, unknown>>;
+    return new ProviderStrategy(asJsonSchema) as
+      | ProviderStrategy<T>
+      | ProviderStrategy<Record<string, unknown>>;
   }
 
   /**
@@ -197,7 +197,7 @@ export class NativeOutput<T = unknown> {
   }
 }
 
-export type ResponseFormat = ToolOutput<any> | NativeOutput<any>;
+export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
 
 /**
  * Handle user input for `responseFormat` parameter of `CreateReactAgentParams`.
@@ -206,7 +206,7 @@ export type ResponseFormat = ToolOutput<any> | NativeOutput<any>;
  * - if value is a Zod schema, default to structured output via tool calling
  * - if value is a JSON schema, default to structured output via tool calling
  * - if value is a custom response format, return it as is
- * - if value is an array, ensure all array elements are instance of `ToolOutput`
+ * - if value is an array, ensure all array elements are instance of `ToolStrategy`
  * @param responseFormat
  * @returns
  */
@@ -217,9 +217,9 @@ export function transformResponseFormat(
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat
-    | ToolOutput<any>[]
+    | ToolStrategy<any>[]
     | ResponseFormatUndefined,
-  options?: ToolOutputOptions
+  options?: ToolStrategyOptions
 ): ResponseFormat[] {
   if (!responseFormat) {
     return [];
@@ -236,15 +236,16 @@ export function transformResponseFormat(
 
   /**
    * If users provide an array, it should only contain raw schemas (Zod or JSON schema),
-   * not ToolOutput or NativeOutput instances.
+   * not ToolStrategy or ProviderStrategy instances.
    */
   if (Array.isArray(responseFormat)) {
     /**
-     * if every entry is a ToolOutput or NativeOutput instance, return the array as is
+     * if every entry is a ToolStrategy or ProviderStrategy instance, return the array as is
      */
     if (
       responseFormat.every(
-        (item) => item instanceof ToolOutput || item instanceof NativeOutput
+        (item) =>
+          item instanceof ToolStrategy || item instanceof ProviderStrategy
       )
     ) {
       return responseFormat as unknown as ResponseFormat[];
@@ -255,7 +256,7 @@ export function transformResponseFormat(
      */
     if (responseFormat.every((item) => isInteropZodObject(item))) {
       return responseFormat.map((item) =>
-        ToolOutput.fromSchema(item as InteropZodObject, undefined, options)
+        ToolStrategy.fromSchema(item as InteropZodObject, undefined, options)
       );
     }
 
@@ -269,7 +270,7 @@ export function transformResponseFormat(
       )
     ) {
       return responseFormat.map((item) =>
-        ToolOutput.fromSchema(item as JsonSchemaFormat, undefined, options)
+        ToolStrategy.fromSchema(item as JsonSchemaFormat, undefined, options)
       );
     }
 
@@ -280,12 +281,12 @@ export function transformResponseFormat(
   }
 
   if (isInteropZodObject(responseFormat)) {
-    return [ToolOutput.fromSchema(responseFormat, undefined, options)];
+    return [ToolStrategy.fromSchema(responseFormat, undefined, options)];
   }
 
   if (
-    responseFormat instanceof ToolOutput ||
-    responseFormat instanceof NativeOutput
+    responseFormat instanceof ToolStrategy ||
+    responseFormat instanceof ProviderStrategy
   ) {
     return [responseFormat];
   }
@@ -299,7 +300,7 @@ export function transformResponseFormat(
     "properties" in responseFormat
   ) {
     return [
-      ToolOutput.fromSchema(
+      ToolStrategy.fromSchema(
         responseFormat as JsonSchemaFormat,
         undefined,
         options
@@ -311,15 +312,16 @@ export function transformResponseFormat(
 }
 
 /**
- * Branded type for ToolOutput arrays that preserves type information
+ * Branded type for ToolStrategy arrays that preserves type information
  */
-export interface TypedToolOutput<T = unknown> extends Array<ToolOutput<any>> {
+export interface TypedToolStrategy<T = unknown>
+  extends Array<ToolStrategy<any>> {
   _schemaType?: T;
 }
-export type ToolOutputError =
+export type ToolStrategyError =
   | StructuredOutputParsingError
   | MultipleStructuredOutputsError;
-export interface ToolOutputOptions {
+export interface ToolStrategyOptions {
   /**
    * Handle errors from the structured output tool call. Using tools to generate structured output
    * can cause errors, e.g. if:
@@ -330,32 +332,32 @@ export interface ToolOutputOptions {
    * - `true` - retry the tool call
    * - `false` - throw an error
    * - `string` - retry the tool call with the provided message
-   * - `(error: ToolOutputError) => Promise<string> | string` - retry with the provided message or throw the error
+   * - `(error: ToolStrategyError) => Promise<string> | string` - retry with the provided message or throw the error
    */
   handleError?:
     | boolean
     | string
-    | ((error: ToolOutputError) => Promise<string> | string);
+    | ((error: ToolStrategyError) => Promise<string> | string);
 }
 
-export function toolOutput<T extends InteropZodType<any>>(
+export function toolStrategy<T extends InteropZodType<any>>(
   responseFormat: T,
-  options?: ToolOutputOptions
-): TypedToolOutput<T extends InteropZodType<infer U> ? U : never>;
-export function toolOutput<T extends readonly InteropZodType<any>[]>(
+  options?: ToolStrategyOptions
+): TypedToolStrategy<T extends InteropZodType<infer U> ? U : never>;
+export function toolStrategy<T extends readonly InteropZodType<any>[]>(
   responseFormat: T,
-  options?: ToolOutputOptions
-): TypedToolOutput<
+  options?: ToolStrategyOptions
+): TypedToolStrategy<
   { [K in keyof T]: T[K] extends InteropZodType<infer U> ? U : never }[number]
 >;
-export function toolOutput(
+export function toolStrategy(
   responseFormat: JsonSchemaFormat,
-  options?: ToolOutputOptions
-): TypedToolOutput<Record<string, unknown>>;
-export function toolOutput(
+  options?: ToolStrategyOptions
+): TypedToolStrategy<Record<string, unknown>>;
+export function toolStrategy(
   responseFormat: JsonSchemaFormat[],
-  options?: ToolOutputOptions
-): TypedToolOutput<Record<string, unknown>>;
+  options?: ToolStrategyOptions
+): TypedToolStrategy<Record<string, unknown>>;
 
 /**
  * Define how to transform the response format from a tool call.
@@ -365,25 +367,27 @@ export function toolOutput(
  * @param options.handleError - Whether to handle errors from the tool call
  * @returns The transformed response format
  */
-export function toolOutput(
+export function toolStrategy(
   responseFormat:
     | InteropZodType<any>
     | InteropZodType<any>[]
     | JsonSchemaFormat
     | JsonSchemaFormat[],
-  options?: ToolOutputOptions
-): TypedToolOutput {
-  return transformResponseFormat(responseFormat, options) as TypedToolOutput;
+  options?: ToolStrategyOptions
+): TypedToolStrategy {
+  return transformResponseFormat(responseFormat, options) as TypedToolStrategy;
 }
 
-export function nativeOutput<T extends InteropZodType<any>>(
+export function providerStrategy<T extends InteropZodType<any>>(
   responseFormat: T
-): NativeOutput<T extends InteropZodType<infer U> ? U : never>;
-export function nativeOutput(
+): ProviderStrategy<T extends InteropZodType<infer U> ? U : never>;
+export function providerStrategy(
   responseFormat: JsonSchemaFormat
-): NativeOutput<Record<string, unknown>>;
-export function nativeOutput(
+): ProviderStrategy<Record<string, unknown>>;
+export function providerStrategy(
   responseFormat: InteropZodType<any> | JsonSchemaFormat
-): NativeOutput<any> {
-  return NativeOutput.fromSchema(responseFormat as any) as NativeOutput<any>;
+): ProviderStrategy<any> {
+  return ProviderStrategy.fromSchema(
+    responseFormat as any
+  ) as ProviderStrategy<any>;
 }
