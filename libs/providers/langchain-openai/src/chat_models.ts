@@ -2300,6 +2300,7 @@ export class ChatOpenAICompletions<
           additional_kwargs.__raw_response = rawResponse;
         }
         const response_metadata: Record<string, unknown> | undefined = {
+          model_provider: "openai",
           model_name: rawResponse.model,
           ...(rawResponse.system_fingerprint
             ? {
@@ -2362,7 +2363,10 @@ export class ChatOpenAICompletions<
       };
     }
 
-    const response_metadata = { usage: { ...rawResponse.usage } };
+    const response_metadata = {
+      model_provider: "openai",
+      usage: { ...rawResponse.usage },
+    };
     if (role === "user") {
       return new HumanMessageChunk({ content, response_metadata });
     } else if (role === "assistant") {
