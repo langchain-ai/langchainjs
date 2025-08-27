@@ -369,6 +369,7 @@ export async function createStructuredChatAgent({
       name: "StructuredChatAgent",
       streamRunnable,
       singleAction: true,
+      verbose: (llm as BaseLanguageModel).verbose,
     }
   );
   return agent;

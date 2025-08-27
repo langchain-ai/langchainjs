@@ -95,9 +95,12 @@ export async function createReactAgent({
     tools: renderTextDescription(tools),
     tool_names: toolNames.join(", "),
   });
+  
+  // Preserve the LLM's existing configuration including verbose setting
   const llmWithStop = (llm as BaseLanguageModel).withConfig({
     stop: ["\nObservation:"],
   });
+  
   const agent = AgentRunnableSequence.fromRunnables(
     [
       RunnablePassthrough.assign({
@@ -114,6 +117,7 @@ export async function createReactAgent({
       name: "ReactAgent",
       streamRunnable,
       singleAction: true,
+      verbose: (llm as BaseLanguageModel).verbose,
     }
   );
   return agent;
