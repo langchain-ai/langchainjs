@@ -1,4 +1,4 @@
-import { iife } from "./misc";
+import { iife } from "./misc.js";
 
 export interface OpenAIEndpointConfig {
   azureOpenAIApiDeploymentName?: string;
