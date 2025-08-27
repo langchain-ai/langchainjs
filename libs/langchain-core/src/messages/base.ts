@@ -431,8 +431,12 @@ export function _mergeDicts(
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
+      } else if (["id", "output_version", "model_provider"].includes(key)) {
+        // Keep the incoming value for these fields
+        merged[key] = value;
+      } else {
+        merged[key] += value;
       }
-      merged[key] += value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {

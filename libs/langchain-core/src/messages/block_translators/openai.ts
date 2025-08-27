@@ -337,7 +337,7 @@ export function convertToV1FromResponses(
           }
         } else if (_isContentBlock(toolOutput, "mcp_call")) {
           continue;
-        } else if (_isContentBlock(toolOutput, "mco_list_tools")) {
+        } else if (_isContentBlock(toolOutput, "mcp_list_tools")) {
           continue;
         } else if (_isContentBlock(toolOutput, "mcp_approval_request")) {
           continue;

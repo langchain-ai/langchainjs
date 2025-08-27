@@ -201,10 +201,9 @@ describe("openaiTranslator", () => {
 
       const expectedFull: Array<ContentBlock.Standard> = [
         { type: "text", text: "Processing now.", index: 0 },
-        // FIXME: id's shouldn't be duplicated
         {
           type: "tool_call",
-          id: "call_1call_1",
+          id: "call_1",
           name: "compute",
           args: { x: 1 },
         },
