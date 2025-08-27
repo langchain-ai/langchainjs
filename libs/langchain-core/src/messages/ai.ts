@@ -191,6 +191,17 @@ export class AIMessage extends BaseMessage implements AIMessageFields {
         initParams.tool_calls = [];
         initParams.invalid_tool_calls = [];
       }
+      if (initParams.contentBlocks !== undefined) {
+        // Add tool call content blocks to the blocks array
+        initParams.contentBlocks.push(
+          ...initParams.tool_calls.map((toolCall) => ({
+            type: "tool_call",
+            id: toolCall.id,
+            name: toolCall.name,
+            args: toolCall.args,
+          }))
+        );
+      }
     }
     // Sadly, TypeScript only allows super() calls at root if the class has
     // properties with initializers, so we have to check types twice.
