@@ -1,17 +1,21 @@
-import { expect, test } from "vitest";
-import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
-import * as path from "node:path";
+import url from "node:url";
+import fs from "node:fs";
+import path from "node:path";
+
+import { describe, expect, test } from "vitest";
+
 import { load } from "../index.js";
 
 const IMPORTANT_IMPORTS = JSON.parse(
-  readFileSync(
-    path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      "data",
-      "important_imports.json"
+  fs
+    .readFileSync(
+      path.join(
+        path.dirname(url.fileURLToPath(import.meta.url)),
+        "data",
+        "important_imports.json"
+      )
     )
-  ).toString()
+    .toString()
 );
 
 const CURRENT_KNOWN_FAILURES = [

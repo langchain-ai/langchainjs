@@ -1,4 +1,3 @@
-
 services:
   # LangChain
   langchain-latest-deps:
@@ -9,7 +8,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../libs/langchain:/langchain
+      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/langchain-cohere:/libs/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
@@ -20,7 +24,12 @@ services:
       COHERE_API_KEY: ${COHERE_API_KEY}
     working_dir: /app
     volumes:
+      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
       - ../libs/langchain:/langchain
+      - ../libs/langchain-openai:/libs/langchain-openai
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/langchain-cohere:/libs/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 

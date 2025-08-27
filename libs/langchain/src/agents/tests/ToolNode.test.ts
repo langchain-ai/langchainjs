@@ -403,7 +403,7 @@ describe("ToolNode with Commands", () => {
     expect(result).toMatchObject([
       {
         messages: [
-          new ToolMessage({
+          expect.objectContaining({
             content: "3",
             tool_call_id: "1",
             name: "add",
@@ -593,7 +593,7 @@ describe("ToolNode with Commands", () => {
 
     expect(result).toMatchObject([
       [
-        new ToolMessage({
+        expect.objectContaining({
           content: "3",
           tool_call_id: "1",
           name: "add",
