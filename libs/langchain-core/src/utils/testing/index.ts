@@ -16,6 +16,7 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
   BaseChatModelParams,
+  BindToolsInput,
 } from "../../language_models/chat_models.js";
 import { BaseLLMParams, LLM } from "../../language_models/llms.js";
 import {
@@ -42,11 +43,9 @@ import {
 } from "../../embeddings.js";
 import {
   StructuredOutputMethodParams,
-  BaseLanguageModelInput,
   StructuredOutputMethodOptions,
+  type AnyAIMessage,
 } from "../../language_models/base.js";
-
-import { toJsonSchema } from "../json_schema.js";
 
 import { VectorStore } from "../../vectorstores.js";
 import { cosine } from "../ml-distance/similarities.js";
@@ -227,17 +226,15 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   thrownErrorString?: string;
 
-  private tools: (StructuredTool | ToolSpec)[] = [];
-
-  constructor({
-    sleep = 50,
-    responses = [],
-    chunks = [],
-    toolStyle = "openai",
-    thrownErrorString,
-    ...rest
-  }: FakeStreamingChatModelFields & BaseLLMParams) {
-    super(rest);
+  constructor(fields: FakeStreamingChatModelFields & BaseLLMParams) {
+    super(fields);
+    const {
+      sleep = 50,
+      responses = [],
+      chunks = [],
+      toolStyle = "openai",
+      thrownErrorString,
+    } = fields;
     this.sleep = sleep;
     this.responses = responses;
     this.chunks = chunks;
@@ -249,61 +246,10 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     return "fake";
   }
 
-  bindTools(tools: (StructuredTool | ToolSpec)[]) {
-    const merged = [...this.tools, ...tools];
-
-    const toolDicts = merged.map((t) => {
-      switch (this.toolStyle) {
-        case "openai":
-          return {
-            type: "function",
-            function: {
-              name: t.name,
-              description: t.description,
-              parameters: toJsonSchema(t.schema),
-            },
-          };
-        case "anthropic":
-          return {
-            name: t.name,
-            description: t.description,
-            input_schema: toJsonSchema(t.schema),
-          };
-        case "bedrock":
-          return {
-            toolSpec: {
-              name: t.name,
-              description: t.description,
-              inputSchema: toJsonSchema(t.schema),
-            },
-          };
-        case "google":
-          return {
-            name: t.name,
-            description: t.description,
-            parameters: toJsonSchema(t.schema),
-          };
-        default:
-          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
-      }
+  bindTools(tools: BindToolsInput[]) {
+    return this.withConfig({
+      tools: [...(this.defaultOptions?.tools ?? []), ...tools],
     });
-
-    const wrapped =
-      this.toolStyle === "google"
-        ? [{ functionDeclarations: toolDicts }]
-        : toolDicts;
-
-    /* creating a *new* instance – mirrors LangChain .bind semantics for type-safety and avoiding noise */
-    const next = new FakeStreamingChatModel({
-      sleep: this.sleep,
-      responses: this.responses,
-      chunks: this.chunks,
-      toolStyle: this.toolStyle,
-      thrownErrorString: this.thrownErrorString,
-    });
-    next.tools = merged;
-
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
   }
 
   async _generate(
@@ -420,7 +366,9 @@ export interface ToolSpec {
  * Interface specific to the Fake Streaming Chat model.
  */
 export interface FakeStreamingChatModelCallOptions
-  extends BaseChatModelCallOptions {}
+  extends BaseChatModelCallOptions {
+  tools?: BindToolsInput[];
+}
 /**
  * Interface for the Constructor-field specific to the Fake Streaming Chat model (all optional because we fill in defaults).
  */
@@ -478,7 +426,10 @@ export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
  * console.log({ secondResponse });
  * ```
  */
-export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOptions> {
+export class FakeListChatModel<RunOutput = AnyAIMessage> extends BaseChatModel<
+  FakeListChatModelCallOptions,
+  RunOutput
+> {
   static lc_name() {
     return "FakeListChatModel";
   }
@@ -611,7 +562,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<FakeListChatModelCallOptions, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -623,7 +574,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<
+    FakeListChatModelCallOptions,
+    { raw: AnyAIMessage; parsed: RunOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -636,21 +590,22 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       | Record<string, any>,
     _config?: StructuredOutputMethodOptions<boolean>
   ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
+    | BaseChatModel<FakeListChatModelCallOptions, RunOutput>
+    | BaseChatModel<
+        FakeListChatModelCallOptions,
+        { raw: AnyAIMessage; parsed: RunOutput }
       > {
-    return RunnableLambda.from(async (input) => {
-      const message = await this.invoke(input);
-      if (message.tool_calls?.[0]?.args) {
-        return message.tool_calls[0].args as RunOutput;
-      }
-      if (typeof message.content === "string") {
-        return JSON.parse(message.content);
-      }
-      throw new Error("No structured output found");
-    }) as Runnable;
+    return this.withOutputParser(
+      RunnableLambda.from(async (message): Promise<RunOutput> => {
+        if (message.tool_calls?.[0]?.args) {
+          return message.tool_calls[0].args as RunOutput;
+        }
+        if (typeof message.content === "string") {
+          return JSON.parse(message.content);
+        }
+        throw new Error("No structured output found");
+      })
+    );
   }
 }
 
