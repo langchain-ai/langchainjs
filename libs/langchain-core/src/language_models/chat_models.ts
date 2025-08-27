@@ -363,7 +363,6 @@ export abstract class BaseChatModel<
           } else {
             yield chunk.message as OutputMessageType;
           }
-          yield chunk.message as OutputMessageType;
           if (!generationChunk) {
             generationChunk = chunk;
           } else {
