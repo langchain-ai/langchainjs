@@ -1,3 +1,5 @@
+import { iife } from "./misc";
+
 export interface OpenAIEndpointConfig {
   azureOpenAIApiDeploymentName?: string;
   azureOpenAIApiInstanceName?: string;
@@ -156,5 +158,3 @@ export function normalizeHeaders(
 
   return Object.fromEntries(output.entries());
 }
-
-const iife = <T>(fn: () => T) => fn();

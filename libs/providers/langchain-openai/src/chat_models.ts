@@ -59,17 +59,18 @@ import type {
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages/tool";
-import type {
-  ResponseFormatText,
-  ResponseFormatJSONObject,
-  ResponseFormatJSONSchema,
-} from "openai/resources/shared";
 import {
   getSchemaDescription,
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import type {
+  ResponseFormatText,
+  ResponseFormatJSONObject,
+  ResponseFormatJSONSchema,
+} from "openai/resources/shared";
+import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import {
   type OpenAICallOptions,
   type OpenAIChatInput,
@@ -104,7 +105,6 @@ import {
 } from "./utils/message_inputs.js";
 import { _convertToResponsesMessageFromV1 } from "./utils/standard.js";
 import { iife } from "./utils/misc.js";
-import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 

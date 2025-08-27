@@ -17,7 +17,7 @@ import type {
   ChatCompletionContentPartInputAudio,
   ChatCompletionContentPart,
 } from "openai/resources/chat/completions";
-import { _convertToCompletionsMessageFromV1 } from "./standard";
+import { _convertToCompletionsMessageFromV1 } from "./standard.js";
 
 export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
 
