@@ -43,6 +43,10 @@ describe("AIMessage", () => {
       });
       expect(message.contentBlocks).toEqual([
         {
+          type: "text",
+          text: "Hello, world!",
+        },
+        {
           type: "tool_call",
           id: "123",
           name: "get_weather",

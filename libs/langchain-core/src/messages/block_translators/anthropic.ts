@@ -1,4 +1,3 @@
-import { iife } from "../v1/utils.js";
 import type { StandardContentBlockTranslator } from "./index.js";
 import type { ContentBlock } from "../content/index.js";
 import { isAIMessageChunk, type AIMessage } from "../ai.js";
@@ -9,6 +8,7 @@ import {
   _isObject,
   _isString,
   safeParseJson,
+  iife,
 } from "./utils.js";
 import { isBaseMessageChunk } from "../base.js";
 
