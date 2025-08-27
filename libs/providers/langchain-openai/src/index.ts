@@ -13,7 +13,5 @@ export { convertPromptToOpenAI } from "./utils/prompts.js";
 
 // These methods are used in LangSmith, export is important here
 // TODO: put this conversion elsewhere
-export {
-  _convertMessagesToOpenAIParams,
-  messageToOpenAIRole,
-} from "./utils/misc.js";
+export { _convertMessagesToOpenAIParams } from "./utils/message_inputs.js";
+export { messageToOpenAIRole } from "./utils/misc.js";
