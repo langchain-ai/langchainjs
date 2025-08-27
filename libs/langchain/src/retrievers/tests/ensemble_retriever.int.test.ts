@@ -1,5 +1,7 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
+
 import { CohereEmbeddings } from "@langchain/cohere";
+
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 import { EnsembleRetriever } from "../ensemble.js";
 

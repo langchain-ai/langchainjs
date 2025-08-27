@@ -1,5 +1,10 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { CallExpressionType, MemberExpressionType } from "./types.js";
+import type {
+  ExpressionNode,
+  CallExpression,
+  MemberExpression,
+} from "../../types/expression-parser.js";
 
 /**
  * Handles call expressions in the AST parsed by the `ASTParser`. This

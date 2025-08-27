@@ -1,4 +1,5 @@
-import { test } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { ExpressionParser } from "../expression.js";
 
 const correctExps = [

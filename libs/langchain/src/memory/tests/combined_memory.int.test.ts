@@ -1,10 +1,12 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import { OpenAI } from "@langchain/openai";
+
 import { BufferMemory } from "../buffer_memory.js";
 import { CombinedMemory } from "../combined_memory.js";
 import { ConversationSummaryMemory } from "../summary.js";

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../llm_chain.js";

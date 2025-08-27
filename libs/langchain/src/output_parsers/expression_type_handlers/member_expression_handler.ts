@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { MemberExpressionType } from "./types.js";
+import type {
+  ExpressionNode,
+  MemberExpression,
+} from "../../types/expression-parser.js";
 
 /**
  * Handles member expressions in the LangChain Expression Language (LCEL).

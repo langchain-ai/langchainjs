@@ -1,7 +1,9 @@
-import * as url from "node:url";
-import * as path from "node:path";
-import * as fs from "node:fs/promises";
-import { test, expect } from "@jest/globals";
+import url from "node:url";
+import path from "node:path";
+import fs from "node:fs/promises";
+
+import { test, expect } from "vitest";
+
 import { Document } from "@langchain/core/documents";
 import { JSONLoader } from "../fs/json.js";
 

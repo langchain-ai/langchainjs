@@ -1,4 +1,5 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { RecursiveCharacterTextSplitter } from "../text_splitter.js";
 
 test("Python code splitter", async () => {

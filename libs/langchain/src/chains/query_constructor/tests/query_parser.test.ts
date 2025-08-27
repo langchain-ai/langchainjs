@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { StructuredQueryOutputParser } from "../index.js";
 import {
   Comparators,

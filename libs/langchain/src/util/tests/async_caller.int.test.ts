@@ -1,4 +1,5 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { OpenAI } from "@langchain/openai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 

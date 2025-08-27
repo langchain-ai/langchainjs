@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 
 import { CombiningOutputParser } from "../combining.js";
 import { StructuredOutputParser } from "../structured.js";

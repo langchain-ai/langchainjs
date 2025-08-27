@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { StringLiteralType } from "./types.js";
+import type {
+  ExpressionNode,
+  StringLiteral,
+} from "../../types/expression-parser.js";
 
 /**
  * Handler for string literal nodes in the LangChain Expression Language.

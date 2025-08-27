@@ -1,4 +1,4 @@
-/* eslint-disable no-process-env */
+import { test } from "vitest";
 
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import {
@@ -8,6 +8,7 @@ import {
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { ChatAnthropic } from "@langchain/anthropic";
+
 import * as hub from "../index.js";
 import { pull as nodePull } from "../node.js";
 

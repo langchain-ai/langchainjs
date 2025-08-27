@@ -1,8 +1,9 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import { Embeddings } from "@langchain/core/embeddings";
+
 import { MemoryVectorStore } from "../memory.js";
 import { cosine } from "../../util/ml-distance/similarities.js";
 

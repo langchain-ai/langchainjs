@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { ArrayLiteralType } from "./types.js";
+import type {
+  ExpressionNode,
+  ArrayExpression,
+} from "../../types/expression-parser.js";
 
 /**
  * Handles array expressions in the LangChain Expression Language (LCEL).

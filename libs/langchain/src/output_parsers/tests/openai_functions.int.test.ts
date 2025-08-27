@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { expect, test } from "@jest/globals";
 import { z } from "zod";
+import { expect, test } from "vitest";
+
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { Operation, applyPatch } from "@langchain/core/utils/json_patch";
-
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+
 import { JsonOutputFunctionsParser } from "../openai_functions.js";
 import { HttpResponseOutputParser } from "../http_response.js";
 

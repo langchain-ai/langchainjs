@@ -1,5 +1,7 @@
-import { test, expect, describe } from "@jest/globals";
+import { test, expect, describe } from "vitest";
+
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+
 import { WebBrowser } from "../webbrowser.js";
 
 describe("webbrowser Test suite", () => {

@@ -1,6 +1,8 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { InMemoryChatMessageHistory as ChatMessageHistory } from "@langchain/core/chat_history";
+
 import { BufferWindowMemory } from "../buffer_window_memory.js";
 
 test("Test buffer window memory", async () => {

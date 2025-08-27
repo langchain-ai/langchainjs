@@ -1,4 +1,5 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { TextLoader } from "../fs/text.js";
 
 test("Test Text loader from blob", async () => {

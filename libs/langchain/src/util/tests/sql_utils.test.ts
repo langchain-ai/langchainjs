@@ -1,5 +1,7 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
+
 import { DataSource } from "typeorm";
+
 import {
   getPromptTemplateFromDataSource,
   verifyIgnoreTablesExistInDatabase,
