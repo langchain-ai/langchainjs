@@ -7,6 +7,9 @@
     "compile": "tsx cli.ts",
     "watch": "tsx cli.ts --watch"
   },
+  "bin": {
+    "langchain-build": "./node_modules/.bin/tsx cli.ts"
+  },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
     "@tsconfig/recommended": "^1.0.10",
