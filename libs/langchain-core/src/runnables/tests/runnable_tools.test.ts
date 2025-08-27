@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { test, expect } from "vitest";
 import { RunnableLambda, RunnableToolLike } from "../base.js";
 import { FakeRetriever } from "../../utils/testing/index.js";

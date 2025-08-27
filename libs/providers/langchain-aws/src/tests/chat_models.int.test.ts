@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 
 import { test, expect } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   AIMessage,
   AIMessageChunk,

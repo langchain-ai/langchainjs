@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
-import { ZodError } from "zod";
+import { ZodError } from "zod/v3";
 import type { Connection } from "../src/types.js";
 
 import "./mocks.js";

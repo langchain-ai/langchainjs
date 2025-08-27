@@ -3,7 +3,7 @@ import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ChatOllama, ChatOllamaCallOptions } from "../chat_models.js";
 
 const currentWeatherName = "get_current_weather";

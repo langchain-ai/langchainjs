@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";
 import { createStructuredOutputChainFromZod } from "langchain/chains/openai_functions";
 import {

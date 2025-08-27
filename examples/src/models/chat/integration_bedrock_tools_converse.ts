@@ -1,6 +1,6 @@
 import { ChatBedrockConverse } from "@langchain/aws";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const model = new ChatBedrockConverse({
   model: "anthropic.claude-3-sonnet-20240229-v1:0",

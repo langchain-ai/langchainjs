@@ -31,11 +31,11 @@
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "^5.3.0",
-    "zod": "^3.25.32"
+    "openai": "^5.3.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.58 <0.4.0"
+    "@langchain/core": ">=0.3.58 <0.4.0",
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
@@ -56,7 +56,8 @@
     "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76"
   },
   "publishConfig": {
     "access": "public"

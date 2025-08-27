@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { tool } from "@langchain/core/tools";
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";

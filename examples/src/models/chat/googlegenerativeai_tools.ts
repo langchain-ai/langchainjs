@@ -1,6 +1,6 @@
 import { StructuredTool } from "@langchain/core/tools";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-pro",

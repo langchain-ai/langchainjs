@@ -1,6 +1,6 @@
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const calculatorSchema = z
   .object({

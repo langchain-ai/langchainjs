@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
 import { GmailBaseToolParams, GmailBaseTool } from "./base.js";
 import { GET_MESSAGE_DESCRIPTION } from "./descriptions.js";

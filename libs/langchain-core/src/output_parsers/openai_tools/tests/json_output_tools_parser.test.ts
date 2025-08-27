@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { JsonOutputKeyToolsParser } from "../json_output_tools_parsers.js";
 import { OutputParserException } from "../../base.js";

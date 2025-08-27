@@ -1,7 +1,7 @@
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 // Or, from web environments:
 // import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 const model = new BedrockChat({

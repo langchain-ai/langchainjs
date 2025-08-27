@@ -7,7 +7,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { createSqlQueryChain } from "langchain/chains/sql_db";
 import { SqlDatabase } from "langchain/sql_db";
 import { DataSource } from "typeorm";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const datasource = new DataSource({
   type: "sqlite",

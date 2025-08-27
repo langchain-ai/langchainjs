@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { OpenAI } from "@langchain/openai";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
