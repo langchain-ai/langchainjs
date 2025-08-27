@@ -95,7 +95,6 @@
     "ioredis": "^5.3.2",
     "js-yaml": "^4.1.0",
     "langchain": "workspace:*",
-    "langsmith": "^0.3.46",
     "lunary": "^0.8.8",
     "mariadb": "^3.4.0",
     "mem0ai": "^2.1.8",

@@ -60,7 +60,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "jest-environment-node": "^29.6.4",
-    "langsmith": "^0.3.46",
+    "langsmith": "^0.3.64",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
     "prettier": "^2.8.3",
@@ -102,7 +102,7 @@
     "zod": "^3.25.32"
   },
   "optionalDependencies": {
-    "langsmith": "^0.3.46"
+    "langsmith": "^0.3.64"
   },
   "publishConfig": {
     "access": "public"
