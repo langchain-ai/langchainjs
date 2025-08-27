@@ -29,10 +29,10 @@ import {
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import {
-  ToolOutput,
-  NativeOutput,
+  ToolStrategy,
+  ProviderStrategy,
   transformResponseFormat,
-  ToolOutputError,
+  ToolStrategyError,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -79,7 +79,7 @@ export class AgentNode<
     ContextSchema
   >;
 
-  #structuredToolInfo: Record<string, ToolOutput> = {};
+  #structuredToolInfo: Record<string, ToolStrategy> = {};
 
   constructor(
     options: AgentNodeOptions<
@@ -101,12 +101,12 @@ export class AgentNode<
      */
     this.#structuredToolInfo = (
       transformResponseFormat(this.#options.responseFormat).filter(
-        (format) => format instanceof ToolOutput
-      ) as ToolOutput[]
+        (format) => format instanceof ToolStrategy
+      ) as ToolStrategy[]
     ).reduce((acc, format) => {
       acc[format.name] = format;
       return acc;
-    }, {} as Record<string, ToolOutput>);
+    }, {} as Record<string, ToolStrategy>);
   }
 
   async #run(
@@ -212,7 +212,7 @@ export class AgentNode<
      * if the user requests a native schema output, try to parse the response
      * and return the structured response if it is valid
      */
-    if (this.#options.responseFormat instanceof NativeOutput) {
+    if (this.#options.responseFormat instanceof ProviderStrategy) {
       const structuredResponse = this.#options.responseFormat.parse(response);
       if (structuredResponse) {
         return { structuredResponse, messages: [response] };
@@ -262,7 +262,7 @@ export class AgentNode<
     /**
      * the following should never happen, let's throw an error if it does
      */
-    if (this.#options.responseFormat instanceof NativeOutput) {
+    if (this.#options.responseFormat instanceof ProviderStrategy) {
       throw new Error(
         "Multiple structured outputs should not apply to native structured output responses"
       );
@@ -272,7 +272,7 @@ export class AgentNode<
       toolCalls.map((call) => call.name)
     );
 
-    return this.#handleToolOutputError(
+    return this.#handleToolStrategyError(
       multipleStructuredOutputsError,
       response,
       toolCalls[0]
@@ -306,24 +306,24 @@ export class AgentNode<
         ),
       };
     } catch (error) {
-      return this.#handleToolOutputError(
-        error as ToolOutputError,
+      return this.#handleToolStrategyError(
+        error as ToolStrategyError,
         response,
         toolCall
       );
     }
   }
 
-  async #handleToolOutputError(
-    error: ToolOutputError,
+  async #handleToolStrategyError(
+    error: ToolStrategyError,
     response: AIMessage,
     toolCall: ToolCall
   ): Promise<Command> {
     /**
-     * Using the `errorHandler` option of the first `ToolOutput` entry is sufficient here.
-     * There is technically only one `ToolOutput` entry in `structuredToolInfo` if the user
-     * uses `toolOutput` to define the response format. If the user applies a list of json
-     * schema objects, these will be transformed into multiple `ToolOutput` entries but all
+     * Using the `errorHandler` option of the first `ToolStrategy` entry is sufficient here.
+     * There is technically only one `ToolStrategy` entry in `structuredToolInfo` if the user
+     * uses `toolStrategy` to define the response format. If the user applies a list of json
+     * schema objects, these will be transformed into multiple `ToolStrategy` entries but all
      * with the same `handleError` option.
      */
     const errorHandler = Object.values(this.#structuredToolInfo).at(0)?.options
@@ -452,7 +452,7 @@ export class AgentNode<
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
     const allTools = this.#options.toolClasses.concat(
-      ...structuredTools.map((toolOutput) => toolOutput.tool)
+      ...structuredTools.map((toolStrategy) => toolStrategy.tool)
     );
 
     /**
@@ -464,7 +464,7 @@ export class AgentNode<
     /**
      * check if the user requests a native schema output
      */
-    if (this.#options.responseFormat instanceof NativeOutput) {
+    if (this.#options.responseFormat instanceof ProviderStrategy) {
       /**
        * if the model does not support JSON schema output, throw an error
        */

@@ -1,11 +1,11 @@
 import { describe, it } from "vitest";
 import { z } from "zod";
 
-import { createReactAgent, toolOutput } from "../index.js";
+import { createReactAgent, toolStrategy } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("structured output handling", () => {
-  describe("toolOutput", () => {
+  describe("toolStrategy", () => {
     describe("multiple structured output tool calls", () => {
       it("should throw if no error handler is provided", async () => {
         const model = new FakeToolCallingModel({
@@ -22,7 +22,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput([
+          responseFormat: toolStrategy([
             z.object({
               foo: z.string(),
             }),
@@ -54,7 +54,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             [
               z.object({
                 foo: z.string(),
@@ -88,7 +88,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             [
               z.object({
                 foo: z.string(),
@@ -127,7 +127,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             [
               z.object({
                 foo: z.string(),
@@ -163,7 +163,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             [
               z.object({
                 foo: z.string(),
@@ -198,7 +198,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             z.object({
               foo: z.string(),
             })
@@ -224,7 +224,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput(
+          responseFormat: toolStrategy(
             z.object({
               foo: z.string(),
             })
@@ -247,7 +247,7 @@ describe("structured output handling", () => {
         const agent = createReactAgent({
           llm: model,
           tools: [],
-          responseFormat: toolOutput([
+          responseFormat: toolStrategy([
             z.object({
               foo: z.string(),
             }),
