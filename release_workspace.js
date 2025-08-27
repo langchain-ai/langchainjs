@@ -6,8 +6,7 @@ const { spawn } = require("child_process");
 const readline = require("readline");
 const semver = require("semver");
 
-const RELEASE_BRANCH = "release";
-const MAIN_BRANCH = "main";
+const MAIN_BRANCH = "v1";
 
 /**
  * Handles execSync errors and logs them in a readable format.
@@ -51,11 +50,7 @@ function getWorkspaceVersion(workspaceDirectory) {
  * @returns {Array<{ dir: string, packageJSON: Record<string, any>}>}
  */
 function getAllWorkspaces() {
-  const possibleWorkspaceDirectories = [
-    "./libs/*",
-    "./langchain",
-    "./langchain-core",
-  ];
+  const possibleWorkspaceDirectories = ["./libs/*", "./libs/providers/*"];
   const allWorkspaces = possibleWorkspaceDirectories.flatMap(
     (workspaceDirectory) => {
       if (workspaceDirectory.endsWith("*")) {
@@ -64,22 +59,30 @@ function getAllWorkspaces() {
           path.join(process.cwd(), workspaceDirectory.replace("*", ""))
         );
         const subDirs = allDirs.map((dir) => {
+          const packageJSONPath = path.join(
+            process.cwd(),
+            `${workspaceDirectory.replace("*", "")}${dir}`,
+            "package.json"
+          );
+          if (!fs.existsSync(packageJSONPath)) {
+            return null;
+          }
           return {
             dir: `${workspaceDirectory.replace("*", "")}${dir}`,
-            packageJSON: require(path.join(
-              process.cwd(),
-              `${workspaceDirectory.replace("*", "")}${dir}`,
-              "package.json"
-            )),
+            packageJSON: require(packageJSONPath),
           };
         });
-        return subDirs;
+        return subDirs.filter((dir) => dir !== null);
       }
-      const packageJSON = require(path.join(
+      const packageJSONPath = path.join(
         process.cwd(),
         workspaceDirectory,
         "package.json"
-      ));
+      );
+      if (!fs.existsSync(packageJSONPath)) {
+        return null;
+      }
+      const packageJSON = require(packageJSONPath);
       return {
         dir: workspaceDirectory,
         packageJSON,
@@ -343,26 +346,6 @@ function commitAndPushChanges(workspaceName, version, onlyPush) {
 }
 
 /**
- * Verifies the current branch is main, then checks out a new release branch
- * and pushes an empty commit.
- *
- * @returns {void}
- * @throws {Error} If the current branch is not main.
- */
-function checkoutReleaseBranch() {
-  const currentBranch = execSync("git branch --show-current").toString().trim();
-  if (currentBranch === MAIN_BRANCH || currentBranch === RELEASE_BRANCH) {
-    console.log(`Checking out '${RELEASE_BRANCH}' branch.`);
-    execSyncWithErrorHandling(`git checkout -B ${RELEASE_BRANCH}`);
-    execSyncWithErrorHandling(`git push -u origin ${RELEASE_BRANCH}`);
-  } else {
-    throw new Error(
-      `Current branch is not ${MAIN_BRANCH} or ${RELEASE_BRANCH}. Current branch: ${currentBranch}`
-    );
-  }
-}
-
-/**
  * Prompts the user for input and returns the input. This is used
  * for requesting an OTP from the user for NPM 2FA.
  *
@@ -455,9 +438,6 @@ async function main() {
   if (!matchingWorkspace) {
     throw new Error(`Could not find workspace ${options.workspace}`);
   }
-
-  // Checkout new "release" branch & push
-  checkoutReleaseBranch();
 
   // Run build, lint, tests
   console.log("Running build, lint, and tests.");
