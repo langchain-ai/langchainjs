@@ -9,6 +9,7 @@ export * from "./types.js";
 export * from "./utils/client.js";
 export * from "./utils/azure.js";
 export * from "./tools/index.js";
+export { customTool } from "./tools/custom.js";
 export { convertPromptToOpenAI } from "./utils/prompts.js";
 
 // These methods are used in LangSmith, export is important here

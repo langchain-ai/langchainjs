@@ -32,7 +32,7 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
-  isOpenAITool,
+  isOpenAITool as isOpenAIFunctionTool,
   type BaseFunctionCallOptions,
   type BaseLanguageModelInput,
   type FunctionDefinition,
@@ -65,11 +65,6 @@ import {
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
-import type {
-  ResponseFormatText,
-  ResponseFormatJSONObject,
-  ResponseFormatJSONSchema,
-} from "openai/resources/shared";
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import {
   type OpenAICallOptions,
@@ -77,6 +72,8 @@ import {
   type OpenAICoreRequestOptions,
   type ChatOpenAIResponseFormat,
   ChatOpenAIReasoningSummary,
+  ResponseFormatConfiguration,
+  OpenAIVerbosityParam,
 } from "./types.js";
 import { type OpenAIEndpointConfig, getEndpoint } from "./utils/azure.js";
 import { wrapOpenAIClientError } from "./utils/client.js";
@@ -87,10 +84,16 @@ import {
   formatToOpenAIToolChoice,
   _convertToOpenAITool,
   ChatOpenAIToolType,
-  ResponsesToolChoice,
+  convertCompletionsCustomTool,
+  convertResponsesCustomTool,
   isBuiltInTool,
   isBuiltInToolChoice,
+  isCustomTool,
+  isCustomToolCall,
+  isOpenAICustomTool,
+  parseCustomToolCall,
   ResponsesTool,
+  ResponsesToolChoice,
 } from "./utils/tools.js";
 import {
   getStructuredOutputMethod,
@@ -221,6 +224,18 @@ export interface BaseChatOpenAICallOptions
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 export interface BaseChatOpenAIFields
@@ -316,6 +331,18 @@ export abstract class BaseChatOpenAI<
    */
   service_tier?: OpenAIClient.Chat.ChatCompletionCreateParams["service_tier"];
 
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey: string;
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
+
   protected defaultOptions: CallOptions;
 
   _llmType() {
@@ -394,6 +421,8 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
+      "promptCacheKey",
+      "verbosity",
     ];
   }
 
@@ -462,6 +491,8 @@ export abstract class BaseChatOpenAI<
     this.reasoning = fields?.reasoning;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
+    this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;
@@ -524,11 +555,7 @@ export abstract class BaseChatOpenAI<
    */
   protected _getResponseFormat(
     resFormat?: CallOptions["response_format"]
-  ):
-    | ResponseFormatText
-    | ResponseFormatJSONObject
-    | ResponseFormatJSONSchema
-    | undefined {
+  ): ResponseFormatConfiguration | undefined {
     if (
       resFormat &&
       resFormat.type === "json_schema" &&
@@ -543,11 +570,7 @@ export abstract class BaseChatOpenAI<
         }
       );
     }
-    return resFormat as
-      | ResponseFormatText
-      | ResponseFormatJSONObject
-      | ResponseFormatJSONSchema
-      | undefined;
+    return resFormat as ResponseFormatConfiguration | undefined;
   }
 
   protected _combineCallOptions(
@@ -593,7 +616,10 @@ export abstract class BaseChatOpenAI<
     tool: ChatOpenAIToolType,
     fields?: { strict?: boolean }
   ): OpenAIClient.ChatCompletionTool {
-    if (isOpenAITool(tool)) {
+    if (isCustomTool(tool)) {
+      return convertResponsesCustomTool(tool.metadata.customTool);
+    }
+    if (isOpenAIFunctionTool(tool)) {
       if (fields?.strict !== undefined) {
         return {
           ...tool,
@@ -794,6 +820,27 @@ export abstract class BaseChatOpenAI<
     return tokens;
   }
 
+  /** @internal */
+  protected _getStructuredOutputMethod(
+    config: StructuredOutputMethodOptions<boolean>
+  ) {
+    const ensuredConfig = { ...config };
+    if (
+      !this.model.startsWith("gpt-3") &&
+      !this.model.startsWith("gpt-4-") &&
+      this.model !== "gpt-4"
+    ) {
+      if (ensuredConfig?.method === undefined) {
+        return "jsonSchema";
+      }
+    } else if (ensuredConfig.method === "jsonSchema") {
+      console.warn(
+        `[WARNING]: JSON Schema is not supported for model "${this.model}". Falling back to tool calling.`
+      );
+    }
+    return ensuredConfig.method;
+  }
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
@@ -920,9 +967,6 @@ export abstract class BaseChatOpenAI<
         outputParser = new JsonOutputParser<RunOutput>();
       }
     } else {
-      /**
-       * handle structured output via tool calling
-       */
       let functionName = name ?? "extract";
       // Is function calling
       if (isInteropZodSchema(schema)) {
@@ -1048,6 +1092,11 @@ export interface ChatOpenAIResponsesCallOptions
    * conversations.
    */
   previous_response_id?: OpenAIClient.Responses.ResponseCreateParams["previous_response_id"];
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 type ChatResponsesInvocationParams = Omit<
@@ -1109,10 +1158,22 @@ export class ChatOpenAIResponses<
         : (() => {
             const formatted = formatToOpenAIToolChoice(options?.tool_choice);
             if (typeof formatted === "object" && "type" in formatted) {
-              return { type: "function", name: formatted.function.name };
-            } else {
-              return undefined;
+              if (formatted.type === "function") {
+                return { type: "function", name: formatted.function.name };
+              } else if (formatted.type === "allowed_tools") {
+                return {
+                  type: "allowed_tools",
+                  mode: formatted.allowed_tools.mode,
+                  tools: formatted.allowed_tools.tools,
+                };
+              } else if (formatted.type === "custom") {
+                return {
+                  type: "custom",
+                  name: formatted.custom.name,
+                };
+              }
             }
+            return undefined;
           })(),
       text: (() => {
         if (options?.text) return options.text;
@@ -1127,15 +1188,16 @@ export class ChatOpenAIResponses<
                 name: format.json_schema.name,
                 strict: format.json_schema.strict,
               },
+              verbosity: options?.verbosity,
             };
           }
           return undefined;
         }
-
-        return { format };
+        return { format, verbosity: options?.verbosity };
       })(),
       parallel_tool_calls: options?.parallel_tool_calls,
       max_output_tokens: this.maxTokens === -1 ? undefined : this.maxTokens,
+      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
     };
@@ -1206,7 +1268,8 @@ export class ChatOpenAIResponses<
 
   async *_streamResponseChunks(
     messages: BaseMessage[],
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamIterable = await this.completionWithRetry(
       {
@@ -1221,6 +1284,17 @@ export class ChatOpenAIResponses<
       const chunk = this._convertResponsesDeltaToBaseMessageChunk(data);
       if (chunk == null) continue;
       yield chunk;
+      await runManager?.handleLLMNewToken(
+        chunk.text || "",
+        {
+          prompt: options.promptIndex ?? 0,
+          completion: 0,
+        },
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
   }
 
@@ -1352,6 +1426,15 @@ export class ChatOpenAIResponses<
         }
       } else if (item.type === "reasoning") {
         additional_kwargs.reasoning = item;
+      } else if (item.type === "custom_tool_call") {
+        const parsed = parseCustomToolCall(item);
+        if (parsed) {
+          tool_calls.push(parsed);
+        } else {
+          invalid_tool_calls.push(
+            makeInvalidToolCall(item, "Malformed custom tool call")
+          );
+        }
       } else {
         additional_kwargs.tool_outputs ??= [];
         additional_kwargs.tool_outputs.push(item);
@@ -1430,6 +1513,7 @@ export class ChatOpenAIResponses<
         "mcp_list_tools",
         "mcp_approval_request",
         "image_generation_call",
+        "custom_tool_call",
       ].includes(chunk.item.type)
     ) {
       additional_kwargs.tool_outputs = [chunk.item];
@@ -1600,6 +1684,16 @@ export class ChatOpenAIResponses<
             };
           }
 
+          // FIXME(hntrl): resolve when core 1.0.0-alpha.2 is released
+          // // Handle custom tool output
+          // if (toolMessage.metadata?.customTool) {
+          //   return {
+          //     type: "custom_tool_call_output",
+          //     call_id: toolMessage.tool_call_id,
+          //     output: toolMessage.content as string,
+          //   };
+          // }
+
           return {
             type: "function_call_output",
             call_id: toolMessage.tool_call_id,
@@ -1649,41 +1743,52 @@ export class ChatOpenAIResponses<
             ];
           }
 
-          input.push({
-            type: "message",
-            role: "assistant",
-            ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
-              ? { id: lcMsg.id }
-              : {}),
-            content: iife(() => {
-              if (typeof content === "string") {
-                return content;
-              }
-              return content.flatMap((item) => {
-                if (item.type === "text") {
-                  return {
-                    type: "output_text",
-                    text: item.text,
-                    annotations: item.annotations ?? [],
-                  };
+          if (typeof content === "string" || content.length > 0) {
+            input.push({
+              type: "message",
+              role: "assistant",
+              ...(lcMsg.id && !this.zdrEnabled && lcMsg.id.startsWith("msg_")
+                ? { id: lcMsg.id }
+                : {}),
+              content: iife(() => {
+                if (typeof content === "string") {
+                  return content;
                 }
+                return content.flatMap((item) => {
+                  if (item.type === "text") {
+                    return {
+                      type: "output_text",
+                      text: item.text,
+                      annotations: item.annotations ?? [],
+                    };
+                  }
 
-                if (item.type === "output_text" || item.type === "refusal") {
-                  return item;
-                }
+                  if (item.type === "output_text" || item.type === "refusal") {
+                    return item;
+                  }
 
-                return [];
-              });
-            }) as ResponseInputMessageContentList,
-          });
+                  return [];
+                });
+              }) as ResponseInputMessageContentList,
+            });
+          }
 
           const functionCallIds =
             additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
 
           if (isAIMessage(lcMsg) && !!lcMsg.tool_calls?.length) {
             input.push(
-              ...lcMsg.tool_calls.map(
-                (toolCall): ResponsesInputItem => ({
+              ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
+                if (isCustomToolCall(toolCall)) {
+                  return {
+                    type: "custom_tool_call",
+                    id: toolCall.call_id,
+                    call_id: toolCall.id ?? "",
+                    input: toolCall.args.input,
+                    name: toolCall.name,
+                  };
+                }
+                return {
                   type: "function_call",
                   name: toolCall.name,
                   arguments: JSON.stringify(toolCall.args),
@@ -1691,8 +1796,8 @@ export class ChatOpenAIResponses<
                   ...(this.zdrEnabled
                     ? { id: functionCallIds?.[toolCall.id!] }
                     : {}),
-                })
-              )
+                };
+              })
             );
           } else if (additional_kwargs?.tool_calls) {
             input.push(
@@ -1864,7 +1969,7 @@ export class ChatOpenAIResponses<
           tool.partial_images = 1;
         }
         reducedTools.push(tool);
-      } else if (isOpenAITool(tool)) {
+      } else if (isOpenAIFunctionTool(tool)) {
         reducedTools.push({
           type: "function",
           name: tool.function.name,
@@ -1872,6 +1977,8 @@ export class ChatOpenAIResponses<
           description: tool.function.description,
           strict: fields?.strict ?? null,
         });
+      } else if (isOpenAICustomTool(tool)) {
+        reducedTools.push(convertCompletionsCustomTool(tool));
       }
     }
     return reducedTools;
@@ -1947,6 +2054,8 @@ export class ChatOpenAICompletions<
         ? { modalities: this.modalities || options?.modalities }
         : {}),
       ...this.modelKwargs,
+      prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
+      verbosity: options?.verbosity ?? this.verbosity,
     };
     if (options?.prediction !== undefined) {
       params.prediction = options.prediction;
@@ -3006,7 +3115,7 @@ export class ChatOpenAI<
    * Whether to use the responses API for all requests. If `false` the responses API will be used
    * only when required in order to fulfill the request.
    */
-  useResponsesApi = false;
+  useResponsesApi: boolean = false;
 
   protected responses: ChatOpenAIResponses;
 
@@ -3016,7 +3125,7 @@ export class ChatOpenAI<
     return [...super.lc_serializable_keys, "useResponsesApi"];
   }
 
-  constructor(fields?: ChatOpenAIFields) {
+  constructor(protected fields?: ChatOpenAIFields) {
     super(fields);
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
@@ -3032,8 +3141,14 @@ export class ChatOpenAI<
       options?.include != null ||
       options?.reasoning?.summary != null ||
       this.reasoning?.summary != null;
+    const hasCustomTools = options?.tools?.some(isOpenAICustomTool);
 
-    return this.useResponsesApi || usesBuiltInTools || hasResponsesOnlyKwargs;
+    return (
+      this.useResponsesApi ||
+      usesBuiltInTools ||
+      hasResponsesOnlyKwargs ||
+      hasCustomTools
+    );
   }
 
   override getLsParams(options: this["ParsedCallOptions"]) {
@@ -3072,7 +3187,8 @@ export class ChatOpenAI<
     if (this._useResponsesApi(options)) {
       yield* this.responses._streamResponseChunks(
         messages,
-        this._combineCallOptions(options)
+        this._combineCallOptions(options),
+        runManager
       );
       return;
     }
@@ -3086,7 +3202,8 @@ export class ChatOpenAI<
   override withConfig(
     config: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    this.defaultOptions = { ...this.defaultOptions, ...config };
-    return this;
+    const newModel = new ChatOpenAI<CallOptions>(this.fields);
+    newModel.defaultOptions = { ...this.defaultOptions, ...config };
+    return newModel;
   }
 }

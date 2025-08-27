@@ -10,16 +10,19 @@ import {
   BaseMessage,
   BaseMessageChunk,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   isAIMessage,
   isAIMessageChunk,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
-
-import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
+import { randomUUID } from "node:crypto";
 import { ChatOpenAI } from "../chat_models.js";
+import { REASONING_OUTPUT_MESSAGES } from "./data/computer-use-inputs.js";
 import { ChatOpenAIReasoningSummary } from "../types.js";
+import { LONG_PROMPT } from "./data/long-prompt.js";
 
 async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
   let full: AIMessageChunk | undefined;
@@ -634,7 +637,7 @@ describe("reasoning summaries", () => {
   const testReasoningSummaries = async (
     requestType: "stream" | "invoke",
     extraConfig: Record<string, unknown> = {},
-    removePreviousOutputMetadata = false
+    removePreviousOutputMetadata: boolean = false
   ) => {
     const prompt = "What is 3 to the power of 3?";
     const llm = new ChatOpenAI({
@@ -767,5 +770,168 @@ describe("reasoning summaries", () => {
     const response = await model.invoke(REASONING_OUTPUT_MESSAGES);
 
     expect(response).toBeDefined();
+  });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/8577
+test("useResponsesApi=true should emit handleLLMNewToken events during streaming", async () => {
+  // This test demonstrates that when useResponsesApi=true is enabled,
+  // the ChatOpenAI class properly passes the runManager parameter to
+  // ChatOpenAIResponses._streamResponseChunks, allowing handleLLMNewToken
+  // events to be emitted during streaming.
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    useResponsesApi: true,
+  });
+
+  const messages = [new HumanMessage("Say 'Hello world' in 3 words.")];
+
+  // Track handleLLMNewToken events
+  const newTokenEvents: string[] = [];
+  let handleLLMNewTokenCalled = false;
+
+  const stream = model.streamEvents(messages, {
+    version: "v2",
+    callbacks: [
+      {
+        handleLLMNewToken(token: string) {
+          handleLLMNewTokenCalled = true;
+          newTokenEvents.push(token);
+        },
+      },
+    ],
+  });
+
+  // Collect all events
+  const events = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+
+  // Verify that handleLLMNewToken was called with individual tokens
+  expect(handleLLMNewTokenCalled).toBe(true);
+  expect(newTokenEvents.length).toBeGreaterThan(0);
+
+  // Verify we have streaming events
+  const streamingEvents = events.filter(
+    (event) => event.event === "on_chat_model_stream"
+  );
+  expect(streamingEvents.length).toBeGreaterThan(0);
+
+  // Verify we have the start and end events
+  const startEvents = events.filter(
+    (event) => event.event === "on_chat_model_start"
+  );
+  const endEvents = events.filter(
+    (event) => event.event === "on_chat_model_end"
+  );
+  expect(startEvents.length).toBeGreaterThan(0);
+  expect(endEvents.length).toBeGreaterThan(0);
+});
+
+describe("gpt-5", () => {
+  const storyPrompt = new HumanMessage(
+    "Write a short story about a robot who discovers they can dream. Include themes of consciousness, identity, and what it means to be alive. The story should be approximately 200 words and have a hopeful ending."
+  );
+  test("works", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5" });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+    console.log(response);
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8641
+  test("works with maxTokens", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", maxTokens: 100 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
+
+  // https://github.com/langchain-ai/langchainjs/issues/8642
+  test("works with temperature", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5", temperature: 0.5 });
+    const response = await model.invoke([storyPrompt]);
+    expect(response).toBeDefined();
+  });
+
+  describe("works with verbosity", () => {
+    test("in completions", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: false,
+        verbosity: "low",
+      });
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
+
+    test("in responses", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: true,
+        verbosity: "low",
+      });
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
+
+    // https://github.com/langchain-ai/langchainjs/issues/8718
+    it("with response format", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5",
+        useResponsesApi: true,
+        verbosity: "low",
+      }).withStructuredOutput(
+        z.object({
+          story: z.string(),
+        })
+      );
+
+      const response = await model.invoke([storyPrompt]);
+      expect(response).toBeDefined();
+    });
+  });
+});
+
+describe("promptCacheKey", () => {
+  test("works as a constructor option", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      promptCacheKey: "long-prompt-cache-key-1",
+    });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
+  });
+
+  test("works as a call option", async () => {
+    const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+    const invoke = () =>
+      model.invoke([
+        new SystemMessage(LONG_PROMPT),
+        new HumanMessage("What is the capital of France?"),
+      ]);
+    const response = await invoke();
+    expect(response).toBeDefined();
+
+    // follow up turn to make sure that the response is cached
+    const response2 = await invoke();
+    expect(response2).toBeDefined();
+    expect(
+      response2.response_metadata.usage.prompt_tokens_details.cached_tokens
+    ).toBeGreaterThan(0);
   });
 });

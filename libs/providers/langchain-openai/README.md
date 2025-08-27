@@ -34,7 +34,7 @@ You can do so by adding appropriate fields to your project's `package.json` like
 }
 ```
 
-The field you need depends on the package manager you're using, but we recommend adding a field for the common `pnpm`, `npm`, and `pnpm` to maximize compatibility.
+The field you need depends on the package manager you're using, but we recommend adding a field for the common `pnpm`, `npm`, and `yarn` to maximize compatibility.
 
 ## Chat Models
 
@@ -102,7 +102,7 @@ pnpm build
 Or from the repo root:
 
 ```bash
-pnpm build --filter @langchain/openai
+pnpm build --filter=@langchain/openai
 ```
 
 ### Run tests
