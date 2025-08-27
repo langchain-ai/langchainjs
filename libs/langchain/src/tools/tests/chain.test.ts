@@ -1,8 +1,9 @@
-import { test, expect, jest } from "@jest/globals";
+import { test, expect, vi } from "vitest";
 
 import { LLM } from "@langchain/core/language_models/llms";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+
 import { ChainTool } from "../chain.js";
 import { LLMChain } from "../../chains/llm_chain.js";
 import { VectorDBQAChain } from "../../chains/vector_db_qa.js";
@@ -20,22 +21,22 @@ class FakeLLM extends LLM {
 
 test("chain tool with llm chain and local callback", async () => {
   const calls: string[] = [];
-  const handleToolStart = jest.fn(() => {
+  const handleToolStart = vi.fn(() => {
     calls.push("tool start");
   });
-  const handleToolEnd = jest.fn(() => {
+  const handleToolEnd = vi.fn(() => {
     calls.push("tool end");
   });
-  const handleLLMStart = jest.fn(() => {
+  const handleLLMStart = vi.fn(() => {
     calls.push("llm start");
   });
-  const handleLLMEnd = jest.fn(() => {
+  const handleLLMEnd = vi.fn(() => {
     calls.push("llm end");
   });
-  const handleChainStart = jest.fn(() => {
+  const handleChainStart = vi.fn(() => {
     calls.push("chain start");
   });
-  const handleChainEnd = jest.fn(() => {
+  const handleChainEnd = vi.fn(() => {
     calls.push("chain end");
   });
 
@@ -78,22 +79,22 @@ test("chain tool with llm chain and local callback", async () => {
 
 test("chain tool with vectordbqa chain", async () => {
   const calls: string[] = [];
-  const handleToolStart = jest.fn(() => {
+  const handleToolStart = vi.fn(() => {
     calls.push("tool start");
   });
-  const handleToolEnd = jest.fn(() => {
+  const handleToolEnd = vi.fn(() => {
     calls.push("tool end");
   });
-  const handleLLMStart = jest.fn(() => {
+  const handleLLMStart = vi.fn(() => {
     calls.push("llm start");
   });
-  const handleLLMEnd = jest.fn(() => {
+  const handleLLMEnd = vi.fn(() => {
     calls.push("llm end");
   });
-  const handleChainStart = jest.fn(() => {
+  const handleChainStart = vi.fn(() => {
     calls.push("chain start");
   });
-  const handleChainEnd = jest.fn(() => {
+  const handleChainEnd = vi.fn(() => {
     calls.push("chain end");
   });
 

@@ -50,3 +50,6 @@ credentials.json
 .vercel
 
 bun.lock
+coverage/
+
+examples/src/createReactAgent/*.png

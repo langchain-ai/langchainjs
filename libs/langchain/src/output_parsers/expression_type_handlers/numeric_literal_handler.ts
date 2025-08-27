@@ -1,5 +1,9 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { NumericLiteralType } from "./types.js";
+import type {
+  ExpressionNode,
+  NumericLiteral,
+} from "../../types/expression-parser.js";
 
 /**
  * Handler for numeric literal nodes in an abstract syntax tree (AST).

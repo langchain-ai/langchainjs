@@ -1,14 +1,15 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
+import { describe, it, test, expect } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { it } from "@jest/globals";
+
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
-import { AgentExecutor, createReactAgent } from "../../agents/index.js";
+
+import { createReactAgent } from "../../agents/index.js";
 import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
@@ -492,17 +493,12 @@ test("Is compatible with agents", async () => {
     prompt,
   });
 
-  const agentExecutor = new AgentExecutor({
-    agent,
-    tools: [weatherTool],
-  });
-
-  const result = await agentExecutor.invoke({
-    input:
+  const result = await agent.invoke({
+    messages:
       "What's the weather in San Francisco right now? Ensure you use the 'GetWeather' tool to answer.",
   });
-  expect(result).toHaveProperty("output");
-  expect(result.output).not.toBe("");
+  expect(result).toHaveProperty("messages");
+  expect(result.messages[0].content).not.toBe("");
 });
 
 describe("Can call base runnable methods", () => {

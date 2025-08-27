@@ -1,6 +1,5 @@
 import { ConneryService } from "@langchain/community/tools/connery";
 import { ChatOpenAI } from "@langchain/openai";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 
 // Specify your Connery Runner credentials.
@@ -34,6 +33,8 @@ const agent = await createReactAgent({
   tools: [sendEmailAction],
 });
 const agentRunResult = await agent.invoke({
-  input: `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,
+  messages: [
+    `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,
+  ],
 });
 console.log(agentRunResult);

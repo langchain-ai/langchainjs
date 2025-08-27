@@ -1,0 +1,149 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_no_hooks_no_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_no_hooks_with_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_both_hooks_no_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> post_model_hook;
+	post_model_hook --> __end__;
+	pre_model_hook --> agent;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_both_hooks_with_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> post_model_hook;
+	post_model_hook --> __end__;
+	pre_model_hook --> agent;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_post_hook_no_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> post_model_hook;
+	post_model_hook --> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_post_hook_with_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> post_model_hook;
+	post_model_hook --> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_pre_hook_no_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> __end__;
+	pre_model_hook --> agent;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: no_tools_with_pre_hook_with_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> __end__;
+	pre_model_hook --> agent;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_no_hooks_no_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	tools --> agent;
+	agent -.-> tools;
+	agent -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_no_hooks_with_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	tools --> agent;
+	agent -.-> tools;
+	agent -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_both_hooks_no_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> post_model_hook;
+	pre_model_hook --> agent;
+	tools --> pre_model_hook;
+	post_model_hook -.-> pre_model_hook;
+	post_model_hook -.-> tools;
+	post_model_hook -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_both_hooks_with_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	agent --> post_model_hook;
+	pre_model_hook --> agent;
+	tools --> pre_model_hook;
+	post_model_hook -.-> pre_model_hook;
+	post_model_hook -.-> tools;
+	post_model_hook -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_post_hook_no_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> post_model_hook;
+	tools --> agent;
+	post_model_hook -.-> agent;
+	post_model_hook -.-> tools;
+	post_model_hook -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_post_hook_with_format 1`] = `
+"graph TD;
+	__start__ --> agent;
+	agent --> post_model_hook;
+	tools --> agent;
+	post_model_hook -.-> agent;
+	post_model_hook -.-> tools;
+	post_model_hook -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_pre_hook_no_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	pre_model_hook --> agent;
+	tools --> pre_model_hook;
+	agent -.-> tools;
+	agent -.-> __end__;
+"
+`;
+
+exports[`Graph > React Agent Graph Structure > should create correct graph structure: two_tools_with_pre_hook_with_format 1`] = `
+"graph TD;
+	__start__ --> pre_model_hook;
+	pre_model_hook --> agent;
+	tools --> pre_model_hook;
+	agent -.-> tools;
+	agent -.-> __end__;
+"
+`;

@@ -1,6 +1,7 @@
-/* eslint-disable no-process-env */
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
+
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
+
 import { ConversationalRetrievalQAChain } from "../../chains/conversational_retrieval_chain.js";
 import { BufferMemory } from "../../memory/buffer_memory.js";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";

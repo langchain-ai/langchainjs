@@ -1,4 +1,3 @@
-
 services:
   # LangChain
   langchain-latest-deps:
@@ -10,6 +9,10 @@ services:
     working_dir: /app
     volumes:
       - ../libs/langchain:/langchain
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/providers/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
@@ -21,6 +24,11 @@ services:
     working_dir: /app
     volumes:
       - ../libs/langchain:/langchain
+      - ../libs/langchain-core:/libs/langchain-core
+      - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
+      - ../libs/providers/langchain-openai:/libs/langchain-openai
+      - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 

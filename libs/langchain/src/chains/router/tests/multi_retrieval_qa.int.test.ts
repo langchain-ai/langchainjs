@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { MultiRetrievalQAChain } from "../multi_retrieval_qa.js";

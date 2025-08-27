@@ -1,0 +1,291 @@
+import type {
+  InteropZodObject,
+  InteropZodType,
+} from "@langchain/core/utils/types";
+
+import { MessagesAnnotation } from "@langchain/langgraph";
+
+import { type AnyAnnotationRoot } from "./annotation.js";
+import type { CreateReactAgentParams, ExtractZodArrayTypes } from "./types.js";
+import type {
+  ToolStrategy,
+  TypedToolStrategy,
+  ProviderStrategy,
+  ResponseFormat,
+  ResponseFormatUndefined,
+  JsonSchemaFormat,
+} from "./responses.js";
+import { ReactAgent } from "./ReactAgent.js";
+
+/**
+ * Creates a StateGraph agent that relies on a chat model utilizing tool calling.
+ *
+ * @example
+ * ```ts
+ * import { ChatOpenAI } from "@langchain/openai";
+ * import { createReactAgent, tool } from "langchain";
+ * import { z } from "zod";
+ *
+ * const model = new ChatOpenAI({
+ *   model: "gpt-4o",
+ * });
+ *
+ * const getWeather = tool((input) => {
+ *   if (["sf", "san francisco"].includes(input.location.toLowerCase())) {
+ *     return "It's 60 degrees and foggy.";
+ *   } else {
+ *     return "It's 90 degrees and sunny.";
+ *   }
+ * }, {
+ *   name: "get_weather",
+ *   description: "Call to get the current weather.",
+ *   schema: z.object({
+ *     location: z.string().describe("Location to get the weather for."),
+ *   })
+ * })
+ *
+ * const agent = createReactAgent({ llm: model, tools: [getWeather] });
+ *
+ * const inputs = {
+ *   messages: [{ role: "user", content: "what is the weather in SF?" }],
+ * };
+ *
+ * const stream = await agent.stream(inputs, { streamMode: "values" });
+ *
+ * for await (const { messages } of stream) {
+ *   console.log(messages);
+ * }
+ * // Returns the messages in the state at each step of execution
+ * ```
+ */
+// Overload 1: With responseFormat as single InteropZodType
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  T extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    T,
+    ContextSchema,
+    InteropZodType<T>
+  > & {
+    responseFormat: InteropZodType<T>;
+  }
+): ReactAgent<StateSchema, T, ContextSchema>;
+
+// Overload 2: With responseFormat as array of InteropZodTypes (infers union type)
+export function createReactAgent<
+  T extends readonly InteropZodType<any>[],
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    ExtractZodArrayTypes<T> extends Record<string, any>
+      ? ExtractZodArrayTypes<T>
+      : Record<string, any>,
+    ContextSchema,
+    T
+  > & {
+    responseFormat: T;
+  }
+): ReactAgent<
+  StateSchema,
+  ExtractZodArrayTypes<T> extends Record<string, any>
+    ? ExtractZodArrayTypes<T>
+    : Record<string, any>,
+  ContextSchema
+>;
+
+// Overload 3: With responseFormat as JsonSchemaFormat (JSON schema object)
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    Record<string, unknown>,
+    ContextSchema,
+    JsonSchemaFormat
+  > & {
+    responseFormat: JsonSchemaFormat;
+  }
+): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
+
+// Overload 4: With responseFormat as array of JsonSchemaFormat (JSON schema objects)
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    Record<string, unknown>,
+    ContextSchema,
+    JsonSchemaFormat[]
+  > & {
+    responseFormat: JsonSchemaFormat[];
+  }
+): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
+
+// Overload 4.5: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[]
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    Record<string, unknown>,
+    ContextSchema,
+    JsonSchemaFormat | JsonSchemaFormat[]
+  > & {
+    responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
+  }
+): ReactAgent<StateSchema, Record<string, unknown>, ContextSchema>;
+
+// Overload 5: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  T extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    T,
+    ContextSchema,
+    TypedToolStrategy<T>
+  > & {
+    responseFormat: TypedToolStrategy<T>;
+  }
+): ReactAgent<StateSchema, T, ContextSchema>;
+
+// Overload 6: With responseFormat as single ToolStrategy instance
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  T extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    T,
+    ContextSchema,
+    ToolStrategy<T>
+  > & {
+    responseFormat: ToolStrategy<T>;
+  }
+): ReactAgent<StateSchema, T, ContextSchema>;
+
+// Overload 7: With responseFormat as ProviderStrategy
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  T extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    T,
+    ContextSchema,
+    ProviderStrategy<T>
+  > & {
+    responseFormat: ProviderStrategy<T>;
+  }
+): ReactAgent<StateSchema, T, ContextSchema>;
+
+// Overload 8: Without responseFormat property at all
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: Omit<
+    CreateReactAgentParams<
+      StateSchema,
+      ResponseFormatUndefined,
+      ContextSchema,
+      never
+    >,
+    "responseFormat"
+  >
+): ReactAgent<StateSchema, ResponseFormatUndefined, ContextSchema>;
+
+// Overload 9: With responseFormat explicitly undefined
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: Omit<
+    CreateReactAgentParams<
+      StateSchema,
+      ResponseFormatUndefined,
+      ContextSchema,
+      never
+    >,
+    "responseFormat"
+  > & {
+    responseFormat?: undefined;
+  }
+): ReactAgent<StateSchema, ResponseFormatUndefined, ContextSchema>;
+
+// Overload 10: For other ResponseFormat values (failsafe)
+export function createReactAgent<
+  StateSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = typeof MessagesAnnotation,
+  StructuredResponseFormat extends Record<string, any> = Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema,
+    ResponseFormat
+  > & {
+    responseFormat: ResponseFormat;
+  }
+): ReactAgent<StateSchema, StructuredResponseFormat, ContextSchema>;
+
+// Implementation
+export function createReactAgent<
+  StateSchema extends AnyAnnotationRoot | InteropZodObject,
+  StructuredResponseFormat extends Record<string, any>,
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject
+>(
+  params: CreateReactAgentParams<
+    StateSchema,
+    StructuredResponseFormat,
+    ContextSchema,
+    any
+  >
+): ReactAgent<StateSchema, StructuredResponseFormat, ContextSchema> {
+  return new ReactAgent(params);
+}
+
+export * from "./types.js";
+export * from "./errors.js";
+export * from "./interrupt.js";
+export {
+  toolStrategy,
+  providerStrategy,
+  ToolStrategy,
+  ProviderStrategy,
+  type ResponseFormat,
+} from "./responses.js";

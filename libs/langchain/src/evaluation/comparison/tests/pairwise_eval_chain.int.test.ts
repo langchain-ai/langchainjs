@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { loadEvaluator } from "../../loader.js";
 
 test("Test PairwiseStringEvalChain", async () => {

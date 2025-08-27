@@ -1,6 +1,10 @@
 import { NodeHandler, ASTParser } from "./base.js";
 import { PropertyAssignmentHandler } from "./property_assignment_handler.js";
 import { ObjectLiteralType, PropertyAssignmentType } from "./types.js";
+import type {
+  ExpressionNode,
+  ObjectExpression,
+} from "../../types/expression-parser.js";
 
 /**
  * Handles object literal expressions in the LangChain Expression

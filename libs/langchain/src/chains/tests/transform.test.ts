@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { TransformChain } from "../transform.js";
 
 test("TransformChain", async () => {

@@ -3,7 +3,6 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import Exa from "exa-js";
 import { pull } from "langchain/hub";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 
 // Define the tools the agent will have access to.
@@ -33,7 +32,7 @@ const agent = await createReactAgent({
 });
 
 const result = await agent.invoke({
-  input: "what is the weather in wailea?",
+  messages: ["what is the weather in wailea?"],
 });
 
 console.log(result);

@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "../../vectorstores/memory.js";

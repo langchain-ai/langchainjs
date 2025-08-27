@@ -1,5 +1,7 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
+
 import { OpenAIEmbeddings } from "@langchain/openai";
+
 import { InMemoryDocstore } from "../../stores/doc/in_memory.js";
 import { TextLoader } from "../../document_loaders/fs/text.js";
 import { InMemoryStore } from "../../storage/in_memory.js";

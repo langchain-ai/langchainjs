@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { OpenAI } from "@langchain/openai";
 import { loadQueryConstructorRunnable, AttributeInfo } from "../index.js";
 import {

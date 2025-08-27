@@ -1,10 +1,12 @@
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
+
 import {
   LengthBasedExampleSelector,
   SemanticSimilarityExampleSelector,
 } from "@langchain/core/example_selectors";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+
 import { MemoryVectorStore } from "../../vectorstores/memory.js";
 
 test("Test using LengthBasedExampleSelector", async () => {

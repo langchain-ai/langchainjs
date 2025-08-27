@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-import { tool } from "@langchain/core/tools";
-// @ts-expect-error - createReactAgent is not yet available
-import { createReactAgent } from "langchain";
+import { createReactAgent, HumanMessage, tool } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
@@ -36,11 +34,11 @@ const agent = await createReactAgent({
   prompt,
 });
 
-const input = "What's the weather like in Paris?";
-const { output } = await agent.invoke({ input });
+const messages = [new HumanMessage("What's the weather like in Paris?")];
+const result = await agent.invoke({ messages });
 
-console.log(output);
+console.log(result.messages.at(-1)?.content);
 
-/* 
-It's 28 degrees Celsius in Paris.
-*/
+/**
+ * It's 28 degrees Celsius in Paris.
+ */

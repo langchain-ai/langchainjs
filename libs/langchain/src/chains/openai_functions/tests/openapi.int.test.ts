@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { createOpenAPIChain } from "../openapi.js";

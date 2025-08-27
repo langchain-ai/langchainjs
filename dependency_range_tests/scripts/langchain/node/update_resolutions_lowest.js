@@ -6,6 +6,7 @@ const communityPackageJsonPath = "package.json";
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)
 );
+currentPackageJson.pnpm = { overrides: {} };
 
 if (
   currentPackageJson.peerDependencies?.["@langchain/core"] &&
@@ -20,67 +21,39 @@ if (
   };
 }
 
-// Convert workspace dependencies to peer dependencies since they don't exist in the test environment
-if (currentPackageJson.devDependencies) {
-  for (const [depName, depVersion] of Object.entries(
-    currentPackageJson.devDependencies
-  )) {
-    if (depVersion.includes("workspace:")) {
-      delete currentPackageJson.devDependencies[depName];
-    }
+/**
+ * Convert workspace dev dependencies to install latest as they are only used for testing
+ */
+const workspaceDependencies = [
+  ...Object.entries(currentPackageJson.devDependencies),
+  ...Object.entries(currentPackageJson.dependencies),
+].filter(([, depVersion]) => depVersion.includes("workspace:"));
+
+for (const [depName, depVersion] of workspaceDependencies) {
+  /**
+   * for the peer dependency @langchain/core, we want to make sure to install min version
+   * defined above
+   */
+  if (depName === "@langchain/core") {
+    delete currentPackageJson.devDependencies[depName];
+    continue;
   }
-}
 
-if (currentPackageJson.dependencies) {
-  for (const [depName, depVersion] of Object.entries(
-    currentPackageJson.dependencies
-  )) {
-    if (depVersion.includes("workspace:")) {
-      // Convert workspace dependencies to peer dependencies
-      if (!currentPackageJson.peerDependencies) {
-        currentPackageJson.peerDependencies = {};
-      }
-      currentPackageJson.peerDependencies[depName] = "*";
-      delete currentPackageJson.dependencies[depName];
-    }
-  }
+  const libName = depName.split("/")[1];
+  /**
+   * reference the workspace dependency as a file path
+   */
+  currentPackageJson.devDependencies[
+    depName
+  ] = `file:/libs/langchain-${libName}`;
+  /**
+   * ensure that peer dependencies are also installed from the file path
+   * e.g. @langchain/openai depends on @langchain/core which should be resolved from the file path
+   */
+  currentPackageJson.pnpm.overrides[
+    depName
+  ] = `file:/libs/langchain-${libName}`;
 }
-
-if (
-  currentPackageJson.peerDependencies?.["@langchain/openai"] &&
-  !currentPackageJson.peerDependencies["@langchain/openai"].includes("rc") &&
-  currentPackageJson.peerDependencies["@langchain/openai"] !== "*"
-) {
-  const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/openai"]
-  ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
-    "@langchain/openai": minVersion,
-  };
-}
-
-if (
-  currentPackageJson.peerDependencies?.["@langchain/textsplitters"] &&
-  !currentPackageJson.peerDependencies["@langchain/textsplitters"].includes(
-    "rc"
-  ) &&
-  currentPackageJson.peerDependencies["@langchain/textsplitters"] !== "*"
-) {
-  const minVersion = semver.minVersion(
-    currentPackageJson.peerDependencies["@langchain/textsplitters"]
-  ).version;
-  currentPackageJson.peerDependencies = {
-    ...currentPackageJson.peerDependencies,
-    "@langchain/textsplitters": minVersion,
-  };
-}
-
-// Stupid hack
-currentPackageJson.resolutions = {
-  ...currentPackageJson.resolutions,
-  jackspeak: "2.1.1",
-};
 
 fs.writeFileSync(
   communityPackageJsonPath,

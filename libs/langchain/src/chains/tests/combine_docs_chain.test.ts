@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { Document } from "@langchain/core/documents";
 import { BaseLLM } from "@langchain/core/language_models/llms";
 import { LLMResult } from "@langchain/core/outputs";

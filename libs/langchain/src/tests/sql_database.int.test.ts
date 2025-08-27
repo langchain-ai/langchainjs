@@ -1,4 +1,5 @@
-import { test, expect, beforeEach, afterEach } from "@jest/globals";
+import { test, expect, beforeEach, afterEach } from "vitest";
+
 import { DataSource } from "typeorm";
 import { SqlDatabase } from "../sql_db.js";
 

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Scenario: ❌ return_direct, ❌ response_format",
+    "returnDirect": false,
+    "responseFormat": null,
+    "expectedToolCalls": 10,
+    "expectedLastMessage": "Attempts: 10",
+    "expectedStructuredResponse": null
+  },
+  {
+    "name": "Scenario: ❌ return_direct, ✅ response_format",
+    "returnDirect": false,
+    "responseFormat": {
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
+    },
+    "expectedToolCalls": 10,
+    "expectedLastMessage": "Returning structured response: {\"attempts\":10,\"succeeded\":true}",
+    "expectedStructuredResponse": { "attempts": 10, "succeeded": true }
+  },
+  {
+    "name": "Scenario: ✅ return_direct, ❌ response_format",
+    "returnDirect": true,
+    "responseFormat": null,
+    "stopWhen": null,
+    "expectedToolCalls": 1,
+    "expectedLastMessage": "{\n  \"status\": \"pending\",\n  \"attempts\": 1\n}",
+    "expectedStructuredResponse": null
+  },
+  {
+    "name": "Scenario: ✅ return_direct, ✅ response_format",
+    "returnDirect": true,
+    "responseFormat": {
+      "type": "object",
+      "properties": {
+        "attempts": { "type": "number" },
+        "succeeded": { "type": "boolean" }
+      },
+      "required": ["attempts", "succeeded"]
+    },
+    "stopWhen": null,
+    "expectedToolCalls": 1,
+    "expectedLastMessage": "{\n  \"status\": \"pending\",\n  \"attempts\": 1\n}",
+    "expectedStructuredResponse": null
+  }
+]
