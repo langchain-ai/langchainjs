@@ -19,10 +19,10 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
  */
 export {
   createReactAgent,
-  toolOutput,
-  nativeOutput,
+  toolStrategy,
+  providerStrategy,
   type AgentState,
-} from "@langchain/agents";
+} from "./agents/index.js";
 
 /**
  * LangChain Memory

@@ -91,7 +91,6 @@
     }
   },
   "dependencies": {
-    "@langchain/agents": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "@langchain/langgraph": "^0.4.3",

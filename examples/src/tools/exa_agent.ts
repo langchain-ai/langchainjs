@@ -4,7 +4,6 @@ import {
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
@@ -43,6 +42,6 @@ const agent = await createReactAgent({
 
 console.log(
   await agent.invoke({
-    input: "Summarize for me a fascinating article about cats.",
+    messages: ["Summarize for me a fascinating article about cats."],
   })
 );

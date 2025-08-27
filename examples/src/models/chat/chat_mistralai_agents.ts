@@ -1,9 +1,7 @@
 import { z } from "zod";
 
 import { ChatMistralAI } from "@langchain/mistralai";
-import { tool } from "@langchain/core/tools";
-// @ts-expect-error - createReactAgent is not yet available
-import { createReactAgent } from "langchain";
+import { createReactAgent, HumanMessage, tool } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -35,11 +33,11 @@ const agent = await createReactAgent({
   prompt,
 });
 
-const input = "What's the weather like in Paris?";
-const { output } = await agent.invoke({ input });
+const messages = [new HumanMessage("What's the weather like in Paris?")];
+const result = await agent.invoke({ messages });
 
-console.log(output);
+console.log(result.messages.at(-1)?.content);
 
-/* 
-  The current weather in Paris is 28 °C.
-*/
+/**
+ * The current weather in Paris is 28 °C.
+ */

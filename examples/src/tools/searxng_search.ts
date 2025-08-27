@@ -1,5 +1,4 @@
 import { ChatOpenAI } from "@langchain/openai";
-// @ts-expect-error - createReactAgent is not yet available
 import { createReactAgent } from "langchain";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
@@ -47,8 +46,8 @@ const agent = createReactAgent({
 console.log("Loaded agent.");
 const input = `What is Langchain? Describe in 50 words`;
 console.log(`Executing with input "${input}"...`);
-const result = await agent.invoke({ input });
-console.log(result);
+const result = await agent.invoke({ messages: [input] });
+console.log(result.messages.at(-1)?.content);
 /**
  * Langchain is a framework for developing applications powered by language models, such as chatbots, Generative Question-Answering, summarization, and more. It provides a standard interface, integrations with other tools, and end-to-end chains for common applications. Langchain enables data-aware and powerful applications.
  */

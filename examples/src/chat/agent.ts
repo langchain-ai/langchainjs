@@ -1,5 +1,4 @@
-// @ts-expect-error - createReactAgent is not yet available
-import { createReactAgent } from "langchain";
+import { createReactAgent, HumanMessage } from "langchain";
 import { pull } from "langchain/hub";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
@@ -33,7 +32,7 @@ export const run = async () => {
   });
 
   const result = await agent.invoke({
-    input: "what is LangChain?",
+    messages: [new HumanMessage("what is LangChain?")],
   });
 
   console.log(result);
