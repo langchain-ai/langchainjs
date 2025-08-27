@@ -668,6 +668,7 @@ export abstract class BaseChatOpenAI<
       "response_format",
       "seed",
       "reasoning",
+      "reasoning_effort",
       "service_tier",
     ];
   }
@@ -724,6 +725,7 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
+      "reasoning_effort",
       "promptCacheKey",
       "verbosity",
     ];
@@ -791,7 +793,10 @@ export abstract class BaseChatOpenAI<
     this.__includeRawResponse = fields?.__includeRawResponse;
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
-    this.reasoning = fields?.reasoning;
+    this.reasoning =
+      fields?.reasoning ?? fields?.reasoning_effort
+        ? { effort: fields.reasoning_effort }
+        : undefined;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
