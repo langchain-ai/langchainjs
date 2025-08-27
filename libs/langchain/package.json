@@ -63,13 +63,15 @@
     "rollup": "^3.19.1",
     "typeorm": "^0.3.20",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0-alpha.3 <2.0.0",
     "cheerio": "*",
     "peggy": "^3.0.2",
-    "typeorm": "*"
+    "typeorm": "*",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependenciesMeta": {
     "cheerio": {
@@ -92,8 +94,7 @@
     "openapi-types": "^12.1.3",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "yaml": "^2.2.1",
-    "zod": "^3.25.32"
+    "yaml": "^2.2.1"
   },
   "optionalDependencies": {
     "langsmith": "^0.3.64"

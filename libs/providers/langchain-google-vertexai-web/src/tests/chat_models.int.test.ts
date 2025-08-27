@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, no-process-env */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { test } from "@jest/globals";
 import {
   AIMessage,

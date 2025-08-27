@@ -10,7 +10,7 @@ import {
 } from "@langchain/core/messages";
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";

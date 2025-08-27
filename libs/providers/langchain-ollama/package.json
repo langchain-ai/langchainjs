@@ -57,8 +57,8 @@
     "release-it-pnpm": "^4.6.6",
     "rollup": "^4.5.2",
     "typescript": "~5.8.3",
-    "zod": "^3.25.32",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76"
   },
   "publishConfig": {
     "access": "public"

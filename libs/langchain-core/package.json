@@ -40,8 +40,10 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "zod": "^3.25.32",
     "zod-to-json-schema": "^3.22.3"
+  },
+  "peerDependencies": {
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@types/decamelize": "^1.2.0",
@@ -64,7 +66,8 @@
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
-    "web-streams-polyfill": "^4.0.0"
+    "web-streams-polyfill": "^4.0.0",
+    "zod": "^3.25.76"
   },
   "publishConfig": {
     "access": "public"

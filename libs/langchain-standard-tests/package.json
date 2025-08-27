@@ -30,8 +30,7 @@
   },
   "dependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/core": "workspace:*",
-    "zod": "^3.25.32"
+    "@langchain/core": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",
@@ -51,10 +50,12 @@
     "release-it-pnpm": "^4.6.6",
     "rollup": "^4.5.2",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "3.25.76"
   },
   "peerDependencies": {
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependenciesMeta": {
     "vitest": {

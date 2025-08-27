@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
 import { describe, it, test, expect } from "vitest";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { RunLogPatch, StreamEvent } from "@langchain/core/tracers/log_stream";

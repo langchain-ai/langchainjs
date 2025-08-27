@@ -38,6 +38,7 @@
     "flat": "^5.0.2",
     "js-yaml": "^4.1.0",
     "langchain": ">=0.2.3 <0.3.0 || >=0.3.4 <0.4.0",
+    "langsmith": "^0.3.46",
     "uuid": "^10.0.0",
     "zod": "^3.25.32"
   },
@@ -217,7 +218,8 @@
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
     "word-extractor": "^1.0.4",
-    "youtubei.js": "^12.2.0"
+    "youtubei.js": "^12.2.0",
+    "zod": "^3.25.76"
   },
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",
@@ -347,7 +349,8 @@
     "weaviate-client": "^3.5.2",
     "word-extractor": "*",
     "ws": "^8.14.2",
-    "youtubei.js": "*"
+    "youtubei.js": "*",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependenciesMeta": {
     "@arcjet/redact": {

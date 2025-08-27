@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
-import { z } from "zod";
-
+import { z } from "zod/v3";
 import { StructuredOutputParser } from "../structured.js";
 
 test("StructuredOutputParser handles valid JSON wrapped in triple backticks", async () => {

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { ChatMistralAI } from "@langchain/mistralai";
 import { createAgent, HumanMessage, tool } from "langchain";

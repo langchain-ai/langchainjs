@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const model = new ChatOpenAI({
   temperature: 0,

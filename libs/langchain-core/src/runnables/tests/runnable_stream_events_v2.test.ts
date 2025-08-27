@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { test, expect, afterEach } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { AsyncLocalStorage } from "node:async_hooks";
 import {
   RunnableLambda,

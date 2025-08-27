@@ -1,7 +1,7 @@
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 // Or, from web environments:
 // import { BedrockChat } from "@langchain/community/chat_models/bedrock/web";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const model = new BedrockChat({
   region: process.env.BEDROCK_AWS_REGION,
