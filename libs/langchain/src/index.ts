@@ -22,6 +22,10 @@ export {
   toolStrategy,
   providerStrategy,
   type AgentState,
+  type HumanInterrupt,
+  type HumanInterruptConfig,
+  type ActionRequest,
+  type HumanResponse,
 } from "./agents/index.js";
 
 /**
