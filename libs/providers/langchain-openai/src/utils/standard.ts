@@ -5,8 +5,7 @@ import {
   type ContentBlock,
 } from "@langchain/core/messages";
 import { isReasoningModel, messageToOpenAIRole } from "./message_inputs";
-
-const iife = <T>(fn: () => T) => fn();
+import { iife } from "./misc";
 
 type ChatCompletionContentData =
   | OpenAIClient.Chat.Completions.ChatCompletionContentPartImage
