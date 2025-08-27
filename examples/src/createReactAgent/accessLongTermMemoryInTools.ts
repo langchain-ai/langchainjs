@@ -19,12 +19,7 @@
  */
 
 import fs from "node:fs/promises";
-import {
-  createReactAgent,
-  tool,
-  InMemoryStore,
-  type CreateAgentToolConfig,
-} from "langchain";
+import { createReactAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -77,12 +72,8 @@ await store.put(["interactions"], "sarah_456", []);
  * Knowledge retrieval tool that uses long-term memory
  */
 const knowledgeRetrievalTool = tool(
-  async (
-    input: { query: string; userId?: string },
-    config: CreateAgentToolConfig
-  ) => {
-    const storeInstance = config.store;
-    if (!storeInstance) {
+  async (input: { query: string; userId?: string }) => {
+    if (!store) {
       throw new Error("Store is required when compiling the graph");
     }
 
@@ -92,11 +83,8 @@ const knowledgeRetrievalTool = tool(
      * Get user-specific preferences and context if userId provided
      */
     if (input.userId) {
-      const userPreferences = await storeInstance.get(
-        ["preferences"],
-        input.userId
-      );
-      const userContext = await storeInstance.get(["context"], input.userId);
+      const userPreferences = await store.get(["preferences"], input.userId);
+      const userContext = await store.get(["context"], input.userId);
 
       if (userPreferences?.value) {
         memories.push(
@@ -124,7 +112,7 @@ const knowledgeRetrievalTool = tool(
         input.query.toLowerCase().includes("database") ||
         input.query.toLowerCase().includes("optimization")
       ) {
-        const domainKnowledge = await storeInstance.get(["knowledge"], domain);
+        const domainKnowledge = await store.get(["knowledge"], domain);
         if (domainKnowledge?.value) {
           memories.push(
             ...domainKnowledge.value.map(
@@ -139,20 +127,13 @@ const knowledgeRetrievalTool = tool(
      * Store this interaction for future reference
      */
     if (input.userId) {
-      const interactions = await storeInstance.get(
-        ["interactions"],
-        input.userId
-      );
+      const interactions = await store.get(["interactions"], input.userId);
       const currentInteractions = interactions?.value || [];
       currentInteractions.push({
         query: input.query,
         timestamp: new Date().toISOString(),
       });
-      await storeInstance.put(
-        ["interactions"],
-        input.userId,
-        currentInteractions
-      );
+      await store.put(["interactions"], input.userId, currentInteractions);
     }
 
     const memoryContext = memories.slice(0, 5).join("\n- ");
@@ -181,12 +162,8 @@ This information helps me provide more personalized and contextually relevant re
  * Preference learning tool that updates long-term memory
  */
 const preferencelearningTool = tool(
-  async (
-    input: { observation: string; userId: string; category: string },
-    config: CreateAgentToolConfig
-  ) => {
-    const storeInstance = config.store;
-    if (!storeInstance) {
+  async (input: { observation: string; userId: string; category: string }) => {
+    if (!store) {
       throw new Error("Store is required when compiling the graph");
     }
 
@@ -195,14 +172,14 @@ const preferencelearningTool = tool(
      */
     const namespace =
       input.category === "preference" ? ["preferences"] : ["context"];
-    const existingData = await storeInstance.get(namespace, input.userId);
+    const existingData = await store.get(namespace, input.userId);
     const currentItems = existingData?.value || [];
 
     /**
      * Add the new observation to the existing data
      */
     currentItems.push(input.observation);
-    await storeInstance.put(namespace, input.userId, currentItems);
+    await store.put(namespace, input.userId, currentItems);
 
     /**
      * Check if we had existing preferences

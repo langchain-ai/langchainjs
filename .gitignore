@@ -51,3 +51,5 @@ credentials.json
 
 bun.lock
 coverage/
+
+examples/src/createReactAgent/*.png
