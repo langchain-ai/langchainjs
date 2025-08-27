@@ -1,6 +1,7 @@
 import type { StandardContentBlockTranslator } from "./index.js";
 import type { ContentBlock } from "../content/index.js";
-import { isAIMessageChunk, type AIMessage } from "../ai.js";
+import type { AIMessageChunk, AIMessage } from "../ai.js";
+import type { BaseMessage, BaseMessageChunk } from "../base.js";
 import {
   _isArray,
   _isContentBlock,
@@ -10,7 +11,6 @@ import {
   safeParseJson,
   iife,
 } from "./utils.js";
-import { isBaseMessageChunk } from "../base.js";
 
 function convertAnthropicAnnotation(
   citation: ContentBlock
@@ -381,11 +381,7 @@ export function convertToV1FromAnthropicMessage(
       }
       // message chunks can have input_json_delta contents
       else if (_isContentBlock(block, "input_json_delta")) {
-        if (
-          isBaseMessageChunk(message) &&
-          isAIMessageChunk(message) &&
-          message.tool_call_chunks?.length
-        ) {
+        if (_isAIMessageChunk(message) && message.tool_call_chunks?.length) {
           const tool_call_chunk = message.tool_call_chunks[0];
           yield {
             type: "tool_call_chunk",
@@ -546,3 +542,11 @@ export const anthropicTranslator: StandardContentBlockTranslator = {
   translateContent: convertToV1FromAnthropicMessage,
   translateContentChunk: convertToV1FromAnthropicMessage,
 };
+
+function _isAIMessageChunk(message: unknown): message is AIMessageChunk {
+  return (
+    typeof (message as BaseMessage)?._getType === "function" &&
+    typeof (message as BaseMessageChunk).concat === "function" &&
+    (message as BaseMessageChunk)._getType() === "ai"
+  );
+}

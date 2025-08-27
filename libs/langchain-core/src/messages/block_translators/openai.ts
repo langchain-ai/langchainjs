@@ -1,7 +1,6 @@
 import type { ContentBlock } from "../content/index.js";
-import { type AIMessageChunk, type AIMessage } from "../ai.js";
-import { BaseContentBlock } from "../content/base.js";
-import { StandardContentBlockTranslator } from "./index.js";
+import type { AIMessageChunk, AIMessage } from "../ai.js";
+import type { StandardContentBlockTranslator } from "./index.js";
 import { convertToV1FromOpenAIDataBlock, isOpenAIDataBlock } from "./data.js";
 import {
   _isArray,
@@ -170,7 +169,7 @@ export function convertToV1FromChatCompletionsInput(
 }
 
 function convertResponsesAnnotation(
-  annotation: BaseContentBlock
+  annotation: ContentBlock
 ): ContentBlock | ContentBlock.Citation {
   if (annotation.type === "url_citation") {
     const { url, title, start_index, end_index } = annotation;
