@@ -12,7 +12,10 @@ export const getWordCount = (corpus: string) => {
 
 /** Number of occurences of a word in a string. */
 export const getTermFrequency = (term: string, corpus: string) => {
-  return ((corpus || "").match(new RegExp(term, "g")) || []).length;
+  // Escape any RegExp metacharacters in the term so constructing a RegExp
+  // from user-provided or model-generated queries does not throw an error
+  const escaped = (term || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return ((corpus || "").match(new RegExp(escaped, "g")) || []).length;
 };
 
 /** Inverse document frequency. */
