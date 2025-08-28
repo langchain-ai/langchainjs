@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.3.26",
+  "version": "1.0.0-alpha.1",
   "description": "Anthropic integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
