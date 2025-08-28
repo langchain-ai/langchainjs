@@ -156,7 +156,7 @@ export function _convertLangChainToolCallToAnthropic(
 
 function* _formatContentBlocks(
   content: ContentBlock[]
-): Generator<Anthropic.Messages.ContentBlockParam> {
+): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
     "tool_use",
     "tool_result",
@@ -189,11 +189,13 @@ function* _formatContentBlocks(
       ) {
         source = _formatImage(contentPart.image_url.url);
       }
-      yield {
-        type: "image" as const, // Explicitly setting the type as "image"
-        source,
-        ...(cacheControl ? { cache_control: cacheControl } : {}),
-      };
+      if (source) {
+        yield {
+          type: "image" as const, // Explicitly setting the type as "image"
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.ImageBlockParam;
+      }
     } else if (_isAnthropicImageBlockParam(contentPart)) {
       return contentPart;
     } else if (contentPart.type === "document") {
@@ -201,7 +203,7 @@ function* _formatContentBlocks(
       yield {
         ...contentPart,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
-      };
+      } as Anthropic.Messages.DocumentBlockParam;
     } else if (_isAnthropicThinkingBlock(contentPart)) {
       const block: AnthropicThinkingBlockParam = {
         type: "thinking" as const, // Explicitly setting the type as "thinking"
@@ -230,7 +232,7 @@ function* _formatContentBlocks(
           : {}),
         content: contentPart.content,
       };
-      yield block;
+      yield block as Anthropic.Beta.BetaSearchResultBlockParam;
     } else if (
       textTypes.find((t) => t === contentPart.type) &&
       "text" in contentPart
@@ -243,7 +245,7 @@ function* _formatContentBlocks(
         ...("citations" in contentPart && contentPart.citations
           ? { citations: contentPart.citations }
           : {}),
-      };
+      } as Anthropic.Messages.TextBlockParam;
     } else if (toolTypes.find((t) => t === contentPart.type)) {
       const contentPartCopy = { ...contentPart };
       if ("index" in contentPartCopy) {
@@ -374,7 +376,9 @@ export function _convertMessagesToAnthropicPayload(
     }
   });
   return {
-    messages: mergeMessages(formattedMessages),
+    messages: mergeMessages(
+      formattedMessages as AnthropicMessageCreateParams["messages"]
+    ),
     system,
   } as AnthropicMessageCreateParams;
 }
