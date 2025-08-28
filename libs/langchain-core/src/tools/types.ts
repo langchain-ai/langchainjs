@@ -85,8 +85,13 @@ export interface ToolParams extends BaseLangChainParams {
 
 export type ToolRunnableConfig<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ConfigurableFieldType extends Record<string, any> = Record<string, any>
-> = RunnableConfig<ConfigurableFieldType> & { toolCall?: ToolCall };
+  ConfigurableFieldType extends Record<string, any> = Record<string, any>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ContextSchema extends Record<string, any> = Record<string, any>
+> = RunnableConfig<ConfigurableFieldType> & {
+  toolCall?: ToolCall;
+  context?: ContextSchema;
+};
 
 /**
  * Schema for defining tools.

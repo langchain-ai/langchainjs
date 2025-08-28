@@ -258,7 +258,7 @@ importers:
         version: 4.10.2
       '@browserbasehq/stagehand':
         specifier: ^1.3.0
-        version: 1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(utf-8-validate@6.0.5)(zod@3.25.76)
+        version: 1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(utf-8-validate@6.0.5)(zod@3.25.76)
       '@clickhouse/client':
         specifier: ^0.2.5
         version: 0.2.10
@@ -435,7 +435,7 @@ importers:
         version: 0.26.1
       chromadb:
         specifier: ^1.5.3
-        version: 1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        version: 1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       cohere-ai:
         specifier: ^7.14.0
         version: 7.18.0(encoding@0.1.13)
@@ -474,7 +474,7 @@ importers:
         version: link:../libs/langchain
       lunary:
         specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
+        version: 0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
       mariadb:
         specifier: ^3.4.0
         version: 3.4.5
@@ -783,11 +783,11 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/langgraph':
-        specifier: ^0.4.3
-        version: 0.4.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
+        specifier: ^1.0.0-alpha
+        version: 1.0.0-alpha.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/langgraph-checkpoint':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
+        specifier: ^0.1.1
+        version: 0.1.1(@langchain/core@libs+langchain-core)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
@@ -1240,7 +1240,7 @@ importers:
         version: 1.0.0-rc.12
       chromadb:
         specifier: ^1.9.1
-        version: 1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        version: 1.10.5(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       closevector-common:
         specifier: 0.1.3
         version: 0.1.3
@@ -1492,7 +1492,7 @@ importers:
         version: 1.0.20
       langsmith:
         specifier: ^0.3.64
-        version: 0.3.64(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
+        version: 0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -3611,8 +3611,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.20
       openai:
-        specifier: ^5.3.0
-        version: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+        specifier: 5.12.2
+        version: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       zod:
         specifier: ^3.25.32
         version: 3.25.76
@@ -6969,8 +6969,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/langgraph-checkpoint@0.1.0':
-    resolution: {integrity: sha512-7oY5b0VQSxcV3DgoHdXiCgBhEzml/ZjZfKNeuq6oZ3ggcdUICa/fzrIBbFju6gxPU8ly93s0OsjF4yURnHw70Q==}
+  '@langchain/langgraph-checkpoint@0.1.1':
+    resolution: {integrity: sha512-h2bP0RUikQZu0Um1ZUPErQLXyhzroJqKRbRcxYRTAh49oNlsfeq4A3K4YEDRbGGuyPZI/Jiqwhks1wZwY73AZw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6989,8 +6989,8 @@ packages:
       react-dom:
         optional: true
 
-  '@langchain/langgraph-sdk@0.0.107':
-    resolution: {integrity: sha512-2qzboDgYH8KJNz7q2Yzvj6H9i4iZUYfZnB7xY+Dkye6yvI+2m1fFIdpP/Ppu+eFvoIUAsbDHDF+wvR4F11kS3Q==}
+  '@langchain/langgraph-sdk@0.0.112':
+    resolution: {integrity: sha512-/9W5HSWCqYgwma6EoOspL4BGYxGxeJP6lIquPSF4FA0JlKopaUv58ucZC3vAgdJyCgg6sorCIV/qg7SGpEcCLw==}
     peerDependencies:
       '@langchain/core': workspace:*
       react: ^18 || ^19
@@ -7013,11 +7013,12 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/langgraph@0.4.5':
-    resolution: {integrity: sha512-LpKDe/SROC9/qIPkuGiyBkIeuPJ4FxWljaJPd8P2cp6IjYI8UqWk7w6IHiq+JIB1oPPcKGprc3D4OZjq59WHzQ==}
+  '@langchain/langgraph@1.0.0-alpha.0':
+    resolution: {integrity: sha512-cCYqWW3/aoU4V6oURiL5sd/uij1r0u/nJT/Po4L8C8HhFM07JlI0Eg92yfkP+Cy9T5gMwta5UX2GtOS3LuurGA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
+      zod: ^3.25.32
       zod-to-json-schema: ^3.x
     peerDependenciesMeta:
       zod-to-json-schema:
@@ -15820,6 +15821,18 @@ packages:
       zod:
         optional: true
 
+  openai@5.12.2:
+    resolution: {integrity: sha512-xqzHHQch5Tws5PcKR2xsZGX9xtch+JQFz5zb14dGqlshmmDAFBFEWmeIpf7wVqWV+w7Emj7jRgkNJakyKE0tYQ==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25.32
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
@@ -22078,6 +22091,22 @@ snapshots:
       - encoding
       - utf-8-validate
 
+  '@browserbasehq/stagehand@1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(utf-8-validate@6.0.5)(zod@3.25.76)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.27.3(encoding@0.1.13)
+      '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
+      '@playwright/test': 1.54.2
+      deepmerge: 4.3.1
+      dotenv: 16.6.1
+      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
   '@bufbuild/protobuf@2.6.2': {}
 
   '@bytecodealliance/componentize-js@0.18.4':
@@ -24499,7 +24528,7 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
 
-  '@langchain/langgraph-checkpoint@0.1.0(@langchain/core@libs+langchain-core)':
+  '@langchain/langgraph-checkpoint@0.1.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
@@ -24515,7 +24544,7 @@ snapshots:
       react: 19.0.0
       react-dom: 18.3.1(react@19.0.0)
 
-  '@langchain/langgraph-sdk@0.0.107(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
+  '@langchain/langgraph-sdk@0.0.112(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
       p-queue: 6.6.2
@@ -24539,11 +24568,11 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/langgraph@0.4.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))':
+  '@langchain/langgraph@1.0.0-alpha.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/langgraph-checkpoint': 0.1.0(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 0.0.107(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
+      '@langchain/langgraph-checkpoint': 0.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/langgraph-sdk': 0.0.112(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
       uuid: 10.0.0
       zod: 3.25.76
     optionalDependencies:
@@ -29081,12 +29110,23 @@ snapshots:
 
   chownr@3.0.0: {}
 
-  chromadb@1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+  chromadb@1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       cliui: 8.0.1
       isomorphic-fetch: 3.0.0(encoding@0.1.13)
     optionalDependencies:
       '@google/generative-ai': 0.7.1
+      cohere-ai: 7.18.0(encoding@0.1.13)
+      ollama: 0.5.16
+      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+    transitivePeerDependencies:
+      - encoding
+
+  chromadb@1.10.5(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+    dependencies:
+      cliui: 8.0.1
+      isomorphic-fetch: 3.0.0(encoding@0.1.13)
+    optionalDependencies:
       cohere-ai: 7.18.0(encoding@0.1.13)
       ollama: 0.5.16
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
@@ -34476,6 +34516,19 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
+  langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 4.1.2
+      console-table-printer: 2.14.6
+      p-queue: 6.6.2
+      p-retry: 4.6.2
+      semver: 7.7.2
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
@@ -34778,12 +34831,12 @@ snapshots:
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
+  lunary@0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
     dependencies:
       unctx: 2.4.1
     optionalDependencies:
       '@anthropic-ai/sdk': 0.56.0
-      openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
 
   lunr@2.3.9: {}
@@ -35790,6 +35843,11 @@ snapshots:
       - encoding
 
   openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76):
+    optionalDependencies:
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      zod: 3.25.76
+
+  openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76):
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 3.25.76

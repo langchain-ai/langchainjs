@@ -282,6 +282,7 @@ export function createReactAgent<
 export * from "./types.js";
 export * from "./errors.js";
 export * from "./interrupt.js";
+export { ToolNode } from "./nodes/ToolNode.js";
 export {
   toolStrategy,
   providerStrategy,

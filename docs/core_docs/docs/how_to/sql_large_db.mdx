@@ -1,13 +1,5 @@
 # How to deal with large databases
 
-:::info Prerequisites
-
-This guide assumes familiarity with the following:
-
-- [Question answering over SQL data](/docs/tutorials/sql_qa)
-
-:::
-
 In order to write valid queries against a database, we need to feed the model the table names, table schemas, and feature values for it to query over.
 When there are many tables, columns, and/or high-cardinality columns, it becomes impossible for us to dump the full information about our database in every prompt.
 Instead, we must find ways to dynamically insert into the prompt only the most relevant information. Let's take a look at some techniques for doing this.

@@ -10,6 +10,7 @@ import {
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
+import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import { PreHookAnnotation, AnyAnnotationRoot } from "../annotation.js";
@@ -55,7 +56,7 @@ export interface AgentNodeOptions<
       StructuredResponseFormat,
       ContextSchema
     >,
-    "llm" | "prompt" | "includeAgentName" | "name" | "responseFormat"
+    "llm" | "model" | "prompt" | "includeAgentName" | "name" | "responseFormat"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -168,6 +169,43 @@ export class AgentNode<
     return { messages: [response] };
   }
 
+  /**
+   * Derive the model from the options.
+   * @param state - The state of the agent.
+   * @param config - The config of the agent.
+   * @returns The model.
+   */
+  #deriveModel(
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
+    config: RunnableConfig
+  ) {
+    if (this.#options.model) {
+      if (typeof this.#options.model === "string") {
+        return initChatModel(this.#options.model);
+      }
+
+      throw new Error("`model` option must be a string.");
+    }
+
+    const model = this.#options.llm;
+
+    /**
+     * If the model is a function, call it to get the model.
+     */
+    if (typeof model === "function") {
+      return model(state, config);
+    }
+
+    if (model) {
+      return model;
+    }
+
+    throw new Error(
+      "No model option was provided, either via `model` or via `llm` option."
+    );
+  }
+
   async #invokeModel(
     state: InternalAgentState<StructuredResponseFormat> &
       PreHookAnnotation["State"],
@@ -180,15 +218,7 @@ export class AgentNode<
     | Command
     | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
   > {
-    let model = this.#options.llm;
-
-    /**
-     * If the model is a function, call it to get the model.
-     * @deprecated likely to be removed in the next version of the agent
-     */
-    if (typeof model === "function") {
-      model = await model(state, config);
-    }
+    const model = await this.#deriveModel(state, config);
 
     /**
      * Check if the LLM already has bound tools and throw if it does.

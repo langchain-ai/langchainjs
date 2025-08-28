@@ -59,6 +59,22 @@ describe("createReactAgent Integration Tests", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("should work with model option", async () => {
+    const agent = createReactAgent({
+      model: "claude-3-5-sonnet-20240620",
+      tools: [getWeather],
+      responseFormat: answerSchema,
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(result.structuredResponse).toBeDefined();
+    expect(result.structuredResponse?.answer).toBe("yes");
+    expect(result.structuredResponse?.city).toBe("Tokyo");
+  });
+
   it("should throw if a user tries to use native response format with Anthropic", async () => {
     const agent = createReactAgent({
       llm,

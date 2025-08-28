@@ -112,8 +112,7 @@ const chain = prompt.pipe(modelWithTools).pipe(
 );
 ```
 
-Finally, we'll call `.stream` on our chain, and similarly to the [streaming agent](/docs/how_to/stream_agent_client)
-example, we'll iterate over the stream and stringify + parse the data before updating the stream value:
+Finally, we'll call `.stream` on our chain, and we'll iterate over the stream and stringify + parse the data before updating the stream value:
 
 ```typescript
     const streamResult = await chain.stream({
