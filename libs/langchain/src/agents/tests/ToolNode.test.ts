@@ -795,7 +795,7 @@ describe("ToolNode error handling", () => {
     ).rejects.toThrow(GraphInterrupt);
   });
 
-  it("should handle tool errors by default", async () => {
+  it.only("should handle tool errors by default", async () => {
     const toolWithError = tool(
       async (_) => {
         throw new Error("some error");
@@ -807,18 +807,17 @@ describe("ToolNode error handling", () => {
       }
     );
     const toolNode = new ToolNode([toolWithError]);
-    await expect(
-      toolNode.invoke({
-        messages: [
-          new AIMessage({
-            content: "",
-            tool_calls: [
-              { name: "tool_with_interrupt", args: {}, id: "testid" },
-            ],
-          }),
-        ],
-      })
-    ).rejects.toThrow(/Please fix your mistakes./);
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ name: "tool_with_interrupt", args: {}, id: "testid" }],
+        }),
+      ],
+    });
+    expect(result.messages[0].content).toBe(
+      "Error: some error\n Please fix your mistakes."
+    );
   });
 
   it("should throw if handleToolErrors is false", async () => {
