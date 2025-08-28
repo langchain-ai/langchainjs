@@ -65,7 +65,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@langchain/core": ">=1.x",
+    "@langchain/core": ">=0.3.58 <0.4.0 || ^1.0.0-alpha",
     "cheerio": "*",
     "peggy": "^3.0.2",
     "typeorm": "*"
@@ -84,7 +84,7 @@
   "dependencies": {
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
-    "@langchain/langgraph": "^0.4.3",
+    "@langchain/langgraph": "^1.0.0-alpha",
     "@langchain/langgraph-checkpoint": "^0.1.0",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
