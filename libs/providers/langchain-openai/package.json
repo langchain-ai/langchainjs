@@ -35,7 +35,7 @@
     "zod": "^3.25.32"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.68 <0.4.0"
+    "@langchain/core": ">=1.0.0-alpha <2.0.0"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
