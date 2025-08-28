@@ -1,6 +1,8 @@
 import type { BaseLanguageModel } from "@langchain/core/language_models/base";
 import type { Runnable } from "@langchain/core/runnables";
+
 import type { Client, ClientConfig } from "langsmith";
+import type { PromptCommit } from "langsmith/schemas";
 
 /**
  * Push a prompt to the hub.
@@ -43,7 +45,7 @@ export async function basePush(
 export async function basePull(
   ownerRepoCommit: string,
   options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
-) {
+): Promise<PromptCommit> {
   const Client = await loadLangSmith();
   const client = new Client(options);
 
