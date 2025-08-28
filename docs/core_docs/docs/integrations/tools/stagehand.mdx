@@ -4,7 +4,6 @@ hide_table_of_contents: true
 ---
 
 import CodeBlock from "@theme/CodeBlock";
-import Example from "@examples/agents/stagehand_ai_web_browser.ts";
 import { StagehandToolkit } from "@langchain/community/agents/toolkits/stagehand";
 
 # Stagehand Toolkit
@@ -102,34 +101,6 @@ console.log(observations);
 
 const currentUrl = stagehand.page.url();
 expect(currentUrl).toContain("google.com/search?q=OpenAI");
-```
-
-## Usage with LangGraph Agents
-
-<CodeBlock language="typescript">{Example}</CodeBlock>
-
-## Usage on Browserbase - remote headless browser
-
-If you want to run the browser remotely, you can use the Browserbase platform.
-
-You need to set the `BROWSERBASE_API_KEY` environment variable to your Browserbase API key.
-
-```bash
-export BROWSERBASE_API_KEY="your-browserbase-api-key"
-```
-
-You also need to set `BROWSERBASE_PROJECT_ID` to your Browserbase project ID.
-
-```bash
-export BROWSERBASE_PROJECT_ID="your-browserbase-project-id"
-```
-
-Then initialize the Stagehand instance with the `BROWSERBASE` environment.
-
-```typescript
-const stagehand = new Stagehand({
-  env: "BROWSERBASE",
-});
 ```
 
 ## Related
