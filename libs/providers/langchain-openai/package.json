@@ -35,10 +35,11 @@
     "zod": "^3.25.32"
   },
   "peerDependencies": {
-    "@langchain/core": ">=1.0.0-alpha <2.0.0"
+    "@langchain/core": "^1.0.0-alpha.1 <2.0.0"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",
+    "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
@@ -57,7 +58,9 @@
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "uuid": "^11.1.0",
+    "vitest": "^3.2.4",
+    "zod-to-json-schema": "^3.24.6"
   },
   "publishConfig": {
     "access": "public"
