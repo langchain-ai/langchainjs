@@ -1521,4 +1521,44 @@ describe("createReactAgent", () => {
       expect(configAbortController.signal.aborted).toBe(true);
     });
   });
+
+  describe("model option", () => {
+    it("should not accept model and llm option", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("ai response")],
+      });
+
+      await expect(() =>
+        createReactAgent({
+          llm: model,
+          model: "gpt-4o",
+          tools: [],
+        })
+      ).toThrow("Cannot provide both `model` and `llm` options.");
+    });
+
+    it("should throw if no model or llm option is provided", async () => {
+      await expect(() =>
+        createReactAgent({
+          tools: [],
+        })
+      ).toThrow(
+        "Either `model` or `llm` option must be provided to create an agent."
+      );
+    });
+
+    it("throws if model is not a string", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("ai response")],
+      });
+
+      await expect(() =>
+        createReactAgent({
+          // @ts-expect-error - model is not a string
+          model: model,
+          tools: [],
+        }).invoke({ messages: [new HumanMessage("Hello Input!")] })
+      ).rejects.toThrow("`model` option must be a string.");
+    });
+  });
 });

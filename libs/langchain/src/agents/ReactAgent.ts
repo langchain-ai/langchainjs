@@ -76,8 +76,24 @@ export class ReactAgent<
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
-    if (typeof options.llm !== "function") {
+    if (options.llm && typeof options.llm !== "function") {
       validateLLMHasNoBoundTools(options.llm);
+    }
+
+    /**
+     * validate that model and llm options are not provided together
+     */
+    if (options.llm && options.model) {
+      throw new Error("Cannot provide both `model` and `llm` options.");
+    }
+
+    /**
+     * validate that either model or llm option is provided
+     */
+    if (!options.llm && !options.model) {
+      throw new Error(
+        "Either `model` or `llm` option must be provided to create an agent."
+      );
     }
 
     const toolClasses = Array.isArray(options.tools)
@@ -114,6 +130,7 @@ export class ReactAgent<
       "agent",
       new AgentNode({
         llm: this.options.llm,
+        model: this.options.model,
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
