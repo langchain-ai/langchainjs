@@ -48,15 +48,14 @@ export interface ToolNodeOptions {
    * Whether to throw the error immediately if the tool fails or handle it by the `onToolError` function or via ToolMessage.
    *
    * If `true` (default):
-   *   - the error can be handled by the `onToolError` function if provided or
-   *   - a tool message with the error message will be returned to the LLM
+   *   - a tool message with the error will be returned to the LLM
    *
    * If `false`:
    *   - the error will be thrown immediately
    *
    * If a function is provided:
-   *   - you can catch the error and return a {@link ToolMessage} as result
-   *   - throw if the function returns undefined
+   *   - returns a custom {@link ToolMessage} as result
+   *   - throws an error otherwise
    *
    * @default true
    */
@@ -228,6 +227,12 @@ export class ToolNode<
         if (result && isToolMessage(result)) {
           return result;
         }
+      } else if (this.handleToolErrors) {
+        return new ToolMessage({
+          name: call.name,
+          content: `Error: ${e}\n Please fix your mistakes.`,
+          tool_call_id: call.id!,
+        });
       }
 
       /**
