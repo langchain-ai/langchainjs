@@ -55,7 +55,8 @@
     "eslint-plugin-prettier": "^4.2.1",
     "langchain": "workspace:*",
     "prettier": "^2.8.3",
-    "release-it": "^18.1.2",
+    "release-it": "^19.0.4",
+    "release-it-pnpm": "^4.6.6",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },
