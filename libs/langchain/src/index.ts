@@ -10,6 +10,11 @@ export {
 } from "@langchain/core/messages";
 
 /**
+ * Universal Chat Model
+ */
+export { initChatModel } from "./chat_models/universal.js";
+
+/**
  * LangChain Tools
  */
 export { tool, DynamicStructuredTool } from "@langchain/core/tools";

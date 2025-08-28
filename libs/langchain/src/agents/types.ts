@@ -44,6 +44,7 @@ import type {
   ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "./responses.js";
+import type { initChatModel } from "../chat_models/universal.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -177,7 +178,22 @@ export type CreateReactAgentParams<
     | ResponseFormatUndefined
 > = {
   /** The chat model that can utilize OpenAI-style tool calling. */
-  llm: LanguageModelLike | DynamicLLMFunction<StateSchema, ContextSchema>;
+  llm?: LanguageModelLike | DynamicLLMFunction<StateSchema, ContextSchema>;
+
+  /**
+   * Initializes a ChatModel based on the provided model name and provider.
+   * It supports various model providers and allows for runtime configuration of model parameters.
+   *
+   * @uses {@link initChatModel}
+   * @example
+   * ```ts
+   * const agent = createReactAgent({
+   *   model: "anthropic:claude-3-7-sonnet-latest",
+   *   // ...
+   * });
+   * ```
+   */
+  model?: string;
 
   /** A list of tools or a ToolNode. */
   tools: ToolNode | (ServerTool | ClientTool)[];
