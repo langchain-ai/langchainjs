@@ -799,7 +799,7 @@ export async function initChatModel<
  * This function initializes a ChatModel based on the provided model name and provider.
  * It supports various model providers and allows for runtime configuration of model parameters.
  *
- * Security Note: Setting `configurableFields` to "any" means fields like api_key, base_url, etc.
+ * Security Note: Setting `configurableFields` to "any" means fields like apiKey, baseUrl, etc.
  * can be altered at runtime, potentially redirecting model requests to a different service/user.
  * Make sure that if you're accepting untrusted configurations, you enumerate the
  * `configurableFields` explicitly.

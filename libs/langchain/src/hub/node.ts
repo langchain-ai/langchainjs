@@ -3,6 +3,7 @@ import {
   basePull,
   generateModelImportMap,
   generateOptionalImportMap,
+  bindOutputSchema,
 } from "./base.js";
 import { load } from "../load/index.js";
 import { getChatModelByClassName } from "../chat_models/universal.js";
@@ -52,5 +53,5 @@ export async function pull<T extends Runnable>(
     generateOptionalImportMap(modelClass),
     generateModelImportMap(modelClass)
   );
-  return loadedPrompt;
+  return bindOutputSchema(loadedPrompt);
 }
