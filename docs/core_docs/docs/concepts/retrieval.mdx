@@ -130,7 +130,7 @@ These approaches leverage models to bridge the gap between user intent and the s
 | Name                                     | When to Use                                                                                                                          | Description                                                                                                                                                                                                                                          |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Self Query](/docs/how_to/self_query/)   | If users are asking questions that are better answered by fetching documents based on metadata rather than similarity with the text. | This uses an LLM to transform user input into two things: (1) a string to look up semantically, (2) a metadata filter to go along with it. This is useful because oftentimes questions are about the METADATA of documents (not the content itself). |
-| [Text to SQL](/docs/tutorials/sql_qa/)   | If users are asking questions that require information housed in a relational database, accessible via SQL.                          | This uses an LLM to transform user input into a SQL query.                                                                                                                                                                                           |
+| Text to SQL                              | If users are asking questions that require information housed in a relational database, accessible via SQL.                          | This uses an LLM to transform user input into a SQL query.                                                                                                                                                                                           |
 | [Text-to-Cypher](/docs/tutorials/graph/) | If users are asking questions that require information housed in a graph database, accessible via Cypher.                            | This uses an LLM to transform user input into a Cypher query.                                                                                                                                                                                        |
 
 As an example, here is how to use the `SelfQueryRetriever` to convert natural language queries into metadata filters.
@@ -153,7 +153,7 @@ const retriever = SelfQueryRetriever.fromLLM({
 
 :::info[Further reading]
 
-- See our tutorials on [text-to-SQL](/docs/tutorials/sql_qa/), [text-to-Cypher](/docs/tutorials/graph/), and [query analysis for metadata filters](/docs/tutorials/rag#query-analysis).
+- See our tutorials on text-to-SQL, [text-to-Cypher](/docs/tutorials/graph/), and [query analysis for metadata filters](/docs/tutorials/rag#query-analysis).
 - See our [blog post overview](https://blog.langchain.dev/query-construction/).
 - See our RAG from Scratch video on [query construction](https://youtu.be/kl6NwWYxvbM?feature=shared).
 
@@ -201,12 +201,6 @@ Relational databases are a fundamental type of structured data storage used in m
 They organize data into tables with predefined schemas, where each table represents an entity or relationship.
 Data is stored in rows (records) and columns (attributes), allowing for efficient querying and manipulation through SQL (Structured Query Language).
 Relational databases excel at maintaining data integrity, supporting complex queries, and handling relationships between different data entities.
-
-:::info[Further reading]
-
-- See our [tutorial](/docs/tutorials/sql_qa/) for working with SQL databases.
-
-:::
 
 #### Graph databases
 
