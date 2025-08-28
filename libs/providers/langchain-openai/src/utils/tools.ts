@@ -6,9 +6,10 @@ import {
   convertToOpenAITool as formatToOpenAITool,
   isLangChainTool,
 } from "@langchain/core/utils/function_calling";
-import { StructuredToolInterface } from "@langchain/core/tools";
+import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
 import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { ToolCall } from "@langchain/core/messages/tool";
 
 /**
  * Formats a tool in either OpenAI format, or LangChain structured tool format
@@ -243,4 +244,132 @@ export function isBuiltInToolChoice(
     "type" in tool_choice &&
     tool_choice.type !== "function"
   );
+}
+
+export type CustomToolCall = ToolCall & {
+  call_id: string;
+  isCustomTool: true;
+};
+
+type LangchainCustomTool = DynamicTool<string> & {
+  metadata: {
+    customTool: OpenAIClient.Responses.CustomTool;
+  };
+};
+
+export function isCustomTool(tool: unknown): tool is LangchainCustomTool {
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "metadata" in tool &&
+    typeof tool.metadata === "object" &&
+    tool.metadata !== null &&
+    "customTool" in tool.metadata &&
+    typeof tool.metadata.customTool === "object" &&
+    tool.metadata.customTool !== null
+  );
+}
+
+export function isOpenAICustomTool(
+  tool: ChatOpenAIToolType
+): tool is OpenAIClient.Chat.ChatCompletionCustomTool {
+  return (
+    "type" in tool &&
+    tool.type === "custom" &&
+    "custom" in tool &&
+    typeof tool.custom === "object" &&
+    tool.custom !== null
+  );
+}
+
+export function parseCustomToolCall(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawToolCall: Record<string, any>
+): CustomToolCall | undefined {
+  if (rawToolCall.type !== "custom_tool_call") {
+    return undefined;
+  }
+  return {
+    ...rawToolCall,
+    type: "tool_call",
+    call_id: rawToolCall.id,
+    id: rawToolCall.call_id,
+    name: rawToolCall.name,
+    isCustomTool: true,
+    args: {
+      input: rawToolCall.input,
+    },
+  };
+}
+
+export function isCustomToolCall(
+  toolCall: ToolCall
+): toolCall is CustomToolCall {
+  return (
+    toolCall.type === "tool_call" &&
+    "isCustomTool" in toolCall &&
+    toolCall.isCustomTool === true
+  );
+}
+
+export function convertCompletionsCustomTool(
+  tool: OpenAIClient.Chat.ChatCompletionCustomTool
+): OpenAIClient.Responses.CustomTool {
+  const getFormat = () => {
+    if (!tool.custom.format) {
+      return undefined;
+    }
+    if (tool.custom.format.type === "grammar") {
+      return {
+        type: "grammar" as const,
+        definition: tool.custom.format.grammar.definition,
+        syntax: tool.custom.format.grammar.syntax,
+      };
+    }
+    if (tool.custom.format.type === "text") {
+      return {
+        type: "text" as const,
+      };
+    }
+    return undefined;
+  };
+  return {
+    type: "custom",
+    name: tool.custom.name,
+    description: tool.custom.description,
+    format: getFormat(),
+  };
+}
+
+export function convertResponsesCustomTool(
+  tool: OpenAIClient.Responses.CustomTool
+): OpenAIClient.Chat.ChatCompletionCustomTool {
+  const getFormat = () => {
+    if (!tool.format) {
+      return undefined;
+    }
+    if (tool.format.type === "grammar") {
+      return {
+        type: "grammar" as const,
+        grammar: {
+          definition: tool.format.definition,
+          syntax: tool.format.syntax,
+        },
+      };
+    }
+    if (tool.format.type === "text") {
+      return {
+        type: "text" as const,
+      };
+    }
+    return undefined;
+  };
+  return {
+    type: "custom",
+    custom: {
+      name: tool.name,
+      description: tool.description,
+      format: getFormat(),
+    },
+  };
 }
