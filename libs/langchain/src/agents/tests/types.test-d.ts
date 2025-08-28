@@ -2,7 +2,7 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";
-import { BaseStore } from "@langchain/langgraph-checkpoint";
+import { type BaseStore } from "@langchain/langgraph-checkpoint";
 
 import { createReactAgent } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";

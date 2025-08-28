@@ -35,6 +35,7 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/langgraph-checkpoint": "^0.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
@@ -85,7 +86,6 @@
     "@langchain/openai": "workspace:*",
     "@langchain/textsplitters": "workspace:*",
     "@langchain/langgraph": "^1.0.0-alpha",
-    "@langchain/langgraph-checkpoint": "^0.1.0",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
     "openapi-types": "^12.1.3",
@@ -95,6 +95,7 @@
     "zod": "^3.25.32"
   },
   "optionalDependencies": {
+    "@langchain/langgraph-checkpoint": "^0.1.0",
     "langsmith": "^0.3.64"
   },
   "publishConfig": {
