@@ -797,6 +797,9 @@ export abstract class BaseChatOpenAI<
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (this.streaming === false) this.disableStreaming = true;
+
     this.streaming = fields?.streaming ?? false;
     if (this.disableStreaming) this.streaming = false;
 
