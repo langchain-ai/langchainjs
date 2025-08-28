@@ -35,7 +35,6 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:*",
-    "@langchain/langgraph-checkpoint": "^0.1.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
