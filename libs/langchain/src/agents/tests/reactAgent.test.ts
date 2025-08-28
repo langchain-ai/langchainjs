@@ -1555,7 +1555,7 @@ describe("createReactAgent", () => {
       await expect(() =>
         createReactAgent({
           // @ts-expect-error - model is not a string
-          model: model,
+          model,
           tools: [],
         }).invoke({ messages: [new HumanMessage("Hello Input!")] })
       ).rejects.toThrow("`model` option must be a string.");
