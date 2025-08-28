@@ -780,7 +780,6 @@ const DEPRECATED_DOC_IDS = [
   "integrations/llms/prompt_layer_openai",
   "integrations/text_embedding/google_palm",
   "integrations/retrievers/chatgpt-retriever-plugin",
-  "integrations/tools/aiplugin-tool",
   "integrations/tools/zapier_agent",
 ];
 
