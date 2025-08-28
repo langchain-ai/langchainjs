@@ -795,6 +795,32 @@ describe("ToolNode error handling", () => {
     ).rejects.toThrow(GraphInterrupt);
   });
 
+  it("should handle tool errors by default", async () => {
+    const toolWithError = tool(
+      async (_) => {
+        throw new Error("some error");
+      },
+      {
+        name: "tool_with_interrupt",
+        description: "A tool that returns an interrupt",
+        schema: z.object({}),
+      }
+    );
+    const toolNode = new ToolNode([toolWithError]);
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { name: "tool_with_interrupt", args: {}, id: "testid" },
+            ],
+          }),
+        ],
+      })
+    ).rejects.toThrow(/Please fix your mistakes./);
+  });
+
   it("should throw if handleToolErrors is false", async () => {
     const toolWithError = tool(
       async (_) => {
