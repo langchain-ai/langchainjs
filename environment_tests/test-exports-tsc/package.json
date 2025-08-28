@@ -16,6 +16,7 @@
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
+    "@types/node": "^24.3.0",
     "langchain": "workspace:*",
     "typescript": "5.5.4"
   },
