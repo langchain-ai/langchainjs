@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "0.3.31",
+  "version": "1.0.0-alpha.1",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
