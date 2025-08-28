@@ -73,6 +73,8 @@ export async function findWorkspacePackages(
               path: workspace.path,
             };
           }
+
+          return null;
         } catch (error) {
           console.error(
             `Error loading package.json for package: ${workspace.name}`,
