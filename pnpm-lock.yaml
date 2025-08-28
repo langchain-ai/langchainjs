@@ -783,11 +783,11 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/langgraph':
-        specifier: ^0.4.3
-        version: 0.4.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))
+        specifier: ^1.0.0-alpha
+        version: 1.0.0-alpha.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/langgraph-checkpoint':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
+        specifier: ^0.1.1
+        version: 0.1.1(@langchain/core@libs+langchain-core)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
@@ -6969,8 +6969,8 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/langgraph-checkpoint@0.1.0':
-    resolution: {integrity: sha512-7oY5b0VQSxcV3DgoHdXiCgBhEzml/ZjZfKNeuq6oZ3ggcdUICa/fzrIBbFju6gxPU8ly93s0OsjF4yURnHw70Q==}
+  '@langchain/langgraph-checkpoint@0.1.1':
+    resolution: {integrity: sha512-h2bP0RUikQZu0Um1ZUPErQLXyhzroJqKRbRcxYRTAh49oNlsfeq4A3K4YEDRbGGuyPZI/Jiqwhks1wZwY73AZw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6989,8 +6989,8 @@ packages:
       react-dom:
         optional: true
 
-  '@langchain/langgraph-sdk@0.0.107':
-    resolution: {integrity: sha512-2qzboDgYH8KJNz7q2Yzvj6H9i4iZUYfZnB7xY+Dkye6yvI+2m1fFIdpP/Ppu+eFvoIUAsbDHDF+wvR4F11kS3Q==}
+  '@langchain/langgraph-sdk@0.0.112':
+    resolution: {integrity: sha512-/9W5HSWCqYgwma6EoOspL4BGYxGxeJP6lIquPSF4FA0JlKopaUv58ucZC3vAgdJyCgg6sorCIV/qg7SGpEcCLw==}
     peerDependencies:
       '@langchain/core': workspace:*
       react: ^18 || ^19
@@ -7013,11 +7013,12 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/langgraph@0.4.5':
-    resolution: {integrity: sha512-LpKDe/SROC9/qIPkuGiyBkIeuPJ4FxWljaJPd8P2cp6IjYI8UqWk7w6IHiq+JIB1oPPcKGprc3D4OZjq59WHzQ==}
+  '@langchain/langgraph@1.0.0-alpha.0':
+    resolution: {integrity: sha512-cCYqWW3/aoU4V6oURiL5sd/uij1r0u/nJT/Po4L8C8HhFM07JlI0Eg92yfkP+Cy9T5gMwta5UX2GtOS3LuurGA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
+      zod: ^3.25.32
       zod-to-json-schema: ^3.x
     peerDependenciesMeta:
       zod-to-json-schema:
@@ -24527,7 +24528,7 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
 
-  '@langchain/langgraph-checkpoint@0.1.0(@langchain/core@libs+langchain-core)':
+  '@langchain/langgraph-checkpoint@0.1.1(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
@@ -24543,7 +24544,7 @@ snapshots:
       react: 19.0.0
       react-dom: 18.3.1(react@19.0.0)
 
-  '@langchain/langgraph-sdk@0.0.107(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
+  '@langchain/langgraph-sdk@0.0.112(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
       p-queue: 6.6.2
@@ -24567,11 +24568,11 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/langgraph@0.4.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))':
+  '@langchain/langgraph@1.0.0-alpha.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
-      '@langchain/langgraph-checkpoint': 0.1.0(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 0.0.107(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
+      '@langchain/langgraph-checkpoint': 0.1.1(@langchain/core@libs+langchain-core)
+      '@langchain/langgraph-sdk': 0.0.112(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
       uuid: 10.0.0
       zod: 3.25.76
     optionalDependencies:
