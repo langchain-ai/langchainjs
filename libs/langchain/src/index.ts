@@ -26,6 +26,7 @@ export {
   createReactAgent,
   toolStrategy,
   providerStrategy,
+  ToolNode,
   type AgentState,
   type HumanInterrupt,
   type HumanInterruptConfig,
