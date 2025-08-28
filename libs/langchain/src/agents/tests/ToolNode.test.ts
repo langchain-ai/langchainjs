@@ -795,7 +795,7 @@ describe("ToolNode error handling", () => {
     ).rejects.toThrow(GraphInterrupt);
   });
 
-  it.only("should handle tool errors by default", async () => {
+  it("should handle tool errors by default", async () => {
     const toolWithError = tool(
       async (_) => {
         throw new Error("some error");
