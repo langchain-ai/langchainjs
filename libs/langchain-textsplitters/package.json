@@ -29,7 +29,7 @@
     "js-tiktoken": "^1.0.12"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha"
+    "@langchain/core": "^1.0.0-alpha.1 <2.0.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
