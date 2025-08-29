@@ -193,9 +193,11 @@ export function convertOpenAPISchemaToJSONSchema(
     );
   }
   if (schema.type === "array") {
+    const openAPIItems = spec.getSchema(schema.items) ?? {};
+
     return {
       type: "array",
-      items: convertOpenAPISchemaToJSONSchema(schema.items ?? {}, spec),
+      items: convertOpenAPISchemaToJSONSchema(openAPIItems, spec),
       minItems: schema.minItems,
       maxItems: schema.maxItems,
     } as JsonSchema7ArrayType;
