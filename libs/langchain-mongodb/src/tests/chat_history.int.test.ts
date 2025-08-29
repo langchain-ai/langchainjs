@@ -4,6 +4,7 @@ import { Collection, MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { MongoDBChatMessageHistory } from "../chat_history.js";
 import { uri } from "./utils.js";
+import { VERSION } from "../version.js";
 
 let client: MongoClient;
 let collection: Collection;
@@ -20,6 +21,19 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await client.close();
+});
+
+describe("MongoDBStore sets client metadata", () => {
+  const spy = jest.spyOn(client, "appendMetadata");
+  const sessionId = new ObjectId().toString();
+  // we explicitly test that there are no side effects
+  // eslint-disable-next-line no-new
+  new MongoDBChatMessageHistory({
+    collection,
+    sessionId,
+  });
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_chat_history", version: VERSION});
+  jest.clearAllMocks();
 });
 
 test("nothing is inserted into the database until messages are added", async () => {
