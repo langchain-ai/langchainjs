@@ -323,6 +323,11 @@ export type ToolStrategyError =
   | MultipleStructuredOutputsError;
 export interface ToolStrategyOptions {
   /**
+   * Allows you to customize the message that appears in the conversation history when structured
+   * output is generated.
+   */
+  toolMessageContent?: string;
+  /**
    * Handle errors from the structured output tool call. Using tools to generate structured output
    * can cause errors, e.g. if:
    * - you provide multiple structured output schemas and the model calls multiple structured output tools

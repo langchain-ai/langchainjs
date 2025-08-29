@@ -131,17 +131,18 @@ export class AgentNode<
       return { messages: [] };
     }
 
-    const response:
-      | AIMessage
-      | Command
-      | { structuredResponse: StructuredResponseFormat } =
-      await this.#invokeModel(state, config);
+    const response = await this.#invokeModel(state, config);
 
     /**
      * if we were able to generate a structured response, return it
      */
     if ("structuredResponse" in response) {
-      return response;
+      return {
+        messages: response.message
+          ? [...state.messages, response.message]
+          : state.messages,
+        structuredResponse: response.structuredResponse,
+      };
     }
 
     /**
@@ -216,7 +217,7 @@ export class AgentNode<
   ): Promise<
     | AIMessage
     | Command
-    | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
+    | { structuredResponse: StructuredResponseFormat; message?: BaseMessage }
   > {
     const model = await this.#deriveModel(state, config);
 
@@ -245,7 +246,7 @@ export class AgentNode<
     if (this.#options.responseFormat instanceof ProviderStrategy) {
       const structuredResponse = this.#options.responseFormat.parse(response);
       if (structuredResponse) {
-        return { structuredResponse, messages: [response] };
+        return { structuredResponse, message: response };
       }
     }
 
@@ -272,10 +273,12 @@ export class AgentNode<
       return this.#handleMultipleStructuredOutputs(response, toolCalls);
     }
 
+    const toolStrategy = this.#structuredToolInfo[toolCalls[0].name];
+    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
     return this.#handleSingleStructuredOutput(
       response,
       toolCalls[0],
-      options.lastMessage
+      toolMessageContent ?? options.lastMessage
     );
   }
 

@@ -238,10 +238,38 @@ describe("structured output handling", () => {
         expect(res.structuredResponse).toEqual({ foo: "bar" });
       });
 
+      it("should return a structured response if it matches the schema and toolMessageContent is provided", async () => {
+        const model = new FakeToolCallingModel({
+          toolCalls: [
+            [{ name: "extract-13", args: { foo: "bar" }, id: "call_1" }],
+          ],
+        });
+
+        const agent = createReactAgent({
+          llm: model,
+          tools: [],
+          responseFormat: toolStrategy(
+            z.object({
+              foo: z.string(),
+            }),
+            {
+              toolMessageContent: "foobar",
+            }
+          ),
+        });
+
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.structuredResponse).toEqual({ foo: "bar" });
+        expect(res.messages.at(-1)?.content).toContain("foobar");
+      });
+
       it("should return structured response if it matches one of the schemas", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-14", args: { bar: "foo" }, id: "call_1" }],
+            [{ name: "extract-15", args: { bar: "foo" }, id: "call_1" }],
           ],
         });
         const agent = createReactAgent({
