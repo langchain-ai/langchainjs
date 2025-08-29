@@ -1,0 +1,176 @@
+# Decodo LangChain Tools
+
+The [@decodo/langchain-ts](https://www.npmjs.com/package/@decodo/langchain-ts) package enables developers to use Decodo's Web Scraper API alongside their LangChain applications.
+
+The Web Scraper API features:
+
+- Easy web data access. Simplified retrieval of information from websites and online sources.
+- Geographic flexibility. Access content regardless of regional restrictions.
+- Reliable scraping. Advanced techniques to avoid detection and blocks.
+
+## Features
+
+The @decodo/langchain-ts plugin features:
+
+- **Web Scraping**: Scrape any URL and retrieve Markdown content
+- **Google Search**: Search Google and retrieve structured results
+- **Amazon Search**: Search Amazon and retrieve structured product data
+- **Geolocation selection** for location-sensitive content
+- **JavaScript rendering** for targets that require a real browser
+- **Markdown output** for token-efficient connection to LLMs
+
+## Installation
+
+```bash
+npm install @decodo/langchain-ts
+```
+
+## Quick Start
+
+To use the tools in this project, you will need a [Decodo Advanced Web Scraping API](https://help.decodo.com/docs/web-scraping-api-core-and-advanced-plans) subscription. Free trials are available on the [dashboard](https://dashboard.decodo.com/).
+
+## Examples
+
+A set of agentic examples for each tool.
+
+### Universal
+
+```typescript
+import dotenv from "dotenv";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { DecodoUniversalTool } from "@decodo/langchain-ts";
+
+dotenv.config();
+
+const main = async () => {
+  const username = process.env.SCRAPER_API_USERNAME!;
+  const password = process.env.SCRAPER_API_PASSWORD!;
+
+  const decodoUniversalTool = new DecodoUniversalTool({ username, password });
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+  });
+
+  const agent = createReactAgent({
+    llm: model,
+    tools: [decodoUniversalTool],
+  });
+
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content:
+          "scrape the wikipedia NBA 2025 season page and tell me who won in 2025?",
+      },
+    ],
+  });
+
+  console.log(result.messages[result.messages.length - 1].content);
+};
+
+if (require.main === module) {
+  main();
+}
+```
+
+For more examples, see the [@decodo/langchain-ts](https://github.com/Decodo/decodo-langchain-ts) on GitHub.
+
+## Google Search
+
+```typescript
+const main = async () => {
+  const username = process.env.SCRAPER_API_USERNAME!;
+  const password = process.env.SCRAPER_API_PASSWORD!;
+
+  const decodoGoogleSearchTool = new DecodoGoogleSearchTool({
+    username,
+    password,
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-5-mini",
+  });
+
+  const agent = createReactAgent({
+    llm: model,
+    tools: [decodoGoogleSearchTool],
+  });
+
+  const prompt =
+    "which mobile service provider appears first on Google in Germany?";
+
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  console.log(result.messages[result.messages.length - 1].content);
+};
+```
+
+## Amazon Search
+
+```typescript
+const main = async () => {
+  const username = process.env.SCRAPER_API_USERNAME!;
+  const password = process.env.SCRAPER_API_PASSWORD!;
+
+  const decodoAmazonSearchTool = new DecodoAmazonSearchTool({
+    username,
+    password,
+  });
+
+  const model = new ChatOpenAI({
+    model: "gpt-5-mini",
+  });
+
+  const agent = createReactAgent({
+    llm: model,
+    tools: [decodoAmazonSearchTool],
+  });
+
+  const prompt =
+    "What is the cheapest laptop with a GeForce RTX 5080 on Amazon in France?";
+
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  console.log(result.messages[result.messages.length - 1].content);
+};
+```
+
+## Configuration
+
+All tools accept a `DecodoConfig` object:
+
+```typescript
+type DecodoConfig = {
+  username: string; // Your Web Advanced product username
+  password: string; // Your Web Advanced product password
+};
+```
+
+## API Parameters
+
+See the [Scraper API documentation](https://help.decodo.com/docs/web-scraping-api-parameters) for a list of available parameters
+
+## License
+
+MIT
+
+## Support
+
+For support, please visit [Decodo's documentation](https://help.decodo.com/) or open an issue on GitHub.
