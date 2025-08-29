@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, isHumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
 import { createReactAgent, providerStrategy } from "../index.js";
@@ -165,11 +165,14 @@ describe("createReactAgent Integration Tests", () => {
       preModelHook: (state) => {
         preHookCalled = true;
         preHookMessageCount = state.messages.length;
+        const lastMessage = state.messages.at(-1);
 
         // Modify the query
-        // eslint-disable-next-line no-param-reassign
-        state.messages[state.messages.length - 1].content =
-          "What is 15 multiplied by 8?";
+        if (lastMessage && isHumanMessage(lastMessage)) {
+          // eslint-disable-next-line no-param-reassign
+          state.messages[state.messages.length - 1].content =
+            "What is 15 multiplied by 8?";
+        }
 
         return state;
       },
@@ -197,5 +200,54 @@ describe("createReactAgent Integration Tests", () => {
     expect(result.structuredResponse?.result).toBe(120);
     expect(result.structuredResponse?.calculation).toContain("15");
     expect(result.structuredResponse?.calculation).toContain("8");
+  });
+
+  describe("stateSchema", () => {
+    it("should allow to reduce zod fields automatically if zod schema is provided", async () => {
+      const stateSchema = z.object({
+        hookCalls: z.number().describe("The number of hook calls"),
+        foobar: z.string().describe("The foobar").default("default foobar"),
+        someEnum: z.enum(["a", "b", "c"]).describe("The someEnum").default("a"),
+      });
+
+      const toolA = tool(async () => "Tool A", {
+        name: "toolA",
+        description: "Tool A",
+      });
+
+      const toolB = tool(async () => "Tool B", {
+        name: "toolB",
+        description: "Tool B",
+      });
+
+      const agent = createReactAgent({
+        model: "gpt-4o-mini",
+        tools: [toolA, toolB],
+        postModelHook: (state) => {
+          return {
+            hookCalls: state.hookCalls + 1,
+            someEnum: "b" as const,
+          };
+        },
+        stateSchema,
+      });
+
+      const response = await agent.invoke({
+        messages: ["Give me the results of toolA and toolB"],
+      });
+
+      /**
+       * 5 messages:
+       * 1. Human message
+       * 2. Tool call
+       * 3. Tool result
+       * 4. Tool call
+       * 5. Tool result
+       */
+      expect(response.messages).toHaveLength(5);
+      expect(response.hookCalls).toBe(2);
+      expect(response.foobar).toBe("default foobar");
+      expect(response.someEnum).toBe("b");
+    });
   });
 });
