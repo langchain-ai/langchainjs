@@ -39,7 +39,7 @@ import {
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
       structuredResponse: StructuredResponseFormat;
-      message: AIMessage;
+      messages: BaseMessage[];
     }
   | Promise<Command>;
 
@@ -138,9 +138,7 @@ export class AgentNode<
      */
     if ("structuredResponse" in response) {
       return {
-        messages: response.message
-          ? [...state.messages, response.message]
-          : state.messages,
+        messages: [...state.messages, ...(response.messages || [])],
         structuredResponse: response.structuredResponse,
       };
     }
@@ -214,11 +212,7 @@ export class AgentNode<
     options: {
       lastMessage?: string;
     } = {}
-  ): Promise<
-    | AIMessage
-    | Command
-    | { structuredResponse: StructuredResponseFormat; message?: BaseMessage }
-  > {
+  ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
     const model = await this.#deriveModel(state, config);
 
     /**
@@ -246,7 +240,7 @@ export class AgentNode<
     if (this.#options.responseFormat instanceof ProviderStrategy) {
       const structuredResponse = this.#options.responseFormat.parse(response);
       if (structuredResponse) {
-        return { structuredResponse, message: response };
+        return { structuredResponse, messages: [response] };
       }
     }
 
@@ -331,12 +325,15 @@ export class AgentNode<
 
       return {
         structuredResponse,
-        message: new AIMessage(
-          lastMessage ??
-            `Returning structured response: ${JSON.stringify(
-              structuredResponse
-            )}`
-        ),
+        messages: [
+          response,
+          new AIMessage(
+            lastMessage ??
+              `Returning structured response: ${JSON.stringify(
+                structuredResponse
+              )}`
+          ),
+        ],
       };
     } catch (error) {
       return this.#handleToolStrategyError(

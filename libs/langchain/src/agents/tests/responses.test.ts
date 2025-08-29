@@ -263,6 +263,14 @@ describe("structured output handling", () => {
         });
 
         expect(res.structuredResponse).toEqual({ foo: "bar" });
+
+        /**
+         * We expect 3 messages:
+         * 1. The user message
+         * 2. The tool message
+         * 3. The structured response message
+         */
+        expect(res.messages.length).toBe(3);
         expect(res.messages.at(-1)?.content).toContain("foobar");
       });
 
