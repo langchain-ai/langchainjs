@@ -12,6 +12,14 @@ import {
 import { ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 
+test("should not require any fields", () => {
+  // eslint-disable-next-line prefer-arrow-callback
+  const t = tool(function myTool() {
+    return "Sunny";
+  });
+  expect(t.name).toBe("myTool");
+});
+
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
     location: z.string(),
@@ -414,6 +422,45 @@ Details: [
     "message": "Expected string, received number"
   }
 ]`);
+});
+
+describe("Tool name", () => {
+  test("is required", () => {
+    expect(() => {
+      tool(() => {
+        return "Sunny";
+      }, {});
+    }).toThrow("Tool name is required");
+  });
+
+  test("is inferred from the function name", () => {
+    // eslint-disable-next-line prefer-arrow-callback
+    const t = tool(function myTool() {
+      return "Sunny";
+    }, {});
+    expect(t.name).toBe("myTool");
+  });
+
+  it("is inferred from the option", () => {
+    const t = tool(
+      () => {
+        return "Sunny";
+      },
+      { name: "myTool" }
+    );
+    expect(t.name).toBe("myTool");
+  });
+
+  it("name option takes precedence over the function name", () => {
+    const t = tool(
+      // eslint-disable-next-line prefer-arrow-callback
+      function myTool() {
+        return "Sunny";
+      },
+      { name: "myTool2" }
+    );
+    expect(t.name).toBe("myTool2");
+  });
 });
 
 describe("isStructuredToolParams", () => {
