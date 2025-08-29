@@ -798,6 +798,8 @@ export abstract class BaseChatOpenAI<
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
     this.streaming = fields?.streaming ?? false;
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (this.streaming === false) this.disableStreaming = true;
     if (this.disableStreaming) this.streaming = false;
 
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
