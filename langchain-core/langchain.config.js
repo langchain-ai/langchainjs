@@ -12,6 +12,7 @@ function abs(relativePath) {
 export const config = {
   internals: [/node\:/, /js-tiktoken/, /langsmith/, /zod\/v[34]/],
   entrypoints: {
+    index: "index",
     agents: "agents",
     caches: "caches/base",
     "callbacks/base": "callbacks/base",
