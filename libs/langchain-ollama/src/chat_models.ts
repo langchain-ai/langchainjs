@@ -109,6 +109,7 @@ export interface ChatOllamaInput
    * @default fetch
    */
   fetch?: typeof fetch;
+  think?: boolean;
 }
 
 /**
@@ -489,6 +490,8 @@ export class ChatOllama
 
   baseUrl = "http://127.0.0.1:11434";
 
+  think?: boolean;
+
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
 
@@ -532,6 +535,7 @@ export class ChatOllama
     this.streaming = fields?.streaming;
     this.format = fields?.format;
     this.keepAlive = fields?.keepAlive;
+    this.think = fields?.think;
     this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
   }
 
@@ -604,6 +608,7 @@ export class ChatOllama
       model: this.model,
       format: options?.format ?? this.format,
       keep_alive: this.keepAlive,
+      think: this.think,
       options: {
         numa: this.numa,
         num_ctx: this.numCtx,
@@ -746,11 +751,16 @@ export class ChatOllama
         usageMetadata.input_tokens + usageMetadata.output_tokens;
       lastMetadata = rest;
 
+      // when think is enabled, try thinking first
+      const token = this.think
+        ? responseMessage.thinking ?? responseMessage.content ?? ""
+        : responseMessage.content ?? "";
+
       yield new ChatGenerationChunk({
-        text: responseMessage.content ?? "",
+        text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(responseMessage.content ?? "");
+      await runManager?.handleLLMNewToken(token);
     }
 
     // Yield the `response_metadata` as the final chunk.
