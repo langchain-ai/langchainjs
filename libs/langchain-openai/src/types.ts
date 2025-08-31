@@ -3,6 +3,8 @@ import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
+  ResponseFormatTextPython,
+  ResponseFormatTextGrammar,
 } from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
@@ -19,6 +21,8 @@ export type { TiktokenModel };
 export type OpenAIChatModelId =
   | OpenAIClient.ChatModel
   | (string & NonNullable<unknown>);
+
+export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
@@ -105,6 +109,11 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    */
   apiKey?: string;
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
@@ -177,14 +186,6 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   audio?: OpenAIClient.Chat.ChatCompletionAudioParam;
 
   /**
-   * Constrains effort on reasoning for reasoning models. Currently supported values are low, medium, and high.
-   * Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
-   *
-   * @deprecated Use the {@link reasoning} object instead.
-   */
-  reasoningEffort?: OpenAIClient.Chat.ChatCompletionReasoningEffort;
-
-  /**
    * Options for reasoning models.
    *
    * Note that some options, like reasoning summaries, are only available when using the responses
@@ -205,9 +206,16 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
 }
 
-export declare interface AzureOpenAIInput {
+export interface AzureOpenAIInput {
   /**
    * API version to use when making requests to Azure OpenAI.
    */
@@ -274,6 +282,15 @@ export declare interface AzureOpenAIInput {
   azureADTokenProvider?: () => Promise<string>;
 }
 
+export interface AzureOpenAIChatInput
+  extends OpenAIChatInput,
+    AzureOpenAIInput {
+  openAIApiKey?: string;
+  openAIApiVersion?: string;
+  openAIBasePath?: string;
+  deploymentName?: string;
+}
+
 type ChatOpenAIResponseFormatJSONSchema = Omit<
   ResponseFormatJSONSchema,
   "json_schema"
@@ -308,4 +325,11 @@ export type ChatOpenAIReasoningSummary = Omit<
 export type ChatOpenAIResponseFormat =
   | ResponseFormatText
   | ResponseFormatJSONObject
+  | ResponseFormatTextGrammar
+  | ResponseFormatTextPython
   | ChatOpenAIResponseFormatJSONSchema;
+
+export type ResponseFormatConfiguration =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ResponseFormatJSONSchema;

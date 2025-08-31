@@ -3,7 +3,7 @@ import {
   type LangSmithTracingClientInterface,
   getDefaultProjectName,
 } from "langsmith";
-import { RunTree } from "langsmith/run_trees";
+import { RunTree, type RunTreeConfig } from "langsmith/run_trees";
 import { getCurrentRunTree } from "langsmith/singletons/traceable";
 
 import {
@@ -40,7 +40,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
   client?: LangSmithTracingClientInterface;
-  replicas?: RunTree["replicas"];
+  replicas?: RunTreeConfig["replicas"];
 }
 
 export class LangChainTracer
@@ -55,7 +55,7 @@ export class LangChainTracer
 
   client: LangSmithTracingClientInterface;
 
-  replicas?: RunTree["replicas"];
+  replicas?: RunTreeConfig["replicas"];
 
   usesRunTreeMap = true;
 
@@ -91,6 +91,7 @@ export class LangChainTracer
   }
 
   updateFromRunTree(runTree: RunTree) {
+    this.runTreeMap.set(runTree.id, runTree);
     let rootRun: RunTree = runTree;
     const visited = new Set<string>();
     while (rootRun.parent_run) {

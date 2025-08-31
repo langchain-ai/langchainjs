@@ -28,7 +28,7 @@ export type { ToolsAgentAction, ToolsAgentStep };
  *   },
  *   prompt,
  *   new ChatOpenAI({
- *     modelName: "gpt-3.5-turbo-1106",
+ *     model: "gpt-3.5-turbo-1106",
  *     temperature: 0,
  *   }).bindTools(tools),
  *   new OpenAIToolsAgentOutputParser(),
@@ -76,21 +76,26 @@ export class OpenAIToolsAgentOutputParser extends AgentMultiActionOutputParser {
       const toolCalls: OpenAIClient.Chat.ChatCompletionMessageToolCall[] =
         message.additional_kwargs.tool_calls;
       try {
-        return toolCalls.map((toolCall, i) => {
-          const toolInput = toolCall.function.arguments
-            ? JSON.parse(toolCall.function.arguments)
-            : {};
-          const messageLog = i === 0 ? [message] : [];
-          return {
-            tool: toolCall.function.name as string,
-            toolInput,
-            toolCallId: toolCall.id,
-            log: `Invoking "${toolCall.function.name}" with ${
-              toolCall.function.arguments ?? "{}"
-            }\n${message.content}`,
-            messageLog,
-          };
-        });
+        return toolCalls
+          .map((toolCall, i) => {
+            if (toolCall.type === "function") {
+              const toolInput = toolCall.function.arguments
+                ? JSON.parse(toolCall.function.arguments)
+                : {};
+              const messageLog = i === 0 ? [message] : [];
+              return {
+                tool: toolCall.function.name as string,
+                toolInput,
+                toolCallId: toolCall.id,
+                log: `Invoking "${toolCall.function.name}" with ${
+                  toolCall.function.arguments ?? "{}"
+                }\n${message.content}`,
+                messageLog,
+              };
+            }
+            return undefined;
+          })
+          .filter(Boolean) as ToolsAgentAction[];
       } catch (error) {
         throw new OutputParserException(
           `Failed to parse tool arguments from chat model response. Text: "${JSON.stringify(

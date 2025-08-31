@@ -7,9 +7,10 @@ import {
   BaseMessage,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
-import type {
-  Message as BedrockMessage,
-  SystemContentBlock as BedrockSystemContentBlock,
+import {
+  ConversationRole as BedrockConversationRole,
+  type Message as BedrockMessage,
+  type SystemContentBlock as BedrockSystemContentBlock,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod";
 import { describe, expect, test } from "@jest/globals";
@@ -63,7 +64,7 @@ describe("convertToConverseMessages", () => {
       output: {
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA? Use weather.com to check.",
@@ -71,7 +72,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -85,7 +86,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -103,6 +104,108 @@ describe("convertToConverseMessages", () => {
         converseSystem: [
           {
             text: "You're an advanced AI assistant.",
+          },
+        ],
+      },
+    },
+    {
+      name: "prompt caching",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "Answer the user's questions using your own knowledge or provided tool.",
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is the capital of France?",
+            },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "And what is the capital of Germany?",
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "Sure! The capital of France is Paris.",
+            },
+            {
+              cachePoint: {
+                type: "default",
+              },
+            },
+            {
+              type: "text",
+              text: "The capital of Germany is Berlin.",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is the capital of France?",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
+              },
+              {
+                text: "And what is the capital of Germany?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Sure! The capital of France is Paris.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                },
+              },
+              {
+                text: "The capital of Germany is Berlin.",
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+            },
+          },
+          {
+            text: "Answer the user's questions using your own knowledge or provided tool.",
           },
         ],
       },
@@ -180,7 +283,7 @@ describe("convertToConverseMessages", () => {
         ],
         converseMessages: [
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use weather.com to check.",
@@ -188,7 +291,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -211,7 +314,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -236,7 +339,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 text: "What's the weather like today in Berkeley, CA and in Paris, France? Use meteofrance.com to check.",
@@ -244,7 +347,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "assistant",
+            role: BedrockConversationRole.ASSISTANT,
             content: [
               {
                 toolUse: {
@@ -267,7 +370,7 @@ describe("convertToConverseMessages", () => {
             ],
           },
           {
-            role: "user",
+            role: BedrockConversationRole.USER,
             content: [
               {
                 toolResult: {
@@ -313,13 +416,19 @@ test("Streaming supports empty string chunks", async () => {
     {
       contentBlockIndex: 0,
       delta: {
-        text: "Hello ",
+        text: "Hello",
       },
     },
     {
       contentBlockIndex: 0,
       delta: {
         text: "",
+      },
+    },
+    {
+      contentBlockIndex: 0,
+      delta: {
+        text: " ",
       },
     },
     {
@@ -498,50 +607,61 @@ describe("tool_choice works for supported models", () => {
     );
   });
 
-  it("should bind tool_choice when using WSO with supported models", async () => {
-    // Claude 3 should NOT throw is using WSO & it should have `tool_choice` bound.
-    const claude3Model = new ChatBedrockConverse({
-      ...baseConstructorArgs,
-      model: "anthropic.claude-3-5-sonnet-20240620-v1:0",
-      // We are not passing the `supportsToolChoiceValues` arg here as
-      // it should be inferred from the model name.
-    });
-    const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
-      name: tool.name,
-    });
-    expect(claude3ModelWSO).toBeDefined();
-    const claude3ModelWSOAsJSON = claude3ModelWSO.toJSON();
-    if (!("kwargs" in claude3ModelWSOAsJSON)) {
-      throw new Error("kwargs not found in claude3ModelWSOAsJSON");
+  it.each([
+    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+    "anthropic.claude-sonnet-4-20250514-v1:0",
+  ])(
+    "should bind tool_choice when using WSO with model that supports tool choice: %s",
+    (model) => {
+      // Claude 3 should NOT throw is using WSO & it should have `tool_choice` bound.
+      const claude3Model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model,
+        // We are not passing the `supportsToolChoiceValues` arg here as
+        // it should be inferred from the model name.
+      });
+      const claude3ModelWSO = claude3Model.withStructuredOutput(tool.schema, {
+        name: tool.name,
+      });
+      expect(claude3ModelWSO).toBeDefined();
+      const claude3ModelWSOAsJSON = claude3ModelWSO.toJSON();
+      if (!("kwargs" in claude3ModelWSOAsJSON)) {
+        throw new Error("kwargs not found in claude3ModelWSOAsJSON");
+      }
+      expect(claude3ModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
+        "tool_choice"
+      );
+      expect(claude3ModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
+        tool.name
+      );
     }
-    expect(claude3ModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
-      "tool_choice"
-    );
-    expect(claude3ModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
-      tool.name
-    );
+  );
 
-    // Mistral (not mistral large) should NOT throw is using WSO
-    const mistralModel = new ChatBedrockConverse({
-      ...baseConstructorArgs,
-      model: "mistral.mistral-large-2407-v1:0",
-      // We are not passing the `supportsToolChoiceValues` arg here as
-      // it should be inferred from the model name.
-    });
-    const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
-      name: tool.name,
-    });
-    expect(mistralModelWSO).toBeDefined();
-    const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
-    if (!("kwargs" in mistralModelWSOAsJSON)) {
-      throw new Error("kwargs not found in mistralModelWSOAsJSON");
+  it.each(["mistral.mistral-large-2407-v1:0"])(
+    "should bind tool_choice when using WSO with model that doesn't support tool choice: %s",
+    (model) => {
+      // Mistral (not mistral large) should NOT throw is using WSO
+      const mistralModel = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        model,
+        // We are not passing the `supportsToolChoiceValues` arg here as
+        // it should be inferred from the model name.
+      });
+      const mistralModelWSO = mistralModel.withStructuredOutput(tool.schema, {
+        name: tool.name,
+      });
+      expect(mistralModelWSO).toBeDefined();
+      const mistralModelWSOAsJSON = mistralModelWSO.toJSON();
+      if (!("kwargs" in mistralModelWSOAsJSON)) {
+        throw new Error("kwargs not found in mistralModelWSOAsJSON");
+      }
+      expect(mistralModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
+        "tool_choice"
+      );
+      // Mistral large only supports "auto" and "any" for tool_choice, not the actual tool name
+      expect(mistralModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
+        "any"
+      );
     }
-    expect(mistralModelWSOAsJSON.kwargs.bound.first.config).toHaveProperty(
-      "tool_choice"
-    );
-    // Mistral large only supports "auto" and "any" for tool_choice, not the actual tool name
-    expect(mistralModelWSOAsJSON.kwargs.bound.first.config.tool_choice).toBe(
-      "any"
-    );
-  });
+  );
 });

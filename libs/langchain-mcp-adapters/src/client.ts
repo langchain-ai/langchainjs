@@ -170,6 +170,9 @@ export class MultiServerMCPClient {
         parsedServerConfig.outputHandling,
         serverConfig.outputHandling
       );
+      const defaultToolTimeout =
+        parsedServerConfig.defaultToolTimeout ??
+        serverConfig.defaultToolTimeout;
 
       this._loadToolsOptions[serverName] = {
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
@@ -178,6 +181,7 @@ export class MultiServerMCPClient {
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
+        ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
       };
     }
 

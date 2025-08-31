@@ -10,6 +10,7 @@ import {
 } from "../callbacks/manager.js";
 import { BaseLangChain } from "../language_models/base.js";
 import {
+  mergeConfigs,
   ensureConfig,
   patchConfig,
   pickRunnableConfigKeys,
@@ -35,6 +36,7 @@ import {
   type ZodStringV4,
   type ZodObjectV3,
   type ZodObjectV4,
+  getSchemaDescription,
 } from "../utils/types/zod.js";
 import type {
   StructuredToolCallInput,
@@ -124,12 +126,19 @@ export abstract class StructuredTool<
    */
   responseFormat?: ResponseFormat = "content";
 
+  /**
+   * Default config object for the tool runnable.
+   */
+  defaultConfig?: ToolRunnableConfig;
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
 
     this.verboseParsingErrors =
       fields?.verboseParsingErrors ?? this.verboseParsingErrors;
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
+    this.defaultConfig = fields?.defaultConfig ?? this.defaultConfig;
+    this.metadata = fields?.metadata ?? this.metadata;
   }
 
   protected abstract _call(
@@ -156,7 +165,9 @@ export abstract class StructuredTool<
       ToolCall
     >;
 
-    let enrichedConfig: ToolRunnableConfig = ensureConfig(config);
+    let enrichedConfig: ToolRunnableConfig = ensureConfig(
+      mergeConfigs(this.defaultConfig, config)
+    );
     if (_isToolCall(input)) {
       toolInput = input.args as Exclude<
         StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -238,7 +249,7 @@ export abstract class StructuredTool<
       parsed = inputForValidation as SchemaOutputT;
     }
 
-    const config = parseCallbackConfigArg(configArg);
+    const config = parseCallbackConfigArg(configArg) as ToolRunnableConfig;
     const callbackManager_ = CallbackManager.configure(
       config.callbacks,
       this.callbacks,
@@ -298,6 +309,7 @@ export abstract class StructuredTool<
       artifact,
       toolCallId,
       name: this.name,
+      metadata: this.metadata,
     });
     await runManager?.handleToolEnd(formattedOutput);
     return formattedOutput as ToolReturnType<TArg, TConfig, ToolOutputT>;
@@ -629,7 +641,7 @@ export function tool<
       ...fields,
       description:
         fields.description ??
-        (fields.schema as { description?: string } | undefined)?.description ??
+        (fields.schema && getSchemaDescription(fields.schema)) ??
         `${fields.name} tool`,
       func: async (input, runManager, config) => {
         return new Promise<ToolOutputT>((resolve, reject) => {
@@ -699,8 +711,9 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   name: string;
   artifact?: unknown;
   toolCallId?: string;
+  metadata?: Record<string, unknown>;
 }): ToolMessage | TOutput {
-  const { content, artifact, toolCallId } = params;
+  const { content, artifact, toolCallId, metadata } = params;
   if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
@@ -708,17 +721,21 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
         content.every((item) => typeof item === "object"))
     ) {
       return new ToolMessage({
+        status: "success",
         content,
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
+        metadata,
       });
     } else {
       return new ToolMessage({
+        status: "success",
         content: _stringify(content),
         artifact,
         tool_call_id: toolCallId,
         name: params.name,
+        metadata,
       });
     }
   } else {

@@ -291,7 +291,7 @@ export type CreateStructuredChatAgentParams = {
  *
  * const llm = new ChatOpenAI({
  *   temperature: 0,
- *   modelName: "gpt-3.5-turbo-1106",
+ *   model: "gpt-3.5-turbo-1106",
  * });
  *
  * const agent = await createStructuredChatAgent({

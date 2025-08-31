@@ -9,6 +9,7 @@ import {
   BaseMessage,
   HumanMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -1220,7 +1221,7 @@ describe("Citations", () => {
       model: citationsModelName,
       clientOptions: {
         defaultHeaders: {
-          "anthropic-beta": "search-results-2025-01-01",
+          "anthropic-beta": "search-results-2025-06-09",
         },
       },
     }).bindTools([ragTool]);
@@ -1417,4 +1418,59 @@ test("Test redacted thinking blocks multiturn streaming", async () => {
 
   // test a second time to make sure that we've got input translation working correctly
   await doStreaming(streamingMessages);
+});
+
+test("Can handle google function calling blocks in content", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-7-sonnet-latest",
+    maxRetries: 0,
+  });
+  const toolCallId = "tool_call_id";
+  const messages = [
+    new SystemMessage("You're a helpful assistant"),
+    new HumanMessage("What is the weather like in San Francisco?"),
+    new AIMessage({
+      content: [
+        {
+          // Pass a content block with the `functionCall` object that Google returns.
+          functionCall: {
+            args: {
+              location: "san francisco",
+            },
+            name: "get_weather",
+          },
+        },
+      ],
+      tool_calls: [
+        {
+          id: toolCallId,
+          name: "get_weather",
+          args: {
+            location: "san francisco",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: toolCallId,
+      content: "The weather is sunny",
+    }),
+    new HumanMessage(
+      "Give me a one sentence description of what the sky looks like."
+    ),
+  ];
+  const res = await chat.invoke(messages);
+  expect(res.content.length).toBeGreaterThan(1);
+});
+
+test("Can handle opus 4.1 without passing any args", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+  });
+
+  const response = await model.invoke(
+    "Please respond to this message simply with: Hello"
+  );
+
+  expect(response.content.length).toBeGreaterThan(0);
 });

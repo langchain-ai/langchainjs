@@ -315,9 +315,6 @@ function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletionsAPI.ChatCompletionMessage> {
   return messages.map((message): ChatCompletionsAPI.ChatCompletionMessage => {
-    if (typeof message.content !== "string") {
-      throw new Error("Non string message content not supported");
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
@@ -1382,9 +1379,22 @@ export class ChatGroq extends BaseChatModel<
         outputSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
+        outputSchema = schema as JsonSchema7Type;
       }
+
+      // Use Groq's structured outputs when we have a complete schema
+      const responseFormat = outputSchema
+        ? {
+            type: "json_schema" as const,
+            json_schema: {
+              name: functionName,
+              schema: outputSchema,
+            },
+          }
+        : { type: "json_object" as const };
+
       llm = this.withConfig({
-        response_format: { type: "json_object" },
+        response_format: responseFormat,
         ls_structured_output_format: {
           kwargs: { method: "jsonMode" },
           schema: outputSchema,

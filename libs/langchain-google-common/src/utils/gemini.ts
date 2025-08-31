@@ -315,6 +315,58 @@ export function normalizeSpeechConfig(
   return ret;
 }
 
+// Compatibility layer for other well known content block types
+export function normalizeMessageContentComplex(
+  content: MessageContentComplex[]
+): MessageContentComplex[] {
+  return content.map((c) => {
+    // OpenAI completions `input_audio`
+    if (
+      c.type === "input_audio" &&
+      "input_audio" in c &&
+      typeof c.input_audio === "object"
+    ) {
+      const { format, data } = c.input_audio;
+      if (format === "wav") {
+        return {
+          type: "audio",
+          source_type: "base64",
+          mime_type: "audio/wav",
+          data,
+        };
+      }
+    }
+    // OpenAI completions `image_url`
+    if (
+      c.type === "image_url" &&
+      "image_url" in c &&
+      typeof c.image_url === "object"
+    ) {
+      const { url } = c.image_url;
+      return {
+        type: "image",
+        source_type: "url",
+        url,
+      };
+    }
+    // OpenAI completions `file`
+    if (
+      c.type === "file" &&
+      "file" in c &&
+      typeof c.file === "object" &&
+      "file_data" in c.file
+    ) {
+      const { file_data } = c.file;
+      return {
+        type: "file",
+        source_type: "base64",
+        data: file_data,
+      };
+    }
+    return c;
+  });
+}
+
 export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function messageContentText(
     content: MessageContentText
@@ -619,8 +671,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           ]
         : content;
 
+    // Normalize the content to use standard format
+    const normalizedContent = normalizeMessageContentComplex(messageContent);
+
     // Get all of the parts, even those that don't correctly resolve
-    const allParts = await messageContentComplexToParts(messageContent);
+    const allParts = await messageContentComplexToParts(normalizedContent);
 
     // Remove any invalid parts
     const parts: GeminiPart[] = allParts.reduce(
@@ -1831,6 +1886,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
     if (parameters.cachedContent) {
       ret.cachedContent = parameters.cachedContent;
+    }
+    if (parameters.labels && Object.keys(parameters.labels).length > 0) {
+      ret.labels = parameters.labels;
     }
     return ret;
   }

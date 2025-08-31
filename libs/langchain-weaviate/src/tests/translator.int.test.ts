@@ -14,14 +14,24 @@ const indexName = "TestTranslate";
 beforeAll(async () => {
   expect(process.env.WEAVIATE_URL).toBeDefined();
   expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
-
-  client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
-    authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
-    headers: {
-      "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
-      "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
-    },
-  });
+  if (process.env.WEAVIATE_URL === "local") {
+    client = await weaviate.connectToLocal({
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  } else {
+    client = await weaviate.connectToWeaviateCloud(process.env.WEAVIATE_URL!, {
+      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
+      headers: {
+        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
+        "X-Cohere-Api-Key": process.env.COHERE_API_KEY || "",
+      },
+    });
+  }
+  console.log("Connecting to Weaviate at", process.env.WEAVIATE_URL);
+  console.log("Ready?", await client.isReady());
 });
 
 test("Weaviate Self Query Retriever Test", async () => {
@@ -92,7 +102,7 @@ test("Weaviate Self Query Retriever Test", async () => {
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const weaviateArgs = {
     client,
@@ -232,7 +242,7 @@ test.skip("Weaviate Vector Store Self Query Retriever Test With Default Filter O
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
   const weaviateArgs = {
     client,
@@ -373,21 +383,9 @@ test("Weaviate Vector Store Self Query Retriever Test With Default Filter And Me
 
   const embeddings = new OpenAIEmbeddings();
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
   });
-  expect(process.env.WEAVIATE_URL).toBeDefined();
-  expect(process.env.WEAVIATE_URL!.length).toBeGreaterThan(0);
 
-  const client = await weaviate.connectToWeaviateCloud(
-    process.env.WEAVIATE_URL!,
-    {
-      authCredentials: new weaviate.ApiKey(process.env.WEAVIATE_API_KEY || ""),
-      headers: {
-        "X-OpenAI-Api-Key": process.env.OPENAI_API_KEY || "",
-        "X-Azure-Api-Key": process.env.AZURE_OPENAI_API_KEY || "",
-      },
-    }
-  );
   const weaviateArgs = {
     client,
     indexName,

@@ -34,7 +34,7 @@ Integrations should generally reside in the `libs/langchain-community` workspace
 To make creating packages like this easier, we offer the [`create-langchain-integration`](https://github.com/langchain-ai/langchainjs/blob/main/libs/create-langchain-integration/) utility that will automatically scaffold a repo with support for both ESM + CJS entrypoints. You can run it like this:
 
 ```bash
-$ npx create-langchain-integration
+npx create-langchain-integration
 ```
 
 After creating the new integration package, you should add it to the [`unit-tests-integrations.yml`](./.github/workflows/unit-tests-integrations.yml) GitHub action workflow so that it is tested in CI. To do this,simply update the `env` section of the `prepare-matrix` job with your package name inside the `PACKAGES` variable:
@@ -56,14 +56,13 @@ It's a chat interface wrapping a fine-tuned `gpt-3.5-turbo` instance trained on 
 
 It's an ongoing project, and feedback on runs will be used to improve the [LangSmith dataset](https://smith.langchain.com) for further fine-tuning! Try it out below:
 
-https://langchain-translator.vercel.app/
+<https://langchain-translator.vercel.app/>
 
 ## 🗺️ Contributing Guidelines
 
 ### 🚩 GitHub Issues
 
-Our [issues](https://github.com/langchain-ai/langchainjs/issues) page contains
-with bugs, improvements, and feature requests.
+Our [issues](https://github.com/langchain-ai/langchainjs/issues) primarily contains bug reports and docs improvements. For feature requests, please defer to the [LangChain Forum](https://forum.langchain.com/).
 
 If you start working on an issue, please assign it to yourself.
 
@@ -291,7 +290,7 @@ and in generated documentation.
 
 #### Install dependencies
 
-##### Note: you only need to follow these steps if you are building the docs site locally.
+##### Note: you only need to follow these steps if you are building the docs site locally
 
 1. [Quarto](https://quarto.org/) - package that converts Jupyter notebooks (`.ipynb` files) into `.mdx` files for serving in Docusaurus.
 2. `yarn build --filter=core_docs` - It's as simple as that! (or you can simply run `yarn build` from `docs/core_docs/`)
@@ -325,7 +324,7 @@ Documentation and the skeleton lives under the `docs/` folder. Example code is i
 
 **If you are contributing an integration, please copy and use the appropriate template from here:**
 
-https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates
+<https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-scripts/src/cli/docs/templates>
 
 ### Running examples
 

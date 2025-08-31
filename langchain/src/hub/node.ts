@@ -4,6 +4,7 @@ import {
   basePull,
   generateModelImportMap,
   generateOptionalImportMap,
+  bindOutputSchema,
 } from "./base.js";
 import { load } from "../load/index.js";
 
@@ -65,5 +66,5 @@ export async function pull<T extends Runnable>(
     generateOptionalImportMap(modelClass),
     generateModelImportMap(modelClass)
   );
-  return loadedPrompt;
+  return bindOutputSchema(loadedPrompt);
 }

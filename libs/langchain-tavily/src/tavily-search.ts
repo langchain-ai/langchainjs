@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { StructuredTool, ToolParams } from "@langchain/core/tools";
 import { InferInteropZodOutput } from "@langchain/core/utils/types";
@@ -104,6 +104,20 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeFavicon?: boolean;
+
+  /**
+   * Filters search results to include only content published on or after this date.
+   *
+   * @default undefined
+   */
+  startDate?: string;
+
+  /**
+   * Filters search results to include only content published on or before this date.
+   *
+   * @default undefined
+   */
+  endDate?: string;
 
   /**
    * The name of the tool.
@@ -348,6 +362,10 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeFavicon?: boolean;
 
+  startDate?: string;
+
+  endDate?: string;
+
   handleToolError = true;
 
   apiWrapper: TavilySearchAPIWrapper;
@@ -398,6 +416,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.country = params.country;
     this.autoParameters = params.autoParameters;
     this.includeFavicon = params.includeFavicon;
+    this.startDate = params.startDate;
+    this.endDate = params.endDate;
   }
 
   async _call(
@@ -439,6 +459,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         country: this.country,
         autoParameters: this.autoParameters,
         includeFavicon: this.includeFavicon,
+        startDate: this.startDate,
+        endDate: this.endDate,
       });
 
       if (

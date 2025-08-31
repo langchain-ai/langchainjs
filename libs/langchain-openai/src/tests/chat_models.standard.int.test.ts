@@ -26,7 +26,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
-        model: "gpt-3.5-turbo",
+        model: "gpt-5",
       },
       supportsStandardContentType: {
         text: true,
@@ -107,7 +107,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     const constructorArgsCopy = { ...this.constructorArgs };
     this.constructorArgs = {
       ...this.constructorArgs,
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
     };
     await super.testParallelToolCalling();
     this.constructorArgs = constructorArgsCopy;
