@@ -39,7 +39,7 @@ import {
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
       structuredResponse: StructuredResponseFormat;
-      message: AIMessage;
+      messages: BaseMessage[];
     }
   | Promise<Command>;
 
@@ -131,17 +131,16 @@ export class AgentNode<
       return { messages: [] };
     }
 
-    const response:
-      | AIMessage
-      | Command
-      | { structuredResponse: StructuredResponseFormat } =
-      await this.#invokeModel(state, config);
+    const response = await this.#invokeModel(state, config);
 
     /**
      * if we were able to generate a structured response, return it
      */
     if ("structuredResponse" in response) {
-      return response;
+      return {
+        messages: [...state.messages, ...(response.messages || [])],
+        structuredResponse: response.structuredResponse,
+      };
     }
 
     /**
@@ -213,11 +212,7 @@ export class AgentNode<
     options: {
       lastMessage?: string;
     } = {}
-  ): Promise<
-    | AIMessage
-    | Command
-    | { structuredResponse: StructuredResponseFormat; messages?: BaseMessage[] }
-  > {
+  ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
     const model = await this.#deriveModel(state, config);
 
     /**
@@ -272,10 +267,12 @@ export class AgentNode<
       return this.#handleMultipleStructuredOutputs(response, toolCalls);
     }
 
+    const toolStrategy = this.#structuredToolInfo[toolCalls[0].name];
+    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
     return this.#handleSingleStructuredOutput(
       response,
       toolCalls[0],
-      options.lastMessage
+      toolMessageContent ?? options.lastMessage
     );
   }
 
@@ -328,12 +325,15 @@ export class AgentNode<
 
       return {
         structuredResponse,
-        message: new AIMessage(
-          lastMessage ??
-            `Returning structured response: ${JSON.stringify(
-              structuredResponse
-            )}`
-        ),
+        messages: [
+          response,
+          new AIMessage(
+            lastMessage ??
+              `Returning structured response: ${JSON.stringify(
+                structuredResponse
+              )}`
+          ),
+        ],
       };
     } catch (error) {
       return this.#handleToolStrategyError(
