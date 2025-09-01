@@ -29291,6 +29291,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonfile@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "jsonfile@npm:4.0.0"
+  dependencies:
+    graceful-fs: ^4.1.6
+  dependenciesMeta:
+    graceful-fs:
+      optional: true
+  checksum: 6447d6224f0d31623eef9b51185af03ac328a7553efcee30fa423d98a9e276ca08db87d71e17f2310b0263fd3ffa6c2a90a6308367f661dc21580f9469897c9e
+  languageName: node
+  linkType: hard
+
 "jsonfile@npm:^6.0.1":
   version: 6.1.0
   resolution: "jsonfile@npm:6.1.0"
@@ -32653,6 +32665,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"openai@npm:5.12.2, openai@npm:^5.12.2":
+  version: 5.12.2
+  resolution: "openai@npm:5.12.2"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: b48116979c0666b1438d68a71df2c57833bca8c20c5d43e0c17e4d8594ca72294a1b62f40c7e3b8e5d5be644c2de5ba27fe97b8136f1de36e0490fd49c552a70
+  languageName: node
+  linkType: hard
+
 "openai@npm:^4.32.1":
   version: 4.96.0
   resolution: "openai@npm:4.96.0"
@@ -32674,7 +32703,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: b48116979c0666b1438d68a71df2c57833bca8c20c5d43e0c17e4d8594ca72294a1b62f40c7e3b8e5d5be644c2de5ba27fe97b8136f1de36e0490fd49c552a70
+  checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
   languageName: node
   linkType: hard
 
@@ -32716,41 +32745,7 @@ __metadata:
       optional: true
   bin:
     openai: bin/cli
-  checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
-  languageName: node
-  linkType: hard
-
-"openai@npm:^5.12.1":
-  version: 5.12.1
-  resolution: "openai@npm:5.12.1"
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: 619d93623790a7f8609d6d58cbac8a293dc75439fdc4f2ce81563df4d02b5488bb15ee5dc69dcfe9cc5202b5f4e3290b5feecbec55a74945966c97e00bf2f6b8
-  languageName: node
-  linkType: hard
-
-"openai@npm:^5.12.2":
-  version: 5.12.2
-  resolution: "openai@npm:5.12.2"
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: b48116979c0666b1438d68a71df2c57833bca8c20c5d43e0c17e4d8594ca72294a1b62f40c7e3b8e5d5be644c2de5ba27fe97b8136f1de36e0490fd49c552a70
+  checksum: 9c658c62060e6421deeb7c6819ffa5b1354fa9cb72bf83f96e174c2ebb347c8752297e3715a40c09507324d9395607b9951374b11a1eaf1b0b9ff98bdfd59372
   languageName: node
   linkType: hard
 
