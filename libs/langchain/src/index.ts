@@ -3,10 +3,18 @@
  */
 export {
   BaseMessage,
+  BaseMessageChunk,
   AIMessage,
+  AIMessageChunk,
   SystemMessage,
+  SystemMessageChunk,
   HumanMessage,
+  HumanMessageChunk,
   ToolMessage,
+  ToolMessageChunk,
+  type ContentBlock,
+  filterMessages,
+  trimMessages,
 } from "@langchain/core/messages";
 
 /**
