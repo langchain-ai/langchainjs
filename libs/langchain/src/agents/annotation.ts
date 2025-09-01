@@ -7,7 +7,12 @@ import {
   type BinaryOperatorAggregate,
 } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
-import type { InteropZodObject } from "@langchain/core/utils/types";
+import {
+  isInteropZodSchema,
+  getInteropZodObjectShape,
+  getInteropZodDefaultGetter,
+  type InteropZodObject,
+} from "@langchain/core/utils/types";
 import type { ResponseFormatUndefined } from "./responses.js";
 
 export const PreHookAnnotation: AnnotationRoot<{
@@ -99,41 +104,37 @@ export type AnyAnnotationRoot = AnnotationRoot<any>;
 export function enhanceStateSchemaWithMessageReducer(
   stateSchema: AnyAnnotationRoot | InteropZodObject
 ): AnyAnnotationRoot {
-  // If it's already an annotation, return as-is
+  /**
+   * If it's already an annotation, return as-is
+   */
   if (typeof stateSchema === "object" && "State" in stateSchema) {
     return stateSchema as AnyAnnotationRoot;
   }
 
-  // If it's a Zod schema, create annotations for all fields
-  if (
-    typeof stateSchema === "object" &&
-    "_def" in stateSchema &&
-    "shape" in stateSchema._def
-  ) {
-    const shape =
-      typeof stateSchema._def.shape === "function"
-        ? stateSchema._def.shape()
-        : stateSchema._def.shape;
+  /**
+   * If it's a Zod schema, create annotations for all fields
+   */
+  if (isInteropZodSchema(stateSchema)) {
+    const shape = getInteropZodObjectShape(stateSchema);
     const annotationFields: Record<string, any> = {};
 
     /**
      * Process each field in the Zod schema
      */
     for (const [key, zodType] of Object.entries(shape)) {
-      if (key === "messages") {
-        /**
-         * Special handling for messages field - always use messagesStateReducer
-         */
-        annotationFields[key] = Annotation<BaseMessage[]>({
-          reducer: messagesStateReducer,
-          default: () => [],
-        });
-      } else {
-        /**
-         * For other fields, create appropriate annotations based on type
-         */
-        annotationFields[key] = createAnnotationForZodType(zodType as any);
-      }
+      annotationFields[key] =
+        key === "messages"
+          ? /**
+             * Special handling for messages field - always use messagesStateReducer
+             */
+            Annotation<BaseMessage[]>({
+              reducer: messagesStateReducer,
+              default: () => [],
+            })
+          : /**
+             * For other fields, create appropriate annotations based on type
+             */
+            createAnnotationForZodType(zodType);
     }
 
     /**
@@ -149,7 +150,9 @@ export function enhanceStateSchemaWithMessageReducer(
     return Annotation.Root(annotationFields);
   }
 
-  // Fallback: create a base annotation with message reducer only
+  /**
+   * Fallback: create a base annotation with message reducer only
+   */
   return Annotation.Root({
     messages: Annotation<BaseMessage[]>({
       reducer: messagesStateReducer,
@@ -163,28 +166,34 @@ export function enhanceStateSchemaWithMessageReducer(
  */
 const ZOD_TYPE_CONFIGS = {
   ZodString: {
-    reducer: (_: any, update: any) => update,
+    reducer: (_: unknown, update: unknown) => update,
     fallbackDefault: "",
   },
   ZodNumber: {
-    reducer: (_: any, update: any) => update,
+    reducer: (_: unknown, update: unknown) => update,
     fallbackDefault: 0,
   },
   ZodBoolean: {
-    reducer: (_: any, update: any) => update,
+    reducer: (_: unknown, update: unknown) => update,
     fallbackDefault: false,
   },
   ZodArray: {
-    reducer: (_: any, update: any) => update,
-    fallbackDefault: [] as any[],
+    reducer: (_: unknown, update: unknown) => update,
+    fallbackDefault: [] as unknown[],
   },
   ZodRecord: {
-    reducer: (current: any, update: any) => ({ ...current, ...update }),
-    fallbackDefault: {} as Record<string, any>,
+    reducer: (current: unknown[], update: unknown[]) => ({
+      ...current,
+      ...update,
+    }),
+    fallbackDefault: {} as Record<string, unknown>,
   },
   ZodObject: {
-    reducer: (current: any, update: any) => ({ ...current, ...update }),
-    fallbackDefault: {} as Record<string, any>,
+    reducer: (current: unknown[], update: unknown[]) => ({
+      ...current,
+      ...update,
+    }),
+    fallbackDefault: {} as Record<string, unknown>,
   },
 } as const;
 
@@ -193,7 +202,7 @@ const ZOD_TYPE_CONFIGS = {
  */
 function createAnnotationFromConfig(
   config: (typeof ZOD_TYPE_CONFIGS)[keyof typeof ZOD_TYPE_CONFIGS],
-  defaultValueFn: () => any
+  defaultValueFn: () => unknown
 ) {
   return Annotation<any>({
     reducer: config.reducer,
@@ -206,48 +215,49 @@ function createAnnotationFromConfig(
  */
 function createAnnotationForZodType(zodType: any): any {
   const typeName = zodType._def?.typeName;
+  const defaultGetter = getInteropZodDefaultGetter(zodType);
+  const isOptional = typeName === "ZodOptional";
 
-  // Handle ZodDefault wrapper first
-  if (typeName === "ZodDefault") {
+  /**
+   * Handle Zod wrapper first
+   */
+  if (
+    typeName === "ZodDefault" ||
+    typeName === "ZodOptional" ||
+    typeName === "ZodNullable"
+  ) {
     const innerTypeName = zodType._def.innerType._def?.typeName;
     const config =
       ZOD_TYPE_CONFIGS[innerTypeName as keyof typeof ZOD_TYPE_CONFIGS];
     return config
-      ? createAnnotationFromConfig(config, () => zodType._def.defaultValue())
-      : Annotation<any>({
-          reducer: (_: any, update: any) => update,
-          default: () => zodType._def.defaultValue(),
+      ? createAnnotationFromConfig(
+          config,
+          () =>
+            defaultGetter?.() ||
+            (isOptional ? undefined : config?.fallbackDefault)
+        )
+      : Annotation<unknown>({
+          reducer: (_: unknown, update: unknown) => update,
+          default: () => defaultGetter?.(),
         });
   }
 
-  // Handle wrapper types that need recursion
-  if (typeName === "ZodOptional" || typeName === "ZodNullable") {
-    const innerAnnotation = createAnnotationForZodType(zodType._def.innerType);
-    const hasDefault = zodType._def?.defaultValue !== undefined;
-    const fallbackDefault = typeName === "ZodNullable" ? null : undefined;
-
-    return {
-      ...innerAnnotation,
-      default: () =>
-        hasDefault ? zodType._def.defaultValue() : fallbackDefault,
-    };
-  }
-
-  // Handle regular types
+  /**
+   * Handle regular types
+   */
   const config = ZOD_TYPE_CONFIGS[typeName as keyof typeof ZOD_TYPE_CONFIGS];
   if (config) {
-    const hasDefault = zodType._def?.defaultValue !== undefined;
-    const defaultValueFn = hasDefault
-      ? () => zodType._def.defaultValue()
-      : () => config.fallbackDefault;
-
-    return createAnnotationFromConfig(config, defaultValueFn);
+    return createAnnotationFromConfig(
+      config,
+      () => defaultGetter?.() || config?.fallbackDefault
+    );
   }
 
-  // Fallback for unknown types
-  const hasDefault = zodType._def?.defaultValue !== undefined;
-  return Annotation<any>({
-    reducer: (_: any, update: any) => update,
-    default: () => (hasDefault ? zodType._def.defaultValue() : undefined),
+  /**
+   * Fallback for unknown types
+   */
+  return Annotation<unknown>({
+    reducer: (_: unknown, update: unknown) => update,
+    default: () => defaultGetter?.(),
   });
 }

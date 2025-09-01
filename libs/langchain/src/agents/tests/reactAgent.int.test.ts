@@ -208,6 +208,11 @@ describe("createReactAgent Integration Tests", () => {
         hookCalls: z.number().describe("The number of hook calls"),
         foobar: z.string().describe("The foobar").default("default foobar"),
         someEnum: z.enum(["a", "b", "c"]).describe("The someEnum").default("a"),
+        someNumber: z.number().describe("The someNumber"),
+        someOptionalNumber: z
+          .number()
+          .describe("The someOptionalNumber")
+          .optional(),
       });
 
       const toolA = tool(async () => "Tool A", {
@@ -248,6 +253,8 @@ describe("createReactAgent Integration Tests", () => {
       expect(response.hookCalls).toBe(2);
       expect(response.foobar).toBe("default foobar");
       expect(response.someEnum).toBe("b");
+      expect(response.someNumber).toBe(0); // expect 0 because it's not set as optional in the schema
+      expect(response.someOptionalNumber).toBe(undefined);
     });
   });
 });
