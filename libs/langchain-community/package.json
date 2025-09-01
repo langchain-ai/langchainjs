@@ -240,7 +240,7 @@
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
     "@browserbasehq/sdk": "*",
-    "@browserbasehq/stagehand": "^1.0.0",
+    "@browserbasehq/stagehand": "^2.4.4",
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "*",
     "@datastax/astra-db-ts": "^1.0.0",
