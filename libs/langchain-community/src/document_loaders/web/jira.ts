@@ -370,12 +370,10 @@ export class JiraProjectLoader extends BaseDocumentLoader {
   private buildAuthorizationHeader(): string {
     if (this.personalAccessToken) {
       return `Bearer ${this.personalAccessToken}`;
-    } else if (this.username && this.accessToken) {
-      return `Basic ${Buffer.from(
-        `${this.username}:${this.accessToken}`
-      ).toString("base64")}`;
     }
-    throw new Error("No authentication method provided");
+    return `Basic ${Buffer.from(
+      `${this.username}:${this.accessToken}`
+    ).toString("base64")}`;
   }
 
   public async load(): Promise<Document[]> {
