@@ -34,8 +34,9 @@ import DirectExample from "@examples/models/llm/token_usage_tracking_direct.ts";
 <CodeBlock language="typescript">{DirectExample}</CodeBlock>
 
 The token usage information is available in the `llmOutput.tokenUsage` field and includes:
+
 - `completionTokens`: Number of tokens used in the generated completion
-- `promptTokens`: Number of tokens used in the input prompt  
+- `promptTokens`: Number of tokens used in the input prompt
 - `totalTokens`: Total number of tokens used (prompt + completion)
 
 :::info LLMs vs Chat Models
@@ -51,6 +52,7 @@ You can also track token usage using callbacks, which is useful when the LLM is 
 <CodeBlock language="typescript">{Example}</CodeBlock>
 
 This callback approach is particularly useful when:
+
 - The LLM is used within chains or agents that call it multiple times
 - You want to track token usage across multiple LLM calls
 - You need to perform additional processing on each token usage event
@@ -62,4 +64,3 @@ If this model is passed to a chain or agent that calls it multiple times, the ca
 You've now seen how to get token usage for supported LLM providers.
 
 Next, check out the other how-to guides in this section, like [how to implement your own custom LLM](/docs/how_to/custom_llm).
-
