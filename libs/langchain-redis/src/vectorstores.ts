@@ -397,12 +397,38 @@ export class RedisVectorStore extends VectorStore {
 
   /**
    * Deletes vectors from the vector store.
-   * @param params The parameters for deleting vectors.
-   * @returns A promise that resolves when the vectors have been deleted.
+   *
+   * Supports two deletion modes:
+   * - Delete all documents by dropping the entire index and recreating it
+   * - Delete specific documents by their IDs using Redis DEL operation
+   *
+   * @param params - The deletion parameters. Must be one of:
+   *   - `{ deleteAll: boolean }` - If true, drops the entire index and all associated documents
+   *   - `{ ids: string[] }` - Array of document IDs to delete. IDs will be automatically prefixed with the configured keyPrefix
+   * @returns A promise that resolves when the deletion operation is complete
+   * @throws {Error} Throws an error if invalid parameters are provided (neither deleteAll nor ids specified)
+   *
+   * @example
+   * Delete all documents:
+   * ```typescript
+   * await vectorStore.delete({ deleteAll: true });
+   * ```
+   *
+   * @example
+   * Delete specific documents by ID:
+   * ```typescript
+   * await vectorStore.delete({ ids: ['doc1', 'doc2', 'doc3'] });
+   * ```
    */
-  async delete(params: { deleteAll: boolean }): Promise<void> {
-    if (params.deleteAll) {
+  async delete(
+    params: { deleteAll: boolean } | { ids: string[] }
+  ): Promise<void> {
+    if ("deleteAll" in params && params.deleteAll) {
       await this.dropIndex(true);
+    } else if ("ids" in params && params.ids && params.ids.length > 0) {
+      const keys = params.ids.map((id) => `${this.keyPrefix}${id}`);
+
+      await this.redisClient.del(keys);
     } else {
       throw new Error(`Invalid parameters passed to "delete".`);
     }
