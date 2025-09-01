@@ -90,7 +90,11 @@
   ],
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./index.d.ts",
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
       "import": "./index.js",
       "require": "./index.cjs"
     },
@@ -656,6 +660,10 @@
   },
   "files": [
     "dist/",
+    "index.cjs",
+    "index.js",
+    "index.d.ts",
+    "index.d.cts",
     "agents.cjs",
     "agents.js",
     "agents.d.ts",
