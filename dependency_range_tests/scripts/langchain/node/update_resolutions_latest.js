@@ -12,7 +12,7 @@ if (
 ) {
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
-    "@langchain/core": "*",
+    "@langchain/core": "alpha",
   };
 }
 
