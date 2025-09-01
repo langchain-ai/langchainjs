@@ -194,6 +194,16 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   reasoning?: OpenAIClient.Reasoning;
 
   /**
+   * Constrains effort on reasoning for
+   * [reasoning models](https://platform.openai.com/docs/guides/reasoning). Reducing reasoning
+   * effort can result in faster responses and fewer tokens used on reasoning in a
+   * response.
+   *
+   * @deprecated Use `reasoning` instead.
+   */
+  reasoning_effort?: OpenAIClient.ReasoningEffort;
+
+  /**
    * Should be set to `true` in tenancies with Zero Data Retention
    * @see https://platform.openai.com/docs/guides/your-data
    *
