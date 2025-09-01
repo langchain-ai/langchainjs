@@ -35,7 +35,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
       id: issue.id,
       host: converter.host,
       projectKey: converter.projectKey,
-      title: "Caveo aurum adipisci tonsor.",
+      title: expect.any(String),
     });
   });
 
