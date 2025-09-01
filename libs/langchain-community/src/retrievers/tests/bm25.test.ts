@@ -28,7 +28,8 @@ test("BM25Retriever", async () => {
 });
 
 test("getTermFrequency escapes regex metacharacters", () => {
-  const corpus = "**Version 1:** What is the country of origin for the person in question?";
+  const corpus =
+    "**Version 1:** What is the country of origin for the person in question?";
   const term = "**Version 1:**";
 
   // Should not throw and should find at least one match
