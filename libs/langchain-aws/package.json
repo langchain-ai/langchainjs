@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "0.1.15",
+  "version": "0.1.14",
   "description": "LangChain AWS integration",
   "type": "module",
   "engines": {
