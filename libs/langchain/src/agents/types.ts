@@ -5,7 +5,6 @@ import type {
 import type {
   LangGraphRunnableConfig,
   START,
-  Runtime,
   StateGraph,
 } from "@langchain/langgraph";
 
@@ -153,11 +152,27 @@ export type AgentState<
     | InteropZodObject = AnyAnnotationRoot
 > = ToAnnotationRoot<AnnotationRoot>["State"] & PreHookAnnotation["State"];
 
-export type AgentRuntime<
-  AnnotationRoot extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot
-> = Runtime<ToAnnotationRoot<AnnotationRoot>["State"]>;
+export interface AgentRuntime<ContextType = Record<string, unknown>> {
+  /**
+   * The context of the agent.
+   */
+  context?: ContextType;
+
+  /**
+   * The store passed to the agent.
+   */
+  store?: BaseStore;
+
+  /**
+   * The writer of the agent to write to the output stream.
+   */
+  writer?: (chunk: unknown) => void;
+
+  /**
+   * An optional abort signal that indicates that the overall operation should be aborted.
+   */
+  signal?: AbortSignal;
+}
 
 export type CreateReactAgentParams<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
@@ -463,5 +478,5 @@ type DynamicLLMFunction<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = (
   state: ToAnnotationRoot<StateSchema>["State"] & PreHookAnnotation["State"],
-  runtime: Runtime<ToAnnotationRoot<ContextSchema>["State"]>
+  runtime: AgentRuntime<ToAnnotationRoot<ContextSchema>["State"]>
 ) => Promise<LanguageModelLike> | LanguageModelLike;
