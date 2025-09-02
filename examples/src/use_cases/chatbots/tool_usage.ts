@@ -32,9 +32,9 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm: chat,
   tools,
   prompt,
@@ -77,7 +77,7 @@ const prompt2 = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-const agent2 = await createReactAgent({
+const agent2 = await createAgent({
   llm: chat,
   tools,
   prompt: prompt2,

@@ -81,7 +81,7 @@ const searchTool = new TavilySearchResults();
 const tools = [retrieverTool, searchTool];
 
 import { pull } from "langchain/hub";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 // Get the prompt to use - you can modify this!
@@ -96,7 +96,7 @@ const agentModel = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm: agentModel,
   tools,
   prompt: agentPrompt,

@@ -23,7 +23,7 @@
 
 import fs from "node:fs/promises";
 import {
-  createReactAgent,
+  createAgent,
   tool,
   setContextVariable,
   getContextVariable,
@@ -152,7 +152,7 @@ const getAccountInfoTool = tool(
 /**
  * Create e-commerce assistant agent
  */
-const ecommerceAgent = createReactAgent({
+const ecommerceAgent = createAgent({
   llm: new ChatOpenAI({
     model: "gpt-4o",
     temperature: 0,

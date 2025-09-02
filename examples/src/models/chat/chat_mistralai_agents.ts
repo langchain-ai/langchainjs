@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ChatMistralAI } from "@langchain/mistralai";
-import { createReactAgent, HumanMessage, tool } from "langchain";
+import { createAgent, HumanMessage, tool } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -27,7 +27,7 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,

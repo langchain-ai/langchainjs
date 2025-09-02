@@ -80,7 +80,7 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
 
 /**
  * `ToolNode` is a built-in LangGraph component that handles tool calls within an agent's workflow.
- * It works seamlessly with `createReactAgent`, offering advanced tool execution control, built
+ * It works seamlessly with `createAgent`, offering advanced tool execution control, built
  * in parallelism, and error handling.
  *
  * @example

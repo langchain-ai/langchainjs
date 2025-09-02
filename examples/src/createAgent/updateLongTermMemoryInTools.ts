@@ -16,7 +16,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent, tool, InMemoryStore } from "langchain";
+import { createAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -385,7 +385,7 @@ const memoryStats = {
   categories: new Set<string>(),
 };
 
-const agent = createReactAgent({
+const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.3 }),
   tools: [
     customerPreferencesTool,

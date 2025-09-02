@@ -199,7 +199,7 @@ export class ProviderStrategy<T = unknown> {
 export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
 
 /**
- * Handle user input for `responseFormat` parameter of `CreateReactAgentParams`.
+ * Handle user input for `responseFormat` parameter of `CreateAgentParams`.
  * This function defines the default behavior for the `responseFormat` parameter, which is:
  *
  * - if value is a Zod schema, default to structured output via tool calling

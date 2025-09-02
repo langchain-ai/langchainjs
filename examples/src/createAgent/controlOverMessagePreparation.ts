@@ -34,7 +34,7 @@
  * append a reminder before each LLM call to ensure compliance.
  */
 import fs from "node:fs/promises";
-import { createReactAgent, tool } from "langchain";
+import { createAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -67,7 +67,7 @@ const checkRefundPolicy = tool(
 /**
  * Create agent using `prompt` function for transient transformations
  */
-const customerServiceAgent = createReactAgent({
+const customerServiceAgent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [escalateToHuman, checkRefundPolicy],
   prompt: async (state) => {

@@ -9,7 +9,7 @@ import { AIMessageChunk } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { awaitAllCallbacks } from "@langchain/core/callbacks/promises";
 
-import { createReactAgent } from "../../agents/index.js";
+import { createAgent } from "../../agents/index.js";
 import { pull } from "../../hub/index.js";
 import { initChatModel } from "../universal.js";
 
@@ -487,7 +487,7 @@ test("Is compatible with agents", async () => {
 
   const prompt = await pull<PromptTemplate>("hwchase17/react");
 
-  const agent = await createReactAgent({
+  const agent = await createAgent({
     llm: gpt4,
     tools: [weatherTool],
     prompt,

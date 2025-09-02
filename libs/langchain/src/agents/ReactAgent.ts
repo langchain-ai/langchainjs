@@ -17,14 +17,14 @@ import {
 } from "@langchain/core/messages";
 
 import {
-  createReactAgentAnnotationConditional,
+  createAgentAnnotationConditional,
   ReactAgentAnnotation,
 } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
 import type {
-  CreateReactAgentParams,
+  CreateAgentParams,
   ClientTool,
   ServerTool,
   InternalAgentState,
@@ -69,7 +69,7 @@ export class ReactAgent<
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   constructor(
-    public options: CreateReactAgentParams<
+    public options: CreateAgentParams<
       StateSchema,
       StructuredResponseFormat,
       ContextSchema
@@ -117,7 +117,7 @@ export class ReactAgent<
 
     const schema = this.options.stateSchema
       ? enhanceStateSchemaWithMessageReducer(this.options.stateSchema)
-      : createReactAgentAnnotationConditional<StructuredResponseFormat>(
+      : createAgentAnnotationConditional<StructuredResponseFormat>(
           this.options.responseFormat !== undefined
         );
 

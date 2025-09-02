@@ -3,7 +3,7 @@ import { z } from "zod";
 import { tool } from "@langchain/core/tools";
 import type { InteropZodType } from "@langchain/core/utils/types";
 
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 // Mock tools
@@ -161,7 +161,7 @@ describe("Graph", () => {
     testCases.forEach(
       ({ tools, preModelHook, postModelHook, responseFormat, name }) => {
         it(`should create correct graph structure: ${name}`, async () => {
-          const agent = createReactAgent({
+          const agent = createAgent({
             llm,
             tools,
             preModelHook,

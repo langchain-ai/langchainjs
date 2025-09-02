@@ -3,7 +3,7 @@ import { z } from "zod";
 import { HumanMessage } from "@langchain/core/messages";
 
 import { FakeToolCallingModel } from "./utils.js";
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
 describe("llm", () => {
   it("should be able to use a function as a model", async () => {
@@ -11,7 +11,7 @@ describe("llm", () => {
       capital: z.string(),
     });
     const llm = vi.fn().mockReturnValue(new FakeToolCallingModel());
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       contextSchema,
       tools: [],

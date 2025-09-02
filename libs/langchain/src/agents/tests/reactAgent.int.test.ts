@@ -5,9 +5,9 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage, isHumanMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent, providerStrategy } from "../index.js";
+import { createAgent, providerStrategy } from "../index.js";
 
-describe("createReactAgent Integration Tests", () => {
+describe("createAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
     return `It's always sunny in ${input.city}!`;
   });
@@ -37,7 +37,7 @@ describe("createReactAgent Integration Tests", () => {
   });
 
   it("should work with Anthropic and return structured response", async () => {
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [getWeather],
       responseFormat: answerSchema,
@@ -60,7 +60,7 @@ describe("createReactAgent Integration Tests", () => {
   });
 
   it("should work with model option", async () => {
-    const agent = createReactAgent({
+    const agent = createAgent({
       model: "claude-3-5-sonnet-20240620",
       tools: [getWeather],
       responseFormat: answerSchema,
@@ -76,7 +76,7 @@ describe("createReactAgent Integration Tests", () => {
   });
 
   it("should throw if a user tries to use native response format with Anthropic", async () => {
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [getWeather],
       responseFormat: providerStrategy(answerSchema),
@@ -99,7 +99,7 @@ describe("createReactAgent Integration Tests", () => {
       },
     });
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [getWeather],
       responseFormat: providerStrategy(answerSchema),
@@ -158,7 +158,7 @@ describe("createReactAgent Integration Tests", () => {
     let preHookMessageCount = 0;
     let postHookMessageCount = 0;
 
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm,
       tools: [calculator],
       responseFormat: resultSchema,
@@ -225,7 +225,7 @@ describe("createReactAgent Integration Tests", () => {
         description: "Tool B",
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         model: "gpt-4o-mini",
         tools: [toolA, toolB],
         postModelHook: (state) => {

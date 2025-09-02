@@ -18,7 +18,7 @@
  * returns a polished result back to the supervisor.
  */
 import fs from "node:fs/promises";
-import { createReactAgent, tool } from "langchain";
+import { createAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -27,7 +27,7 @@ const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 });
 /**
  * Create a sub-agent used for analysis/summary over full thread state
  */
-const subAgent = createReactAgent({
+const subAgent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0 }),
   tools: [],
   prompt: async (state) => [
@@ -82,7 +82,7 @@ const delegateToSubAgentTool = tool(
 /**
  * Create agent that uses tools with thread-level context awareness
  */
-const agent = createReactAgent({
+const agent = createAgent({
   llm,
   tools: [delegateToSubAgentTool],
   prompt: `You are a supervisor agent.

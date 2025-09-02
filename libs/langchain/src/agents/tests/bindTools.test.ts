@@ -13,9 +13,9 @@ import type { AIMessageChunk } from "@langchain/core/messages";
 import type { ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
-describe("_shouldBindTools through createReactAgent", () => {
+describe("_shouldBindTools through createAgent", () => {
   // Mock tools for testing
   const mockTool1 = tool(() => "result1", {
     name: "tool1",
@@ -113,7 +113,7 @@ describe("_shouldBindTools through createReactAgent", () => {
     it("should successfully create agent with basic chat model (tools will be bound)", async () => {
       const model = new MockBasicChatModel();
       // This should succeed as _shouldBindTools returns true for basic models
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [mockTool1],
       });
@@ -123,7 +123,7 @@ describe("_shouldBindTools through createReactAgent", () => {
     it("should successfully create agent with empty tools array", async () => {
       const model = new MockBasicChatModel();
       // This should succeed as _shouldBindTools returns true for empty arrays
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [],
       });
@@ -133,7 +133,7 @@ describe("_shouldBindTools through createReactAgent", () => {
     it("should successfully create agent with tool-calling model", async () => {
       const model = new MockToolCallingModel();
       // This should succeed regardless of _shouldBindTools result
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: model,
         tools: [mockTool1],
       });
@@ -149,7 +149,7 @@ describe("_shouldBindTools through createReactAgent", () => {
         chatModel,
       ]);
       // Should succeed as _shouldBindTools finds the BaseChatModel and returns true
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: sequence,
         tools: [mockTool1],
       });
@@ -165,7 +165,7 @@ describe("_shouldBindTools through createReactAgent", () => {
       ]);
       // Should succeed as _shouldBindTools finds the RunnableBinding with matching tools
       expect(() =>
-        createReactAgent({
+        createAgent({
           llm: sequence,
           tools: [mockTool1],
         })
@@ -182,7 +182,7 @@ describe("_shouldBindTools through createReactAgent", () => {
       });
 
       // Only client tools should be considered for name comparison
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [mockTool1, mockServerTool],
       });
@@ -196,7 +196,7 @@ describe("_shouldBindTools through createReactAgent", () => {
         config: {},
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [
           mockTool1,
@@ -216,7 +216,7 @@ describe("_shouldBindTools through createReactAgent", () => {
       });
 
       // Should succeed as _shouldBindTools treats null kwargs as no bound tools
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [mockTool1],
       });
@@ -232,7 +232,7 @@ describe("_shouldBindTools through createReactAgent", () => {
       });
 
       // Should succeed as _shouldBindTools treats empty config as no bound tools
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [mockTool1],
       });
@@ -246,7 +246,7 @@ describe("_shouldBindTools through createReactAgent", () => {
         config: {},
       });
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: boundModel,
         tools: [
           mockTool1,

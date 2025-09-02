@@ -5,7 +5,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import z from "zod";
 
-import { createReactAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
 import errorHandlingSpec from "./specifications/errorHandling.json";
 
@@ -142,7 +142,7 @@ describe("stopWhen Tests", () => {
         };
       };
 
-      const agent = createReactAgent({
+      const agent = createAgent({
         tools: [pollJob],
         llm,
         prompt: scenario.throwWithin === "prompt" ? dynamicPrompt : prompt,

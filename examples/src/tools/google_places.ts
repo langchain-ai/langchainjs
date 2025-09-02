@@ -1,6 +1,6 @@
 import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
 import { OpenAI } from "@langchain/openai";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 
 export async function run() {
   const model = new OpenAI({
@@ -9,7 +9,7 @@ export async function run() {
 
   const tools = [new GooglePlacesAPI()];
 
-  const executor = await createReactAgent({
+  const executor = await createAgent({
     llm: model,
     tools,
     name: "zero-shot-react-description",

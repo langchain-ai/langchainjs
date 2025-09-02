@@ -1,6 +1,6 @@
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { pull } from "langchain/hub";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
 import { AzureChatOpenAI } from "@langchain/openai";
 
@@ -22,7 +22,7 @@ const llm = new AzureChatOpenAI({
 // https://smith.langchain.com/hub/jacob/tool-calling-agent
 const prompt = await pull<ChatPromptTemplate>("jacob/tool-calling-agent");
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,
