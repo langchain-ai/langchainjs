@@ -8347,7 +8347,7 @@ __metadata:
     "@baiducloud/qianfan": ^0.1.6
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ^0.6.0
+    "@langchain/openai": ^0.6.10
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9107,7 +9107,7 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/openai": ^0.6.0
+    "@langchain/openai": ^0.6.10
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
@@ -9207,7 +9207,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-common@^0.2.16, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
+"@langchain/google-common@^0.2.17, @langchain/google-common@workspace:*, @langchain/google-common@workspace:libs/langchain-google-common":
   version: 0.0.0-use.local
   resolution: "@langchain/google-common@workspace:libs/langchain-google-common"
   dependencies:
@@ -9241,13 +9241,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-gauth@^0.2.16, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
+"@langchain/google-gauth@^0.2.17, @langchain/google-gauth@workspace:libs/langchain-google-gauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-gauth@workspace:libs/langchain-google-gauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.16
+    "@langchain/google-common": ^0.2.17
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9319,8 +9319,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.16
-    "@langchain/google-webauth": ^0.2.16
+    "@langchain/google-common": ^0.2.17
+    "@langchain/google-webauth": ^0.2.17
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -9355,8 +9355,8 @@ __metadata:
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.16
-    "@langchain/google-gauth": ^0.2.16
+    "@langchain/google-common": ^0.2.17
+    "@langchain/google-gauth": ^0.2.17
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@swc/core": ^1.3.90
@@ -9385,13 +9385,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/google-webauth@^0.2.16, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
+"@langchain/google-webauth@^0.2.17, @langchain/google-webauth@workspace:libs/langchain-google-webauth":
   version: 0.0.0-use.local
   resolution: "@langchain/google-webauth@workspace:libs/langchain-google-webauth"
   dependencies:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
-    "@langchain/google-common": ^0.2.16
+    "@langchain/google-common": ^0.2.17
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9760,7 +9760,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/openai@>=0.1.0 <0.7.0, @langchain/openai@>=0.2.0 <0.7.0, @langchain/openai@^0.6.0, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
+"@langchain/openai@>=0.1.0 <0.7.0, @langchain/openai@>=0.2.0 <0.7.0, @langchain/openai@^0.6.10, @langchain/openai@workspace:*, @langchain/openai@workspace:^, @langchain/openai@workspace:libs/langchain-openai":
   version: 0.0.0-use.local
   resolution: "@langchain/openai@workspace:libs/langchain-openai"
   dependencies:
