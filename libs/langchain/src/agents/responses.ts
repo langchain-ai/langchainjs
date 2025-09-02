@@ -115,13 +115,12 @@ export class ToolStrategy<_T = unknown> {
       functionDefinition = {
         name: getFunctionName(schema.title as string),
         description: (schema.description as string) ?? "",
-        parameters: schema,
+        parameters: schema.schema || (schema as Record<string, unknown>),
       };
     }
     const asJsonSchema = toJsonSchema(schema);
     const tool = {
       type: "function" as const,
-      name: getFunctionName(),
       function: functionDefinition,
     };
     return new ToolStrategy(asJsonSchema, tool, outputOptions);

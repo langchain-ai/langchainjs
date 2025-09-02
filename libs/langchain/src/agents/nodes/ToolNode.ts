@@ -230,7 +230,7 @@ export class ToolNode<
       } else if (this.handleToolErrors) {
         return new ToolMessage({
           name: call.name,
-          content: `Error: ${e}\n Please fix your mistakes.`,
+          content: `${e}\n Please fix your mistakes.`,
           tool_call_id: call.id!,
         });
       }

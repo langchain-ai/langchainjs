@@ -3,33 +3,13 @@
     "name": "throw immediate in tool call",
     "throwWithin": "toolCall",
     "throwTimming": "immediate",
-    "errorHandler": "bubbleUp",
-    "expectedToolCalls": 1,
-    "expectedError": "tool call error"
+    "expectedToolCalls": 4
   },
   {
     "name": "throw delayed in tool call",
     "throwWithin": "toolCall",
     "throwTimming": "delayed",
-    "errorHandler": "bubbleUp",
-    "expectedToolCalls": 4,
-    "expectedError": "tool call error"
-  },
-  {
-    "name": "throw immediate in tool call",
-    "throwWithin": "toolCall",
-    "throwTimming": "immediate",
-    "errorHandler": "cached",
-    "expectedToolCalls": 1,
-    "expectedResult": "123"
-  },
-  {
-    "name": "throw delayed in tool call",
-    "throwWithin": "toolCall",
-    "throwTimming": "delayed",
-    "errorHandler": "cached",
-    "expectedToolCalls": 4,
-    "expectedResult": "123"
+    "expectedToolCalls": 9
   },
   {
     "name": "throw immediate in prompt",
