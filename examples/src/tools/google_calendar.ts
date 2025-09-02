@@ -1,4 +1,4 @@
-import { createAgent } from "@langchain/langgraph/prebuilt";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Calculator } from "@langchain/community/tools/calculator";
 import {
@@ -32,7 +32,7 @@ export async function run() {
     new GoogleCalendarViewTool(googleCalendarParams),
   ];
 
-  const calendarAgent = createAgent({
+  const calendarAgent = createReactAgent({
     llm: model,
     tools,
   });
