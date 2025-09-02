@@ -8169,7 +8169,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.14.0
@@ -8206,7 +8206,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@smithy/types": ^3.2.0
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -8315,7 +8315,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.14.0
@@ -8385,7 +8385,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8422,7 +8422,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8457,7 +8457,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -8530,7 +8530,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/openai": ">=0.2.0 <0.7.0"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@langchain/weaviate": ^0.2.0
     "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
@@ -9284,7 +9284,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9322,7 +9322,7 @@ __metadata:
     "@langchain/google-common": ^0.2.16
     "@langchain/google-webauth": ^0.2.16
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9358,7 +9358,7 @@ __metadata:
     "@langchain/google-common": ^0.2.16
     "@langchain/google-gauth": ^0.2.16
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9428,7 +9428,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9560,7 +9560,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@mistralai/mistralai": ^1.3.1
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9596,7 +9596,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@mixedbread-ai/sdk": ^2.2.3
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
@@ -9731,7 +9731,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
@@ -9768,7 +9768,7 @@ __metadata:
     "@jest/globals": ^29.5.0
     "@langchain/core": "workspace:*"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     dpdm: ^3.14.0
@@ -9949,7 +9949,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@langchain/standard-tests@0.0.0, @langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
+"@langchain/standard-tests@workspace:*, @langchain/standard-tests@workspace:libs/langchain-standard-tests":
   version: 0.0.0-use.local
   resolution: "@langchain/standard-tests@workspace:libs/langchain-standard-tests"
   dependencies:
@@ -10108,7 +10108,7 @@ __metadata:
     "@langchain/core": "workspace:*"
     "@langchain/openai": "workspace:^"
     "@langchain/scripts": ">=0.1.0 <0.2.0"
-    "@langchain/standard-tests": 0.0.0
+    "@langchain/standard-tests": "workspace:*"
     "@swc/core": ^1.3.90
     "@swc/jest": ^0.2.29
     "@tsconfig/recommended": ^1.0.3
