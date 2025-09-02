@@ -1,6 +1,7 @@
 {
   "name": "@langchain/standard-tests",
   "version": "0.0.0",
+  "private": true,
   "description": "Standard tests for LangChain.js",
   "type": "module",
   "engines": {
