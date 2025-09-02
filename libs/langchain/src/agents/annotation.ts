@@ -5,6 +5,7 @@ import {
   AnnotationRoot,
   messagesStateReducer,
   type BinaryOperatorAggregate,
+  type LastValue,
 } from "@langchain/langgraph";
 import type { InteropZodToStateDefinition } from "@langchain/langgraph/zod";
 import {
@@ -43,19 +44,27 @@ export const createReactAgentBaseAnnotation = () =>
 const createReactAgentAnnotation = <
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>
->(): AnyAnnotationRoot =>
+>(): AnnotationRoot<{
+  structuredResponse: LastValue<T>;
+  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+}> =>
   Annotation.Root({
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
       default: () => [],
     }),
-    structuredResponse: Annotation<T>,
+    structuredResponse: Annotation<T>(),
   });
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
 export function createReactAgentAnnotationConditional<
   T extends Record<string, any> | ResponseFormatUndefined
->(hasStructuredResponse = true): AnyAnnotationRoot {
+>(
+  hasStructuredResponse = true
+): AnnotationRoot<{
+  structuredResponse: LastValue<T extends ResponseFormatUndefined ? never : T>;
+  messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+}> {
   const baseAnnotation = {
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
@@ -64,7 +73,12 @@ export function createReactAgentAnnotationConditional<
   };
 
   if (!hasStructuredResponse) {
-    return Annotation.Root(baseAnnotation);
+    return Annotation.Root(baseAnnotation) as AnnotationRoot<{
+      structuredResponse: LastValue<
+        T extends ResponseFormatUndefined ? never : T
+      >;
+      messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+    }>;
   }
 
   return Annotation.Root({
@@ -103,12 +117,12 @@ export type AnyAnnotationRoot = AnnotationRoot<any>;
  */
 export function enhanceStateSchemaWithMessageReducer(
   stateSchema: AnyAnnotationRoot | InteropZodObject
-): AnyAnnotationRoot {
+) {
   /**
    * If it's already an annotation, return as-is
    */
   if (typeof stateSchema === "object" && "State" in stateSchema) {
-    return stateSchema as AnyAnnotationRoot;
+    return stateSchema;
   }
 
   /**
