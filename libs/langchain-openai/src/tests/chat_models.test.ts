@@ -369,4 +369,33 @@ describe("ChatOpenAI", () => {
       },
     ]);
   });
+
+  test("can be constructed with reasoning_effort", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-2024-08-06",
+      reasoning_effort: "low",
+    });
+
+    expect(model.reasoning).toEqual({ effort: "low" });
+  });
+
+  test("specifying streaming=false disables streaming", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-2024-08-06",
+      streaming: false,
+    });
+
+    // disableStreaming will disable streaming in BaseChatModel
+    expect(model.disableStreaming).toBe(true);
+    expect(model.streaming).toBe(false);
+  });
+
+  test("can be constructed with reasoning_effort", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o-2024-08-06",
+      reasoning_effort: "low",
+    });
+
+    expect(model.reasoning).toEqual({ effort: "low" });
+  });
 });

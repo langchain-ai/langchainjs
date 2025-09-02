@@ -35,6 +35,7 @@ describe("JiraDocumentConverter Unit Tests", () => {
       id: issue.id,
       host: converter.host,
       projectKey: converter.projectKey,
+      title: expect.any(String),
     });
   });
 
