@@ -816,7 +816,7 @@ describe("ToolNode error handling", () => {
       ],
     });
     expect(result.messages[0].content).toBe(
-      "Error: Error: some error\n Please fix your mistakes."
+      "Error: some error\n Please fix your mistakes."
     );
   });
 

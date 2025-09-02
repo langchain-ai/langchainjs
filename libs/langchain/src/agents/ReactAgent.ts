@@ -30,7 +30,11 @@ import type {
   InternalAgentState,
   WithStateGraphNodes,
 } from "./types.js";
-import type { AnyAnnotationRoot, ToAnnotationRoot } from "./annotation.js";
+import {
+  enhanceStateSchemaWithMessageReducer,
+  type AnyAnnotationRoot,
+  type ToAnnotationRoot,
+} from "./annotation.js";
 import type { ResponseFormatUndefined } from "./responses.js";
 
 type AgentGraph<
@@ -111,10 +115,11 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    const schema = (this.options.stateSchema ??
-      createReactAgentAnnotationConditional<StructuredResponseFormat>(
-        this.options.responseFormat !== undefined
-      )) as AnyAnnotationRoot;
+    const schema = this.options.stateSchema
+      ? enhanceStateSchemaWithMessageReducer(this.options.stateSchema)
+      : createReactAgentAnnotationConditional<StructuredResponseFormat>(
+          this.options.responseFormat !== undefined
+        );
 
     const workflow = new StateGraph(schema, this.options.contextSchema);
 

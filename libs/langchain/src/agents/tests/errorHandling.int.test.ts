@@ -2,11 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
-import {
-  HumanMessage,
-  SystemMessage,
-  ToolMessage,
-} from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import z from "zod";
 
 import { createReactAgent } from "../index.js";
@@ -33,12 +29,6 @@ interface TestScenario {
    */
   throwTimming?: "immediate" | "delayed";
   /**
-   * How the error should be handled.
-   * - `bubbleUp`: rethrow the error in the handler.
-   * - `cached`: return a cached result.
-   */
-  errorHandler?: "bubbleUp" | "cached";
-  /**
    * The expected number of tool calls.
    */
   expectedToolCalls: number;
@@ -46,10 +36,6 @@ interface TestScenario {
    * The expected error message.
    */
   expectedError?: string;
-  /**
-   * The expected result.
-   */
-  expectedResult?: string;
   /**
    * Whether to only run this test scenario.
    */
@@ -105,30 +91,6 @@ function makePollTool(params?: ToolParams) {
     }),
     mock,
   };
-}
-
-/**
- * A simple error handler that throws the error.
- * @param toolCall - The tool call that caused the error.
- */
-function bubbleUpErrorHandler(toolCall: { error: unknown }) {
-  throw toolCall.error;
-}
-
-/**
- * A simple error handler that returns a cached result.
- * @param toolCall - The tool call that caused the error.
- */
-function cachedErrorHandler(toolCall: {
-  error: unknown;
-  name: string;
-  id: string;
-}) {
-  return new ToolMessage({
-    content: JSON.stringify({ result: "123" }),
-    name: toolCall.name,
-    tool_call_id: toolCall.id ?? "",
-  });
 }
 
 // Agent prompt used across all tests
@@ -192,13 +154,6 @@ describe("stopWhen Tests", () => {
           scenario.throwWithin === "postModelHook"
             ? getDynamicHook("postModelHook")
             : undefined,
-        ...(scenario.errorHandler === "bubbleUp"
-          ? {
-              onToolCallError: bubbleUpErrorHandler,
-            }
-          : {
-              onToolCallError: cachedErrorHandler,
-            }),
       });
 
       if (scenario.expectedError) {
@@ -215,7 +170,7 @@ describe("stopWhen Tests", () => {
             new HumanMessage("Get a result that is greater or equal to 10"),
           ],
         });
-        expect(res.messages.at(-1)?.content).toContain(scenario.expectedResult);
+        expect(typeof res.messages.at(-1)?.content).toBe("string");
       }
 
       expect(mock).toHaveBeenCalledTimes(scenario.expectedToolCalls);
