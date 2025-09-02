@@ -3,7 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import Exa from "exa-js";
 import { pull } from "langchain/hub";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 
 // Define the tools the agent will have access to.
 const tools = [
@@ -25,7 +25,7 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,

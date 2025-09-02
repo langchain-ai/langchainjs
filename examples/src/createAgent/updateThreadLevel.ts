@@ -18,7 +18,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent, tool } from "langchain";
+import { createAgent, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -47,7 +47,7 @@ const checkSystemStatus = tool(
 /**
  * Create agent with preModelHook for state management
  */
-const agent = createReactAgent({
+const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [checkSystemStatus],
   preModelHook: (state) => {

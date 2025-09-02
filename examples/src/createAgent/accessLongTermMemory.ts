@@ -24,7 +24,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent, tool, InMemoryStore } from "langchain";
+import { createAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -163,7 +163,7 @@ const updateProceduralMemoryTool = tool(
 /**
  * Create coding assistant with procedural memory from LangChain store
  */
-const codingAssistant = createReactAgent({
+const codingAssistant = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4" }),
   tools: [getProceduralMemoryTool, updateProceduralMemoryTool],
   store, // Pass the store to the agent

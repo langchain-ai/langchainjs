@@ -202,7 +202,7 @@ export type CreateReactAgentParams<
    * @uses {@link initChatModel}
    * @example
    * ```ts
-   * const agent = createReactAgent({
+   * const agent = createAgent({
    *   model: "anthropic:claude-3-7-sonnet-latest",
    *   // ...
    * });
@@ -250,7 +250,7 @@ export type CreateReactAgentParams<
    * // Context schema defines runtime parameters passed per invocation
    * const contextSchema = z.object({ ... });
    *
-   * const agent = createReactAgent({
+   * const agent = createAgent({
    *   llm: model,
    *   tools: [updatePreferences, addTask],
    *   stateSchema,    // Persisted: preferences, e.g. task history, workflow state
@@ -286,7 +286,7 @@ export type CreateReactAgentParams<
    *
    * @example
    * ```ts
-   * const agent = createReactAgent({
+   * const agent = createAgent({
    *   llm: model,
    *   tools: [getWeather],
    *   contextSchema: z.object({
@@ -330,7 +330,7 @@ export type CreateReactAgentParams<
    * Can be passed in as:
    *   - Zod schema
    *     ```ts
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: z.object({
    *         capital: z.string(),
    *       }),
@@ -339,7 +339,7 @@ export type CreateReactAgentParams<
    *     ```
    *   - JSON schema
    *     ```ts
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: {
    *         type: "json_schema",
    *         schema: {
@@ -356,7 +356,7 @@ export type CreateReactAgentParams<
    *   - Create React Agent ResponseFormat
    *     ```ts
    *     import { providerStrategy, toolStrategy } from "langchain";
-   *     const agent = createReactAgent({
+   *     const agent = createAgent({
    *       responseFormat: providerStrategy(
    *         z.object({
    *           capital: z.string(),

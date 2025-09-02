@@ -5,7 +5,7 @@ import { SystemMessage, BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { type BaseStore } from "@langchain/langgraph-checkpoint";
 
-import { createReactAgent, AgentRuntime } from "../index.js";
+import { createAgent, AgentRuntime } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("types", () => {
@@ -21,7 +21,7 @@ describe("types", () => {
       }),
     });
 
-    void createReactAgent({
+    void createAgent({
       llm: new FakeToolCallingModel(),
       prompt: (state, config) => {
         // still allows to access messages

@@ -1,5 +1,5 @@
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearch } from "@langchain/tavily";
 import { Calculator } from "@langchain/community/tools/calculator";
@@ -19,7 +19,7 @@ const llm = new ChatAnthropic({
   temperature: 0,
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,

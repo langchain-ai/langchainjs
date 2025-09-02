@@ -4,7 +4,7 @@ import {
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
 
@@ -34,7 +34,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,

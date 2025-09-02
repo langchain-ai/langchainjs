@@ -4,7 +4,7 @@ import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-import { createReactAgent, toolStrategy, providerStrategy } from "../index.js";
+import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";
 import { FakeToolCallingChatModel } from "./utils.js";
 
@@ -24,7 +24,7 @@ const jsonSchema: JsonSchemaFormat = {
 
 describe("response format", () => {
   it("should allow no response format", async () => {
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: new FakeToolCallingChatModel({}),
       tools: [],
     });
@@ -39,7 +39,7 @@ describe("response format", () => {
       responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
     }
 
-    const createReactAgentParameters: CreateReactAgentParameters = {
+    const createAgentParameters: CreateReactAgentParameters = {
       llm: new FakeToolCallingChatModel({}),
       tools: [],
       responseFormat: {
@@ -50,7 +50,7 @@ describe("response format", () => {
         required: ["capital"],
       },
     };
-    const agent = createReactAgent(createReactAgentParameters);
+    const agent = createAgent(createAgentParameters);
     const res = await agent.invoke(prompt);
     expectTypeOf(res.structuredResponse).toEqualTypeOf<
       Record<string, unknown>
@@ -62,13 +62,12 @@ describe("response format", () => {
       responseFormat: z.ZodSchema<{ capital: string }>;
     }
 
-    const createReactAgentParametersWithZod: CreateReactAgentParametersWithZod =
-      {
-        llm: new FakeToolCallingChatModel({}),
-        tools: [],
-        responseFormat: z.object({ capital: z.string() }),
-      };
-    const agentWithZod = createReactAgent(createReactAgentParametersWithZod);
+    const createAgentParametersWithZod: CreateReactAgentParametersWithZod = {
+      llm: new FakeToolCallingChatModel({}),
+      tools: [],
+      responseFormat: z.object({ capital: z.string() }),
+    };
+    const agentWithZod = createAgent(createAgentParametersWithZod);
     const resWithZod = await agentWithZod.invoke(prompt);
     expectTypeOf(resWithZod.structuredResponse).toEqualTypeOf<{
       capital: string;
@@ -82,17 +81,17 @@ describe("response format", () => {
       responseFormat?: z.ZodSchema<{ capital: string }>;
     }
 
-    const createReactAgentParameters: CreateReactAgentParameters = {
+    const createAgentParameters: CreateReactAgentParameters = {
       llm: new FakeToolCallingChatModel({}),
       tools: [],
       responseFormat: undefined,
     };
     // This should now be valid since responseFormat can be optional
-    createReactAgent(createReactAgentParameters);
+    createAgent(createAgentParameters);
   });
 
   it("supports to use stopWhen without responseFormat", async () => {
-    createReactAgent({
+    createAgent({
       llm: new FakeToolCallingChatModel({}),
       tools: [],
     });
@@ -100,7 +99,7 @@ describe("response format", () => {
 
   describe("responseFormat as raw zod schemas", () => {
     it("should allow a simple zod schema", async () => {
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: z.object({
@@ -114,7 +113,7 @@ describe("response format", () => {
     });
 
     it("should allow multiple zod schemas", async () => {
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // Note: Using 'as const' is required for proper type inference
@@ -141,7 +140,7 @@ describe("response format", () => {
 
   describe("responseFormat as json schema", () => {
     it("should allow single json schema objects", async () => {
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: jsonSchema,
@@ -155,7 +154,7 @@ describe("response format", () => {
     });
 
     it("should allow multiple json schema objects", async () => {
-      const agent = createReactAgent({
+      const agent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: [jsonSchema, jsonSchema],
@@ -167,7 +166,7 @@ describe("response format", () => {
     });
 
     it("should NOT allow to pass in arbitrary objects", async () => {
-      createReactAgent({
+      createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - arbitrary objects are not valid JSON schemas
@@ -178,7 +177,7 @@ describe("response format", () => {
 
   describe("using toolStrategy", () => {
     it("should allow single zod schema", async () => {
-      const toolStrategyAgent = createReactAgent({
+      const toolStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: toolStrategy(z.object({ capital: z.string() })),
@@ -190,7 +189,7 @@ describe("response format", () => {
     });
 
     it("should allow multiple zod schemas", async () => {
-      const toolStrategyAgent = createReactAgent({
+      const toolStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: toolStrategy([
@@ -208,7 +207,7 @@ describe("response format", () => {
     });
 
     it("should allow single json schema object", async () => {
-      const toolStrategyAgent = createReactAgent({
+      const toolStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: toolStrategy(jsonSchema),
@@ -220,7 +219,7 @@ describe("response format", () => {
     });
 
     it("should allow multiple json schema objects", async () => {
-      const toolStrategyAgent = createReactAgent({
+      const toolStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: toolStrategy([jsonSchema, jsonSchema]),
@@ -232,13 +231,13 @@ describe("response format", () => {
     });
 
     it("should NOT allow to pass in a tool output within an array", async () => {
-      createReactAgent({
+      createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
         responseFormat: [toolStrategy(jsonSchema)],
       });
-      createReactAgent({
+      createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
@@ -252,7 +251,7 @@ describe("response format", () => {
 
   describe("using providerStrategy", () => {
     it("should allow single zod schema", async () => {
-      const providerStrategyAgent = createReactAgent({
+      const providerStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: providerStrategy(z.object({ capital: z.string() })),
@@ -264,7 +263,7 @@ describe("response format", () => {
     });
 
     it("should NOT allow multiple zod schemas", async () => {
-      createReactAgent({
+      createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs
@@ -276,7 +275,7 @@ describe("response format", () => {
     });
 
     it("should allow single json schema object", async () => {
-      const providerStrategyAgent = createReactAgent({
+      const providerStrategyAgent = createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         responseFormat: providerStrategy(jsonSchema),
@@ -288,7 +287,7 @@ describe("response format", () => {
     });
 
     it("should NOT allow multiple json schema objects", async () => {
-      createReactAgent({
+      createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
         // @ts-expect-error - validate error: only one schema is allowed for native outputs

@@ -19,7 +19,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent, tool, InMemoryStore } from "langchain";
+import { createAgent, tool, InMemoryStore } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -216,7 +216,7 @@ This information will be used to personalize future interactions.`;
 /**
  * Create the agent with memory-aware tools
  */
-const agent = createReactAgent({
+const agent = createAgent({
   llm,
   tools: [knowledgeRetrievalTool, preferencelearningTool],
   store, // Pass the store to the agent

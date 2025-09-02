@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createReactAgent, HumanMessage, tool } from "langchain";
+import { createAgent, HumanMessage, tool } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
@@ -28,7 +28,7 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,

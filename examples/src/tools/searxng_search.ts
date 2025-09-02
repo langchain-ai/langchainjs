@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -38,7 +38,7 @@ const customOutputParser = (
   },
 });
 // Replace this placeholder agent with your actual implementation.
-const agent = createReactAgent({
+const agent = createAgent({
   llm: model,
   tools,
   prompt: prefix,

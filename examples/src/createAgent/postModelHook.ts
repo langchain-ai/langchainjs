@@ -18,7 +18,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent, tool, AIMessage, MemorySaver } from "langchain";
+import { createAgent, tool, AIMessage, MemorySaver } from "langchain";
 import { interrupt } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -142,7 +142,7 @@ const stats = {
 /**
  * Agent with post-model hook
  */
-const agent = createReactAgent({
+const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
   tools: [productInfoTool],
   checkpointer: new MemorySaver(),

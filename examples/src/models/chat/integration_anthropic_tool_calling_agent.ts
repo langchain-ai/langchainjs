@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createReactAgent, tool, HumanMessage } from "langchain";
+import { createAgent, tool, HumanMessage } from "langchain";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -26,7 +26,7 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,

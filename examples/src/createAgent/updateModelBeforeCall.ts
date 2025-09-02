@@ -27,7 +27,7 @@
  */
 
 import fs from "node:fs/promises";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 
@@ -38,7 +38,7 @@ const context = z.object({
   model: z.enum(["gpt-4o", "gpt-4o-mini"]).optional(),
 });
 
-const agent = createReactAgent({
+const agent = createAgent({
   tools: [],
   /**
    * Custom dynamic model selection before the model call.

@@ -1,4 +1,4 @@
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearch } from "@langchain/tavily";
@@ -23,7 +23,7 @@ const llm = new ChatAnthropic({
   verbose: false,
 });
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,

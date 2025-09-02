@@ -1,4 +1,4 @@
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 import { OpenAI } from "@langchain/openai";
 import {
   GmailCreateDraft,
@@ -35,7 +35,7 @@ export async function run() {
     new GmailSendMessage(),
   ];
 
-  const gmailAgent = await createReactAgent({
+  const gmailAgent = await createAgent({
     llm: model,
     tools,
     name: "structured-chat-zero-shot-react-description",

@@ -1,7 +1,7 @@
 import { GoogleRoutesAPI } from "@langchain/community/tools/google_routes";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 
 const tools = [new GoogleRoutesAPI()];
 
@@ -16,7 +16,7 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["placeholder", "{agent_scratchpad}"],
 ]);
 
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools,
   prompt,

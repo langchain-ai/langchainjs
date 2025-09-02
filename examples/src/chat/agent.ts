@@ -1,4 +1,4 @@
-import { createReactAgent, HumanMessage } from "langchain";
+import { createAgent, HumanMessage } from "langchain";
 import { pull } from "langchain/hub";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
@@ -25,7 +25,7 @@ export const run = async () => {
     temperature: 0,
   });
 
-  const agent = await createReactAgent({
+  const agent = await createAgent({
     llm,
     tools,
     prompt,

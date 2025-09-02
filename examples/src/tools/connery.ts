@@ -1,6 +1,6 @@
 import { ConneryService } from "@langchain/community/tools/connery";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "langchain";
+import { createAgent } from "langchain";
 
 // Specify your Connery Runner credentials.
 process.env.CONNERY_RUNNER_URL = "";
@@ -28,7 +28,7 @@ console.log(manualRunResult);
 
 // Run the action using the OpenAI Functions agent.
 const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
-const agent = await createReactAgent({
+const agent = await createAgent({
   llm,
   tools: [sendEmailAction],
 });

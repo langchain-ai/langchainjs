@@ -31,7 +31,7 @@ export { tool, DynamicStructuredTool } from "@langchain/core/tools";
  * LangChain Agents
  */
 export {
-  createReactAgent,
+  createAgent,
   toolStrategy,
   providerStrategy,
   ToolNode,
