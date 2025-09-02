@@ -174,7 +174,7 @@ export interface AgentRuntime<ContextType = Record<string, unknown>> {
   signal?: AbortSignal;
 }
 
-export type CreateReactAgentParams<
+export type CreateAgentParams<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,

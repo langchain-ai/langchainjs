@@ -6,7 +6,7 @@ import type {
 import { MessagesAnnotation } from "@langchain/langgraph";
 
 import { type AnyAnnotationRoot } from "./annotation.js";
-import type { CreateReactAgentParams, ExtractZodArrayTypes } from "./types.js";
+import type { CreateAgentParams, ExtractZodArrayTypes } from "./types.js";
 import type {
   ToolStrategy,
   TypedToolStrategy,
@@ -66,7 +66,7 @@ export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     T,
     ContextSchema,
@@ -84,7 +84,7 @@ export function createAgent<
     | InteropZodObject = typeof MessagesAnnotation,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     ExtractZodArrayTypes<T> extends Record<string, any>
       ? ExtractZodArrayTypes<T>
@@ -109,7 +109,7 @@ export function createAgent<
     | InteropZodObject = typeof MessagesAnnotation,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     Record<string, unknown>,
     ContextSchema,
@@ -126,7 +126,7 @@ export function createAgent<
     | InteropZodObject = typeof MessagesAnnotation,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     Record<string, unknown>,
     ContextSchema,
@@ -143,7 +143,7 @@ export function createAgent<
     | InteropZodObject = typeof MessagesAnnotation,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     Record<string, unknown>,
     ContextSchema,
@@ -161,7 +161,7 @@ export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     T,
     ContextSchema,
@@ -179,12 +179,7 @@ export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
-    StateSchema,
-    T,
-    ContextSchema,
-    ToolStrategy<T>
-  > & {
+  params: CreateAgentParams<StateSchema, T, ContextSchema, ToolStrategy<T>> & {
     responseFormat: ToolStrategy<T>;
   }
 ): ReactAgent<StateSchema, T, ContextSchema>;
@@ -197,7 +192,7 @@ export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     T,
     ContextSchema,
@@ -215,7 +210,7 @@ export function createAgent<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
   params: Omit<
-    CreateReactAgentParams<
+    CreateAgentParams<
       StateSchema,
       ResponseFormatUndefined,
       ContextSchema,
@@ -233,7 +228,7 @@ export function createAgent<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
   params: Omit<
-    CreateReactAgentParams<
+    CreateAgentParams<
       StateSchema,
       ResponseFormatUndefined,
       ContextSchema,
@@ -253,7 +248,7 @@ export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     StructuredResponseFormat,
     ContextSchema,
@@ -269,7 +264,7 @@ export function createAgent<
   StructuredResponseFormat extends Record<string, any>,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject
 >(
-  params: CreateReactAgentParams<
+  params: CreateAgentParams<
     StateSchema,
     StructuredResponseFormat,
     ContextSchema,

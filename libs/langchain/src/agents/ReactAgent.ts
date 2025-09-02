@@ -24,7 +24,7 @@ import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
 import type {
-  CreateReactAgentParams,
+  CreateAgentParams,
   ClientTool,
   ServerTool,
   InternalAgentState,
@@ -69,7 +69,7 @@ export class ReactAgent<
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   constructor(
-    public options: CreateReactAgentParams<
+    public options: CreateAgentParams<
       StateSchema,
       StructuredResponseFormat,
       ContextSchema

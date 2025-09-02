@@ -26,7 +26,7 @@ import {
   InternalAgentState,
   ClientTool,
   ServerTool,
-  CreateReactAgentParams,
+  CreateAgentParams,
 } from "../types.js";
 import { withAgentName } from "../withAgentName.js";
 import {
@@ -51,11 +51,7 @@ export interface AgentNodeOptions<
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateReactAgentParams<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema
-    >,
+    CreateAgentParams<StateSchema, StructuredResponseFormat, ContextSchema>,
     "llm" | "model" | "prompt" | "includeAgentName" | "name" | "responseFormat"
   > {
   toolClasses: (ClientTool | ServerTool)[];

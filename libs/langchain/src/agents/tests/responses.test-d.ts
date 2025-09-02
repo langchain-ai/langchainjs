@@ -33,13 +33,13 @@ describe("response format", () => {
   });
 
   it("makes it simple to pass in the parameter as variable", async () => {
-    interface CreateReactAgentParameters {
+    interface CreateAgentParameters {
       llm: LanguageModelLike;
       tools: Tool[];
       responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
     }
 
-    const createAgentParameters: CreateReactAgentParameters = {
+    const createAgentParameters: CreateAgentParameters = {
       llm: new FakeToolCallingChatModel({}),
       tools: [],
       responseFormat: {
@@ -56,13 +56,13 @@ describe("response format", () => {
       Record<string, unknown>
     >();
 
-    interface CreateReactAgentParametersWithZod {
+    interface CreateAgentParametersWithZod {
       llm: LanguageModelLike;
       tools: Tool[];
       responseFormat: z.ZodSchema<{ capital: string }>;
     }
 
-    const createAgentParametersWithZod: CreateReactAgentParametersWithZod = {
+    const createAgentParametersWithZod: CreateAgentParametersWithZod = {
       llm: new FakeToolCallingChatModel({}),
       tools: [],
       responseFormat: z.object({ capital: z.string() }),
@@ -75,13 +75,13 @@ describe("response format", () => {
   });
 
   it("does not allow to have responseFormat be optional", async () => {
-    interface CreateReactAgentParameters {
+    interface CreateAgentParameters {
       llm: LanguageModelLike;
       tools: Tool[];
       responseFormat?: z.ZodSchema<{ capital: string }>;
     }
 
-    const createAgentParameters: CreateReactAgentParameters = {
+    const createAgentParameters: CreateAgentParameters = {
       llm: new FakeToolCallingChatModel({}),
       tools: [],
       responseFormat: undefined,
