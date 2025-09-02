@@ -201,7 +201,7 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    *
    * @deprecated Use `reasoning` instead.
    */
-  reasoning_effort?: OpenAIClient.ReasoningEffort;
+  reasoningEffort?: OpenAIClient.ReasoningEffort;
 
   /**
    * Should be set to `true` in tenancies with Zero Data Retention
