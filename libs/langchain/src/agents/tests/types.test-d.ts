@@ -2,9 +2,10 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
 import { type BaseStore } from "@langchain/langgraph-checkpoint";
 
-import { createReactAgent } from "../index.js";
+import { createReactAgent, AgentRuntime } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 describe("types", () => {
@@ -70,5 +71,29 @@ describe("types", () => {
       contextSchema,
       tools: [],
     });
+  });
+
+  it("should provide runtime type", () => {
+    const contextSchema = z.object({
+      userId: z.string(),
+    });
+
+    tool(
+      async (_, runtime: AgentRuntime<z.infer<typeof contextSchema>>) => {
+        expectTypeOf(runtime.context).toEqualTypeOf<
+          z.infer<typeof contextSchema> | undefined
+        >();
+        expectTypeOf(runtime.store).toEqualTypeOf<BaseStore | undefined>();
+        expectTypeOf(runtime.writer).toEqualTypeOf<
+          ((chunk: unknown) => void) | undefined
+        >();
+        expectTypeOf(runtime.signal).toEqualTypeOf<AbortSignal | undefined>();
+      },
+      {
+        name: "test",
+        description: "test",
+        schema: z.object({}),
+      }
+    );
   });
 });

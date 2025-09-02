@@ -36,6 +36,7 @@ export {
   providerStrategy,
   ToolNode,
   type AgentState,
+  type AgentRuntime,
   type HumanInterrupt,
   type HumanInterruptConfig,
   type ActionRequest,
