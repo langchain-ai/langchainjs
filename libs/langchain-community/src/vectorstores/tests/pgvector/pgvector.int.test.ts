@@ -255,6 +255,127 @@ describe("PGVectorStore", () => {
     );
   });
 
+  test("PGvector supports notIn,lt,lte,gt,gte,neq in metadata filter ", async () => {
+    const documents = [
+      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
+      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents);
+
+    // notIn test
+    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        notIn: [100, 300],
+      },
+    });
+
+    expect(result.length).toEqual(1);
+    expect(result).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 200 },
+      },
+    ]);
+
+    // lt test
+    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        lt: 200,
+      },
+    });
+
+    expect(result2.length).toEqual(1);
+    expect(result2).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 100 },
+      },
+    ]);
+
+    // lte test
+    const result3 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        lte: 200,
+      },
+    });
+
+    expect(result3.length).toEqual(2);
+    expect(result3).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 100 },
+      },
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 200 },
+      },
+    ]);
+
+    // gt test
+    const result4 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        gt: 200,
+      },
+    });
+
+    expect(result4.length).toEqual(1);
+    expect(result4).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 300 },
+      },
+    ]);
+
+    // gte test
+    const result5 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        gte: 200,
+      },
+    });
+
+    expect(result5.length).toEqual(2);
+    expect(result5).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 200 },
+      },
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 300 },
+      },
+    ]);
+
+    // neq test
+    const result6 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+      a: {
+        neq: 200,
+      },
+    });
+
+    expect(result6.length).toEqual(2);
+    expect(result6).toEqual([
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 100 },
+      },
+      {
+        id: expect.any(String),
+        pageContent: "Lorem Ipsum",
+        metadata: { a: 300 },
+      },
+    ]);
+  });
+
   test("PGvector can delete document by id", async () => {
     const documents = [
       { pageContent: "Lorem Ipsum", metadata: { a: 1 } },

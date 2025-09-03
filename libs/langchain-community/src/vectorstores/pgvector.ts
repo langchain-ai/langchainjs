@@ -109,7 +109,7 @@ export interface PGVectorStoreArgs {
  * ```typescript
  * import type { Document } from '@langchain/core/documents';
  *
- * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar", num: 4 } };
  * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
  * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
  *
@@ -145,7 +145,6 @@ export interface PGVectorStoreArgs {
  *
  * <br />
  *
- *
  * <details>
  * <summary><strong>Similarity search with filter</strong></summary>
  *
@@ -158,9 +157,32 @@ export interface PGVectorStoreArgs {
  * // Output: * foo [{"baz":"bar"}]
  * ```
  * </details>
+ * 
+ * <br />
+ * 
+ * <details>
+ * <summary><strong>Similarity search with filter operators</strong></summary>
+ *
+ * Available filter operators: in, notIn, lte, lt, gte, gt, neq
+ *
+ * ```typescript
+ * const resultsWithFilters = await vectorStore.similaritySearch("thud", 1, {
+ *   baz: {
+ *     in: ["bar", "car"],
+ *   },
+ *   num: {
+ *     lte: 10
+ *   }
+ * });
+ *
+ * for (const doc of resultsWithFilters) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
  *
  * <br />
- *
  *
  * <details>
  * <summary><strong>Similarity search with score</strong></summary>
@@ -445,7 +467,11 @@ export class PGVectorStore extends VectorStore {
     }
 
     // Check if we have added ids to the rows.
-    if (rows.length !== 0 && columns.length === rows[0].length - 1) {
+    if (
+      rows[0] !== undefined &&
+      rows.length !== 0 &&
+      columns.length === rows[0].length - 1
+    ) {
       columns.push(this.idColumnName);
     }
 
@@ -586,7 +612,10 @@ export class PGVectorStore extends VectorStore {
    * @example <caption>Delete by filter</caption>
    * await vectorStore.delete({ filter: { a: 1, b: 2 } });
    */
-  async delete(params: { ids?: string[]; filter?: Metadata }): Promise<void> {
+  override async delete(params: {
+    ids?: string[];
+    filter?: Metadata;
+  }): Promise<void> {
     const { ids, filter } = params;
 
     if (!(ids || filter)) {
@@ -629,8 +658,6 @@ export class PGVectorStore extends VectorStore {
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parameters: unknown[] = [embeddingString, k];
     const whereClauses = [];
 
@@ -680,6 +707,26 @@ export class PGVectorStore extends VectorStore {
           );
           parameters.push(..._value.arrayContains);
           paramCount += _value.arrayContains.length;
+        }
+        const operators = {
+          gt: ">",
+          gte: ">=",
+          lt: "<",
+          lte: "<=",
+          neq: "!=",
+        };
+        // check if _value has any of the operators as keys and it's numeric
+        for (const [opKey, sqlOp] of Object.entries(operators)) {
+          if (
+            Object.prototype.hasOwnProperty.call(_value, opKey) &&
+            typeof _value[opKey] === "number"
+          ) {
+            paramCount += 1;
+            whereClauses.push(
+              `(${this.metadataColumnName}->>'${key}')::numeric ${sqlOp} $${paramCount}`
+            );
+            parameters.push(_value[opKey]);
+          }
         }
       } else {
         paramCount += 1;
@@ -822,7 +869,7 @@ export class PGVectorStore extends VectorStore {
    * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
-  static async fromTexts(
+  static override async fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
@@ -850,14 +897,13 @@ export class PGVectorStore extends VectorStore {
    * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
-  static async fromDocuments(
+  static override async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
-
     return instance;
   }
 
@@ -938,7 +984,7 @@ export class PGVectorStore extends VectorStore {
    *     diversity and 1 to minimum diversity.
    * @returns List of documents selected by maximal marginal relevance.
    */
-  async maxMarginalRelevanceSearch(
+  override async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
