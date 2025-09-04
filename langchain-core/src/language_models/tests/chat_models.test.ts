@@ -1,14 +1,13 @@
 /* eslint-disable no-promise-executor-return */
 
-import { test, expect } from "@jest/globals";
-import { z } from "zod/v3";
+import { expect, test } from "@jest/globals";
+import { z, z as z4 } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { z as z4 } from "zod/v4";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import { AIMessage } from "../../messages/ai.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
