@@ -15,6 +15,7 @@ import {
   type InteropZodObject,
 } from "@langchain/core/utils/types";
 import type { ResponseFormatUndefined } from "./responses.js";
+import type { IMiddleware, InferMiddlewareStates } from "./types.js";
 
 export const PreHookAnnotation: AnnotationRoot<{
   llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;
@@ -57,35 +58,68 @@ const createAgentAnnotation = <
   });
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
-export function createAgentAnnotationConditional<
-  T extends Record<string, any> | ResponseFormatUndefined
->(
-  hasStructuredResponse = true
-): AnnotationRoot<{
-  structuredResponse: LastValue<T extends ResponseFormatUndefined ? never : T>;
+// Helper type for the merged annotation
+type MergedAnnotationSpec<
+  T extends Record<string, any> | ResponseFormatUndefined,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+> = {
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-}> {
-  const baseAnnotation = {
+} & (T extends ResponseFormatUndefined
+  ? {}
+  : { structuredResponse: LastValue<T> }) &
+  InferMiddlewareStates<TMiddlewares>;
+
+export function createAgentAnnotationConditional<
+  T extends Record<string, any> | ResponseFormatUndefined,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
+>(
+  hasStructuredResponse = true,
+  middlewares?: TMiddlewares
+): AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>> {
+  const baseAnnotation: Record<string, any> = {
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
       default: () => [],
     }),
   };
 
+  // Add middleware state properties to the annotation
+  if (middlewares) {
+    for (const middleware of middlewares) {
+      if (middleware.stateSchema) {
+        // Parse empty object to get default values
+        let parsedDefaults: Record<string, any> = {};
+        try {
+          parsedDefaults = middleware.stateSchema.parse({});
+        } catch {
+          // If parsing fails, we'll use undefined as defaults
+        }
+
+        const shape = middleware.stateSchema.shape;
+        for (const [key] of Object.entries(shape)) {
+          if (!(key in baseAnnotation)) {
+            const defaultValue = parsedDefaults[key] ?? undefined;
+            baseAnnotation[key] = Annotation({
+              reducer: (x: any, y: any) => y ?? x,
+              default: () => defaultValue,
+            });
+          }
+        }
+      }
+    }
+  }
+
   if (!hasStructuredResponse) {
-    return Annotation.Root(baseAnnotation) as AnnotationRoot<{
-      structuredResponse: LastValue<
-        T extends ResponseFormatUndefined ? never : T
-      >;
-      messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
-    }>;
+    return Annotation.Root(baseAnnotation) as AnnotationRoot<
+      MergedAnnotationSpec<T, TMiddlewares>
+    >;
   }
 
   return Annotation.Root({
     ...baseAnnotation,
     structuredResponse:
       Annotation<T extends ResponseFormatUndefined ? never : T>(),
-  });
+  }) as unknown as AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>>;
 }
 
 // Helper type to select the right annotation based on the response format type

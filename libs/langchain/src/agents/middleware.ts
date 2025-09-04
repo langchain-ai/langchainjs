@@ -1,0 +1,117 @@
+import { z } from "zod";
+import type {
+  IMiddleware,
+  Runtime,
+  Controls,
+  MiddlewareResult,
+  AgentBuiltInState,
+  PreparedCall,
+} from "./types.js";
+
+/**
+ * Creates a middleware instance with automatic schema inference.
+ *
+ * @param config - Middleware configuration
+ * @param config.name - The name of the middleware
+ * @param config.stateSchema - The schema of the middleware state
+ * @param config.contextSchema - The schema of the middleware context
+ * @param config.prepareCall - The function to prepare the call
+ * @param config.beforeModel - The function to run before the model call
+ * @param config.afterModel - The function to run after the model call
+ * @returns A middleware instance
+ *
+ * @example
+ * ```ts
+ * const authMiddleware = createMiddleware({
+ *   name: "AuthMiddleware",
+ *   stateSchema: z.object({
+ *     isAuthenticated: z.boolean().default(false),
+ *   }),
+ *   contextSchema: z.object({
+ *     userId: z.string(),
+ *   }),
+ *   beforeModel: async (state, runtime, controls) => {
+ *     if (!state.isAuthenticated) {
+ *       return controls.terminate(new Error("Not authenticated"));
+ *     }
+ *   },
+ * });
+ * ```
+ */
+export function createMiddleware<
+  TSchema extends z.ZodObject<any> | undefined = undefined,
+  TContextSchema extends z.ZodObject<any> | undefined = undefined
+>(config: {
+  name: string;
+  stateSchema?: TSchema;
+  contextSchema?: TContextSchema;
+  prepareCall?: (
+    options: PreparedCall,
+    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
+    >
+  ) => Promise<PreparedCall | undefined> | PreparedCall | undefined;
+  beforeModel?: (
+    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
+    >,
+    controls: Controls<
+      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+        AgentBuiltInState
+    >
+  ) =>
+    | Promise<
+        MiddlewareResult<
+          Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+        >
+      >
+    | MiddlewareResult<
+        Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      >;
+  afterModel?: (
+    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
+    >,
+    controls: Controls<
+      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+        AgentBuiltInState
+    >
+  ) =>
+    | Promise<
+        MiddlewareResult<
+          Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+        >
+      >
+    | MiddlewareResult<
+        Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      >;
+}): IMiddleware<TSchema, TContextSchema, any> {
+  const middleware: IMiddleware<TSchema, TContextSchema, any> = {
+    name: config.name,
+    stateSchema: config.stateSchema,
+    contextSchema: config.contextSchema,
+  };
+
+  if (config.prepareCall) {
+    middleware.prepareCall = async (options, state, runtime) =>
+      Promise.resolve(config.prepareCall!(options, state, runtime));
+  }
+
+  if (config.beforeModel) {
+    middleware.beforeModel = async (state, runtime, controls) =>
+      Promise.resolve(config.beforeModel!(state, runtime, controls));
+  }
+
+  if (config.afterModel) {
+    middleware.afterModel = async (state, runtime, controls) =>
+      Promise.resolve(config.afterModel!(state, runtime, controls));
+  }
+
+  return middleware;
+}

@@ -7,73 +7,82 @@ import {
   START,
   Send,
   CompiledStateGraph,
-  MessagesAnnotation,
 } from "@langchain/langgraph";
-import {
-  isToolMessage,
-  isAIMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+import { ToolMessage, AIMessage } from "@langchain/core/messages";
 
-import {
-  createAgentAnnotationConditional,
-  ReactAgentAnnotation,
-} from "./annotation.js";
+import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "./utils.js";
+
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "./nodes/ToolNode.js";
+import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
+import { AfterModelNode } from "./nodes/AfterModalNode.js";
+import { initializeMiddlewareStates } from "./nodes/utils.js";
+
 import type {
   CreateAgentParams,
   ClientTool,
   ServerTool,
-  InternalAgentState,
   WithStateGraphNodes,
+  IMiddleware,
+  InferMiddlewareStates,
+  InferMiddlewareInputStates,
+  BuiltInState,
 } from "./types.js";
-import {
-  enhanceStateSchemaWithMessageReducer,
-  type AnyAnnotationRoot,
-  type ToAnnotationRoot,
-} from "./annotation.js";
+import { type AnyAnnotationRoot, type ToAnnotationRoot } from "./annotation.js";
 import type { ResponseFormatUndefined } from "./responses.js";
 
+// Helper type to get the state definition with middleware states
+type MergedAgentState<
+  StructuredResponseFormat extends
+    | Record<string, any>
+    | ResponseFormatUndefined,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+> = (StructuredResponseFormat extends ResponseFormatUndefined
+  ? BuiltInState
+  : BuiltInState & { structuredResponse: StructuredResponseFormat }) &
+  InferMiddlewareStates<TMiddlewares>;
+
+type InvokeStateParameter<
+  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+> = BuiltInState & InferMiddlewareInputStates<TMiddlewares>;
+
 type AgentGraph<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined = Record<string, any>,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
 > = CompiledStateGraph<
-  ToAnnotationRoot<StateSchema>["State"],
-  ToAnnotationRoot<StateSchema>["Update"],
+  any,
+  any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
-  typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
-  ReactAgentAnnotation<StructuredResponseFormat>["spec"] &
-    ToAnnotationRoot<StateSchema>["spec"],
+  any,
+  MergedAgentState<StructuredResponseFormat, TMiddlewares>,
   ToAnnotationRoot<ContextSchema>["spec"],
   unknown
 >;
 
 export class ReactAgent<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined = Record<string, any>,
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
 > {
-  #graph: AgentGraph<StateSchema, StructuredResponseFormat, ContextSchema>;
+  #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
 
-  #inputSchema?: AnnotationRoot<ToAnnotationRoot<StateSchema>["spec"]>;
+  #inputSchema?: AnnotationRoot<any>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   constructor(
-    public options: CreateAgentParams<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema
-    >
+    public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
   ) {
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
@@ -115,16 +124,44 @@ export class ReactAgent<
         .map((tool) => tool.name)
     );
 
-    const schema = this.options.stateSchema
-      ? enhanceStateSchemaWithMessageReducer(this.options.stateSchema)
-      : createAgentAnnotationConditional<StructuredResponseFormat>(
-          this.options.responseFormat !== undefined
-        );
+    // Create a schema that merges agent base schema with middleware state schemas
+    const schema = createAgentAnnotationConditional<
+      StructuredResponseFormat,
+      TMiddlewares
+    >(
+      this.options.responseFormat !== undefined,
+      this.options.middlewares as TMiddlewares
+    );
 
-    const workflow = new StateGraph(schema, this.options.contextSchema);
+    const workflow = new StateGraph(
+      schema as AnnotationRoot<any>,
+      this.options.contextSchema
+    );
+
+    // Generate node names for middleware nodes that have hooks
+    const beforeModelNodes: { index: number; name: string }[] = [];
+    const afterModelNodes: { index: number; name: string }[] = [];
+
+    if (this.options.middlewares) {
+      for (let i = 0; i < this.options.middlewares.length; i++) {
+        const middleware = this.options.middlewares[i];
+        if (middleware.beforeModel) {
+          beforeModelNodes.push({
+            index: i,
+            name: `before_model_${middleware.name}_${i}`,
+          });
+        }
+        if (middleware.afterModel) {
+          afterModelNodes.push({
+            index: i,
+            name: `after_model_${middleware.name}_${i}`,
+          });
+        }
+      }
+    }
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "pre_model_hook" | "post_model_hook" | "tools" | "agent",
+      "tools" | "agent" | string,
       typeof workflow
     >;
 
@@ -140,6 +177,7 @@ export class ReactAgent<
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
         responseFormat: this.options.responseFormat,
+        middlewares: this.options.middlewares,
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
@@ -160,42 +198,53 @@ export class ReactAgent<
     }
 
     /**
-     * setup preModelHook
+     * Add middleware nodes
      */
-    if (options.preModelHook) {
-      allNodeWorkflows.addNode("pre_model_hook", options.preModelHook);
-    }
+    if (this.options.middlewares && this.options.middlewares.length > 0) {
+      // Add beforeModel nodes for middlewares that have the hook
+      for (const nodeInfo of beforeModelNodes) {
+        const middleware = this.options.middlewares[nodeInfo.index];
+        allNodeWorkflows.addNode(
+          nodeInfo.name,
+          new BeforeModelNode(middleware)
+        );
+      }
 
-    /**
-     * setup postModelHook
-     */
-    if (options.postModelHook) {
-      allNodeWorkflows.addNode("post_model_hook", options.postModelHook);
+      // Add afterModel nodes for middlewares that have the hook
+      for (const nodeInfo of afterModelNodes) {
+        const middleware = this.options.middlewares[nodeInfo.index];
+        allNodeWorkflows.addNode(nodeInfo.name, new AfterModelNode(middleware));
+      }
     }
 
     /**
      * Add Edges
      */
-    allNodeWorkflows.addEdge(START, this.#getEntryPoint());
-
-    if (this.options.preModelHook) {
-      allNodeWorkflows.addEdge("pre_model_hook", "agent");
+    // Connect START to first beforeModel node or agent
+    if (beforeModelNodes.length > 0) {
+      allNodeWorkflows.addEdge(START, beforeModelNodes[0].name);
+    } else {
+      allNodeWorkflows.addEdge(START, "agent");
     }
 
-    if (this.options.postModelHook) {
-      allNodeWorkflows.addEdge("agent", "post_model_hook");
-      const postHookPaths = this.#getPostModelHookPaths(
-        toolClasses.filter(isClientTool)
+    // Connect beforeModel nodes in sequence
+    for (let i = 0; i < beforeModelNodes.length - 1; i++) {
+      allNodeWorkflows.addEdge(
+        beforeModelNodes[i].name,
+        beforeModelNodes[i + 1].name
       );
-      if (postHookPaths.length === 1) {
-        allNodeWorkflows.addEdge("post_model_hook", postHookPaths[0]);
-      } else {
-        allNodeWorkflows.addConditionalEdges(
-          "post_model_hook",
-          this.#createPostModelHookRouter(),
-          postHookPaths
-        );
-      }
+    }
+
+    // Connect last beforeModel node to agent
+    const lastBeforeModelNode = beforeModelNodes.at(-1);
+    if (beforeModelNodes.length > 0 && lastBeforeModelNode) {
+      allNodeWorkflows.addEdge(lastBeforeModelNode.name, "agent");
+    }
+
+    // Connect agent to last afterModel node (for reverse order execution)
+    const lastAfterModelNode = afterModelNodes.at(-1);
+    if (afterModelNodes.length > 0 && lastAfterModelNode) {
+      allNodeWorkflows.addEdge("agent", lastAfterModelNode.name);
     } else {
       const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
       if (modelPaths.length === 1) {
@@ -209,18 +258,45 @@ export class ReactAgent<
       }
     }
 
+    // Connect afterModel nodes in reverse sequence
+    for (let i = afterModelNodes.length - 1; i > 0; i--) {
+      allNodeWorkflows.addEdge(
+        afterModelNodes[i].name,
+        afterModelNodes[i - 1].name
+      );
+    }
+
+    // Connect first afterModel node (last to execute) to model paths
+    if (afterModelNodes.length > 0) {
+      const firstAfterModelNode = afterModelNodes[0].name;
+      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
+      if (modelPaths.length === 1) {
+        allNodeWorkflows.addEdge(firstAfterModelNode, modelPaths[0]);
+      } else {
+        allNodeWorkflows.addConditionalEdges(
+          firstAfterModelNode,
+          this.#createModelRouter(),
+          modelPaths
+        );
+      }
+    }
+
     /**
      * add edges for tools node
      */
     if (toolClasses.length > 0) {
+      // Tools should return to first beforeModel node or agent
+      const toolReturnTarget =
+        beforeModelNodes.length > 0 ? beforeModelNodes[0].name : "agent";
+
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           "tools",
           this.#createToolsRouter(shouldReturnDirect),
-          [this.#getEntryPoint(), END]
+          [toolReturnTarget, END]
         );
       } else {
-        allNodeWorkflows.addEdge("tools", this.#getEntryPoint());
+        allNodeWorkflows.addEdge("tools", toolReturnTarget);
       }
     }
 
@@ -234,71 +310,18 @@ export class ReactAgent<
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
-    });
+    }) as AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
   }
 
   /**
    * Get the compiled graph.
    */
   get graph(): AgentGraph<
-    StateSchema,
     StructuredResponseFormat,
-    ContextSchema
+    ContextSchema,
+    TMiddlewares
   > {
     return this.#graph;
-  }
-
-  #getEntryPoint() {
-    const entryPoint = this.options.preModelHook ? "pre_model_hook" : "agent";
-    return entryPoint;
-  }
-
-  /**
-   * Get possible edge destinations from post_model_hook node.
-   */
-  #getPostModelHookPaths(toolClasses: (ClientTool | ServerTool)[]) {
-    const paths: (typeof END | "agent" | "pre_model_hook" | "tools")[] = [];
-    if (toolClasses.length > 0) {
-      paths.push(this.#getEntryPoint(), "tools");
-    }
-    paths.push(END);
-    return paths;
-  }
-
-  #createPostModelHookRouter() {
-    return (state: InternalAgentState<StructuredResponseFormat>) => {
-      const messages = state.messages;
-      const toolMessages = messages.filter(isToolMessage);
-      const lastAiMessage = messages.filter(isAIMessage).at(-1);
-      const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
-        (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
-      );
-
-      if (pendingToolCalls && pendingToolCalls.length > 0) {
-        /**
-         * The tool node processes a single message.
-         * All tool calls in the message are executed in parallel within the tool node.
-         * @deprecated likely to be removed in the next version of the agent
-         */
-        if (this.#toolBehaviorVersion === "v1") {
-          return "tools";
-        }
-
-        /**
-         * The tool node processes a single tool call. Tool calls are distributed across
-         * multiple instances of the tool node using the Send API.
-         */
-        return pendingToolCalls.map(
-          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
-        );
-      }
-
-      if (messages.at(-1) instanceof ToolMessage) {
-        return this.#getEntryPoint();
-      }
-
-      return END;
-    };
   }
 
   /**
@@ -326,7 +349,10 @@ export class ReactAgent<
     /**
      * determine if the agent should continue or not
      */
-    return (state: InternalAgentState<StructuredResponseFormat>) => {
+    /**
+     * ToDo: fix type
+     */
+    return (state: any) => {
       const messages = state.messages;
       const lastMessage = messages.at(-1);
 
@@ -335,15 +361,7 @@ export class ReactAgent<
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
-        if (this.options.postModelHook) {
-          return "post_model_hook";
-        }
-
         return END;
-      }
-
-      if (this.options.postModelHook) {
-        return "post_model_hook";
       }
 
       /**
@@ -366,7 +384,10 @@ export class ReactAgent<
    * Create routing function for tools node conditional edges.
    */
   #createToolsRouter(shouldReturnDirect: Set<string>) {
-    return (state: InternalAgentState<StructuredResponseFormat>) => {
+    /**
+     * ToDo: fix type
+     */
+    return (state: any) => {
       const messages = state.messages;
       const lastMessage = messages[messages.length - 1];
 
@@ -378,37 +399,85 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly
-        return this.options.responseFormat ? this.#getEntryPoint() : END;
+        return this.options.responseFormat ? "agent" : END;
       }
 
       // For non-returnDirect tools, always route back to agent
-      return this.#getEntryPoint();
+      return "agent";
     };
   }
 
   /**
-   * @inheritdoc
+   * Initialize middleware states if not already present in the input state.
    */
-  get invoke(): AgentGraph<StateSchema, StructuredResponseFormat>["invoke"] {
-    return this.#graph.invoke.bind(this.#graph);
+  #initializeMiddlewareStates(
+    state: InvokeStateParameter<TMiddlewares>
+  ): InvokeStateParameter<TMiddlewares> {
+    if (!this.options.middlewares || this.options.middlewares.length === 0) {
+      return state;
+    }
+
+    const defaultStates = initializeMiddlewareStates(
+      this.options.middlewares,
+      state
+    );
+    const updatedState = { ...state } as InvokeStateParameter<TMiddlewares>;
+
+    // Only add defaults for keys that don't exist in current state
+    for (const [key, value] of Object.entries(defaultStates)) {
+      if (!(key in updatedState)) {
+        updatedState[key as keyof InvokeStateParameter<TMiddlewares>] = value;
+      }
+    }
+
+    return updatedState;
   }
 
   /**
    * @inheritdoc
    */
-  get stream(): AgentGraph<StateSchema, StructuredResponseFormat>["stream"] {
-    return this.#graph.stream.bind(this.#graph);
+  get invoke() {
+    type FullState = MergedAgentState<StructuredResponseFormat, TMiddlewares>;
+    return async (
+      state: InvokeStateParameter<TMiddlewares>,
+      config?: any
+    ): Promise<FullState> => {
+      const initializedState = this.#initializeMiddlewareStates(state);
+      return this.#graph.invoke(initializedState, config) as Promise<FullState>;
+    };
   }
 
-  /**
-   * @inheritdoc
-   */
-  get streamEvents(): AgentGraph<
-    StateSchema,
-    StructuredResponseFormat
-  >["streamEvents"] {
-    return this.#graph.streamEvents.bind(this.#graph);
-  }
+  // /**
+  //  * @inheritdoc
+  //  */
+  // get stream() {
+  //   type FullState = MergedAgentState<StructuredResponseFormat, TMiddlewares>;
+  //   const self = this;
+  //   return async function* (
+  //     state: any,
+  //     config?: any
+  //   ): AsyncGenerator<FullState, FullState, unknown> {
+  //     const initializedState = self.#initializeMiddlewareStates(state);
+  //     yield* self.#graph.stream(initializedState, config) as AsyncGenerator<
+  //       FullState,
+  //       FullState,
+  //       unknown
+  //     >;
+  //   };
+  // }
+
+  // /**
+  //  * @inheritdoc
+  //  */
+  // get streamEvents(): AgentGraph<
+  //   StructuredResponseFormat,
+  //   ContextSchema
+  // >["streamEvents"] {
+  //   return (async (state: any, config?: any, streamMode?: any) => {
+  //     const initializedState = this.#initializeMiddlewareStates(state);
+  //     return this.#graph.streamEvents(initializedState, config, streamMode);
+  //   }) as AgentGraph<StructuredResponseFormat, ContextSchema>["streamEvents"];
+  // }
 
   /**
    * Visualize the graph as a PNG image.
