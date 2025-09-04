@@ -968,6 +968,151 @@ test.each(["true", "false"])(
   }
 );
 
+test.each(["true", "false"])(
+  "runnable nested within a traceable with manual tracer passed, background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const child = RunnableLambda.from(async () => {
+      return { message: new HumanMessage({ content: "From child!" }) };
+    }).withConfig({ runName: "child" });
+
+    const parent = traceable(
+      async () => {
+        return child.invoke(
+          {},
+          {
+            callbacks: [new LangChainTracer()],
+          }
+        );
+      },
+      { name: "parent", tracingEnabled: true, client }
+    );
+
+    await parent();
+
+    await awaitAllCallbacks();
+    await client.awaitPendingTraceBatches();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
+    const callParams = [
+      firstCallParams,
+      secondCallParams,
+      thirdCallParams,
+      fourthCallParams,
+    ];
+    const parentCallCreateParams = callParams.find((param) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const childCallCreateParams = callParams.find((param) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const parentCallUpdateParams = callParams.find((param) => {
+      return (
+        param.dotted_order === parentCallCreateParams.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+    const childCallUpdateParams = callParams.find((param) => {
+      return (
+        param.dotted_order === childCallCreateParams.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+    expect(parentCallCreateParams).toMatchObject({
+      id: parentCallCreateParams.id,
+      name: "parent",
+      start_time: expect.any(String),
+      run_type: "chain",
+      extra: expect.any(Object),
+      serialized: {},
+      inputs: {},
+      child_runs: [],
+      trace_id: parentCallCreateParams.id,
+      dotted_order: parentCallCreateParams.dotted_order,
+      tags: [],
+    });
+
+    expect(childCallCreateParams).toMatchObject({
+      id: expect.any(String),
+      name: "child",
+      parent_run_id: parentCallCreateParams.id,
+      start_time: expect.any(String),
+      serialized: {
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain_core", "runnables", "RunnableLambda"],
+      },
+      inputs: {},
+      run_type: "chain",
+      extra: expect.any(Object),
+      tags: [],
+      trace_id: parentCallCreateParams.id,
+      dotted_order: expect.stringContaining(
+        `${parentCallCreateParams.dotted_order}.`
+      ),
+    });
+
+    expect(childCallUpdateParams).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        message: {
+          lc: 1,
+          type: "constructor",
+          id: ["langchain_core", "messages", "HumanMessage"],
+          kwargs: {
+            content: "From child!",
+            additional_kwargs: {},
+            response_metadata: {},
+          },
+        },
+      },
+      inputs: {},
+      trace_id: parentCallCreateParams.id,
+      dotted_order: expect.stringContaining(
+        `${parentCallCreateParams.dotted_order}.`
+      ),
+    });
+
+    expect(parentCallUpdateParams).toMatchObject({
+      end_time: expect.any(Number),
+      inputs: {},
+      outputs: {
+        message: {
+          lc: 1,
+          type: "constructor",
+          id: ["langchain_core", "messages", "HumanMessage"],
+          kwargs: {
+            content: "From child!",
+            additional_kwargs: {},
+            response_metadata: {},
+          },
+        },
+      },
+      extra: expect.any(Object),
+      dotted_order: parentCallCreateParams.dotted_order,
+      trace_id: parentCallCreateParams.id,
+      tags: [],
+    });
+  }
+);
+
 test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   const projectNames = ["replica1", "replica2"];
   const referenceExampleId = "00000000-0000-0000-0000-000000000000";

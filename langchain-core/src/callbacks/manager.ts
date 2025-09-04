@@ -1251,13 +1251,14 @@ export class CallbackManager
         if (tracingV2Enabled) {
           const tracerV2 = new LangChainTracer();
           callbackManager.addHandler(tracerV2, true);
-
-          // handoff between langchain and langsmith/traceable
-          // override the parent run ID
-          callbackManager._parentRunId =
-            LangChainTracer.getTraceableRunTree()?.id ??
-            callbackManager._parentRunId;
         }
+      }
+      if (tracingV2Enabled) {
+        // handoff between langchain and langsmith/traceable
+        // override the parent run ID
+        callbackManager._parentRunId =
+          LangChainTracer.getTraceableRunTree()?.id ??
+          callbackManager._parentRunId;
       }
     }
 

@@ -53,3 +53,25 @@ test("runnable nested within a traceable with manual tracer passed", async () =>
 
   await awaitAllCallbacks();
 });
+
+test("runnable nested within a traceable with manual tracer passed", async () => {
+  const child = RunnableLambda.from(async () => {
+    return [new HumanMessage({ content: "From child!" })];
+  }).withConfig({ runName: "child" });
+
+  const parent = traceable(
+    async () => {
+      return child.invoke(
+        {},
+        {
+          callbacks: [new LangChainTracer()],
+        }
+      );
+    },
+    { name: "parent", tracingEnabled: true }
+  );
+
+  await parent();
+
+  await awaitAllCallbacks();
+});
