@@ -1,5 +1,11 @@
 # langchain
 
+## 0.3.33
+
+### Patch Changes
+
+- d2c7f09: support prompts not created from RunnableBinding
+
 ## 0.3.32
 
 ### Patch Changes
