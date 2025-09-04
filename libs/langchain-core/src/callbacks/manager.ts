@@ -10,8 +10,7 @@ import {
   NewTokenIndices,
 } from "./base.js";
 import { ConsoleCallbackHandler } from "../tracers/console.js";
-import { type BaseMessage } from "../messages/base.js";
-import { getBufferString } from "../messages/utils.js";
+import { Message } from "../_standard/message.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import {
   LangChainTracer,
@@ -249,6 +248,119 @@ export class CallbackManagerForRetrieverRun
                 : console.warn;
               logFunction(
                 `Error in handler ${handler.constructor.name}, handleRetrieverError: ${error}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+}
+
+export class CallbackManagerForChatModelRun
+  extends BaseRunManager
+  implements BaseCallbackManagerMethods
+{
+  async handleChatModelToken(
+    token: string,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
+  ): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelToken?.(
+                token,
+                this.runId,
+                this._parentRunId,
+                this.tags,
+                fields
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelToken: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleChatModelError(
+    err: Error | unknown,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelError?.(
+                err,
+                this.runId,
+                this._parentRunId,
+                this.tags,
+                extraParams
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelError: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleChatModelEnd(
+    output: Message,
+    _runId?: string,
+    _parentRunId?: string,
+    _tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelEnd?.(
+                output,
+                this.runId,
+                this._parentRunId,
+                this.tags,
+                extraParams
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelEnd: ${err}`
               );
               if (handler.raiseError) {
                 throw err;
@@ -747,31 +859,54 @@ export class CallbackManager
 
   async handleChatModelStart(
     llm: Serialized,
-    messages: BaseMessage[][],
+    messages: Message[],
     runId: string | undefined = undefined,
     _parentRunId: string | undefined = undefined,
     extraParams: Record<string, unknown> | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
     runName: string | undefined = undefined
-  ): Promise<CallbackManagerForLLMRun[]> {
-    return Promise.all(
-      messages.map(async (messageGroup, idx) => {
-        // Can't have duplicate runs with the same run ID (if provided)
-        const runId_ = idx === 0 && runId ? runId : uuidv4();
-
-        await Promise.all(
-          this.handlers.map((handler) => {
-            if (handler.ignoreLLM) {
-              return;
-            }
-            if (isBaseTracer(handler)) {
-              // Create and add run to the run map.
-              // We do this synchronously to avoid race conditions
-              // when callbacks are backgrounded.
-              handler._createRunForChatModelStart(
+  ): Promise<CallbackManagerForChatModelRun> {
+    const runId_ = runId ?? uuidv4();
+    await Promise.all(
+      this.handlers.map((handler) => {
+        if (handler.ignoreLLM) {
+          return;
+        }
+        if (isBaseTracer(handler)) {
+          // Create and add run to the run map.
+          // We do this synchronously to avoid race conditions
+          // when callbacks are backgrounded.
+          handler._createRunForChatModelStart(
+            llm,
+            messages,
+            runId_,
+            this._parentRunId,
+            extraParams,
+            this.tags,
+            this.metadata,
+            runName
+          );
+        }
+        return consumeCallback(async () => {
+          try {
+            if (handler.handleChatModelStart) {
+              await handler.handleChatModelStart?.(
                 llm,
-                [messageGroup],
+                messages,
+                runId_,
+                this._parentRunId,
+                extraParams,
+                this.tags,
+                this.metadata,
+                runName
+              );
+            } else if (handler.handleLLMStart) {
+              // TODO: convert messages to string for handleLLMStart
+              // const messageString = getBufferString(messageGroup);
+              await handler.handleLLMStart?.(
+                llm,
+                messages.map((message) => message.toString()),
                 runId_,
                 this._parentRunId,
                 extraParams,
@@ -780,58 +915,29 @@ export class CallbackManager
                 runName
               );
             }
-            return consumeCallback(async () => {
-              try {
-                if (handler.handleChatModelStart) {
-                  await handler.handleChatModelStart?.(
-                    llm,
-                    [messageGroup],
-                    runId_,
-                    this._parentRunId,
-                    extraParams,
-                    this.tags,
-                    this.metadata,
-                    runName
-                  );
-                } else if (handler.handleLLMStart) {
-                  const messageString = getBufferString(messageGroup);
-                  await handler.handleLLMStart?.(
-                    llm,
-                    [messageString],
-                    runId_,
-                    this._parentRunId,
-                    extraParams,
-                    this.tags,
-                    this.metadata,
-                    runName
-                  );
-                }
-              } catch (err) {
-                const logFunction = handler.raiseError
-                  ? console.error
-                  : console.warn;
-                logFunction(
-                  `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
-                );
-                if (handler.raiseError) {
-                  throw err;
-                }
-              }
-            }, handler.awaitHandlers);
-          })
-        );
-
-        return new CallbackManagerForLLMRun(
-          runId_,
-          this.handlers,
-          this.inheritableHandlers,
-          this.tags,
-          this.inheritableTags,
-          this.metadata,
-          this.inheritableMetadata,
-          this._parentRunId
-        );
+          } catch (err) {
+            const logFunction = handler.raiseError
+              ? console.error
+              : console.warn;
+            logFunction(
+              `Error in handler ${handler.constructor.name}, handleLLMStart: ${err}`
+            );
+            if (handler.raiseError) {
+              throw err;
+            }
+          }
+        }, handler.awaitHandlers);
       })
+    );
+    return new CallbackManagerForChatModelRun(
+      runId_,
+      this.handlers,
+      this.inheritableHandlers,
+      this.tags,
+      this.inheritableTags,
+      this.metadata,
+      this.inheritableMetadata,
+      this._parentRunId
     );
   }
 

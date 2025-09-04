@@ -1,6 +1,6 @@
 import * as uuid from "uuid";
 import type { ChainValues } from "../utils/types/index.js";
-import type { BaseMessage } from "../messages/base.js";
+import { Message } from "../_standard/message.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
 import type {
   ChatGenerationChunk,
@@ -56,7 +56,7 @@ export type HandleLLMNewTokenCallbackFields = {
  */
 abstract class BaseCallbackHandlerMethodsClass {
   /**
-   * Called at the start of an LLM or Chat Model run, with the prompt(s)
+   * Called at the start of an LLM run, with the prompt(s)
    * and the run ID.
    */
   handleLLMStart?(
@@ -72,7 +72,7 @@ abstract class BaseCallbackHandlerMethodsClass {
   Promise<any> | any;
 
   /**
-   * Called when an LLM/ChatModel in `streaming` mode produces a new token
+   * Called when an LLM in `streaming` mode produces a new token
    */
   handleLLMNewToken?(
     token: string,
@@ -91,7 +91,7 @@ abstract class BaseCallbackHandlerMethodsClass {
   Promise<any> | any;
 
   /**
-   * Called if an LLM/ChatModel run encounters an error
+   * Called if an LLM run encounters an error
    */
   handleLLMError?(
     err: Error,
@@ -103,7 +103,7 @@ abstract class BaseCallbackHandlerMethodsClass {
   Promise<any> | any;
 
   /**
-   * Called at the end of an LLM/ChatModel run, with the output and the run ID.
+   * Called at the end of an LLM run, with the output and the run ID.
    */
   handleLLMEnd?(
     output: LLMResult,
@@ -115,18 +115,54 @@ abstract class BaseCallbackHandlerMethodsClass {
   Promise<any> | any;
 
   /**
-   * Called at the start of a Chat Model run, with the prompt(s)
+   * Called at the start of a chat model run, with the messages
    * and the run ID.
    */
   handleChatModelStart?(
     llm: Serialized,
-    messages: BaseMessage[][],
+    messages: Message[],
     runId: string,
     parentRunId?: string,
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> | any;
+
+  /**
+   * Called when a chat model in `streaming` mode produces a new token
+   */
+  handleChatModelToken?(
+    token: string,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    fields?: HandleLLMNewTokenCallbackFields
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> | any;
+
+  /**
+   * Called if a chat model run encounters an error
+   */
+  handleChatModelError?(
+    err: Error,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Promise<any> | any;
+
+  /**
+   * Called at the end of a chat model run, with the output and the run ID.
+   */
+  handleChatModelEnd?(
+    output: Message,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    extraParams?: Record<string, unknown>
   ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> | any;
 
