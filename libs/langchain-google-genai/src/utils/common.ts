@@ -379,7 +379,7 @@ export function convertMessageContentToParts(
   let functionCalls: FunctionCallPart[] = [];
   const messageParts: Part[] = [];
 
-  if (typeof message.content === "string" && message.content) {
+  if (typeof message.content === "string") {
     messageParts.push({ text: message.content });
   }
 
