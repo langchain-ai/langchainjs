@@ -7,11 +7,33 @@ import {
   bindOutputSchema,
 } from "./base.js";
 import { load } from "../load/index.js";
-import { arraysEqual } from "../util/misc.js";
 
 // TODO: Make this the default, add web entrypoint in next breaking release
 
 export { basePush as push };
+
+function _idEquals(a: string[], b: string[]): boolean {
+  if (!Array.isArray(a) || !Array.isArray(b)) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isRunnableBinding(a: string[]): boolean {
+  const wellKnownIds = [
+    ["langchain_core", "runnables", "RunnableBinding"],
+    ["langchain", "schema", "runnable", "RunnableBinding"],
+  ];
+  return wellKnownIds.some((id) => _idEquals(a, id));
+}
 
 /**
  * Pull a prompt from the hub.
@@ -34,9 +56,8 @@ export async function pull<T extends Runnable>(
   const promptObject = await basePull(ownerRepoCommit, options);
   let modelClass;
   if (options?.includeModel) {
-    const chatModelObject = arraysEqual(
-      promptObject.manifest.kwargs?.last?.id,
-      ["langchain_core", "runnables", "RunnableBinding"]
+    const chatModelObject = isRunnableBinding(
+      promptObject.manifest.kwargs?.last?.id
     )
       ? promptObject.manifest.kwargs?.last?.kwargs?.bound
       : promptObject.manifest.kwargs?.last;
