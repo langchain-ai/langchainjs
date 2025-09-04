@@ -7,6 +7,7 @@ import {
   bindOutputSchema,
 } from "./base.js";
 import { load } from "../load/index.js";
+import { arraysEqual } from "../util/misc.js";
 
 // TODO: Make this the default, add web entrypoint in next breaking release
 
@@ -33,9 +34,15 @@ export async function pull<T extends Runnable>(
   const promptObject = await basePull(ownerRepoCommit, options);
   let modelClass;
   if (options?.includeModel) {
-    if (Array.isArray(promptObject.manifest.kwargs?.last?.kwargs?.bound?.id)) {
-      const modelName =
-        promptObject.manifest.kwargs?.last?.kwargs?.bound?.id.at(-1);
+    const chatModelObject = arraysEqual(
+      promptObject.manifest.kwargs?.last?.id,
+      ["langchain_core", "runnables", "RunnableBinding"]
+    )
+      ? promptObject.manifest.kwargs?.last?.kwargs?.bound
+      : promptObject.manifest.kwargs?.last;
+
+    if (Array.isArray(chatModelObject?.id)) {
+      const modelName = chatModelObject?.id.at(-1);
       if (modelName === "ChatOpenAI") {
         modelClass = (await import("@langchain/openai")).ChatOpenAI;
       } else if (modelName === "ChatAnthropic") {
