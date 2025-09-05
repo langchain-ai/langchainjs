@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 0.3.75
+
+### Patch Changes
+
+- d6d841f: fix(core): Fix deep nesting of runnables within traceables
+
 ## 0.3.74
 
 ### Patch Changes
