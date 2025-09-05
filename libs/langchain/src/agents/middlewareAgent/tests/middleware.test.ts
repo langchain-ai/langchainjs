@@ -4,7 +4,10 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 
 import { createAgent, createMiddleware } from "../index.js";
-import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
+import {
+  FakeToolCallingChatModel,
+  FakeToolCallingModel,
+} from "../../tests/utils.js";
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {

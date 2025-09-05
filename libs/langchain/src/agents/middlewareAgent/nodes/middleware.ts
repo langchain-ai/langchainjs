@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
-import { RunnableCallable } from "../RunnableCallable.js";
+import { RunnableCallable } from "../../RunnableCallable.js";
 import type {
   Runtime,
   Controls,

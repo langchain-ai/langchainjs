@@ -1,6 +1,11 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  AIMessage,
+  ToolMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
@@ -10,31 +15,33 @@ import {
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
-import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError } from "../errors.js";
-import { RunnableCallable } from "../RunnableCallable.js";
-import { PreHookAnnotation, AnyAnnotationRoot } from "../annotation.js";
-import { mergeAbortSignals } from "./utils.js";
+import { initChatModel } from "../../../chat_models/universal.js";
+import { MultipleStructuredOutputsError } from "../../errors.js";
+import { RunnableCallable } from "../../RunnableCallable.js";
+import { PreHookAnnotation, AnyAnnotationRoot } from "../../annotation.js";
 import {
   bindTools,
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
   hasSupportForJsonSchemaOutput,
-} from "../utils.js";
-import {
+} from "../../utils.js";
+import { executePrepareCallHooks } from "../nodes/utils.js";
+import { mergeAbortSignals } from "../../nodes/utils.js";
+import { PreparedCall } from "../types.js";
+import type {
   InternalAgentState,
   ClientTool,
   ServerTool,
   CreateAgentParams,
-} from "../types.js";
-import { withAgentName } from "../withAgentName.js";
+} from "../../types.js";
+import { withAgentName } from "../../withAgentName.js";
 import {
   ToolStrategy,
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
-} from "../responses.js";
+} from "../../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -44,15 +51,20 @@ type ResponseHandlerResult<StructuredResponseFormat> =
   | Promise<Command>;
 
 export interface AgentNodeOptions<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
     unknown
   >,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
-    CreateAgentParams<StateSchema, StructuredResponseFormat, ContextSchema>,
-    "llm" | "model" | "prompt" | "includeAgentName" | "name" | "responseFormat"
+    CreateAgentParams<StructuredResponseFormat, ContextSchema>,
+    | "llm"
+    | "model"
+    | "prompt"
+    | "includeAgentName"
+    | "name"
+    | "responseFormat"
+    | "middlewares"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -60,7 +72,6 @@ export interface AgentNodeOptions<
 }
 
 export class AgentNode<
-  StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
     unknown
@@ -70,20 +81,12 @@ export class AgentNode<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
   { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
 > {
-  #options: AgentNodeOptions<
-    StateSchema,
-    StructuredResponseFormat,
-    ContextSchema
-  >;
+  #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
 
   #structuredToolInfo: Record<string, ToolStrategy> = {};
 
   constructor(
-    options: AgentNodeOptions<
-      StateSchema,
-      StructuredResponseFormat,
-      ContextSchema
-    >
+    options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
   ) {
     super({
       name: options.name ?? "model",
@@ -209,15 +212,52 @@ export class AgentNode<
       lastMessage?: string;
     } = {}
   ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
-    const model = await this.#deriveModel(state, config);
+    let model = await this.#deriveModel(state, config);
 
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
     validateLLMHasNoBoundTools(model);
 
-    const modelWithTools = await this.#bindTools(model);
-    const modelInput = this.#getModelInputState(state);
+    // Execute prepareModelRequest hooks if middlewares are present
+    let preparedOptions: PreparedCall | undefined;
+    if (this.#options.middlewares && this.#options.middlewares.length > 0) {
+      const preparedCallOptions: PreparedCall = {
+        model,
+        messages: state.messages,
+      };
+
+      preparedOptions = await executePrepareCallHooks(
+        this.#options.middlewares,
+        preparedCallOptions,
+        state,
+        config
+      );
+
+      // Apply any model changes from prepareModelRequest
+      if (preparedOptions?.model) {
+        model = preparedOptions.model;
+      }
+    }
+
+    const modelWithTools = await this.#bindTools(model, preparedOptions);
+    let modelInput = this.#getModelInputState(state);
+
+    // Use messages from preparedOptions if provided
+    if (preparedOptions?.messages) {
+      modelInput = { ...modelInput, messages: preparedOptions.messages };
+    }
+
+    // Add system message if provided
+    if (preparedOptions?.systemMessage) {
+      // Prepend a system message if needed
+      const systemMsg = new SystemMessage(preparedOptions.systemMessage);
+      modelInput = {
+        ...modelInput,
+        messages: [systemMsg, ...modelInput.messages],
+      };
+    }
+
     const signal = mergeAbortSignals(this.#options.signal, config.signal);
     const invokeConfig = {
       ...config,
@@ -474,18 +514,38 @@ export class AgentNode<
     >;
   }
 
-  async #bindTools(model: LanguageModelLike): Promise<Runnable> {
+  async #bindTools(
+    model: LanguageModelLike,
+    preparedOptions?: PreparedCall
+  ): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
-    const allTools = this.#options.toolClasses.concat(
+
+    // Use tools from preparedOptions if provided, otherwise use default tools
+    let allTools = this.#options.toolClasses.concat(
       ...structuredTools.map((toolStrategy) => toolStrategy.tool)
     );
+
+    if (preparedOptions?.tools) {
+      // Filter tools based on prepared options
+      allTools = preparedOptions.tools
+        .map((tool) => {
+          if (typeof tool === "string") {
+            // Find tool by name
+            return allTools.find((t) => (t as any).name === tool) || tool;
+          }
+          return tool;
+        })
+        .filter((t) => t) as (ClientTool | ServerTool)[];
+    }
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"
      * so that the model can choose to use a structured tool or not.
      */
-    const toolChoice = structuredTools.length > 0 ? "any" : undefined;
+    const toolChoice =
+      preparedOptions?.toolChoice ||
+      (structuredTools.length > 0 ? "any" : undefined);
 
     /**
      * check if the user requests a native schema output
