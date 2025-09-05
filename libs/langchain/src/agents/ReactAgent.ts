@@ -28,6 +28,9 @@ import type {
   InferMiddlewareStates,
   InferMiddlewareInputStates,
   BuiltInState,
+  InferMiddlewareContextInputs,
+  IsAllOptional,
+  InferContextInput,
 } from "./types.js";
 import { type AnyAnnotationRoot, type ToAnnotationRoot } from "./annotation.js";
 import type { ResponseFormatUndefined } from "./responses.js";
@@ -438,13 +441,35 @@ export class ReactAgent<
    */
   get invoke() {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddlewares>;
-    return async (
+    type FullContext = InferContextInput<ContextSchema> &
+      InferMiddlewareContextInputs<TMiddlewares>;
+
+    // Create overloaded function type based on whether context has required fields
+    type InvokeFunction = IsAllOptional<FullContext> extends true
+      ? (
+          state: InvokeStateParameter<TMiddlewares>,
+          config?: {
+            context?: FullContext;
+            [key: string]: any;
+          }
+        ) => Promise<FullState>
+      : (
+          state: InvokeStateParameter<TMiddlewares>,
+          config: {
+            context: FullContext;
+            [key: string]: any;
+          }
+        ) => Promise<FullState>;
+
+    const invokeFunc: InvokeFunction = async (
       state: InvokeStateParameter<TMiddlewares>,
       config?: any
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);
       return this.#graph.invoke(initializedState, config) as Promise<FullState>;
     };
+
+    return invokeFunc;
   }
 
   // /**

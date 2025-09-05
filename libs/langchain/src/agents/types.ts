@@ -1,6 +1,7 @@
 import type {
   InteropZodObject,
   InteropZodType,
+  InferInteropZodInput,
 } from "@langchain/core/utils/types";
 import type {
   LangGraphRunnableConfig,
@@ -235,6 +236,56 @@ export type InferMergedState<T extends readonly IMiddleware<any, any, any>[]> =
 export type InferMergedInputState<
   T extends readonly IMiddleware<any, any, any>[]
 > = InferMiddlewareInputStates<T> & AgentBuiltInState;
+
+/**
+ * Helper type to infer the context schema type from a middleware
+ */
+export type InferMiddlewareContext<T extends IMiddleware<any, any, any>> =
+  T extends IMiddleware<any, infer C, any>
+    ? C extends z.ZodObject<any>
+      ? z.infer<C>
+      : {}
+    : {};
+
+/**
+ * Helper type to infer the input context schema type from a middleware (with optional defaults)
+ */
+export type InferMiddlewareContextInput<T extends IMiddleware<any, any, any>> =
+  T extends IMiddleware<any, infer C, any>
+    ? C extends z.ZodObject<any>
+      ? z.input<C>
+      : {}
+    : {};
+
+/**
+ * Helper type to infer merged context from an array of middlewares
+ */
+export type InferMiddlewareContexts<
+  T extends readonly IMiddleware<any, any, any>[]
+> = T extends readonly []
+  ? {}
+  : T extends readonly [infer First, ...infer Rest]
+  ? First extends IMiddleware<any, any, any>
+    ? Rest extends readonly IMiddleware<any, any, any>[]
+      ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
+      : InferMiddlewareContext<First>
+    : {}
+  : {};
+
+/**
+ * Helper type to infer merged input context from an array of middlewares (with optional defaults)
+ */
+export type InferMiddlewareContextInputs<
+  T extends readonly IMiddleware<any, any, any>[]
+> = T extends readonly []
+  ? {}
+  : T extends readonly [infer First, ...infer Rest]
+  ? First extends IMiddleware<any, any, any>
+    ? Rest extends readonly IMiddleware<any, any, any>[]
+      ? InferMiddlewareContextInput<First> & InferMiddlewareContextInputs<Rest>
+      : InferMiddlewareContextInput<First>
+    : {}
+  : {};
 
 /**
  * Base middleware interface.
@@ -656,3 +707,43 @@ type DynamicLLMFunction<
   state: AgentBuiltInState & PreHookAnnotation["State"],
   runtime: AgentRuntime<ToAnnotationRoot<ContextSchema>["State"]>
 ) => Promise<LanguageModelLike> | LanguageModelLike;
+
+/**
+ * Helper type to check if all properties of a type are optional
+ */
+export type IsAllOptional<T> = T extends Record<string, any>
+  ? {} extends T
+    ? true
+    : false
+  : true;
+
+/**
+ * Helper type to extract input type from context schema (with optional defaults)
+ */
+export type InferContextInput<
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject
+> = ContextSchema extends InteropZodObject
+  ? InferInteropZodInput<ContextSchema>
+  : ContextSchema extends AnyAnnotationRoot
+  ? ToAnnotationRoot<ContextSchema>["State"]
+  : {};
+
+/**
+ * Helper type to get the required config type based on context schema
+ */
+export type InferAgentConfig<
+  ContextSchema extends AnyAnnotationRoot | InteropZodObject,
+  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+> = IsAllOptional<
+  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddlewares>
+> extends true
+  ?
+      | LangGraphRunnableConfig<{
+          context?: InferContextInput<ContextSchema> &
+            InferMiddlewareContextInputs<TMiddlewares>;
+        }>
+      | undefined
+  : LangGraphRunnableConfig<{
+      context: InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddlewares>;
+    }>;

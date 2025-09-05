@@ -59,4 +59,43 @@ describe("middleware types", () => {
       customResponseFormat: string;
     }>();
   });
+
+  it("a middleware can define a context schema which can be a required property within the runnable config", async () => {
+    const middleware = createMiddleware({
+      name: "Middleware",
+      contextSchema: z.object({
+        customOptionalContextProp: z.string().default("default value"),
+        customRequiredContextProp: z.string(),
+      }),
+    });
+
+    const agent = createAgent({
+      contextSchema: z.object({
+        customAgentOptionalContextProp: z.string().default("default value"),
+        customAgentRequiredContextProp: z.string(),
+      }),
+      middlewares: [middleware] as const,
+      tools: [],
+      model: "gpt-4",
+    });
+
+    const state = {
+      messages: [new HumanMessage("Hello, world!")],
+    };
+
+    await agent.invoke(state, {
+      context: {
+        customAgentRequiredContextProp: "123",
+        customRequiredContextProp: "456",
+      },
+    });
+
+    await agent.invoke(state, {
+      context: {
+        customAgentRequiredContextProp: "123",
+        // @ts-expect-error defined as string
+        customRequiredContextProp: 456,
+      },
+    });
+  });
 });
