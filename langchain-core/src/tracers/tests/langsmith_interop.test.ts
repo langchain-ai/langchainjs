@@ -150,21 +150,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -179,20 +164,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -305,21 +276,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -334,20 +290,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -447,21 +389,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: {
         outputs: ["H", "e", "l", "l", "o", "!", "D", "a", "v", "i", "d"],
       },
@@ -478,20 +405,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -601,41 +514,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -754,41 +638,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -903,41 +758,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: {
         outputs: [
           "H",
@@ -1092,7 +918,6 @@ test.each(["true", "false"])(
 
     expect(parentCallUpdateParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {},
       outputs: {
         message: {
           lc: 1,
