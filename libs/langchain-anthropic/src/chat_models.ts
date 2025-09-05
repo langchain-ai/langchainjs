@@ -836,7 +836,11 @@ export class ChatAnthropicMessages<
       if (this.topK !== -1) {
         throw new Error("topK is not supported when thinking is enabled");
       }
-      if (this.topP !== -1) {
+      if (
+        this.model.includes("opus-4-1")
+          ? this.topP !== undefined
+          : this.topP !== -1
+      ) {
         throw new Error("topP is not supported when thinking is enabled");
       }
       if (this.temperature !== 1) {
