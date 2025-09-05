@@ -1,5 +1,12 @@
 # @langchain/community
 
+## 0.3.55
+
+### Patch Changes
+
+- f201ab8: bump firebase-admin dependency (#8861)
+- f201ab8: use URL encoding for paths in github document laoder (#8860)
+
 ## 0.3.54
 
 ### Patch Changes
