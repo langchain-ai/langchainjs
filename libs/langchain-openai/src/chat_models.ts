@@ -668,7 +668,7 @@ export abstract class BaseChatOpenAI<
       "response_format",
       "seed",
       "reasoning",
-      "reasoning_effort",
+      "reasoningEffort",
       "service_tier",
     ];
   }
@@ -686,6 +686,7 @@ export abstract class BaseChatOpenAI<
     return {
       apiKey: "openai_api_key",
       modelName: "model",
+      reasoningEffort: "reasoning_effort",
     };
   }
 
@@ -725,7 +726,7 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
-      "reasoning_effort",
+      "reasoningEffort",
       "promptCacheKey",
       "verbosity",
     ];
@@ -794,8 +795,8 @@ export abstract class BaseChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoning =
-      fields?.reasoning ?? fields?.reasoning_effort
-        ? { effort: fields.reasoning_effort }
+      fields?.reasoning ?? fields?.reasoningEffort
+        ? { effort: fields.reasoningEffort }
         : undefined;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;

@@ -4,7 +4,6 @@ export interface OptionalImportMap {}
 
 export interface SecretMap {
   ALIBABA_API_KEY?: string;
-  ARK_API_KEY?: string;
   AUTHENTICATOR?: string;
   AWS_ACCESS_KEY_ID?: string;
   AWS_SECRETE_ACCESS_KEY?: string;
@@ -21,7 +20,6 @@ export interface SecretMap {
   CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
-  DEEPSEEK_API_KEY?: string;
   DRIA_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
   FRIENDLI_TEAM?: string;
