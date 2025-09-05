@@ -307,7 +307,7 @@ export interface IMiddleware<
    * @param runtime - Runtime context and metadata
    * @returns Modified options or undefined to pass through
    */
-  prepareCall?(
+  prepareModelRequest?(
     options: PreparedCall,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -516,7 +516,7 @@ export type CreateAgentParams<
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
    *
-   * Cannot be used together with `prepareCall`.
+   * Cannot be used together with `prepareModelRequest`.
    */
   prompt?: Prompt<ContextSchema>;
 

@@ -15,7 +15,7 @@ import type {
  * @param config.name - The name of the middleware
  * @param config.stateSchema - The schema of the middleware state
  * @param config.contextSchema - The schema of the middleware context
- * @param config.prepareCall - The function to prepare the call
+ * @param config.prepareModelRequest - The function to prepare the model request
  * @param config.beforeModel - The function to run before the model call
  * @param config.afterModel - The function to run after the model call
  * @returns A middleware instance
@@ -45,7 +45,7 @@ export function createMiddleware<
   name: string;
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
-  prepareCall?: (
+  prepareModelRequest?: (
     options: PreparedCall,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -98,9 +98,9 @@ export function createMiddleware<
     contextSchema: config.contextSchema,
   };
 
-  if (config.prepareCall) {
-    middleware.prepareCall = async (options, state, runtime) =>
-      Promise.resolve(config.prepareCall!(options, state, runtime));
+  if (config.prepareModelRequest) {
+    middleware.prepareModelRequest = async (options, state, runtime) =>
+      Promise.resolve(config.prepareModelRequest!(options, state, runtime));
   }
 
   if (config.beforeModel) {

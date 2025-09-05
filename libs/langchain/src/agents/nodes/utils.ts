@@ -40,7 +40,7 @@ export function mergeAbortSignals(
 }
 
 /**
- * Helper function to execute prepareCall hooks from all middlewares.
+ * Helper function to execute prepareModelRequest hooks from all middlewares.
  * This is used within AgentNode before the model is invoked.
  */
 export async function executePrepareCallHooks(
@@ -62,10 +62,10 @@ export async function executePrepareCallHooks(
     currentIteration: 0,
   };
 
-  // Execute prepareCall hooks in order
+  // Execute prepareModelRequest hooks in order
   for (const middleware of middlewares) {
-    if (middleware.prepareCall) {
-      const result = await middleware.prepareCall(
+    if (middleware.prepareModelRequest) {
+      const result = await middleware.prepareModelRequest(
         currentOptions,
         state,
         runtime

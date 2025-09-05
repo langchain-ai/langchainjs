@@ -219,7 +219,7 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(model);
 
-    // Execute prepareCall hooks if middlewares are present
+    // Execute prepareModelRequest hooks if middlewares are present
     let preparedOptions: PreparedCall | undefined;
     if (this.#options.middlewares && this.#options.middlewares.length > 0) {
       const preparedCallOptions: PreparedCall = {
@@ -234,7 +234,7 @@ export class AgentNode<
         config
       );
 
-      // Apply any model changes from prepareCall
+      // Apply any model changes from prepareModelRequest
       if (preparedOptions.model) {
         model = preparedOptions.model;
       }

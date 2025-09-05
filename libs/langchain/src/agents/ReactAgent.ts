@@ -213,7 +213,7 @@ export class ReactAgent<
           new BeforeModelNode(middleware),
           {
             // private state here
-            // input: this.#inputSchema,
+            input: this.#inputSchema,
           }
         );
       }
@@ -226,7 +226,7 @@ export class ReactAgent<
           new AfterModelNode(middleware),
           {
             // private state here
-            // input: this.#inputSchema,
+            input: this.#inputSchema,
           }
         );
       }
