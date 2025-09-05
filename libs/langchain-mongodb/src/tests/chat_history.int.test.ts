@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-
+import { jest } from "@jest/globals";
 import { Collection, MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { MongoDBChatMessageHistory } from "../chat_history.js";
@@ -32,7 +32,7 @@ describe("MongoDBStore sets client metadata", () => {
     collection,
     sessionId,
   });
-  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_chat_history", version: VERSION});
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_chat_history", version: VERSION });
   jest.clearAllMocks();
 });
 

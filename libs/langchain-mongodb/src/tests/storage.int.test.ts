@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+import { jest } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 import { Collection, MongoClient, ServerApiVersion } from "mongodb";
 import { MongoDBStore } from "../storage.js";
@@ -35,7 +36,7 @@ describe("MongoDBStore sets client metadata", () => {
   new MongoDBStore({
     collection,
   });
-  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_storage", version: VERSION});
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_storage", version: VERSION });
   jest.clearAllMocks();
 });
 
