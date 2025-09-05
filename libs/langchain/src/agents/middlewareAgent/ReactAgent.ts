@@ -6,6 +6,7 @@ import {
   END,
   START,
   Send,
+  Command,
   CompiledStateGraph,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
@@ -471,9 +472,13 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
-    state: InvokeStateParameter<TMiddlewares> | null
-  ): InvokeStateParameter<TMiddlewares> | null {
-    if (!this.options.middlewares || this.options.middlewares.length === 0) {
+    state: InvokeStateParameter<TMiddlewares> | Command<any, any, string> | null
+  ): InvokeStateParameter<TMiddlewares> | Command<any, any, string> | null {
+    if (
+      !this.options.middlewares ||
+      this.options.middlewares.length === 0 ||
+      state instanceof Command
+    ) {
       return state;
     }
 
@@ -504,16 +509,25 @@ export class ReactAgent<
     // Create overloaded function type based on whether context has required fields
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
-          state: InvokeStateParameter<TMiddlewares> | null,
+          state:
+            | InvokeStateParameter<TMiddlewares>
+            | Command<any, any, string>
+            | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
-          state: InvokeStateParameter<TMiddlewares> | null,
+          state:
+            | InvokeStateParameter<TMiddlewares>
+            | Command<any, any, string>
+            | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddlewares> | null,
+      state:
+        | InvokeStateParameter<TMiddlewares>
+        | Command<any, any, string>
+        | null,
       config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);
