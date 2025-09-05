@@ -1,23 +1,10 @@
-import { insecureHash, type HashKeyEncoder } from "../utils/hash.js";
+import { sha256, type HashKeyEncoder } from "../utils/hash.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
 import { mapStoredMessageToChatMessage } from "../messages/utils.js";
 import { type StoredGeneration } from "../messages/base.js";
 
-/**
- * This cache key should be consistent across all versions of LangChain.
- * It is currently NOT consistent across versions of LangChain.
- *
- * A huge benefit of having a remote cache (like redis) is that you can
- * access the cache from different processes/machines. The allows you to
- * separate concerns and scale horizontally.
- *
- * TODO: Make cache key consistent across versions of LangChain.
- *
- * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
- * This function will be removed in a future version.
- */
-export const getCacheKey: HashKeyEncoder = (...strings) =>
-  insecureHash(strings.join("_"));
+export const defaultHashKeyEncoder: HashKeyEncoder = (...strings) =>
+  sha256(strings.join("_"));
 
 export function deserializeStoredGeneration(
   storedGeneration: StoredGeneration
@@ -46,10 +33,7 @@ export function serializeGeneration(generation: Generation) {
  * Base class for all caches. All caches should extend this class.
  */
 export abstract class BaseCache<T = Generation[]> {
-  // For backwards compatibility, we use a default key encoder
-  // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
-  // about the security implications of using SHA-1 as a cache key.
-  protected keyEncoder: HashKeyEncoder = getCacheKey;
+  protected keyEncoder: HashKeyEncoder = defaultHashKeyEncoder;
 
   /**
    * Sets a custom key encoder function for the cache.
