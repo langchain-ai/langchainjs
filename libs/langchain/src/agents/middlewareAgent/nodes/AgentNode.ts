@@ -28,12 +28,11 @@ import {
 } from "../../utils.js";
 import { executePrepareCallHooks } from "../nodes/utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
-import { PreparedCall } from "../types.js";
+import { PreparedCall, CreateAgentParams } from "../types.js";
 import type {
   InternalAgentState,
   ClientTool,
   ServerTool,
-  CreateAgentParams,
 } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
 import {

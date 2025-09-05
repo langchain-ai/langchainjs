@@ -4,8 +4,8 @@ import type {
 } from "@langchain/core/utils/types";
 
 import { type AnyAnnotationRoot } from "../annotation.js";
-import type { IMiddleware } from "./types.js";
-import type { CreateAgentParams, ExtractZodArrayTypes } from "../types.js";
+import type { CreateAgentParams, IMiddleware } from "./types.js";
+import type { ExtractZodArrayTypes } from "../types.js";
 import type {
   ToolStrategy,
   TypedToolStrategy,
