@@ -106,25 +106,25 @@ export abstract class MiddlewareNode<
     /**
      * If result is a control action, handle it
      */
-    if (typeof result === "object" && "type" in result) {
-      // Handle control actions
-      const action = result as ControlAction<TStateSchema>;
-      if (action.type === "terminate") {
-        if (action.error) {
-          throw action.error;
-        }
-        return { ...state, ...(action.result || {}) };
-      }
+    // if (typeof result === "object" && "type" in result) {
+    //   // Handle control actions
+    //   const action = result as ControlAction<TStateSchema>;
+    //   if (action.type === "terminate") {
+    //     if (action.error) {
+    //       throw action.error;
+    //     }
+    //     return { ...state, ...(action.result || {}) };
+    //   }
 
-      if (action.type === "jump") {
-        return new Command<any, TStateSchema, string>({
-          goto: action.target,
-          update: { ...state, ...(action.stateUpdate || {}) },
-        });
-      }
+    //   if (action.type === "jump") {
+    //     return new Command<any, TStateSchema, string>({
+    //       goto: action.target,
+    //       update: { ...state, ...(action.stateUpdate || {}) },
+    //     });
+    //   }
 
-      throw new Error(`Invalid control action: ${JSON.stringify(action)}`);
-    }
+    //   throw new Error(`Invalid control action: ${JSON.stringify(action)}`);
+    // }
 
     /**
      * If result is a state update, merge it with current state

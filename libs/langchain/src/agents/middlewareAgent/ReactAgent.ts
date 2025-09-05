@@ -344,11 +344,18 @@ export class ReactAgent<
      * add edges for tools node
      */
     if (toolClasses.length > 0) {
-      // Tools should return to first beforeModel node or agent
-      const toolReturnTarget =
-        beforeModelNodes.length > 0
-          ? beforeModelNodes[0].name
-          : "model_request";
+      // Tools should return to first beforeModel node or prepare_model_request/agent
+      let toolReturnTarget: string;
+      if (beforeModelNodes.length > 0) {
+        toolReturnTarget = beforeModelNodes[0].name;
+      } else if (
+        this.options.middlewares &&
+        this.options.middlewares.length > 0
+      ) {
+        toolReturnTarget = "prepare_model_request";
+      } else {
+        toolReturnTarget = "model_request";
+      }
 
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
@@ -472,8 +479,8 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
-    state: InvokeStateParameter<TMiddlewares> | Command<any, any, string> | null
-  ): InvokeStateParameter<TMiddlewares> | Command<any, any, string> | null {
+    state: InvokeStateParameter<TMiddlewares> | Command | null
+  ): InvokeStateParameter<TMiddlewares> | Command | null {
     if (
       !this.options.middlewares ||
       this.options.middlewares.length === 0 ||
@@ -509,25 +516,16 @@ export class ReactAgent<
     // Create overloaded function type based on whether context has required fields
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
-          state:
-            | InvokeStateParameter<TMiddlewares>
-            | Command<any, any, string>
-            | null,
+          state: InvokeStateParameter<TMiddlewares> | Command | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
-          state:
-            | InvokeStateParameter<TMiddlewares>
-            | Command<any, any, string>
-            | null,
+          state: InvokeStateParameter<TMiddlewares> | Command | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
-      state:
-        | InvokeStateParameter<TMiddlewares>
-        | Command<any, any, string>
-        | null,
+      state: InvokeStateParameter<TMiddlewares> | Command | null,
       config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);

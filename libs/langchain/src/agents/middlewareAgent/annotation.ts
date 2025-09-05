@@ -11,7 +11,7 @@ import type { ResponseFormatUndefined } from "../responses.js";
 import type {
   AgentMiddleware,
   InferMiddlewareStates,
-  PreparedCall,
+  ModelRequest,
 } from "./types.js";
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
@@ -38,7 +38,7 @@ export function createAgentAnnotationConditional<
       reducer: messagesStateReducer,
       default: () => [],
     }),
-    __preparedModelOptions: Annotation<PreparedCall, PreparedCall>({
+    __preparedModelOptions: Annotation<ModelRequest, ModelRequest>({
       reducer: (left, right) => ({ ...left, ...(right || {}) }),
     }),
   };

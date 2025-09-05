@@ -2,7 +2,7 @@ import { RunnableConfig } from "@langchain/core/runnables";
 import { RunnableCallable } from "../../RunnableCallable.js";
 import { executePrepareCallHooks } from "./utils.js";
 import { AgentMiddleware, CreateAgentParams } from "../types.js";
-import { PreparedCall } from "../types.js";
+import { ModelRequest } from "../types.js";
 import { initChatModel } from "../../../chat_models/universal.js";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 
@@ -70,7 +70,7 @@ export class PrepareModelRequestNode extends RunnableCallable<any, any> {
     }
 
     // Prepare the call options
-    const preparedCallOptions: PreparedCall = {
+    const preparedCallOptions: ModelRequest = {
       model,
       messages: state.messages,
       /**

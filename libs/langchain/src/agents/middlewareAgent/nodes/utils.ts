@@ -5,7 +5,7 @@ import type {
   AgentMiddleware,
   Runtime,
   AgentBuiltInState,
-  PreparedCall,
+  ModelRequest,
 } from "../types.js";
 
 /**
@@ -14,10 +14,10 @@ import type {
  */
 export async function executePrepareCallHooks(
   middlewares: readonly AgentMiddleware<any, any, any>[],
-  options: PreparedCall,
+  options: ModelRequest,
   state: AgentBuiltInState,
   config?: RunnableConfig
-): Promise<PreparedCall> {
+): Promise<ModelRequest> {
   let currentOptions = { ...options };
   const runtime: Runtime<any> = {
     toolCalls: [],

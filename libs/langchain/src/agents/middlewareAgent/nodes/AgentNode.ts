@@ -28,7 +28,7 @@ import {
 } from "../../utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
 import {
-  PreparedCall,
+  ModelRequest,
   CreateAgentParams,
   InternalAgentState,
 } from "../types.js";
@@ -501,7 +501,7 @@ export class AgentNode<
 
   async #bindTools(
     model: LanguageModelLike,
-    preparedOptions?: PreparedCall
+    preparedOptions?: ModelRequest
   ): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
@@ -511,18 +511,21 @@ export class AgentNode<
       ...structuredTools.map((toolStrategy) => toolStrategy.tool)
     );
 
-    if (preparedOptions?.tools) {
-      // Filter tools based on prepared options
-      allTools = preparedOptions.tools
-        .map((tool) => {
-          if (typeof tool === "string") {
-            // Find tool by name
-            return allTools.find((t) => (t as any).name === tool) || tool;
-          }
-          return tool;
-        })
-        .filter((t) => t) as (ClientTool | ServerTool)[];
-    }
+    /**
+     * Support tools in preparedOptions
+     */
+    // if (preparedOptions?.tools) {
+    //   // Filter tools based on prepared options
+    //   allTools = preparedOptions.tools
+    //     .map((tool) => {
+    //       if (typeof tool === "string") {
+    //         // Find tool by name
+    //         return allTools.find((t) => (t as any).name === tool) || tool;
+    //       }
+    //       return tool;
+    //     })
+    //     .filter((t) => t) as (ClientTool | ServerTool)[];
+    // }
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"

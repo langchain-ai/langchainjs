@@ -88,7 +88,7 @@ export interface AnthropicModelSettings {
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
  */
-export interface PreparedCall {
+export interface ModelRequest {
   /**
    * The model to use for this step.
    */
@@ -165,10 +165,18 @@ export type ControlAction<TStateSchema> = {
   error?: Error;
 };
 
+export interface AgentJump {
+  messages: BaseMessage[];
+  jump_to: "model" | "tools";
+}
+
 /**
  * Result type for middleware functions.
  */
-export type MiddlewareResult<TState> = TState | ControlAction<TState> | void;
+export type MiddlewareResult<TState> =
+  | TState
+  | /* ControlAction<TState> */ AgentJump
+  | void;
 
 /**
  * Type for the agent's built-in state properties.
@@ -314,13 +322,13 @@ export interface AgentMiddleware<
    * @returns Modified options or undefined to pass through
    */
   prepareModelRequest?(
-    options: PreparedCall,
+    request: ModelRequest,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ):
-    | Promise<Partial<PreparedCall> | undefined>
-    | Partial<PreparedCall>
+    | Promise<Partial<ModelRequest> | undefined>
+    | Partial<ModelRequest>
     | undefined;
   beforeModel?(
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
@@ -652,7 +660,7 @@ export type InternalAgentState<
   >
 > = {
   messages: BaseMessage[];
-  __preparedModelOptions?: PreparedCall;
+  __preparedModelOptions?: ModelRequest;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });

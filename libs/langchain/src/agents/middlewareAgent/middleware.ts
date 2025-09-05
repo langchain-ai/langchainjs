@@ -5,7 +5,7 @@ import type {
   Controls,
   MiddlewareResult,
   AgentBuiltInState,
-  PreparedCall,
+  ModelRequest,
 } from "./types.js";
 
 /**
@@ -46,13 +46,13 @@ export function createMiddleware<
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
   prepareModelRequest?: (
-    options: PreparedCall,
+    options: ModelRequest,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
       TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
     >
-  ) => Promise<PreparedCall | undefined> | PreparedCall | undefined;
+  ) => Promise<ModelRequest | undefined> | ModelRequest | undefined;
   beforeModel?: (
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
