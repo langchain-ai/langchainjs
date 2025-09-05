@@ -170,7 +170,6 @@ export class JSONLinesLoader extends TextLoader {
     const pointer = jsonpointer.compile(this.pointer);
     return jsons.map((json) => {
       const data = pointer.get(json)
-      console.log({data})
       if (typeof data === "string") {
         return data;
       }
