@@ -169,7 +169,7 @@ export class ReactAgent<
     }
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "tools" | "agent" | "prepare_model_request" | string,
+      "tools" | "model_request" | "prepare_model_request" | string,
       typeof workflow
     >;
 
@@ -177,7 +177,7 @@ export class ReactAgent<
      * Add Nodes
      */
     allNodeWorkflows.addNode(
-      "agent",
+      "model_request",
       new AgentNode({
         llm: this.options.llm,
         model: this.options.model,
@@ -270,7 +270,7 @@ export class ReactAgent<
       allNodeWorkflows.addEdge(START, "prepare_model_request");
     } else {
       // If no middlewares at all, go directly to agent
-      allNodeWorkflows.addEdge(START, "agent");
+      allNodeWorkflows.addEdge(START, "model_request");
     }
 
     // Connect beforeModel nodes in sequence
@@ -290,26 +290,26 @@ export class ReactAgent<
           "prepare_model_request"
         );
       } else {
-        allNodeWorkflows.addEdge(lastBeforeModelNode.name, "agent");
+        allNodeWorkflows.addEdge(lastBeforeModelNode.name, "model_request");
       }
     }
 
     // Connect prepare_model_request node to agent (if it exists)
     if (this.options.middlewares && this.options.middlewares.length > 0) {
-      allNodeWorkflows.addEdge("prepare_model_request", "agent");
+      allNodeWorkflows.addEdge("prepare_model_request", "model_request");
     }
 
     // Connect agent to last afterModel node (for reverse order execution)
     const lastAfterModelNode = afterModelNodes.at(-1);
     if (afterModelNodes.length > 0 && lastAfterModelNode) {
-      allNodeWorkflows.addEdge("agent", lastAfterModelNode.name);
+      allNodeWorkflows.addEdge("model_request", lastAfterModelNode.name);
     } else {
       const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
       if (modelPaths.length === 1) {
-        allNodeWorkflows.addEdge("agent", modelPaths[0]);
+        allNodeWorkflows.addEdge("model_request", modelPaths[0]);
       } else {
         allNodeWorkflows.addConditionalEdges(
-          "agent",
+          "model_request",
           this.#createModelRouter(),
           modelPaths
         );
@@ -345,7 +345,9 @@ export class ReactAgent<
     if (toolClasses.length > 0) {
       // Tools should return to first beforeModel node or agent
       const toolReturnTarget =
-        beforeModelNodes.length > 0 ? beforeModelNodes[0].name : "agent";
+        beforeModelNodes.length > 0
+          ? beforeModelNodes[0].name
+          : "model_request";
 
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
@@ -457,11 +459,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly
-        return this.options.responseFormat ? "agent" : END;
+        return this.options.responseFormat ? "model_request" : END;
       }
 
       // For non-returnDirect tools, always route back to agent
-      return "agent";
+      return "model_request";
     };
   }
 

@@ -4,7 +4,7 @@ import type {
   InteropZodType,
   InferInteropZodInput,
 } from "@langchain/core/utils/types";
-import type { LangGraphRunnableConfig } from "@langchain/langgraph";
+import type { LangGraphRunnableConfig, START } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
@@ -33,7 +33,9 @@ import type {
 } from "../responses.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
 
-import type { ClientTool, ServerTool, N } from "../types.js";
+import type { ClientTool, ServerTool } from "../types.js";
+
+export type N = typeof START | "model_request" | "tools";
 
 export interface BuiltInState {
   messages: BaseMessage[];
