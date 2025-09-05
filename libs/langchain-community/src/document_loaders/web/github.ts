@@ -647,7 +647,9 @@ export class GithubRepoLoader
    * @returns A promise that resolves to an array of GithubFile instances.
    */
   private async fetchRepoFiles(path: string): Promise<GithubFile[]> {
-    const url = `${this.apiUrl}/repos/${this.owner}/${this.repo}/contents/${path}?ref=${this.branch}`;
+    const url = `${this.apiUrl}/repos/${this.owner}/${
+      this.repo
+    }/contents/${encodeURIComponent(path)}?ref=${this.branch}`;
     return this.caller.call(async () => {
       this.log(`Fetching ${url}`);
       const response = await fetch(url, { headers: this.headers });
