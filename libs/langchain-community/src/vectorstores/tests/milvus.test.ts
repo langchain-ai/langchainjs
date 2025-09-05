@@ -57,7 +57,7 @@ jest.mock("@zilliz/milvus2-sdk-node", () => ({
 }));
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.resetAllMocks();
   mockMilvusClient.describeCollection.mockResolvedValue({});
   mockMilvusClient.insert.mockResolvedValue(mockSuccessResponse);
   mockMilvusClient.upsert.mockResolvedValue(mockSuccessResponse);
