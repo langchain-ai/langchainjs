@@ -1,0 +1,23 @@
+name: CodeQL config
+
+# Needed to customize the security-extended query suite
+disable-default-queries: true
+queries:
+  - uses: security-extended
+query-filters:
+  - exclude:
+      id: actions/missing-workflow-permissions
+threat-models: local
+paths-ignore:
+  - "/release_workspace.js"
+  - "**/create-entrypoints.js"
+  - "examples/*.ts"
+  - "examples/**/*.ts"
+  - "**/*.test.ts"
+  - "**/examples/*.ts"
+  - "**/examples/**/*.ts"
+  - "**/*.test.ts"
+  - "**/tests/**/*.ts"
+  - "**/__tests__/**/*.ts"
+  - "/libs/langchain-scripts/**/*.ts"
+  - "docs/core_docs/scripts/*.js"
