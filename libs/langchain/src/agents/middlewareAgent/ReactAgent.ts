@@ -117,9 +117,9 @@ export class ReactAgent<
       );
     }
 
-    const toolClasses = Array.isArray(options.tools)
-      ? options.tools
-      : options.tools.tools;
+    const toolClasses =
+      (Array.isArray(options.tools) ? options.tools : options.tools?.tools) ??
+      [];
 
     /**
      * If any of the tools are configured to return_directly after running,
@@ -471,8 +471,8 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
-    state: InvokeStateParameter<TMiddlewares>
-  ): InvokeStateParameter<TMiddlewares> {
+    state: InvokeStateParameter<TMiddlewares> | null
+  ): InvokeStateParameter<TMiddlewares> | null {
     if (!this.options.middlewares || this.options.middlewares.length === 0) {
       return state;
     }
@@ -504,16 +504,16 @@ export class ReactAgent<
     // Create overloaded function type based on whether context has required fields
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
-          state: InvokeStateParameter<TMiddlewares>,
+          state: InvokeStateParameter<TMiddlewares> | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
-          state: InvokeStateParameter<TMiddlewares>,
+          state: InvokeStateParameter<TMiddlewares> | null,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddlewares>,
+      state: InvokeStateParameter<TMiddlewares> | null,
       config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);
@@ -526,37 +526,9 @@ export class ReactAgent<
     return invokeFunc;
   }
 
-  // /**
-  //  * @inheritdoc
-  //  */
-  // get stream() {
-  //   type FullState = MergedAgentState<StructuredResponseFormat, TMiddlewares>;
-  //   const self = this;
-  //   return async function* (
-  //     state: any,
-  //     config?: any
-  //   ): AsyncGenerator<FullState, FullState, unknown> {
-  //     const initializedState = self.#initializeMiddlewareStates(state);
-  //     yield* self.#graph.stream(initializedState, config) as AsyncGenerator<
-  //       FullState,
-  //       FullState,
-  //       unknown
-  //     >;
-  //   };
-  // }
-
-  // /**
-  //  * @inheritdoc
-  //  */
-  // get streamEvents(): AgentGraph<
-  //   StructuredResponseFormat,
-  //   ContextSchema
-  // >["streamEvents"] {
-  //   return (async (state: any, config?: any, streamMode?: any) => {
-  //     const initializedState = this.#initializeMiddlewareStates(state);
-  //     return this.#graph.streamEvents(initializedState, config, streamMode);
-  //   }) as AgentGraph<StructuredResponseFormat, ContextSchema>["streamEvents"];
-  // }
+  /**
+   * ToDo(@christian-bromann): Add stream and streamEvents methods
+   */
 
   /**
    * Visualize the graph as a PNG image.

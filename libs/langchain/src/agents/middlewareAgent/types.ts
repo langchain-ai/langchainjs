@@ -443,7 +443,7 @@ export type CreateAgentParams<
   model?: string;
 
   /** A list of tools or a ToolNode. */
-  tools: ToolNode | (ServerTool | ClientTool)[];
+  tools?: ToolNode | (ServerTool | ClientTool)[];
 
   /**
    * An optional prompt for the LLM. This takes full graph state BEFORE the LLM is called and prepares the input to LLM.
