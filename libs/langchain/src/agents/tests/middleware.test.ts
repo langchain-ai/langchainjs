@@ -1,9 +1,10 @@
-import { expect, describe, it } from "vitest";
+import { expect, describe, it, vi } from "vitest";
+import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { z } from "zod";
 
 import { createAgent, createMiddleware } from "../index.js";
-import { FakeToolCallingChatModel } from "./utils.js";
+import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -161,5 +162,76 @@ describe("middleware", () => {
         },
       }
     );
+  });
+
+  describe("control actions", () => {
+    it("should terminate the agent in beforeModel hook", async () => {
+      const llm = new FakeToolCallingChatModel({
+        responses: [new AIMessage("The weather in Tokyo is 25°C")],
+      });
+      const middleware = createMiddleware({
+        name: "middleware",
+        beforeModel: (_, __, controls) => {
+          return controls.terminate(new Error("middleware terminated"));
+        },
+      });
+      const toolFn = vi.fn();
+      const agent = createAgent({
+        llm,
+        tools: [
+          tool(toolFn, {
+            name: "tool",
+            description: "tool",
+            schema: z.object({
+              name: z.string(),
+            }),
+          }),
+        ],
+        middlewares: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Hello, world!")],
+        })
+      ).rejects.toThrow("middleware terminated");
+      expect(toolFn).not.toHaveBeenCalled();
+    });
+
+    it("should terminate the agent in afterModel hook", async () => {
+      const llm = new FakeToolCallingModel({
+        toolCalls: [[{ id: "call_1", name: "tool", args: { name: "test" } }]],
+      });
+      const beforeModel = vi.fn();
+      const middleware = createMiddleware({
+        name: "middleware",
+        beforeModel,
+        afterModel: (_, __, controls) => {
+          return controls.terminate(
+            new Error("middleware terminated in afterModel")
+          );
+        },
+      });
+      const toolFn = vi.fn();
+      const agent = createAgent({
+        llm,
+        tools: [
+          tool(toolFn, {
+            name: "tool",
+            description: "tool",
+            schema: z.object({
+              name: z.string(),
+            }),
+          }),
+        ],
+        middlewares: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Hello, world!")],
+        })
+      ).rejects.toThrow("middleware terminated in afterModel");
+      expect(toolFn).toHaveBeenCalledTimes(0);
+      expect(beforeModel).toHaveBeenCalledTimes(1);
+    });
   });
 });

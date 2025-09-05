@@ -7,6 +7,7 @@ import {
   START,
   Send,
   CompiledStateGraph,
+  type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
 
@@ -209,14 +210,25 @@ export class ReactAgent<
         const middleware = this.options.middlewares[nodeInfo.index];
         allNodeWorkflows.addNode(
           nodeInfo.name,
-          new BeforeModelNode(middleware)
+          new BeforeModelNode(middleware),
+          {
+            // private state here
+            // input: this.#inputSchema,
+          }
         );
       }
 
       // Add afterModel nodes for middlewares that have the hook
       for (const nodeInfo of afterModelNodes) {
         const middleware = this.options.middlewares[nodeInfo.index];
-        allNodeWorkflows.addNode(nodeInfo.name, new AfterModelNode(middleware));
+        allNodeWorkflows.addNode(
+          nodeInfo.name,
+          new AfterModelNode(middleware),
+          {
+            // private state here
+            // input: this.#inputSchema,
+          }
+        );
       }
     }
 
@@ -448,25 +460,22 @@ export class ReactAgent<
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
           state: InvokeStateParameter<TMiddlewares>,
-          config?: {
-            context?: FullContext;
-            [key: string]: any;
-          }
+          config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
           state: InvokeStateParameter<TMiddlewares>,
-          config: {
-            context: FullContext;
-            [key: string]: any;
-          }
+          config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
       state: InvokeStateParameter<TMiddlewares>,
-      config?: any
+      config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);
-      return this.#graph.invoke(initializedState, config) as Promise<FullState>;
+      return this.#graph.invoke(
+        initializedState,
+        config as any
+      ) as Promise<FullState>;
     };
 
     return invokeFunc;

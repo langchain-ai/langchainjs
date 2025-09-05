@@ -128,7 +128,7 @@ export interface PreparedCall {
 /**
  * Runtime information available to middleware (readonly).
  */
-export interface Runtime<TContext = any> {
+export interface Runtime<TContext = unknown> {
   readonly toolCalls: ToolCall[];
   readonly toolResults: ToolResult[];
   readonly tokenUsage: {
@@ -143,21 +143,21 @@ export interface Runtime<TContext = any> {
 /**
  * Control flow interface for middleware.
  */
-export interface Controls<TState = any> {
+export interface Controls<TState = unknown> {
   jumpTo(
     target: "model" | "tools",
     stateUpdate?: Partial<TState>
-  ): ControlAction;
-  terminate(result?: Partial<TState> | Error): ControlAction;
+  ): ControlAction<TState>;
+  terminate(result?: Partial<TState> | Error): ControlAction<TState>;
 }
 
 /**
  * Control action type returned by control methods.
  */
-export type ControlAction = {
+export type ControlAction<TStateSchema> = {
   type: "jump" | "terminate" | "retry";
   target?: string;
-  stateUpdate?: any;
+  stateUpdate?: Partial<TStateSchema>;
   result?: any;
   error?: Error;
 };
@@ -165,7 +165,7 @@ export type ControlAction = {
 /**
  * Result type for middleware functions.
  */
-export type MiddlewareResult<TState> = TState | ControlAction | void;
+export type MiddlewareResult<TState> = TState | ControlAction<TState> | void;
 
 /**
  * Type for the agent's built-in state properties.
@@ -698,10 +698,7 @@ export type WithStateGraphNodes<
   ? StateGraph<SD, S, U, N | K, I, O, C>
   : never;
 
-/**
- * @deprecated likely to be removed in the next version of the agent
- */
-type DynamicLLMFunction<
+export type DynamicLLMFunction<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = (
   state: AgentBuiltInState & PreHookAnnotation["State"],
