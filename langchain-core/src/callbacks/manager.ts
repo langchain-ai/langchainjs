@@ -1261,7 +1261,7 @@ export class CallbackManager
           callbackManager._parentRunId = implicitRunTree.id;
           const tracerV2 = callbackManager.handlers.find(
             (handler) => handler.name === "langchain_tracer"
-          ) as LangChainTracer;
+          ) as LangChainTracer | undefined;
           tracerV2?.updateFromRunTree(implicitRunTree);
         }
       }
