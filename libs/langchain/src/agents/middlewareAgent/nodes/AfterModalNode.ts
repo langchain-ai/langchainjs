@@ -2,7 +2,7 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { MiddlewareNode } from "./middleware.js";
 import type {
   Controls,
-  IMiddleware,
+  AgentMiddleware,
   MiddlewareResult,
   Runtime,
 } from "../types.js";
@@ -18,7 +18,7 @@ export class AfterModelNode<
 
   name: string;
 
-  constructor(public middleware: IMiddleware<any, any, any>) {
+  constructor(public middleware: AgentMiddleware<any, any, any>) {
     super({
       name: `AfterModelNode_${middleware.name}`,
       func: async (state: TStateSchema, config?: LangGraphRunnableConfig) =>

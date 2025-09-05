@@ -180,8 +180,8 @@ export type AgentBuiltInState = {
 /**
  * Helper type to infer the state schema type from a middleware
  */
-export type InferMiddlewareState<T extends IMiddleware<any, any, any>> =
-  T extends IMiddleware<infer S, any, any>
+export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
+  T extends AgentMiddleware<infer S, any, any>
     ? S extends z.ZodObject<any>
       ? z.infer<S>
       : {}
@@ -190,23 +190,24 @@ export type InferMiddlewareState<T extends IMiddleware<any, any, any>> =
 /**
  * Helper type to infer the input state schema type from a middleware (all properties optional)
  */
-export type InferMiddlewareInputState<T extends IMiddleware<any, any, any>> =
-  T extends IMiddleware<infer S, any, any>
-    ? S extends z.ZodObject<any>
-      ? z.input<S>
-      : {}
-    : {};
+export type InferMiddlewareInputState<
+  T extends AgentMiddleware<any, any, any>
+> = T extends AgentMiddleware<infer S, any, any>
+  ? S extends z.ZodObject<any>
+    ? z.input<S>
+    : {}
+  : {};
 
 /**
  * Helper type to infer merged state from an array of middlewares (just the middleware states)
  */
 export type InferMiddlewareStates<
-  T extends readonly IMiddleware<any, any, any>[]
+  T extends readonly AgentMiddleware<any, any, any>[]
 > = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends IMiddleware<any, any, any>
-    ? Rest extends readonly IMiddleware<any, any, any>[]
+  ? First extends AgentMiddleware<any, any, any>
+    ? Rest extends readonly AgentMiddleware<any, any, any>[]
       ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
       : InferMiddlewareState<First>
     : {}
@@ -216,12 +217,12 @@ export type InferMiddlewareStates<
  * Helper type to infer merged input state from an array of middlewares (with optional defaults)
  */
 export type InferMiddlewareInputStates<
-  T extends readonly IMiddleware<any, any, any>[]
+  T extends readonly AgentMiddleware<any, any, any>[]
 > = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends IMiddleware<any, any, any>
-    ? Rest extends readonly IMiddleware<any, any, any>[]
+  ? First extends AgentMiddleware<any, any, any>
+    ? Rest extends readonly AgentMiddleware<any, any, any>[]
       ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
       : InferMiddlewareInputState<First>
     : {}
@@ -230,21 +231,22 @@ export type InferMiddlewareInputStates<
 /**
  * Helper type to infer merged state from an array of middlewares (includes built-in state)
  */
-export type InferMergedState<T extends readonly IMiddleware<any, any, any>[]> =
-  InferMiddlewareStates<T> & AgentBuiltInState;
+export type InferMergedState<
+  T extends readonly AgentMiddleware<any, any, any>[]
+> = InferMiddlewareStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer merged input state from an array of middlewares (includes built-in state)
  */
 export type InferMergedInputState<
-  T extends readonly IMiddleware<any, any, any>[]
+  T extends readonly AgentMiddleware<any, any, any>[]
 > = InferMiddlewareInputStates<T> & AgentBuiltInState;
 
 /**
  * Helper type to infer the context schema type from a middleware
  */
-export type InferMiddlewareContext<T extends IMiddleware<any, any, any>> =
-  T extends IMiddleware<any, infer C, any>
+export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
+  T extends AgentMiddleware<any, infer C, any>
     ? C extends z.ZodObject<any>
       ? z.infer<C>
       : {}
@@ -253,23 +255,24 @@ export type InferMiddlewareContext<T extends IMiddleware<any, any, any>> =
 /**
  * Helper type to infer the input context schema type from a middleware (with optional defaults)
  */
-export type InferMiddlewareContextInput<T extends IMiddleware<any, any, any>> =
-  T extends IMiddleware<any, infer C, any>
-    ? C extends z.ZodObject<any>
-      ? z.input<C>
-      : {}
-    : {};
+export type InferMiddlewareContextInput<
+  T extends AgentMiddleware<any, any, any>
+> = T extends AgentMiddleware<any, infer C, any>
+  ? C extends z.ZodObject<any>
+    ? z.input<C>
+    : {}
+  : {};
 
 /**
  * Helper type to infer merged context from an array of middlewares
  */
 export type InferMiddlewareContexts<
-  T extends readonly IMiddleware<any, any, any>[]
+  T extends readonly AgentMiddleware<any, any, any>[]
 > = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends IMiddleware<any, any, any>
-    ? Rest extends readonly IMiddleware<any, any, any>[]
+  ? First extends AgentMiddleware<any, any, any>
+    ? Rest extends readonly AgentMiddleware<any, any, any>[]
       ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
       : InferMiddlewareContext<First>
     : {}
@@ -279,12 +282,12 @@ export type InferMiddlewareContexts<
  * Helper type to infer merged input context from an array of middlewares (with optional defaults)
  */
 export type InferMiddlewareContextInputs<
-  T extends readonly IMiddleware<any, any, any>[]
+  T extends readonly AgentMiddleware<any, any, any>[]
 > = T extends readonly []
   ? {}
   : T extends readonly [infer First, ...infer Rest]
-  ? First extends IMiddleware<any, any, any>
-    ? Rest extends readonly IMiddleware<any, any, any>[]
+  ? First extends AgentMiddleware<any, any, any>
+    ? Rest extends readonly AgentMiddleware<any, any, any>[]
       ? InferMiddlewareContextInput<First> & InferMiddlewareContextInputs<Rest>
       : InferMiddlewareContextInput<First>
     : {}
@@ -293,7 +296,7 @@ export type InferMiddlewareContextInputs<
 /**
  * Base middleware interface.
  */
-export interface IMiddleware<
+export interface AgentMiddleware<
   TSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
   TContextSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
   TFullContext = any
@@ -562,7 +565,7 @@ export type CreateAgentParams<
    * Middlewares to run during agent execution.
    * Each middleware can define its own state schema and hook into the agent lifecycle.
    */
-  middlewares?: readonly IMiddleware<any, any, any>[];
+  middlewares?: readonly AgentMiddleware<any, any, any>[];
 
   /**
    * An optional name for the agent.
@@ -627,7 +630,7 @@ export type InferContextInput<
  */
 export type InferAgentConfig<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
 > = IsAllOptional<
   InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddlewares>
 > extends true

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type {
-  IMiddleware,
+  AgentMiddleware,
   Runtime,
   Controls,
   MiddlewareResult,
@@ -91,8 +91,8 @@ export function createMiddleware<
     | MiddlewareResult<
         Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
       >;
-}): IMiddleware<TSchema, TContextSchema, any> {
-  const middleware: IMiddleware<TSchema, TContextSchema, any> = {
+}): AgentMiddleware<TSchema, TContextSchema, any> {
+  const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
     name: config.name,
     stateSchema: config.stateSchema,
     contextSchema: config.contextSchema,

@@ -5,7 +5,7 @@ import type {
   Runtime,
   Controls,
   ControlAction,
-  IMiddleware,
+  AgentMiddleware,
   MiddlewareResult,
 } from "../types.js";
 
@@ -17,7 +17,7 @@ export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
-  abstract middleware: IMiddleware<
+  abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;

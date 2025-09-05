@@ -25,7 +25,7 @@ import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
 
 import {
   CreateAgentParams,
-  IMiddleware,
+  AgentMiddleware,
   InferMiddlewareStates,
   InferMiddlewareInputStates,
   BuiltInState,
@@ -45,14 +45,14 @@ type MergedAgentState<
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
 > = (StructuredResponseFormat extends ResponseFormatUndefined
   ? BuiltInState
   : BuiltInState & { structuredResponse: StructuredResponseFormat }) &
   InferMiddlewareStates<TMiddlewares>;
 
 type InvokeStateParameter<
-  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
 > = BuiltInState & InferMiddlewareInputStates<TMiddlewares>;
 
 type AgentGraph<
@@ -62,7 +62,7 @@ type AgentGraph<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
 > = CompiledStateGraph<
   any,
   any,
@@ -81,7 +81,7 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
 > {
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
 

@@ -2,7 +2,7 @@ import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode } from "./middleware.js";
 import type {
   Controls,
-  IMiddleware,
+  AgentMiddleware,
   MiddlewareResult,
   Runtime,
 } from "../types.js";
@@ -16,7 +16,7 @@ export class BeforeModelNode<
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "beforeModalNodes"];
 
-  constructor(public middleware: IMiddleware<any, any, any>) {
+  constructor(public middleware: AgentMiddleware<any, any, any>) {
     super({
       name: `BeforeModelNode_${middleware.name}`,
       func: async (

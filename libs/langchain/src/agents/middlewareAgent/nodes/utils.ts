@@ -2,7 +2,7 @@ import { RunnableConfig } from "@langchain/core/runnables";
 import { type ZodIssue } from "zod";
 
 import type {
-  IMiddleware,
+  AgentMiddleware,
   Runtime,
   AgentBuiltInState,
   PreparedCall,
@@ -13,7 +13,7 @@ import type {
  * This is used within AgentNode before the model is invoked.
  */
 export async function executePrepareCallHooks(
-  middlewares: readonly IMiddleware<any, any, any>[],
+  middlewares: readonly AgentMiddleware<any, any, any>[],
   options: PreparedCall,
   state: AgentBuiltInState,
   config?: RunnableConfig
@@ -53,7 +53,7 @@ export async function executePrepareCallHooks(
  * This is used to ensure all middleware state properties are initialized.
  */
 export function initializeMiddlewareStates(
-  middlewares: readonly IMiddleware<any, any, any>[],
+  middlewares: readonly AgentMiddleware<any, any, any>[],
   state: unknown
 ): Record<string, any> {
   const middlewareStates: Record<string, any> = {};

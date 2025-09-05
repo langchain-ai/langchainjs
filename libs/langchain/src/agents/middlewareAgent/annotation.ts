@@ -9,7 +9,7 @@ import {
 } from "@langchain/langgraph";
 import type { ResponseFormatUndefined } from "../responses.js";
 import type {
-  IMiddleware,
+  AgentMiddleware,
   InferMiddlewareStates,
   PreparedCall,
 } from "./types.js";
@@ -18,7 +18,7 @@ import type {
 // Helper type for the merged annotation
 type MergedAnnotationSpec<
   T extends Record<string, any> | ResponseFormatUndefined,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[]
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
 > = {
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
 } & (T extends ResponseFormatUndefined
@@ -28,7 +28,7 @@ type MergedAnnotationSpec<
 
 export function createAgentAnnotationConditional<
   T extends Record<string, any> | ResponseFormatUndefined,
-  TMiddlewares extends readonly IMiddleware<any, any, any>[] = []
+  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
   middlewares?: TMiddlewares

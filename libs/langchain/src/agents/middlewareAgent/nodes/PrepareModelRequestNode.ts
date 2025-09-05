@@ -1,13 +1,13 @@
 import { RunnableConfig } from "@langchain/core/runnables";
 import { RunnableCallable } from "../../RunnableCallable.js";
 import { executePrepareCallHooks } from "./utils.js";
-import { IMiddleware, CreateAgentParams } from "../types.js";
+import { AgentMiddleware, CreateAgentParams } from "../types.js";
 import { PreparedCall } from "../types.js";
 import { initChatModel } from "../../../chat_models/universal.js";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 
 interface PrepareModelRequestNodeOptions {
-  middlewares: readonly IMiddleware<any, any, any>[];
+  middlewares: readonly AgentMiddleware<any, any, any>[];
   llm?: CreateAgentParams<any, any>["llm"];
   model?: CreateAgentParams<any, any>["model"];
 }
