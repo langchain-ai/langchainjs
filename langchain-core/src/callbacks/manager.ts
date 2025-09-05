@@ -1257,7 +1257,7 @@ export class CallbackManager
         // handoff between langchain and langsmith/traceable
         // override the parent run ID
         const implicitRunTree = LangChainTracer.getTraceableRunTree();
-        if (implicitRunTree && !callbackManager._parentRunId) {
+        if (implicitRunTree && callbackManager._parentRunId === undefined) {
           callbackManager._parentRunId = implicitRunTree.id;
           const tracerV2 = callbackManager.handlers.find(
             (handler) => handler.name === "langchain_tracer"
