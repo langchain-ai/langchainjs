@@ -1,86 +1,185 @@
-import { z } from "zod";
+/* eslint-disable import/no-extraneous-dependencies */
 import {
-  createMiddleware,
   createMiddlewareAgent,
   HumanMessage,
   AIMessage,
+  BaseMessage,
 } from "langchain";
-import { RemoveMessage } from "@langchain/core/messages";
-import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
+import {
+  summarizationMiddleware,
+  countTokensApproximately,
+} from "langchain/middleware";
+import { ChatOpenAI } from "@langchain/openai";
+import { LoremIpsum } from "lorem-ipsum";
 
-// Simple summarization middleware that summarizes long conversations
-const summarizationMiddleware = createMiddleware({
-  name: "SummarizationMiddleware",
-  stateSchema: z.object({
-    messageCount: z.number().default(0),
-    lastSummary: z.string().optional(),
-  }),
-  contextSchema: z.object({
-    maxMessagesBeforeSummary: z.number().default(10),
-  }),
-  beforeModel: async (state, runtime) => {
-    const messageCount = state.messages.length;
-
-    // Check if we need to summarize
-    if (messageCount > runtime.context.maxMessagesBeforeSummary) {
-      // Create a simple summary of the conversation
-      const summary = `Previous conversation summary: ${messageCount} messages exchanged.`;
-
-      // Keep only the last few messages plus the summary
-      const recentMessages = state.messages.slice(
-        -runtime.context.maxMessagesBeforeSummary
-      );
-      const summaryMessage = new HumanMessage(summary);
-      return {
-        messages: [
-          new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),
-          summaryMessage,
-          ...recentMessages,
-        ],
-        messageCount: recentMessages.length + 1,
-        lastSummary: summary,
-      };
-    }
-
-    // Update message count
-    return {
-      messageCount,
-    };
+// Initialize lorem ipsum generator
+const lorem = new LoremIpsum({
+  sentencesPerParagraph: {
+    max: 8,
+    min: 4,
+  },
+  wordsPerSentence: {
+    max: 16,
+    min: 4,
   },
 });
 
-// Example usage
+// Create a summarization model
+const summarizationModel = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0.3,
+});
+
+// Create summarization middleware with a low token threshold for demo purposes
+const summaryMiddleware = summarizationMiddleware({
+  model: summarizationModel,
+  maxTokensBeforeSummary: 2000, // Low threshold to trigger summarization quickly
+  messagesToKeep: 5, // Keep only the last 5 messages after summarization
+  tokenCounter: countTokensApproximately, // Use the built-in token counter
+});
+
+// Create the agent with summarization middleware
 const agent = createMiddlewareAgent({
   model: "openai:gpt-4o-mini",
-  contextSchema: z.object({
-    userId: z.string(),
-  }),
   tools: [],
-  middlewares: [summarizationMiddleware] as const,
+  middlewares: [summaryMiddleware] as const,
 });
 
-const config = {
-  context: {
-    userId: "user123",
-    maxMessagesBeforeSummary: 3, // Summarize after 2 messages
-  },
-};
+console.log("🚀 Summarization Middleware Example");
+console.log("==================================");
+console.log("\nThis example demonstrates automatic conversation summarization");
+console.log("when token limits are approached.\n");
 
-// Simulate a longer conversation
-const messages = [
-  new HumanMessage("I need help with my order #12345"),
-  new AIMessage(
-    "I'll help you with order #12345. Let me check the status for you."
-  ),
-  new HumanMessage("Also, I think I entered the wrong address"),
-  new AIMessage(
-    "I can help update your shipping address. What's the correct address?"
-  ), // This triggers summarization
-  new HumanMessage("It should be 123 Main St, San Francisco, CA 94105"),
-  new AIMessage("I'll update that for you right away."),
-  new HumanMessage("When will it ship?"),
-];
-const result = await agent.invoke({ messages }, config);
+// Generate a long conversation history
+const messages: BaseMessage[] = [];
 
-console.log("Message count:", result.messageCount);
-console.log("First message:", result.messages.at(0)?.content);
+// Add initial context
+messages.push(
+  new HumanMessage(
+    "I'm working on a complex software project and need your help. Let me describe the architecture..."
+  )
+);
+
+// Generate several exchanges with lorem ipsum content
+for (let i = 0; i < 8; i += 1) {
+  // Human describes various aspects of their project
+  const humanContent = `
+Here's another aspect of my project:
+
+${lorem.generateParagraphs(2)}
+
+Additionally, I'm facing these challenges:
+${lorem.generateParagraphs(1)}
+
+What are your thoughts on this?
+  `.trim();
+
+  messages.push(new HumanMessage(humanContent));
+
+  // AI provides detailed responses
+  const aiContent = `
+Thank you for sharing those details. Based on what you've described:
+
+${lorem.generateParagraphs(2)}
+
+Here are my recommendations:
+1. ${lorem.generateSentences(1)}
+2. ${lorem.generateSentences(1)}
+3. ${lorem.generateSentences(1)}
+
+${lorem.generateParagraphs(1)}
+  `.trim();
+
+  messages.push(new AIMessage(aiContent));
+}
+
+// Calculate total tokens before summarization
+const totalTokensBefore = countTokensApproximately(messages);
+console.log(
+  `📊 Token count before summarization: ~${totalTokensBefore} tokens`
+);
+console.log(`📝 Number of messages: ${messages.length}`);
+
+// Add a final question that will trigger summarization
+messages.push(
+  new HumanMessage(
+    "Given everything we've discussed, what's the most important thing I should focus on first?"
+  )
+);
+
+console.log("\n🔄 Invoking agent (this will trigger summarization)...\n");
+
+// Invoke the agent - this should trigger summarization
+const result = await agent.invoke({
+  messages,
+});
+
+// Check if summarization occurred
+const resultMessages = result.messages;
+const systemMessage = resultMessages[0];
+
+const systemContent =
+  typeof systemMessage?.content === "string" ? systemMessage.content : "";
+if (systemMessage && systemContent.includes("Previous conversation summary:")) {
+  console.log("✅ Summarization triggered!");
+  console.log(
+    `📝 Number of messages after summarization: ${resultMessages.length}`
+  );
+
+  // Calculate tokens after summarization
+  const totalTokensAfter = countTokensApproximately(resultMessages);
+  console.log(
+    `📊 Token count after summarization: ~${totalTokensAfter} tokens`
+  );
+  console.log(
+    `💾 Token reduction: ${Math.round(
+      (1 - totalTokensAfter / totalTokensBefore) * 100
+    )}%`
+  );
+
+  console.log("\n📋 Summary content:");
+  console.log("================");
+  const summaryContent = systemContent
+    .split("## Previous conversation summary:")[1]
+    ?.trim();
+  if (summaryContent) {
+    console.log(summaryContent);
+  }
+
+  console.log("\n🤖 Agent's final response:");
+  console.log("========================");
+  const lastContent = resultMessages[resultMessages.length - 1].content;
+  console.log(
+    typeof lastContent === "string" ? lastContent : JSON.stringify(lastContent)
+  );
+} else {
+  console.log(
+    "❌ Summarization was not triggered (message count or token threshold not reached)"
+  );
+  console.log("\n🤖 Agent's response:");
+  const lastContent = resultMessages[resultMessages.length - 1].content;
+  console.log(
+    typeof lastContent === "string" ? lastContent : JSON.stringify(lastContent)
+  );
+}
+
+// Demonstrate continuing the conversation after summarization
+console.log("\n\n📝 Continuing the conversation...");
+console.log("================================");
+
+const continuedResult = await agent.invoke({
+  messages: [
+    ...resultMessages,
+    new HumanMessage(
+      "Thanks! Can you remind me what the main challenges were that I mentioned earlier?"
+    ),
+  ],
+});
+
+console.log("\n🤖 Agent's response (using summarized context):");
+console.log("===========================================");
+const finalContent =
+  continuedResult.messages[continuedResult.messages.length - 1].content;
+console.log(
+  typeof finalContent === "string" ? finalContent : JSON.stringify(finalContent)
+);

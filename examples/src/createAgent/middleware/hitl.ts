@@ -1,106 +1,146 @@
-import { z } from "zod";
 import {
-  createMiddleware,
   createMiddlewareAgent,
   HumanMessage,
+  tool,
   MemorySaver,
 } from "langchain";
-import { Command, interrupt } from "@langchain/langgraph";
+import { humanInTheLoopMiddleware } from "langchain/middleware";
+import { Command } from "@langchain/langgraph";
+import { z } from "zod";
 
-const checkpointer = new MemorySaver();
+const checkpointSaver = new MemorySaver();
 
-/**
- * Simple Human in the Loop (HITL) Middleware
- *
- * This middleware demonstrates how to interrupt execution when information is missing
- * and resume with human-provided input.
- */
-export const humanInTheLoopMiddleware = createMiddleware({
-  name: "HumanInTheLoopMiddleware",
-
-  beforeModel: (state) => {
-    // Check if the user's question is missing critical information
-    const lastUserMessage = [...state.messages]
-      .reverse()
-      .find((msg) => msg instanceof HumanMessage);
-
-    if (!lastUserMessage) {
-      return;
+// Define a safe tool (no approval needed)
+const calculateTool = tool(
+  async ({ a, b, operation }: { a: number; b: number; operation: string }) => {
+    console.log(
+      `🛠️  calculator tool called with args: ${a}, ${b}, ${operation}`
+    );
+    switch (operation) {
+      case "add":
+        return `${a} + ${b} = ${a + b}`;
+      case "multiply":
+        return `${a} * ${b} = ${a * b}`;
+      default:
+        return "Unknown operation";
     }
+  },
+  {
+    name: "calculator",
+    description: "Perform basic math operations",
+    schema: z.object({
+      a: z.number().describe("First number"),
+      b: z.number().describe("Second number"),
+      operation: z.enum(["add", "multiply"]).describe("Math operation"),
+    }),
+  }
+);
 
-    const userContent = lastUserMessage.content.toString().toLowerCase();
+// Define a tool that requires approval
+const writeFileTool = tool(
+  async ({ filename, content }: { filename: string; content: string }) => {
+    console.log(
+      `🛠️  write_file tool called with args: ${filename}, ${content}`
+    );
+    // Simulate file writing
+    return `Successfully wrote ${content.length} characters to ${filename}`;
+  },
+  {
+    name: "write_file",
+    description: "Write content to a file",
+    schema: z.object({
+      filename: z.string().describe("Name of the file"),
+      content: z.string().describe("Content to write"),
+    }),
+  }
+);
 
-    // Interrupt to ask for clarification
-    const clarification = interrupt({
-      type: "missing_information",
-      question: "Which country or state's capital are you asking about?",
-      originalQuery: userContent,
-    });
-
-    // Add the clarification as a new message
-    console.log(`\n✅ Human provided clarification: "${clarification}"`);
-
-    // eslint-disable-next-line consistent-return
-    return {
-      messages: [
-        ...state.messages,
-        new HumanMessage(`The capital of ${clarification}`),
-      ],
-      clarificationRequested: true,
-    };
+// Configure HITL middleware
+const hitlMiddleware = humanInTheLoopMiddleware({
+  toolConfigs: {
+    write_file: {
+      requireApproval: true,
+      description: "⚠️ File write operation requires approval",
+    },
+    calculator: {
+      requireApproval: false, // Math is safe
+    },
   },
 });
 
+// Create agent with HITL middleware
 const agent = createMiddlewareAgent({
   model: "openai:gpt-4o-mini",
-  tools: [],
-  checkpointer,
-  middlewares: [humanInTheLoopMiddleware] as const,
+  checkpointSaver,
+  prompt:
+    "You are a helpful assistant. Use the tools provided to help the user.",
+  tools: [calculateTool, writeFileTool],
+  middlewares: [hitlMiddleware] as const,
 });
-
-console.log("🚀 Human in the Loop Example - Missing Information Flow");
-console.log("========================================================");
-console.log(
-  "\nThis example shows how the agent interrupts when information is missing"
-);
-console.log("and resumes with human-provided input.\n");
-
-const threadId = "example-thread-123";
-
-// Step 1: Initial invocation with incomplete information
-console.log("📝 Step 1: User asks incomplete question");
-console.log('   User: "What\'s the capital?"');
-
-const result = await agent.invoke(
-  {
-    messages: [new HumanMessage("What's the capital?")],
+const config = {
+  configurable: {
+    thread_id: "123",
   },
+};
+
+console.log("🚀 HITL Tool Approval Example");
+console.log("=============================\n");
+
+// Example 1: Safe tool - no approval needed
+console.log("📊 Example 1: Using calculator (auto-approved)");
+const mathResult = await agent.invoke(
   {
-    configurable: {
-      thread_id: threadId,
-    },
-    context: {
-      checkForMissingInfo: true,
-    },
-  }
+    messages: [new HumanMessage("Calculate 42 * 17")],
+  },
+  config
+);
+console.log("Result:", mathResult.messages.at(-1)?.content);
+
+// Example 2: Tool requiring approval
+console.log("\n📝 Example 2: Writing to file (requires approval)");
+console.log("User: Write 'Hello World' to greeting.txt\n");
+
+// This will pause at the HITL middleware for approval
+const initialResult = await agent.invoke(
+  {
+    messages: [new HumanMessage("Write 'Hello World' to greeting.txt")],
+  },
+  config
 );
 
-// This won't be reached due to interruption
-console.log("\nFinal message:", result.messages.at(-1)?.content);
+// Check if the agent is paused (waiting for approval)
+const state = await agent.graph.getState(config);
+if (state.next && state.next.length > 0) {
+  console.log("⏸️  Interrupted for approval!");
 
-// Step 2: Resume with the missing information
-console.log("📝 Step 2: Resuming with clarification");
-console.log('   Human provides: "France"');
+  // Get the interrupt data from the task
+  const task = state.tasks?.[0];
+  if (task?.interrupts && task.interrupts.length > 0) {
+    const requests = task.interrupts[0].value;
+    console.log("Tool:", requests[0].action);
+    console.log("Args:", JSON.stringify(requests[0].args, null, 2));
 
-// Resume the graph with the clarification
-const resumedResult = await agent.invoke(
-  new Command({ resume: "France" }), // No new input needed, we're resuming
-  {
-    configurable: {
-      thread_id: threadId,
-    },
+    console.log("\nℹ️  In a real application, you would:");
+    console.log("  - Show this to the user");
+    console.log("  - Get their response (accept/edit/ignore/manual)");
+    console.log(
+      "  - Resume with: agent.invoke(new Command({ resume: response }))"
+    );
+
+    console.log("\n✅ Simulating user approval...\n");
+
+    // Resume with approval
+    const resumedResult = await agent.invoke(
+      // @ts-expect-error
+      new Command({
+        resume: [{ type: "accept" }], // Approve the tool call
+      }),
+      config
+    );
+
+    console.log("Result:", resumedResult.messages.at(-1)?.content);
   }
-);
-
-console.log("\n✅ Agent successfully resumed!");
-console.log("Final answer:", resumedResult.messages.at(-1)?.content);
+} else {
+  console.log("Agent completed without interruption");
+  console.log("Result:", initialResult.messages.at(-1)?.content);
+}

@@ -28,6 +28,7 @@ export { initChatModel } from "./chat_models/universal.js";
 export { tool, DynamicStructuredTool } from "@langchain/core/tools";
 
 export {
+  type AgentJump,
   createMiddleware,
   createAgent as createMiddlewareAgent,
 } from "./agents/middlewareAgent/index.js";

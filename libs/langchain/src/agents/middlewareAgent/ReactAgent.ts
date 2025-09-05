@@ -54,7 +54,10 @@ type MergedAgentState<
 
 type InvokeStateParameter<
   TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
-> = BuiltInState & InferMiddlewareInputStates<TMiddlewares>;
+> =
+  | (BuiltInState & InferMiddlewareInputStates<TMiddlewares>)
+  | Command<any, any, any>
+  | null;
 
 type AgentGraph<
   StructuredResponseFormat extends
@@ -479,12 +482,13 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
-    state: InvokeStateParameter<TMiddlewares> | Command | null
-  ): InvokeStateParameter<TMiddlewares> | Command | null {
+    state: InvokeStateParameter<TMiddlewares>
+  ): InvokeStateParameter<TMiddlewares> {
     if (
       !this.options.middlewares ||
       this.options.middlewares.length === 0 ||
-      state instanceof Command
+      state instanceof Command ||
+      !state
     ) {
       return state;
     }
@@ -494,10 +498,14 @@ export class ReactAgent<
       state
     );
     const updatedState = { ...state } as InvokeStateParameter<TMiddlewares>;
+    if (!updatedState) {
+      return updatedState;
+    }
 
     // Only add defaults for keys that don't exist in current state
     for (const [key, value] of Object.entries(defaultStates)) {
       if (!(key in updatedState)) {
+        // @ts-expect-error
         updatedState[key as keyof InvokeStateParameter<TMiddlewares>] = value;
       }
     }
@@ -516,16 +524,16 @@ export class ReactAgent<
     // Create overloaded function type based on whether context has required fields
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
-          state: InvokeStateParameter<TMiddlewares> | Command | null,
+          state: InvokeStateParameter<TMiddlewares>,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
-          state: InvokeStateParameter<TMiddlewares> | Command | null,
+          state: InvokeStateParameter<TMiddlewares>,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddlewares> | Command | null,
+      state: InvokeStateParameter<TMiddlewares>,
       config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);
