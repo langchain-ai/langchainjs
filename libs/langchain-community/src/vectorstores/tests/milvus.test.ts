@@ -70,190 +70,194 @@ beforeEach(() => {
   mockMilvusClient.loadPartition.mockResolvedValue(mockSuccessResponse);
 });
 
-test("Milvus upsert with autoId: false includes primary field from metadata", async () => {
-  // Mock collection schema with autoID primary field
-  const mockSchema = {
-    schema: {
-      fields,
-    },
-  };
+// FIXME(hntrl): figure out why milvus client isn't being mocked
+// (this is causing latent network issues in community tests)
+describe.skip("Milvus", () => {
+  test("Milvus upsert with autoId: false includes primary field from metadata", async () => {
+    // Mock collection schema with autoID primary field
+    const mockSchema = {
+      schema: {
+        fields,
+      },
+    };
 
-  mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
 
-  const embeddings = new FakeEmbeddings();
-  const milvus = new Milvus(embeddings, {
-    collectionName: "test_collection",
-    autoId: false, // User wants to provide their own IDs for upsert
-    primaryField: "id",
-    textField: "text",
-    vectorField: "vector",
-    clientConfig: {
-      address: "localhost:19530",
-    },
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: false, // User wants to provide their own IDs for upsert
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
+
+    // Replace the client with our mock after construction
+    (milvus as any).client = mockMilvusClient;
+
+    // Test document with primary field in metadata
+    const documents = [
+      new Document({
+        pageContent: "Test content for upsert",
+        metadata: {
+          id: "test_id_123",
+          custom_field: "custom_value",
+        },
+      }),
+    ];
+
+    await milvus.addDocuments(documents);
+
+    // Verify upsert was called (not insert)
+    expect(mockMilvusClient.upsert).toHaveBeenCalledTimes(1);
+    expect(mockMilvusClient.insert).not.toHaveBeenCalled();
+
+    // Verify the upsert call includes the primary field
+    const upsertCall = mockMilvusClient.upsert.mock.calls[0][0];
+    expect(upsertCall.collection_name).toBe("test_collection");
+    expect(upsertCall.fields_data).toHaveLength(1);
+
+    const upsertData = upsertCall.fields_data[0];
+    expect(upsertData.id).toBe("test_id_123"); // Primary field should be included
+    expect(upsertData.text).toBe("Test content for upsert");
+    expect(upsertData.vector).toBeDefined();
+    expect(upsertData.custom_field).toBe("custom_value");
   });
 
-  // Replace the client with our mock after construction
-  (milvus as any).client = mockMilvusClient;
-
-  // Test document with primary field in metadata
-  const documents = [
-    new Document({
-      pageContent: "Test content for upsert",
-      metadata: {
-        id: "test_id_123",
-        custom_field: "custom_value",
+  test("Milvus upsert with autoId: false throws error when primary field missing from metadata", async () => {
+    // Mock collection schema
+    const mockSchema = {
+      schema: {
+        fields,
       },
-    }),
-  ];
+    };
 
-  await milvus.addDocuments(documents);
+    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
 
-  // Verify upsert was called (not insert)
-  expect(mockMilvusClient.upsert).toHaveBeenCalledTimes(1);
-  expect(mockMilvusClient.insert).not.toHaveBeenCalled();
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: false,
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
 
-  // Verify the upsert call includes the primary field
-  const upsertCall = mockMilvusClient.upsert.mock.calls[0][0];
-  expect(upsertCall.collection_name).toBe("test_collection");
-  expect(upsertCall.fields_data).toHaveLength(1);
+    // Replace the client with our mock after construction
+    (milvus as any).client = mockMilvusClient;
 
-  const upsertData = upsertCall.fields_data[0];
-  expect(upsertData.id).toBe("test_id_123"); // Primary field should be included
-  expect(upsertData.text).toBe("Test content for upsert");
-  expect(upsertData.vector).toBeDefined();
-  expect(upsertData.custom_field).toBe("custom_value");
-});
+    // Test document WITHOUT primary field in metadata
+    const documents = [
+      new Document({
+        pageContent: "Test content",
+        metadata: {
+          custom_field: "custom_value",
+          // Missing 'id' field
+        },
+      }),
+    ];
 
-test("Milvus upsert with autoId: false throws error when primary field missing from metadata", async () => {
-  // Mock collection schema
-  const mockSchema = {
-    schema: {
-      fields,
-    },
-  };
-
-  mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
-
-  const embeddings = new FakeEmbeddings();
-  const milvus = new Milvus(embeddings, {
-    collectionName: "test_collection",
-    autoId: false,
-    primaryField: "id",
-    textField: "text",
-    vectorField: "vector",
-    clientConfig: {
-      address: "localhost:19530",
-    },
+    await expect(milvus.addDocuments(documents)).rejects.toThrow(
+      "The Collection's primaryField is configured with autoId=false, thus its value must be provided through metadata."
+    );
   });
 
-  // Replace the client with our mock after construction
-  (milvus as any).client = mockMilvusClient;
-
-  // Test document WITHOUT primary field in metadata
-  const documents = [
-    new Document({
-      pageContent: "Test content",
-      metadata: {
-        custom_field: "custom_value",
-        // Missing 'id' field
+  test("Milvus insert with autoId: true excludes primary field from data", async () => {
+    // Mock collection schema
+    const mockSchema = {
+      schema: {
+        fields,
       },
-    }),
-  ];
+    };
 
-  await expect(milvus.addDocuments(documents)).rejects.toThrow(
-    "The Collection's primaryField is configured with autoId=false, thus its value must be provided through metadata."
-  );
-});
+    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
 
-test("Milvus insert with autoId: true excludes primary field from data", async () => {
-  // Mock collection schema
-  const mockSchema = {
-    schema: {
-      fields,
-    },
-  };
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: true, // Auto-generate IDs
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
 
-  mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    // Replace the client with our mock after construction
+    (milvus as any).client = mockMilvusClient;
 
-  const embeddings = new FakeEmbeddings();
-  const milvus = new Milvus(embeddings, {
-    collectionName: "test_collection",
-    autoId: true, // Auto-generate IDs
-    primaryField: "id",
-    textField: "text",
-    vectorField: "vector",
-    clientConfig: {
-      address: "localhost:19530",
-    },
+    const documents = [
+      new Document({
+        pageContent: "Test content for insert",
+        metadata: {
+          custom_field: "custom_value",
+        },
+      }),
+    ];
+
+    await milvus.addDocuments(documents);
+
+    // Verify insert was called (not upsert)
+    expect(mockMilvusClient.insert).toHaveBeenCalledTimes(1);
+    expect(mockMilvusClient.upsert).not.toHaveBeenCalled();
+
+    // Verify the insert call excludes the primary field (since autoId: true)
+    const insertCall = mockMilvusClient.insert.mock.calls[0][0];
+    const insertData = insertCall.fields_data[0];
+    expect(insertData.id).toBeUndefined(); // Primary field should be excluded
+    expect(insertData.text).toBe("Test content for insert");
+    expect(insertData.vector).toBeDefined();
+    expect(insertData.custom_field).toBe("custom_value");
   });
 
-  // Replace the client with our mock after construction
-  (milvus as any).client = mockMilvusClient;
-
-  const documents = [
-    new Document({
-      pageContent: "Test content for insert",
-      metadata: {
-        custom_field: "custom_value",
+  test("Milvus upsert with provided IDs uses those IDs instead of metadata", async () => {
+    // Mock collection schema
+    const mockSchema = {
+      schema: {
+        fields,
       },
-    }),
-  ];
+    };
 
-  await milvus.addDocuments(documents);
+    mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
 
-  // Verify insert was called (not upsert)
-  expect(mockMilvusClient.insert).toHaveBeenCalledTimes(1);
-  expect(mockMilvusClient.upsert).not.toHaveBeenCalled();
+    const embeddings = new FakeEmbeddings();
+    const milvus = new Milvus(embeddings, {
+      collectionName: "test_collection",
+      autoId: false,
+      primaryField: "id",
+      textField: "text",
+      vectorField: "vector",
+      clientConfig: {
+        address: "localhost:19530",
+      },
+    });
 
-  // Verify the insert call excludes the primary field (since autoId: true)
-  const insertCall = mockMilvusClient.insert.mock.calls[0][0];
-  const insertData = insertCall.fields_data[0];
-  expect(insertData.id).toBeUndefined(); // Primary field should be excluded
-  expect(insertData.text).toBe("Test content for insert");
-  expect(insertData.vector).toBeDefined();
-  expect(insertData.custom_field).toBe("custom_value");
-});
+    // Replace the client with our mock after construction
+    (milvus as any).client = mockMilvusClient;
 
-test("Milvus upsert with provided IDs uses those IDs instead of metadata", async () => {
-  // Mock collection schema
-  const mockSchema = {
-    schema: {
-      fields,
-    },
-  };
+    const documents = [
+      new Document({
+        pageContent: "Test content",
+        metadata: {
+          id: "metadata_id", // This should be ignored
+          custom_field: "custom_value",
+        },
+      }),
+    ];
 
-  mockMilvusClient.describeCollection.mockResolvedValue(mockSchema);
+    // Provide explicit IDs
+    await milvus.addDocuments(documents, { ids: ["explicit_id"] });
 
-  const embeddings = new FakeEmbeddings();
-  const milvus = new Milvus(embeddings, {
-    collectionName: "test_collection",
-    autoId: false,
-    primaryField: "id",
-    textField: "text",
-    vectorField: "vector",
-    clientConfig: {
-      address: "localhost:19530",
-    },
+    // Verify upsert was called with explicit ID
+    const upsertCall = mockMilvusClient.upsert.mock.calls[0][0];
+    const upsertData = upsertCall.fields_data[0];
+    expect(upsertData.id).toBe("explicit_id"); // Should use explicit ID, not metadata ID
   });
-
-  // Replace the client with our mock after construction
-  (milvus as any).client = mockMilvusClient;
-
-  const documents = [
-    new Document({
-      pageContent: "Test content",
-      metadata: {
-        id: "metadata_id", // This should be ignored
-        custom_field: "custom_value",
-      },
-    }),
-  ];
-
-  // Provide explicit IDs
-  await milvus.addDocuments(documents, { ids: ["explicit_id"] });
-
-  // Verify upsert was called with explicit ID
-  const upsertCall = mockMilvusClient.upsert.mock.calls[0][0];
-  const upsertData = upsertCall.fields_data[0];
-  expect(upsertData.id).toBe("explicit_id"); // Should use explicit ID, not metadata ID
 });
