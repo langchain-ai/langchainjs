@@ -1,8 +1,10 @@
 /* eslint-disable no-process-env */
+import { jest } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 import { Collection, MongoClient, ServerApiVersion } from "mongodb";
 import { MongoDBStore } from "../storage.js";
 import { uri } from "./utils.js";
+import { VERSION } from "../version.js";
 
 let client: MongoClient;
 let collection: Collection;
@@ -26,6 +28,16 @@ afterEach(async () => {
 
 afterAll(async () => {
   await client.close();
+});
+
+describe("MongoDBStore sets client metadata", () => {
+  const spy = jest.spyOn(client, "appendMetadata");
+  // eslint-disable-next-line no-new
+  new MongoDBStore({
+    collection,
+  });
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_storage", version: VERSION });
+  jest.clearAllMocks();
 });
 
 describe("mget()", () => {
