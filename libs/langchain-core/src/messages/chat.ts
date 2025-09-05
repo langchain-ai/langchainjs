@@ -4,8 +4,13 @@ import {
   type BaseMessageFields,
   mergeContent,
   _mergeDicts,
-  type MessageType,
 } from "./base.js";
+import {
+  $MessageStructure,
+  $StandardMessageStructure,
+  MessageType,
+} from "./message.js";
+import { Constructor } from "./utils.js";
 
 export interface ChatMessageFieldsWithRole extends BaseMessageFields {
   role: string;
@@ -14,13 +19,17 @@ export interface ChatMessageFieldsWithRole extends BaseMessageFields {
 /**
  * Represents a chat message in a conversation.
  */
-export class ChatMessage
-  extends BaseMessage
+export class ChatMessage<
+    TStructure extends $MessageStructure = $StandardMessageStructure
+  >
+  extends BaseMessage<TStructure, "chat">
   implements ChatMessageFieldsWithRole
 {
   static lc_name() {
     return "ChatMessage";
   }
+
+  readonly type = "chat" as const;
 
   role: string;
 
@@ -41,12 +50,8 @@ export class ChatMessage
     this.role = fields.role;
   }
 
-  _getType(): MessageType {
-    return "generic";
-  }
-
   static isInstance(message: BaseMessage): message is ChatMessage {
-    return message._getType() === "generic";
+    return message.type === "generic";
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -61,10 +66,17 @@ export class ChatMessage
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.
  */
-export class ChatMessageChunk extends BaseMessageChunk {
+export class ChatMessageChunk<
+    TStructure extends $MessageStructure = $StandardMessageStructure
+  >
+  extends BaseMessageChunk<TStructure, "chat">
+  implements ChatMessageFieldsWithRole
+{
   static lc_name() {
     return "ChatMessageChunk";
   }
+
+  readonly type = "chat" as const;
 
   role: string;
 
@@ -81,12 +93,9 @@ export class ChatMessageChunk extends BaseMessageChunk {
     this.role = fields.role;
   }
 
-  _getType(): MessageType {
-    return "generic";
-  }
-
   concat(chunk: ChatMessageChunk) {
-    return new ChatMessageChunk({
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,
@@ -110,9 +119,9 @@ export class ChatMessageChunk extends BaseMessageChunk {
 }
 
 export function isChatMessage(x: BaseMessage): x is ChatMessage {
-  return x._getType() === "generic";
+  return x.type === "generic";
 }
 
 export function isChatMessageChunk(x: BaseMessageChunk): x is ChatMessageChunk {
-  return x._getType() === "generic";
+  return x.type === "generic";
 }

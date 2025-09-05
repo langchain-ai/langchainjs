@@ -5,6 +5,13 @@ import { isDataContentBlock } from "./content/data.js";
 import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
 import { convertToV1FromDataContent } from "./block_translators/data.js";
 import { convertToV1FromChatCompletionsInput } from "./block_translators/openai.js";
+import {
+  $InferMessageContent,
+  $MessageStructure,
+  $StandardMessageStructure,
+  Message,
+  MessageType,
+} from "./message.js";
 
 export interface StoredMessageData {
   content: string;
@@ -34,16 +41,6 @@ export interface StoredMessageV1 {
   role: string | undefined;
   text: string;
 }
-
-export type MessageType =
-  | "human"
-  | "ai"
-  | "generic"
-  | "developer"
-  | "system"
-  | "function"
-  | "tool"
-  | "remove";
 
 export type MessageContent = string | Array<ContentBlock>;
 
@@ -193,7 +190,13 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
  */
-export abstract class BaseMessage extends Serializable {
+export abstract class BaseMessage<
+    TStructure extends $MessageStructure = $StandardMessageStructure,
+    TRole extends MessageType = MessageType
+  >
+  extends Serializable
+  implements Message<TStructure, TRole>
+{
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -205,6 +208,8 @@ export abstract class BaseMessage extends Serializable {
       response_metadata: "response_metadata",
     };
   }
+
+  abstract readonly type: TRole;
 
   /**
    * Get text content of the message.
@@ -225,7 +230,7 @@ export abstract class BaseMessage extends Serializable {
   }
 
   /** The content of the message. */
-  content: MessageContent;
+  content: $InferMessageContent<TStructure, TRole>;
 
   /** The name of the message sender in a multi-user chat. */
   name?: string;
@@ -243,7 +248,7 @@ export abstract class BaseMessage extends Serializable {
   id?: string;
 
   /**
-   * @deprecated Use .getType() instead or import the proper typeguard.
+   * @deprecated Use .type instead or import the proper typeguard.
    * For example:
    *
    * ```ts
@@ -253,11 +258,16 @@ export abstract class BaseMessage extends Serializable {
    * isAIMessage(message); // true
    * ```
    */
-  abstract _getType(): MessageType;
+  _getType(): MessageType {
+    return this.type;
+  }
 
-  /** The type of the message. */
+  /**
+   * @deprecated Use .type instead
+   * The type of the message.
+   */
   getType(): MessageType {
-    return this._getType();
+    return this.type;
   }
 
   constructor(
@@ -315,14 +325,12 @@ export abstract class BaseMessage extends Serializable {
       (blocks, step) => step(blocks),
       blocks
     );
-    // this assertion is safe since we're planning to allow
-    // untyped content blocks for v1 messages (directed through message structures).
     return parsedBlocks as Array<ContentBlock.Standard>;
   }
 
   toDict(): StoredMessage {
     return {
-      type: this._getType(),
+      type: this.type,
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };
@@ -521,8 +529,11 @@ export function _mergeObj<T = any>(
  * one. It also overrides the `__add__()` method to support concatenation
  * of `BaseMessageChunk` instances.
  */
-export abstract class BaseMessageChunk extends BaseMessage {
-  abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
+export abstract class BaseMessageChunk<
+  TStructure extends $MessageStructure = $StandardMessageStructure,
+  TRole extends MessageType = MessageType
+> extends BaseMessage<TStructure, TRole> {
+  abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 }
 
 export type MessageFieldWithRole = {
@@ -540,12 +551,7 @@ export function _isMessageFieldWithRole(
 export type BaseMessageLike =
   | BaseMessage
   | MessageFieldWithRole
-  | [
-      StringWithAutocomplete<
-        MessageType | "user" | "assistant" | "placeholder"
-      >,
-      MessageContent
-    ]
+  | ["user" | "assistant" | "placeholder" | MessageType, MessageContent]
   | string
   /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
@@ -559,7 +565,7 @@ export type BaseMessageLike =
 export function isBaseMessage(
   messageLike?: unknown
 ): messageLike is BaseMessage {
-  return typeof (messageLike as BaseMessage)?._getType === "function";
+  return typeof (messageLike as BaseMessage)?.type === "string";
 }
 
 export function isBaseMessageChunk(

@@ -4,7 +4,6 @@ import { Runnable, RunnableLambda } from "../runnables/base.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessage,
-  MessageType,
   BaseMessageChunk,
   BaseMessageFields,
   isBaseMessageChunk,
@@ -20,6 +19,7 @@ import {
   FunctionMessageFieldsWithName,
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { MessageType } from "./message.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {

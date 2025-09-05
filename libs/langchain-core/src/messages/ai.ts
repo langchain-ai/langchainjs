@@ -4,18 +4,23 @@ import {
   BaseMessageChunk,
   mergeContent,
   _mergeDicts,
-  type MessageType,
   BaseMessageFields,
   _mergeLists,
 } from "./base.js";
 import { getTranslator } from "./block_translators/index.js";
 import { ContentBlock } from "./content/index.js";
 import {
+  $MessageStructure,
+  $StandardMessageStructure,
+  MessageType,
+} from "./message.js";
+import {
   InvalidToolCall,
   ToolCall,
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
+import { Constructor } from "./utils.js";
 
 export type AIMessageFields = BaseMessageFields & {
   tool_calls?: ToolCall[];
@@ -124,7 +129,14 @@ export type UsageMetadata = {
 /**
  * Represents an AI message in a conversation.
  */
-export class AIMessage extends BaseMessage implements AIMessageFields {
+export class AIMessage<
+    TStructure extends $MessageStructure = $StandardMessageStructure
+  >
+  extends BaseMessage<TStructure, "ai">
+  implements AIMessageFields
+{
+  readonly type = "ai" as const;
+
   // These are typed as optional to avoid breaking changes and allow for casting
   // from BaseMessage.
   tool_calls?: ToolCall[] = [];
@@ -237,10 +249,6 @@ export class AIMessage extends BaseMessage implements AIMessageFields {
     return "AIMessage";
   }
 
-  _getType(): MessageType {
-    return "ai";
-  }
-
   get contentBlocks(): Array<ContentBlock.Standard> {
     if (this.response_metadata?.output_version === "v1") {
       return this.content as Array<ContentBlock.Standard>;
@@ -301,7 +309,11 @@ export type AIMessageChunkFields = AIMessageFields & {
  * Represents a chunk of an AI message, which can be concatenated with
  * other AI message chunks.
  */
-export class AIMessageChunk extends BaseMessageChunk {
+export class AIMessageChunk<
+  TStructure extends $MessageStructure = $StandardMessageStructure
+> extends BaseMessageChunk<TStructure, "ai"> {
+  readonly type = "ai" as const;
+
   // Must redeclare tool call fields since there is no multiple inheritance in JS.
   // These are typed as optional to avoid breaking changes and allow for casting
   // from BaseMessage.
@@ -416,10 +428,6 @@ export class AIMessageChunk extends BaseMessageChunk {
 
   static lc_name() {
     return "AIMessageChunk";
-  }
-
-  _getType(): MessageType {
-    return "ai";
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
@@ -566,6 +574,7 @@ export class AIMessageChunk extends BaseMessageChunk {
       };
       combinedFields.usage_metadata = usage_metadata;
     }
-    return new AIMessageChunk(combinedFields);
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls(combinedFields);
   }
 }
