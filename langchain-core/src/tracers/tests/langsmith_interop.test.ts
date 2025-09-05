@@ -1113,6 +1113,272 @@ test.each(["true", "false"])(
   }
 );
 
+test.each(["true", "false"])(
+  "deep nesting with manual tracer passed with background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const aiGreet = traceable(
+      async (msg: BaseMessage) => {
+        const child = RunnableLambda.from(async () => {
+          const grandchild = RunnableLambda.from(async () => {
+            const greatGrandchild = traceable(
+              async () => {
+                const greatGreatGrandchild = RunnableLambda.from(async () => {
+                  return [
+                    new HumanMessage({
+                      content: "From great great grandchild!",
+                    }),
+                  ];
+                }).withConfig({ runName: "greatGreatGrandchild" });
+                return greatGreatGrandchild.invoke({});
+              },
+              { name: "greatGrandchild", tracingEnabled: true, client }
+            );
+            return greatGrandchild({});
+          }).withConfig({ runName: "grandchild" });
+          return grandchild.invoke({});
+        }).withConfig({ runName: "child" });
+        return child.invoke([msg]);
+      },
+      { name: "aiGreet", tracingEnabled: true, client }
+    );
+
+    const parent = RunnableLambda.from(async () => {
+      return aiGreet(new HumanMessage({ content: "Hello!" }));
+    }).withConfig({ runName: "parent" });
+
+    await parent.invoke(
+      {},
+      {
+        callbacks: [new LangChainTracer()],
+      }
+    );
+
+    await awaitAllCallbacks();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toBeGreaterThan(8);
+
+    const callParams = relevantCalls.map((call: any) =>
+      JSON.parse(decoder.decode(call[1].body))
+    );
+
+    const parentCall = callParams.find((param: any) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const aiGreetCall = callParams.find((param: any) => {
+      return param.name === "aiGreet" && param.start_time !== undefined;
+    });
+    const childCall = callParams.find((param: any) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const grandchildCall = callParams.find((param: any) => {
+      return param.name === "grandchild" && param.start_time !== undefined;
+    });
+    const greatGrandchildCall = callParams.find((param: any) => {
+      return param.name === "greatGrandchild" && param.start_time !== undefined;
+    });
+    const greatGreatGrandchildCall = callParams.find((param: any) => {
+      return (
+        param.name === "greatGreatGrandchild" && param.start_time !== undefined
+      );
+    });
+
+    expect(parentCall).toMatchObject({
+      name: "parent",
+      trace_id: parentCall.id,
+    });
+
+    expect(aiGreetCall).toMatchObject({
+      name: "aiGreet",
+      parent_run_id: parentCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${parentCall.dotted_order}.`),
+    });
+
+    expect(childCall).toMatchObject({
+      name: "child",
+      parent_run_id: aiGreetCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${aiGreetCall.dotted_order}.`),
+    });
+
+    expect(grandchildCall).toMatchObject({
+      name: "grandchild",
+      parent_run_id: childCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${childCall.dotted_order}.`),
+    });
+
+    expect(greatGrandchildCall).toMatchObject({
+      name: "greatGrandchild",
+      parent_run_id: grandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${grandchildCall.dotted_order}.`),
+    });
+
+    expect(greatGreatGrandchildCall).toMatchObject({
+      name: "greatGreatGrandchild",
+      parent_run_id: greatGrandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(
+        `${greatGrandchildCall.dotted_order}.`
+      ),
+    });
+
+    const greatGreatGrandchildEndCall = callParams.find((param: any) => {
+      return (
+        param.dotted_order === greatGreatGrandchildCall.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+
+    expect(greatGreatGrandchildEndCall).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        output: expect.arrayContaining([
+          expect.objectContaining({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain_core", "messages", "HumanMessage"],
+            kwargs: expect.objectContaining({
+              content: "From great great grandchild!",
+            }),
+          }),
+        ]),
+      },
+    });
+  }
+);
+
+test.each(["true", "false"])(
+  "deep nesting with traceable parent and manual tracer passed with background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const childCallbacks = [new LangChainTracer()];
+
+    const parent = traceable(
+      async (msg: BaseMessage) => {
+        const child = RunnableLambda.from(async () => {
+          const grandchild = RunnableLambda.from(async () => {
+            const greatGrandchild = traceable(
+              async () => {
+                const greatGreatGrandchild = RunnableLambda.from(async () => {
+                  return [
+                    new HumanMessage({
+                      content: "From great great grandchild!",
+                    }),
+                  ];
+                }).withConfig({ runName: "greatGreatGrandchild" });
+                return greatGreatGrandchild.invoke({});
+              },
+              { name: "greatGrandchild", tracingEnabled: true, client }
+            );
+            return greatGrandchild({});
+          }).withConfig({ runName: "grandchild" });
+          return grandchild.invoke({});
+        }).withConfig({ runName: "child" });
+        return child.invoke([msg], { callbacks: childCallbacks });
+      },
+      { name: "parent", tracingEnabled: true, client }
+    );
+
+    await parent(new HumanMessage({ content: "Hello!" }));
+
+    await awaitAllCallbacks();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toBeGreaterThan(8);
+
+    const callParams = relevantCalls.map((call: any) =>
+      JSON.parse(decoder.decode(call[1].body))
+    );
+
+    const parentCall = callParams.find((param: any) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const childCall = callParams.find((param: any) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const grandchildCall = callParams.find((param: any) => {
+      return param.name === "grandchild" && param.start_time !== undefined;
+    });
+    const greatGrandchildCall = callParams.find((param: any) => {
+      return param.name === "greatGrandchild" && param.start_time !== undefined;
+    });
+    const greatGreatGrandchildCall = callParams.find((param: any) => {
+      return (
+        param.name === "greatGreatGrandchild" && param.start_time !== undefined
+      );
+    });
+
+    expect(parentCall).toMatchObject({
+      name: "parent",
+      trace_id: parentCall.id,
+    });
+    expect(childCall).toMatchObject({
+      name: "child",
+      parent_run_id: parentCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${parentCall.dotted_order}.`),
+    });
+
+    expect(grandchildCall).toMatchObject({
+      name: "grandchild",
+      parent_run_id: childCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${childCall.dotted_order}.`),
+    });
+
+    expect(greatGrandchildCall).toMatchObject({
+      name: "greatGrandchild",
+      parent_run_id: grandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${grandchildCall.dotted_order}.`),
+    });
+
+    expect(greatGreatGrandchildCall).toMatchObject({
+      name: "greatGreatGrandchild",
+      parent_run_id: greatGrandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(
+        `${greatGrandchildCall.dotted_order}.`
+      ),
+    });
+
+    const greatGreatGrandchildEndCall = callParams.find((param: any) => {
+      return (
+        param.dotted_order === greatGreatGrandchildCall.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+
+    expect(greatGreatGrandchildEndCall).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        output: expect.arrayContaining([
+          expect.objectContaining({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain_core", "messages", "HumanMessage"],
+            kwargs: expect.objectContaining({
+              content: "From great great grandchild!",
+            }),
+          }),
+        ]),
+      },
+    });
+  }
+);
+
 test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   const projectNames = ["replica1", "replica2"];
   const referenceExampleId = "00000000-0000-0000-0000-000000000000";
