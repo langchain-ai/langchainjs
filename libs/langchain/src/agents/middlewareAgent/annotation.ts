@@ -8,7 +8,11 @@ import {
   type LastValue,
 } from "@langchain/langgraph";
 import type { ResponseFormatUndefined } from "../responses.js";
-import type { IMiddleware, InferMiddlewareStates } from "./types.js";
+import type {
+  IMiddleware,
+  InferMiddlewareStates,
+  PreparedCall,
+} from "./types.js";
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
 // Helper type for the merged annotation
@@ -33,6 +37,9 @@ export function createAgentAnnotationConditional<
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
       default: () => [],
+    }),
+    __preparedModelOptions: Annotation<PreparedCall, PreparedCall>({
+      reducer: (left, right) => ({ ...left, ...(right || {}) }),
     }),
   };
 

@@ -18,6 +18,7 @@ import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "../nodes/ToolNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
 import { AfterModelNode } from "./nodes/AfterModalNode.js";
+import { PrepareModelRequestNode } from "./nodes/PrepareModelRequestNode.js";
 import { initializeMiddlewareStates } from "./nodes/utils.js";
 
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
@@ -168,7 +169,7 @@ export class ReactAgent<
     }
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "tools" | "agent" | string,
+      "tools" | "agent" | "prepare_model_request" | string,
       typeof workflow
     >;
 
@@ -205,6 +206,25 @@ export class ReactAgent<
     }
 
     /**
+     * Add prepare model request node
+     */
+    if (this.options.middlewares && this.options.middlewares.length > 0) {
+      const prepareModelRequestNode = new PrepareModelRequestNode({
+        middlewares: this.options.middlewares,
+        llm: this.options.llm,
+        model: this.options.model,
+      });
+      allNodeWorkflows.addNode(
+        "prepare_model_request",
+        prepareModelRequestNode,
+        {
+          // private state here
+          input: this.#inputSchema,
+        }
+      );
+    }
+
+    /**
      * Add middleware nodes
      */
     if (this.options.middlewares && this.options.middlewares.length > 0) {
@@ -238,10 +258,18 @@ export class ReactAgent<
     /**
      * Add Edges
      */
-    // Connect START to first beforeModel node or agent
+    // Determine starting point based on what nodes exist
     if (beforeModelNodes.length > 0) {
+      // If we have beforeModel nodes, start with the first one
       allNodeWorkflows.addEdge(START, beforeModelNodes[0].name);
+    } else if (
+      this.options.middlewares &&
+      this.options.middlewares.length > 0
+    ) {
+      // If no beforeModel nodes but we have middlewares, start with prepare_model_request
+      allNodeWorkflows.addEdge(START, "prepare_model_request");
     } else {
+      // If no middlewares at all, go directly to agent
       allNodeWorkflows.addEdge(START, "agent");
     }
 
@@ -253,10 +281,22 @@ export class ReactAgent<
       );
     }
 
-    // Connect last beforeModel node to agent
+    // Connect last beforeModel node to prepare_model_request node (if middlewares exist) or agent
     const lastBeforeModelNode = beforeModelNodes.at(-1);
     if (beforeModelNodes.length > 0 && lastBeforeModelNode) {
-      allNodeWorkflows.addEdge(lastBeforeModelNode.name, "agent");
+      if (this.options.middlewares && this.options.middlewares.length > 0) {
+        allNodeWorkflows.addEdge(
+          lastBeforeModelNode.name,
+          "prepare_model_request"
+        );
+      } else {
+        allNodeWorkflows.addEdge(lastBeforeModelNode.name, "agent");
+      }
+    }
+
+    // Connect prepare_model_request node to agent (if it exists)
+    if (this.options.middlewares && this.options.middlewares.length > 0) {
+      allNodeWorkflows.addEdge("prepare_model_request", "agent");
     }
 
     // Connect agent to last afterModel node (for reverse order execution)

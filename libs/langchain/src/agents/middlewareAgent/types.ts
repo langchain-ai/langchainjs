@@ -75,6 +75,13 @@ export interface ToolResult {
   error?: string;
 }
 
+export interface AnthropicModelSettings {
+  cache_control: {
+    type: string;
+    ttl: string;
+  };
+}
+
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
@@ -83,11 +90,11 @@ export interface PreparedCall {
   /**
    * The model to use for this step.
    */
-  model?: LanguageModelLike;
+  model: LanguageModelLike;
   /**
    * The messages to send to the model.
    */
-  messages?: BaseMessage[];
+  messages: BaseMessage[];
   /**
    * The system message for this step.
    */
@@ -110,7 +117,13 @@ export interface PreparedCall {
    * The tools to make available for this step.
    * Can be tool names (strings) or tool instances.
    */
-  tools?: (string | ClientTool | ServerTool)[];
+  tools: (string | ClientTool | ServerTool)[];
+
+  /**
+   * The model settings to use for this step.
+   * Currently only supported for Anthropic models.
+   */
+  modelSettings?: AnthropicModelSettings | Record<string, any>;
 }
 
 /**
@@ -300,7 +313,10 @@ export interface IMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ): Promise<PreparedCall | undefined> | PreparedCall | undefined;
+  ):
+    | Promise<Partial<PreparedCall> | undefined>
+    | Partial<PreparedCall>
+    | undefined;
   beforeModel?(
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -623,3 +639,15 @@ export type InferAgentConfig<
       context: InferContextInput<ContextSchema> &
         InferMiddlewareContextInputs<TMiddlewares>;
     }>;
+
+export type InternalAgentState<
+  StructuredResponseType extends Record<string, unknown> | undefined = Record<
+    string,
+    unknown
+  >
+> = {
+  messages: BaseMessage[];
+  __preparedModelOptions?: PreparedCall;
+} & (StructuredResponseType extends ResponseFormatUndefined
+  ? Record<string, never>
+  : { structuredResponse: StructuredResponseType });

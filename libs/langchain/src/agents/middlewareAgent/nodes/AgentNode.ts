@@ -26,14 +26,13 @@ import {
   hasToolCalls,
   hasSupportForJsonSchemaOutput,
 } from "../../utils.js";
-import { executePrepareCallHooks } from "../nodes/utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
-import { PreparedCall, CreateAgentParams } from "../types.js";
-import type {
+import {
+  PreparedCall,
+  CreateAgentParams,
   InternalAgentState,
-  ClientTool,
-  ServerTool,
-} from "../../types.js";
+} from "../types.js";
+import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
 import {
   ToolStrategy,
@@ -218,25 +217,12 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(model);
 
-    // Execute prepareModelRequest hooks if middlewares are present
-    let preparedOptions: PreparedCall | undefined;
-    if (this.#options.middlewares && this.#options.middlewares.length > 0) {
-      const preparedCallOptions: PreparedCall = {
-        model,
-        messages: state.messages,
-      };
+    // get prepared options from state
+    const preparedOptions = state.__preparedModelOptions;
 
-      preparedOptions = await executePrepareCallHooks(
-        this.#options.middlewares,
-        preparedCallOptions,
-        state,
-        config
-      );
-
-      // Apply any model changes from prepareModelRequest
-      if (preparedOptions?.model) {
-        model = preparedOptions.model;
-      }
+    // Apply any model changes from prepareModelRequest
+    if (preparedOptions?.model) {
+      model = preparedOptions.model;
     }
 
     const modelWithTools = await this.#bindTools(model, preparedOptions);
@@ -576,6 +562,7 @@ export class AgentNode<
           schema: this.#options.responseFormat.schema,
         },
         strict: true,
+        ...preparedOptions?.modelSettings,
       });
     }
 
