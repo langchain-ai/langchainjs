@@ -1474,3 +1474,19 @@ test("Can handle opus 4.1 without passing any args", async () => {
 
   expect(response.content.length).toBeGreaterThan(0);
 });
+
+test("Can handle opus 4.1 with streaming and thinking", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+    thinking: {
+      type: "enabled",
+      budget_tokens: 1024,
+    },
+  });
+
+  const response = await model.invoke(
+    "Please respond to this message simply with: Hello"
+  );
+
+  expect(response.content.length).toBeGreaterThan(0);
+});
