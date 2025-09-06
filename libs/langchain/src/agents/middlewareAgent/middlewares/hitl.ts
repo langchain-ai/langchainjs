@@ -30,27 +30,146 @@ const contextSchema = z.object({
 });
 
 /**
- * Human-in-the-Loop middleware for tool approval
+ * Creates a Human-in-the-Loop (HITL) middleware for tool approval and oversight.
  *
- * This middleware intercepts tool calls and allows human approval/editing
- * before execution. It supports:
- * - Selective tool approval based on configuration
- * - Editing tool arguments before execution
- * - Skipping tool execution entirely
- * - Providing manual responses instead of tool execution
+ * This middleware intercepts tool calls made by an AI agent and provides human oversight
+ * capabilities before execution. It enables selective approval workflows where certain tools
+ * require human intervention while others can execute automatically.
  *
- * @param options Configuration options
- * @returns Middleware instance
+ * ## Features
+ *
+ * - **Selective Tool Approval**: Configure which tools require human approval
+ * - **Multiple Response Types**: Accept, edit, ignore, or manually respond to tool calls
+ * - **Asynchronous Workflow**: Uses LangGraph's interrupt mechanism for non-blocking approval
+ * - **Custom Approval Messages**: Provide context-specific descriptions for approval requests
+ *
+ * ## Response Types
+ *
+ * When a tool requires approval, the human operator can respond with:
+ * - `accept`: Execute the tool with original arguments
+ * - `edit`: Modify the tool arguments before execution
+ * - `ignore`: Skip the tool and terminate the agent
+ * - `response`: Provide a manual response instead of executing the tool
+ *
+ * @param options - Configuration options for the middleware
+ * @param options.toolConfigs - Per-tool configuration mapping tool names to their settings
+ * @param options.toolConfigs[toolName].requireApproval - Whether the tool requires human approval
+ * @param options.toolConfigs[toolName].description - Custom approval message for the tool
+ * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval")
+ *
+ * @returns A middleware instance that can be passed to `createMiddlewareAgent`
  *
  * @example
- * ```ts
+ * Basic usage with selective tool approval
+ * ```typescript
+ * import { humanInTheLoopMiddleware } from "langchain/middleware";
+ * import { createMiddlewareAgent } from "langchain";
+ *
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   toolConfigs: {
- *     "dangerous_tool": { requireApproval: true },
- *     "safe_tool": { requireApproval: false }
+ *     "write_file": {
+ *       requireApproval: true,
+ *       description: "⚠️ File write operation requires approval"
+ *     },
+ *     "read_file": {
+ *       requireApproval: false  // Safe operation, no approval needed
+ *     }
  *   }
  * });
+ *
+ * const agent = createMiddlewareAgent({
+ *   model: "openai:gpt-4",
+ *   tools: [writeFileTool, readFileTool],
+ *   middlewares: [hitlMiddleware]
+ * });
  * ```
+ *
+ * @example
+ * Handling approval requests
+ * ```typescript
+ * import { Command } from "@langchain/langgraph";
+ *
+ * // Initial agent invocation
+ * const result = await agent.invoke({
+ *   messages: [new HumanMessage("Write 'Hello' to output.txt")]
+ * }, config);
+ *
+ * // Check if agent is paused for approval
+ * const state = await agent.graph.getState(config);
+ * if (state.next?.length > 0) {
+ *   // Get interrupt details
+ *   const task = state.tasks?.[0];
+ *   const requests = task?.interrupts?.[0]?.value;
+ *
+ *   // Show tool call details to user
+ *   console.log("Tool:", requests[0].action);
+ *   console.log("Args:", requests[0].args);
+ *
+ *   // Resume with approval
+ *   await agent.invoke(
+ *     new Command({ resume: [{ type: "accept" }] }),
+ *     config
+ *   );
+ * }
+ * ```
+ *
+ * @example
+ * Different response types
+ * ```typescript
+ * // Accept the tool call as-is
+ * new Command({ resume: [{ type: "accept" }] })
+ *
+ * // Edit the tool arguments
+ * new Command({
+ *   resume: [{
+ *     type: "edit",
+ *     args: { action: "write_file", args: { filename: "safe.txt", content: "Modified" } }
+ *   }]
+ * })
+ *
+ * // Skip tool and terminate agent
+ * new Command({ resume: [{ type: "ignore" }] })
+ *
+ * // Provide manual response
+ * new Command({
+ *   resume: [{
+ *     type: "response",
+ *     args: "File operation not allowed in demo mode"
+ *   }]
+ * })
+ * ```
+ *
+ * @example
+ * Production use case with database operations
+ * ```typescript
+ * const hitlMiddleware = humanInTheLoopMiddleware({
+ *   toolConfigs: {
+ *     "execute_sql": {
+ *       requireApproval: true,
+ *       description: "🚨 SQL query requires DBA approval\nPlease review for safety and performance"
+ *     },
+ *     "read_schema": {
+ *       requireApproval: false  // Reading metadata is safe
+ *     },
+ *     "delete_records": {
+ *       requireApproval: true,
+ *       description: "⛔ DESTRUCTIVE OPERATION - Requires manager approval"
+ *     }
+ *   },
+ *   messagePrefix: "Database operation pending approval"
+ * });
+ * ```
+ *
+ * @remarks
+ * - Tool calls are processed in the order they appear in the AI message
+ * - Auto-approved tools execute immediately without interruption
+ * - Multiple tools requiring approval are bundled into a single interrupt
+ * - The middleware operates in the `afterModel` phase, intercepting before tool execution
+ * - Requires a checkpointer to maintain state across interruptions
+ *
+ * @see {@link createMiddlewareAgent} for agent creation
+ * @see {@link Command} for resuming interrupted execution
+ * @public
  */
 export function humanInTheLoopMiddleware(
   options: z.input<typeof contextSchema> = {}

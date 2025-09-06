@@ -64,7 +64,11 @@ console.log(
 );
 console.log("and resumes with human-provided input.\n");
 
-const threadId = "example-thread-123";
+const config = {
+  configurable: {
+    thread_id: "example-thread-123",
+  },
+};
 
 // Step 1: Initial invocation with incomplete information
 console.log("📝 Step 1: User asks incomplete question");
@@ -74,14 +78,7 @@ const result = await agent.invoke(
   {
     messages: [new HumanMessage("What's the capital?")],
   },
-  {
-    configurable: {
-      thread_id: threadId,
-    },
-    context: {
-      checkForMissingInfo: true,
-    },
-  }
+  config
 );
 
 // This won't be reached due to interruption
@@ -98,11 +95,7 @@ const resumedResult = await agent.invoke(
   new Command({
     resume: "France",
   }),
-  {
-    configurable: {
-      thread_id: threadId,
-    },
-  }
+  config
 );
 
 console.log("\n✅ Agent successfully resumed!");
