@@ -220,11 +220,11 @@ export class AIMessage extends BaseMessage {
 }
 
 export function isAIMessage(x: BaseMessage): x is AIMessage {
-  return x._getType() === "ai";
+  return x instanceof AIMessage;
 }
 
 export function isAIMessageChunk(x: BaseMessageChunk): x is AIMessageChunk {
-  return x._getType() === "ai";
+  return x instanceof AIMessageChunk;
 }
 
 export type AIMessageChunkFields = AIMessageFields & {
