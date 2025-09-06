@@ -29,11 +29,25 @@ test("traceables double nested within runnables with batching", async () => {
   await awaitAllCallbacks();
 });
 
-test("runnable nested within a traceable with manual tracer passed", async () => {
+test("deep nesting with manual tracer passed", async () => {
   const aiGreet = traceable(
     async (msg: BaseMessage) => {
       const child = RunnableLambda.from(async () => {
-        return [new HumanMessage({ content: "From child!" })];
+        const grandchild = RunnableLambda.from(async () => {
+          const greatGrandchild = traceable(
+            async () => {
+              const greatGreatGrandchild = RunnableLambda.from(async () => {
+                return [
+                  new HumanMessage({ content: "From great great grandchild!" }),
+                ];
+              }).withConfig({ runName: "greatGreatGrandchild" });
+              return greatGreatGrandchild.invoke({});
+            },
+            { name: "greatGrandchild", tracingEnabled: true }
+          );
+          return greatGrandchild({});
+        }).withConfig({ runName: "grandchild" });
+        return grandchild.invoke({});
       }).withConfig({ runName: "child" });
       return child.invoke([msg]);
     },
@@ -50,6 +64,31 @@ test("runnable nested within a traceable with manual tracer passed", async () =>
       callbacks: [new LangChainTracer()],
     }
   );
+
+  await awaitAllCallbacks();
+});
+
+test("runnable nested within a traceable with manual tracer passed", async () => {
+  const child = RunnableLambda.from(async () => {
+    const grandchild = RunnableLambda.from(async () => {
+      return [new HumanMessage({ content: "From grandchild!" })];
+    }).withConfig({ runName: "grandchild" });
+    return grandchild.invoke({});
+  }).withConfig({ runName: "child" });
+
+  const parent = traceable(
+    async () => {
+      return child.invoke(
+        {},
+        {
+          callbacks: [new LangChainTracer()],
+        }
+      );
+    },
+    { name: "parent", tracingEnabled: true }
+  );
+
+  await parent();
 
   await awaitAllCallbacks();
 });
