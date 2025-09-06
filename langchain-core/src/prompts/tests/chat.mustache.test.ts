@@ -201,9 +201,9 @@ test("with ChatPromptTemplate", async () => {
   );
 });
 
-test.only("nested object", async () => {
+test("nested object", async () => {
   const samplePrompt =
-    "Here are the locations:\n\n{{#locations}}\n- {{name}}\n{{/locations}}";
+    "Here are the {{name}}:\n\n{{#locations}}\n- {{name}}\n{{/locations}}\n{{name}} end";
 
   const sampleVariables = {
     locations: [
@@ -217,10 +217,11 @@ test.only("nested object", async () => {
         name: "Palo Alto",
       },
     ],
+    name: "locations",
   };
 
   const expectedResult =
-    "Here are the locations:\n\n- Tokyo\n- Los Angeles\n- Palo Alto\n";
+    "Here are the locations:\n\n- Tokyo\n- Los Angeles\n- Palo Alto\nlocations end";
   const prompt = ChatPromptTemplate.fromMessages([["system", samplePrompt]], {
     templateFormat: "mustache",
   });
