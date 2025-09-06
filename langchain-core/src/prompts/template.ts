@@ -83,10 +83,12 @@ export const parseFString = (template: string): ParsedTemplateNode[] => {
  * to make it compatible with other LangChain string parsing template formats.
  *
  * @param {mustache.TemplateSpans} template The result of parsing a mustache template with the mustache.js library.
+ * @param {string[]} context Array of section variable names for nested context
  * @returns {ParsedTemplateNode[]}
  */
 const mustacheTemplateToNodes = (
-  template: mustache.TemplateSpans
+  template: mustache.TemplateSpans,
+  context: string[] = []
 ): ParsedTemplateNode[] => {
   const nodes: ParsedTemplateNode[] = [];
 
@@ -101,7 +103,8 @@ const mustacheTemplateToNodes = (
 
       // If this is a section with nested content, recursively process it
       if (temp[0] === "#" && temp.length > 4 && Array.isArray(temp[4])) {
-        const nestedNodes = mustacheTemplateToNodes(temp[4]);
+        const newContext = [...context, temp[1]];
+        const nestedNodes = mustacheTemplateToNodes(temp[4], newContext);
         nodes.push(...nestedNodes);
       }
     } else {

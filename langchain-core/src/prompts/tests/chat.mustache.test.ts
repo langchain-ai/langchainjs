@@ -201,6 +201,35 @@ test("with ChatPromptTemplate", async () => {
   );
 });
 
+test("nested object", async () => {
+  const samplePrompt =
+    "Here are the {{name}}:\n\n{{#locations}}\n- {{name}}\n{{/locations}}\n{{name}} end";
+
+  const sampleVariables = {
+    locations: [
+      {
+        name: "Tokyo",
+      },
+      {
+        name: "Los Angeles",
+      },
+      {
+        name: "Palo Alto",
+      },
+    ],
+    name: "locations",
+  };
+
+  const expectedResult =
+    "Here are the locations:\n\n- Tokyo\n- Los Angeles\n- Palo Alto\nlocations end";
+  const prompt = ChatPromptTemplate.fromMessages([["system", samplePrompt]], {
+    templateFormat: "mustache",
+  });
+  expect(await prompt.format(sampleVariables)).toBe(
+    `System: ${expectedResult}`
+  );
+});
+
 test("Rendering a prompt with conditionals doesn't result in empty text blocks", async () => {
   const manifest = {
     lc: 1,
