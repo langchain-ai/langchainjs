@@ -9,7 +9,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 /**
- * Metadata type that supports various filtering operations.
+ * Strict metadata filter type that supports various filtering operations.
  *
  * For simple equality filters, use:
  * ```typescript
@@ -41,7 +41,7 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  * }
  * ```
  */
-type MetadataFilter = Record<
+type StrictMetadataFilter = Record<
   string,
   | string
   | number
@@ -65,6 +65,17 @@ type MetadataFilter = Record<
       neq?: string | number | boolean;
     }
 >;
+
+/**
+ * @deprecated Use StrictMetadataFilter for better type safety. This type will be removed.
+ * Legacy metadata filter type for backward compatibility
+ */
+type LegacyMetadataFilter = Record<string, unknown>;
+
+/**
+ * Metadata filter type that supports both strict typing and legacy usage
+ */
+type MetadataFilter = StrictMetadataFilter | LegacyMetadataFilter;
 
 type Metadata = Record<string, unknown>;
 
@@ -645,7 +656,7 @@ export class PGVectorStore extends VectorStore {
 
     for (const [key, value] of Object.entries(filter)) {
       if (typeof value === "object" && value !== null) {
-        const _value: Record<string, unknown> = value;
+        const _value = value as Record<string, unknown>;
         const currentParamCount = paramCount;
 
         if (Array.isArray(_value.in)) {
