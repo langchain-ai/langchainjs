@@ -7,7 +7,7 @@ import { FakeToolCallingModel } from "../../tests/utils.js";
 
 describe("middleware state management", () => {
   it("should allow to define private state props with _ that doesn't leak out", async () => {
-    expect.assertions(5);
+    expect.assertions(10);
     const llm = new FakeToolCallingModel({});
 
     /**
@@ -23,6 +23,9 @@ describe("middleware state management", () => {
         _privateMiddlewareAState: z.string(),
       }),
       beforeModel: async (state) => {
+        // ensure built-in state is present
+        expect(state).toHaveProperty("messages");
+
         const { messages, ...rest } = state;
         expect(rest).toEqual({
           middlewareABeforeModelState: "ABefore",
@@ -34,6 +37,9 @@ describe("middleware state management", () => {
         };
       },
       afterModel: async (state) => {
+        // ensure built-in state is present
+        expect(state).toHaveProperty("messages");
+
         const { messages, ...rest } = state;
         expect(rest).toEqual({
           middlewareABeforeModelState: "middlewareABeforeModelState",
@@ -59,6 +65,9 @@ describe("middleware state management", () => {
         _privateMiddlewareBState: z.string(),
       }),
       beforeModel: async (state) => {
+        // ensure built-in state is present
+        expect(state).toHaveProperty("messages");
+
         const { messages, ...rest } = state;
         expect(rest).toEqual({
           middlewareBBeforeModelState: "BBefore",
@@ -83,6 +92,9 @@ describe("middleware state management", () => {
         _privateMiddlewareCState: z.string(),
       }),
       afterModel: async (state) => {
+        // ensure built-in state is present
+        expect(state).toHaveProperty("messages");
+
         const { messages, ...rest } = state;
         expect(rest).toEqual({
           middlewareCBeforeModelState: "CBefore",
@@ -110,6 +122,7 @@ describe("middleware state management", () => {
       middlewareCAfterModelState: "CAfter",
     });
 
+    expect(messages).toHaveLength(2);
     expect(rest).toEqual({
       middlewareABeforeModelState: "middlewareABeforeModelState",
       middlewareAAfterModelState: "middlewareAAfterModelState",
