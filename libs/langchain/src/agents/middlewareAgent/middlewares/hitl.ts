@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { v4 as uuid } from "uuid";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage, isAIMessage } from "@langchain/core/messages";
 import { interrupt } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import type { ToolCall } from "../types.js";
@@ -188,10 +188,7 @@ export function humanInTheLoopMiddleware(
       const lastMessage = messages[messages.length - 1];
 
       // Check if it's an AI message with tool calls
-      if (
-        !(lastMessage instanceof AIMessage) ||
-        !lastMessage.tool_calls?.length
-      ) {
+      if (!isAIMessage(lastMessage) || !lastMessage.tool_calls?.length) {
         return;
       }
 
@@ -282,9 +279,10 @@ export function humanInTheLoopMiddleware(
               content: typeof response.args === "string" ? response.args : "",
               tool_call_id: toolCall.id,
             });
-            return controls.jumpTo("model", {
+            return {
               messages: [...state.messages, toolMessage],
-            });
+              jump_to: "model",
+            };
 
           default:
             throw new Error(`Unknown response type: ${(response as any).type}`);
