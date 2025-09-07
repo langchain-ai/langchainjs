@@ -31,6 +31,7 @@ import {
   ModelRequest,
   CreateAgentParams,
   InternalAgentState,
+  AnthropicModelSettings,
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
@@ -222,7 +223,8 @@ export class AgentNode<
     /**
      * get prepared options from prepareModelRequestNode state
      */
-    const preparedOptions = this.#options.prepareModelRequestNode?.getState();
+    const { __preparedModelOptions: preparedOptions } =
+      this.#options.prepareModelRequestNode?.getState();
 
     // Apply any model changes from prepareModelRequest
     if (preparedOptions?.model) {
@@ -507,7 +509,10 @@ export class AgentNode<
     model: LanguageModelLike,
     preparedOptions?: ModelRequest
   ): Promise<Runnable> {
-    const options: Partial<BaseChatModelCallOptions> = {};
+    const options: Partial<BaseChatModelCallOptions & AnthropicModelSettings> =
+      {
+        ...preparedOptions?.modelSettings,
+      };
     const structuredTools = Object.values(this.#structuredToolInfo);
 
     // Use tools from preparedOptions if provided, otherwise use default tools
@@ -569,7 +574,6 @@ export class AgentNode<
           schema: this.#options.responseFormat.schema,
         },
         strict: true,
-        ...preparedOptions?.modelSettings,
       });
     }
 

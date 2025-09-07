@@ -11,7 +11,7 @@ import {
   CompiledStateGraph,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import { ToolMessage, AIMessage } from "@langchain/core/messages";
+import { ToolMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "../utils.js";
@@ -185,6 +185,7 @@ export class ReactAgent<
         middlewares: this.options.middlewares,
         llm: this.options.llm,
         model: this.options.model,
+        prompt: this.options.prompt as string | BaseMessage,
       });
       allNodeWorkflows.addNode(
         "prepare_model_request",

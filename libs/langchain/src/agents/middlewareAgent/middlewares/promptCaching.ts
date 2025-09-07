@@ -131,7 +131,7 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    prepareModelRequest: (options, _, runtime) => {
+    prepareModelRequest: (options, state, runtime) => {
       const enableCaching =
         runtime.context.enableCaching ?? middlewareOptions?.enableCaching;
       const ttl = runtime.context.ttl ?? middlewareOptions?.ttl;
@@ -151,7 +151,7 @@ export function anthropicPromptCachingMiddleware(
       }
 
       const messagesCount =
-        options.messages.length + (options.systemMessage ? 1 : 0);
+        state.messages.length + (options.systemMessage ? 1 : 0);
 
       if (messagesCount < minMessagesToCache) {
         return options;

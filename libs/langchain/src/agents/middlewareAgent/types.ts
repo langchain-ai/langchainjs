@@ -100,7 +100,7 @@ export interface ModelRequest {
   /**
    * The system message for this step.
    */
-  systemMessage?: string;
+  systemMessage?: BaseMessage;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:
