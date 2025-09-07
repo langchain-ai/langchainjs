@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
+
 import { RunnableCallable } from "../../RunnableCallable.js";
 import type {
   Runtime,
@@ -8,6 +9,7 @@ import type {
   AgentMiddleware,
   MiddlewareResult,
 } from "../types.js";
+import { derivePrivateState } from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -130,5 +132,15 @@ export abstract class MiddlewareNode<
      * If result is a state update, merge it with current state
      */
     return { ...state, ...result };
+  }
+
+  get nodeOptions(): {
+    input: z.ZodObject<TStateSchema>;
+  } {
+    return {
+      input: derivePrivateState(
+        this.middleware.stateSchema
+      ) as z.ZodObject<TStateSchema>,
+    };
   }
 }

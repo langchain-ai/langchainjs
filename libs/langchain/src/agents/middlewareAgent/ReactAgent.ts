@@ -1,5 +1,6 @@
 /* eslint-disable prefer-destructuring, no-instanceof/no-instanceof */
 import { InteropZodObject } from "@langchain/core/utils/types";
+
 import {
   AnnotationRoot,
   StateGraph,
@@ -89,8 +90,6 @@ export class ReactAgent<
 > {
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
 
-  #inputSchema?: AnnotationRoot<any>;
-
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   constructor(
@@ -178,6 +177,23 @@ export class ReactAgent<
     >;
 
     /**
+     * Add prepare model request node
+     */
+    let prepareModelRequestNode: PrepareModelRequestNode | undefined;
+    if (this.options.middlewares && this.options.middlewares.length > 0) {
+      prepareModelRequestNode = new PrepareModelRequestNode({
+        middlewares: this.options.middlewares,
+        llm: this.options.llm,
+        model: this.options.model,
+      });
+      allNodeWorkflows.addNode(
+        "prepare_model_request",
+        prepareModelRequestNode,
+        PrepareModelRequestNode.nodeOptions
+      );
+    }
+
+    /**
      * Add Nodes
      */
     allNodeWorkflows.addNode(
@@ -193,10 +209,8 @@ export class ReactAgent<
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
-      }),
-      {
-        input: this.#inputSchema,
-      }
+        prepareModelRequestNode,
+      })
     );
 
     /**
@@ -210,51 +224,28 @@ export class ReactAgent<
     }
 
     /**
-     * Add prepare model request node
-     */
-    if (this.options.middlewares && this.options.middlewares.length > 0) {
-      const prepareModelRequestNode = new PrepareModelRequestNode({
-        middlewares: this.options.middlewares,
-        llm: this.options.llm,
-        model: this.options.model,
-      });
-      allNodeWorkflows.addNode(
-        "prepare_model_request",
-        prepareModelRequestNode,
-        {
-          // private state here
-          input: this.#inputSchema,
-        }
-      );
-    }
-
-    /**
      * Add middleware nodes
      */
     if (this.options.middlewares && this.options.middlewares.length > 0) {
       // Add beforeModel nodes for middlewares that have the hook
       for (const nodeInfo of beforeModelNodes) {
         const middleware = this.options.middlewares[nodeInfo.index];
+        const beforeModelNode = new BeforeModelNode(middleware);
         allNodeWorkflows.addNode(
           nodeInfo.name,
-          new BeforeModelNode(middleware),
-          {
-            // private state here
-            input: this.#inputSchema,
-          }
+          beforeModelNode,
+          beforeModelNode.nodeOptions
         );
       }
 
       // Add afterModel nodes for middlewares that have the hook
       for (const nodeInfo of afterModelNodes) {
         const middleware = this.options.middlewares[nodeInfo.index];
+        const afterModelNode = new AfterModelNode(middleware);
         allNodeWorkflows.addNode(
           nodeInfo.name,
-          new AfterModelNode(middleware),
-          {
-            // private state here
-            input: this.#inputSchema,
-          }
+          afterModelNode,
+          afterModelNode.nodeOptions
         );
       }
     }

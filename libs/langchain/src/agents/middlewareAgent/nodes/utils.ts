@@ -1,56 +1,14 @@
-import { RunnableConfig } from "@langchain/core/runnables";
-import { type ZodIssue } from "zod";
+import type { BaseMessage } from "@langchain/core/messages";
+import { z, type ZodIssue, type ZodTypeAny } from "zod";
 
-import type {
-  AgentMiddleware,
-  Runtime,
-  AgentBuiltInState,
-  ModelRequest,
-} from "../types.js";
-
-/**
- * Helper function to execute prepareModelRequest hooks from all middlewares.
- * This is used within AgentNode before the model is invoked.
- */
-export async function executePrepareCallHooks(
-  middlewares: readonly AgentMiddleware<any, any, any>[],
-  options: ModelRequest,
-  state: AgentBuiltInState,
-  config?: RunnableConfig
-): Promise<ModelRequest> {
-  let currentOptions = { ...options };
-  const runtime: Runtime<any> = {
-    toolCalls: [],
-    toolResults: [],
-    tokenUsage: {
-      inputTokens: 0,
-      outputTokens: 0,
-      totalTokens: 0,
-    },
-    context: config?.configurable?.context || {},
-    currentIteration: 0,
-  };
-
-  // Execute prepareModelRequest hooks in order
-  for (const middleware of middlewares) {
-    if (middleware.prepareModelRequest) {
-      const result = await middleware.prepareModelRequest(
-        currentOptions,
-        state,
-        runtime
-      );
-      if (result) {
-        currentOptions = { ...currentOptions, ...result };
-      }
-    }
-  }
-
-  return currentOptions;
-}
+import type { AgentMiddleware } from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
  * This is used to ensure all middleware state properties are initialized.
+ *
+ * Private properties (starting with _) are automatically made optional since
+ * users cannot provide them when invoking the agent.
  */
 export function initializeMiddlewareStates(
   middlewares: readonly AgentMiddleware<any, any, any>[],
@@ -60,17 +18,32 @@ export function initializeMiddlewareStates(
 
   for (const middleware of middlewares) {
     if (middleware.stateSchema) {
-      // Use safeParse to avoid errors with required fields
-      const parseResult = middleware.stateSchema.safeParse(state);
+      // Create a modified schema where private properties are optional
+      const shape = middleware.stateSchema.shape;
+      const modifiedShape: Record<string, any> = {};
+
+      for (const [key, value] of Object.entries(shape)) {
+        if (key.startsWith("_")) {
+          // Make private properties optional
+          modifiedShape[key] = (value as ZodTypeAny).optional();
+        } else {
+          // Keep public properties as-is
+          modifiedShape[key] = value;
+        }
+      }
+
+      const modifiedSchema = z.object(modifiedShape);
+
+      // Use safeParse with the modified schema
+      const parseResult = modifiedSchema.safeParse(state);
 
       if (parseResult.success) {
-        // Only use default values if the schema allows empty objects
         Object.assign(middlewareStates, parseResult.data);
         continue;
       }
 
       /**
-       * If safeParse fails, we throw a nice error message
+       * If safeParse fails, there are required public fields missing
        */
       const requiredFields = parseResult.error.issues
         .filter(
@@ -104,4 +77,36 @@ export function initializeMiddlewareStates(
   }
 
   return middlewareStates;
+}
+
+/**
+ * Users can define private and public state for a middleware. Private state properties start with an underscore.
+ * This function will return the private state properties from the state schema, making all of them optional.
+ * @param stateSchema - The middleware state schema
+ * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
+ */
+export function derivePrivateState(stateSchema?: z.ZodObject<z.ZodRawShape>) {
+  const builtInStateSchema = {
+    messages: z.custom<BaseMessage[]>(() => []),
+  };
+
+  if (!stateSchema) {
+    return z.object(builtInStateSchema);
+  }
+
+  const shape = stateSchema.shape;
+  const privateShape: Record<string, any> = builtInStateSchema;
+
+  // Filter properties that start with underscore and make them optional
+  for (const [key, value] of Object.entries(shape)) {
+    if (key.startsWith("_")) {
+      // Make the private property optional
+      privateShape[key] = value.optional();
+    } else {
+      privateShape[key] = value;
+    }
+  }
+
+  // Return a new schema with only private properties (all optional)
+  return z.object(privateShape);
 }

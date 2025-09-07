@@ -1,8 +1,8 @@
+import { z } from "zod";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { RunnableCallable } from "../../RunnableCallable.js";
-import { executePrepareCallHooks } from "./utils.js";
-import { AgentMiddleware, CreateAgentParams } from "../types.js";
-import { ModelRequest } from "../types.js";
+import { AgentMiddleware, CreateAgentParams, Runtime } from "../types.js";
+import { ModelRequest, AgentBuiltInState } from "../types.js";
 import { initChatModel } from "../../../chat_models/universal.js";
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 
@@ -19,10 +19,22 @@ interface PrepareModelRequestNodeOptions {
 export class PrepareModelRequestNode extends RunnableCallable<any, any> {
   #options: PrepareModelRequestNodeOptions;
 
+  static nodeOptions = {
+    /**
+     * define private state for PrepareModelRequestNode
+     */
+    input: z.object({
+      /**
+       * all middlewares can access the same `__preparedModelOptions` object
+       */
+      __preparedModelOptions: z.custom<ModelRequest>(),
+    }),
+  };
+
   constructor(options: PrepareModelRequestNodeOptions) {
     super({
       func: async (state: any, config?: RunnableConfig) => {
-        return this.invoke(state, config);
+        return this.#invoke(state, config);
       },
       name: "prepare_model_request",
     });
@@ -56,7 +68,7 @@ export class PrepareModelRequestNode extends RunnableCallable<any, any> {
     return undefined;
   }
 
-  async invoke(state: any, config?: RunnableConfig): Promise<any> {
+  async #invoke(state: any, config?: RunnableConfig): Promise<any> {
     // If no middlewares, return state unchanged
     if (!this.#options.middlewares || this.#options.middlewares.length === 0) {
       return state;
@@ -80,8 +92,7 @@ export class PrepareModelRequestNode extends RunnableCallable<any, any> {
     };
 
     // Execute prepareModelRequest hooks
-    const preparedOptions = await executePrepareCallHooks(
-      this.#options.middlewares,
+    const preparedOptions = await this.#executePrepareCallHooks(
       preparedCallOptions,
       state,
       config
@@ -91,5 +102,44 @@ export class PrepareModelRequestNode extends RunnableCallable<any, any> {
     return {
       __preparedModelOptions: preparedOptions,
     };
+  }
+
+  /**
+   * Helper function to execute prepareModelRequest hooks from all middlewares.
+   * This is used within AgentNode before the model is invoked.
+   */
+  async #executePrepareCallHooks(
+    options: ModelRequest,
+    state: AgentBuiltInState,
+    config?: RunnableConfig
+  ): Promise<ModelRequest> {
+    let currentOptions = { ...options };
+    const runtime: Runtime<any> = {
+      toolCalls: [],
+      toolResults: [],
+      tokenUsage: {
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+      },
+      context: config?.configurable?.context || {},
+      currentIteration: 0,
+    };
+
+    // Execute prepareModelRequest hooks in order
+    for (const middleware of this.#options.middlewares) {
+      if (middleware.prepareModelRequest) {
+        const result = await middleware.prepareModelRequest(
+          currentOptions,
+          state,
+          runtime
+        );
+        if (result) {
+          currentOptions = { ...currentOptions, ...result };
+        }
+      }
+    }
+
+    return currentOptions;
   }
 }

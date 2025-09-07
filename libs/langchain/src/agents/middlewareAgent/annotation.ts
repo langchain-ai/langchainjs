@@ -8,11 +8,7 @@ import {
   type LastValue,
 } from "@langchain/langgraph";
 import type { ResponseFormatUndefined } from "../responses.js";
-import type {
-  AgentMiddleware,
-  InferMiddlewareStates,
-  ModelRequest,
-} from "./types.js";
+import type { AgentMiddleware, InferMiddlewareStates } from "./types.js";
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse
 // Helper type for the merged annotation
@@ -38,9 +34,6 @@ export function createAgentAnnotationConditional<
       reducer: messagesStateReducer,
       default: () => [],
     }),
-    __preparedModelOptions: Annotation<ModelRequest, ModelRequest>({
-      reducer: (left, right) => ({ ...left, ...(right || {}) }),
-    }),
   };
 
   // Add middleware state properties to the annotation
@@ -57,6 +50,13 @@ export function createAgentAnnotationConditional<
 
         const shape = middleware.stateSchema.shape;
         for (const [key] of Object.entries(shape)) {
+          /**
+           * Skip private state properties
+           */
+          if (key.startsWith("_")) {
+            continue;
+          }
+
           if (!(key in baseAnnotation)) {
             const defaultValue = parsedDefaults[key] ?? undefined;
             baseAnnotation[key] = Annotation({

@@ -186,23 +186,32 @@ export type AgentBuiltInState = {
 };
 
 /**
+ * Helper type to filter out properties that start with underscore (private properties)
+ */
+type FilterPrivateProps<T> = {
+  [K in keyof T as K extends `_${string}` ? never : K]: T[K];
+};
+
+/**
  * Helper type to infer the state schema type from a middleware
+ * This filters out private properties (those starting with underscore)
  */
 export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
   T extends AgentMiddleware<infer S, any, any>
     ? S extends z.ZodObject<any>
-      ? z.infer<S>
+      ? FilterPrivateProps<z.infer<S>>
       : {}
     : {};
 
 /**
  * Helper type to infer the input state schema type from a middleware (all properties optional)
+ * This filters out private properties (those starting with underscore)
  */
 export type InferMiddlewareInputState<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<infer S, any, any>
   ? S extends z.ZodObject<any>
-    ? z.input<S>
+    ? FilterPrivateProps<z.input<S>>
     : {}
   : {};
 

@@ -40,6 +40,7 @@ import {
   transformResponseFormat,
   ToolStrategyError,
 } from "../../responses.js";
+import type { PrepareModelRequestNode } from "./PrepareModelRequestNode.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -67,6 +68,7 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
+  prepareModelRequestNode?: PrepareModelRequestNode;
 }
 
 export class AgentNode<
@@ -217,8 +219,10 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(model);
 
-    // get prepared options from state
-    const preparedOptions = state.__preparedModelOptions;
+    /**
+     * get prepared options from prepareModelRequestNode state
+     */
+    const preparedOptions = this.#options.prepareModelRequestNode?.getState();
 
     // Apply any model changes from prepareModelRequest
     if (preparedOptions?.model) {
