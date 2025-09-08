@@ -12,6 +12,11 @@ import {
   _isMessageFieldWithRole,
 } from "./base.js";
 import { ChatMessage, ChatMessageFields, ChatMessageChunk } from "./chat.js";
+import {
+  FunctionMessage,
+  FunctionMessageChunk,
+  FunctionMessageFields,
+} from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolCall, ToolMessage, ToolMessageFields } from "./tool.js";
@@ -360,6 +365,11 @@ export function mapStoredMessageToChatMessage(message: StoredMessage) {
       return new AIMessage(storedMessage.data);
     case "system":
       return new SystemMessage(storedMessage.data);
+    case "function":
+      if (storedMessage.data.name === undefined) {
+        throw new Error("Name must be defined for function messages");
+      }
+      return new FunctionMessage(storedMessage.data as FunctionMessageFields);
     case "tool":
       if (storedMessage.data.tool_call_id === undefined) {
         throw new Error("Tool call ID must be defined for tool messages");
@@ -427,6 +437,9 @@ export function convertToChunk(message: BaseMessage) {
   } else if (type === "system") {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new SystemMessageChunk({ ...message });
+  } else if (type === "function") {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    return new FunctionMessageChunk({ ...message });
   } else if (ChatMessage.isInstance(message)) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new ChatMessageChunk({ ...message });
