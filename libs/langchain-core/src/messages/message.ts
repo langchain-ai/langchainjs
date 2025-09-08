@@ -10,14 +10,14 @@ import type { $MergeDiscriminatedUnion, $MergeObjects } from "./utils.js";
  * @example
  * ```ts
  * // Standard message types
- * const messageType1: $MessageType = "ai";
- * const messageType2: $MessageType = "human";
+ * const messageType1: MessageType = "ai";
+ * const messageType2: MessageType = "human";
  *
  * // Custom message type
- * const messageType3: $MessageType = "custom_type";
+ * const messageType3: MessageType = "custom_type";
  * ```
  */
-export type $MessageType =
+export type MessageType =
   | "ai"
   | "human"
   | "tool"
@@ -51,7 +51,7 @@ export type $MessageType =
  * };
  * ```
  */
-export type $MessageOutputVersion = "v0" | "v1";
+export type MessageOutputVersion = "v0" | "v1";
 
 /**
  * Represents the input and output types of a tool that can be used in messages.
@@ -62,13 +62,13 @@ export type $MessageOutputVersion = "v0" | "v1";
  * @example
  * ```ts
  * // Tool that takes a string input and returns a number
- * interface StringToNumberTool extends $MessageToolDefinition<string, number> {
+ * interface StringToNumberTool extends MessageToolDefinition<string, number> {
  *   input: string;
  *   output: number;
  * }
  * ```
  */
-export interface $MessageToolDefinition<TInput = unknown, TOutput = unknown> {
+export interface MessageToolDefinition<TInput = unknown, TOutput = unknown> {
   input: TInput;
   output: TOutput;
 }
@@ -79,20 +79,20 @@ export interface $MessageToolDefinition<TInput = unknown, TOutput = unknown> {
  *
  * @example
  * ```ts
- * interface MyToolSet extends $MessageToolSet {
- *   calculator: $MessageToolDefinition<
+ * interface MyToolSet extends MessageToolSet {
+ *   calculator: MessageToolDefinition<
  *     { operation: string; numbers: number[] },
  *     number
  *   >;
- *   translator: $MessageToolDefinition<
+ *   translator: MessageToolDefinition<
  *     { text: string; targetLanguage: string },
  *     string
  *   >;
  * }
  * ```
  */
-export interface $MessageToolSet {
-  [key: string]: $MessageToolDefinition;
+export interface MessageToolSet {
+  [key: string]: MessageToolDefinition;
 }
 
 /**
@@ -106,7 +106,7 @@ export interface $MessageToolSet {
  * // Given a message structure with a calculator tool:
  * interface MyStructure extends $MessageStructure {
  *   tools: {
- *     calculator: $MessageToolDefinition<{ operation: string, numbers: number[] }, number>
+ *     calculator: MessageToolDefinition<{ operation: string, numbers: number[] }, number>
  *   }
  * }
  *
@@ -122,10 +122,10 @@ export interface $MessageToolSet {
  * ```
  */
 export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
-  TStructure["tools"] extends $MessageToolSet
+  TStructure["tools"] extends MessageToolSet
     ? {
         [K in keyof TStructure["tools"]]: K extends string
-          ? TStructure["tools"][K] extends $MessageToolDefinition
+          ? TStructure["tools"][K] extends MessageToolDefinition
             ? ContentBlock.Tools.ToolCall<K, TStructure["tools"][K]["input"]>
             : never
           : never;
@@ -149,7 +149,7 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  * // Message structure with tools and properties
  * interface AdvancedMessageStructure extends $MessageStructure {
  *   tools: {
- *     calculator: $MessageToolDefinition<
+ *     calculator: MessageToolDefinition<
  *       { operation: string; numbers: number[] },
  *       number
  *     >;
@@ -198,34 +198,34 @@ export interface $MessageStructure {
    * Optional output version for the message structure.
    * If not provided, defaults to "v0".
    */
-  readonly outputVersion?: $MessageOutputVersion;
+  readonly outputVersion?: MessageOutputVersion;
   /**
    * Optional set of tool definitions that can be used in messages.
    * Each tool is defined with input/output types and can be referenced in tool messages.
    */
-  readonly tools?: $MessageToolSet;
+  readonly tools?: MessageToolSet;
   /**
    * Optional mapping of message types to their allowed content blocks.
    * Each message type can specify what content block types it supports (text, images, etc).
    */
   readonly content?: Partial<{
-    [key in $MessageType]: ContentBlock;
+    [key in MessageType]: ContentBlock;
   }>;
   /**
    * Optional mapping of message types to arbitrary property objects.
    * Allows attaching custom metadata or other information to specific message types.
    */
   readonly properties?: Partial<{
-    [key in $MessageType]: Record<string, unknown>;
+    [key in MessageType]: Record<string, unknown>;
   }>;
 }
 
 /**
  * Normalizes an arbitrary type to a message output version or undefined.
- * Accepts unknown and narrows to a valid $MessageOutputVersion if present.
+ * Accepts unknown and narrows to a valid MessageOutputVersion if present.
  */
 type $NormalizeMessageOutputVersion<T> =
-  | Extract<T, $MessageOutputVersion>
+  | Extract<T, MessageOutputVersion>
   | undefined;
 
 /**
@@ -452,7 +452,7 @@ export type $NormalizedMessageStructure<T extends $MessageStructure> =
  */
 export type $InferMessageContentBlocks<
   TStructure extends $MessageStructure,
-  TRole extends $MessageType
+  TRole extends MessageType
 > = $NormalizedMessageStructure<TStructure> extends infer S
   ? S extends $MessageStructure
     ? S["content"] extends infer C
@@ -476,7 +476,7 @@ export type $InferMessageContentBlocks<
  *
  * This utility type determines the appropriate content type based on the message structure's
  * output version and the specified message type. The content type varies depending on the
- * output version (see {@link $MessageOutputVersion})
+ * output version (see {@link MessageOutputVersion})
  *
  * @template TStructure - The message structure to infer content from
  * @template TRole - The message role/type to get content for (e.g., "ai", "human", "system", "tool")
@@ -512,7 +512,7 @@ export type $InferMessageContentBlocks<
  */
 export type $InferMessageContent<
   TStructure extends $MessageStructure,
-  TRole extends $MessageType
+  TRole extends MessageType
 > = TStructure["outputVersion"] extends "v1"
   ? Array<$InferMessageContentBlocks<TStructure, TRole>>
   : string | Array<ContentBlock | ContentBlock.Text>;
@@ -557,7 +557,7 @@ export type $InferMessageContent<
  */
 export type $InferMessageProperties<
   TStructure extends $MessageStructure,
-  TRole extends $MessageType
+  TRole extends MessageType
 > = $NormalizedMessageStructure<TStructure> extends infer S
   ? S extends $MessageStructure
     ? S["properties"] extends infer P | undefined
@@ -609,7 +609,7 @@ export type $InferMessageProperties<
  */
 export type $InferMessageProperty<
   TStructure extends $MessageStructure,
-  TRole extends $MessageType,
+  TRole extends MessageType,
   K extends string
 > = K extends keyof $InferMessageProperties<TStructure, TRole>
   ? $InferMessageProperties<TStructure, TRole>[K]
@@ -644,7 +644,7 @@ export type $InferMessageProperty<
  */
 export type $InferResponseMetadata<
   TStructure extends $MessageStructure,
-  TRole extends $MessageType
+  TRole extends MessageType
 > = $InferMessageProperty<
   TStructure,
   TRole,
@@ -699,7 +699,7 @@ export type $InferResponseMetadata<
  */
 export interface Message<
   TStructure extends $MessageStructure = $StandardMessageStructure,
-  TRole extends $MessageType = $MessageType
+  TRole extends MessageType = MessageType
 > {
   /** The message type/role */
   readonly type: TRole;

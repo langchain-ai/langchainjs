@@ -10,7 +10,7 @@ import {
 } from "./base.js";
 import { ChatMessage, ChatMessageChunk, ChatMessageFields } from "./chat.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
-import { $MessageType } from "./message.js";
+import { MessageType } from "./message.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import { ToolMessage, ToolMessageChunk, ToolMessageFields } from "./tool.js";
@@ -30,10 +30,7 @@ export type MessageChunkUnion =
   | typeof ToolMessageChunk
   | typeof ChatMessageChunk
   | typeof RemoveMessage; // RemoveMessage does not have a chunk class.
-export type MessageTypeOrClass =
-  | $MessageType
-  | MessageUnion
-  | MessageChunkUnion;
+export type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
 
 const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
   const typesAsStrings = [
@@ -894,7 +891,7 @@ async function _lastMaxTokens(
 }
 
 const _MSG_CHUNK_MAP: Record<
-  $MessageType,
+  MessageType,
   {
     message: MessageUnion;
     messageChunk: MessageChunkUnion;
@@ -931,21 +928,21 @@ const _MSG_CHUNK_MAP: Record<
 };
 
 function _switchTypeToMessage(
-  messageType: $MessageType,
+  messageType: MessageType,
   fields: BaseMessageFields
 ): BaseMessage;
 function _switchTypeToMessage(
-  messageType: $MessageType,
+  messageType: MessageType,
   fields: BaseMessageFields,
   returnChunk: true
 ): BaseMessageChunk;
 function _switchTypeToMessage(
-  messageType: $MessageType,
+  messageType: MessageType,
   fields: BaseMessageFields,
   returnChunk?: boolean
 ): BaseMessageChunk | BaseMessage;
 function _switchTypeToMessage(
-  messageType: $MessageType,
+  messageType: MessageType,
   fields: BaseMessageFields,
   returnChunk?: boolean
 ): BaseMessageChunk | BaseMessage {

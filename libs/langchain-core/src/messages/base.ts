@@ -8,7 +8,7 @@ import {
   $InferMessageContent,
   $InferResponseMetadata,
   $MessageStructure,
-  $MessageType,
+  MessageType,
   isMessage,
   Message,
 } from "./message.js";
@@ -64,7 +64,7 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends $MessageStructure = $MessageStructure,
-  TRole extends $MessageType = $MessageType
+  TRole extends MessageType = MessageType
 > = {
   id?: string;
   name?: string;
@@ -193,7 +193,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  */
 export abstract class BaseMessage<
     TStructure extends $MessageStructure = $MessageStructure,
-    TRole extends $MessageType = $MessageType
+    TRole extends MessageType = MessageType
   >
   extends Serializable
   implements Message<TStructure, TRole>
@@ -239,7 +239,7 @@ export abstract class BaseMessage<
    * isAIMessage(message); // true
    * ```
    */
-  _getType(): $MessageType {
+  _getType(): MessageType {
     return this.type;
   }
 
@@ -247,7 +247,7 @@ export abstract class BaseMessage<
    * @deprecated Use .type instead
    * The type of the message.
    */
-  getType(): $MessageType {
+  getType(): MessageType {
     return this._getType();
   }
 
@@ -531,7 +531,7 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends $MessageStructure = $MessageStructure,
-  TRole extends $MessageType = $MessageType
+  TRole extends MessageType = MessageType
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
@@ -545,7 +545,7 @@ export abstract class BaseMessageChunk<
 }
 
 export type MessageFieldWithRole = {
-  role: $MessageType;
+  role: MessageType;
   content: MessageContent;
   name?: string;
 } & Record<string, unknown>;
@@ -559,13 +559,13 @@ export function _isMessageFieldWithRole(
 export type BaseMessageLike =
   | BaseMessage
   | MessageFieldWithRole
-  | [$MessageType, MessageContent]
+  | [MessageType, MessageContent]
   | string
   /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */
   | ({
-      type: $MessageType;
+      type: MessageType;
     } & BaseMessageFields &
       Record<string, unknown>)
   | SerializedConstructor;
