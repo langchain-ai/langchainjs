@@ -800,13 +800,13 @@ export abstract class BaseChatOpenAI<
         : undefined;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.disableStreaming = fields?.disableStreaming === true;
+    this.streaming = fields?.streaming === true;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
-    this.streaming = fields?.streaming ?? false;
     // disable streaming in BaseChatModel if explicitly disabled
     if (this.streaming === false) this.disableStreaming = true;
-    if (this.disableStreaming) this.streaming = false;
+    if (this.disableStreaming === true) this.streaming = false;
 
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
