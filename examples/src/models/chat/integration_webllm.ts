@@ -19,7 +19,7 @@ const model = new ChatWebLLM({
   },
 });
 
-await model.initialize((progress: Record<string, unknown>) => {
+await model.initialize((progress) => {
   console.log(progress);
 });
 

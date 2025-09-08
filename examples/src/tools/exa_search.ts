@@ -8,7 +8,6 @@ import { createAgent } from "langchain";
 // Define the tools the agent will have access to.
 const tools = [
   new ExaSearchResults({
-    // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
     client: new Exa(process.env.EXASEARCH_API_KEY),
   }),
 ];
