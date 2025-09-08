@@ -11,7 +11,7 @@ import {
   CompiledStateGraph,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import { ToolMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
+import { ToolMessage, AIMessage } from "@langchain/core/messages";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "../utils.js";
@@ -20,7 +20,6 @@ import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "../nodes/ToolNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
 import { AfterModelNode } from "./nodes/AfterModalNode.js";
-import { PrepareModelRequestNode } from "./nodes/PrepareModelRequestNode.js";
 import { initializeMiddlewareStates } from "./nodes/utils.js";
 
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
@@ -149,49 +148,63 @@ export class ReactAgent<
       this.options.contextSchema
     );
 
-    // Generate node names for middleware nodes that have hooks
-    const beforeModelNodes: { index: number; name: string }[] = [];
-    const afterModelNodes: { index: number; name: string }[] = [];
-
-    if (this.options.middlewares) {
-      for (let i = 0; i < this.options.middlewares.length; i++) {
-        const middleware = this.options.middlewares[i];
-        if (middleware.beforeModel) {
-          beforeModelNodes.push({
-            index: i,
-            name: `before_model_${middleware.name}_${i}`,
-          });
-        }
-        if (middleware.afterModel) {
-          afterModelNodes.push({
-            index: i,
-            name: `after_model_${middleware.name}_${i}`,
-          });
-        }
-      }
-    }
-
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "tools" | "model_request" | "prepare_model_request" | string,
+      "tools" | "model_request" | string,
       typeof workflow
     >;
 
-    /**
-     * Add prepare model request node
-     */
-    let prepareModelRequestNode: PrepareModelRequestNode | undefined;
-    if (this.options.middlewares && this.options.middlewares.length > 0) {
-      prepareModelRequestNode = new PrepareModelRequestNode({
-        middlewares: this.options.middlewares,
-        llm: this.options.llm,
-        model: this.options.model,
-        prompt: this.options.prompt as string | BaseMessage,
-      });
-      allNodeWorkflows.addNode(
-        "prepare_model_request",
-        prepareModelRequestNode,
-        PrepareModelRequestNode.nodeOptions
-      );
+    // Generate node names for middleware nodes that have hooks
+    const beforeModelNodes: { index: number; name: string }[] = [];
+    const afterModelNodes: { index: number; name: string }[] = [];
+    const prepareModelRequestHookMiddlewares: [
+      AgentMiddleware,
+      /**
+       * ToDo: better type to get the state of middleware
+       */
+      () => any
+    ][] = [];
+
+    const middlewares = this.options.middlewares ?? [];
+    for (let i = 0; i < middlewares.length; i++) {
+      let beforeModelNode: BeforeModelNode | undefined;
+      let afterModelNode: AfterModelNode | undefined;
+      const middleware = middlewares[i];
+      if (middleware.beforeModel) {
+        beforeModelNode = new BeforeModelNode(middleware);
+        const name = `before_model_${middleware.name}_${i}`;
+        beforeModelNodes.push({
+          index: i,
+          name,
+        });
+        allNodeWorkflows.addNode(
+          name,
+          beforeModelNode,
+          beforeModelNode.nodeOptions
+        );
+      }
+      if (middleware.afterModel) {
+        afterModelNode = new AfterModelNode(middleware);
+        const name = `after_model_${middleware.name}_${i}`;
+        afterModelNodes.push({
+          index: i,
+          name,
+        });
+        allNodeWorkflows.addNode(
+          name,
+          afterModelNode,
+          afterModelNode.nodeOptions
+        );
+      }
+
+      if (middleware.prepareModelRequest) {
+        prepareModelRequestHookMiddlewares.push([
+          middleware,
+          () => ({
+            ...beforeModelNode?.getState(),
+            ...afterModelNode?.getState(),
+          }),
+        ]);
+      }
     }
 
     /**
@@ -210,8 +223,9 @@ export class ReactAgent<
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
-        prepareModelRequestNode,
-      })
+        prepareModelRequestHookMiddlewares,
+      }),
+      AgentNode.nodeOptions
     );
 
     /**
@@ -225,47 +239,14 @@ export class ReactAgent<
     }
 
     /**
-     * Add middleware nodes
-     */
-    if (this.options.middlewares && this.options.middlewares.length > 0) {
-      // Add beforeModel nodes for middlewares that have the hook
-      for (const nodeInfo of beforeModelNodes) {
-        const middleware = this.options.middlewares[nodeInfo.index];
-        const beforeModelNode = new BeforeModelNode(middleware);
-        allNodeWorkflows.addNode(
-          nodeInfo.name,
-          beforeModelNode,
-          beforeModelNode.nodeOptions
-        );
-      }
-
-      // Add afterModel nodes for middlewares that have the hook
-      for (const nodeInfo of afterModelNodes) {
-        const middleware = this.options.middlewares[nodeInfo.index];
-        const afterModelNode = new AfterModelNode(middleware);
-        allNodeWorkflows.addNode(
-          nodeInfo.name,
-          afterModelNode,
-          afterModelNode.nodeOptions
-        );
-      }
-    }
-
-    /**
      * Add Edges
      */
     // Determine starting point based on what nodes exist
     if (beforeModelNodes.length > 0) {
       // If we have beforeModel nodes, start with the first one
       allNodeWorkflows.addEdge(START, beforeModelNodes[0].name);
-    } else if (
-      this.options.middlewares &&
-      this.options.middlewares.length > 0
-    ) {
-      // If no beforeModel nodes but we have middlewares, start with prepare_model_request
-      allNodeWorkflows.addEdge(START, "prepare_model_request");
     } else {
-      // If no middlewares at all, go directly to agent
+      // If no beforeModel nodes, go directly to agent
       allNodeWorkflows.addEdge(START, "model_request");
     }
 
@@ -277,22 +258,10 @@ export class ReactAgent<
       );
     }
 
-    // Connect last beforeModel node to prepare_model_request node (if middlewares exist) or agent
+    // Connect last beforeModel node to agent
     const lastBeforeModelNode = beforeModelNodes.at(-1);
     if (beforeModelNodes.length > 0 && lastBeforeModelNode) {
-      if (this.options.middlewares && this.options.middlewares.length > 0) {
-        allNodeWorkflows.addEdge(
-          lastBeforeModelNode.name,
-          "prepare_model_request"
-        );
-      } else {
-        allNodeWorkflows.addEdge(lastBeforeModelNode.name, "model_request");
-      }
-    }
-
-    // Connect prepare_model_request node to agent (if it exists)
-    if (this.options.middlewares && this.options.middlewares.length > 0) {
-      allNodeWorkflows.addEdge("prepare_model_request", "model_request");
+      allNodeWorkflows.addEdge(lastBeforeModelNode.name, "model_request");
     }
 
     // Connect agent to last afterModel node (for reverse order execution)
@@ -339,15 +308,10 @@ export class ReactAgent<
      * add edges for tools node
      */
     if (toolClasses.length > 0) {
-      // Tools should return to first beforeModel node or prepare_model_request/agent
+      // Tools should return to first beforeModel node or agent
       let toolReturnTarget: string;
       if (beforeModelNodes.length > 0) {
         toolReturnTarget = beforeModelNodes[0].name;
-      } else if (
-        this.options.middlewares &&
-        this.options.middlewares.length > 0
-      ) {
-        toolReturnTarget = "prepare_model_request";
       } else {
         toolReturnTarget = "model_request";
       }

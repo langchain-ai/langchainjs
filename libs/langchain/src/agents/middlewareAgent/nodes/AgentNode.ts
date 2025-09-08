@@ -5,8 +5,11 @@ import {
   AIMessage,
   ToolMessage,
   SystemMessage,
+  isBaseMessage,
+  isToolMessage,
 } from "@langchain/core/messages";
-import { Command } from "@langchain/langgraph";
+import { z } from "zod";
+import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
@@ -32,6 +35,8 @@ import {
   CreateAgentParams,
   InternalAgentState,
   AnthropicModelSettings,
+  Runtime,
+  AgentMiddleware,
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
@@ -41,7 +46,7 @@ import {
   transformResponseFormat,
   ToolStrategyError,
 } from "../../responses.js";
-import type { PrepareModelRequestNode } from "./PrepareModelRequestNode.js";
+import { parseToolCalls, parseToolResults } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -69,7 +74,10 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  prepareModelRequestNode?: PrepareModelRequestNode;
+  prepareModelRequestHookMiddlewares?: [
+    AgentMiddleware<any, any, any>,
+    () => any
+  ][];
 }
 
 export class AgentNode<
@@ -121,7 +129,7 @@ export class AgentNode<
      */
     const lastMessage = state.messages[state.messages.length - 1];
     if (
-      lastMessage instanceof ToolMessage &&
+      isToolMessage(lastMessage) &&
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
@@ -213,25 +221,29 @@ export class AgentNode<
       lastMessage?: string;
     } = {}
   ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
-    let model = await this.#deriveModel(state, config);
+    const model = await this.#deriveModel(state, config);
+
+    /**
+     * Execute prepareModelRequest hooks from beforeModelNodes
+     */
+    const preparedOptions = await this.#executePrepareModelRequestHooks(
+      model,
+      state,
+      config
+    );
+
+    /**
+     * If user provides a model in the preparedOptions, use it,
+     * otherwise use the model from the options
+     */
+    const finalModel = preparedOptions?.model ?? model;
 
     /**
      * Check if the LLM already has bound tools and throw if it does.
      */
-    validateLLMHasNoBoundTools(model);
+    validateLLMHasNoBoundTools(finalModel);
 
-    /**
-     * get prepared options from prepareModelRequestNode state
-     */
-    const { __preparedModelOptions: preparedOptions } =
-      this.#options.prepareModelRequestNode?.getState();
-
-    // Apply any model changes from prepareModelRequest
-    if (preparedOptions?.model) {
-      model = preparedOptions.model;
-    }
-
-    const modelWithTools = await this.#bindTools(model, preparedOptions);
+    const modelWithTools = await this.#bindTools(finalModel, preparedOptions);
     let modelInput = this.#getModelInputState(state);
 
     // Use messages from preparedOptions if provided
@@ -505,6 +517,71 @@ export class AgentNode<
     >;
   }
 
+  async #executePrepareModelRequestHooks(
+    model: LanguageModelLike,
+    state: InternalAgentState<StructuredResponseFormat> &
+      PreHookAnnotation["State"],
+    config: LangGraphRunnableConfig
+  ): Promise<ModelRequest | undefined> {
+    if (
+      !this.#options.prepareModelRequestHookMiddlewares ||
+      this.#options.prepareModelRequestHookMiddlewares.length === 0
+    ) {
+      return undefined;
+    }
+
+    // Get the prompt for system message
+    let systemMessage: BaseMessage | undefined;
+    if (typeof this.#options.prompt === "string") {
+      systemMessage = new SystemMessage(this.#options.prompt);
+    } else if (isBaseMessage(this.#options.prompt)) {
+      systemMessage = this.#options.prompt;
+    }
+
+    // Prepare the initial call options
+    let currentOptions: ModelRequest = {
+      model,
+      systemMessage,
+      messages: state.messages,
+      tools: [],
+    };
+
+    // Execute prepareModelRequest hooks from all middlewares
+    const middlewares = this.#options.prepareModelRequestHookMiddlewares;
+    for (const [middleware, getMiddlewareState] of middlewares) {
+      // Merge context with default context of middleware
+      const context = {
+        ...(middleware.contextSchema?.parse({}) || {}),
+        ...(config?.context || {}),
+      };
+
+      // Create runtime
+      const runtime: Runtime<any> = {
+        toolCalls: parseToolCalls(state.messages),
+        toolResults: parseToolResults(state.messages),
+        context,
+      };
+
+      const result = await middleware.prepareModelRequest!(
+        currentOptions,
+        {
+          messages: state.messages,
+          ...getMiddlewareState(),
+        },
+        {
+          ...runtime,
+          context,
+        }
+      );
+
+      if (result) {
+        currentOptions = { ...currentOptions, ...result };
+      }
+    }
+
+    return currentOptions;
+  }
+
   async #bindTools(
     model: LanguageModelLike,
     preparedOptions?: ModelRequest
@@ -517,24 +594,9 @@ export class AgentNode<
 
     // Use tools from preparedOptions if provided, otherwise use default tools
     let allTools = this.#options.toolClasses.concat(
-      ...structuredTools.map((toolStrategy) => toolStrategy.tool)
+      ...structuredTools.map((toolStrategy) => toolStrategy.tool),
+      ...(preparedOptions?.tools || [])
     );
-
-    /**
-     * Support tools in preparedOptions
-     */
-    // if (preparedOptions?.tools) {
-    //   // Filter tools based on prepared options
-    //   allTools = preparedOptions.tools
-    //     .map((tool) => {
-    //       if (typeof tool === "string") {
-    //         // Find tool by name
-    //         return allTools.find((t) => (t as any).name === tool) || tool;
-    //       }
-    //       return tool;
-    //     })
-    //     .filter((t) => t) as (ClientTool | ServerTool)[];
-    // }
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"
@@ -595,5 +657,13 @@ export class AgentNode<
     );
 
     return modelRunnable;
+  }
+
+  static get nodeOptions() {
+    return {
+      input: z.object({
+        messages: z.array(z.custom<BaseMessage>()),
+      }),
+    };
   }
 }

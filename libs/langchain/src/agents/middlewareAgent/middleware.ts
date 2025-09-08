@@ -52,7 +52,7 @@ export function createMiddleware<
     runtime: Runtime<
       TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
     >
-  ) => Promise<ModelRequest | undefined> | ModelRequest | undefined;
+  ) => Promise<ModelRequest | void> | ModelRequest | void;
   beforeModel?: (
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,

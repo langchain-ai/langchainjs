@@ -31,22 +31,21 @@ describe("middleware", () => {
         middlewareAAfterModelState: z.string(),
       }),
       beforeModel: (state) => {
-        expect(state).toEqual(initialState);
+        const { messages, ...rest } = state;
+        expect(rest).toEqual({
+          middlewareABeforeModelState: "ABefore",
+          middlewareAAfterModelState: "AAfter",
+        });
         return {
           middlewareABeforeModelState: "middlewareABeforeModelState",
         };
       },
       afterModel: (state) => {
         const { messages, ...rest } = state;
-        const { messages: _, ...restOriginal } = initialState;
-        expect(rest).toEqual(
-          expect.objectContaining({
-            ...restOriginal,
-            middlewareABeforeModelState: "middlewareABeforeModelState",
-            middlewareBBeforeModelState: "middlewareBBeforeModelState",
-            middlewareCAfterModelState: "middlewareCAfterModelState",
-          })
-        );
+        expect(rest).toEqual({
+          middlewareABeforeModelState: "middlewareABeforeModelState",
+          middlewareAAfterModelState: "AAfter",
+        });
         return {
           middlewareAAfterModelState: "middlewareAAfterModelState",
         };
@@ -59,9 +58,10 @@ describe("middleware", () => {
         middlewareBAfterModelState: z.string(),
       }),
       beforeModel: (state) => {
-        expect(state).toEqual({
-          ...initialState,
-          middlewareABeforeModelState: "middlewareABeforeModelState",
+        const { messages, ...rest } = state;
+        expect(rest).toEqual({
+          middlewareBAfterModelState: "BAfter",
+          middlewareBBeforeModelState: "BBefore",
         });
         return {
           middlewareBBeforeModelState: "middlewareBBeforeModelState",
@@ -77,10 +77,6 @@ describe("middleware", () => {
       afterModel: (state) => {
         const { messages, ...rest } = state;
         expect(rest).toEqual({
-          middlewareAAfterModelState: "AAfter",
-          middlewareABeforeModelState: "middlewareABeforeModelState",
-          middlewareBAfterModelState: "BAfter",
-          middlewareBBeforeModelState: "middlewareBBeforeModelState",
           middlewareCAfterModelState: "CAfter",
           middlewareCBeforeModelState: "CBefore",
         });

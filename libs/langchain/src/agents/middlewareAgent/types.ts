@@ -119,7 +119,7 @@ export interface ModelRequest {
    * The tools to make available for this step.
    * Can be tool names (strings) or tool instances.
    */
-  tools: (string | ClientTool | ServerTool)[];
+  tools: (ClientTool | ServerTool)[];
 
   /**
    * The model settings to use for this step.
@@ -134,13 +134,13 @@ export interface ModelRequest {
 export interface Runtime<TContext = unknown> {
   readonly toolCalls: ToolCall[];
   readonly toolResults: ToolResult[];
-  readonly tokenUsage: {
-    readonly inputTokens: number;
-    readonly outputTokens: number;
-    readonly totalTokens: number;
-  };
+  // readonly tokenUsage: {
+  //   readonly inputTokens: number;
+  //   readonly outputTokens: number;
+  //   readonly totalTokens: number;
+  // };
   readonly context: TContext;
-  readonly currentIteration: number;
+  // readonly currentIteration: number;
 }
 
 /**
@@ -335,10 +335,7 @@ export interface AgentMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
-  ):
-    | Promise<Partial<ModelRequest> | undefined>
-    | Partial<ModelRequest>
-    | undefined;
+  ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
   beforeModel?(
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,

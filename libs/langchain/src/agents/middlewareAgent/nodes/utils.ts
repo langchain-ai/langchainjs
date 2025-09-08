@@ -1,7 +1,13 @@
-import type { BaseMessage } from "@langchain/core/messages";
+import {
+  type BaseMessage,
+  type ToolMessage,
+  type AIMessage,
+  isToolMessage,
+  isAIMessage,
+} from "@langchain/core/messages";
 import { z, type ZodIssue, type ZodTypeAny } from "zod";
 
-import type { AgentMiddleware } from "../types.js";
+import type { AgentMiddleware, ToolCall, ToolResult } from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -109,4 +115,34 @@ export function derivePrivateState(stateSchema?: z.ZodObject<z.ZodRawShape>) {
 
   // Return a new schema with only private properties (all optional)
   return z.object(privateShape);
+}
+
+/**
+ * Parse out all tool calls from the messages
+ * @param messages - The messages to parse
+ * @returns The tool calls
+ */
+export function parseToolCalls(messages: BaseMessage[]): ToolCall[] {
+  return (
+    messages
+      .filter(
+        (message) => isAIMessage(message) && (message as AIMessage).tool_calls
+      )
+      .map((message) => (message as AIMessage).tool_calls as ToolCall[])
+      .flat() || []
+  );
+}
+
+/**
+ * Parse out all tool results from the messages
+ * @param messages - The messages to parse
+ * @returns The tool results
+ */
+export function parseToolResults(messages: BaseMessage[]): ToolResult[] {
+  return messages
+    .filter((message) => isToolMessage(message))
+    .map((message) => ({
+      id: (message as ToolMessage).tool_call_id,
+      result: (message as ToolMessage).content,
+    }));
 }

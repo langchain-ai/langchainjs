@@ -9,7 +9,11 @@ import type {
   AgentMiddleware,
   MiddlewareResult,
 } from "../types.js";
-import { derivePrivateState } from "./utils.js";
+import {
+  derivePrivateState,
+  parseToolCalls,
+  parseToolResults,
+} from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -66,15 +70,9 @@ export abstract class MiddlewareNode<
      * ToDo: implement later
      */
     const runtime: Runtime<TContextSchema> = {
-      toolCalls: [],
-      toolResults: [],
-      tokenUsage: {
-        inputTokens: 0,
-        outputTokens: 0,
-        totalTokens: 0,
-      },
+      toolCalls: parseToolCalls(state.messages),
+      toolResults: parseToolResults(state.messages),
       context: filteredContext,
-      currentIteration: 0,
     };
 
     const controls: Controls<TStateSchema> = {
