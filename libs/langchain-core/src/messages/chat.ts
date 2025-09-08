@@ -5,11 +5,11 @@ import {
   mergeContent,
   _mergeDicts,
 } from "./base.js";
-import { $InferMessageContent, $MessageStructure } from "./message.js";
+import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface ChatMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "generic"> {
   role: string;
 }
@@ -17,9 +17,7 @@ export interface ChatMessageFields<
 /**
  * Represents a chat message in a conversation.
  */
-export class ChatMessage<
-    TStructure extends $MessageStructure = $MessageStructure
-  >
+export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
   extends BaseMessage<TStructure, "generic">
   implements ChatMessageFields<TStructure>
 {
@@ -73,7 +71,7 @@ export class ChatMessage<
  * other chat message chunks.
  */
 export class ChatMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageChunk<TStructure, "generic"> {
   static lc_name() {
     return "ChatMessageChunk";

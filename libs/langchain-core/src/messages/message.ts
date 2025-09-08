@@ -104,7 +104,7 @@ export interface MessageToolSet {
  * @example
  * ```ts
  * // Given a message structure with a calculator tool:
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   tools: {
  *     calculator: MessageToolDefinition<{ operation: string, numbers: number[] }, number>
  *   }
@@ -121,7 +121,7 @@ export interface MessageToolSet {
  * // }
  * ```
  */
-export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
+export type $MessageToolCallBlock<TStructure extends MessageStructure> =
   TStructure["tools"] extends MessageToolSet
     ? {
         [K in keyof TStructure["tools"]]: K extends string
@@ -138,7 +138,7 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  * @example
  * ```ts
  * // Basic message structure with just content blocks
- * interface SimpleMessageStructure extends $MessageStructure {
+ * interface SimpleMessageStructure extends MessageStructure {
  *   content: {
  *     human: ContentBlock.Text;
  *     // allows for text + reasoning blocks in ai messages
@@ -147,7 +147,7 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  * }
  *
  * // Message structure with tools and properties
- * interface AdvancedMessageStructure extends $MessageStructure {
+ * interface AdvancedMessageStructure extends MessageStructure {
  *   tools: {
  *     calculator: MessageToolDefinition<
  *       { operation: string; numbers: number[] },
@@ -193,7 +193,7 @@ export type $MessageToolCallBlock<TStructure extends $MessageStructure> =
  * };
  * ```
  */
-export interface $MessageStructure {
+export interface MessageStructure {
   /**
    * Optional output version for the message structure.
    * If not provided, defaults to "v0".
@@ -332,7 +332,7 @@ export type $MergeContentDefinition<T, U> = {
  * @example
  * ```ts
  * // Structure A allows text in human messages and has a confidence property on AI messages
- * interface StructureA extends $MessageStructure {
+ * interface StructureA extends MessageStructure {
  *   content: {
  *     human: ContentBlock.Text;
  *   };
@@ -342,7 +342,7 @@ export type $MergeContentDefinition<T, U> = {
  * }
  *
  * // Structure B allows images in human messages and has a model property on AI messages
- * interface StructureB extends $MessageStructure {
+ * interface StructureB extends MessageStructure {
  *   content: {
  *     human: ContentBlock.Multimodal.Image;
  *   };
@@ -360,8 +360,8 @@ export type $MergeContentDefinition<T, U> = {
  * @template B - Second message structure to merge (takes precedence over A)
  */
 export type $MergeMessageStructure<
-  T extends $MessageStructure,
-  U extends $MessageStructure
+  T extends MessageStructure,
+  U extends MessageStructure
 > = {
   outputVersion: $MergeOutputVersion<T["outputVersion"], U["outputVersion"]>;
   tools: $MergeObjects<T["tools"], U["tools"]>;
@@ -375,7 +375,7 @@ export type $MergeMessageStructure<
  *
  * This is also the message structure that's used when a message structure is not provided.
  */
-export interface $StandardMessageStructure extends $MessageStructure {
+export interface StandardMessageStructure extends MessageStructure {
   content: {
     /** Text content for AI messages */
     ai: ContentBlock.Text;
@@ -416,13 +416,13 @@ export interface $StandardMessageStructure extends $MessageStructure {
  * This ensures that any custom message structure includes all the standard message structure fields
  * by default while allowing overrides and extensions.
  *
- * @template T - The message structure type to normalize, must extend $MessageStructure
+ * @template T - The message structure type to normalize, must extend MessageStructure
  * @returns Either T if it's already a standard structure, or the merged result of T with standard structure
  */
-export type $NormalizedMessageStructure<T extends $MessageStructure> =
-  T extends $StandardMessageStructure
+export type $NormalizedMessageStructure<T extends MessageStructure> =
+  T extends StandardMessageStructure
     ? T
-    : $MergeMessageStructure<$StandardMessageStructure, T>;
+    : $MergeMessageStructure<StandardMessageStructure, T>;
 
 /**
  * Infers the content blocks for a specific message type in a message structure.
@@ -436,7 +436,7 @@ export type $NormalizedMessageStructure<T extends $MessageStructure> =
  *
  * @example
  * ```ts
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   content: {
  *     human: ContentBlock.Text;
  *     ai: ContentBlock.Text | ContentBlock.ToolCall;
@@ -451,10 +451,10 @@ export type $NormalizedMessageStructure<T extends $MessageStructure> =
  * ```
  */
 export type $InferMessageContentBlocks<
-  TStructure extends $MessageStructure,
+  TStructure extends MessageStructure,
   TRole extends MessageType
 > = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends $MessageStructure
+  ? S extends MessageStructure
     ? S["content"] extends infer C
       ? C extends Record<PropertyKey, ContentBlock>
         ? TRole extends keyof C
@@ -484,7 +484,7 @@ export type $InferMessageContentBlocks<
  *
  * @example
  * ```ts
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   outputVersion: "v0";
  *   content: {
  *     human: ContentBlock.Text;
@@ -495,7 +495,7 @@ export type $InferMessageContentBlocks<
  * type HumanContentV0 = $InferMessageContent<MyStructure, "human">;
  * // HumanContentV0 = string | Array<ContentBlock | ContentBlock.Text>
  *
- * interface MyStructureV1 extends $MessageStructure {
+ * interface MyStructureV1 extends MessageStructure {
  *   outputVersion: "v1";
  *   content: {
  *     human: ContentBlock.Text;
@@ -511,7 +511,7 @@ export type $InferMessageContentBlocks<
  * ```
  */
 export type $InferMessageContent<
-  TStructure extends $MessageStructure,
+  TStructure extends MessageStructure,
   TRole extends MessageType
 > = TStructure["outputVersion"] extends "v1"
   ? Array<$InferMessageContentBlocks<TStructure, TRole>>
@@ -533,7 +533,7 @@ export type $InferMessageContent<
  *
  * @example
  * ```ts
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   properties: {
  *     ai: {
  *       response_metadata: { model: string };
@@ -556,10 +556,10 @@ export type $InferMessageContent<
  * ```
  */
 export type $InferMessageProperties<
-  TStructure extends $MessageStructure,
+  TStructure extends MessageStructure,
   TRole extends MessageType
 > = $NormalizedMessageStructure<TStructure> extends infer S
-  ? S extends $MessageStructure
+  ? S extends MessageStructure
     ? S["properties"] extends infer P | undefined
       ? P extends Record<PropertyKey, unknown>
         ? TRole extends keyof P
@@ -584,7 +584,7 @@ export type $InferMessageProperties<
  *
  * @example
  * ```ts
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   properties: {
  *     ai: {
  *       response_metadata: { model: string; temperature: number };
@@ -608,7 +608,7 @@ export type $InferMessageProperties<
  * ```
  */
 export type $InferMessageProperty<
-  TStructure extends $MessageStructure,
+  TStructure extends MessageStructure,
   TRole extends MessageType,
   K extends string
 > = K extends keyof $InferMessageProperties<TStructure, TRole>
@@ -626,7 +626,7 @@ export type $InferMessageProperty<
  *
  * @example
  * ```ts
- * interface MyStructure extends $MessageStructure {
+ * interface MyStructure extends MessageStructure {
  *   properties: {
  *     ai: {
  *       response_metadata: { model: string; temperature: number; tokens: number };
@@ -643,7 +643,7 @@ export type $InferMessageProperty<
  * ```
  */
 export type $InferResponseMetadata<
-  TStructure extends $MessageStructure,
+  TStructure extends MessageStructure,
   TRole extends MessageType
 > = $InferMessageProperty<
   TStructure,
@@ -669,12 +669,12 @@ export type $InferResponseMetadata<
  * };
  *
  * // Basic ai message interface extension
- * interface MyMessage extends Message<$StandardMessageStructure, "ai"> {
+ * interface MyMessage extends Message<StandardMessageStructure, "ai"> {
  *   // Additional AI-specific properties can be added here
  * }
  *`
  * // Custom message structure
- * interface CustomStructure extends $MessageStructure {
+ * interface CustomStructure extends MessageStructure {
  *   content: {
  *     ai: ContentBlock.Text | ContentBlock.ToolCall<"search", { query: string }>;
  *     human: ContentBlock.Text | ContentBlock.Multimodal.Image;
@@ -698,7 +698,7 @@ export type $InferResponseMetadata<
  * ```
  */
 export interface Message<
-  TStructure extends $MessageStructure = $StandardMessageStructure,
+  TStructure extends MessageStructure = StandardMessageStructure,
   TRole extends MessageType = MessageType
 > {
   /** The message type/role */

@@ -12,7 +12,7 @@ import { ContentBlock } from "./content/index.js";
 import {
   $InferMessageContent,
   $InferMessageProperty,
-  $MessageStructure,
+  MessageStructure,
 } from "./message.js";
 import { mergeResponseMetadata, mergeUsageMetadata } from "./metadata.js";
 import {
@@ -24,14 +24,14 @@ import {
 import { Constructor } from "./utils.js";
 
 export interface AIMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "ai"> {
   tool_calls?: ToolCall[];
   invalid_tool_calls?: InvalidToolCall[];
   usage_metadata?: $InferMessageProperty<TStructure, "ai", "usage_metadata">;
 }
 
-export class AIMessage<TStructure extends $MessageStructure = $MessageStructure>
+export class AIMessage<TStructure extends MessageStructure = MessageStructure>
   extends BaseMessage<TStructure, "ai">
   implements AIMessageFields<TStructure>
 {
@@ -199,7 +199,7 @@ export class AIMessage<TStructure extends $MessageStructure = $MessageStructure>
 /**
  * @deprecated Use {@link AIMessage.isInstance} instead
  */
-export function isAIMessage<TStructure extends $MessageStructure>(
+export function isAIMessage<TStructure extends MessageStructure>(
   x: BaseMessage
 ): x is AIMessage<TStructure> {
   return x._getType() === "ai";
@@ -208,14 +208,14 @@ export function isAIMessage<TStructure extends $MessageStructure>(
 /**
  * @deprecated Use {@link AIMessageChunk.isInstance} instead
  */
-export function isAIMessageChunk<TStructure extends $MessageStructure>(
+export function isAIMessageChunk<TStructure extends MessageStructure>(
   x: BaseMessageChunk
 ): x is AIMessageChunk<TStructure> {
   return x._getType() === "ai";
 }
 
 export type AIMessageChunkFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > = AIMessageFields<TStructure> & {
   tool_call_chunks?: ToolCallChunk[];
 };
@@ -225,7 +225,7 @@ export type AIMessageChunkFields<
  * other AI message chunks.
  */
 export class AIMessageChunk<
-    TStructure extends $MessageStructure = $MessageStructure
+    TStructure extends MessageStructure = MessageStructure
   >
   extends BaseMessageChunk<TStructure, "ai">
   implements AIMessage<TStructure>, AIMessageChunkFields<TStructure>

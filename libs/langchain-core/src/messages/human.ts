@@ -5,18 +5,18 @@ import {
   _mergeDicts,
   type BaseMessageFields,
 } from "./base.js";
-import type { $InferMessageContent, $MessageStructure } from "./message.js";
+import type { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface HumanMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "human"> {}
 
 /**
  * Represents a human message in a conversation.
  */
 export class HumanMessage<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessage<TStructure, "human"> {
   static lc_name() {
     return "HumanMessage";
@@ -42,7 +42,7 @@ export class HumanMessage<
  * other human message chunks.
  */
 export class HumanMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageChunk<TStructure, "human"> {
   static lc_name() {
     return "HumanMessageChunk";
@@ -82,7 +82,7 @@ export class HumanMessageChunk<
 /**
  * @deprecated Use {@link HumanMessage.isInstance} instead
  */
-export function isHumanMessage<TStructure extends $MessageStructure>(
+export function isHumanMessage<TStructure extends MessageStructure>(
   x: BaseMessage
 ): x is HumanMessage<TStructure> {
   return x.getType() === "human";
@@ -91,7 +91,7 @@ export function isHumanMessage<TStructure extends $MessageStructure>(
 /**
  * @deprecated Use {@link HumanMessageChunk.isInstance} instead
  */
-export function isHumanMessageChunk<TStructure extends $MessageStructure>(
+export function isHumanMessageChunk<TStructure extends MessageStructure>(
   x: BaseMessageChunk
 ): x is HumanMessageChunk<TStructure> {
   return x.getType() === "human";

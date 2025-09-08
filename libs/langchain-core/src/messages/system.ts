@@ -5,18 +5,18 @@ import {
   _mergeDicts,
   type BaseMessageFields,
 } from "./base.js";
-import { $InferMessageContent, $MessageStructure } from "./message.js";
+import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface SystemMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "system"> {}
 
 /**
  * Represents a system message in a conversation.
  */
 export class SystemMessage<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessage<TStructure, "system"> {
   static lc_name() {
     return "SystemMessage";
@@ -42,7 +42,7 @@ export class SystemMessage<
  * other system message chunks.
  */
 export class SystemMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageChunk<TStructure, "system"> {
   static lc_name() {
     return "SystemMessageChunk";
@@ -82,7 +82,7 @@ export class SystemMessageChunk<
 /**
  * @deprecated Use {@link SystemMessage.isInstance} instead
  */
-export function isSystemMessage<TStructure extends $MessageStructure>(
+export function isSystemMessage<TStructure extends MessageStructure>(
   x: BaseMessage
 ): x is SystemMessage<TStructure> {
   return x._getType() === "system";
@@ -91,7 +91,7 @@ export function isSystemMessage<TStructure extends $MessageStructure>(
 /**
  * @deprecated Use {@link SystemMessageChunk.isInstance} instead
  */
-export function isSystemMessageChunk<TStructure extends $MessageStructure>(
+export function isSystemMessageChunk<TStructure extends MessageStructure>(
   x: BaseMessageChunk
 ): x is SystemMessageChunk<TStructure> {
   return x._getType() === "system";

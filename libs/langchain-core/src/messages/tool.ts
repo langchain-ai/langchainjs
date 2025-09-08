@@ -7,11 +7,11 @@ import {
   _mergeObj,
   _mergeStatus,
 } from "./base.js";
-import { $InferMessageContent, $MessageStructure } from "./message.js";
+import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface ToolMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "tool"> {
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
@@ -49,9 +49,7 @@ export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
 /**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage<
-    TStructure extends $MessageStructure = $MessageStructure
-  >
+export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
   extends BaseMessage<TStructure, "tool">
   implements DirectToolOutput
 {
@@ -129,7 +127,7 @@ export class ToolMessage<
  * with other tool message chunks.
  */
 export class ToolMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageChunk<TStructure, "tool"> {
   readonly type = "tool" as const;
 
