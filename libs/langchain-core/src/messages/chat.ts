@@ -36,6 +36,13 @@ export class ChatMessage<
   }
 
   constructor(
+    content: $InferMessageContent<TStructure, "generic">,
+    role: string
+  );
+
+  constructor(fields: ChatMessageFields<TStructure>);
+
+  constructor(
     fields:
       | $InferMessageContent<TStructure, "generic">
       | ChatMessageFields<TStructure>,
@@ -75,6 +82,13 @@ export class ChatMessageChunk<
   readonly type = "generic" as const;
 
   role: string;
+
+  constructor(
+    content: $InferMessageContent<TStructure, "generic">,
+    role: string
+  );
+
+  constructor(fields: ChatMessageFields<TStructure>);
 
   constructor(
     fields:
