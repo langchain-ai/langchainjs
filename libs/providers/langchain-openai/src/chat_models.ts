@@ -16,6 +16,7 @@ import {
   type BaseMessageFields,
   type MessageContent,
   type InvalidToolCall,
+  type ContentBlock,
   MessageContentImageUrl,
   isDataContentBlock,
   convertToProviderContentBlock,
@@ -2447,8 +2448,50 @@ export class ChatOpenAICompletions<
           additional_kwargs.audio = message.audio;
         }
 
+        /**
+         * Handle OpenRouter image responses
+         * @see https://openrouter.ai/docs/features/multimodal/image-generation#api-usage
+         */
+        let content: string | ContentBlock.Standard[] = message.content || "";
+        const messageWithImages = rawResponse.choices?.[0]
+          ?.message as unknown as {
+          images?: Array<{
+            type: "image_url";
+            image_url: { url: string };
+          }>;
+        };
+        if (
+          messageWithImages?.images &&
+          Array.isArray(messageWithImages.images) &&
+          messageWithImages.images.length > 0
+        ) {
+          const images = messageWithImages.images;
+          const structuredContent: (
+            | ContentBlock.Multimodal.Standard
+            | ContentBlock.Text
+          )[] = [{ type: "text", text: content }];
+
+          // Add each image to the structured content
+          for (const image of images) {
+            if (image.image_url?.url) {
+              const imageBlock: ContentBlock.Multimodal.Image = {
+                type: "image",
+                url: image.image_url.url,
+              };
+              structuredContent.push(imageBlock);
+            }
+          }
+
+          content = structuredContent;
+
+          // Also add image URLs to additional_kwargs for backward compatibility
+          additional_kwargs.image_urls = images
+            .map((img) => img.image_url?.url)
+            .filter(Boolean);
+        }
+
         return new AIMessage({
-          content: message.content || "",
+          content,
           tool_calls: toolCalls,
           invalid_tool_calls: invalidToolCalls,
           additional_kwargs,
