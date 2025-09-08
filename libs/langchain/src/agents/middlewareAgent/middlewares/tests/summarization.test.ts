@@ -188,8 +188,7 @@ describe("summarizationMiddleware", () => {
 
     // Find the tool-related messages in the result
     const hasToolCall = result.messages.some(
-      (msg) =>
-        isAIMessage(msg) && msg.tool_calls && msg.tool_calls.length > 0
+      (msg) => isAIMessage(msg) && msg.tool_calls && msg.tool_calls.length > 0
     );
     const hasToolMessage = result.messages.some(
       (msg) => isToolMessage(msg) && msg.tool_call_id === "call_123"

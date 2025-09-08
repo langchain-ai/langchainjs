@@ -127,8 +127,9 @@ export class AgentNode<
      * Check if we just executed a returnDirect tool
      * If so, we should generate structured response (if needed) and stop
      */
-    const lastMessage = state.messages[state.messages.length - 1];
+    const lastMessage = state.messages.at(-1);
     if (
+      lastMessage &&
       isToolMessage(lastMessage) &&
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
