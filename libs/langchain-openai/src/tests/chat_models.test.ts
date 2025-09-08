@@ -28,7 +28,7 @@ describe("ChatOpenAI", () => {
         disableStreaming: true,
       });
       expect(chat.disableStreaming).toBe(true);
-      let chatWithNull = new ChatOpenAI({
+      const chatWithNull = new ChatOpenAI({
         model: "gpt-4o-mini",
         disableStreaming: null,
       } as any);
