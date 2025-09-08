@@ -9,7 +9,7 @@ import {
 } from "./multimodal.js";
 import { type Data } from "./data.js";
 
-export type ContentBlock = BaseContentBlock;
+export interface ContentBlock extends BaseContentBlock {}
 
 export const KNOWN_BLOCK_TYPES = [
   "text",

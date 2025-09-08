@@ -1,7 +1,6 @@
 export * from "./ai.js";
 export * from "./base.js";
 export * from "./chat.js";
-export * from "./function.js";
 export * from "./human.js";
 export * from "./system.js";
 export * from "./utils.js";
@@ -10,7 +9,7 @@ export * from "./modifier.js";
 // TODO: Use a star export when we deprecate the
 // existing "ToolCall" type in "base.js".
 export {
-  type ToolMessageFieldsWithToolCallId,
+  type ToolMessageFields,
   ToolMessage,
   ToolMessageChunk,
   type InvalidToolCall,

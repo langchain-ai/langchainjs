@@ -4,15 +4,15 @@ import {
   type BaseMessageFields,
   mergeContent,
   _mergeDicts,
-  type MessageType,
   _mergeObj,
   _mergeStatus,
-  type MessageContent,
 } from "./base.js";
+import { $InferMessageContent, $MessageStructure } from "./message.js";
+import { Constructor } from "./utils.js";
 
-export type ToolMessageFields = BaseMessageFields;
-
-export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
+export interface ToolMessageFields<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessageFields<TStructure, "tool"> {
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
    *
@@ -23,10 +23,6 @@ export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
   tool_call_id: string;
-  /**
-   * Status of the tool invocation.
-   * @version 0.2.19
-   */
   status?: "success" | "error";
 }
 
@@ -53,9 +49,12 @@ export function isDirectToolOutput(x: unknown): x is DirectToolOutput {
 /**
  * Represents a tool message in a conversation.
  */
-export class ToolMessage extends BaseMessage implements DirectToolOutput {
-  declare content: MessageContent;
-
+export class ToolMessage<
+    TStructure extends $MessageStructure = $MessageStructure
+  >
+  extends BaseMessage<TStructure, "tool">
+  implements DirectToolOutput
+{
   static lc_name() {
     return "ToolMessage";
   }
@@ -66,6 +65,8 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
   }
 
   lc_direct_tool_output = true as const;
+
+  readonly type = "tool" as const;
 
   /**
    * Status of the tool invocation.
@@ -85,20 +86,22 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId);
-
   constructor(
-    fields: string | ToolMessageFields,
+    fields: $InferMessageContent<TStructure, "tool"> | ToolMessageFields,
     tool_call_id: string,
     name?: string
   );
 
+  constructor(fields: ToolMessageFields<TStructure>);
+
   constructor(
-    fields: string | ToolMessageFieldsWithToolCallId,
+    fields:
+      | $InferMessageContent<TStructure, "tool">
+      | ToolMessageFields<TStructure>,
     tool_call_id?: string,
     name?: string
   ) {
-    if (typeof fields === "string") {
+    if (typeof fields === "string" || Array.isArray(fields)) {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, name, tool_call_id: tool_call_id! };
     }
@@ -108,12 +111,8 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     this.status = fields.status;
   }
 
-  _getType(): MessageType {
-    return "tool";
-  }
-
-  static isInstance(message: BaseMessage): message is ToolMessage {
-    return message._getType() === "tool";
+  static isInstance(message: unknown): message is ToolMessage {
+    return super.isInstance(message) && message.type === "tool";
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -129,8 +128,10 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
  * Represents a chunk of a tool message, which can be concatenated
  * with other tool message chunks.
  */
-export class ToolMessageChunk extends BaseMessageChunk {
-  declare content: MessageContent;
+export class ToolMessageChunk<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessageChunk<TStructure, "tool"> {
+  readonly type = "tool" as const;
 
   tool_call_id: string;
 
@@ -150,7 +151,7 @@ export class ToolMessageChunk extends BaseMessageChunk {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
-  constructor(fields: ToolMessageFieldsWithToolCallId) {
+  constructor(fields: ToolMessageFields<TStructure>) {
     super(fields);
     this.tool_call_id = fields.tool_call_id;
     this.artifact = fields.artifact;
@@ -161,12 +162,9 @@ export class ToolMessageChunk extends BaseMessageChunk {
     return "ToolMessageChunk";
   }
 
-  _getType(): MessageType {
-    return "tool";
-  }
-
-  concat(chunk: ToolMessageChunk) {
-    return new ToolMessageChunk({
+  concat(chunk: ToolMessageChunk<TStructure>) {
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,
@@ -192,22 +190,24 @@ export class ToolMessageChunk extends BaseMessageChunk {
   }
 }
 
-/**
- * A call to a tool.
- * @property {string} name - The name of the tool to be called
- * @property {Record<string, any>} args - The arguments to the tool call
- * @property {string} [id] - If provided, an identifier associated with the tool call
- */
-export type ToolCall = {
-  name: string;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args: Record<string, any>;
-
+export interface ToolCall<
+  TName extends string = string,
+  TArgs extends Record<string, unknown> = Record<string, unknown>
+> {
+  readonly type?: "tool_call";
+  /**
+   * If provided, an identifier associated with the tool call
+   */
   id?: string;
-
-  type?: "tool_call";
-};
+  /**
+   * The name of the tool being called
+   */
+  name: TName;
+  /**
+   * The arguments to the tool call
+   */
+  args: TArgs;
+}
 
 /**
  * A chunk of a tool call (e.g., as part of a stream).
@@ -253,31 +253,51 @@ export type ToolCall = {
  * //   }
  * // ]
  * ```
- *
- * @property {string} [name] - If provided, a substring of the name of the tool to be called
- * @property {string} [args] - If provided, a JSON substring of the arguments to the tool call
- * @property {string} [id] - If provided, a substring of an identifier for the tool call
- * @property {number} [index] - If provided, the index of the tool call in a sequence
  */
-export type ToolCallChunk = {
-  name?: string;
-
-  args?: string;
-
+export interface ToolCallChunk<TName extends string = string> {
+  readonly type?: "tool_call_chunk";
+  /**
+   * If provided, a substring of an identifier for the tool call
+   */
   id?: string;
-
+  /**
+   * If provided, a substring of the name of the tool to be called
+   */
+  name?: TName;
+  /**
+   * If provided, a JSON substring of the arguments to the tool call
+   */
+  args?: string;
+  /**
+   * If provided, the index of the tool call in a sequence
+   */
   index?: number;
+}
 
-  type?: "tool_call_chunk";
-};
-
-export type InvalidToolCall = {
-  name?: string;
-  args?: string;
+export interface InvalidToolCall<TName extends string = string> {
+  readonly type?: "invalid_tool_call";
+  /**
+   * If provided, an identifier associated with the tool call
+   */
   id?: string;
+  /**
+      /**
+     * The name of the tool being called
+     */
+  name?: TName;
+  /**
+   * The arguments to the tool call
+   */
+  args?: string;
+  /**
+   * An error message associated with the tool call
+   */
   error?: string;
-  type?: "invalid_tool_call";
-};
+  /**
+   * Index of block in aggregate response
+   */
+  index?: string | number;
+}
 
 export function defaultToolCallParser(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -292,12 +312,11 @@ export function defaultToolCallParser(
       const functionName = toolCall.function.name;
       try {
         const functionArgs = JSON.parse(toolCall.function.arguments);
-        const parsed = {
+        toolCalls.push({
           name: functionName || "",
           args: functionArgs || {},
           id: toolCall.id,
-        };
-        toolCalls.push(parsed);
+        });
       } catch (error) {
         invalidToolCalls.push({
           name: functionName,
@@ -311,6 +330,9 @@ export function defaultToolCallParser(
   return [toolCalls, invalidToolCalls];
 }
 
+/**
+ * @deprecated Use {@link ToolMessage.isInstance} instead
+ */
 export function isToolMessage(x: unknown): x is ToolMessage {
   return (
     typeof x === "object" &&
@@ -321,6 +343,9 @@ export function isToolMessage(x: unknown): x is ToolMessage {
   );
 }
 
+/**
+ * @deprecated Use {@link ToolMessageChunk.isInstance} instead
+ */
 export function isToolMessageChunk(x: BaseMessageChunk): x is ToolMessageChunk {
   return x._getType() === "tool";
 }

@@ -3,33 +3,37 @@ import {
   BaseMessageChunk,
   mergeContent,
   _mergeDicts,
-  type MessageType,
   type BaseMessageFields,
-  type MessageContent,
 } from "./base.js";
+import type { $InferMessageContent, $MessageStructure } from "./message.js";
+import { Constructor } from "./utils.js";
 
-export type HumanMessageFields = BaseMessageFields;
+export interface HumanMessageFields<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessageFields<TStructure, "human"> {}
 
 /**
  * Represents a human message in a conversation.
  */
-export class HumanMessage extends BaseMessage {
-  declare content: MessageContent;
-
+export class HumanMessage<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessage<TStructure, "human"> {
   static lc_name() {
     return "HumanMessage";
   }
 
-  _getType(): MessageType {
-    return "human";
-  }
+  readonly type = "human" as const;
 
   constructor(
-    fields: string | HumanMessageFields,
-    /** @deprecated */
-    kwargs?: Record<string, unknown>
+    fields:
+      | $InferMessageContent<TStructure, "human">
+      | HumanMessageFields<TStructure>
   ) {
-    super(fields, kwargs);
+    super(fields);
+  }
+
+  static isInstance(obj: unknown): obj is HumanMessage {
+    return super.isInstance(obj) && obj.type === "human";
   }
 }
 
@@ -37,27 +41,26 @@ export class HumanMessage extends BaseMessage {
  * Represents a chunk of a human message, which can be concatenated with
  * other human message chunks.
  */
-export class HumanMessageChunk extends BaseMessageChunk {
-  declare content: MessageContent;
-
+export class HumanMessageChunk<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessageChunk<TStructure, "human"> {
   static lc_name() {
     return "HumanMessageChunk";
   }
 
-  _getType(): MessageType {
-    return "human";
-  }
+  readonly type = "human" as const;
 
   constructor(
-    fields: string | HumanMessageFields,
-    /** @deprecated */
-    kwargs?: Record<string, unknown>
+    fields:
+      | $InferMessageContent<TStructure, "human">
+      | HumanMessageFields<TStructure>
   ) {
-    super(fields, kwargs);
+    super(fields);
   }
 
-  concat(chunk: HumanMessageChunk) {
-    return new HumanMessageChunk({
+  concat(chunk: HumanMessageChunk<TStructure>) {
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,
@@ -70,14 +73,26 @@ export class HumanMessageChunk extends BaseMessageChunk {
       id: this.id ?? chunk.id,
     });
   }
+
+  static isInstance(obj: unknown): obj is HumanMessageChunk {
+    return super.isInstance(obj) && obj.type === "human";
+  }
 }
 
-export function isHumanMessage(x: BaseMessage): x is HumanMessage {
+/**
+ * @deprecated Use {@link HumanMessage.isInstance} instead
+ */
+export function isHumanMessage<TStructure extends $MessageStructure>(
+  x: BaseMessage
+): x is HumanMessage<TStructure> {
   return x.getType() === "human";
 }
 
-export function isHumanMessageChunk(
+/**
+ * @deprecated Use {@link HumanMessageChunk.isInstance} instead
+ */
+export function isHumanMessageChunk<TStructure extends $MessageStructure>(
   x: BaseMessageChunk
-): x is HumanMessageChunk {
+): x is HumanMessageChunk<TStructure> {
   return x.getType() === "human";
 }
