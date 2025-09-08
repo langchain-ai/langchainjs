@@ -12,7 +12,6 @@ import {
   isMessage,
   Message,
 } from "./message.js";
-import { iife } from "./utils.js";
 
 /** @internal */
 const __MESSAGE_CLASS = Symbol.for("langchain.message");
@@ -257,12 +256,8 @@ export abstract class BaseMessage<
       | $InferMessageContent<TStructure, TRole>
       | BaseMessageFields<TStructure, TRole>
   ) {
-    const fields = iife<BaseMessageFields<TStructure, TRole>>(() => {
-      if (typeof arg === "string" || Array.isArray(arg)) {
-        return { content: arg };
-      }
-      return arg;
-    });
+    const fields: BaseMessageFields<TStructure, TRole> =
+      typeof arg === "string" || Array.isArray(arg) ? { content: arg } : arg;
     if (!fields.additional_kwargs) {
       fields.additional_kwargs = {};
     }
