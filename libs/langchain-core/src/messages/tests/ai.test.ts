@@ -150,6 +150,7 @@ describe("AIMessage", () => {
       });
       expect(message.tool_calls).toEqual([
         {
+          type: "tool_call",
           id: "123",
           name: "get_weather",
           args: {

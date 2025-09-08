@@ -5,7 +5,7 @@ import {
   mergeContent,
   _mergeDicts,
 } from "./base.js";
-import { $InferMessageContent, $MessageStructure } from "./message.js";
+import { $MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface FunctionMessageFields<
