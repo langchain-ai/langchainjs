@@ -7,6 +7,59 @@ import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../chat_models.js";
 
 describe("ChatOpenAI", () => {
+  describe("should initialize with correct values", () => {
+    it("should handle disableStreaming and streaming properties", () => {
+      let chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+      });
+      expect(chat.disableStreaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: undefined,
+      } as any);
+      expect(chat.disableStreaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: false,
+      });
+      expect(chat.disableStreaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: true,
+      });
+      expect(chat.disableStreaming).toBe(true);
+      let chatWithNull = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: null,
+      } as any);
+      expect(chatWithNull.disableStreaming).toBe(false);
+      const chatWithZero = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: 0,
+      } as any);
+      expect(chatWithZero.disableStreaming).toBe(false);
+      const chatWithEmptyString = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: "",
+      } as any);
+      expect(chatWithEmptyString.disableStreaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        streaming: true,
+        disableStreaming: true,
+      });
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        streaming: true,
+        disableStreaming: false,
+      });
+      expect(chat.disableStreaming).toBe(false);
+      expect(chat.streaming).toBe(true);
+    });
+  });
+
   describe("strict tool calling", () => {
     const weatherTool = {
       type: "function" as const,
