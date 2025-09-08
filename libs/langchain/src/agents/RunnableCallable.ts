@@ -37,12 +37,18 @@ export class RunnableCallable<I = unknown, O = unknown> extends Runnable<I, O> {
 
   recurse = true;
 
+  #state: Awaited<O>;
+
   constructor(fields: RunnableCallableArgs<I, O>) {
     super();
     this.name = fields.name ?? fields.func.name;
     this.func = fields.func;
     this.config = fields.tags ? { tags: fields.tags } : undefined;
     this.recurse = fields.recurse ?? this.recurse;
+  }
+
+  getState(): Awaited<O> {
+    return this.#state;
   }
 
   async invoke(
@@ -63,6 +69,7 @@ export class RunnableCallable<I = unknown, O = unknown> extends Runnable<I, O> {
       );
     }
 
+    this.#state = returnValue;
     return returnValue;
   }
 }

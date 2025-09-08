@@ -415,6 +415,17 @@
       },
       "input": "./src/memory/chat_memory.ts"
     },
+    "./middleware": {
+      "import": {
+        "types": "./dist/agents/middlewareAgent/middlewares/index.d.ts",
+        "default": "./dist/agents/middlewareAgent/middlewares/index.js"
+      },
+      "require": {
+        "types": "./dist/agents/middlewareAgent/middlewares/index.d.cts",
+        "default": "./dist/agents/middlewareAgent/middlewares/index.cjs"
+      },
+      "input": "./src/agents/middlewareAgent/middlewares/index.ts"
+    },
     "./document": {
       "import": {
         "types": "./dist/document.d.ts",
