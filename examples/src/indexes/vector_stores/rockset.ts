@@ -8,7 +8,7 @@ import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 
 const store = await RocksetStore.withNewCollection(new OpenAIEmbeddings(), {
-  client: rockset.default.default(
+  client: rockset.default(
     process.env.ROCKSET_API_KEY ?? "",
     `https://api.${process.env.ROCKSET_API_REGION ?? "usw2a1"}.rockset.com`
   ),
