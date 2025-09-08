@@ -4,23 +4,28 @@ import {
   type BaseMessageFields,
   mergeContent,
   _mergeDicts,
-  type MessageType,
 } from "./base.js";
+import { $InferMessageContent, MessageStructure } from "./message.js";
+import { Constructor } from "./utils.js";
 
-export interface ChatMessageFieldsWithRole extends BaseMessageFields {
+export interface ChatMessageFields<
+  TStructure extends MessageStructure = MessageStructure
+> extends BaseMessageFields<TStructure, "generic"> {
   role: string;
 }
 
 /**
  * Represents a chat message in a conversation.
  */
-export class ChatMessage
-  extends BaseMessage
-  implements ChatMessageFieldsWithRole
+export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
+  extends BaseMessage<TStructure, "generic">
+  implements ChatMessageFields<TStructure>
 {
   static lc_name() {
     return "ChatMessage";
   }
+
+  readonly type = "generic" as const;
 
   role: string;
 
@@ -28,12 +33,20 @@ export class ChatMessage
     return ChatMessage;
   }
 
-  constructor(content: string, role: string);
+  constructor(
+    content: $InferMessageContent<TStructure, "generic">,
+    role: string
+  );
 
-  constructor(fields: ChatMessageFieldsWithRole);
+  constructor(fields: ChatMessageFields<TStructure>);
 
-  constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
-    if (typeof fields === "string") {
+  constructor(
+    fields:
+      | $InferMessageContent<TStructure, "generic">
+      | ChatMessageFields<TStructure>,
+    role?: string
+  ) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
@@ -41,12 +54,8 @@ export class ChatMessage
     this.role = fields.role;
   }
 
-  _getType(): MessageType {
-    return "generic";
-  }
-
-  static isInstance(message: BaseMessage): message is ChatMessage {
-    return message._getType() === "generic";
+  static isInstance(obj: unknown): obj is ChatMessage {
+    return super.isInstance(obj) && obj.type === "generic";
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -61,19 +70,31 @@ export class ChatMessage
  * Represents a chunk of a chat message, which can be concatenated with
  * other chat message chunks.
  */
-export class ChatMessageChunk extends BaseMessageChunk {
+export class ChatMessageChunk<
+  TStructure extends MessageStructure = MessageStructure
+> extends BaseMessageChunk<TStructure, "generic"> {
   static lc_name() {
     return "ChatMessageChunk";
   }
 
+  readonly type = "generic" as const;
+
   role: string;
 
-  constructor(content: string, role: string);
+  constructor(
+    content: $InferMessageContent<TStructure, "generic">,
+    role: string
+  );
 
-  constructor(fields: ChatMessageFieldsWithRole);
+  constructor(fields: ChatMessageFields<TStructure>);
 
-  constructor(fields: string | ChatMessageFieldsWithRole, role?: string) {
-    if (typeof fields === "string") {
+  constructor(
+    fields:
+      | $InferMessageContent<TStructure, "generic">
+      | ChatMessageFields<TStructure>,
+    role?: string
+  ) {
+    if (typeof fields === "string" || Array.isArray(fields)) {
       // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
@@ -81,12 +102,9 @@ export class ChatMessageChunk extends BaseMessageChunk {
     this.role = fields.role;
   }
 
-  _getType(): MessageType {
-    return "generic";
-  }
-
-  concat(chunk: ChatMessageChunk) {
-    return new ChatMessageChunk({
+  concat(chunk: ChatMessageChunk<TStructure>) {
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,
@@ -101,6 +119,10 @@ export class ChatMessageChunk extends BaseMessageChunk {
     });
   }
 
+  static isInstance(obj: unknown): obj is ChatMessageChunk {
+    return super.isInstance(obj) && obj.type === "generic";
+  }
+
   override get _printableFields(): Record<string, unknown> {
     return {
       ...super._printableFields,
@@ -109,10 +131,16 @@ export class ChatMessageChunk extends BaseMessageChunk {
   }
 }
 
+/**
+ * @deprecated Use {@link ChatMessage.isInstance} instead
+ */
 export function isChatMessage(x: BaseMessage): x is ChatMessage {
   return x._getType() === "generic";
 }
 
+/**
+ * @deprecated Use {@link ChatMessageChunk.isInstance} instead
+ */
 export function isChatMessageChunk(x: BaseMessageChunk): x is ChatMessageChunk {
   return x._getType() === "generic";
 }

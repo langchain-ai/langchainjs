@@ -1,15 +1,11 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import {
   AIMessage,
+  AIMessageChunk,
   BaseMessage,
   BaseMessageLike,
-  MessageContent,
   SystemMessage,
-  AIMessageChunk,
-  isAIMessage,
-  isAIMessageChunk,
-  isBaseMessage,
-  isBaseMessageChunk,
+  MessageContent,
 } from "@langchain/core/messages";
 import { MessagesAnnotation } from "@langchain/langgraph";
 import {
@@ -61,12 +57,11 @@ export type AgentNameMode = "inline";
 export function _addInlineAgentName<T extends BaseMessageLike>(
   message: T
 ): T | AIMessage {
-  const isAI =
-    isBaseMessage(message) &&
-    (isAIMessage(message) ||
-      (isBaseMessageChunk(message) && isAIMessageChunk(message)));
+  if (!AIMessage.isInstance(message) || AIMessageChunk.isInstance(message)) {
+    return message;
+  }
 
-  if (!isAI || !message.name) {
+  if (!message.name) {
     return message;
   }
 
@@ -74,9 +69,7 @@ export function _addInlineAgentName<T extends BaseMessageLike>(
 
   if (typeof message.content === "string") {
     return new AIMessage({
-      ...(Object.keys(message.lc_kwargs ?? {}).length > 0
-        ? message.lc_kwargs
-        : message),
+      ...message.lc_kwargs,
       content: `<name>${name}</name><content>${message.content}</content>`,
       name: undefined,
     });
@@ -136,7 +129,7 @@ export function _addInlineAgentName<T extends BaseMessageLike>(
  * @internal
  */
 export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
-  if (!isAIMessage(message) || !message.content) {
+  if (!AIMessage.isInstance(message) || !message.content) {
     return message;
   }
 
@@ -254,7 +247,7 @@ export function getPromptRunnable(prompt?: Prompt): Runnable {
         return [systemMessage, ...(state.messages ?? [])];
       }
     ).withConfig({ runName: PROMPT_RUNNABLE_NAME });
-  } else if (isBaseMessage(prompt) && prompt._getType() === "system") {
+  } else if (SystemMessage.isInstance(prompt)) {
     promptRunnable = RunnableLambda.from(
       (state: typeof MessagesAnnotation.State) => [prompt, ...state.messages]
     ).withConfig({ runName: PROMPT_RUNNABLE_NAME });

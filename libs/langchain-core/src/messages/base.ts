@@ -1,10 +1,20 @@
 import { Serializable, SerializedConstructor } from "../load/serializable.js";
-import { StringWithAutocomplete } from "../utils/types/index.js";
 import { ContentBlock } from "./content/index.js";
 import { isDataContentBlock } from "./content/data.js";
 import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
 import { convertToV1FromDataContent } from "./block_translators/data.js";
 import { convertToV1FromChatCompletionsInput } from "./block_translators/openai.js";
+import {
+  $InferMessageContent,
+  $InferResponseMetadata,
+  MessageStructure,
+  MessageType,
+  isMessage,
+  Message,
+} from "./message.js";
+
+/** @internal */
+const MESSAGE_SYMBOL = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string;
@@ -35,16 +45,6 @@ export interface StoredMessageV1 {
   text: string;
 }
 
-export type MessageType =
-  | "human"
-  | "ai"
-  | "generic"
-  | "developer"
-  | "system"
-  | "function"
-  | "tool"
-  | "remove";
-
 export type MessageContent = string | Array<ContentBlock>;
 
 export interface FunctionCall {
@@ -62,10 +62,15 @@ export interface FunctionCall {
   name: string;
 }
 
-export type BaseMessageFields = {
+export type BaseMessageFields<
+  TStructure extends MessageStructure = MessageStructure,
+  TRole extends MessageType = MessageType
+> = {
+  id?: string;
   name?: string;
-  content?: MessageContent;
+  content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
+  /** @deprecated */
   additional_kwargs?: {
     /**
      * @deprecated Use "tool_calls" field on AIMessages instead
@@ -77,14 +82,7 @@ export type BaseMessageFields = {
     tool_calls?: OpenAIToolCall[];
     [key: string]: unknown;
   };
-  /** Response metadata. For example: response headers, logprobs, token counts, model name. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  response_metadata?: Record<string, any>;
-  /**
-   * An optional unique identifier for the message. This should ideally be
-   * provided by the provider/model which created the message.
-   */
-  id?: string;
+  response_metadata?: Partial<$InferResponseMetadata<TStructure, TRole>>;
 };
 
 export function mergeContent(
@@ -193,7 +191,13 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * properties like `content`, `name`, and `additional_kwargs`. It also
  * includes methods like `toDict()` and `_getType()`.
  */
-export abstract class BaseMessage extends Serializable {
+export abstract class BaseMessage<
+    TStructure extends MessageStructure = MessageStructure,
+    TRole extends MessageType = MessageType
+  >
+  extends Serializable
+  implements Message<TStructure, TRole>
+{
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -206,41 +210,23 @@ export abstract class BaseMessage extends Serializable {
     };
   }
 
-  /**
-   * Get text content of the message.
-   */
-  get text(): string {
-    if (typeof this.content === "string") {
-      return this.content;
-    }
+  readonly [MESSAGE_SYMBOL] = true as const;
 
-    if (!Array.isArray(this.content)) return "";
-    return this.content
-      .map((c) => {
-        if (typeof c === "string") return c;
-        if (c.type === "text") return c.text;
-        return "";
-      })
-      .join("");
-  }
+  abstract readonly type: TRole;
 
-  /** The content of the message. */
-  content: MessageContent;
+  id?: string;
 
-  /** The name of the message sender in a multi-user chat. */
   name?: string;
 
-  /** Additional keyword arguments */
-  additional_kwargs: NonNullable<BaseMessageFields["additional_kwargs"]>;
+  content: $InferMessageContent<TStructure, TRole>;
 
-  /** Response metadata. For example: response headers, logprobs, token counts, model name. */
-  response_metadata: NonNullable<BaseMessageFields["response_metadata"]>;
+  additional_kwargs: NonNullable<
+    BaseMessageFields<TStructure, TRole>["additional_kwargs"]
+  >;
 
-  /**
-   * An optional unique identifier for the message. This should ideally be
-   * provided by the provider/model which created the message.
-   */
-  id?: string;
+  response_metadata: NonNullable<
+    BaseMessageFields<TStructure, TRole>["response_metadata"]
+  >;
 
   /**
    * @deprecated Use .getType() instead or import the proper typeguard.
@@ -253,39 +239,38 @@ export abstract class BaseMessage extends Serializable {
    * isAIMessage(message); // true
    * ```
    */
-  abstract _getType(): MessageType;
+  _getType(): MessageType {
+    return this.type;
+  }
 
-  /** The type of the message. */
+  /**
+   * @deprecated Use .type instead
+   * The type of the message.
+   */
   getType(): MessageType {
     return this._getType();
   }
 
   constructor(
-    fields: string | BaseMessageFields,
-    /** @deprecated */
-    kwargs?: Record<string, unknown>
+    arg:
+      | $InferMessageContent<TStructure, TRole>
+      | BaseMessageFields<TStructure, TRole>
   ) {
-    if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign
-      fields = {
-        content: fields,
-        additional_kwargs: kwargs,
-        response_metadata: {},
-      };
-    }
-    // Make sure the default value for additional_kwargs is passed into super() for serialization
+    const fields: BaseMessageFields<TStructure, TRole> =
+      typeof arg === "string" || Array.isArray(arg) ? { content: arg } : arg;
     if (!fields.additional_kwargs) {
-      // eslint-disable-next-line no-param-reassign
       fields.additional_kwargs = {};
     }
     if (!fields.response_metadata) {
-      // eslint-disable-next-line no-param-reassign
       fields.response_metadata = {};
     }
     super(fields);
     this.name = fields.name;
     if (fields.content === undefined && fields.contentBlocks !== undefined) {
-      this.content = fields.contentBlocks;
+      this.content = fields.contentBlocks as $InferMessageContent<
+        TStructure,
+        TRole
+      >;
       this.response_metadata = {
         output_version: "v1",
         ...fields.response_metadata,
@@ -294,11 +279,26 @@ export abstract class BaseMessage extends Serializable {
       this.content = fields.content ?? [];
       this.response_metadata = fields.response_metadata;
     } else {
-      this.content = [];
+      this.content = [] as $InferMessageContent<TStructure, TRole>;
       this.response_metadata = fields.response_metadata;
     }
     this.additional_kwargs = fields.additional_kwargs;
     this.id = fields.id;
+  }
+
+  /** Get text content of the message. */
+  get text(): string {
+    if (typeof this.content === "string") {
+      return this.content;
+    }
+    if (!Array.isArray(this.content)) return "";
+    return this.content
+      .map((c) => {
+        if (typeof c === "string") return c;
+        if (c.type === "text") return c.text;
+        return "";
+      })
+      .join("");
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
@@ -315,8 +315,6 @@ export abstract class BaseMessage extends Serializable {
       (blocks, step) => step(blocks),
       blocks
     );
-    // this assertion is safe since we're planning to allow
-    // untyped content blocks for v1 messages (directed through message structures).
     return parsedBlocks as Array<ContentBlock.Standard>;
   }
 
@@ -341,6 +339,16 @@ export abstract class BaseMessage extends Serializable {
       additional_kwargs: this.additional_kwargs,
       response_metadata: this.response_metadata,
     };
+  }
+
+  static isInstance(obj: unknown): obj is BaseMessage {
+    return (
+      typeof obj === "object" &&
+      obj !== null &&
+      MESSAGE_SYMBOL in obj &&
+      obj[MESSAGE_SYMBOL] === true &&
+      isMessage(obj)
+    );
   }
 
   // this private method is used to update the ID for the runtime
@@ -521,12 +529,23 @@ export function _mergeObj<T = any>(
  * one. It also overrides the `__add__()` method to support concatenation
  * of `BaseMessageChunk` instances.
  */
-export abstract class BaseMessageChunk extends BaseMessage {
-  abstract concat(chunk: BaseMessageChunk): BaseMessageChunk;
+export abstract class BaseMessageChunk<
+  TStructure extends MessageStructure = MessageStructure,
+  TRole extends MessageType = MessageType
+> extends BaseMessage<TStructure, TRole> {
+  abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
+
+  static isInstance(obj: unknown): obj is BaseMessageChunk {
+    return (
+      super.isInstance(obj) &&
+      "concat" in obj &&
+      typeof obj.concat === "function"
+    );
+  }
 }
 
 export type MessageFieldWithRole = {
-  role: StringWithAutocomplete<"user" | "assistant" | MessageType>;
+  role: MessageType;
   content: MessageContent;
   name?: string;
 } & Record<string, unknown>;
@@ -540,12 +559,7 @@ export function _isMessageFieldWithRole(
 export type BaseMessageLike =
   | BaseMessage
   | MessageFieldWithRole
-  | [
-      StringWithAutocomplete<
-        MessageType | "user" | "assistant" | "placeholder"
-      >,
-      MessageContent
-    ]
+  | [MessageType, MessageContent]
   | string
   /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
@@ -556,12 +570,18 @@ export type BaseMessageLike =
       Record<string, unknown>)
   | SerializedConstructor;
 
+/**
+ * @deprecated Use {@link BaseMessage.isInstance} instead
+ */
 export function isBaseMessage(
   messageLike?: unknown
 ): messageLike is BaseMessage {
   return typeof (messageLike as BaseMessage)?._getType === "function";
 }
 
+/**
+ * @deprecated Use {@link BaseMessageChunk.isInstance} instead
+ */
 export function isBaseMessageChunk(
   messageLike?: unknown
 ): messageLike is BaseMessageChunk {
