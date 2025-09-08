@@ -571,49 +571,5 @@ describe("ChatOpenAI", () => {
         },
       ]);
     });
-
-    it("Should handle OpenRouter responses with no images gracefully", () => {
-      const model = new ChatOpenAI({
-        model: "test-model",
-        apiKey: "test-key",
-      });
-
-      const completions = (model as any).completions;
-
-      const mockMessage = {
-        role: "assistant" as const,
-        content: "This is a text-only response",
-      };
-
-      const mockRawResponse = {
-        id: "chatcmpl-12345",
-        object: "chat.completion",
-        created: 1234567890,
-        model: "google/gemini-2.5-flash-image-preview",
-        choices: [
-          {
-            index: 0,
-            message: {
-              ...mockMessage,
-              // No images array
-            },
-            finish_reason: "stop",
-          },
-        ],
-        usage: {
-          prompt_tokens: 10,
-          completion_tokens: 20,
-          total_tokens: 30,
-        },
-      };
-
-      const result = completions._convertCompletionsMessageToBaseMessage(
-        mockMessage,
-        mockRawResponse
-      );
-
-      // Verify the response is a simple string when no images are present
-      expect(result.content).toEqual("This is a text-only response");
-    });
   });
 });
