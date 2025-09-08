@@ -490,7 +490,7 @@ export abstract class BaseChatOpenAI<
     this.modalities = fields?.modalities;
     this.reasoning = fields?.reasoning;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
-    this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    this.disableStreaming = fields?.disableStreaming === true;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
