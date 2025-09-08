@@ -593,7 +593,7 @@ export class AgentNode<
     const structuredTools = Object.values(this.#structuredToolInfo);
 
     // Use tools from preparedOptions if provided, otherwise use default tools
-    let allTools = this.#options.toolClasses.concat(
+    const allTools = this.#options.toolClasses.concat(
       ...structuredTools.map((toolStrategy) => toolStrategy.tool),
       ...(preparedOptions?.tools || [])
     );

@@ -426,7 +426,7 @@ describe("humanInTheLoopMiddleware", () => {
     expect(writeFileFn).not.toHaveBeenCalled();
 
     // Verify manual response was added
-    const messages = resumedResult.messages;
+    const { messages } = resumedResult;
     expect(messages[messages.length - 1].content).toBe(
       "File operation not allowed in demo mode"
     );

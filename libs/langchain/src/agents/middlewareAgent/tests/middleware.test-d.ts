@@ -1,8 +1,8 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod";
+import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 
 import { createAgent, createMiddleware } from "../index.js";
-import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {

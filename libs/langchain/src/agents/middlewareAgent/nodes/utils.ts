@@ -25,7 +25,7 @@ export function initializeMiddlewareStates(
   for (const middleware of middlewares) {
     if (middleware.stateSchema) {
       // Create a modified schema where private properties are optional
-      const shape = middleware.stateSchema.shape;
+      const { shape } = middleware.stateSchema;
       const modifiedShape: Record<string, any> = {};
 
       for (const [key, value] of Object.entries(shape)) {
@@ -100,7 +100,7 @@ export function derivePrivateState(stateSchema?: z.ZodObject<z.ZodRawShape>) {
     return z.object(builtInStateSchema);
   }
 
-  const shape = stateSchema.shape;
+  const { shape } = stateSchema;
   const privateShape: Record<string, any> = builtInStateSchema;
 
   // Filter properties that start with underscore and make them optional

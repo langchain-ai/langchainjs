@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { BaseMessage } from "@langchain/core/messages";
 import {
   Annotation,
@@ -27,7 +28,7 @@ export function createAgentAnnotationConditional<
   TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
-  middlewares?: TMiddlewares
+  middlewares: TMiddlewares = [] as unknown as TMiddlewares
 ): AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>> {
   const baseAnnotation: Record<string, any> = {
     messages: Annotation<BaseMessage[], Messages>({
@@ -37,33 +38,31 @@ export function createAgentAnnotationConditional<
   };
 
   // Add middleware state properties to the annotation
-  if (middlewares) {
-    for (const middleware of middlewares) {
-      if (middleware.stateSchema) {
-        // Parse empty object to get default values
-        let parsedDefaults: Record<string, any> = {};
-        try {
-          parsedDefaults = middleware.stateSchema.parse({});
-        } catch {
-          // If parsing fails, we'll use undefined as defaults
+  for (const middleware of middlewares) {
+    if (middleware.stateSchema) {
+      // Parse empty object to get default values
+      let parsedDefaults: Record<string, any> = {};
+      try {
+        parsedDefaults = middleware.stateSchema.parse({});
+      } catch {
+        // If parsing fails, we'll use undefined as defaults
+      }
+
+      const { shape } = middleware.stateSchema;
+      for (const [key] of Object.entries(shape)) {
+        /**
+         * Skip private state properties
+         */
+        if (key.startsWith("_")) {
+          continue;
         }
 
-        const shape = middleware.stateSchema.shape;
-        for (const [key] of Object.entries(shape)) {
-          /**
-           * Skip private state properties
-           */
-          if (key.startsWith("_")) {
-            continue;
-          }
-
-          if (!(key in baseAnnotation)) {
-            const defaultValue = parsedDefaults[key] ?? undefined;
-            baseAnnotation[key] = Annotation({
-              reducer: (x: any, y: any) => y ?? x,
-              default: () => defaultValue,
-            });
-          }
+        if (!(key in baseAnnotation)) {
+          const defaultValue = parsedDefaults[key] ?? undefined;
+          baseAnnotation[key] = Annotation({
+            reducer: (x: any, y: any) => y ?? x,
+            default: () => defaultValue,
+          });
         }
       }
     }

@@ -4,6 +4,9 @@ import {
   AIMessage,
   SystemMessage,
   ToolMessage,
+  isSystemMessage,
+  isAIMessage,
+  isToolMessage,
 } from "@langchain/core/messages";
 import {
   summarizationMiddleware,
@@ -78,15 +81,15 @@ describe("summarizationMiddleware", () => {
     // Create a conversation with enough tokens to trigger summarization
     const messages = [
       new HumanMessage(
-        "I'm working on a complex software project. " + "x".repeat(200)
+        `I'm working on a complex software project. ${"x".repeat(200)}`
       ),
       new AIMessage(
-        "I understand your project. Let me help. " + "x".repeat(200)
+        `I understand your project. Let me help. ${"x".repeat(200)}`
       ),
       new HumanMessage(
-        "Here are more details about the architecture. " + "x".repeat(200)
+        `Here are more details about the architecture. ${"x".repeat(200)}`
       ),
-      new AIMessage("That's interesting. Tell me more. " + "x".repeat(200)),
+      new AIMessage(`That's interesting. Tell me more. ${"x".repeat(200)}`),
       new HumanMessage("What do you recommend?"),
     ];
 
@@ -168,10 +171,10 @@ describe("summarizationMiddleware", () => {
 
     // Create messages with AI/Tool pairs that should stay together
     const messages = [
-      new HumanMessage("Old conversation part 1. " + "x".repeat(100)),
-      new AIMessage("Old response 1. " + "x".repeat(100)),
-      new HumanMessage("Old conversation part 2. " + "x".repeat(100)),
-      new AIMessage("Old response 2. " + "x".repeat(100)),
+      new HumanMessage(`Old conversation part 1. ${"x".repeat(100)}`),
+      new AIMessage(`Old response 1. ${"x".repeat(100)}`),
+      new HumanMessage(`Old conversation part 2. ${"x".repeat(100)}`),
+      new AIMessage(`Old response 2. ${"x".repeat(100)}`),
       // This AI/Tool pair should be kept together
       toolCallMessage,
       new ToolMessage({
@@ -186,10 +189,10 @@ describe("summarizationMiddleware", () => {
     // Find the tool-related messages in the result
     const hasToolCall = result.messages.some(
       (msg) =>
-        msg instanceof AIMessage && msg.tool_calls && msg.tool_calls.length > 0
+        isAIMessage(msg) && msg.tool_calls && msg.tool_calls.length > 0
     );
     const hasToolMessage = result.messages.some(
-      (msg) => msg instanceof ToolMessage && msg.tool_call_id === "call_123"
+      (msg) => isToolMessage(msg) && msg.tool_call_id === "call_123"
     );
 
     // Both should be present or both should be absent (not split)
@@ -216,8 +219,8 @@ describe("summarizationMiddleware", () => {
       new SystemMessage(
         "You are a helpful assistant.\n## Previous conversation summary:\nPrevious discussion about databases."
       ),
-      new HumanMessage("Let's continue our discussion. " + "x".repeat(150)),
-      new AIMessage("Sure, building on what we discussed. " + "x".repeat(150)),
+      new HumanMessage(`Let's continue our discussion. ${"x".repeat(150)}`),
+      new AIMessage(`Sure, building on what we discussed. ${"x".repeat(150)}`),
       new HumanMessage("What's your final recommendation?"),
     ];
 
@@ -335,7 +338,7 @@ describe("summarizationMiddleware", () => {
     // Should have system message + kept messages + new response
     // The exact count depends on where the cutoff happens
     const nonSystemMessages = result.messages.filter(
-      (m) => !(m instanceof SystemMessage)
+      (m) => !isSystemMessage(m)
     );
     expect(nonSystemMessages.length).toBeGreaterThanOrEqual(messagesToKeep);
     expect(nonSystemMessages.length).toBeLessThanOrEqual(messagesToKeep + 3); // Some buffer for safety

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { z } from "zod";
 import type {
   InteropZodObject,
@@ -19,9 +20,11 @@ import type {
 } from "@langchain/langgraph-checkpoint";
 import type { Runnable } from "@langchain/core/runnables";
 
-import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
-import type { PreHookAnnotation } from "../annotation.js";
-import type { AgentRuntime } from "../types.js";
+import type {
+  PreHookAnnotation,
+  AnyAnnotationRoot,
+  ToAnnotationRoot,
+} from "../annotation.js";
 
 import type {
   ResponseFormat,
@@ -32,8 +35,7 @@ import type {
   JsonSchemaFormat,
 } from "../responses.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
-
-import type { ClientTool, ServerTool } from "../types.js";
+import type { ClientTool, ServerTool, AgentRuntime } from "../types.js";
 
 export type N = typeof START | "model_request" | "tools";
 

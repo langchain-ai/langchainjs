@@ -162,7 +162,7 @@ export function anthropicPromptCachingMiddleware(
         modelSettings: {
           cache_control: {
             type: "ephemeral",
-            ttl: ttl,
+            ttl,
           },
         },
       };

@@ -4,9 +4,11 @@ import {
   BaseMessage,
   AIMessage,
   SystemMessage,
-  ToolMessage,
+  isToolMessage,
   RemoveMessage,
   trimMessages,
+  isSystemMessage,
+  isAIMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
@@ -127,7 +129,7 @@ export function summarizationMiddleware(
     contextSchema,
     beforeModel: async (state, runtime) => {
       const config = { ...contextSchema.parse(options), ...runtime.context };
-      const messages = state.messages;
+      const { messages } = state;
 
       // Ensure all messages have IDs
       ensureMessageIds(messages);
@@ -201,7 +203,7 @@ function splitSystemMessage(messages: BaseMessage[]): {
   systemMessage: SystemMessage | null;
   conversationMessages: BaseMessage[];
 } {
-  if (messages.length > 0 && messages[0] instanceof SystemMessage) {
+  if (messages.length > 0 && isSystemMessage(messages[0])) {
     return {
       systemMessage: messages[0] as SystemMessage,
       conversationMessages: messages.slice(1),
@@ -242,7 +244,7 @@ function buildUpdatedSystemMessage(
 ): SystemMessage {
   let originalContent = "";
   if (originalSystemMessage) {
-    const content = originalSystemMessage.content;
+    const { content } = originalSystemMessage;
     if (typeof content === "string") {
       originalContent = content.split(summaryPrefix)[0].trim();
     }
@@ -316,7 +318,7 @@ function isSafeCutoffPoint(
  */
 function hasToolCalls(message: BaseMessage): boolean {
   return (
-    message instanceof AIMessage &&
+    isAIMessage(message) &&
     "tool_calls" in message &&
     Array.isArray(message.tool_calls) &&
     message.tool_calls.length > 0
@@ -351,10 +353,7 @@ function cutoffSeparatesToolPair(
 ): boolean {
   for (let j = aiMessageIndex + 1; j < messages.length; j++) {
     const message = messages[j];
-    if (
-      message instanceof ToolMessage &&
-      toolCallIds.has(message.tool_call_id)
-    ) {
+    if (isToolMessage(message) && toolCallIds.has(message.tool_call_id)) {
       const aiBeforeCutoff = aiMessageIndex < cutoffIndex;
       const toolBeforeCutoff = j < cutoffIndex;
       if (aiBeforeCutoff !== toolBeforeCutoff) {
@@ -393,7 +392,7 @@ async function createSummary(
       JSON.stringify(trimmedMessages, null, 2)
     );
     const response = await model.invoke(formattedPrompt);
-    const content = response.content;
+    const { content } = response;
     return typeof content === "string"
       ? content.trim()
       : "Error generating summary: Invalid response format";

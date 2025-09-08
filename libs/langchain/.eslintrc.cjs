@@ -27,6 +27,7 @@ module.exports = {
     "import_map.ts",
     "dynamic_import_map.ts",
     "vitest.config.ts",
+    "*.test-d.ts",
   ],
   rules: {
     "no-process-env": 2,

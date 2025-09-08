@@ -1,4 +1,4 @@
-/* eslint-disable prefer-destructuring, no-instanceof/no-instanceof */
+/* eslint-disable prefer-destructuring, no-instanceof/no-instanceof, @typescript-eslint/ban-types */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -461,7 +461,7 @@ export class ReactAgent<
     // Only add defaults for keys that don't exist in current state
     for (const [key, value] of Object.entries(defaultStates)) {
       if (!(key in updatedState)) {
-        // @ts-expect-error
+        // @ts-expect-error - ToDo: fix type
         updatedState[key as keyof InvokeStateParameter<TMiddlewares>] = value;
       }
     }

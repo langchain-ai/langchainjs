@@ -2,10 +2,10 @@ import { z } from "zod";
 import { v4 as uuid } from "uuid";
 import { AIMessage, ToolMessage, isAIMessage } from "@langchain/core/messages";
 import { interrupt } from "@langchain/langgraph";
+
 import { createMiddleware } from "../middleware.js";
 import type { ToolCall } from "../types.js";
-
-import { HumanResponse } from "langchain";
+import { HumanResponse } from "../../interrupt.js";
 
 /**
  * Interrupt request for tool approval
@@ -179,7 +179,7 @@ export function humanInTheLoopMiddleware(
     contextSchema,
     afterModel: async (state, runtime, controls) => {
       const config = { ...contextSchema.parse(options), ...runtime.context };
-      const messages = state.messages;
+      const { messages } = state;
 
       if (!messages.length) {
         return;
@@ -272,7 +272,7 @@ export function humanInTheLoopMiddleware(
             // Skip to end - terminate the agent
             return controls.terminate();
 
-          case "response":
+          case "response": {
             // Return manual tool response and jump back to model
             // For response, args is a string
             const toolMessage = new ToolMessage({
@@ -283,7 +283,7 @@ export function humanInTheLoopMiddleware(
               messages: [...state.messages, toolMessage],
               jump_to: "model",
             };
-
+          }
           default:
             throw new Error(`Unknown response type: ${(response as any).type}`);
         }
