@@ -17,7 +17,7 @@ import {
   BaseMessageFields,
   AIMessageFields,
   ToolMessage,
-  ToolMessageFieldsWithToolCallId,
+  ToolMessageFields,
 } from "@langchain/core/messages";
 import { ChatResult } from "@langchain/core/outputs";
 import {
@@ -88,12 +88,12 @@ export class _AnyIdToolMessage extends ToolMessage {
     return ["langchain_core", "messages", "ToolMessage"];
   }
 
-  constructor(fields: ToolMessageFieldsWithToolCallId) {
-    const fieldsWithJestMatcher: Partial<ToolMessageFieldsWithToolCallId> = {
+  constructor(fields: ToolMessageFields) {
+    const fieldsWithJestMatcher: Partial<ToolMessageFields> = {
       id: expect.any(String) as unknown as string,
       ...fields,
     };
-    super(fieldsWithJestMatcher as ToolMessageFieldsWithToolCallId);
+    super(fieldsWithJestMatcher as ToolMessageFields);
   }
 }
 
