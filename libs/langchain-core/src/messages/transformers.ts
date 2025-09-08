@@ -9,6 +9,11 @@ import {
   isBaseMessageChunk,
 } from "./base.js";
 import { ChatMessage, ChatMessageChunk, ChatMessageFields } from "./chat.js";
+import {
+  FunctionMessage,
+  FunctionMessageChunk,
+  FunctionMessageFields,
+} from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
 import { MessageType } from "./message.js";
 import { RemoveMessage } from "./modifier.js";
@@ -21,12 +26,14 @@ export type MessageUnion =
   | typeof AIMessage
   | typeof SystemMessage
   | typeof ChatMessage
+  | typeof FunctionMessage
   | typeof ToolMessage
   | typeof RemoveMessage;
 export type MessageChunkUnion =
   | typeof HumanMessageChunk
   | typeof AIMessageChunk
   | typeof SystemMessageChunk
+  | typeof FunctionMessageChunk
   | typeof ToolMessageChunk
   | typeof ChatMessageChunk
   | typeof RemoveMessage; // RemoveMessage does not have a chunk class.
@@ -917,6 +924,10 @@ const _MSG_CHUNK_MAP: Record<
     message: ToolMessage,
     messageChunk: ToolMessageChunk,
   },
+  function: {
+    message: FunctionMessage,
+    messageChunk: FunctionMessageChunk,
+  },
   generic: {
     message: ChatMessage,
     messageChunk: ChatMessageChunk,
@@ -1015,6 +1026,16 @@ function _switchTypeToMessage(
         throw new Error(
           "Can not convert ToolMessage to ToolMessageChunk if 'tool_call_id' field is not defined."
         );
+      }
+      break;
+    case "function":
+      if (returnChunk) {
+        chunk = new FunctionMessageChunk(fields as FunctionMessageFields);
+      } else {
+        if (!fields.name) {
+          throw new Error("FunctionMessage must have a 'name' field");
+        }
+        msg = new FunctionMessage(fields as FunctionMessageFields);
       }
       break;
     case "generic":
