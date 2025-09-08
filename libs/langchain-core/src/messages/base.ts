@@ -7,7 +7,7 @@ import { convertToV1FromChatCompletionsInput } from "./block_translators/openai.
 import {
   $InferMessageContent,
   $InferResponseMetadata,
-  $MessageStructure,
+  MessageStructure,
   MessageType,
   isMessage,
   Message,
@@ -63,7 +63,7 @@ export interface FunctionCall {
 }
 
 export type BaseMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure,
+  TStructure extends MessageStructure = MessageStructure,
   TRole extends MessageType = MessageType
 > = {
   id?: string;
@@ -192,7 +192,7 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * includes methods like `toDict()` and `_getType()`.
  */
 export abstract class BaseMessage<
-    TStructure extends $MessageStructure = $MessageStructure,
+    TStructure extends MessageStructure = MessageStructure,
     TRole extends MessageType = MessageType
   >
   extends Serializable
@@ -530,7 +530,7 @@ export function _mergeObj<T = any>(
  * of `BaseMessageChunk` instances.
  */
 export abstract class BaseMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure,
+  TStructure extends MessageStructure = MessageStructure,
   TRole extends MessageType = MessageType
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;

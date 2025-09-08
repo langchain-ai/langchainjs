@@ -5,11 +5,11 @@ import {
   mergeContent,
   _mergeDicts,
 } from "./base.js";
-import { $MessageStructure } from "./message.js";
+import { MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface FunctionMessageFields<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageFields<TStructure, "function"> {
   name: string;
 }
@@ -18,7 +18,7 @@ export interface FunctionMessageFields<
  * Represents a function message in a conversation.
  */
 export class FunctionMessage<
-    TStructure extends $MessageStructure = $MessageStructure
+    TStructure extends MessageStructure = MessageStructure
   >
   extends BaseMessage<TStructure, "function">
   implements FunctionMessageFields<TStructure>
@@ -42,7 +42,7 @@ export class FunctionMessage<
  * with other function message chunks.
  */
 export class FunctionMessageChunk<
-  TStructure extends $MessageStructure = $MessageStructure
+  TStructure extends MessageStructure = MessageStructure
 > extends BaseMessageChunk<TStructure, "function"> {
   static lc_name() {
     return "FunctionMessageChunk";
