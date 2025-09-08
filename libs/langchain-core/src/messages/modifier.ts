@@ -1,7 +1,9 @@
-import { BaseMessage, BaseMessageFields, MessageType } from "./base.js";
+import { BaseMessage, BaseMessageFields } from "./base.js";
+import { $MessageStructure } from "./message.js";
 
-export interface RemoveMessageFields
-  extends Omit<BaseMessageFields, "content"> {
+export interface RemoveMessageFields<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends Omit<BaseMessageFields<TStructure, "remove">, "content"> {
   /**
    * The ID of the message to remove.
    */
@@ -11,22 +13,19 @@ export interface RemoveMessageFields
 /**
  * Message responsible for deleting other messages.
  */
-export class RemoveMessage extends BaseMessage {
+export class RemoveMessage<
+  TStructure extends $MessageStructure = $MessageStructure
+> extends BaseMessage<TStructure, "remove"> {
+  readonly type = "remove" as const;
+
   /**
    * The ID of the message to remove.
    */
   id: string;
 
-  constructor(fields: RemoveMessageFields) {
-    super({
-      ...fields,
-      content: "",
-    });
+  constructor(fields: RemoveMessageFields<TStructure>) {
+    super(fields);
     this.id = fields.id;
-  }
-
-  _getType(): MessageType {
-    return "remove";
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -34,5 +33,9 @@ export class RemoveMessage extends BaseMessage {
       ...super._printableFields,
       id: this.id,
     };
+  }
+
+  static isInstance(obj: unknown): obj is RemoveMessage {
+    return super.isInstance(obj) && obj.type === "remove";
   }
 }

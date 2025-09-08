@@ -4,29 +4,16 @@ import { Runnable, RunnableLambda } from "../runnables/base.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessage,
-  MessageType,
   BaseMessageChunk,
   BaseMessageFields,
   isBaseMessageChunk,
 } from "./base.js";
-import {
-  ChatMessage,
-  ChatMessageChunk,
-  ChatMessageFieldsWithRole,
-} from "./chat.js";
-import {
-  FunctionMessage,
-  FunctionMessageChunk,
-  FunctionMessageFieldsWithName,
-} from "./function.js";
+import { ChatMessage, ChatMessageChunk, ChatMessageFields } from "./chat.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { $MessageType } from "./message.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import {
-  ToolMessage,
-  ToolMessageChunk,
-  ToolMessageFieldsWithToolCallId,
-} from "./tool.js";
+import { ToolMessage, ToolMessageChunk, ToolMessageFields } from "./tool.js";
 import { convertToChunk } from "./utils.js";
 
 export type MessageUnion =
@@ -34,18 +21,19 @@ export type MessageUnion =
   | typeof AIMessage
   | typeof SystemMessage
   | typeof ChatMessage
-  | typeof FunctionMessage
   | typeof ToolMessage
   | typeof RemoveMessage;
 export type MessageChunkUnion =
   | typeof HumanMessageChunk
   | typeof AIMessageChunk
   | typeof SystemMessageChunk
-  | typeof FunctionMessageChunk
   | typeof ToolMessageChunk
   | typeof ChatMessageChunk
   | typeof RemoveMessage; // RemoveMessage does not have a chunk class.
-export type MessageTypeOrClass = MessageType | MessageUnion | MessageChunkUnion;
+export type MessageTypeOrClass =
+  | $MessageType
+  | MessageUnion
+  | MessageChunkUnion;
 
 const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
   const typesAsStrings = [
@@ -906,7 +894,7 @@ async function _lastMaxTokens(
 }
 
 const _MSG_CHUNK_MAP: Record<
-  MessageType,
+  $MessageType,
   {
     message: MessageUnion;
     messageChunk: MessageChunkUnion;
@@ -932,10 +920,6 @@ const _MSG_CHUNK_MAP: Record<
     message: ToolMessage,
     messageChunk: ToolMessageChunk,
   },
-  function: {
-    message: FunctionMessage,
-    messageChunk: FunctionMessageChunk,
-  },
   generic: {
     message: ChatMessage,
     messageChunk: ChatMessageChunk,
@@ -947,21 +931,21 @@ const _MSG_CHUNK_MAP: Record<
 };
 
 function _switchTypeToMessage(
-  messageType: MessageType,
+  messageType: $MessageType,
   fields: BaseMessageFields
 ): BaseMessage;
 function _switchTypeToMessage(
-  messageType: MessageType,
+  messageType: $MessageType,
   fields: BaseMessageFields,
   returnChunk: true
 ): BaseMessageChunk;
 function _switchTypeToMessage(
-  messageType: MessageType,
+  messageType: $MessageType,
   fields: BaseMessageFields,
   returnChunk?: boolean
 ): BaseMessageChunk | BaseMessage;
 function _switchTypeToMessage(
-  messageType: MessageType,
+  messageType: $MessageType,
   fields: BaseMessageFields,
   returnChunk?: boolean
 ): BaseMessageChunk | BaseMessage {
@@ -1026,11 +1010,9 @@ function _switchTypeToMessage(
     case "tool":
       if ("tool_call_id" in fields) {
         if (returnChunk) {
-          chunk = new ToolMessageChunk(
-            fields as ToolMessageFieldsWithToolCallId
-          );
+          chunk = new ToolMessageChunk(fields as ToolMessageFields);
         } else {
-          msg = new ToolMessage(fields as ToolMessageFieldsWithToolCallId);
+          msg = new ToolMessage(fields as ToolMessageFields);
         }
       } else {
         throw new Error(
@@ -1038,22 +1020,12 @@ function _switchTypeToMessage(
         );
       }
       break;
-    case "function":
-      if (returnChunk) {
-        chunk = new FunctionMessageChunk(fields);
-      } else {
-        if (!fields.name) {
-          throw new Error("FunctionMessage must have a 'name' field");
-        }
-        msg = new FunctionMessage(fields as FunctionMessageFieldsWithName);
-      }
-      break;
     case "generic":
       if ("role" in fields) {
         if (returnChunk) {
-          chunk = new ChatMessageChunk(fields as ChatMessageFieldsWithRole);
+          chunk = new ChatMessageChunk(fields as ChatMessageFields);
         } else {
-          msg = new ChatMessage(fields as ChatMessageFieldsWithRole);
+          msg = new ChatMessage(fields as ChatMessageFields);
         }
       } else {
         throw new Error(
