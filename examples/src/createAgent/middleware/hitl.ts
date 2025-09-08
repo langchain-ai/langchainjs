@@ -1,9 +1,4 @@
-import {
-  createMiddlewareAgent,
-  HumanMessage,
-  tool,
-  MemorySaver,
-} from "langchain";
+import { createAgent, HumanMessage, tool, MemorySaver } from "langchain";
 import { humanInTheLoopMiddleware } from "langchain/middleware";
 import { Command } from "@langchain/langgraph";
 import { z } from "zod";
@@ -69,7 +64,7 @@ const hitlMiddleware = humanInTheLoopMiddleware({
 });
 
 // Create agent with HITL middleware
-const agent = createMiddlewareAgent({
+const agent = createAgent({
   model: "openai:gpt-4o-mini",
   checkpointSaver,
   prompt:

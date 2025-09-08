@@ -1,6 +1,6 @@
 import {
   createMiddleware,
-  createMiddlewareAgent,
+  createAgent,
   HumanMessage,
   MemorySaver,
 } from "langchain";
@@ -14,7 +14,7 @@ const checkpointer = new MemorySaver();
  * This middleware demonstrates how to interrupt execution when information is missing
  * and resume with human-provided input.
  */
-export const humanInTheLoopMiddleware = createMiddleware({
+const humanInTheLoopMiddleware = createMiddleware({
   name: "HumanInTheLoopMiddleware",
 
   beforeModel: (state) => {
@@ -50,7 +50,7 @@ export const humanInTheLoopMiddleware = createMiddleware({
   },
 });
 
-const agent = createMiddlewareAgent({
+const agent = createAgent({
   model: "openai:gpt-4o-mini",
   tools: [],
   checkpointer,

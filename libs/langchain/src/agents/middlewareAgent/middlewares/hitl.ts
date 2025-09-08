@@ -57,13 +57,13 @@ const contextSchema = z.object({
  * @param options.toolConfigs[toolName].description - Custom approval message for the tool
  * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval")
  *
- * @returns A middleware instance that can be passed to `createMiddlewareAgent`
+ * @returns A middleware instance that can be passed to `createAgent`
  *
  * @example
  * Basic usage with selective tool approval
  * ```typescript
  * import { humanInTheLoopMiddleware } from "langchain/middleware";
- * import { createMiddlewareAgent } from "langchain";
+ * import { createAgent } from "langchain";
  *
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   toolConfigs: {
@@ -77,7 +77,7 @@ const contextSchema = z.object({
  *   }
  * });
  *
- * const agent = createMiddlewareAgent({
+ * const agent = createAgent({
  *   model: "openai:gpt-4",
  *   tools: [writeFileTool, readFileTool],
  *   middlewares: [hitlMiddleware]
@@ -167,7 +167,7 @@ const contextSchema = z.object({
  * - The middleware operates in the `afterModel` phase, intercepting before tool execution
  * - Requires a checkpointer to maintain state across interruptions
  *
- * @see {@link createMiddlewareAgent} for agent creation
+ * @see {@link createAgent} for agent creation
  * @see {@link Command} for resuming interrupted execution
  * @public
  */

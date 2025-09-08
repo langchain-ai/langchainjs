@@ -1,8 +1,8 @@
-import { createMiddlewareAgent, HumanMessage, AIMessage } from "langchain";
+import { createAgent, HumanMessage, AIMessage } from "langchain";
 import { anthropicPromptCachingMiddleware } from "langchain/middleware";
 
 // Example usage
-const agent = createMiddlewareAgent({
+const agent = createAgent({
   model: "anthropic:claude-sonnet-4-20250514",
   tools: [],
   middlewares: [anthropicPromptCachingMiddleware({ ttl: "5m" })] as const,

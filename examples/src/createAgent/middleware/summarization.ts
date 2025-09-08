@@ -1,10 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import {
-  createMiddlewareAgent,
-  HumanMessage,
-  AIMessage,
-  BaseMessage,
-} from "langchain";
+import { createAgent, HumanMessage, AIMessage, BaseMessage } from "langchain";
 import {
   summarizationMiddleware,
   countTokensApproximately,
@@ -39,7 +34,7 @@ const summaryMiddleware = summarizationMiddleware({
 });
 
 // Create the agent with summarization middleware
-const agent = createMiddlewareAgent({
+const agent = createAgent({
   model: "openai:gpt-4o-mini",
   tools: [],
   middlewares: [summaryMiddleware] as const,

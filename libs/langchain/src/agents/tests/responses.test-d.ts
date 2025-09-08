@@ -169,7 +169,6 @@ describe("response format", () => {
       createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        // @ts-expect-error - arbitrary objects are not valid JSON schemas
         responseFormat: { type: "test" },
       });
     });
@@ -234,13 +233,11 @@ describe("response format", () => {
       createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        // @ts-expect-error - validate error: only one schema is allowed for native outputs
         responseFormat: [toolStrategy(jsonSchema)],
       });
       createAgent({
         llm: new FakeToolCallingChatModel({}),
         tools: [],
-        // @ts-expect-error - validate error: only one schema is allowed for native outputs
         responseFormat: [
           toolStrategy(jsonSchema),
           providerStrategy(jsonSchema),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   createMiddleware,
-  createMiddlewareAgent,
+  createAgent,
   HumanMessage,
   AIMessage,
 } from "langchain";
@@ -50,7 +50,7 @@ const summarizationMiddleware = createMiddleware({
 });
 
 // Example usage
-const agent = createMiddlewareAgent({
+const agent = createAgent({
   model: "openai:gpt-4o-mini",
   contextSchema: z.object({
     userId: z.string(),
@@ -82,6 +82,5 @@ const messages = [
 ];
 const result = await agent.invoke({ messages }, config);
 
-// @ts-expect-error
 console.log("Message count:", result.messageCount);
 console.log("First message:", result.messages.at(0)?.content);

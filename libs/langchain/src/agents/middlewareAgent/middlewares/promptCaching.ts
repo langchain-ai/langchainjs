@@ -33,17 +33,17 @@ const contextSchema = z.object({
  * @param middlewareOptions.ttl - Cache time-to-live: `"5m"` for 5 minutes or `"1h"` for 1 hour (default: `"5m"`)
  * @param middlewareOptions.minMessagesToCache - Minimum number of messages required before caching is applied (default: `3`)
  *
- * @returns A middleware instance that can be passed to `createMiddlewareAgent`
+ * @returns A middleware instance that can be passed to `createAgent`
  *
  * @throws {Error} If used with non-Anthropic models
  *
  * @example
  * Basic usage with default settings
  * ```typescript
- * import { createMiddlewareAgent } from "langchain";
+ * import { createAgent } from "langchain";
  * import { anthropicPromptCachingMiddleware } from "langchain/middleware";
  *
- * const agent = createMiddlewareAgent({
+ * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   middlewares: [
  *     anthropicPromptCachingMiddleware()
@@ -59,7 +59,7 @@ const contextSchema = z.object({
  *   minMessagesToCache: 5  // Only cache after 5 messages
  * });
  *
- * const agent = createMiddlewareAgent({
+ * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   systemMessage: "You are a helpful assistant with deep knowledge of...", // Long system prompt
  *   middlewares: [cachingMiddleware]
@@ -69,7 +69,7 @@ const contextSchema = z.object({
  * @example
  * Conditional caching based on runtime context
  * ```typescript
- * const agent = createMiddlewareAgent({
+ * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   middlewares: [
  *     anthropicPromptCachingMiddleware({
@@ -93,7 +93,7 @@ const contextSchema = z.object({
  * @example
  * Optimal setup for customer support chatbot
  * ```typescript
- * const supportAgent = createMiddlewareAgent({
+ * const supportAgent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   systemMessage: `You are a customer support agent for ACME Corp.
  *
@@ -121,7 +121,7 @@ const contextSchema = z.object({
  * - **Best Use Cases**: Long system prompts, multi-turn conversations, repetitive queries, RAG applications
  * - **Cost Impact**: Cached tokens are billed at 10% of the base input token price, cache writes are billed at 25% of the base
  *
- * @see {@link createMiddlewareAgent} for agent creation
+ * @see {@link createAgent} for agent creation
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching} Anthropic's prompt caching documentation
  * @public
  */
