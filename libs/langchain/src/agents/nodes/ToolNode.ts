@@ -271,13 +271,13 @@ export class ToolNode<
       let aiMessage: AIMessage | undefined;
       for (let i = messages.length - 1; i >= 0; i -= 1) {
         const message = messages[i];
-        if (message.getType() === "ai") {
+        if (AIMessage.isInstance(message)) {
           aiMessage = message;
           break;
         }
       }
 
-      if (aiMessage?.getType() !== "ai") {
+      if (!AIMessage.isInstance(aiMessage)) {
         throw new Error("ToolNode only accepts AIMessages as input.");
       }
 
