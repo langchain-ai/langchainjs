@@ -293,4 +293,3 @@ export function createAgent<
 }
 
 export { createMiddleware } from "./middleware.js";
-export type { AgentJump } from "./types.js";

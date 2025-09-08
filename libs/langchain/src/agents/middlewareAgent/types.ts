@@ -165,18 +165,10 @@ export type ControlAction<TStateSchema> = {
   error?: Error;
 };
 
-export interface AgentJump {
-  messages: BaseMessage[];
-  jump_to: "model" | "tools";
-}
-
 /**
  * Result type for middleware functions.
  */
-export type MiddlewareResult<TState> =
-  | TState
-  | /* ControlAction<TState> */ AgentJump
-  | void;
+export type MiddlewareResult<TState> = TState | void;
 
 /**
  * Type for the agent's built-in state properties.
