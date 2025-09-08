@@ -3,6 +3,8 @@ import type {
   ResponseFormatText,
   ResponseFormatJSONObject,
   ResponseFormatJSONSchema,
+  ResponseFormatTextPython,
+  ResponseFormatTextGrammar,
 } from "openai/resources/shared";
 
 import { TiktokenModel } from "js-tiktoken/lite";
@@ -19,6 +21,8 @@ export type { TiktokenModel };
 export type OpenAIChatModelId =
   | OpenAIClient.ChatModel
   | (string & NonNullable<unknown>);
+
+export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
 
 export declare interface OpenAIBaseInput {
   /** Sampling temperature to use */
@@ -105,6 +109,11 @@ export declare interface OpenAIBaseInput {
    * `OPENAI_API_KEY` environment variable.
    */
   apiKey?: string;
+
+  /**
+   * The verbosity of the model's response.
+   */
+  verbosity?: OpenAIVerbosityParam;
 }
 
 export type OpenAICoreRequestOptions = OpenAIClient.RequestOptions;
@@ -185,6 +194,16 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
   reasoning?: OpenAIClient.Reasoning;
 
   /**
+   * Constrains effort on reasoning for
+   * [reasoning models](https://platform.openai.com/docs/guides/reasoning). Reducing reasoning
+   * effort can result in faster responses and fewer tokens used on reasoning in a
+   * response.
+   *
+   * @deprecated Use `reasoning` instead.
+   */
+  reasoningEffort?: OpenAIClient.ReasoningEffort;
+
+  /**
    * Should be set to `true` in tenancies with Zero Data Retention
    * @see https://platform.openai.com/docs/guides/your-data
    *
@@ -197,6 +216,13 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Specifies the service tier for prioritization and latency optimization.
    */
   service_tier?: OpenAIClient.Responses.ResponseCreateParams["service_tier"];
+
+  /**
+   * Used by OpenAI to cache responses for similar requests to optimize your cache
+   * hit rates. Replaces the `user` field.
+   * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
+   */
+  promptCacheKey?: string;
 }
 
 export interface AzureOpenAIInput {
@@ -309,4 +335,11 @@ export type ChatOpenAIReasoningSummary = Omit<
 export type ChatOpenAIResponseFormat =
   | ResponseFormatText
   | ResponseFormatJSONObject
+  | ResponseFormatTextGrammar
+  | ResponseFormatTextPython
   | ChatOpenAIResponseFormatJSONSchema;
+
+export type ResponseFormatConfiguration =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ResponseFormatJSONSchema;

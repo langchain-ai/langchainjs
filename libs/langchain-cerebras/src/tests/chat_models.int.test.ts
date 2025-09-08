@@ -288,3 +288,28 @@ test("json mode", async () => {
 
   expect(JSON.parse(res.content as string)).toEqual({ result: 4 });
 });
+
+test("can accept tool messages with empty content", async () => {
+  const llm = new ChatCerebras({
+    model: "llama3.1-8b",
+    temperature: 0,
+  });
+  const res = await llm.invoke([
+    new HumanMessage("What is the weather in SF?"),
+    new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "12345",
+          name: "get_current_weather",
+          args: { location: "SF" },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: "12345",
+      content: "It is currently 24 degrees with hail in SF.",
+    }),
+  ]);
+  expect(res.content).toBeUndefined();
+});

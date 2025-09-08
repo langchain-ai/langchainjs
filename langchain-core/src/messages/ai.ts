@@ -272,9 +272,11 @@ export class AIMessageChunk extends BaseMessageChunk {
     } else {
       const groupedToolCallChunk = fields.tool_call_chunks.reduce(
         (acc, chunk) => {
-          if (!chunk.id) return acc;
-          acc[chunk.id] = acc[chunk.id] ?? [];
-          acc[chunk.id].push(chunk);
+          // Assign a fallback ID if the chunk doesn't have one
+          // This can happen with tools that have empty schemas
+          const chunkId = chunk.id || `fallback-${chunk.index || 0}`;
+          acc[chunkId] = acc[chunkId] ?? [];
+          acc[chunkId].push(chunk);
           return acc;
         },
         {} as Record<string, ToolCallChunk[]>
@@ -287,6 +289,8 @@ export class AIMessageChunk extends BaseMessageChunk {
         const name = chunks[0]?.name ?? "";
         const joinedArgs = chunks.map((c) => c.args || "").join("");
         const argsStr = joinedArgs.length ? joinedArgs : "{}";
+        // Use the original ID from the first chunk if it exists, otherwise use the grouped ID
+        const originalId = chunks[0]?.id || id;
         try {
           parsedArgs = parsePartialJson(argsStr);
           if (
@@ -299,14 +303,14 @@ export class AIMessageChunk extends BaseMessageChunk {
           toolCalls.push({
             name,
             args: parsedArgs,
-            id,
+            id: originalId,
             type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
             name,
             args: argsStr,
-            id,
+            id: originalId,
             error: "Malformed args.",
             type: "invalid_tool_call",
           });

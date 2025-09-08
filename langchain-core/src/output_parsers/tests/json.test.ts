@@ -336,6 +336,28 @@ test("JSONOutputParser parses streamed JSON", async () => {
   );
 });
 
+test("JSONOutputParser traces streamed JSON as just the last chunk", async () => {
+  async function* generator() {
+    for (const token of STREAMED_TOKENS) {
+      yield token;
+    }
+  }
+  const parser = new JsonOutputParser();
+  let tracedOutput;
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    })
+  );
+  expect(result.at(-1)).toEqual(tracedOutput);
+});
+
 test("JSONOutputParser parses streamed JSON diff", async () => {
   async function* generator() {
     for (const token of STREAMED_TOKENS) {
@@ -343,8 +365,22 @@ test("JSONOutputParser parses streamed JSON diff", async () => {
     }
   }
   const parser = new JsonOutputParser({ diff: true });
-  const result = await acc(parser.transform(generator(), {}));
+  let tracedOutput;
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    })
+  );
   expect(result).toEqual(EXPECTED_STREAMED_JSON_DIFF);
+  expect(tracedOutput).toEqual(
+    EXPECTED_STREAMED_JSON_DIFF.map((patch) => patch[0])
+  );
 });
 
 test("JsonOutputParser supports a type param", async () => {

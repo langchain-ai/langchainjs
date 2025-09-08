@@ -150,21 +150,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -179,20 +164,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -305,21 +276,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: { outputs: "Hello!David" },
       parent_run_id: firstCallParams.id,
       extra: expect.any(Object),
@@ -334,20 +290,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -447,21 +389,6 @@ test.each(["true", "false"])(
     });
     expect(thirdCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "David",
-        ],
-      },
       outputs: {
         outputs: ["H", "e", "l", "l", "o", "!", "D", "a", "v", "i", "d"],
       },
@@ -478,20 +405,6 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: firstCallParams.dotted_order,
     });
@@ -601,41 +514,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -754,41 +638,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: { outputs: "Hello!mitochondria" },
       extra: expect.any(Object),
       dotted_order: firstCallParams.dotted_order,
@@ -903,41 +758,12 @@ test.each(["true", "false"])(
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      inputs: {
-        input: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-        ],
-      },
       trace_id: firstCallParams.id,
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
       parent_run_id: firstCallParams.id,
     });
     expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
-      inputs: {
-        args: [
-          {
-            lc: 1,
-            type: "constructor",
-            id: ["langchain_core", "messages", "HumanMessage"],
-            kwargs: {
-              content: "Hello!",
-              additional_kwargs: {},
-              response_metadata: {},
-            },
-          },
-          "mitochondria",
-        ],
-      },
       outputs: {
         outputs: [
           "H",
@@ -964,6 +790,416 @@ test.each(["true", "false"])(
       dotted_order: firstCallParams.dotted_order,
       trace_id: firstCallParams.id,
       tags: [],
+    });
+  }
+);
+
+test.each(["true", "false"])(
+  "runnable nested within a traceable with manual tracer passed, background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const child = RunnableLambda.from(async () => {
+      return { message: new HumanMessage({ content: "From child!" }) };
+    }).withConfig({ runName: "child" });
+
+    const parent = traceable(
+      async () => {
+        return child.invoke(
+          {},
+          {
+            callbacks: [new LangChainTracer()],
+          }
+        );
+      },
+      { name: "parent", tracingEnabled: true, client }
+    );
+
+    await parent();
+
+    await awaitAllCallbacks();
+    await client.awaitPendingTraceBatches();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toEqual(4);
+    const firstCallParams = JSON.parse(
+      decoder.decode((relevantCalls[0][1] as any).body)
+    );
+    const secondCallParams = JSON.parse(
+      decoder.decode((relevantCalls[1][1] as any).body)
+    );
+    const thirdCallParams = JSON.parse(
+      decoder.decode((relevantCalls[2][1] as any).body)
+    );
+    const fourthCallParams = JSON.parse(
+      decoder.decode((relevantCalls[3][1] as any).body)
+    );
+    const callParams = [
+      firstCallParams,
+      secondCallParams,
+      thirdCallParams,
+      fourthCallParams,
+    ];
+    const parentCallCreateParams = callParams.find((param) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const childCallCreateParams = callParams.find((param) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const parentCallUpdateParams = callParams.find((param) => {
+      return (
+        param.dotted_order === parentCallCreateParams.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+    const childCallUpdateParams = callParams.find((param) => {
+      return (
+        param.dotted_order === childCallCreateParams.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+    expect(parentCallCreateParams).toMatchObject({
+      id: parentCallCreateParams.id,
+      name: "parent",
+      start_time: expect.any(String),
+      run_type: "chain",
+      extra: expect.any(Object),
+      serialized: {},
+      inputs: {},
+      child_runs: [],
+      trace_id: parentCallCreateParams.id,
+      dotted_order: parentCallCreateParams.dotted_order,
+      tags: [],
+    });
+
+    expect(childCallCreateParams).toMatchObject({
+      id: expect.any(String),
+      name: "child",
+      parent_run_id: parentCallCreateParams.id,
+      start_time: expect.any(String),
+      serialized: {
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain_core", "runnables", "RunnableLambda"],
+      },
+      inputs: {},
+      run_type: "chain",
+      extra: expect.any(Object),
+      tags: [],
+      trace_id: parentCallCreateParams.id,
+      dotted_order: expect.stringContaining(
+        `${parentCallCreateParams.dotted_order}.`
+      ),
+    });
+
+    expect(childCallUpdateParams).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        message: {
+          lc: 1,
+          type: "constructor",
+          id: ["langchain_core", "messages", "HumanMessage"],
+          kwargs: {
+            content: "From child!",
+            additional_kwargs: {},
+            response_metadata: {},
+          },
+        },
+      },
+      inputs: {},
+      trace_id: parentCallCreateParams.id,
+      dotted_order: expect.stringContaining(
+        `${parentCallCreateParams.dotted_order}.`
+      ),
+    });
+
+    expect(parentCallUpdateParams).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        message: {
+          lc: 1,
+          type: "constructor",
+          id: ["langchain_core", "messages", "HumanMessage"],
+          kwargs: {
+            content: "From child!",
+            additional_kwargs: {},
+            response_metadata: {},
+          },
+        },
+      },
+      extra: expect.any(Object),
+      dotted_order: parentCallCreateParams.dotted_order,
+      trace_id: parentCallCreateParams.id,
+      tags: [],
+    });
+  }
+);
+
+test.each(["true", "false"])(
+  "deep nesting with manual tracer passed with background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const aiGreet = traceable(
+      async (msg: BaseMessage) => {
+        const child = RunnableLambda.from(async () => {
+          const grandchild = RunnableLambda.from(async () => {
+            const greatGrandchild = traceable(
+              async () => {
+                const greatGreatGrandchild = RunnableLambda.from(async () => {
+                  return [
+                    new HumanMessage({
+                      content: "From great great grandchild!",
+                    }),
+                  ];
+                }).withConfig({ runName: "greatGreatGrandchild" });
+                return greatGreatGrandchild.invoke({});
+              },
+              { name: "greatGrandchild", tracingEnabled: true, client }
+            );
+            return greatGrandchild({});
+          }).withConfig({ runName: "grandchild" });
+          return grandchild.invoke({});
+        }).withConfig({ runName: "child" });
+        return child.invoke([msg]);
+      },
+      { name: "aiGreet", tracingEnabled: true, client }
+    );
+
+    const parent = RunnableLambda.from(async () => {
+      return aiGreet(new HumanMessage({ content: "Hello!" }));
+    }).withConfig({ runName: "parent" });
+
+    await parent.invoke(
+      {},
+      {
+        callbacks: [new LangChainTracer()],
+      }
+    );
+
+    await awaitAllCallbacks();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toBeGreaterThan(8);
+
+    const callParams = relevantCalls.map((call: any) =>
+      JSON.parse(decoder.decode(call[1].body))
+    );
+
+    const parentCall = callParams.find((param: any) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const aiGreetCall = callParams.find((param: any) => {
+      return param.name === "aiGreet" && param.start_time !== undefined;
+    });
+    const childCall = callParams.find((param: any) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const grandchildCall = callParams.find((param: any) => {
+      return param.name === "grandchild" && param.start_time !== undefined;
+    });
+    const greatGrandchildCall = callParams.find((param: any) => {
+      return param.name === "greatGrandchild" && param.start_time !== undefined;
+    });
+    const greatGreatGrandchildCall = callParams.find((param: any) => {
+      return (
+        param.name === "greatGreatGrandchild" && param.start_time !== undefined
+      );
+    });
+
+    expect(parentCall).toMatchObject({
+      name: "parent",
+      trace_id: parentCall.id,
+    });
+
+    expect(aiGreetCall).toMatchObject({
+      name: "aiGreet",
+      parent_run_id: parentCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${parentCall.dotted_order}.`),
+    });
+
+    expect(childCall).toMatchObject({
+      name: "child",
+      parent_run_id: aiGreetCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${aiGreetCall.dotted_order}.`),
+    });
+
+    expect(grandchildCall).toMatchObject({
+      name: "grandchild",
+      parent_run_id: childCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${childCall.dotted_order}.`),
+    });
+
+    expect(greatGrandchildCall).toMatchObject({
+      name: "greatGrandchild",
+      parent_run_id: grandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${grandchildCall.dotted_order}.`),
+    });
+
+    expect(greatGreatGrandchildCall).toMatchObject({
+      name: "greatGreatGrandchild",
+      parent_run_id: greatGrandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(
+        `${greatGrandchildCall.dotted_order}.`
+      ),
+    });
+
+    const greatGreatGrandchildEndCall = callParams.find((param: any) => {
+      return (
+        param.dotted_order === greatGreatGrandchildCall.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+
+    expect(greatGreatGrandchildEndCall).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        output: expect.arrayContaining([
+          expect.objectContaining({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain_core", "messages", "HumanMessage"],
+            kwargs: expect.objectContaining({
+              content: "From great great grandchild!",
+            }),
+          }),
+        ]),
+      },
+    });
+  }
+);
+
+test.each(["true", "false"])(
+  "deep nesting with traceable parent and manual tracer passed with background callbacks: %s",
+  async (value) => {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
+
+    const childCallbacks = [new LangChainTracer()];
+
+    const parent = traceable(
+      async (msg: BaseMessage) => {
+        const child = RunnableLambda.from(async () => {
+          const grandchild = RunnableLambda.from(async () => {
+            const greatGrandchild = traceable(
+              async () => {
+                const greatGreatGrandchild = RunnableLambda.from(async () => {
+                  return [
+                    new HumanMessage({
+                      content: "From great great grandchild!",
+                    }),
+                  ];
+                }).withConfig({ runName: "greatGreatGrandchild" });
+                return greatGreatGrandchild.invoke({});
+              },
+              { name: "greatGrandchild", tracingEnabled: true, client }
+            );
+            return greatGrandchild({});
+          }).withConfig({ runName: "grandchild" });
+          return grandchild.invoke({});
+        }).withConfig({ runName: "child" });
+        return child.invoke([msg], { callbacks: childCallbacks });
+      },
+      { name: "parent", tracingEnabled: true, client }
+    );
+
+    await parent(new HumanMessage({ content: "Hello!" }));
+
+    await awaitAllCallbacks();
+
+    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
+      return call[0].startsWith("https://api.smith.langchain.com/runs");
+    });
+
+    expect(relevantCalls.length).toBeGreaterThan(8);
+
+    const callParams = relevantCalls.map((call: any) =>
+      JSON.parse(decoder.decode(call[1].body))
+    );
+
+    const parentCall = callParams.find((param: any) => {
+      return param.name === "parent" && param.start_time !== undefined;
+    });
+    const childCall = callParams.find((param: any) => {
+      return param.name === "child" && param.start_time !== undefined;
+    });
+    const grandchildCall = callParams.find((param: any) => {
+      return param.name === "grandchild" && param.start_time !== undefined;
+    });
+    const greatGrandchildCall = callParams.find((param: any) => {
+      return param.name === "greatGrandchild" && param.start_time !== undefined;
+    });
+    const greatGreatGrandchildCall = callParams.find((param: any) => {
+      return (
+        param.name === "greatGreatGrandchild" && param.start_time !== undefined
+      );
+    });
+
+    expect(parentCall).toMatchObject({
+      name: "parent",
+      trace_id: parentCall.id,
+    });
+    expect(childCall).toMatchObject({
+      name: "child",
+      parent_run_id: parentCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${parentCall.dotted_order}.`),
+    });
+
+    expect(grandchildCall).toMatchObject({
+      name: "grandchild",
+      parent_run_id: childCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${childCall.dotted_order}.`),
+    });
+
+    expect(greatGrandchildCall).toMatchObject({
+      name: "greatGrandchild",
+      parent_run_id: grandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(`${grandchildCall.dotted_order}.`),
+    });
+
+    expect(greatGreatGrandchildCall).toMatchObject({
+      name: "greatGreatGrandchild",
+      parent_run_id: greatGrandchildCall.id,
+      trace_id: parentCall.id,
+      dotted_order: expect.stringContaining(
+        `${greatGrandchildCall.dotted_order}.`
+      ),
+    });
+
+    const greatGreatGrandchildEndCall = callParams.find((param: any) => {
+      return (
+        param.dotted_order === greatGreatGrandchildCall.dotted_order &&
+        param.end_time !== undefined
+      );
+    });
+
+    expect(greatGreatGrandchildEndCall).toMatchObject({
+      end_time: expect.any(Number),
+      outputs: {
+        output: expect.arrayContaining([
+          expect.objectContaining({
+            lc: 1,
+            type: "constructor",
+            id: ["langchain_core", "messages", "HumanMessage"],
+            kwargs: expect.objectContaining({
+              content: "From great great grandchild!",
+            }),
+          }),
+        ]),
+      },
     });
   }
 );
