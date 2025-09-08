@@ -444,7 +444,7 @@ describe("ChatOpenAI", () => {
       });
 
       // Access the completions object to test the method
-      const completions = (model as any).completions;
+      const { completions } = model as any;
 
       // Mock message with images from OpenRouter
       const mockMessage = {
@@ -508,7 +508,7 @@ describe("ChatOpenAI", () => {
         apiKey: "test-key",
       });
 
-      const completions = (model as any).completions;
+      const { completions } = model as any;
 
       const mockMessage = {
         role: "assistant" as const,

@@ -2465,7 +2465,7 @@ export class ChatOpenAICompletions<
           Array.isArray(messageWithImages.images) &&
           messageWithImages.images.length > 0
         ) {
-          const images = messageWithImages.images;
+          const { images } = messageWithImages;
           const structuredContent: (
             | ContentBlock.Multimodal.Standard
             | ContentBlock.Text
