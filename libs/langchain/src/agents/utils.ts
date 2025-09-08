@@ -58,7 +58,6 @@ export function _addInlineAgentName<T extends BaseMessageLike>(
   message: T
 ): T | AIMessage {
   if (!AIMessage.isInstance(message) || AIMessageChunk.isInstance(message)) {
-    message;
     return message;
   }
 
