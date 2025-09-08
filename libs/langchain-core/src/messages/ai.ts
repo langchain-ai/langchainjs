@@ -24,13 +24,13 @@ import {
 } from "./tool.js";
 import { Constructor } from "./utils.js";
 
-export type AIMessageFields<
+export interface AIMessageFields<
   TStructure extends $MessageStructure = $MessageStructure
-> = BaseMessageFields<TStructure, "ai"> & {
+> extends BaseMessageFields<TStructure, "ai"> {
   tool_calls?: ToolCall[];
   invalid_tool_calls?: InvalidToolCall[];
   usage_metadata?: $InferMessageProperty<TStructure, "ai", "usage_metadata">;
-};
+}
 
 export class AIMessage<TStructure extends $MessageStructure = $MessageStructure>
   extends BaseMessage<TStructure, "ai">

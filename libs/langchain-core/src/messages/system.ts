@@ -8,9 +8,9 @@ import {
 import { $InferMessageContent, $MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
-export type SystemMessageFields<
+export interface SystemMessageFields<
   TStructure extends $MessageStructure = $MessageStructure
-> = BaseMessageFields<TStructure, "system">;
+> extends BaseMessageFields<TStructure, "system"> {}
 
 /**
  * Represents a system message in a conversation.
