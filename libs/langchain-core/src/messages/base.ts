@@ -565,7 +565,7 @@ export type BaseMessageLike =
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */
   | ({
-      type: MessageType;
+      type: MessageType | "user" | "assistant" | "placeholder";
     } & BaseMessageFields &
       Record<string, unknown>)
   | SerializedConstructor;
