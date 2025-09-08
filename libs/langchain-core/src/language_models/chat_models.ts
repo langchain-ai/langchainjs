@@ -1068,8 +1068,11 @@ export abstract class BaseChatModel<
     }
 
     const llm = this.bindTools(tools);
-    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-      (input: AIMessageChunk): RunOutput => {
+    const outputParser = RunnableLambda.from<OutputMessageType, RunOutput>(
+      (input: BaseMessageChunk): RunOutput => {
+        if (!AIMessageChunk.isInstance(input)) {
+          throw new Error("Input is not an AIMessageChunk.");
+        }
         if (!input.tool_calls || input.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }

@@ -13,7 +13,6 @@ import {
   $InferMessageContent,
   $InferMessageProperty,
   $MessageStructure,
-  $StandardMessageStructure,
 } from "./message.js";
 import { mergeResponseMetadata, mergeUsageMetadata } from "./metadata.js";
 import {
@@ -216,7 +215,7 @@ export function isAIMessageChunk<TStructure extends $MessageStructure>(
 }
 
 export type AIMessageChunkFields<
-  TStructure extends $MessageStructure = $StandardMessageStructure
+  TStructure extends $MessageStructure = $MessageStructure
 > = AIMessageFields<TStructure> & {
   tool_call_chunks?: ToolCallChunk[];
 };
@@ -226,7 +225,7 @@ export type AIMessageChunkFields<
  * other AI message chunks.
  */
 export class AIMessageChunk<
-    TStructure extends $MessageStructure = $StandardMessageStructure
+    TStructure extends $MessageStructure = $MessageStructure
   >
   extends BaseMessageChunk<TStructure, "ai">
   implements AIMessage<TStructure>, AIMessageChunkFields<TStructure>
@@ -300,6 +299,7 @@ export class AIMessageChunk<
             name,
             args: parsedArgs,
             id: originalId,
+            type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
@@ -307,6 +307,7 @@ export class AIMessageChunk<
             args: argsStr,
             id: originalId,
             error: "Malformed args.",
+            type: "invalid_tool_call",
           });
         }
       }
