@@ -14,7 +14,7 @@ import {
 } from "./message.js";
 
 /** @internal */
-const __MESSAGE_CLASS = Symbol.for("langchain.message");
+const MESSAGE_SYMBOL = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string;
@@ -210,7 +210,7 @@ export abstract class BaseMessage<
     };
   }
 
-  readonly [__MESSAGE_CLASS] = true as const;
+  readonly [MESSAGE_SYMBOL] = true as const;
 
   abstract readonly type: TRole;
 
@@ -345,8 +345,8 @@ export abstract class BaseMessage<
     return (
       typeof obj === "object" &&
       obj !== null &&
-      __MESSAGE_CLASS in obj &&
-      obj[__MESSAGE_CLASS] === true &&
+      MESSAGE_SYMBOL in obj &&
+      obj[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
