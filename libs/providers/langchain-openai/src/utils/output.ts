@@ -136,7 +136,7 @@ export function interopZodResponseFormat(
 export function handleMultiModalOutput(
   content: string,
   messages: unknown
-): ContentBlock.Standard[] | string {
+): ContentBlock[] | string {
   /**
    * Handle OpenRouter image responses
    * @see https://openrouter.ai/docs/features/multimodal/image-generation#api-usage
