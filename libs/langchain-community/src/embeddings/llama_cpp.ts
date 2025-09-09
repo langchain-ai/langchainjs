@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { LlamaModel, LlamaContext, getLlama } from "node-llama-cpp";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import {

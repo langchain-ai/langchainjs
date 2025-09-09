@@ -1,6 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { test, expect } from "vitest";
 import {
   ChatPromptTemplate,

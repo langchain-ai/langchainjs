@@ -30,7 +30,6 @@ describe("Google Maker Suite Hub", () => {
   );
 
   // We don't need a real key
-  // eslint-disable-next-line no-process-env
   process.env.GOOGLE_PALM_API_KEY = "test";
 
   describe("Prompt", () => {

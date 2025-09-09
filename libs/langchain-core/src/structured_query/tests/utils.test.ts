@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 import { castValue, isFloat, isInt, isString, isBoolean } from "../utils.js";
 

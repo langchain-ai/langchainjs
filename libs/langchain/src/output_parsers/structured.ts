@@ -110,7 +110,7 @@ ${JSON.stringify(toJsonSchema(this.schema))}
         ? text.trim().split(/```(?:json)?/)[1]
         : text.trim();
       return await interopParseAsync(this.schema, JSON.parse(json));
-    } catch (e) {
+    } catch {
       try {
         return await interopParseAsync(this.schema, JSON.parse(text.trim()));
       } catch (e2) {

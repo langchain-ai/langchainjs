@@ -392,7 +392,7 @@ export class RedisVectorStore extends VectorStore {
       await this.redisClient.ft.dropIndex(this.indexName, options);
 
       return true;
-    } catch (err) {
+    } catch {
       return false;
     }
   }

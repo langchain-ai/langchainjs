@@ -166,6 +166,7 @@ export function createStructuredOutputChain<
 >(
   input: StructuredOutputChainInput<T>
 ): LLMChain<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
   | ChatOpenAI<BaseFunctionCallOptions>
@@ -211,6 +212,7 @@ export function createStructuredOutputChainFromZod<T extends InteropZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">
 ): LLMChain<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   | BaseChatModel<BaseFunctionCallOptions, AIMessageChunk>
   | ChatOpenAI<BaseFunctionCallOptions>

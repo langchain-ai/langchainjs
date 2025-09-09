@@ -236,19 +236,17 @@ export class AzionRetriever extends BaseRetriever {
       return "";
     }
 
-    return (
-      filters
-        .map(({ operator, column, value }) => {
-          const columnRef = this.expandedMetadata
-            ? this.sanitizeItem(column)
-            : `metadata->>'$.${this.sanitizeItem(column)}'`;
-          if (["IN", "NOT IN"].includes(operator.toUpperCase())) {
-            return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
-          }
-          return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
-        })
-        .join(" AND ") + " AND "
-    );
+    return `${filters
+      .map(({ operator, column, value }) => {
+        const columnRef = this.expandedMetadata
+          ? this.sanitizeItem(column)
+          : `metadata->>'$.${this.sanitizeItem(column)}'`;
+        if (["IN", "NOT IN"].includes(operator.toUpperCase())) {
+          return `${columnRef} ${operator} (${this.sanitizeItem(value)})`;
+        }
+        return `${columnRef} ${operator} '${this.sanitizeItem(value)}'`;
+      })
+      .join(" AND ")} AND `;
   }
 
   /**

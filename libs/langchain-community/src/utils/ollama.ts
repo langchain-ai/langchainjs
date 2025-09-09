@@ -149,8 +149,7 @@ async function* createOllamaStream(
       error = new Error(
         `Ollama call failed with status code ${response.status}: ${json.error}`
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch {
       error = new Error(
         `Ollama call failed with status code ${response.status}: ${responseText}`
       );
@@ -176,7 +175,7 @@ async function* createOllamaStream(
     for (const line of lines) {
       try {
         yield JSON.parse(line);
-      } catch (e) {
+      } catch {
         console.warn(`Received a non-JSON parseable chunk: ${line}`);
       }
     }

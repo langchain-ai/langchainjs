@@ -133,7 +133,6 @@ test("serialize + deserialize custom classes", async () => {
 });
 
 test("serialize + deserialize llm", async () => {
-  // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = "openai-key";
   const llm = new OpenAI({
     temperature: 0.5,
@@ -231,7 +230,6 @@ test("serialize + deserialize runnable sequence with new and old ids", async () 
 });
 
 test("serialize + deserialize llm chain chat prompt", async () => {
-  // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = undefined;
   const llm = new ChatOpenAI({
     temperature: 0.5,
@@ -257,7 +255,6 @@ test("serialize + deserialize llm chain chat prompt", async () => {
 });
 
 test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
-  // eslint-disable-next-line no-process-env
   process.env.OPENAI_API_KEY = undefined;
   const llm = new AzureChatOpenAI({
     temperature: 0.5,

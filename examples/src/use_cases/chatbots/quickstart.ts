@@ -1,7 +1,3 @@
-/* eslint-disable import/first */
-/* eslint-disable arrow-body-style */
-/* eslint-disable import/no-duplicates */
-
 import { ChatOpenAI } from "@langchain/openai";
 
 const chat = new ChatOpenAI({

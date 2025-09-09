@@ -59,7 +59,6 @@ function replaceSecrets(
  * Should not be subclassed, subclass lc_name above instead.
  */
 export function get_lc_unique_name(
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   serializableClass: typeof Serializable
 ): string {
   // "super" here would refer to the parent class of Serializable,
@@ -183,7 +182,6 @@ export abstract class Serializable implements SerializableInterface {
     }, {} as SerializedFields);
     // get secrets, attributes and aliases from all superclasses
     for (
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
       let current = Object.getPrototypeOf(this);
       current;
       current = Object.getPrototypeOf(current)
@@ -196,7 +194,7 @@ export abstract class Serializable implements SerializableInterface {
     // include all secrets used, even if not in kwargs,
     // will be replaced with sentinel value in replaceSecrets
     Object.keys(secrets).forEach((keyPath) => {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let read: any = this;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

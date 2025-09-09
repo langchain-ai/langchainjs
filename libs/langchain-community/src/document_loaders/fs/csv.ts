@@ -87,7 +87,6 @@ export class CSVLoader extends TextLoader {
         throw new Error(`Column ${column} not found in CSV file.`);
       }
       // Note TextLoader will raise an exception if the value is null.
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return parsed.map((row) => row[column]!);
     }
 

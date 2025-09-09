@@ -390,7 +390,14 @@ describe("isMessageLike", () => {
     });
     it("returns false for objects with non-string/non-array 'content' (e.g., function/plain object)", () => {
       expect(isMessageLike({ type: "ai", content: {} })).toBe(false);
-      expect(isMessageLike({ type: "ai", content: () => {} })).toBe(false);
+      expect(
+        isMessageLike({
+          type: "ai",
+          content: () => {
+            // empty
+          },
+        })
+      ).toBe(false);
     });
     it("returns false for arrays with length not equal to 2", () => {
       expect(isMessageLike([])).toBe(false);

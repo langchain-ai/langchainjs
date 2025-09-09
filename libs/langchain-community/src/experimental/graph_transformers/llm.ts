@@ -196,12 +196,12 @@ function mapToBaseNode(node: any): Node {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapToBaseRelationship({
   fallbackRelationshipType,
 }: {
   fallbackRelationshipType: string | null;
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (relationship: any): Relationship {
     return new Relationship({
       source: new Node({

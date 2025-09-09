@@ -638,14 +638,12 @@ export abstract class BaseChatModel<
               isBaseMessage(result.message) &&
               isAIMessage(result.message)
             ) {
-              // eslint-disable-next-line no-param-reassign
               result.message.usage_metadata = {
                 input_tokens: 0,
                 output_tokens: 0,
                 total_tokens: 0,
               };
             }
-            // eslint-disable-next-line no-param-reassign
             result.generationInfo = {
               ...result.generationInfo,
               tokenUsage: {},

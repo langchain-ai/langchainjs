@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { test, expect, afterAll } from "vitest";
 import { MongoClient, ObjectId } from "mongodb";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
@@ -9,7 +7,6 @@ import {
 } from "../../chat_histories/mongodb.js";
 
 afterAll(async () => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const client = new MongoClient(
     process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
   );
@@ -21,7 +18,6 @@ afterAll(async () => {
 test("Test Azure Cosmos MongoDB history store", async () => {
   expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const mongoClient = new MongoClient(
     process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
   );
@@ -61,7 +57,6 @@ test("Test Azure Cosmos MongoDB history store", async () => {
 test("Test clear Azure Cosmos MongoDB history store", async () => {
   expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const mongoClient = new MongoClient(
     process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
   );
@@ -102,7 +97,6 @@ test("Test clear Azure Cosmos MongoDB history store", async () => {
 test("Test getAllSessions and clearAllSessions", async () => {
   expect(process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING).toBeDefined();
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const mongoClient = new MongoClient(
     process.env.AZURE_COSMOSDB_MONGODB_CONNECTION_STRING!
   );

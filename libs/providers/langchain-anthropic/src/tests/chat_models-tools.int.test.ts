@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, expect, test } from "vitest";

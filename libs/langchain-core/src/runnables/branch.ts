@@ -223,7 +223,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
               } else {
                 try {
                   finalOutput = concat(finalOutput, chunk);
-                } catch (e) {
+                } catch {
                   finalOutput = undefined;
                   finalOutputSupported = false;
                 }
@@ -248,7 +248,7 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
             } else {
               try {
                 finalOutput = concat(finalOutput, chunk as RunOutput);
-              } catch (e) {
+              } catch {
                 finalOutput = undefined;
                 finalOutputSupported = false;
               }

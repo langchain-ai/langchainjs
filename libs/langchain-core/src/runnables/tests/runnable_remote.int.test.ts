@@ -82,7 +82,6 @@ test("streamLog error handling hosted langserve", async () => {
   const result = await remote.streamLog({
     question: "What is a document loader?",
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await expect(async () => {
     for await (const chunk of result) {
       console.log(chunk);

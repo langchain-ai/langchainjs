@@ -1,6 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable no-promise-executor-return */
-
 import { beforeAll, expect, vi, test, type MockInstance } from "vitest";
 import { Collection, MongoClient } from "mongodb";
 import { setTimeout } from "timers/promises";
@@ -31,10 +28,8 @@ import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
 */
 
 let client: MongoClient;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let collection: Collection;
 beforeAll(async () => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   client = new MongoClient(uri(), { monitorCommands: true });
   await client.connect();
 

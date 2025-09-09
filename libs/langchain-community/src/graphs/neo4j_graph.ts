@@ -277,7 +277,7 @@ export class Neo4jGraph {
       this.database = database;
       this.timeoutMs = timeoutMs;
       this.enhancedSchema = enhancedSchema;
-    } catch (error) {
+    } catch {
       throw new Error(
         "Could not create a Neo4j driver instance. Please check the connection details."
       );

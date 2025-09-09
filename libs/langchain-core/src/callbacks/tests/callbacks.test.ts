@@ -1,4 +1,3 @@
-/* eslint-disable no-promise-executor-return */
 import { test, expect } from "vitest";
 import * as uuid from "uuid";
 import { AsyncLocalStorage } from "node:async_hooks";

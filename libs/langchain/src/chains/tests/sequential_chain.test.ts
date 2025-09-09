@@ -141,7 +141,6 @@ test("Test SequentialChain input/output chains' validation", () => {
   const chain2 = new LLMChain({ llm: model2, prompt: prompt2 });
 
   expect(() => {
-    /* eslint-disable no-new */
     new SequentialChain({
       chains: [chain1, chain2],
       inputVariables: ["input1"],
@@ -151,7 +150,6 @@ test("Test SequentialChain input/output chains' validation", () => {
     `"Missing variables for chain "llm": "input2". Only got the following variables: "input1"."`
   );
   expect(() => {
-    /* eslint-disable no-new */
     new SequentialChain({
       chains: [chain1, chain2],
       inputVariables: ["input1", "input2"],
@@ -183,7 +181,6 @@ test("Test SequentialChain chains' intermediate variables validation", () => {
   const chain2 = new LLMChain({ llm: model2, prompt: prompt2 });
 
   expect(() => {
-    /* eslint-disable no-new */
     new SequentialChain({
       chains: [chain1, chain2],
       inputVariables: ["input1", "input2"],

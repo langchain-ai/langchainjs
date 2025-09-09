@@ -83,7 +83,6 @@ export class PDFLoader extends BufferLoader {
           } else {
             textItems.push(`\n${item.str}`);
           }
-          // eslint-disable-next-line prefer-destructuring
           lastY = item.transform[5];
         }
       }

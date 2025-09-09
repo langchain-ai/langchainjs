@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 import { OpenAI } from "@langchain/openai";

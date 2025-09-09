@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "@jest/globals";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests";

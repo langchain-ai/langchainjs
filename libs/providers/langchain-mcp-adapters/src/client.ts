@@ -1,3 +1,4 @@
+/* eslint-disable no-process-env */
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
@@ -98,10 +99,9 @@ function isResolvedStreamableHTTPConnection(
 
   if ("url" in connection && typeof connection.url === "string") {
     try {
-      // eslint-disable-next-line no-new
       new URL(connection.url);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -354,7 +354,7 @@ export class MultiServerMCPClient {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-misused-promises
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
@@ -759,7 +759,7 @@ export class MultiServerMCPClient {
     reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-param-reassign
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();

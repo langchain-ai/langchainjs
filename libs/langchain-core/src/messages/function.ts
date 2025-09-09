@@ -33,7 +33,7 @@ export class FunctionMessage extends BaseMessage {
     name?: string
   ) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line no-param-reassign
       fields = { content: fields, name: name! };
     }
     super(fields);

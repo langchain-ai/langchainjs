@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { v } from "convex/values";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { ConvexVectorStore } from "../../../convex.js";

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
   type FunctionDeclarationSchema as GenerativeAIFunctionDeclarationSchema,
   type SchemaType as FunctionDeclarationSchemaType,
@@ -78,7 +76,6 @@ export function jsonSchemaToGeminiParameters(
 ): GenerativeAIFunctionDeclarationSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsonSchema = removeAdditionalProperties(
     schema as GenerativeAIJsonSchemaDirty
   );
