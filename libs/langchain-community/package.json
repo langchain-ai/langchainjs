@@ -53,7 +53,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
     "@aws-sdk/client-sfn": "^3.749.0",
     "@aws-sdk/credential-provider-node": "^3.749.0",
-    "@aws-sdk/dsql-signer": "^3.738.0",
+    "@aws-sdk/dsql-signer": "^3.844.0",
     "@aws-sdk/types": "^3.734.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
