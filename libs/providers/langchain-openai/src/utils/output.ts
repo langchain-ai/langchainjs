@@ -6,6 +6,7 @@ import {
 import { toJSONSchema as toJSONSchemaV4, parse as parseV4 } from "zod/v4/core";
 import { ResponseFormatJSONSchema } from "openai/resources";
 import { zodResponseFormat } from "openai/helpers/zod";
+import { ContentBlock } from "@langchain/core/messages";
 
 const SUPPORTED_METHODS = [
   "jsonSchema",
@@ -123,4 +124,40 @@ export function interopZodResponseFormat(
     );
   }
   throw new Error("Unsupported schema response format");
+}
+
+/**
+ * Handle multi modal response content.
+ *
+ * @param content The content of the message.
+ * @param messages The messages of the response.
+ * @returns The new content of the message.
+ */
+export function handleMultiModalOutput(
+  content: string,
+  messages: unknown
+): ContentBlock.Standard[] | string {
+  /**
+   * Handle OpenRouter image responses
+   * @see https://openrouter.ai/docs/features/multimodal/image-generation#api-usage
+   */
+  if (
+    messages &&
+    typeof messages === "object" &&
+    "images" in messages &&
+    Array.isArray(messages.images)
+  ) {
+    const images = messages.images
+      .filter((image) => typeof image?.image_url?.url === "string")
+      .map(
+        (image) =>
+          ({
+            type: "image",
+            url: image.image_url.url as string,
+          } as const)
+      );
+    return [{ type: "text", text: content }, ...images];
+  }
+
+  return content;
 }
