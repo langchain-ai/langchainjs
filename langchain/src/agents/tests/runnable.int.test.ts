@@ -10,7 +10,6 @@ import {
   BaseMessage,
   FunctionMessage,
 } from "@langchain/core/messages";
-import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentStep } from "@langchain/core/agents";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentExecutor } from "../executor.js";
@@ -20,7 +19,7 @@ import { OpenAIFunctionsAgentOutputParser } from "../openai/output_parser.js";
 
 test("Runnable variant", async () => {
   const tools = [new Calculator(), new SerpAPI()];
-  const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+  const model = new ChatOpenAI({ model: "gpt-4", temperature: 0 });
 
   const prompt = ChatPromptTemplate.fromMessages([
     ["ai", "You are a helpful assistant"],
@@ -28,9 +27,7 @@ test("Runnable variant", async () => {
     new MessagesPlaceholder("agent_scratchpad"),
   ]);
 
-  const modelWithTools = model.bind({
-    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
-  });
+  const modelWithTools = model.bindTools(tools);
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
     steps.flatMap(({ action, observation }) => {
@@ -73,7 +70,7 @@ test("Runnable variant", async () => {
 test("Runnable variant executor astream log", async () => {
   const tools = [new Calculator(), new SerpAPI()];
   const model = new ChatOpenAI({
-    modelName: "gpt-4",
+    model: "gpt-4",
     temperature: 0,
     streaming: true,
   });
@@ -84,9 +81,7 @@ test("Runnable variant executor astream log", async () => {
     new MessagesPlaceholder("agent_scratchpad"),
   ]);
 
-  const modelWithTools = model.bind({
-    functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
-  });
+  const modelWithTools = model.bindTools(tools);
 
   const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
     steps.flatMap(({ action, observation }) => {

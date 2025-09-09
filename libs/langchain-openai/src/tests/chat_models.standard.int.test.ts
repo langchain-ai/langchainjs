@@ -26,7 +26,14 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasStructuredOutput: true,
       supportsParallelToolCalls: true,
       constructorArgs: {
-        model: "gpt-3.5-turbo",
+        model: "gpt-5",
+      },
+      supportsStandardContentType: {
+        text: true,
+        // TODO: audio only supported by gpt-4o-audio-preview, but gpt-4o doesn't support the other input types
+        // audio: ["base64", "url", "dataUrl"],
+        image: ["base64", "url", "dataUrl"],
+        file: ["base64", "url", "dataUrl"],
       },
     });
   }
@@ -100,7 +107,7 @@ class ChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
     const constructorArgsCopy = { ...this.constructorArgs };
     this.constructorArgs = {
       ...this.constructorArgs,
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
     };
     await super.testParallelToolCalling();
     this.constructorArgs = constructorArgsCopy;

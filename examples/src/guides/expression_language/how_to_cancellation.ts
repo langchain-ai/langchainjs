@@ -4,8 +4,8 @@ import { PromptTemplate } from "@langchain/core/prompts";
 const controller = new AbortController();
 
 // Create a new LLMChain from a PromptTemplate and an LLM in streaming mode.
-const llm = new ChatOpenAI({ temperature: 0.9 });
-const model = llm.bind({ signal: controller.signal });
+const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 });
+const model = llm.withConfig({ signal: controller.signal });
 const prompt = PromptTemplate.fromTemplate(
   "Please write a 500 word essay about {topic}."
 );

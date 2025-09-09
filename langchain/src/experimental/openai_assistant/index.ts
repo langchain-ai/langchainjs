@@ -1,4 +1,8 @@
-import { type ClientOptions, OpenAIClient } from "@langchain/openai";
+import {
+  type ClientOptions,
+  type OpenAIChatModelId,
+  OpenAIClient,
+} from "@langchain/openai";
 import { StructuredTool } from "@langchain/core/tools";
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import { formatToOpenAIAssistantTool } from "@langchain/openai";
@@ -62,7 +66,7 @@ export class OpenAIAssistantRunnable<
     pollIntervalMs,
     fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId"> & {
-    model: string;
+    model: OpenAIChatModelId;
     name?: string;
     instructions?: string;
     tools?: OpenAIToolType | Array<StructuredTool>;
@@ -103,9 +107,9 @@ export class OpenAIAssistantRunnable<
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
       run = await this.client.beta.threads.runs.submitToolOutputs(
-        parsedStepsInput.threadId,
         parsedStepsInput.runId,
         {
+          thread_id: parsedStepsInput.threadId,
           tool_outputs: parsedStepsInput.toolOutputs,
         }
       );
@@ -137,13 +141,10 @@ export class OpenAIAssistantRunnable<
     } else {
       // Submitting tool outputs to an existing run, outside the AgentExecutor
       // framework.
-      run = await this.client.beta.threads.runs.submitToolOutputs(
-        input.threadId,
-        input.runId,
-        {
-          tool_outputs: input.toolOutputs,
-        }
-      );
+      run = await this.client.beta.threads.runs.submitToolOutputs(input.runId, {
+        thread_id: input.threadId,
+        tool_outputs: input.toolOutputs,
+      });
     }
 
     return this._getResponse(run.id, run.thread_id);
@@ -156,7 +157,7 @@ export class OpenAIAssistantRunnable<
    * @returns {Promise<AssistantDeleted>}
    */
   public async deleteAssistant() {
-    return await this.client.beta.assistants.del(this.assistantId);
+    return await this.client.beta.assistants.delete(this.assistantId);
   }
 
   /**
@@ -181,7 +182,7 @@ export class OpenAIAssistantRunnable<
     instructions,
     fileIds,
   }: Omit<OpenAIAssistantRunnableInput<AsAgent>, "assistantId" | "tools"> & {
-    model?: string;
+    model?: OpenAIChatModelId;
     name?: string;
     instructions?: string;
     fileIds?: string[];
@@ -268,7 +269,9 @@ export class OpenAIAssistantRunnable<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let run = {} as any;
     while (inProgress) {
-      run = await this.client.beta.threads.runs.retrieve(threadId, runId);
+      run = await this.client.beta.threads.runs.retrieve(runId, {
+        thread_id: threadId,
+      });
       inProgress = ["in_progress", "queued"].includes(run.status);
       if (inProgress) {
         await sleep(this.pollIntervalMs);

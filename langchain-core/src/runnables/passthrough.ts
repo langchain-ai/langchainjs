@@ -132,7 +132,7 @@ export class RunnablePassthrough<RunInput = any> extends Runnable<
    *     schema: async () => db.getTableInfo(),
    *   }),
    *   prompt,
-   *   new ChatOpenAI({}).bind({ stop: ["\nSQLResult:"] }),
+   *   new ChatOpenAI({ model: "gpt-4o-mini" }).withConfig({ stop: ["\nSQLResult:"] }),
    *   new StringOutputParser(),
    * ]);
    * const result = await sqlQueryGeneratorChain.invoke({

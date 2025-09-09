@@ -631,6 +631,122 @@ test("Multi part chat prompt template with image", async () => {
   ]);
 });
 
+test("Multi part chat prompt template with dicts", async () => {
+  const name = "Bob";
+  const text1 = "chair";
+  const myImage = "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAA";
+  const template = ChatPromptTemplate.fromMessages([
+    ["system", "You are an AI assistant named {name}"],
+    [
+      "human",
+      [
+        {
+          type: "text",
+          text: "{text1}",
+          cache_control: { type: "ephemeral" },
+        },
+        { type: "audio", audio: { path: "{myImage}" } },
+        // { type: "image_url", image_url: { path: "{myImage}" } },
+      ],
+    ],
+  ]);
+  const messages = await template.formatMessages({
+    name,
+    text1,
+    myImage,
+  });
+  expect(messages).toEqual([
+    new SystemMessage("You are an AI assistant named Bob"),
+    new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: `chair`,
+          cache_control: { type: "ephemeral" },
+        },
+        {
+          type: "audio",
+          audio: {
+            path: myImage,
+          },
+        },
+      ],
+    }),
+  ]);
+
+  expect(JSON.parse(JSON.stringify(template))).toEqual({
+    id: ["langchain_core", "prompts", "chat", "ChatPromptTemplate"],
+    kwargs: {
+      input_variables: ["name", "text1", "myImage"],
+      messages: [
+        {
+          id: [
+            "langchain_core",
+            "prompts",
+            "chat",
+            "SystemMessagePromptTemplate",
+          ],
+          kwargs: {
+            prompt: {
+              id: ["langchain_core", "prompts", "prompt", "PromptTemplate"],
+              kwargs: {
+                input_variables: ["name"],
+                template: "You are an AI assistant named {name}",
+                template_format: "f-string",
+              },
+              lc: 1,
+              type: "constructor",
+            },
+          },
+          lc: 1,
+          type: "constructor",
+        },
+        {
+          id: [
+            "langchain_core",
+            "prompts",
+            "chat",
+            "HumanMessagePromptTemplate",
+          ],
+          kwargs: {
+            additional_options: {},
+            prompt: [
+              {
+                id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
+                kwargs: {
+                  input_variables: ["text1"],
+                  template: {
+                    cache_control: { type: "ephemeral" },
+                    text: "{text1}",
+                    type: "text",
+                  },
+                  template_format: "f-string",
+                },
+                lc: 1,
+                type: "constructor",
+              },
+              {
+                id: ["langchain_core", "prompts", "dict", "DictPromptTemplate"],
+                kwargs: {
+                  input_variables: ["myImage"],
+                  template: { audio: { path: "{myImage}" }, type: "audio" },
+                  template_format: "f-string",
+                },
+                lc: 1,
+                type: "constructor",
+              },
+            ],
+          },
+          lc: 1,
+          type: "constructor",
+        },
+      ],
+    },
+    lc: 1,
+    type: "constructor",
+  });
+});
+
 test("Multi-modal, multi part chat prompt works with instances of BaseMessage", async () => {
   const name = "Bob";
   const objectName = "chair";

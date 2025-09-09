@@ -4,6 +4,7 @@ import { DiscordSendMessagesTool } from "@langchain/community/tools/discord";
 import { DadJokeAPI } from "@langchain/community/tools/dadjokeapi";
 
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0,
 });
 

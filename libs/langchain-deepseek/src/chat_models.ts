@@ -1,15 +1,17 @@
-import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  StructuredOutputMethodOptions,
+} from "@langchain/core/language_models/base";
 import { BaseMessage } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { InteropZodType } from "@langchain/core/utils/types";
 import {
-  ChatOpenAI,
   ChatOpenAICallOptions,
+  ChatOpenAICompletions,
   ChatOpenAIFields,
-  ChatOpenAIStructuredOutputMethodOptions,
   OpenAIClient,
 } from "@langchain/openai";
-import { z } from "zod";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -69,11 +71,11 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  * ## [Runtime args](https://api.js.langchain.com/interfaces/_langchain_deepseek.ChatDeepSeekCallOptions.html)
  *
  * Runtime args can be passed as the second argument to any of the base runnable methods `.invoke`. `.stream`, `.batch`, etc.
- * They can also be passed via `.bind`, or the second arg in `.bindTools`, like shown in the examples below:
+ * They can also be passed via `.withConfig`, or the second arg in `.bindTools`, like shown in the examples below:
  *
  * ```typescript
- * // When calling `.bind`, call options should be passed via the first argument
- * const llmWithArgsBound = llm.bind({
+ * // When calling `.withConfig`, call options should be passed via the first argument
+ * const llmWithArgsBound = llm.withConfig({
  *   stop: ["\n"],
  *   tools: [...],
  * });
@@ -401,7 +403,7 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  *
  * <br />
  */
-export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
+export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions> {
   static lc_name() {
     return "ChatDeepSeek";
   }
@@ -438,7 +440,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     });
   }
 
-  protected override _convertOpenAIDeltaToBaseMessageChunk(
+  protected override _convertCompletionsDeltaToBaseMessageChunk(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
@@ -450,7 +452,7 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
       | "assistant"
       | "tool"
   ) {
-    const messageChunk = super._convertOpenAIDeltaToBaseMessageChunk(
+    const messageChunk = super._convertCompletionsDeltaToBaseMessageChunk(
       delta,
       rawResponse,
       defaultRole
@@ -459,15 +461,14 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     return messageChunk;
   }
 
-  protected override _convertOpenAIChatCompletionMessageToBaseMessage(
+  protected override _convertCompletionsMessageToBaseMessage(
     message: OpenAIClient.ChatCompletionMessage,
     rawResponse: OpenAIClient.ChatCompletion
   ) {
-    const langChainMessage =
-      super._convertOpenAIChatCompletionMessageToBaseMessage(
-        message,
-        rawResponse
-      );
+    const langChainMessage = super._convertCompletionsMessageToBaseMessage(
+      message,
+      rawResponse
+    );
     langChainMessage.additional_kwargs.reasoning_content =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
@@ -479,10 +480,10 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -490,10 +491,10 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -501,10 +502,10 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -514,10 +515,10 @@ export class ChatDeepSeek extends ChatOpenAI<ChatDeepSeekCallOptions> {
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: ChatOpenAIStructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

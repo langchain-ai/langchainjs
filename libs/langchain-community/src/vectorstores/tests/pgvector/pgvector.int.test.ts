@@ -19,6 +19,214 @@ const postgresConnectionOptions = {
   database: "api",
 } as PoolConfig;
 
+const documentsForFilterTest = [
+  {
+    pageContent: "Lorem Ipsum",
+    metadata: {
+      num: 100,
+      string: "test1",
+      bool: true,
+    },
+  },
+  {
+    pageContent: "Lorem Ipsum",
+    metadata: {
+      num: 200,
+      string: "test2",
+      bool: true,
+    },
+  },
+  {
+    pageContent: "Lorem Ipsum",
+    metadata: {
+      num: 300,
+      string: "test3",
+      bool: false,
+    },
+  },
+];
+
+const testFilters = async (pgvectorVectorStore: PGVectorStore) => {
+  await pgvectorVectorStore.addDocuments(documentsForFilterTest);
+
+  // 'in' test
+  const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      in: [100, 300],
+    },
+    bool: {
+      in: [true, false],
+    },
+  });
+
+  expect(result.length).toEqual(2);
+  expect(result).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 100, bool: true }),
+    },
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 300, bool: false }),
+    },
+  ]);
+
+  // equality test
+  const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    string: "test2",
+    num: 200,
+  });
+  expect(result2.length).toEqual(1);
+  expect(result2).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ string: "test2", num: 200 }),
+    },
+  ]);
+
+  // equality test no results
+  const result2a = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    string: "test2",
+    num: 300,
+  });
+  expect(result2a.length).toEqual(0);
+
+  // notIn test
+  const result3 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      notIn: [100, 300],
+    },
+  });
+
+  expect(result3.length).toEqual(1);
+  expect(result3).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 200 }),
+    },
+  ]);
+
+  // lt test
+  const result4 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      lt: 200,
+    },
+  });
+
+  expect(result4.length).toEqual(1);
+  expect(result4).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 100 }),
+    },
+  ]);
+
+  // lte test
+  const result5 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      lte: 200,
+    },
+  });
+
+  expect(result5.length).toEqual(2);
+  expect(result5).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 100 }),
+    },
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 200 }),
+    },
+  ]);
+
+  // gt test
+  const result6 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      gt: 200,
+    },
+  });
+
+  expect(result6.length).toEqual(1);
+  expect(result6).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 300 }),
+    },
+  ]);
+
+  // gte test
+  const result7 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      gte: 200,
+    },
+  });
+
+  expect(result7.length).toEqual(2);
+  expect(result7).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 200 }),
+    },
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 300 }),
+    },
+  ]);
+
+  // combination of gte and lte
+  const result7a = await pgvectorVectorStore.similaritySearch("hello", 3, {
+    num: {
+      gte: 200,
+      lte: 300,
+    },
+  });
+  expect(result7a.length).toEqual(2);
+  expect(result7a).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 200 }),
+    },
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 300 }),
+    },
+  ]);
+
+  // neq test
+  const result8 = await pgvectorVectorStore.similaritySearch("hello", 2, {
+    num: {
+      neq: 200,
+    },
+  });
+
+  expect(result8.length).toEqual(2);
+  expect(result8).toEqual([
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 100 }),
+    },
+    {
+      id: expect.any(String),
+      pageContent: "Lorem Ipsum",
+      metadata: expect.objectContaining({ num: 300 }),
+    },
+  ]);
+};
+
 describe("PGVectorStore", () => {
   let pgvectorVectorStore: PGVectorStore;
   const tableName = "testlangchain";
@@ -135,49 +343,7 @@ describe("PGVectorStore", () => {
   });
 
   test("PGvector supports different filter types", async () => {
-    const documents = [
-      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
-    ];
-
-    await pgvectorVectorStore.addDocuments(documents);
-
-    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: {
-        in: [100, 300],
-      },
-    });
-
-    expect(result.length).toEqual(2);
-    expect(result).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 100 },
-      },
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 300 },
-      },
-    ]);
-
-    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: 200,
-    });
-    expect(result2.length).toEqual(1);
-    expect(result2).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 200 },
-      },
-    ]);
-
-    const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
-
-    expect(result3.length).toEqual(3);
+    await testFilters(pgvectorVectorStore);
   });
 
   test("PGvector supports arrayContains (?|) in metadata filter ", async () => {
@@ -290,7 +456,10 @@ describe("PGVectorStore", () => {
     const initialIds = result.rows.map((row) => row.id);
 
     // Filter Matches 1st document
-    await pgvectorVectorStore.delete({ filter: { a: 1, b: 1 } });
+    // Use complex filters here to test the various operators at the same time
+    await pgvectorVectorStore.delete({
+      filter: { a: 1, b: { gte: 1 }, c: { neq: 2 } },
+    });
 
     const result2 = await pgvectorVectorStore.pool.query(
       `SELECT id FROM "${tableName}"`
@@ -451,49 +620,7 @@ describe("PGVectorStore with collection", () => {
   });
 
   test("PGvector supports different filter types", async () => {
-    const documents = [
-      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
-    ];
-
-    await pgvectorVectorStore.addDocuments(documents);
-
-    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: {
-        in: [100, 300],
-      },
-    });
-
-    expect(result.length).toEqual(2);
-    expect(result).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 100 },
-      },
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 300 },
-      },
-    ]);
-
-    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: 200,
-    });
-    expect(result2.length).toEqual(1);
-    expect(result2).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 200 },
-      },
-    ]);
-
-    const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
-
-    expect(result3.length).toEqual(3);
+    await testFilters(pgvectorVectorStore);
   });
 
   test("PGvector can delete document by id", async () => {
@@ -546,7 +673,10 @@ describe("PGVectorStore with collection", () => {
     const initialIds = result.rows.map((row) => row.id);
 
     // Filter Matches 1st document
-    await pgvectorVectorStore.delete({ filter: { a: 1, b: 1 } });
+    // Use complex filters here to test the various operators at the same time
+    await pgvectorVectorStore.delete({
+      filter: { a: 1, b: { gte: 1 }, c: { neq: 2 } },
+    });
 
     const result2 = await pgvectorVectorStore.pool.query(
       `SELECT id FROM "${tableName}"`
@@ -691,49 +821,7 @@ describe("PGVectorStore with schema", () => {
   });
 
   test("PGvector supports different filter types", async () => {
-    const documents = [
-      { pageContent: "Lorem Ipsum", metadata: { a: 100 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 200 } },
-      { pageContent: "Lorem Ipsum", metadata: { a: 300 } },
-    ];
-
-    await pgvectorVectorStore.addDocuments(documents);
-
-    const result = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: {
-        in: [100, 300],
-      },
-    });
-
-    expect(result.length).toEqual(2);
-    expect(result).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 100 },
-      },
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 300 },
-      },
-    ]);
-
-    const result2 = await pgvectorVectorStore.similaritySearch("hello", 2, {
-      a: 200,
-    });
-    expect(result2.length).toEqual(1);
-    expect(result2).toEqual([
-      {
-        id: expect.any(String),
-        pageContent: "Lorem Ipsum",
-        metadata: { a: 200 },
-      },
-    ]);
-
-    const result3 = await pgvectorVectorStore.similaritySearch("hello", 3);
-
-    expect(result3.length).toEqual(3);
+    await testFilters(pgvectorVectorStore);
   });
 
   test("PGvector can delete document by id", async () => {
@@ -786,7 +874,10 @@ describe("PGVectorStore with schema", () => {
     const initialIds = result.rows.map((row) => row.id);
 
     // Filter Matches 1st document
-    await pgvectorVectorStore.delete({ filter: { a: 1, b: 1 } });
+    // Use complex filters here to test the various operators at the same time
+    await pgvectorVectorStore.delete({
+      filter: { a: 1, c: { in: [1] } },
+    });
 
     const result2 = await pgvectorVectorStore.pool.query(
       `SELECT id FROM ${computedTableName}`
@@ -798,11 +889,136 @@ describe("PGVectorStore with schema", () => {
     const idsAfterDelete = result2.rows.map((row) => row.id);
 
     // The document with matching metadata should not be in the database
-    expect(idsAfterDelete).not.toContainEqual(initialIds[0]);
+    expect(idsAfterDelete).not.toContainEqual(initialIds[2]);
 
     // All other documents should still be in database
+    expect(idsAfterDelete).toContainEqual(initialIds[0]);
     expect(idsAfterDelete).toContainEqual(initialIds[1]);
-    expect(idsAfterDelete).toContainEqual(initialIds[2]);
+  });
+});
+
+describe("PGVectorStore with skipInitializationCheck", () => {
+  let pgvectorVectorStore: PGVectorStore;
+  const tableName = "testlangchain_skip_init";
+
+  afterEach(async () => {
+    const pool = new pg.Pool(postgresConnectionOptions);
+    await pool.query(`DROP TABLE IF EXISTS "${tableName}"`);
+    await pool.end();
+  });
+
+  test("skipInitializationCheck=false (default) should initialize tables", async () => {
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const result = await pgvectorVectorStore.pool.query(
+      `SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '${tableName}'
+      )`
+    );
+
+    expect(result.rows[0].exists).toBe(true);
+    await pgvectorVectorStore.end();
+  });
+
+  test("skipInitializationCheck=true should skip table initialization", async () => {
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      skipInitializationCheck: true,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const tableExists = await pgvectorVectorStore.pool.query(
+      `SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '${tableName}'
+      )`
+    );
+
+    expect(tableExists.rows[0].exists).toBe(false);
+
+    await pgvectorVectorStore.end();
+  });
+
+  test("skipInitializationCheck=true should work with addDocuments", async () => {
+    const setupPool = new pg.Pool(postgresConnectionOptions);
+
+    await setupPool.query(`CREATE EXTENSION IF NOT EXISTS vector`);
+    await setupPool.query(`
+      CREATE TABLE "${tableName}" (
+        "id" uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+        "content" text,
+        "metadata" jsonb,
+        "vector" vector(1536)
+      );
+    `);
+
+    await setupPool.end();
+
+    const config: PGVectorStoreArgs = {
+      postgresConnectionOptions,
+      tableName,
+      skipInitializationCheck: true,
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "vector",
+        contentColumnName: "content",
+        metadataColumnName: "metadata",
+      },
+    };
+
+    pgvectorVectorStore = await PGVectorStore.initialize(
+      embeddingsEngine,
+      config
+    );
+
+    const documents = [
+      { pageContent: "Hello world", metadata: { source: "test" } },
+      {
+        pageContent: "Testing skipInitializationCheck",
+        metadata: { source: "test" },
+      },
+    ];
+
+    await pgvectorVectorStore.addDocuments(documents);
+
+    const query = await embeddingsEngine.embedQuery("Hello");
+    const results = await pgvectorVectorStore.similaritySearchVectorWithScore(
+      query,
+      1
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0][0].pageContent).toBe("Hello world");
+
+    await pgvectorVectorStore.end();
   });
 });
 

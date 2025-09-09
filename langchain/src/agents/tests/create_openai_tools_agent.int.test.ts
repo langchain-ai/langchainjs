@@ -16,7 +16,7 @@ const tools = [new TavilySearchResults({ maxResults: 1 })];
 test("createOpenAIToolsAgent works", async () => {
   const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 0,
   });
   const agent = await createOpenAIToolsAgent({
@@ -60,7 +60,7 @@ test("createOpenAIToolsAgent handles errors", async () => {
   ];
   const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 0,
   });
   const agent = await createOpenAIToolsAgent({
@@ -87,7 +87,7 @@ test.skip("createOpenAIToolsAgent tracing works when it is nested in a lambda", 
   );
   const prompt = await pull<ChatPromptTemplate>("hwchase17/openai-tools-agent");
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 0,
   });
   const agent = await createOpenAIToolsAgent({

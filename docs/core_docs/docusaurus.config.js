@@ -69,6 +69,12 @@ const config = {
         },
       }),
     }),
+    [
+      "@docusaurus/plugin-google-tag-manager",
+      {
+        containerId: "GTM-NN9LVH7S",
+      },
+    ],
   ],
 
   presets: [
@@ -135,10 +141,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://www.linkedin.com/jobs/view/4167322504/" target="_blank">Join our team!</a></strong>',
-        backgroundColor: "#d0c9fe",
+          "These docs will be deprecated and no longer maintained with the release of LangChain v1.0 in October 2025. <a href='https://docs.langchain.com/oss/javascript/langchain/overview' target='_blank'>Visit the v1.0 alpha docs</a>",
+        backgroundColor: "#CC5500",
       },
       prism: {
         theme: {
@@ -268,6 +278,10 @@ const config = {
             title: "Community",
             items: [
               {
+                label: "LangChain Forum",
+                href: "https://forum.langchain.com/",
+              },
+              {
                 label: "Twitter",
                 href: "https://twitter.com/LangChainAI",
               },
@@ -316,13 +330,7 @@ const config = {
       },
     }),
 
-  scripts: [
-    baseUrl + "js/google_analytics.js",
-    {
-      src: "https://www.googletagmanager.com/gtag/js?id=G-TVSL7JBE9Y",
-      async: true,
-    },
-  ],
+  scripts: [baseUrl + "js/job_link.js"],
 
   customFields: {
     supabasePublicKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY,

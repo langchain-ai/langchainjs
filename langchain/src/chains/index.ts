@@ -98,4 +98,5 @@ export {
 export {
   type OpenAPIChainOptions,
   createOpenAPIChain,
+  convertOpenAPISpecToOpenAIFunctions,
 } from "./openai_functions/openapi.js";

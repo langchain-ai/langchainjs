@@ -1,6 +1,6 @@
 # @langchain/weaviate
 
-This package contains the LangChain.js integrations for Weaviate with the `weaviate-ts-client` SDK.
+This package contains the LangChain.js integrations for Weaviate with the `weaviate-client` SDK.
 
 ## Installation
 
@@ -27,7 +27,7 @@ export WEAVIATE_API_KEY=
 ```
 
 ```typescript
-import weaviate, { ApiKey } from 'weaviate-ts-client';
+import weaviate, { ApiKey } from 'weaviate-client';
 import { WeaviateStore } from "@langchain/weaviate";
 
 // Weaviate SDK has a TypeScript issue so we must do this.

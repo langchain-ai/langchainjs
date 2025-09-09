@@ -6,7 +6,7 @@ export const promptLayerTrackRequest = async (
   functionName: string,
   kwargs:
     | OpenAIClient.CompletionCreateParams
-    | OpenAIClient.Chat.CompletionCreateParams,
+    | OpenAIClient.Chat.ChatCompletionCreateParams,
   plTags: string[] | undefined,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,

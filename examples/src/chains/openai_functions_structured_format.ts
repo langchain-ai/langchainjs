@@ -35,16 +35,17 @@ const llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 });
 
 // Binding "function_call" below makes the model always call the specified function.
 // If you want to allow the model to call functions selectively, omit it.
-const functionCallingModel = llm.bind({
-  functions: [
+const functionCallingModel = llm
+  .bindTools([
     {
       name: "output_formatter",
       description: "Should always be used to properly format output",
       parameters: zodToJsonSchema(zodSchema),
     },
-  ],
-  function_call: { name: "output_formatter" },
-});
+  ])
+  .withConfig({
+    function_call: { name: "output_formatter" },
+  });
 
 const outputParser = new JsonOutputFunctionsParser();
 

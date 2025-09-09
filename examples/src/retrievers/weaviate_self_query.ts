@@ -1,4 +1,4 @@
-import weaviate from "weaviate-ts-client";
+import weaviate from "weaviate-client";
 
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "langchain/retrievers/self_query";

@@ -1,9 +1,28 @@
-import { test, expect } from "@jest/globals";
+import { describe, test, expect } from "@jest/globals";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { RunnableSequence } from "../../runnables/base.js";
 import { RunnablePassthrough } from "../../runnables/passthrough.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { JsonOutputParser } from "../json.js";
+
+async function acc(iter: AsyncGenerator<object>): Promise<object[]> {
+  const acc = [];
+  for await (const chunk of iter) {
+    acc.push(chunk);
+  }
+  return acc;
+}
+
+async function* streamChunks(chunks: string[]): AsyncGenerator<string> {
+  for (const chunk of chunks) {
+    yield chunk;
+    await new Promise<void>((resolve) => {
+      void setTimeout(() => {
+        resolve();
+      }, 0);
+    });
+  }
+}
 
 const STREAMED_TOKENS = `
 {
@@ -244,13 +263,64 @@ const EXPECTED_STREAMED_JSON_DIFF = [
   [{ op: "replace", path: "/audience/1", value: "So funny" }],
 ];
 
-async function acc(iter: AsyncGenerator<object>): Promise<object[]> {
-  const acc = [];
-  for await (const chunk of iter) {
-    acc.push(chunk);
+const MARKDOWN_STREAM_TEST_CASES = [
+  {
+    name: "Markdown with split code block",
+    input: ['```json\n{"', 'countries": [{"n', 'ame": "China"}]}', "\n```"],
+    expected: [{ countries: [{ name: "China" }] }],
+  },
+  {
+    name: "Markdown without json identifier, split",
+    input: ['```\n{"', 'key": "val', '"}\n```'],
+    expected: [{ key: "val" }],
+  },
+  {
+    name: "Ignores text after closing markdown backticks",
+    input: ["```json\n", '{ "data": 123 }', "\n```", " Some extra text"],
+    expected: [{ data: 123 }],
+  },
+];
+
+describe("Markdown Streaming Scenarios", () => {
+  for (const testCase of MARKDOWN_STREAM_TEST_CASES) {
+    test(testCase.name, async () => {
+      const parser = new JsonOutputParser();
+      const result = await acc(
+        parser.transform(streamChunks(testCase.input), {})
+      );
+      expect(result).toEqual(testCase.expected);
+    });
   }
-  return acc;
-}
+});
+
+test("Handles markdown with text around code block", async () => {
+  const input = [
+    "Explanation:\n```json\n{",
+    '"answer": 42',
+    "}\n```\nConclusion",
+  ];
+
+  const expected = [{}, { answer: 42 }];
+
+  const parser = new JsonOutputParser();
+  const result = await acc(parser.transform(streamChunks(input), {}));
+  expect(result).toEqual(expected);
+});
+
+test("Handles multiple code blocks in single chunk", async () => {
+  const input = ['```json\n{"a":1}\n```\n```json\n{"b":2}\n```'];
+
+  const parser = new JsonOutputParser();
+  const result = await acc(
+    parser.transform(
+      (async function* () {
+        yield input[0];
+      })(),
+      {}
+    )
+  );
+  expect(result).toEqual([{ a: 1 }]);
+});
 
 test("JSONOutputParser parses streamed JSON", async () => {
   async function* generator() {
@@ -266,6 +336,28 @@ test("JSONOutputParser parses streamed JSON", async () => {
   );
 });
 
+test("JSONOutputParser traces streamed JSON as just the last chunk", async () => {
+  async function* generator() {
+    for (const token of STREAMED_TOKENS) {
+      yield token;
+    }
+  }
+  const parser = new JsonOutputParser();
+  let tracedOutput;
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    })
+  );
+  expect(result.at(-1)).toEqual(tracedOutput);
+});
+
 test("JSONOutputParser parses streamed JSON diff", async () => {
   async function* generator() {
     for (const token of STREAMED_TOKENS) {
@@ -273,8 +365,22 @@ test("JSONOutputParser parses streamed JSON diff", async () => {
     }
   }
   const parser = new JsonOutputParser({ diff: true });
-  const result = await acc(parser.transform(generator(), {}));
+  let tracedOutput;
+  const result = await acc(
+    parser.transform(generator(), {
+      callbacks: [
+        {
+          handleChainEnd(outputs) {
+            tracedOutput = outputs;
+          },
+        },
+      ],
+    })
+  );
   expect(result).toEqual(EXPECTED_STREAMED_JSON_DIFF);
+  expect(tracedOutput).toEqual(
+    EXPECTED_STREAMED_JSON_DIFF.map((patch) => patch[0])
+  );
 });
 
 test("JsonOutputParser supports a type param", async () => {

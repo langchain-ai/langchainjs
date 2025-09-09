@@ -8,6 +8,13 @@ import {
 } from "@langchain/core/messages";
 
 /**
+ * @see https://platform.openai.com/docs/api-reference/images/create
+ */
+export type OpenAIImageModelId =
+  | OpenAIClient.ImageModel
+  | (string & NonNullable<unknown>);
+
+/**
  * An interface for the Dall-E API Wrapper.
  */
 export interface DallEAPIWrapperParams extends ToolParams {
@@ -25,14 +32,15 @@ export interface DallEAPIWrapperParams extends ToolParams {
    * Alias for `model`
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
+   * @deprecated Use `model` instead.
    */
-  modelName?: string;
+  modelName?: OpenAIImageModelId;
   /**
    * The model to use.
    * @params "dall-e-2" | "dall-e-3"
    * @default "dall-e-3"
    */
-  model?: string;
+  model?: OpenAIImageModelId;
   /**
    * The style of the generated images. Must be one of vivid or natural.
    * Vivid causes the model to lean towards generating hyper-real and dramatic images.
@@ -173,44 +181,46 @@ export class DallEAPIWrapper extends Tool {
   ): MessageContentImageUrl[] {
     if (this.dallEResponseFormat === "url") {
       return response.flatMap((res) => {
-        const imageUrlContent = res.data
-          .flatMap((item) => {
-            if (!item.url) return [];
-            return {
-              type: "image_url" as const,
-              image_url: item.url,
-            };
-          })
-          .filter(
-            (item) =>
-              item !== undefined &&
-              item.type === "image_url" &&
-              typeof item.image_url === "string" &&
-              item.image_url !== undefined
-          );
+        const imageUrlContent =
+          res.data
+            ?.flatMap((item) => {
+              if (!item.url) return [];
+              return {
+                type: "image_url" as const,
+                image_url: item.url,
+              };
+            })
+            .filter(
+              (item) =>
+                item !== undefined &&
+                item.type === "image_url" &&
+                typeof item.image_url === "string" &&
+                item.image_url !== undefined
+            ) ?? [];
         return imageUrlContent;
       });
     } else {
       return response.flatMap((res) => {
-        const b64Content = res.data
-          .flatMap((item) => {
-            if (!item.b64_json) return [];
-            return {
-              type: "image_url" as const,
-              image_url: {
-                url: item.b64_json,
-              },
-            };
-          })
-          .filter(
-            (item) =>
-              item !== undefined &&
-              item.type === "image_url" &&
-              typeof item.image_url === "object" &&
-              "url" in item.image_url &&
-              typeof item.image_url.url === "string" &&
-              item.image_url.url !== undefined
-          );
+        const b64Content =
+          res.data
+            ?.flatMap((item) => {
+              if (!item.b64_json) return [];
+              return {
+                type: "image_url" as const,
+                image_url: {
+                  url: item.b64_json,
+                },
+              };
+            })
+            .filter(
+              (item) =>
+                item !== undefined &&
+                item.type === "image_url" &&
+                typeof item.image_url === "object" &&
+                "url" in item.image_url &&
+                typeof item.image_url.url === "string" &&
+                item.image_url.url !== undefined
+            ) ?? [];
         return b64Content;
       });
     }
@@ -243,13 +253,16 @@ export class DallEAPIWrapper extends Tool {
 
     let data = "";
     if (this.dallEResponseFormat === "url") {
-      [data] = response.data
-        .map((item) => item.url)
-        .filter((url): url is string => url !== "undefined");
+      [data] =
+        response.data
+          ?.map((item) => item.url)
+          .filter((url): url is string => url !== "undefined") ?? [];
     } else {
-      [data] = response.data
-        .map((item) => item.b64_json)
-        .filter((b64_json): b64_json is string => b64_json !== "undefined");
+      [data] =
+        response.data
+          ?.map((item) => item.b64_json)
+          .filter((b64_json): b64_json is string => b64_json !== "undefined") ??
+        [];
     }
     return data;
   }

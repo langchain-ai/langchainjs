@@ -1,8 +1,9 @@
 import * as uuid from "uuid";
 import type {
   ChromaClient as ChromaClientT,
+  ChromaClientArgs,
   Collection,
-  ChromaClientParams,
+  CollectionConfiguration,
   CollectionMetadata,
   Where,
 } from "chromadb";
@@ -16,7 +17,9 @@ type SharedChromaLibArgs = {
   collectionName?: string;
   filter?: object;
   collectionMetadata?: CollectionMetadata;
-  clientParams?: Omit<ChromaClientParams, "path">;
+  collectionConfiguration?: CollectionConfiguration;
+  chromaCloudAPIKey?: string;
+  clientParams?: Omit<ChromaClientArgs, "path">;
 };
 
 /**
@@ -74,7 +77,7 @@ export interface ChromaDeleteParams<T> {
  *   embeddings,
  *   {
  *     collectionName: "foo",
- *     url: "http://localhost:8000", // URL of the Chroma server
+ *     host: "localhost",
  *   }
  * );
  * ```
@@ -90,7 +93,7 @@ export interface ChromaDeleteParams<T> {
  *
  * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
  * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
- * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
+ * const document3 = { pageContent: "I will be deleted :(", metadata: {} };
  *
  * const documents: Document[] = [document1, document2, document3];
  * const ids = ["1", "2", "3"];
@@ -185,7 +188,7 @@ export class Chroma extends VectorStore {
 
   numDimensions?: number;
 
-  clientParams?: Omit<ChromaClientParams, "path">;
+  clientParams?: Omit<ChromaClientArgs, "path">;
 
   url: string;
 
@@ -201,11 +204,18 @@ export class Chroma extends VectorStore {
     this.embeddings = embeddings;
     this.collectionName = ensureCollectionName(args.collectionName);
     this.collectionMetadata = args.collectionMetadata;
-    this.clientParams = args.clientParams;
+    this.clientParams = args.clientParams || {};
     if ("index" in args) {
       this.index = args.index;
     } else if ("url" in args) {
       this.url = args.url || "http://localhost:8000";
+    }
+
+    if (args.chromaCloudAPIKey) {
+      this.clientParams.headers = {
+        ...(this.clientParams?.headers || {}),
+        "x-chroma-token": args.chromaCloudAPIKey,
+      };
     }
 
     this.filter = args.filter;
@@ -236,15 +246,15 @@ export class Chroma extends VectorStore {
   async ensureCollection(): Promise<Collection> {
     if (!this.collection) {
       if (!this.index) {
-        const chromaClient = new (await Chroma.imports()).ChromaClient({
+        this.index = new (await Chroma.imports()).ChromaClient({
           path: this.url,
           ...(this.clientParams ?? {}),
         });
-        this.index = chromaClient;
       }
       try {
         this.collection = await this.index.getOrCreateCollection({
           name: this.collectionName,
+          embeddingFunction: null,
           ...(this.collectionMetadata && { metadata: this.collectionMetadata }),
         });
       } catch (err) {
@@ -361,7 +371,7 @@ export class Chroma extends VectorStore {
     // similaritySearchVectorWithScore supports one query vector at a time
     // chroma supports multiple query vectors at a time
     const result = await collection.query({
-      queryEmbeddings: query,
+      queryEmbeddings: [query],
       nResults: k,
       where,
     });
@@ -375,6 +385,12 @@ export class Chroma extends VectorStore {
     const [firstDistances] = distances;
     const [firstDocuments] = documents;
     const [firstMetadatas] = metadatas;
+
+    if (firstDistances.some((item) => item === null)) {
+      return [];
+    }
+
+    const cleanDistances = firstDistances.filter((item) => item !== null);
 
     const results: [Document, number][] = [];
     for (let i = 0; i < firstIds.length; i += 1) {
@@ -401,7 +417,7 @@ export class Chroma extends VectorStore {
           metadata,
           id: firstIds[i],
         }),
-        firstDistances[i],
+        cleanDistances[i],
       ]);
     }
     return results;

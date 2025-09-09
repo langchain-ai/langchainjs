@@ -106,7 +106,7 @@ export function generateModelImportMap(
       importMapKey = "chat_models__anthropic";
     } else if (modelLcName === "ChatAzureOpenAI") {
       importMapKey = "chat_models__openai";
-    } else if (modelLcName === "ChatGoogleVertexAI") {
+    } else if (modelLcName === "ChatVertexAI") {
       importMapKey = "chat_models__vertexai";
     } else if (modelLcName === "ChatGoogleGenerativeAI") {
       importMapKey = "chat_models__google_genai";
@@ -153,4 +153,27 @@ export function generateOptionalImportMap(
     }
   }
   return optionalImportMap;
+}
+
+export function bindOutputSchema<T extends Runnable>(loadedSequence: T) {
+  if (
+    "first" in loadedSequence &&
+    loadedSequence.first !== null &&
+    typeof loadedSequence.first === "object" &&
+    "schema" in loadedSequence.first &&
+    "last" in loadedSequence &&
+    loadedSequence.last !== null &&
+    typeof loadedSequence.last === "object" &&
+    "bound" in loadedSequence.last &&
+    loadedSequence.last.bound !== null &&
+    typeof loadedSequence.last.bound === "object" &&
+    "withStructuredOutput" in loadedSequence.last.bound &&
+    typeof loadedSequence.last.bound.withStructuredOutput === "function"
+  ) {
+    // eslint-disable-next-line no-param-reassign
+    loadedSequence.last.bound = loadedSequence.last.bound.withStructuredOutput(
+      loadedSequence.first.schema
+    );
+  }
+  return loadedSequence;
 }

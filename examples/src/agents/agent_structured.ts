@@ -2,7 +2,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { z } from "zod";
 import type { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import { AgentExecutor } from "langchain/agents";
 import type { FunctionsAgentAction } from "langchain/agents/openai/output_parser";
 
@@ -102,9 +101,8 @@ const formatAgentSteps = (steps: AgentStep[]): BaseMessage[] =>
     }
   });
 
-const llmWithTools = llm.bind({
-  functions: [convertToOpenAIFunction(searchTool), responseOpenAIFunction],
-});
+const llmWithTools = llm.bindTools([searchTool, responseOpenAIFunction]);
+
 /** Create the runnable */
 const runnableAgent = RunnableSequence.from<{
   input: string;

@@ -307,18 +307,18 @@ export class ReadableAbstractStream implements AbstractStream {
     return this.baseStream.streamDone;
   }
 
-  async run(body: ReadableStream) {
-    const reader = body.getReader();
-    let isDone = false;
-    while (!isDone) {
-      const { value, done } = await reader.read();
-      if (!done) {
+  // Should be a ReadableStream, but the Gaxios Readable stream isn't.
+  // But both should support async iterators, so make sure of that.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async run(body: any) {
+    if (typeof body[Symbol.asyncIterator] === "function") {
+      for await (const value of body) {
         const svalue = this.decoder.decode(value, { stream: true });
         this.appendBuffer(svalue);
-      } else {
-        isDone = done;
-        this.closeBuffer();
       }
+      this.closeBuffer();
+    } else {
+      throw Error("Stream must implement async iterator.");
     }
   }
 }

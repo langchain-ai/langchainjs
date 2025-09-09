@@ -155,21 +155,21 @@ export class ChromeAI extends LLM<ChromeAICallOptions> {
     try {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore Experimental browser-only global
-      aiInstance = ai;
+      aiInstance = LanguageModel;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
         `Could not initialize ChromeAI instance. Make sure you are running a version of Chrome with the proper experimental flags enabled.\n\nError message: ${e.message}`
       );
     }
-    const { available } = await aiInstance.languageModel.capabilities();
-    if (available === "no") {
+    const availability = await aiInstance.availability();
+    if (availability === "no") {
       throw new Error("The AI model is not available.");
-    } else if (available === "after-download") {
+    } else if (availability === "after-download") {
       throw new Error("The AI model is not yet downloaded.");
     }
 
-    const session = await aiInstance.languageModel.create({
+    const session = await aiInstance.create({
       systemPrompt: this.systemPrompt,
       topK: this.topK,
       temperature: this.temperature,

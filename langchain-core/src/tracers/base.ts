@@ -1,4 +1,5 @@
 import { KVMap, BaseRun } from "langsmith/schemas";
+import { RunTree, convertToDottedOrderFormat } from "langsmith/run_trees";
 
 import type { ChainValues } from "../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
@@ -12,13 +13,16 @@ import {
   NewTokenIndices,
 } from "../callbacks/base.js";
 import type { Document } from "../documents/document.js";
+import { getRuntimeEnvironmentSync } from "../utils/env.js";
 
 export type RunType = string;
 
+// TODO: Remove this type and just use the base LangSmith Run type.
 export interface Run extends BaseRun {
   // some optional fields are always present here
   id: string;
   start_time: number;
+  end_time?: number;
   execution_order: number;
   // some additional fields that don't exist in sdk runs
   child_runs: this[];
@@ -30,6 +34,44 @@ export interface Run extends BaseRun {
   }>;
   trace_id?: string;
   dotted_order?: string;
+  /** @internal */
+  _serialized_start_time?: string;
+}
+
+// TODO: Remove and just use base LangSmith Run type
+const convertRunTreeToRun = (runTree?: RunTree): Run | undefined => {
+  if (!runTree) {
+    return undefined;
+  }
+  // Important that we return the raw run tree object since the reference
+  // is mutated in other places.
+  // TODO: Remove places where this is being done.
+
+  // eslint-disable-next-line no-param-reassign
+  runTree.events = runTree.events ?? [];
+  // eslint-disable-next-line no-param-reassign
+  runTree.child_runs = runTree.child_runs ?? [];
+  // TODO: Remove this cast and just use the LangSmith RunTree type.
+  return runTree as unknown as Run;
+};
+
+function convertRunToRunTree(run?: Run, parentRun?: Run): RunTree | undefined {
+  if (!run) {
+    return undefined;
+  }
+  return new RunTree({
+    ...run,
+    start_time: run._serialized_start_time ?? run.start_time,
+    parent_run: convertRunToRunTree(parentRun),
+    child_runs: run.child_runs
+      .map((r) => convertRunToRunTree(r))
+      .filter((r): r is RunTree => r !== undefined),
+    extra: {
+      ...run.extra,
+      runtime: getRuntimeEnvironmentSync(),
+    },
+    tracingEnabled: false,
+  });
 }
 
 export interface AgentRun extends Run {
@@ -43,29 +85,17 @@ function _coerceToDict(value: any, defaultKey: string) {
     : { [defaultKey]: value };
 }
 
-function stripNonAlphanumeric(input: string) {
-  return input.replace(/[-:.]/g, "");
-}
-
-function convertToDottedOrderFormat(
-  epoch: number,
-  runId: string,
-  executionOrder: number
-) {
-  const paddedOrder = executionOrder.toFixed(0).slice(0, 3).padStart(3, "0");
-  return (
-    stripNonAlphanumeric(
-      `${new Date(epoch).toISOString().slice(0, -1)}${paddedOrder}Z`
-    ) + runId
-  );
-}
-
 export function isBaseTracer(x: BaseCallbackHandler): x is BaseTracer {
   return typeof (x as BaseTracer)._addRunToRunMap === "function";
 }
 
 export abstract class BaseTracer extends BaseCallbackHandler {
+  /** @deprecated Use `runTreeMap` instead. */
   protected runMap: Map<string, Run> = new Map();
+
+  protected runTreeMap: Map<string, RunTree> = new Map();
+
+  protected usesRunTreeMap = false;
 
   constructor(_fields?: BaseCallbackHandlerInput) {
     super(...arguments);
@@ -73,6 +103,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   copy(): this {
     return this;
+  }
+
+  protected getRunById(runId?: string): Run | undefined {
+    if (runId === undefined) {
+      return undefined;
+    }
+    return this.usesRunTreeMap
+      ? convertRunTreeToRun(this.runTreeMap.get(runId))
+      : this.runMap.get(runId);
   }
 
   protected stringifyError(error: unknown) {
@@ -95,14 +134,15 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   _addRunToRunMap(run: Run) {
-    const currentDottedOrder = convertToDottedOrderFormat(
-      run.start_time,
-      run.id,
-      run.execution_order
-    );
+    const { dottedOrder: currentDottedOrder, microsecondPrecisionDatestring } =
+      convertToDottedOrderFormat(
+        new Date(run.start_time).getTime(),
+        run.id,
+        run.execution_order
+      );
     const storedRun = { ...run };
+    const parentRun = this.getRunById(storedRun.parent_run_id);
     if (storedRun.parent_run_id !== undefined) {
-      const parentRun = this.runMap.get(storedRun.parent_run_id);
       if (parentRun) {
         this._addChildRun(parentRun, storedRun);
         parentRun.child_execution_order = Math.max(
@@ -115,6 +155,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
             parentRun.dotted_order,
             currentDottedOrder,
           ].join(".");
+          storedRun._serialized_start_time = microsecondPrecisionDatestring;
         } else {
           // This can happen naturally for callbacks added within a run
           // console.debug(`Parent run with UUID ${storedRun.parent_run_id} has no dotted order.`);
@@ -128,14 +169,22 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     } else {
       storedRun.trace_id = storedRun.id;
       storedRun.dotted_order = currentDottedOrder;
+      storedRun._serialized_start_time = microsecondPrecisionDatestring;
     }
-    this.runMap.set(storedRun.id, storedRun);
+    if (this.usesRunTreeMap) {
+      const runTree = convertRunToRunTree(storedRun, parentRun);
+      if (runTree !== undefined) {
+        this.runTreeMap.set(storedRun.id, runTree);
+      }
+    } else {
+      this.runMap.set(storedRun.id, storedRun);
+    }
     return storedRun;
   }
 
   protected async _endTrace(run: Run): Promise<void> {
     const parentRun =
-      run.parent_run_id !== undefined && this.runMap.get(run.parent_run_id);
+      run.parent_run_id !== undefined && this.getRunById(run.parent_run_id);
     if (parentRun) {
       parentRun.child_execution_order = Math.max(
         parentRun.child_execution_order,
@@ -144,12 +193,16 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     } else {
       await this.persistRun(run);
     }
-    this.runMap.delete(run.id);
     await this.onRunUpdate?.(run);
+    if (this.usesRunTreeMap) {
+      this.runTreeMap.delete(run.id);
+    } else {
+      this.runMap.delete(run.id);
+    }
   }
 
   protected _getExecutionOrder(parentRunId: string | undefined): number {
-    const parentRun = parentRunId !== undefined && this.runMap.get(parentRunId);
+    const parentRun = parentRunId !== undefined && this.getRunById(parentRunId);
     // If a run has no parent then execution order is 1
     if (!parentRun) {
       return 1;
@@ -212,7 +265,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     name?: string
   ): Promise<Run> {
     const run =
-      this.runMap.get(runId) ??
+      this.getRunById(runId) ??
       this._createRunForLLMStart(
         llm,
         prompts,
@@ -282,7 +335,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     name?: string
   ): Promise<Run> {
     const run =
-      this.runMap.get(runId) ??
+      this.getRunById(runId) ??
       this._createRunForChatModelStart(
         llm,
         messages,
@@ -305,7 +358,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _tags?: string[],
     extraParams?: Record<string, unknown>
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
@@ -328,7 +381,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _tags?: string[],
     extraParams?: Record<string, unknown>
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error("No LLM run to end.");
     }
@@ -395,7 +448,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     name?: string
   ): Promise<Run> {
     const run =
-      this.runMap.get(runId) ??
+      this.getRunById(runId) ??
       this._createRunForChainStart(
         chain,
         inputs,
@@ -418,7 +471,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run) {
       throw new Error("No chain run to end.");
     }
@@ -443,7 +496,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run) {
       throw new Error("No chain run to end.");
     }
@@ -510,7 +563,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     name?: string
   ): Promise<Run> {
     const run =
-      this.runMap.get(runId) ??
+      this.getRunById(runId) ??
       this._createRunForToolStart(
         tool,
         input,
@@ -527,7 +580,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any, runId: string): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
@@ -543,7 +596,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleToolError(error: unknown, runId: string): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "tool") {
       throw new Error("No tool run to end");
     }
@@ -559,7 +612,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleAgentAction(action: AgentAction, runId: string): Promise<void> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "chain") {
       return;
     }
@@ -575,7 +628,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleAgentEnd(action: AgentFinish, runId: string): Promise<void> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "chain") {
       return;
     }
@@ -636,7 +689,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     name?: string
   ): Promise<Run> {
     const run =
-      this.runMap.get(runId) ??
+      this.getRunById(runId) ??
       this._createRunForRetrieverStart(
         retriever,
         query,
@@ -655,7 +708,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     documents: Document<Record<string, unknown>>[],
     runId: string
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "retriever") {
       throw new Error("No retriever run to end");
     }
@@ -671,7 +724,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleRetrieverError(error: unknown, runId: string): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "retriever") {
       throw new Error("No retriever run to end");
     }
@@ -687,7 +740,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   async handleText(text: string, runId: string): Promise<void> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "chain") {
       return;
     }
@@ -707,7 +760,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     _tags?: string[],
     fields?: HandleLLMNewTokenCallbackFields
   ): Promise<Run> {
-    const run = this.runMap.get(runId);
+    const run = this.getRunById(runId);
     if (!run || run?.run_type !== "llm") {
       throw new Error(
         `Invalid "runId" provided to "handleLLMNewToken" callback.`

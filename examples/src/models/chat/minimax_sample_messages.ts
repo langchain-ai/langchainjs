@@ -9,7 +9,7 @@ const model = new ChatMinimax({
       content: "MM Assistant is an AI Assistant developed by minimax.",
     },
   ],
-}).bind({
+}).withConfig({
   sampleMessages: [
     new HumanMessage({
       content: " Turn A5 into red and modify the content to minimax.",

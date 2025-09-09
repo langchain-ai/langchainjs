@@ -24,7 +24,7 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "llama-3.3-70b-versatile",
+        model: "moonshotai/kimi-k2-instruct",
         maxRetries: 1,
       },
     });
@@ -49,14 +49,6 @@ class ChatGroqStandardIntegrationTests extends ChatModelIntegrationTests<
   async testStreamTokensWithToolCalls() {
     this.skipTestMessage(
       "testStreamTokensWithToolCalls",
-      "ChatGroq",
-      "API does not consistently call tools. TODO: re-write with better prompting for tool call."
-    );
-  }
-
-  async testWithStructuredOutputIncludeRaw() {
-    this.skipTestMessage(
-      "testWithStructuredOutputIncludeRaw",
       "ChatGroq",
       "API does not consistently call tools. TODO: re-write with better prompting for tool call."
     );

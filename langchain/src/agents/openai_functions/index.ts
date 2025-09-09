@@ -302,6 +302,7 @@ export type CreateOpenAIFunctionsAgentParams = {
  * );
  *
  * const llm = new ChatOpenAI({
+ *   model: "gpt-4o-mini",
  *   temperature: 0,
  * });
  *
@@ -344,9 +345,11 @@ export async function createOpenAIFunctionsAgent({
       ].join("\n")
     );
   }
-  const llmWithTools = llm.bind({
-    functions: tools.map((tool) => convertToOpenAIFunction(tool)),
-  });
+  const llmWithTools = llm.bindTools
+    ? llm.bindTools(tools)
+    : llm.withConfig({
+        functions: tools.map((tool) => convertToOpenAIFunction(tool)),
+      });
   const agent = AgentRunnableSequence.fromRunnables(
     [
       RunnablePassthrough.assign({

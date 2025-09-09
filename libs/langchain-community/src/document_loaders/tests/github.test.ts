@@ -61,3 +61,56 @@ describe("GithubRepoLoader recursion", () => {
     ).toThrow();
   });
 });
+
+describe("GithubRepoLoader URL encoding", () => {
+  test("Should properly encode special characters in directory paths", async () => {
+    // Mock fetch to capture the URLs being called
+    const mockFetch = jest.fn().mockImplementation((url) => {
+      // Check that special characters are properly encoded in the URL
+      expect(url).toContain("src%2Fapp%2F%255Fmeta"); // The full encoded path
+
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve([
+            {
+              name: "%5Fmeta",
+              path: "src/app/%5Fmeta",
+              type: "dir",
+              size: 0,
+              url: "https://api.github.com/repos/test/test/contents/src/app/%5Fmeta",
+              html_url: "",
+              sha: "abc123",
+              git_url: "",
+              download_url: "",
+              _links: {
+                self: "",
+                git: "",
+                html: "",
+              },
+            },
+          ]),
+      });
+    });
+
+    global.fetch = mockFetch as any;
+
+    const loader = new GithubRepoLoader(
+      "https://github.com/test/test/tree/main/src/app/%5Fmeta",
+      {
+        branch: "main",
+        recursive: false,
+        unknown: "warn",
+      }
+    );
+
+    // This should call fetchRepoFiles with "src/app/%5Fmeta" path
+    await loader.load();
+
+    // Verify that fetch was called with properly encoded URL
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("contents/src%2Fapp%2F%255Fmeta"),
+      expect.any(Object)
+    );
+  });
+});

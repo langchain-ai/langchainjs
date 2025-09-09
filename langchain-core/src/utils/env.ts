@@ -22,9 +22,7 @@ export const isWebWorker = () =>
 
 export const isJsDom = () =>
   (typeof window !== "undefined" && window.name === "nodejs") ||
-  (typeof navigator !== "undefined" &&
-    (navigator.userAgent.includes("Node.js") ||
-      navigator.userAgent.includes("jsdom")));
+  (typeof navigator !== "undefined" && navigator.userAgent.includes("jsdom"));
 
 // Supabase Edge Function provides a `Deno` global object
 // without `version` property
@@ -65,7 +63,14 @@ export type RuntimeEnvironment = {
 
 let runtimeEnvironment: RuntimeEnvironment | undefined;
 
+/**
+ * @deprecated Use getRuntimeEnvironmentSync instead
+ */
 export async function getRuntimeEnvironment(): Promise<RuntimeEnvironment> {
+  return getRuntimeEnvironmentSync();
+}
+
+export function getRuntimeEnvironmentSync(): RuntimeEnvironment {
   if (runtimeEnvironment === undefined) {
     const env = getEnv();
 

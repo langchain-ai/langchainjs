@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import type { ZodType as ZodTypeV3 } from "zod/v3";
+import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 import {
   AIMessage,
   type BaseMessage,
@@ -11,6 +11,9 @@ import {
   isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
+  convertToOpenAIImageBlock,
+  isURLContentBlock,
+  isBase64ContentBlock,
 } from "../messages/index.js";
 import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
@@ -48,8 +51,13 @@ import {
 } from "../runnables/base.js";
 import { concat } from "../utils/stream.js";
 import { RunnablePassthrough } from "../runnables/passthrough.js";
-import { isZodSchema } from "../utils/types/is_zod_schema.js";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+} from "../utils/types/zod.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import { toJsonSchema } from "../utils/json_schema.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -128,6 +136,34 @@ export function createChatMessageChunkEncoderStream() {
       );
     },
   });
+}
+
+function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
+  const messagesToTrace: BaseMessage[] = [];
+  for (const message of messages) {
+    let messageToTrace = message;
+    if (Array.isArray(message.content)) {
+      for (let idx = 0; idx < message.content.length; idx++) {
+        const block = message.content[idx];
+        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
+          if (messageToTrace === message) {
+            // Also shallow-copy content
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            messageToTrace = new (message.constructor as any)({
+              ...messageToTrace,
+              content: [
+                ...message.content.slice(0, idx),
+                convertToOpenAIImageBlock(block),
+                ...message.content.slice(idx + 1),
+              ],
+            });
+          }
+        }
+      }
+    }
+    messagesToTrace.push(messageToTrace);
+  }
+  return messagesToTrace;
 }
 
 export type LangSmithParams = {
@@ -265,7 +301,7 @@ export abstract class BaseChatModel<
       };
       const runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        [messages],
+        [_formatForTracing(messages)],
         runnableConfig.runId,
         undefined,
         extra,
@@ -380,7 +416,7 @@ export abstract class BaseChatModel<
       };
       runManagers = await callbackManager_?.handleChatModelStart(
         this.toJSON(),
-        baseMessages,
+        baseMessages.map(_formatForTracing),
         handledOptions.runId,
         undefined,
         extra,
@@ -554,7 +590,7 @@ export abstract class BaseChatModel<
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
       this.toJSON(),
-      baseMessages,
+      baseMessages.map(_formatForTracing),
       handledOptions.runId,
       undefined,
       extra,
@@ -873,7 +909,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -884,7 +920,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -895,7 +931,29 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    outputSchema:
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -919,9 +977,11 @@ export abstract class BaseChatModel<
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: Record<string, any> | InteropZodType<RunOutput> =
+      outputSchema;
     const name = config?.name;
-    const description = schema.description ?? "A function available to call.";
+    const description =
+      getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -932,14 +992,14 @@ export abstract class BaseChatModel<
 
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",
           function: {
             name: functionName,
             description,
-            parameters: zodToJsonSchema(schema),
+            parameters: toJsonSchema(schema),
           },
         },
       ];

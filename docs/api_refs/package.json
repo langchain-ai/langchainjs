@@ -14,7 +14,7 @@
     "clean": "rm -rf .next .turbo public/ && mkdir public"
   },
   "dependencies": {
-    "next": "14.0.1",
+    "next": "14.2.32",
     "react": "^18",
     "react-dom": "^18"
   },
@@ -24,7 +24,7 @@
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
-    "eslint-config-next": "14.0.1",
+    "eslint-config-next": "14.2.28",
     "glob": "^10.3.10",
     "postcss": "^8",
     "prettier": "^2.8.3",

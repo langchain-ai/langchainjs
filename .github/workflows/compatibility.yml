@@ -57,7 +57,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
       - name: Test LangChain with latest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-latest-deps
 
@@ -71,7 +70,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
       - name: Test LangChain with lowest deps
         run: docker compose -f dependency_range_tests/docker-compose.yml run langchain-lowest-deps
 

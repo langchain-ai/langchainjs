@@ -1,6 +1,11 @@
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
-import { isModelGemini, isModelGemma, validateGeminiParams } from "./gemini.js";
+import {
+  isModelGemini,
+  isModelGemma,
+  normalizeSpeechConfig,
+  validateGeminiParams,
+} from "./gemini.js";
 import {
   GeminiFunctionDeclaration,
   GeminiFunctionSchema,
@@ -118,6 +123,28 @@ export function convertToGeminiTools(tools: GoogleAIToolType[]): GeminiTool[] {
   return geminiTools;
 }
 
+function reasoningEffortToReasoningTokens(
+  _modelName?: string,
+  effort?: string
+): number | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+  const maxEffort = 24 * 1024; // Max for Gemini 2.5 Flash
+  switch (effort) {
+    case "low":
+      // Defined as 1k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 1024;
+    case "medium":
+      // Defined as 8k by https://ai.google.dev/gemini-api/docs/openai#thinking
+      return 8 * 1024;
+    case "high":
+      return maxEffort;
+    default:
+      return undefined;
+  }
+}
+
 export function copyAIModelParamsInto(
   params: GoogleAIModelParams | undefined,
   options: GoogleAIBaseLanguageModelCallOptions | undefined,
@@ -134,8 +161,19 @@ export function copyAIModelParamsInto(
     options?.maxOutputTokens ??
     params?.maxOutputTokens ??
     target.maxOutputTokens;
+  ret.maxReasoningTokens =
+    options?.maxReasoningTokens ??
+    params?.maxReasoningTokens ??
+    target?.maxReasoningTokens ??
+    options?.thinkingBudget ??
+    params?.thinkingBudget ??
+    target?.thinkingBudget ??
+    reasoningEffortToReasoningTokens(ret.modelName, params?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, target?.reasoningEffort) ??
+    reasoningEffortToReasoningTokens(ret.modelName, options?.reasoningEffort);
   ret.topP = options?.topP ?? params?.topP ?? target.topP;
   ret.topK = options?.topK ?? params?.topK ?? target.topK;
+  ret.seed = options?.seed ?? params?.seed ?? target.seed;
   ret.presencePenalty =
     options?.presencePenalty ??
     params?.presencePenalty ??
@@ -163,6 +201,9 @@ export function copyAIModelParamsInto(
     options?.responseModalities ??
     params?.responseModalities ??
     target?.responseModalities;
+  ret.speechConfig = normalizeSpeechConfig(
+    options?.speechConfig ?? params?.speechConfig ?? target?.speechConfig
+  );
   ret.streaming = options?.streaming ?? params?.streaming ?? target?.streaming;
   const toolChoice = processToolChoice(
     options?.tool_choice,
@@ -182,6 +223,8 @@ export function copyAIModelParamsInto(
   if (options?.cachedContent) {
     ret.cachedContent = options.cachedContent;
   }
+
+  ret.labels = options?.labels ?? params?.labels ?? target?.labels;
 
   return ret;
 }

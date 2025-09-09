@@ -26,9 +26,7 @@ const geminiCalculatorTool: GeminiTool = {
 const model = new ChatVertexAI({
   temperature: 0.7,
   model: "gemini-1.5-flash-001",
-}).bind({
-  tools: [geminiCalculatorTool],
-});
+}).bindTools([geminiCalculatorTool]);
 
 const response = await model.invoke("What is 1628253239 times 81623836?");
 console.log(JSON.stringify(response.additional_kwargs, null, 2));

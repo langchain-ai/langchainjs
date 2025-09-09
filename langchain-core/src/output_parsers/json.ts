@@ -18,6 +18,14 @@ export class JsonOutputParser<
 
   lc_serializable = true;
 
+  /** @internal */
+  override _concatOutputChunks<T>(first: T, second: T): T {
+    if (this.diff) {
+      return super._concatOutputChunks(first, second);
+    }
+    return second;
+  }
+
   protected _diff(
     prev: unknown | undefined,
     next: unknown

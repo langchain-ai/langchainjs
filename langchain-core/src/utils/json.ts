@@ -1,12 +1,29 @@
 export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
   // eslint-disable-next-line no-param-reassign
   s = s.trim();
-  const match = /```(json)?(.*)```/s.exec(s);
-  if (!match) {
+
+  const firstFenceIndex = s.indexOf("```");
+  if (firstFenceIndex === -1) {
     return parser(s);
-  } else {
-    return parser(match[2]);
   }
+
+  let contentAfterFence = s.substring(firstFenceIndex + 3);
+
+  if (contentAfterFence.startsWith("json\n")) {
+    contentAfterFence = contentAfterFence.substring(5);
+  } else if (contentAfterFence.startsWith("json")) {
+    contentAfterFence = contentAfterFence.substring(4);
+  } else if (contentAfterFence.startsWith("\n")) {
+    contentAfterFence = contentAfterFence.substring(1);
+  }
+
+  const closingFenceIndex = contentAfterFence.indexOf("```");
+  let finalContent = contentAfterFence;
+  if (closingFenceIndex !== -1) {
+    finalContent = contentAfterFence.substring(0, closingFenceIndex);
+  }
+
+  return parser(finalContent.trim());
 }
 
 // Adapted from https://github.com/KillianLucas/open-interpreter/blob/main/interpreter/core/llm/utils/parse_partial_json.py

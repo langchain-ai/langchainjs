@@ -11,10 +11,11 @@ import {
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { RunnableLambda } from "@langchain/core/runnables";
 import { ChatAnthropic } from "../chat_models.js";
 import { AnthropicToolResponse } from "../types.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 
 const zodSchema = z
   .object({
@@ -202,9 +203,7 @@ test("Can bind & invoke StructuredTools", async () => {
 });
 
 test("Can bind & invoke AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
-  });
+  const modelWithTools = model.bindTools([anthropicTool]);
 
   const result = await modelWithTools.invoke(
     "What is the weather in London today?"
@@ -231,8 +230,7 @@ test("Can bind & invoke AnthropicTools", async () => {
 });
 
 test("Can bind & stream AnthropicTools", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -302,8 +300,7 @@ test("stream events with no tool calls has string message content", async () => 
 });
 
 test("stream events with tool calls has raw message content", async () => {
-  const modelWithTools = model.bind({
-    tools: [anthropicTool],
+  const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
       type: "tool",
       name: "get_weather",
@@ -369,7 +366,7 @@ test("withStructuredOutput with AnthropicTool", async () => {
 });
 
 test("withStructuredOutput JSON Schema only", async () => {
-  const jsonSchema = zodToJsonSchema(zodSchema);
+  const jsonSchema = toJsonSchema(zodSchema);
   const modelWithTools = model.withStructuredOutput<{ location: string }>(
     jsonSchema,
     {
@@ -455,7 +452,7 @@ test("bindTools accepts openai formatted tool", async () => {
       name: "get_weather",
       description:
         "Get the weather of a specific location and return the temperature in Celsius.",
-      parameters: zodToJsonSchema(zodSchema),
+      parameters: toJsonSchema(zodSchema),
     },
   };
   const modelWithTools = model.bindTools([openaiTool]);
@@ -589,7 +586,7 @@ test("streaming with structured output", async () => {
   }
   expect(typeof finalChunk).toEqual("object");
   const stream2 = await model
-    .withStructuredOutput(zodToJsonSchema(zodSchema))
+    .withStructuredOutput(toJsonSchema(zodSchema))
     .stream("weather in london");
   // Currently, streaming yields a single chunk
   let finalChunk2;
@@ -610,13 +607,13 @@ test("Can bound and invoke different tool types", async () => {
     function: {
       name: "get_weather_oai",
       description: "Get the weather of a specific location.",
-      parameters: zodToJsonSchema(zodSchema),
+      parameters: toJsonSchema(zodSchema),
     },
   };
   const anthropicTool = {
     name: "get_weather_ant",
     description: "Get the weather of a specific location.",
-    input_schema: zodToJsonSchema(zodSchema),
+    input_schema: toJsonSchema(zodSchema),
   };
   const tools = [langchainTool, openaiTool, anthropicTool];
   const modelWithTools = model.bindTools(tools);
@@ -685,6 +682,31 @@ test("Can call and use two tool calls at once", async () => {
   ]);
 
   expect(result2.content.length).toBeGreaterThan(5);
+});
+
+test("converting messages doesn't drop tool input", async () => {
+  const tool = {
+    name: "generate_random_joke",
+    description: "Generate a random joke.",
+    schema: z.object({
+      prompt: z.string().describe("The prompt to generate the joke for."),
+    }),
+  };
+  const largeModel = new ChatAnthropic({
+    model: "claude-3-5-sonnet-latest",
+    temperature: 0,
+  }).bindTools([tool]);
+
+  const inputMessage = new HumanMessage(
+    "Generate three (3) random jokes. Please use the generate_random_joke tool, and call it three times in your response to me. Ensure you call the tool three times before responding to me. This is very important."
+  );
+
+  const result = await largeModel.invoke([inputMessage]);
+  expect(result.tool_calls).toHaveLength(3);
+
+  const converted = _convertMessagesToAnthropicPayload([result]);
+  // @ts-expect-error We're forcing this type in the conversion function.
+  expect(converted.messages[0].content[1].input.prompt).toBeDefined();
 });
 
 test("structured output with thinking enabled", async () => {

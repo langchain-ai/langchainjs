@@ -5,6 +5,7 @@ import {
   AIMessage,
   AIMessageChunk,
   BaseMessage,
+  BaseMessageLike,
   HumanMessage,
   MessageContentComplex,
   SystemMessage,
@@ -285,6 +286,7 @@ test("Test ChatBedrockConverse can stream tools", async () => {
 test("Test ChatBedrockConverse tool_choice works", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
+    model: "us.anthropic.claude-sonnet-4-20250514-v1:0",
   });
   const tools = [
     tool(
@@ -494,7 +496,9 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
     ),
   ];
   const modelWithTools = model.bindTools(tools);
-  const messages = [new HumanMessage("What is the current weather in London?")];
+  const messages: BaseMessageLike[] = [
+    new HumanMessage("What is the current weather in London?"),
+  ];
 
   const result = await modelWithTools.invoke(messages);
   messages.push(result);
@@ -513,12 +517,7 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
   expect(typeof result.tool_calls![0].args.location).toBe("string");
   expect(result.tool_calls![0].args.location.length).toBeGreaterThan(0);
 
-  messages.push(
-    new ToolMessage({
-      tool_call_id: result.tool_calls![0].id!,
-      content: await tools[0].invoke(result.tool_calls![0]),
-    })
-  );
+  messages.push(await tools[0].invoke(result.tool_calls![0]));
 
   const result2 = await modelWithTools.invoke(messages);
   expect(result2.content).toBeDefined();

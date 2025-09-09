@@ -1,6 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
+import { CohereClient, type Cohere } from "cohere-ai";
 
 /**
  * Interface that extends EmbeddingsParams and defines additional
@@ -22,7 +23,7 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
  * @example
  * ```typescript
  * // Embed a query using the CohereEmbeddings class
- * const model = new ChatOpenAI();
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const res = await model.embedQuery(
  *   "What would be a good company name for a company that makes colorful socks?",
  * );
@@ -40,7 +41,7 @@ export class CohereEmbeddings
 
   private apiKey: string;
 
-  private client: typeof import("cohere-ai");
+  private client: CohereClient;
 
   /**
    * Constructor for the CohereEmbeddings class.
@@ -66,6 +67,7 @@ export class CohereEmbeddings
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
+    this.client = new CohereClient({ token: this.apiKey });
   }
 
   /**
@@ -74,8 +76,6 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of embeddings.
    */
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    await this.maybeInitClient();
-
     const batches = chunkArray(texts, this.batchSize);
 
     const batchRequests = batches.map((batch) =>
@@ -90,10 +90,13 @@ export class CohereEmbeddings
     const embeddings: number[][] = [];
 
     for (let i = 0; i < batchResponses.length; i += 1) {
-      const batch = batches[i];
-      const { body: batchResponse } = batchResponses[i];
-      for (let j = 0; j < batch.length; j += 1) {
-        embeddings.push(batchResponse.embeddings[j]);
+      if (batchResponses[i].responseType === "embeddings_floats") {
+        const batchResponse = batchResponses[
+          i
+        ] as Cohere.EmbedResponse.EmbeddingsFloats;
+        embeddings.push(...batchResponse.embeddings);
+      } else {
+        throw new Error("Unexpected response type");
       }
     }
 
@@ -106,13 +109,11 @@ export class CohereEmbeddings
    * @returns A Promise that resolves to an array of numbers representing the embedding.
    */
   async embedQuery(text: string): Promise<number[]> {
-    await this.maybeInitClient();
-
-    const { body } = await this.embeddingWithRetry({
+    const result = await this.embeddingWithRetry({
       model: this.modelName,
       texts: [text],
     });
-    return body.embeddings[0];
+    return (result as Cohere.EmbedResponse.EmbeddingsFloats).embeddings[0];
   }
 
   /**
@@ -120,37 +121,10 @@ export class CohereEmbeddings
    * @param request - An object containing the request parameters for generating embeddings.
    * @returns A Promise that resolves to the API response.
    */
-  private async embeddingWithRetry(
-    request: Parameters<typeof this.client.embed>[0]
-  ) {
-    await this.maybeInitClient();
-
-    return this.caller.call(this.client.embed.bind(this.client), request);
-  }
-
-  /**
-   * Initializes the Cohere client if it hasn't been initialized already.
-   */
-  private async maybeInitClient() {
-    if (!this.client) {
-      const { cohere } = await CohereEmbeddings.imports();
-
-      this.client = cohere;
-      this.client.init(this.apiKey);
-    }
-  }
-
-  /** @ignore */
-  static async imports(): Promise<{
-    cohere: typeof import("cohere-ai");
-  }> {
-    try {
-      const { default: cohere } = await import("cohere-ai");
-      return { cohere };
-    } catch (e) {
-      throw new Error(
-        "Please install cohere-ai as a dependency with, e.g. `yarn add cohere-ai`"
-      );
-    }
+  private async embeddingWithRetry(request: Cohere.EmbedRequest) {
+    return this.caller.call(
+      this.client.embed.bind(this.client),
+      request
+    ) as Promise<Cohere.EmbedResponse>;
   }
 }

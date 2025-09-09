@@ -26,7 +26,7 @@ test("invoke with stop sequence", async () => {
     model: "llama-3.3-70b-versatile",
   });
   const message = new HumanMessage("Count to ten.");
-  const res = await chat.bind({ stop: ["5", "five"] }).invoke([message]);
+  const res = await chat.withConfig({ stop: ["5", "five"] }).invoke([message]);
   // console.log({ res });
   expect((res.content as string).toLowerCase()).not.toContain("6");
   expect((res.content as string).toLowerCase()).not.toContain("six");
@@ -87,12 +87,12 @@ test("streaming", async () => {
 test("invoke with bound tools", async () => {
   const chat = new ChatGroq({
     maxRetries: 0,
-    model: "llama-3.3-70b-versatile",
+    model: "moonshotai/kimi-k2-instruct",
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const res = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -112,8 +112,10 @@ test("invoke with bound tools", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .invoke([message]);
   // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toEqual(1);
@@ -131,8 +133,8 @@ test("stream with bound tools, yielding a single chunk", async () => {
   });
   const message = new HumanMessage("What is the current weather in Hawaii?");
   const stream = await chat
-    .bind({
-      tools: [
+    .bindTools(
+      [
         {
           type: "function",
           function: {
@@ -152,8 +154,10 @@ test("stream with bound tools, yielding a single chunk", async () => {
           },
         },
       ],
-      tool_choice: "auto",
-    })
+      {
+        tool_choice: "auto",
+      }
+    )
     .stream([message]);
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
@@ -164,10 +168,10 @@ test("stream with bound tools, yielding a single chunk", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatGroq({
-    model: "llama-3.3-70b-versatile",
+    model: "moonshotai/kimi-k2-instruct",
     temperature: 0,
-  }).bind({
-    tools: [
+  }).bindTools(
+    [
       {
         type: "function",
         function: {
@@ -187,8 +191,10 @@ test("Few shotting with tool calls", async () => {
         },
       },
     ],
-    tool_choice: "auto",
-  });
+    {
+      tool_choice: "auto",
+    }
+  );
   const res = await chat.invoke([
     new HumanMessage("What is the weather in SF?"),
     new AIMessage({
@@ -216,7 +222,7 @@ test("Few shotting with tool calls", async () => {
 
 test("Groq can stream tool calls", async () => {
   const model = new ChatGroq({
-    model: "llama-3.1-70b-versatile",
+    model: "llama-3.3-70b-versatile",
     temperature: 0,
   });
 
@@ -258,7 +264,6 @@ test("response metadata includes groq metadata", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await model.invoke([message]);
-  // console.dir(res, { depth: Infinity });
   expect(res.response_metadata.x_groq?.id).toBeDefined();
 });
 
@@ -274,4 +279,33 @@ test("response metadata includes groq metadata when streaming", async () => {
   }
   // console.dir(finalRes, { depth: Infinity });
   expect(finalRes?.response_metadata.x_groq?.id).toBeDefined();
+});
+
+test("invoke with image input", async () => {
+  const chat = new ChatGroq({
+    maxRetries: 0,
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+  });
+  const message = new HumanMessage({
+    content: [
+      {
+        type: "text",
+        text: "What's in this image?",
+      },
+      {
+        type: "image_url",
+        image_url: {
+          url: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png",
+        },
+      },
+    ],
+  });
+  const res = await chat.invoke([message]);
+
+  expect(res.content.length).toBeGreaterThan(10);
+  expect(typeof res.content).toBe("string");
+  // The response should contain some reference to Google or logo
+  expect((res.content as string).toLowerCase()).toMatch(
+    /google|logo|text|image/
+  );
 });

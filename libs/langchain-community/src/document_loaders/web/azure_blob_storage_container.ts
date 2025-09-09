@@ -32,6 +32,12 @@ interface AzureBlobStorageContainerLoaderConfig {
  * Blob Storage container. It extends the BaseDocumentLoader class.
  */
 export class AzureBlobStorageContainerLoader extends BaseDocumentLoader {
+  get lc_secrets(): { [key: string]: string } {
+    return {
+      connectionString: "AZURE_BLOB_CONNECTION_STRING",
+    };
+  }
+
   private readonly connectionString: string;
 
   private readonly container: string;
