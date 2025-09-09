@@ -199,3 +199,32 @@ test("with ChatPromptTemplate", async () => {
     `System: ${expectedResult}`
   );
 });
+
+test("nested object", async () => {
+  const samplePrompt =
+    "Here are the {{name}}:\n\n{{#locations}}\n- {{name}}\n{{/locations}}\n{{name}} end";
+
+  const sampleVariables = {
+    locations: [
+      {
+        name: "Tokyo",
+      },
+      {
+        name: "Los Angeles",
+      },
+      {
+        name: "Palo Alto",
+      },
+    ],
+    name: "locations",
+  };
+
+  const expectedResult =
+    "Here are the locations:\n\n- Tokyo\n- Los Angeles\n- Palo Alto\nlocations end";
+  const prompt = ChatPromptTemplate.fromMessages([["system", samplePrompt]], {
+    templateFormat: "mustache",
+  });
+  expect(await prompt.format(sampleVariables)).toBe(
+    `System: ${expectedResult}`
+  );
+});
