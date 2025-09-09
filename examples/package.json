@@ -33,7 +33,7 @@
     "@getmetal/metal-sdk": "^4.0.0",
     "@gomomento/sdk": "^1.51.1",
     "@google/generative-ai": "^0.7.0",
-    "@lancedb/lancedb": "^0.13.0",
+    "@lancedb/lancedb": "^0.19.1",
     "@langchain/anthropic": "workspace:*",
     "@langchain/aws": "workspace:*",
     "@langchain/azure-cosmosdb": "workspace:*",
