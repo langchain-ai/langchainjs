@@ -12,7 +12,6 @@ if (
 ) {
   currentPackageJson.peerDependencies = {
     ...currentPackageJson.peerDependencies,
-    "@langchain/core": "1.0.0-alpha.1",
   };
 }
 
