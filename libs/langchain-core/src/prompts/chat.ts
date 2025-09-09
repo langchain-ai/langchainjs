@@ -1071,25 +1071,33 @@ export class ChatPromptTemplate<
           await this._parseImagePrompts(promptMessage, allValues)
         );
       } else {
-        const inputValues = promptMessage.inputVariables.reduce(
-          (acc, inputVariable) => {
-            if (
-              !(inputVariable in allValues) &&
-              !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
-            ) {
-              const error = addLangChainErrorFields(
-                new Error(
-                  `Missing value for input variable \`${inputVariable.toString()}\``
-                ),
-                "INVALID_PROMPT_INPUT"
-              );
-              throw error;
-            }
-            acc[inputVariable] = allValues[inputVariable];
-            return acc;
-          },
-          {} as InputValues
-        );
+        let inputValues: InputValues;
+
+        if (this.templateFormat === "mustache") {
+          inputValues = { ...allValues };
+        } else {
+          inputValues = promptMessage.inputVariables.reduce(
+            (acc, inputVariable) => {
+              if (
+                !(inputVariable in allValues) &&
+                !(
+                  isMessagesPlaceholder(promptMessage) && promptMessage.optional
+                )
+              ) {
+                const error = addLangChainErrorFields(
+                  new Error(
+                    `Missing value for input variable \`${inputVariable.toString()}\``
+                  ),
+                  "INVALID_PROMPT_INPUT"
+                );
+                throw error;
+              }
+              acc[inputVariable] = allValues[inputVariable];
+              return acc;
+            },
+            {} as InputValues
+          );
+        }
         const message = await promptMessage.formatMessages(inputValues);
         resultMessages = resultMessages.concat(message);
       }
