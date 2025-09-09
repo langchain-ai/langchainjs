@@ -57,20 +57,21 @@ import { Table, Tr, Th, Td } from "@mdx-js/react";
 
 In addition to the basic value-based filtering capabilities, it is possible to use more advanced filtering. The table below shows the available filter operators.
 
-| Operator   | Semantic                                                                   |
-| ---------- | -------------------------------------------------------------------------- |
-| `$eq`      | Equality (==)                                                              |
-| `$ne`      | Inequality (!=)                                                            |
-| `$lt`      | Less than (<)                                                              |
-| `$lte`     | Less than or equal (<=)                                                    |
-| `$gt`      | Greater than (>)                                                           |
-| `$gte`     | Greater than or equal (>=)                                                 |
-| `$in`      | Contained in a set of given values (in)                                    |
-| `$nin`     | Not contained in a set of given values (not in)                            |
-| `$between` | Between the range of two boundary values                                   |
-| `$like`    | Text equality based on the "LIKE" semantics in SQL (using "%" as wildcard) |
-| `$and`     | Logical "and", supporting 2 or more operands                               |
-| `$or`      | Logical "or", supporting 2 or more operands                                |
+| Operator    | Semantic                                                                   |
+| ----------- | -------------------------------------------------------------------------- |
+| `$eq`       | Equality (==)                                                              |
+| `$ne`       | Inequality (!=)                                                            |
+| `$lt`       | Less than (&lt;)                                                           |
+| `$lte`      | Less than or equal (&lt;=)                                                 |
+| `$gt`       | Greater than (>)                                                           |
+| `$gte`      | Greater than or equal (>=)                                                 |
+| `$in`       | Contained in a set of given values (in)                                    |
+| `$nin`      | Not contained in a set of given values (not in)                            |
+| `$between`  | Between the range of two boundary values                                   |
+| `$like`     | Text equality based on the "LIKE" semantics in SQL (using "%" as wildcard) |
+| `$contains` | Filters documents containing a specific keyword                            |
+| `$and`      | Logical "and", supporting 2 or more operands                               |
+| `$or`       | Logical "or", supporting 2 or more operands                                |
 
 import ExampleAdvancedFilter from "@examples/indexes/vector_stores/hana_vector/advancedFiltering.ts";
 
@@ -81,6 +82,18 @@ import ExampleAdvancedFilter from "@examples/indexes/vector_stores/hana_vector/a
 import ExampleChain from "@examples/indexes/vector_stores/hana_vector/chains.ts";
 
 <CodeBlock language="typescript">{ExampleChain}</CodeBlock>
+
+## Internal Embedding Functionality
+
+SAP HANA Cloud Vector Engine supports computing embeddings directly in the database by leveraging its native `VECTOR_EMBEDDING` function. This approach eliminates the need for an external embedding service, improving performance and enhancing data security.
+
+To enable this functionality, instantiate a `HanaInternalEmbeddings` object with the internal embedding model ID and pass this instance to your `HanaDB` vector store.
+
+For more details on the `VECTOR_EMBEDDING` function, refer to the official [SAP HANA Cloud documentation](https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-vector-engine-guide/vector-embedding-function-vector?locale=en-US).
+
+import ExampleInternalEmbeddings from "@examples/indexes/vector_stores/hana_vector/internalEmbeddings.ts";
+
+<CodeBlock language="typescript">{ExampleInternalEmbeddings}</CodeBlock>
 
 ## Related
 

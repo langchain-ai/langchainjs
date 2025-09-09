@@ -29,15 +29,15 @@ await new Promise<void>((resolve, reject) => {
 const docs: Document[] = [
   {
     pageContent: "First",
-    metadata: { name: "adam", is_active: true, id: 1, height: 10.0 },
+    metadata: { name: "Adam Smith", is_active: true, id: 1, height: 10.0 },
   },
   {
     pageContent: "Second",
-    metadata: { name: "bob", is_active: false, id: 2, height: 5.7 },
+    metadata: { name: "Bob Johnson", is_active: false, id: 2, height: 5.7 },
   },
   {
     pageContent: "Third",
-    metadata: { name: "jane", is_active: true, id: 3, height: 2.4 },
+    metadata: { name: "Jane Doe", is_active: true, id: 3, height: 2.4 },
   },
 ];
 
@@ -75,8 +75,8 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"id":{"$ne":1}}
-{ name: 'bob', is_active: false, id: 2, height: 5.7 } 
-{ name: 'jane', is_active: true, id: 3, height: 2.4 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 }
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 }
 */
 
 // Between range
@@ -86,27 +86,27 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"id":{"$between":[1,2]}}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'bob', is_active: false, id: 2, height: 5.7 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
 
 // In list
-advancedFilter = { name: { $in: ["adam", "bob"] } };
+advancedFilter = { name: { $in: ["Adam Smith", "Bob Johnson"] } };
 console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
 printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
-/* Filter: {"name":{"$in":["adam","bob"]}}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'bob', is_active: false, id: 2, height: 5.7 } */
+/* Filter: {"name":{"$in":["Adam Smith","Bob Johnson"]}}
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
 
 // Not in list
-advancedFilter = { name: { $nin: ["adam", "bob"] } };
+advancedFilter = { name: { $nin: ["Adam Smith", "Bob Johnson"] } };
 console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
 printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
-/* Filter: {"name":{"$nin":["adam","bob"]}}
-{ name: 'jane', is_active: true, id: 3, height: 2.4 } */
+/* Filter: {"name":{"$nin":["Adam Smith","Bob Johnson"]}}
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 } */
 
 // Greater than
 advancedFilter = { id: { $gt: 1 } };
@@ -115,8 +115,8 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"id":{"$gt":1}}
-{ name: 'bob', is_active: false, id: 2, height: 5.7 }
-{ name: 'jane', is_active: true, id: 3, height: 2.4 } */
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 }
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 } */
 
 // Greater than or equal to
 advancedFilter = { id: { $gte: 1 } };
@@ -125,9 +125,9 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"id":{"$gte":1}}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'bob', is_active: false, id: 2, height: 5.7 }
-{ name: 'jane', is_active: true, id: 3, height: 2.4 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 }
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 } */
 
 // Less than
 advancedFilter = { id: { $lt: 1 } };
@@ -145,7 +145,7 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"id":{"$lte":1}}
-{ name: 'adam', is_active: true, id: 1, height: 10 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 } */
 
 // Text filtering with $like
 advancedFilter = { name: { $like: "a%" } };
@@ -154,7 +154,7 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"name":{"$like":"a%"}}
-{ name: 'adam', is_active: true, id: 1, height: 10 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 } */
 
 advancedFilter = { name: { $like: "%a%" } };
 console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
@@ -162,18 +162,35 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"name":{"$like":"%a%"}}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'jane', is_active: true, id: 3, height: 2.4 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 } */
 
-// Combined filtering with $or
-advancedFilter = { $or: [{ id: 1 }, { name: "bob" }] };
+// Text filtering with $contains
+advancedFilter = { name: { $contains: "bob" } };
 console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
 printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
-/* Filter: {"$or":[{"id":1},{"name":"bob"}]}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'bob', is_active: false, id: 2, height: 5.7 } */
+/* Filter: {"name":{"$contains":"bob"}}
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
+
+advancedFilter = { name: { $contains: "bo" } };
+console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
+printFilterResult(
+  await vectorStore.similaritySearch("just testing", 5, advancedFilter)
+);
+/* Filter: {"name":{"$contains":"bo"}}
+<empty result> */
+
+// Combined filtering with $or
+advancedFilter = { $or: [{ id: 1 }, { name: "Bob Johnson" }] };
+console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
+printFilterResult(
+  await vectorStore.similaritySearch("just testing", 5, advancedFilter)
+);
+/* Filter: {"$or":[{"id":1},{"name":"Bob Johnson"}]}
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
 
 // Combined filtering with $and
 advancedFilter = { $and: [{ id: 1 }, { id: 2 }] };
@@ -184,15 +201,23 @@ printFilterResult(
 /* Filter: {"$and":[{"id":1},{"id":2}]}
 <empty result> */
 
+advancedFilter = { $and: [{ name: { $contains: "bob" } }, { id: 2 }] };
+console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
+printFilterResult(
+  await vectorStore.similaritySearch("just testing", 5, advancedFilter)
+);
+/* Filter: {"$and":[{"name":{"$contains":"bob"}},{"id":2}]}
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
+
 advancedFilter = { $or: [{ id: 1 }, { id: 2 }, { id: 3 }] };
 console.log(`Filter: ${JSON.stringify(advancedFilter)}`);
 printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"$or":[{"id":1},{"id":2},{"id":3}]}
-{ name: 'adam', is_active: true, id: 1, height: 10 }
-{ name: 'bob', is_active: false, id: 2, height: 5.7 }
-{ name: 'jane', is_active: true, id: 3, height: 2.4 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 }
+{ name: 'Jane Doe', is_active: true, id: 3, height: 2.4 } */
 
 // You can also define a nested filter with $and and $or.
 advancedFilter = {
@@ -203,8 +228,8 @@ printFilterResult(
   await vectorStore.similaritySearch("just testing", 5, advancedFilter)
 );
 /* Filter: {"$and":[{"$or":[{"id":1},{"id":2}]},{"height":{"$gte":5.0}}]}
-{ name: 'adam', is_active: true, id: 1, height: 10 } 
-{ name: 'bob', is_active: false, id: 2, height: 5.7 } */
+{ name: 'Adam Smith', is_active: true, id: 1, height: 10 }
+{ name: 'Bob Johnson', is_active: false, id: 2, height: 5.7 } */
 
 // Disconnect from SAP HANA aft er the operations
 client.disconnect();
