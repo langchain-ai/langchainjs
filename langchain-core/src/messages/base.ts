@@ -415,8 +415,8 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      if (key === "type") {
-        // Do not merge 'type' fields
+      if (key === "type" || key === "id") {
+        // Do not merge 'type' or 'id' fields
         continue;
       }
       merged[key] += value;
