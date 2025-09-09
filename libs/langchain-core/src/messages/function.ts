@@ -4,43 +4,36 @@ import {
   type BaseMessageFields,
   mergeContent,
   _mergeDicts,
-  type MessageType,
 } from "./base.js";
+import { MessageStructure } from "./message.js";
+import { Constructor } from "./utils.js";
 
-export interface FunctionMessageFieldsWithName extends BaseMessageFields {
+export interface FunctionMessageFields<
+  TStructure extends MessageStructure = MessageStructure
+> extends BaseMessageFields<TStructure, "function"> {
   name: string;
 }
 
 /**
  * Represents a function message in a conversation.
  */
-export class FunctionMessage extends BaseMessage {
+export class FunctionMessage<
+    TStructure extends MessageStructure = MessageStructure
+  >
+  extends BaseMessage<TStructure, "function">
+  implements FunctionMessageFields<TStructure>
+{
   static lc_name() {
     return "FunctionMessage";
   }
 
-  constructor(fields: FunctionMessageFieldsWithName);
+  readonly type = "function" as const;
 
-  constructor(
-    fields: string | BaseMessageFields,
-    /** @deprecated */
-    name: string
-  );
+  name: string;
 
-  constructor(
-    fields: string | FunctionMessageFieldsWithName,
-    /** @deprecated */
-    name?: string
-  ) {
-    if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
-      fields = { content: fields, name: name! };
-    }
+  constructor(fields: FunctionMessageFields<TStructure>) {
     super(fields);
-  }
-
-  _getType(): MessageType {
-    return "function";
+    this.name = fields.name;
   }
 }
 
@@ -48,17 +41,18 @@ export class FunctionMessage extends BaseMessage {
  * Represents a chunk of a function message, which can be concatenated
  * with other function message chunks.
  */
-export class FunctionMessageChunk extends BaseMessageChunk {
+export class FunctionMessageChunk<
+  TStructure extends MessageStructure = MessageStructure
+> extends BaseMessageChunk<TStructure, "function"> {
   static lc_name() {
     return "FunctionMessageChunk";
   }
 
-  _getType(): MessageType {
-    return "function";
-  }
+  readonly type = "function" as const;
 
-  concat(chunk: FunctionMessageChunk) {
-    return new FunctionMessageChunk({
+  concat(chunk: FunctionMessageChunk<TStructure>) {
+    const Cls = this.constructor as Constructor<this>;
+    return new Cls({
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,

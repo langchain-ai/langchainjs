@@ -369,4 +369,69 @@ describe("ChatOpenAI", () => {
       },
     ]);
   });
+
+  describe("custom tool streaming delta handling", () => {
+    it("should handle response.custom_tool_call_input.delta events", () => {
+      const responses = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        useResponsesApi: true,
+      }) as any;
+
+      // Test custom tool delta event
+      const customToolDelta = {
+        type: "response.custom_tool_call_input.delta",
+        delta: '{"query": "test query"}',
+        output_index: 0,
+      };
+
+      const result =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          customToolDelta
+        );
+
+      expect(result).toBeDefined();
+      expect(result.message.tool_call_chunks).toBeDefined();
+      expect(result.message.tool_call_chunks).toHaveLength(1);
+      expect(result.message.tool_call_chunks[0]).toEqual({
+        type: "tool_call_chunk",
+        args: '{"query": "test query"}',
+        index: 0,
+      });
+    });
+
+    it("should handle both function and custom tool delta events equally", () => {
+      const responses = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        useResponsesApi: true,
+      }) as any;
+
+      // Test function call delta
+      const functionDelta = {
+        type: "response.function_call_arguments.delta",
+        delta: '{"location": "NYC"}',
+        output_index: 0,
+      };
+
+      // Test custom tool delta
+      const customDelta = {
+        type: "response.custom_tool_call_input.delta",
+        delta: '{"location": "NYC"}',
+        output_index: 0,
+      };
+
+      const functionResult =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          functionDelta
+        );
+      const customResult =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          customDelta
+        );
+
+      // Both should produce identical tool_call_chunks
+      expect(functionResult.message.tool_call_chunks).toEqual(
+        customResult.message.tool_call_chunks
+      );
+    });
+  });
 });

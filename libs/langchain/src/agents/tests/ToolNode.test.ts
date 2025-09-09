@@ -148,8 +148,12 @@ describe("ToolNode", () => {
     function shouldContinue({
       messages,
     }: typeof AgentAnnotation.State): "tools" | "__end__" {
-      const lastMessage: AIMessage = messages[messages.length - 1];
+      const lastMessage = messages[messages.length - 1];
 
+      // If the last message isn't an AIMessage, we stop
+      if (!AIMessage.isInstance(lastMessage)) {
+        return "__end__";
+      }
       // If the LLM makes a tool call, then we route to the "tools" node
       if ((lastMessage.tool_calls?.length ?? 0) > 0) {
         return "tools";

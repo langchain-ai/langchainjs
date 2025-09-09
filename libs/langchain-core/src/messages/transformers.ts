@@ -4,29 +4,21 @@ import { Runnable, RunnableLambda } from "../runnables/base.js";
 import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessage,
-  MessageType,
   BaseMessageChunk,
   BaseMessageFields,
   isBaseMessageChunk,
 } from "./base.js";
-import {
-  ChatMessage,
-  ChatMessageChunk,
-  ChatMessageFieldsWithRole,
-} from "./chat.js";
+import { ChatMessage, ChatMessageChunk, ChatMessageFields } from "./chat.js";
 import {
   FunctionMessage,
   FunctionMessageChunk,
-  FunctionMessageFieldsWithName,
+  FunctionMessageFields,
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { MessageType } from "./message.js";
 import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
-import {
-  ToolMessage,
-  ToolMessageChunk,
-  ToolMessageFieldsWithToolCallId,
-} from "./tool.js";
+import { ToolMessage, ToolMessageChunk, ToolMessageFields } from "./tool.js";
 import { convertToChunk } from "./utils.js";
 
 export type MessageUnion =
@@ -1026,11 +1018,9 @@ function _switchTypeToMessage(
     case "tool":
       if ("tool_call_id" in fields) {
         if (returnChunk) {
-          chunk = new ToolMessageChunk(
-            fields as ToolMessageFieldsWithToolCallId
-          );
+          chunk = new ToolMessageChunk(fields as ToolMessageFields);
         } else {
-          msg = new ToolMessage(fields as ToolMessageFieldsWithToolCallId);
+          msg = new ToolMessage(fields as ToolMessageFields);
         }
       } else {
         throw new Error(
@@ -1040,20 +1030,20 @@ function _switchTypeToMessage(
       break;
     case "function":
       if (returnChunk) {
-        chunk = new FunctionMessageChunk(fields);
+        chunk = new FunctionMessageChunk(fields as FunctionMessageFields);
       } else {
         if (!fields.name) {
           throw new Error("FunctionMessage must have a 'name' field");
         }
-        msg = new FunctionMessage(fields as FunctionMessageFieldsWithName);
+        msg = new FunctionMessage(fields as FunctionMessageFields);
       }
       break;
     case "generic":
       if ("role" in fields) {
         if (returnChunk) {
-          chunk = new ChatMessageChunk(fields as ChatMessageFieldsWithRole);
+          chunk = new ChatMessageChunk(fields as ChatMessageFields);
         } else {
-          msg = new ChatMessage(fields as ChatMessageFieldsWithRole);
+          msg = new ChatMessage(fields as ChatMessageFields);
         }
       } else {
         throw new Error(

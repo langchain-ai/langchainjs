@@ -165,9 +165,9 @@ export class AgentNode<
     if (this.#areMoreStepsNeeded(state, response)) {
       return {
         messages: [
-          new AIMessage("Sorry, need more steps to process this request.", {
+          new AIMessage({
+            content: "Sorry, need more steps to process this request.",
             name: this.name,
-            lc_kwargs: { name: this.name },
             id: response.id,
           }),
         ],

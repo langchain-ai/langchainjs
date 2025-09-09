@@ -2,7 +2,6 @@ import { ExaRetriever } from "@langchain/exa";
 import Exa from "exa-js";
 
 const retriever = new ExaRetriever({
-  // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
   client: new Exa(
     process.env.EXASEARCH_API_KEY // default API key
   ),
