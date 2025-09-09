@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { ChatVertexAI } from "../chat_models.js";
 

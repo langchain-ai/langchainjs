@@ -158,7 +158,6 @@ function createRouteLabel(route: any): string[] {
   return route.routeLabels;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function filterRoutes(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   route: any,

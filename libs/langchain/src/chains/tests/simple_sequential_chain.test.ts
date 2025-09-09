@@ -81,7 +81,6 @@ test("Test SimpleSequentialChain input chains' single input validation", async (
   const chain1 = new LLMChain({ llm: model1, prompt });
   const chain2 = new LLMChain({ llm: model2, prompt });
   expect(() => {
-    /* eslint-disable no-new */
     new SimpleSequentialChain({ chains: [chain1, chain2] });
   }).toThrowErrorMatchingInlineSnapshot(
     `[Error: Chains used in SimpleSequentialChain should all have one input, got 2 for llm.]`
@@ -110,7 +109,6 @@ test("Test SimpleSequentialChain input chains' single ouput validation", async (
     combineDocumentsChain: chain2,
   });
   expect(() => {
-    /* eslint-disable no-new */
     new SimpleSequentialChain({ chains: [chain1, multipleOutputChain] });
   }).toThrowErrorMatchingInlineSnapshot(
     `[Error: Chains used in SimpleSequentialChain should all have one output, got 2 for analyze_document_chain.]`

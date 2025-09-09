@@ -16,6 +16,6 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules/", "dist/", "tests/"],
+  "exclude": ["eslint.config.ts", "node_modules/", "dist/", "tests/"],
   "include": ["./src"]
 }

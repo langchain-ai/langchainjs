@@ -63,7 +63,6 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // File does not exist yet.
-      // eslint-disable-next-line no-instanceof/no-instanceof
       if ("code" in e && e.code === "ENOENT") {
         return undefined;
       }
@@ -182,7 +181,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
     try {
       // Verifies the directory exists at the provided path, and that it is readable and writable.
       await fs.access(rootPath, fs.constants.R_OK | fs.constants.W_OK);
-    } catch (_) {
+    } catch {
       try {
         // Directory does not exist, create it.
         await fs.mkdir(rootPath, { recursive: true });

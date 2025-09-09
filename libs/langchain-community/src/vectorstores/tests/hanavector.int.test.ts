@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import hdbClient from "hdb";
 import { Document } from "@langchain/core/documents";
@@ -629,7 +628,6 @@ describe("Tests on HANA side", () => {
       tableName: tableNameTest,
     };
     try {
-      // eslint-disable-next-line no-new
       const vectordb = new HanaDB(embeddings, args);
       await vectordb.initialize();
     } catch (error) {
@@ -663,7 +661,6 @@ describe("Tests on HANA side", () => {
       vectorColumn: vectorColumnTest,
     };
     try {
-      // eslint-disable-next-line no-new
       const vectordb = new HanaDB(embeddings, args);
       await vectordb.initialize();
     } catch (error) {

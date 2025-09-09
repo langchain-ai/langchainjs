@@ -94,7 +94,7 @@ export function getEnvironmentVariable(name: string): string | undefined {
     } else {
       return undefined;
     }
-  } catch (e) {
+  } catch {
     return undefined;
   }
 }

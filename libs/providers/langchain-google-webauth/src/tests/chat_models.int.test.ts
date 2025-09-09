@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { StructuredTool, tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { afterEach, expect, jest, test } from "@jest/globals";
@@ -616,7 +615,6 @@ describe.each(testGeminiModelNames)(
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
-        // eslint-disable-next-line no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     });
@@ -1710,7 +1708,6 @@ describe.each(testTtsModelNames)(
       `;
       const res = await model.stream(prompt);
       for await (const chunk of res) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const content = chunk?.content?.[0] ?? "";
         if (
           typeof content !== "string" &&
@@ -1788,7 +1785,6 @@ describe.each(testReasoningModelNames)(
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
         console.log(`Delaying for ${delay}ms`);
-        // eslint-disable-next-line no-promise-executor-return
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     });

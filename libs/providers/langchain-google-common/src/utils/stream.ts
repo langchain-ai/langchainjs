@@ -194,7 +194,7 @@ export class JsonStream implements AbstractStream {
         // We only get here if it parsed it ok
         // If we did turn it into an object, remove it from the buffer
         this._buffer = this._buffer.slice(index + 1);
-      } catch (xx) {
+      } catch {
         // It didn't parse it correctly, so we swallow the exception and continue
       }
     }
@@ -284,6 +284,7 @@ export class ReadableAbstractStream implements AbstractStream {
     this.baseStream = baseStream;
     this.decoder = new TextDecoder("utf-8");
     if (body) {
+      // eslint-disable-next-line no-void
       void this.run(body);
     } else {
       console.error("Unexpected empty body while streaming");

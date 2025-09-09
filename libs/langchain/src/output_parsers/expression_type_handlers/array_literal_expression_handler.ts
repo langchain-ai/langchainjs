@@ -42,7 +42,6 @@ export class ArrayLiteralExpressionHandler extends NodeHandler {
       type: "array_literal",
       values: await Promise.all(
         node.elements.map((innerNode) =>
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           this.parentHandler!.handle(innerNode as ExpressionNode)
         )
       ),

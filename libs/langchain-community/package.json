@@ -15,7 +15,7 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-community/",
   "scripts": {
     "build": "pnpm --filter @langchain/build compile @langchain/community",
-    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
@@ -121,8 +121,6 @@
     "@types/uuid": "^9",
     "@types/word-extractor": "^1",
     "@types/ws": "^8",
-    "@typescript-eslint/eslint-plugin": "^5.58.0",
-    "@typescript-eslint/parser": "^5.58.0",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.7",
     "@upstash/vector": "^1.2.1",
@@ -154,13 +152,7 @@
     "dpdm": "^3.14.0",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
-    "eslint": "^8.33.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jest": "^27.6.0",
-    "eslint-plugin-no-instanceof": "^1.0.1",
-    "eslint-plugin-prettier": "^4.2.1",
+    "eslint": "^9.34.0",
     "faiss-node": "^0.5.1",
     "fast-xml-parser": "^4.5.1",
     "firebase-admin": "^11.9.0 || ^12.0.0",
@@ -216,7 +208,8 @@
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
     "word-extractor": "^1.0.4",
-    "youtubei.js": "^12.2.0"
+    "youtubei.js": "^12.2.0",
+    "@langchain/eslint": "workspace:*"
   },
   "peerDependencies": {
     "@arcjet/redact": "^v1.0.0-alpha.23",

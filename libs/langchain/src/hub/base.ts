@@ -83,7 +83,6 @@ export async function basePull(
       promptObject.manifest.kwargs.messages = messages.map((message: any) => {
         const nestedVars = message?.kwargs?.prompt?.kwargs?.input_variables;
         if (Array.isArray(nestedVars)) {
-          // eslint-disable-next-line no-param-reassign
           message.kwargs.prompt.kwargs.input_variables =
             nestedVars.map(stripDotNotation);
         }

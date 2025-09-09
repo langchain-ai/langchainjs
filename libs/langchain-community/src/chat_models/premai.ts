@@ -125,9 +125,12 @@ function premResponseToChatMessage(
 ): BaseMessage {
   switch (message.role) {
     case "assistant":
-      return new AIMessage(message.content || "");
+      return new AIMessage(message.content as string);
     default:
-      return new ChatMessage(message.content || "", message.role ?? "unknown");
+      return new ChatMessage(
+        message.content as string,
+        message.role ?? "unknown"
+      );
   }
 }
 
@@ -369,6 +372,7 @@ export class ChatPrem<
         },
       });
       yield chunk;
+      // eslint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {
@@ -448,7 +452,7 @@ export class ChatPrem<
           .choices) {
           const text = part.message?.content ?? "";
           const generation: ChatGeneration = {
-            text,
+            text: text as string,
             message: premResponseToChatMessage(
               part.message ?? { role: "assistant" }
             ),

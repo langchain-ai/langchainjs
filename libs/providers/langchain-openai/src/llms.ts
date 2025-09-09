@@ -316,6 +316,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                   choice.finish_reason = part.finish_reason;
                   choice.logprobs = part.logprobs;
                 }
+                // eslint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(part.text, {
                   prompt: Math.floor(part.index / this.n),
                   completion: part.index % this.n,

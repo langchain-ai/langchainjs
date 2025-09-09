@@ -1,4 +1,4 @@
-/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";

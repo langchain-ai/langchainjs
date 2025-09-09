@@ -12,3 +12,4 @@ const embeddings = new OpenAIEmbeddings({
 const vectorStore = await Chroma.fromDocuments(chunkedDocs, embeddings, {
   collectionName: "yt-videos",
 });
+console.log(vectorStore);

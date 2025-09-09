@@ -46,7 +46,6 @@ export interface ImagePromptTemplateInput<
    * the message content array if using a complex message
    * content.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalContentFields?: ContentBlock;
 }
 
@@ -76,8 +75,12 @@ export class ImagePromptTemplate<
    * the message content array if using a complex message
    * content.
    */
+<<<<<<< HEAD
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalContentFields?: ContentBlock;
+=======
+  additionalContentFields?: MessageContentComplex;
+>>>>>>> b035f89cc (internal(eslint): adopt new internal eslint package (#8771))
 
   constructor(input: ImagePromptTemplateInput<RunInput, PartialVariableName>) {
     super(input);

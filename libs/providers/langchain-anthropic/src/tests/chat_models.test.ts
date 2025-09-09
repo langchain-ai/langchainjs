@@ -1,6 +1,11 @@
 import { vi, test, expect } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { z } from "zod/v3";
+import {
+  AIMessage,
+  HumanMessage,
+  ToolMessage,
+  AIMessageChunk,
+} from "@langchain/core/messages";
+import { z } from "zod";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatAnthropic } from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
@@ -11,8 +16,8 @@ test("withStructuredOutput with output validation", async () => {
     temperature: 0,
     anthropicApiKey: "testing",
   });
-  vi.spyOn(model as any, "invoke").mockResolvedValue(
-    new AIMessage({
+  vi.spyOn(model, "invoke").mockResolvedValue(
+    new AIMessageChunk({
       content: [
         {
           type: "tool_use",

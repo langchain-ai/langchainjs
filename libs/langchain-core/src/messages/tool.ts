@@ -100,7 +100,6 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     name?: string
   ) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, name, tool_call_id: tool_call_id! };
     }
     super(fields);
@@ -315,7 +314,7 @@ export function defaultToolCallParser(
           args: functionArgs || {},
           id: toolCall.id,
         });
-      } catch (error) {
+      } catch {
         invalidToolCalls.push({
           name: functionName,
           args: toolCall.function.arguments,

@@ -111,7 +111,6 @@ function convertOpenAPIParamsToJSONSchema(
       let schema;
       if (param.schema) {
         schema = spec.getSchema(param.schema);
-        // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[param.name] = convertOpenAPISchemaToJSONSchema(
           schema,
           spec
@@ -127,7 +126,6 @@ function convertOpenAPIParamsToJSONSchema(
         if (schema.description === undefined) {
           schema.description = param.description ?? "";
         }
-        // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[param.name] = convertOpenAPISchemaToJSONSchema(
           schema,
           spec
@@ -170,7 +168,6 @@ export function convertOpenAPISchemaToJSONSchema(
         if (openAPIProperty.type === undefined) {
           return jsonSchema;
         }
-        // eslint-disable-next-line no-param-reassign
         jsonSchema.properties[propertyName] = convertOpenAPISchemaToJSONSchema(
           openAPIProperty,
           spec
@@ -234,7 +231,6 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
             param
           ) => {
             if (!operationParams[param.in]) {
-              // eslint-disable-next-line no-param-reassign
               operationParams[param.in] = [];
             }
             operationParams[param.in].push(param);
@@ -337,7 +333,6 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
             requestParams[argName] !== null &&
             requestParams[argName] !== undefined
           ) {
-            // eslint-disable-next-line no-param-reassign
             filteredArgs[argName] = requestParams[argName];
           }
           return filteredArgs;
@@ -470,10 +465,10 @@ export async function createOpenAPIChain(
   if (typeof spec === "string") {
     try {
       convertedSpec = await OpenAPISpec.fromURL(spec);
-    } catch (e) {
+    } catch {
       try {
         convertedSpec = OpenAPISpec.fromString(spec);
-      } catch (e) {
+      } catch {
         throw new Error(`Unable to parse spec from source ${spec}.`);
       }
     }

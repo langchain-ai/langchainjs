@@ -24,7 +24,7 @@ function nodeDataStr(
         ? dataStr.slice("Runnable".length)
         : dataStr;
       return dataStr;
-    } catch (error) {
+    } catch {
       return data.getName();
     }
   } else {

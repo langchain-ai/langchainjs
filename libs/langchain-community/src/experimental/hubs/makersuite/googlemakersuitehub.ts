@@ -152,7 +152,7 @@ export class MakerSuitePrompt {
     const promptData: MakerSuiteDataPromptData = this
       .promptData as MakerSuiteDataPromptData;
     const dataPrompt = promptData?.dataPrompt;
-    let prompt = `${dataPrompt?.preamble}\n` || "";
+    let prompt = `${dataPrompt?.preamble}\n`;
 
     dataPrompt?.rows.forEach((row) => {
       // Add the data for each row, as long as it is listed as used
@@ -286,7 +286,7 @@ export class MakerSuitePrompt {
    * will have the parameters (model name, temperature, etc) from those in
    * MakerSuite.
    */
-  toChain() {
+  toChain(): Runnable {
     return this.toTemplate().pipe(this.toModel() as Runnable);
   }
 }

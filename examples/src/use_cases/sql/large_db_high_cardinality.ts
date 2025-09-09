@@ -18,7 +18,10 @@ const db = await SqlDatabase.fromDataSourceParams({
   appDataSource: datasource,
 });
 
-async function queryAsList(database: any, query: string): Promise<string[]> {
+async function queryAsList(
+  database: SqlDatabase,
+  query: string
+): Promise<string[]> {
   const res: Array<{ [key: string]: string }> = JSON.parse(
     await database.run(query)
   )

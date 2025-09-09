@@ -30,7 +30,6 @@ const subDocs = [];
 for (let i = 0; i < docs.length; i += 1) {
   const childDocs = await childSplitter.splitDocuments([docs[i]]);
   const taggedChildDocs = childDocs.map((childDoc) => {
-    // eslint-disable-next-line no-param-reassign
     childDoc.metadata[idKey] = docIds[i];
     return childDoc;
   });

@@ -88,7 +88,6 @@ export function createTaggingChain(
  * Will be removed in 0.2.0
  */
 export function createTaggingChainFromZod(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema: InteropZodObject,
   llm: BaseChatModel<BaseFunctionCallOptions>,
   options?: TaggingChainOptions

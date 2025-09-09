@@ -300,7 +300,6 @@ export class DataForSeoAPISearch extends Tool {
   }
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  /* eslint-disable no-param-reassign */
   /**
    * @method cleanupUnnecessaryItems
    * @param {any} d

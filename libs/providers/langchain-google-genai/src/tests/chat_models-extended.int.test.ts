@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { z } from "zod/v3";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";

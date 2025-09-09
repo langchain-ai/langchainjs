@@ -205,27 +205,29 @@ export class RedisVectorStore extends VectorStore {
       ) || 0;
     const multi = this.redisClient.multi();
 
-    vectors.map(async (vector, idx) => {
-      const key =
-        keys && keys.length
-          ? keys[idx]
-          : `${this.keyPrefix}${idx + lastKeyCount}`;
-      const metadata =
-        documents[idx] && documents[idx].metadata
-          ? documents[idx].metadata
-          : {};
+    await Promise.all(
+      vectors.map(async (vector, idx) => {
+        const key =
+          keys && keys.length
+            ? keys[idx]
+            : `${this.keyPrefix}${idx + lastKeyCount}`;
+        const metadata =
+          documents[idx] && documents[idx].metadata
+            ? documents[idx].metadata
+            : {};
 
-      multi.hSet(key, {
-        [this.vectorKey]: this.getFloat32Buffer(vector),
-        [this.contentKey]: documents[idx].pageContent,
-        [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
-      });
+        multi.hSet(key, {
+          [this.vectorKey]: this.getFloat32Buffer(vector),
+          [this.contentKey]: documents[idx].pageContent,
+          [this.metadataKey]: this.escapeSpecialChars(JSON.stringify(metadata)),
+        });
 
-      // write batch
-      if (idx % batchSize === 0) {
-        await multi.exec();
-      }
-    });
+        // write batch
+        if (idx % batchSize === 0) {
+          await multi.exec();
+        }
+      })
+    );
 
     // insert final batch
     await multi.exec();
@@ -386,7 +388,7 @@ export class RedisVectorStore extends VectorStore {
       await this.redisClient.ft.dropIndex(this.indexName, options);
 
       return true;
-    } catch (err) {
+    } catch {
       return false;
     }
   }

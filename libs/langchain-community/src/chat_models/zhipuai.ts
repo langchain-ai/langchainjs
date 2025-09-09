@@ -324,6 +324,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
                 response.usage = data.usage;
               }
 
+              // eslint-disable-next-line no-void
               void runManager?.handleLLMNewToken(text ?? "");
               if (finish_reason && finish_reason !== "null") {
                 if (resolved || rejected) return;
@@ -481,7 +482,7 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
   private _deserialize(json: string) {
     try {
       return JSON.parse(json);
-    } catch (e) {
+    } catch {
       console.warn(`Received a non-JSON parseable chunk: ${json}`);
     }
   }

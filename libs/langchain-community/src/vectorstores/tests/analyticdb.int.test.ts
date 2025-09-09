@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable import/no-extraneous-dependencies */
 import { test } from "@jest/globals";
 
 import { OpenAIEmbeddings } from "@langchain/openai";

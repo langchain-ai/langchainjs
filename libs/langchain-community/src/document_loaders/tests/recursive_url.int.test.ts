@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { test, jest } from "@jest/globals";
 import { compile } from "html-to-text";
 import { RecursiveUrlLoader } from "../web/recursive_url.js";

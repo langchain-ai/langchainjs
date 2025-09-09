@@ -23,7 +23,6 @@ import { ToolCall } from "@langchain/core/messages/tool";
  * @returns {ToolDefinition} The inputted tool in OpenAI tool format.
  */
 export function _convertToOpenAITool(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tool: BindToolsInput,
   fields?: {
     /**

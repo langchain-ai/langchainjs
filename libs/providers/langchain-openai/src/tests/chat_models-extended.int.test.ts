@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "vitest";
 
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
@@ -170,7 +169,6 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   ]);
   // console.log(JSON.stringify(res));
   expect(res.additional_kwargs.tool_calls?.length).toBeGreaterThan(1);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const toolMessages = res.additional_kwargs.tool_calls!.map(
     (toolCall) =>
       new ToolMessage({
@@ -191,6 +189,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     toolError = e;
   }
   expect(toolError).toBeDefined();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   expect((toolError as any)?.lc_error_code).toEqual("INVALID_TOOL_RESULTS");
   // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var

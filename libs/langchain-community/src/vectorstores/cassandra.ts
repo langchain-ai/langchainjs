@@ -1,4 +1,3 @@
-/* eslint-disable prefer-template */
 import { v4 as uuidv4 } from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
@@ -43,7 +42,6 @@ export interface CassandraLibArgs
  * texts or documents.
  */
 export class CassandraStore extends VectorStore {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   declare FilterType: WhereClause;
 
   private readonly table: CassandraTable;

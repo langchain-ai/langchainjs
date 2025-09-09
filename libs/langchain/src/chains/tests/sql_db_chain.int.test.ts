@@ -126,7 +126,6 @@ test.skip("Test token limit SqlDatabaseChain", async () => {
         INSERT INTO users (name, age) VALUES ('Bob', 21);
     `);
 
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   await datasource.query(`
         INSERT INTO users (name, age) VALUES ('${veryLongString}', 22);
     `);

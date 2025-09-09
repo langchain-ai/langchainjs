@@ -22,7 +22,6 @@ New lines of conversation:
 
 New summary:`;
 
-// eslint-disable-next-line spaced-comment
 export const SUMMARY_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["summary", "new_lines"],
   template: _DEFAULT_SUMMARIZER_TEMPLATE,
@@ -46,7 +45,6 @@ Human: {input}
 You:`;
 
 export const ENTITY_MEMORY_CONVERSATION_TEMPLATE =
-  // eslint-disable-next-line spaced-comment
   /*#__PURE__*/ new PromptTemplate({
     inputVariables: ["entities", "history", "input"],
     template: _DEFAULT_ENTITY_MEMORY_CONVERSATION_TEMPLATE,
@@ -87,7 +85,6 @@ Human: {input}
 
 Output:`;
 
-// eslint-disable-next-line spaced-comment
 export const ENTITY_EXTRACTION_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["history", "input"],
   template: _DEFAULT_ENTITY_EXTRACTION_TEMPLATE,
@@ -111,7 +108,6 @@ Last line of conversation:
 Human: {input}
 Updated summary (or the exact string "UNCHANGED" if there is no new information about {entity} above):`;
 
-// eslint-disable-next-line spaced-comment
 export const ENTITY_SUMMARIZATION_PROMPT = /*#__PURE__*/ new PromptTemplate({
   inputVariables: ["entity", "summary", "history", "input"],
   template: _DEFAULT_ENTITY_SUMMARIZATION_TEMPLATE,

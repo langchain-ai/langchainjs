@@ -210,7 +210,7 @@ export class MessageGeminiSafetyHandler extends DefaultGeminiSafetyHandler {
   ): GenerateContentResponseData {
     try {
       return super.handleData(response, data);
-    } catch (xx) {
+    } catch {
       return this.setMessage(data);
     }
   }
@@ -416,7 +416,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   ): GeminiPartInlineData | GeminiPartFileData {
     // Add videoMetadata if defined
     if ("videoMetadata" in content && typeof ret === "object") {
-      // eslint-disable-next-line no-param-reassign
       ret.videoMetadata = content.videoMetadata;
     }
     return ret;
@@ -1077,7 +1076,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       const modalityLc: keyof ModalitiesTokenDetails =
         modality.toLowerCase() as keyof ModalitiesTokenDetails;
       const currentCount = details[modalityLc] ?? 0;
-      // eslint-disable-next-line no-param-reassign
       details[modalityLc] = currentCount + tokenCount;
     });
   }
@@ -1125,7 +1123,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function responseToGenerationInfo(response: GoogleLLMResponse) {
     const data =
-      // eslint-disable-next-line no-nested-ternary
       Array.isArray(response.data) && response.data[0]
         ? response.data[0]
         : response.data &&
@@ -1676,11 +1673,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     let ret = {} as GeminiContent;
     for (let index = 0; index < input.length; index += 1) {
       const message = input[index];
-      if (message._getType() === "system") {
+      if (message.getType() === "system") {
         // For system types, we only want it if it is the first message,
         // if it appears anywhere else, it should be an error.
         if (index === 0) {
-          // eslint-disable-next-line prefer-destructuring
           ret = (await baseMessageToContent!(message, undefined))[0];
         } else {
           throw new Error(

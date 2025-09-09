@@ -1,6 +1,5 @@
 /* eslint-disable prefer-template */
 /* eslint-disable default-case */
-/* eslint-disable no-plusplus */
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
@@ -44,7 +43,6 @@ export async function getBytes(
     return new Promise<void>((resolve) => {
       stream.on("readable", () => {
         let chunk;
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           chunk = stream.read();
           if (chunk == null) {
@@ -65,7 +63,6 @@ export async function getBytes(
   //          such as those from Azure OpenAI, which may not terminate with a blank line. Without this
   //          mechanism, we risk ignoring a possibly significant last message.
   //          See https://github.com/langchain-ai/langchainjs/issues/1299 for details.
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const result = await reader.read();
     if (result.done) {

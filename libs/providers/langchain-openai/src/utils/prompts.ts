@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import type { BasePromptValue } from "@langchain/core/prompt_values";
 import type { OpenAI } from "openai";
 

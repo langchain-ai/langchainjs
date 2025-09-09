@@ -91,7 +91,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
           initParams.tool_calls = initParams.tool_calls ?? [];
           initParams.invalid_tool_calls = initParams.invalid_tool_calls ?? [];
         }
-      } catch (e) {
+      } catch {
         // Do nothing if parsing fails
         initParams.tool_calls = [];
         initParams.invalid_tool_calls = [];
@@ -302,7 +302,7 @@ export class AIMessageChunk<
             id: originalId,
             type: "tool_call",
           });
-        } catch (e) {
+        } catch {
           invalidToolCalls.push({
             name,
             args: argsStr,
