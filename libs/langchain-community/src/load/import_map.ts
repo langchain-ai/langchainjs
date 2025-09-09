@@ -168,7 +168,6 @@ export * as retrievers__azion_edgesql from "../retrievers/azion_edgesql.js";
 export * as retrievers__bm25 from "../retrievers/bm25.js";
 export * as retrievers__chaindesk from "../retrievers/chaindesk.js";
 export * as retrievers__databerry from "../retrievers/databerry.js";
-export * as retrievers__dria from "../retrievers/dria.js";
 export * as retrievers__metal from "../retrievers/metal.js";
 export * as retrievers__remote from "../retrievers/remote/index.js";
 export * as retrievers__supabase from "../retrievers/supabase.js";
