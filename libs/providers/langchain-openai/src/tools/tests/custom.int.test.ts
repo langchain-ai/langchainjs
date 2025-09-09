@@ -23,13 +23,12 @@ describe("customTool", () => {
     };
     const result = await tool.invoke(toolCall);
     expect(result).toBeInstanceOf(ToolMessage);
-    // FIXME(hntrl): resolve when core 1.0.0-alpha.2 is released
-    // expect(result.metadata).toEqual({
-    //   customTool: {
-    //     name: "text_tool",
-    //     description: "A tool that returns the input",
-    //   },
-    // });
+    expect(result.metadata).toEqual({
+      customTool: {
+        name: "text_tool",
+        description: "A tool that returns the input",
+      },
+    });
   });
 
   test("responding with a tool message from a custom tool will be used correctly", async () => {

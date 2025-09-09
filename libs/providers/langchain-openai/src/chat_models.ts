@@ -1689,15 +1689,14 @@ export class ChatOpenAIResponses<
             };
           }
 
-          // FIXME(hntrl): resolve when core 1.0.0-alpha.2 is released
-          // // Handle custom tool output
-          // if (toolMessage.metadata?.customTool) {
-          //   return {
-          //     type: "custom_tool_call_output",
-          //     call_id: toolMessage.tool_call_id,
-          //     output: toolMessage.content as string,
-          //   };
-          // }
+          // Handle custom tool output
+          if (toolMessage.metadata?.customTool) {
+            return {
+              type: "custom_tool_call_output",
+              call_id: toolMessage.tool_call_id,
+              output: toolMessage.content as string,
+            };
+          }
 
           return {
             type: "function_call_output",
