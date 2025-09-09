@@ -1,25 +1,5 @@
-import { type GoogleLLMInput, GoogleLLM } from "@langchain/google-webauth";
-
 /**
- * Input to a Google Vertex LLM class.
+ * The implementation of this file was consolidated into the @langchain/google package.
+ * This file is kept here for backwards compatibility.
  */
-export interface VertexAIInput extends GoogleLLMInput {}
-
-/**
- * Integration with a Google Vertex AI LLM using
- * the "@langchain/google-webauth" package for auth.
- */
-export class VertexAI extends GoogleLLM {
-  lc_namespace = ["langchain", "llms", "vertexai"];
-
-  static lc_name() {
-    return "VertexAI";
-  }
-
-  constructor(fields?: VertexAIInput) {
-    super({
-      ...fields,
-      platformType: "gcp",
-    });
-  }
-}
+export { VertexAIInput, VertexAI } from "@langchain/google/web";
