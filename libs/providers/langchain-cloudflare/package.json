@@ -29,7 +29,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/core": "^1.0.0-alpha",
+    "@langchain/core": "^1.0.0-alpha.1",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

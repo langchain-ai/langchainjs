@@ -30,7 +30,7 @@
     "redis": "^4.6.13"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha"
+    "@langchain/core": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.0",

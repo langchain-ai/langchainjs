@@ -29,7 +29,7 @@
     "@nomic-ai/atlas": "^0.8.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha"
+    "@langchain/core": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

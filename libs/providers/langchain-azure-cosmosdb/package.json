@@ -34,7 +34,7 @@
     "mongodb": "^6.17.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha"
+    "@langchain/core": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
