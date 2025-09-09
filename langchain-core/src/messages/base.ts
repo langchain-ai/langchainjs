@@ -415,11 +415,15 @@ export function _mergeDicts(
         `field[${key}] already exists in the message chunk, but with a different type.`
       );
     } else if (typeof merged[key] === "string") {
-      if (key === "type" || key === "id") {
-        // Do not merge 'type' or 'id' fields
+      if (key === "type") {
+        // Do not merge 'type' fields
         continue;
+      } else if (["id", "output_version", "model_provider"].includes(key)) {
+        // Keep the incoming value for these fields
+        merged[key] = value;
+      } else {
+        merged[key] += value;
       }
-      merged[key] += value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
