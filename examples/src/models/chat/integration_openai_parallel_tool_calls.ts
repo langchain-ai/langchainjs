@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 const model = new ChatOpenAI({

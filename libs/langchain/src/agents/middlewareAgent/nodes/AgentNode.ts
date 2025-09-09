@@ -8,7 +8,7 @@ import {
   isBaseMessage,
   isToolMessage,
 } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { ChatMinimax } from "@langchain/community/chat_models/minimax";
 import { HumanMessage } from "@langchain/core/messages";

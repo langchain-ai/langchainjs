@@ -93,7 +93,7 @@
     "p-retry": "4",
     "uuid": "^10.0.0",
     "yaml": "^2.2.1",
-    "zod": "^3.25.32"
+    "zod": "^3.25.76 || ^4"
   },
   "optionalDependencies": {
     "langsmith": "^0.3.64"

@@ -1,6 +1,6 @@
 import { ChatCohere } from "@langchain/cohere";
 import { HumanMessage } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
 
 const model = new ChatCohere({

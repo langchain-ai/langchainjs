@@ -1,7 +1,7 @@
 /* eslint-disable no-process-env */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WatsonxAiMlVml_v1 from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import {
   ChatWatsonx,

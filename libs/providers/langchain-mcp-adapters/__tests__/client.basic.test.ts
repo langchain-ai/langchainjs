@@ -7,7 +7,7 @@ import {
   afterEach,
   type Mock,
 } from "vitest";
-import { ZodError } from "zod";
+import { ZodError } from "zod/v3";
 
 import "./mocks.js";
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { createMiddleware } from "../middleware.js";
 
 const contextSchema = z.object({

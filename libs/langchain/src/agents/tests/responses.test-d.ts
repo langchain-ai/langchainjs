@@ -2,7 +2,7 @@
 import { describe, expectTypeOf, it } from "vitest";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { Tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import type { JsonSchemaFormat } from "../responses.js";

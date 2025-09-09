@@ -86,7 +86,7 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  * @example
  * ```ts
  * import { ToolNode, tool, AIMessage } from "langchain";
- * import { z } from "zod";
+ * import { z } from "zod/v3";
  *
  * const getWeather = tool((input) => {
  *   if (["sf", "san francisco"].includes(input.location.toLowerCase())) {

@@ -31,7 +31,7 @@
   "dependencies": {
     "@jest/globals": "^29.5.0",
     "@langchain/core": "workspace:*",
-    "zod": "^3.25.32"
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",

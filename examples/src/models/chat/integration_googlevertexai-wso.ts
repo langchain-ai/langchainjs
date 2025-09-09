@@ -1,5 +1,5 @@
 import { ChatVertexAI } from "@langchain/google-vertexai";
-import { z } from "zod";
+import { z } from "zod/v3";
 // Or, if using the web entrypoint:
 // import { ChatVertexAI } from "@langchain/google-vertexai-web";
 

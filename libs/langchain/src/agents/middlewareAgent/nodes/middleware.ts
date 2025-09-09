@@ -1,5 +1,5 @@
 /* eslint-disable no-instanceof/no-instanceof */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../../RunnableCallable.js";

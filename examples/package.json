@@ -112,12 +112,12 @@
     "uuid": "^10.0.0",
     "voy-search": "0.6.2",
     "weaviate-client": "^3.5.2",
-    "zod": "^3.22.4",
     "zod-to-json-schema": "^3.22.3"
   },
   "peerDependencies": {
     "@getzep/zep-cloud": "^1.0.6",
-    "@getzep/zep-js": "^0.9.0"
+    "@getzep/zep-js": "^0.9.0",
+    "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.2",
@@ -133,6 +133,7 @@
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
-    "typescript": "~5.1.6"
+    "typescript": "~5.1.6",
+    "zod": "^3.25.76"
   }
 }

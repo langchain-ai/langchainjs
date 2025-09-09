@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { describe, it, expectTypeOf } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { type BaseStore } from "@langchain/langgraph-checkpoint";

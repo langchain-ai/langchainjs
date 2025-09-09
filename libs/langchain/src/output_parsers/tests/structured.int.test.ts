@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import {

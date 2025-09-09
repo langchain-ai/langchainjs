@@ -33,7 +33,7 @@ import {
   type BaseCheckpointSaver,
 } from "@langchain/langgraph-checkpoint";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export class _AnyIdAIMessage extends AIMessage {
   get lc_id() {

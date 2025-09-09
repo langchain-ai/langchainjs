@@ -26,6 +26,9 @@
     "format": "prettier --config .prettierrc --write \"src\"",
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
+  "dependencies": {
+    "zod": "^3.25.76 || ^4"
+  },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
   },
@@ -69,8 +72,5 @@
   },
   "files": [
     "dist/"
-  ],
-  "dependencies": {
-    "zod": "^3.25.32"
-  }
+  ]
 }

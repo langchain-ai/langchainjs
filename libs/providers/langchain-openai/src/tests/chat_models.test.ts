@@ -1,6 +1,6 @@
 /* eslint-disable no-process-env */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { tool } from "@langchain/core/tools";

@@ -15,7 +15,8 @@
     "vitest": "0.34.3",
     "typeorm": "^0.3.25",
     "reflect-metadata": "^0.1.13",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.3",
+    "zod": "^3.25.76"
   },
   "private": true,
   "scripts": {

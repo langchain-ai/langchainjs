@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
 import {

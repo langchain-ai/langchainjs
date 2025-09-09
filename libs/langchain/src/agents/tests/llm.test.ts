@@ -1,5 +1,5 @@
 import { describe, it, vi, expect } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { HumanMessage } from "@langchain/core/messages";
 
 import { FakeToolCallingModel } from "./utils.js";

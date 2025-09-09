@@ -31,11 +31,11 @@
   },
   "dependencies": {
     "js-tiktoken": "^1.0.12",
-    "openai": "5.12.2",
-    "zod": "^3.25.32"
+    "openai": "^5.3.0",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.1 <2.0.0"
+    "@langchain/core": "^1.0.0-alpha.1"
   },
   "devDependencies": {
     "@azure/identity": "^4.2.1",

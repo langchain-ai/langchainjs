@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { describe, it, expect, vi } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";

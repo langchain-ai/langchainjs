@@ -18,7 +18,8 @@
     "@langchain/openai": "workspace:*",
     "@types/node": "^24.3.0",
     "langchain": "workspace:*",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

@@ -50,7 +50,7 @@ export type { AgentMiddleware } from "./middlewareAgent/types.js";
  * @example
  * ```ts
  * import { createAgent, tool } from "langchain";
- * import { z } from "zod";
+ * import { z } from "zod/v3";
  *
  * const getWeather = tool((input) => {
  *   if (["sf", "san francisco"].includes(input.location.toLowerCase())) {

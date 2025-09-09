@@ -5,7 +5,7 @@ import {
   isToolMessage,
   isAIMessage,
 } from "@langchain/core/messages";
-import { z, type ZodIssue, type ZodTypeAny } from "zod";
+import { z, type ZodIssue, type ZodTypeAny } from "zod/v3";
 
 import type { AgentMiddleware, ToolCall, ToolResult } from "../types.js";
 
