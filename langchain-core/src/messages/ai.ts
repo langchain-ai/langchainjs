@@ -6,6 +6,7 @@ import {
   _mergeDicts,
   type MessageType,
   BaseMessageFields,
+  _mergeLists,
 } from "./base.js";
 import {
   InvalidToolCall,
@@ -383,12 +384,11 @@ export class AIMessageChunk extends BaseMessageChunk {
       this.tool_call_chunks !== undefined ||
       chunk.tool_call_chunks !== undefined
     ) {
-      // For tool call chunks, we want to concatenate the arrays instead of merging
-      // items with the same index, since each tool call chunk should remain separate
-      const leftChunks = this.tool_call_chunks ?? [];
-      const rightChunks = chunk.tool_call_chunks ?? [];
-      const rawToolCalls = [...leftChunks, ...rightChunks];
-      if (rawToolCalls.length > 0) {
+      const rawToolCalls = _mergeLists(
+        this.tool_call_chunks,
+        chunk.tool_call_chunks
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls;
       }
     }
