@@ -231,11 +231,6 @@ export const importMap: Array<DeprecatedEntrypoint> = [
     namedImport: "serializeGeneration",
   },
   {
-    old: "langchain/cache/base",
-    new: "@langchain/core/caches",
-    namedImport: "getCacheKey",
-  },
-  {
     old: "langchain/schema/*",
     new: "@langchain/core/caches",
     namedImport: "BaseCache",

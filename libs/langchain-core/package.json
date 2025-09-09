@@ -667,28 +667,6 @@
       },
       "input": "./src/utils/hash.ts"
     },
-    "./utils/hash/insecure": {
-      "require": {
-        "types": "./dist/utils/js-sha1/hash.d.cts",
-        "default": "./dist/utils/js-sha1/hash.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/js-sha1/hash.d.ts",
-        "default": "./dist/utils/js-sha1/hash.js"
-      },
-      "input": "./src/utils/js-sha1/hash.ts"
-    },
-    "./utils/hash/sha256": {
-      "require": {
-        "types": "./dist/utils/js-sha256/hash.d.cts",
-        "default": "./dist/utils/js-sha256/hash.cjs"
-      },
-      "import": {
-        "types": "./dist/utils/js-sha256/hash.d.ts",
-        "default": "./dist/utils/js-sha256/hash.js"
-      },
-      "input": "./src/utils/js-sha256/hash.ts"
-    },
     "./utils/json_patch": {
       "require": {
         "types": "./dist/utils/json_patch.d.cts",
