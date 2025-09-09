@@ -271,12 +271,29 @@ export class AIMessageChunk extends BaseMessageChunk {
             : undefined,
       };
     } else {
+      const groupedToolCallChunk = fields.tool_call_chunks.reduce(
+        (acc, chunk) => {
+          // Assign a fallback ID if the chunk doesn't have one
+          // This can happen with tools that have empty schemas
+          const chunkId = chunk.id || `fallback-${chunk.index || 0}`;
+          acc[chunkId] = acc[chunkId] ?? [];
+          acc[chunkId].push(chunk);
+          return acc;
+        },
+        {} as Record<string, ToolCallChunk[]>
+      );
+
       const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
-      for (const toolCallChunk of fields.tool_call_chunks) {
+      for (const [id, chunks] of Object.entries(groupedToolCallChunk)) {
         let parsedArgs = {};
+        const name = chunks[0]?.name ?? "";
+        const joinedArgs = chunks.map((c) => c.args || "").join("");
+        const argsStr = joinedArgs.length ? joinedArgs : "{}";
+        // Use the original ID from the first chunk if it exists, otherwise use the grouped ID
+        const originalId = chunks[0]?.id || id;
         try {
-          parsedArgs = parsePartialJson(toolCallChunk.args || "{}");
+          parsedArgs = parsePartialJson(argsStr);
           if (
             parsedArgs === null ||
             typeof parsedArgs !== "object" ||
@@ -285,16 +302,16 @@ export class AIMessageChunk extends BaseMessageChunk {
             throw new Error("Malformed tool call chunk args.");
           }
           toolCalls.push({
-            name: toolCallChunk.name ?? "",
+            name,
             args: parsedArgs,
-            id: toolCallChunk.id,
+            id: originalId,
             type: "tool_call",
           });
         } catch (e) {
           invalidToolCalls.push({
-            name: toolCallChunk.name,
-            args: toolCallChunk.args,
-            id: toolCallChunk.id,
+            name,
+            args: argsStr,
+            id: originalId,
             error: "Malformed args.",
             type: "invalid_tool_call",
           });

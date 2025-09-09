@@ -16,15 +16,17 @@ import {
   type BaseLanguageModelInput,
   isOpenAITool,
 } from "@langchain/core/language_models/base";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import {
   Runnable,
   RunnablePassthrough,
   RunnableSequence,
 } from "@langchain/core/runnables";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { z } from "zod";
+import {
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
 
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { AnthropicToolsOutputParser } from "./output_parsers.js";
@@ -35,6 +37,7 @@ import {
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
 import {
+  AnthropicBuiltInToolUnion,
   AnthropicMessageCreateParams,
   AnthropicMessageStreamEvent,
   AnthropicRequestOptions,
@@ -100,6 +103,33 @@ function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
 
+function isBuiltinTool(tool: unknown): tool is AnthropicBuiltInToolUnion {
+  const builtinTools = [
+    "web_search",
+    "bash",
+    "code_execution",
+    "computer",
+    "str_replace_editor",
+    "str_replace_based_edit_tool",
+  ];
+  return (
+    typeof tool === "object" &&
+    tool !== null &&
+    "type" in tool &&
+    "name" in tool &&
+    typeof tool.type === "string" &&
+    typeof tool.name === "string" &&
+    builtinTools.includes(tool.name)
+  );
+}
+
+/**
+ * @see https://docs.anthropic.com/claude/docs/models-overview
+ */
+export type AnthropicMessagesModelId =
+  | Anthropic.Model
+  | (string & NonNullable<unknown>);
+
 /**
  * Input to AnthropicChat class.
  */
@@ -108,8 +138,10 @@ export interface AnthropicInput {
    * from 0 to 1. Use temp closer to 0 for analytical /
    * multiple choice, and temp closer to 1 for creative
    * and generative tasks.
+   * To not set this field, pass `null`. If `undefined` is passed,
+   * the default (1) will be used.
    */
-  temperature?: number;
+  temperature?: number | null;
 
   /** Only sample from the top K options for each subsequent
    * token. Used to remove "long tail" low probability
@@ -124,8 +156,13 @@ export interface AnthropicInput {
    * specified by top_p. Defaults to -1, which disables it.
    * Note that you should either alter temperature or top_p,
    * but not both.
+   *
+   * To not set this field, pass `null`. If `undefined` is passed,
+   * the default (-1) will be used.
+   *
+   * For Opus 4.1, this defaults to `null`.
    */
-  topP?: number;
+  topP?: number | null;
 
   /** A maximum number of tokens to generate before stopping. */
   maxTokens?: number;
@@ -154,9 +191,9 @@ export interface AnthropicInput {
   anthropicApiUrl?: string;
 
   /** @deprecated Use "model" instead */
-  modelName?: string;
+  modelName?: AnthropicMessagesModelId;
   /** Model name to use */
-  model?: string;
+  model?: AnthropicMessagesModelId;
 
   /** Overridable Anthropic ClientOptions */
   clientOptions?: ClientOptions;
@@ -622,11 +659,11 @@ export class ChatAnthropicMessages<
 
   apiUrl?: string;
 
-  temperature = 1;
+  temperature: number | undefined = 1;
 
   topK = -1;
 
-  topP = -1;
+  topP: number | undefined = -1;
 
   maxTokens = 2048;
 
@@ -683,9 +720,20 @@ export class ChatAnthropicMessages<
 
     this.invocationKwargs = fields?.invocationKwargs ?? {};
 
-    this.temperature = fields?.temperature ?? this.temperature;
+    if (this.model.includes("opus-4-1")) {
+      // Default to `undefined` for `topP` for Opus 4.1 models
+      this.topP = fields?.topP === null ? undefined : fields?.topP;
+    } else {
+      this.topP = fields?.topP ?? this.topP;
+    }
+
+    // If the user passes `null`, set it to `undefined`. Otherwise, use their value or the default. We have to check for null, because
+    // there's no way for us to know if they explicitly set it to `undefined`, or never passed a value
+    this.temperature =
+      fields?.temperature === null
+        ? undefined
+        : fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
-    this.topP = fields?.topP ?? this.topP;
     this.maxTokens =
       fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
@@ -720,11 +768,14 @@ export class ChatAnthropicMessages<
    */
   formatStructuredToolToAnthropic(
     tools: ChatAnthropicCallOptions["tools"]
-  ): Anthropic.Messages.Tool[] | undefined {
+  ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools || !tools.length) {
       return undefined;
     }
     return tools.map((tool) => {
+      if (isBuiltinTool(tool)) {
+        return tool;
+      }
       if (isAnthropicTool(tool)) {
         return tool;
       }
@@ -740,8 +791,8 @@ export class ChatAnthropicMessages<
         return {
           name: tool.name,
           description: tool.description,
-          input_schema: (isZodSchema(tool.schema)
-            ? zodToJsonSchema(tool.schema)
+          input_schema: (isInteropZodSchema(tool.schema)
+            ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
         };
       }
@@ -785,7 +836,11 @@ export class ChatAnthropicMessages<
       if (this.topK !== -1) {
         throw new Error("topK is not supported when thinking is enabled");
       }
-      if (this.topP !== -1) {
+      if (
+        this.model.includes("opus-4-1")
+          ? this.topP !== undefined
+          : this.topP !== -1
+      ) {
         throw new Error("topP is not supported when thinking is enabled");
       }
       if (this.temperature !== 1) {
@@ -1056,7 +1111,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -1067,7 +1122,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -1078,7 +1133,7 @@ export class ChatAnthropicMessages<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -1089,7 +1144,8 @@ export class ChatAnthropicMessages<
         { raw: BaseMessage; parsed: RunOutput }
       > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -1100,8 +1156,8 @@ export class ChatAnthropicMessages<
     let functionName = name ?? "extract";
     let outputParser: BaseLLMOutputParser<RunOutput>;
     let tools: Anthropic.Messages.Tool[];
-    if (isZodSchema(schema)) {
-      const jsonSchema = zodToJsonSchema(schema);
+    if (isInteropZodSchema(schema)) {
+      const jsonSchema = toJsonSchema(schema);
       tools = [
         {
           name: functionName,
@@ -1151,6 +1207,10 @@ export class ChatAnthropicMessages<
 
       llm = this.withConfig({
         tools,
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1167,6 +1227,10 @@ export class ChatAnthropicMessages<
         tool_choice: {
           type: "tool",
           name: functionName,
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
         },
       } as Partial<CallOptions>);
     }

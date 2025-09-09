@@ -7,7 +7,6 @@ import {
   HumanMessage,
   type AIMessage,
   type ToolMessage,
-  type MessageContent,
   isAIMessage,
   type StandardContentBlockConverter,
   type StandardTextBlock,
@@ -23,13 +22,16 @@ import {
   AnthropicImageBlockParam,
   AnthropicMessageCreateParams,
   AnthropicTextBlockParam,
-  AnthropicToolResponse,
   AnthropicToolResultBlockParam,
   AnthropicToolUseBlockParam,
   AnthropicDocumentBlockParam,
   AnthropicThinkingBlockParam,
   AnthropicRedactedThinkingBlockParam,
+  AnthropicServerToolUseBlockParam,
+  AnthropicWebSearchToolResultBlockParam,
   isAnthropicImageBlockParam,
+  AnthropicSearchResultBlockParam,
+  AnthropicToolResponse,
 } from "../types.js";
 
 function _formatImage(imageUrl: string) {
@@ -118,7 +120,7 @@ function _ensureMessageContents(
                 type: "tool_result",
                 // rare case: message.content could be undefined
                 ...(message.content != null
-                  ? { content: _formatContent(message.content) }
+                  ? { content: _formatContent(message) }
                   : {}),
                 tool_use_id: (message as ToolMessage).tool_call_id,
               },
@@ -191,7 +193,6 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
           source: {
             type: "url",
             url: block.url,
-            media_type: block.mime_type ?? "",
           },
           ...("cache_control" in (block.metadata ?? {})
             ? { cache_control: block.metadata!.cache_control }
@@ -343,9 +344,17 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
   },
 };
 
-function _formatContent(content: MessageContent) {
-  const toolTypes = ["tool_use", "tool_result", "input_json_delta"];
+function _formatContent(message: BaseMessage) {
+  const toolTypes = [
+    "tool_use",
+    "tool_result",
+    "input_json_delta",
+    "server_tool_use",
+    "web_search_tool_result",
+    "web_search_result",
+  ];
   const textTypes = ["text", "text_delta"];
+  const { content } = message;
 
   if (typeof content === "string") {
     return content;
@@ -396,6 +405,20 @@ function _formatContent(content: MessageContent) {
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         };
         return block;
+      } else if (contentPart.type === "search_result") {
+        const block: AnthropicSearchResultBlockParam = {
+          type: "search_result" as const, // Explicitly setting the type as "search_result"
+          title: contentPart.title,
+          source: contentPart.source,
+          ...("cache_control" in contentPart && contentPart.cache_control
+            ? { cache_control: contentPart.cache_control }
+            : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
+          content: contentPart.content,
+        };
+        return block;
       } else if (
         textTypes.find((t) => t === contentPart.type) &&
         "text" in contentPart
@@ -405,6 +428,9 @@ function _formatContent(content: MessageContent) {
           type: "text" as const, // Explicitly setting the type as "text"
           text: contentPart.text,
           ...(cacheControl ? { cache_control: cacheControl } : {}),
+          ...("citations" in contentPart && contentPart.citations
+            ? { citations: contentPart.citations }
+            : {}),
         };
       } else if (toolTypes.find((t) => t === contentPart.type)) {
         const contentPartCopy = { ...contentPart };
@@ -436,6 +462,27 @@ function _formatContent(content: MessageContent) {
           ...(cacheControl ? { cache_control: cacheControl } : {}),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
+      } else if (
+        "functionCall" in contentPart &&
+        contentPart.functionCall &&
+        typeof contentPart.functionCall === "object" &&
+        isAIMessage(message)
+      ) {
+        const correspondingToolCall = message.tool_calls?.find(
+          (toolCall) => toolCall.name === contentPart.functionCall.name
+        );
+        if (!correspondingToolCall) {
+          throw new Error(
+            `Could not find tool call for function call ${contentPart.functionCall.name}`
+          );
+        }
+        // Google GenAI models include a `functionCall` object inside content. We should ignore it as Anthropic will not support it.
+        return {
+          id: correspondingToolCall.id,
+          type: "tool_use",
+          name: correspondingToolCall.name,
+          input: contentPart.functionCall.args,
+        };
       } else {
         throw new Error("Unsupported message content format");
       }
@@ -499,7 +546,8 @@ export function _convertMessagesToAnthropicPayload(
           content.find(
             (contentPart) =>
               (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta") &&
+                contentPart.type === "input_json_delta" ||
+                contentPart.type === "server_tool_use") &&
               contentPart.id === toolCall.id
           )
         );
@@ -510,13 +558,13 @@ export function _convertMessagesToAnthropicPayload(
         }
         return {
           role,
-          content: _formatContent(message.content),
+          content: _formatContent(message),
         };
       }
     } else {
       return {
         role,
-        content: _formatContent(message.content),
+        content: _formatContent(message),
       };
     }
   });
@@ -545,6 +593,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
           | AnthropicDocumentBlockParam
           | AnthropicThinkingBlockParam
           | AnthropicRedactedThinkingBlockParam
+          | AnthropicServerToolUseBlockParam
+          | AnthropicWebSearchToolResultBlockParam
         >
   ): Array<
     | AnthropicTextBlockParam
@@ -554,6 +604,8 @@ function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {
     | AnthropicDocumentBlockParam
     | AnthropicThinkingBlockParam
     | AnthropicRedactedThinkingBlockParam
+    | AnthropicServerToolUseBlockParam
+    | AnthropicWebSearchToolResultBlockParam
   > => {
     if (typeof content === "string") {
       return [

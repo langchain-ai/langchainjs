@@ -745,7 +745,7 @@ async function _firstMaxTokens(
       break;
     }
   }
-  if (idx < messagesCopy.length - 1 && partialStrategy) {
+  if (idx < messagesCopy.length && partialStrategy) {
     let includedPartial = false;
     if (Array.isArray(messagesCopy[idx].content)) {
       const excluded = messagesCopy[idx];

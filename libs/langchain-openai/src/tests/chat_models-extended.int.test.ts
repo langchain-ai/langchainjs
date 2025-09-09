@@ -8,7 +8,7 @@ import { ChatOpenAI } from "../chat_models.js";
 
 test("Test ChatOpenAI JSON mode", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).withConfig({
     response_format: {
@@ -24,7 +24,7 @@ test("Test ChatOpenAI JSON mode", async () => {
 
 test("Test ChatOpenAI seed", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     temperature: 1,
   }).withConfig({
@@ -58,7 +58,7 @@ test("Test ChatOpenAI seed", async () => {
 
 test("Test ChatOpenAI tool calling", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).bindTools(
     [
@@ -104,7 +104,7 @@ test("Test ChatOpenAI tool calling", async () => {
 test("Test ChatOpenAI streaming logprobs", async () => {
   const model = new ChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-3.5-turbo",
+    model: "gpt-3.5-turbo",
     streaming: true,
     logprobs: true,
   });
@@ -116,7 +116,7 @@ test("Test ChatOpenAI streaming logprobs", async () => {
 test("Test ChatOpenAI with search preview model", async () => {
   const model = new ChatOpenAI({
     maxTokens: 50,
-    modelName: "gpt-4o-search-preview",
+    model: "gpt-4o-search-preview",
   });
   const res = await model.invoke("Print hello world.");
   expect(res.content).toBeDefined();
@@ -137,7 +137,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
     }
   }
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
   }).bindTools(
     [
@@ -203,7 +203,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
 
 test("Test ChatOpenAI tool calling with streaming", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 256,
   }).bindTools(
     [
@@ -254,7 +254,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
   const lookupSpy = jest.spyOn(memoryCache, "lookup");
   const updateSpy = jest.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 1,
     cache: memoryCache,
   }).withConfig({
@@ -282,7 +282,7 @@ test("ChatOpenAI in JSON mode can cache generations", async () => {
 
 test("Few shotting with tool calls", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 1,
   }).bindTools(
     [
@@ -336,7 +336,7 @@ test("Few shotting with tool calls", async () => {
 
 test("Test ChatOpenAI with raw response", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     __includeRawResponse: true,
   });
@@ -347,7 +347,7 @@ test("Test ChatOpenAI with raw response", async () => {
 
 test("Test ChatOpenAI with raw response", async () => {
   const chat = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     maxTokens: 128,
     __includeRawResponse: true,
   });
@@ -707,4 +707,57 @@ public class User
     typeof res.response_metadata?.usage?.completion_tokens_details
       .rejected_prediction_tokens
   ).toBe("number");
+});
+
+test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streaming", async () => {
+  const { tool } = await import("@langchain/core/tools");
+  const { z } = await import("zod");
+  const { HumanMessage, SystemMessage } = await import(
+    "@langchain/core/messages"
+  );
+
+  const llm = new ChatOpenAI({
+    model: "gpt-3.5-turbo-1106",
+    maxTokens: 256,
+  });
+
+  // Tool with empty schema (no parameters)
+  const getCurrentTime = tool(
+    async () => `current time: ${new Date().toLocaleString()}`,
+    {
+      name: "get_current_time",
+      description: "get current time",
+      schema: z.object({}), // Empty schema - this is the bug trigger
+    }
+  );
+
+  const llmWithTools = llm.bindTools([getCurrentTime]);
+
+  const dialogs = [
+    new SystemMessage({ content: "You are a helpful assistant." }),
+    new HumanMessage({ content: "get current time" }),
+  ];
+
+  // Test non-streaming mode - this should work
+  const nonStreamingResult = await llmWithTools.invoke(dialogs);
+  expect(nonStreamingResult.tool_calls).toBeDefined();
+  expect(nonStreamingResult.tool_calls?.length).toBeGreaterThan(0);
+  expect(nonStreamingResult.tool_calls?.[0].name).toBe("get_current_time");
+
+  // Test streaming mode - this should also work but currently doesn't
+  const stream = await llmWithTools.stream(dialogs);
+  let finalChunk;
+  for await (const chunk of stream) {
+    if (!finalChunk) {
+      finalChunk = chunk;
+    } else {
+      finalChunk = finalChunk.concat(chunk);
+    }
+  }
+
+  // This should pass but currently fails due to the bug
+  expect(finalChunk?.tool_calls).toBeDefined();
+  expect(finalChunk?.tool_calls?.length).toBeGreaterThan(0);
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_current_time");
+  expect(finalChunk?.tool_calls?.[0].args).toEqual({});
 });

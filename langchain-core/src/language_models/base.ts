@@ -1,6 +1,7 @@
 import type { Tiktoken, TiktokenModel } from "js-tiktoken/lite";
+import type { ZodType as ZodTypeV3 } from "zod/v3";
+import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
 
-import { z } from "zod";
 import { type BaseCache, InMemoryCache } from "../caches/base.js";
 import {
   type BasePromptValueInterface,
@@ -20,6 +21,11 @@ import { encodingForModel } from "../utils/tiktoken.js";
 import { Runnable, type RunnableInterface } from "../runnables/base.js";
 import { RunnableConfig } from "../runnables/config.js";
 import { JSONSchema } from "../utils/json_schema.js";
+import {
+  InferInteropZodOutput,
+  InteropZodObject,
+  InteropZodType,
+} from "../utils/types/zod.js";
 
 // https://www.npmjs.com/package/js-tiktoken
 
@@ -202,7 +208,26 @@ export interface BaseLanguageModelParams
   cache?: BaseCache | boolean;
 }
 
-export interface BaseLanguageModelCallOptions extends RunnableConfig {
+export interface BaseLanguageModelTracingCallOptions {
+  /**
+   * Describes the format of structured outputs.
+   * This should be provided if an output is considered to be structured
+   */
+  ls_structured_output_format?: {
+    /**
+     * An object containing the method used for structured output (e.g., "jsonMode").
+     */
+    kwargs: { method: string };
+    /**
+     * The JSON schema describing the expected output structure.
+     */
+    schema?: JSONSchema;
+  };
+}
+
+export interface BaseLanguageModelCallOptions
+  extends RunnableConfig,
+    BaseLanguageModelTracingCallOptions {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -255,8 +280,7 @@ export type BaseLanguageModelInput =
   | string
   | BaseMessageLike[];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type StructuredOutputType = z.infer<z.ZodObject<any, any, any, any>>;
+export type StructuredOutputType = InferInteropZodOutput<InteropZodObject>;
 
 export type StructuredOutputMethodOptions<IncludeRaw extends boolean = false> =
   {
@@ -274,7 +298,7 @@ export type StructuredOutputMethodParams<
 > = {
   /** @deprecated Pass schema in as the first argument */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: z.ZodType<RunOutput> | Record<string, any>;
+  schema: InteropZodType<RunOutput> | Record<string, any>;
   name?: string;
   method?: "functionCalling" | "jsonMode";
   includeRaw?: IncludeRaw;
@@ -411,13 +435,35 @@ export abstract class BaseLanguageModel<
 
   private _encoding?: Tiktoken;
 
+  /**
+   * Get the number of tokens in the content.
+   * @param content The content to get the number of tokens for.
+   * @returns The number of tokens in the content.
+   */
   async getNumTokens(content: MessageContent) {
-    // TODO: Figure out correct value.
-    if (typeof content !== "string") {
-      return 0;
+    // Extract text content from MessageContent
+    let textContent: string;
+    if (typeof content === "string") {
+      textContent = content;
+    } else {
+      /**
+       * Content is an array of MessageContentComplex
+       *
+       * ToDo(@christian-bromann): This is a temporary fix to get the number of tokens for the content.
+       * We need to find a better way to do this.
+       * @see https://github.com/langchain-ai/langchainjs/pull/8341#pullrequestreview-2933713116
+       */
+      textContent = content
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item.type === "text" && "text" in item) return item.text;
+          return "";
+        })
+        .join("");
     }
+
     // fallback to approximate calculation if tiktoken is not available
-    let numTokens = Math.ceil(content.length / 4);
+    let numTokens = Math.ceil(textContent.length / 4);
 
     if (!this._encoding) {
       try {
@@ -436,7 +482,7 @@ export abstract class BaseLanguageModel<
 
     if (this._encoding) {
       try {
-        numTokens = this._encoding.encode(content).length;
+        numTokens = this._encoding.encode(textContent).length;
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
@@ -519,7 +565,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV3<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -530,7 +576,29 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | z.ZodType<RunOutput>
+      | ZodTypeV3<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<true>
+  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema:
+      | ZodTypeV4<RunOutput>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | Record<string, any>,
+    config?: StructuredOutputMethodOptions<false>
+  ): Runnable<BaseLanguageModelInput, RunOutput>;
+
+  withStructuredOutput?<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema:
+      | ZodTypeV4<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -542,7 +610,7 @@ export abstract class BaseLanguageModel<
    * @template {BaseLanguageModelInput} RunInput The input type for the Runnable, expected to be the same input for the LLM.
    * @template {Record<string, any>} RunOutput The output type for the Runnable, expected to be a Zod schema object for structured output validation.
    *
-   * @param {z.ZodEffects<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
+   * @param {InteropZodType<RunOutput>} schema The schema for the structured output. Either as a Zod schema or a valid JSON schema object.
    *   If a Zod schema is passed, the returned attributes will be validated, whereas with JSON schema they will not be.
    * @param {string} name The name of the function to call.
    * @param {"functionCalling" | "jsonMode"} [method=functionCalling] The method to use for getting the structured output. Defaults to "functionCalling".
@@ -554,7 +622,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     schema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>

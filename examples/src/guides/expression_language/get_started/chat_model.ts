@@ -1,6 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
 
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 const promptAsString = "Human: Tell me a short joke about ice cream";
 
 const response = await model.invoke(promptAsString);

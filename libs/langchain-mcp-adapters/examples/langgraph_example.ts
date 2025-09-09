@@ -52,11 +52,14 @@ async function runExample() {
 
     // Create a client with configurations for the everything server only
     client = new MultiServerMCPClient({
-      everything: {
-        transport: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-everything"],
+      mcpServers: {
+        everything: {
+          transport: "stdio" as const,
+          command: "npx",
+          args: ["-y", "@modelcontextprotocol/server-everything"],
+        },
       },
+      useStandardContentBlocks: true,
     });
 
     // Get the tools (flattened array is the default now)
@@ -74,7 +77,7 @@ async function runExample() {
 
     // Create an OpenAI model and bind the tools
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-4-turbo-preview",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-4-turbo-preview",
       temperature: 0,
     }).bindTools(mcpTools);
 

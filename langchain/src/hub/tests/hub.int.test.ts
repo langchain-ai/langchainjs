@@ -100,3 +100,26 @@ test("Test LangChain Hub while loading model with dynamic imports", async () => 
   expect(res).toBeInstanceOf(AIMessage);
   expect(res.tool_calls?.length).toEqual(1);
 });
+
+test("Test LangChain Hub while loading model with dynamic imports and structured output", async () => {
+  const pulledPrompt = await nodePull("jacob/structured-output", {
+    includeModel: true,
+  });
+  const res = await pulledPrompt.invoke({
+    question:
+      "Who is the current president of the USA as of today? You must use the provided tool for the latest info.",
+  });
+  expect(res).not.toBeInstanceOf(AIMessage);
+  expect(typeof res.correctness).toBe("boolean");
+});
+
+test("Test LangChain Hub while loading model not defined in a RunnableBinding", async () => {
+  const promptA = await nodePull("hntrl/binding-manifest", {
+    includeModel: true,
+  });
+  const resA = await promptA.invoke({
+    question: "What's the capital of the USA?",
+  });
+  expect(resA).toBeInstanceOf(AIMessage);
+  expect(resA.content).toBeDefined();
+});

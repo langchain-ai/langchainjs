@@ -50,11 +50,23 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 function convertAIMessageToCerebras(
   messages: AIMessage
 ): CerebrasMessageParam[] {
+  const toolCalls: CerebrasToolCall[] | undefined = messages.tool_calls?.map(
+    (tc) => ({
+      id: tc.id!,
+      type: "function",
+      function: {
+        name: tc.name,
+        arguments: JSON.stringify(tc.args),
+      },
+    })
+  );
+
   if (typeof messages.content === "string") {
     return [
       {
         role: "assistant",
         content: messages.content,
+        tool_calls: toolCalls,
       },
     ];
   }
@@ -75,17 +87,6 @@ function convertAIMessageToCerebras(
     messages.tool_calls?.length
   ) {
     // `tool_use` content types are accepted if the message has tool calls
-    const toolCalls: CerebrasToolCall[] | undefined = messages.tool_calls?.map(
-      (tc) => ({
-        id: tc.id!,
-        type: "function",
-        function: {
-          name: tc.name,
-          arguments: JSON.stringify(tc.args),
-        },
-      })
-    );
-
     if (toolCalls) {
       toolCallMsgs = {
         role: "assistant",

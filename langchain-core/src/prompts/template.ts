@@ -83,23 +83,37 @@ export const parseFString = (template: string): ParsedTemplateNode[] => {
  * to make it compatible with other LangChain string parsing template formats.
  *
  * @param {mustache.TemplateSpans} template The result of parsing a mustache template with the mustache.js library.
+ * @param {string[]} context Array of section variable names for nested context
  * @returns {ParsedTemplateNode[]}
  */
 const mustacheTemplateToNodes = (
-  template: mustache.TemplateSpans
-): ParsedTemplateNode[] =>
-  template.map((temp) => {
+  template: mustache.TemplateSpans,
+  context: string[] = []
+): ParsedTemplateNode[] => {
+  const nodes: ParsedTemplateNode[] = [];
+
+  for (const temp of template) {
     if (temp[0] === "name") {
       const name = temp[1].includes(".") ? temp[1].split(".")[0] : temp[1];
-      return { type: "variable", name };
+      nodes.push({ type: "variable", name });
     } else if (["#", "&", "^", ">"].includes(temp[0])) {
       // # represents a section, "&" represents an unescaped variable.
       // These should both be considered variables.
-      return { type: "variable", name: temp[1] };
+      nodes.push({ type: "variable", name: temp[1] });
+
+      // If this is a section with nested content, recursively process it
+      if (temp[0] === "#" && temp.length > 4 && Array.isArray(temp[4])) {
+        const newContext = [...context, temp[1]];
+        const nestedNodes = mustacheTemplateToNodes(temp[4], newContext);
+        nodes.push(...nestedNodes);
+      }
     } else {
-      return { type: "literal", text: temp[1] };
+      nodes.push({ type: "literal", text: temp[1] });
     }
-  });
+  }
+
+  return nodes;
+};
 
 export const parseMustache = (template: string) => {
   configureMustache();

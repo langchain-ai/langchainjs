@@ -642,11 +642,13 @@ class _StringImageMessagePromptTemplate<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
           }
-          content.push({
-            ...additionalContentFields,
-            type: "text",
-            text: formatted,
-          });
+          if (formatted !== "") {
+            content.push({
+              ...additionalContentFields,
+              type: "text",
+              text: formatted,
+            });
+          }
           /** @TODO replace this */
           // eslint-disable-next-line no-instanceof/no-instanceof
         } else if (prompt instanceof ImagePromptTemplate) {
@@ -1062,25 +1064,33 @@ export class ChatPromptTemplate<
           await this._parseImagePrompts(promptMessage, allValues)
         );
       } else {
-        const inputValues = promptMessage.inputVariables.reduce(
-          (acc, inputVariable) => {
-            if (
-              !(inputVariable in allValues) &&
-              !(isMessagesPlaceholder(promptMessage) && promptMessage.optional)
-            ) {
-              const error = addLangChainErrorFields(
-                new Error(
-                  `Missing value for input variable \`${inputVariable.toString()}\``
-                ),
-                "INVALID_PROMPT_INPUT"
-              );
-              throw error;
-            }
-            acc[inputVariable] = allValues[inputVariable];
-            return acc;
-          },
-          {} as InputValues
-        );
+        let inputValues: InputValues;
+
+        if (this.templateFormat === "mustache") {
+          inputValues = { ...allValues };
+        } else {
+          inputValues = promptMessage.inputVariables.reduce(
+            (acc, inputVariable) => {
+              if (
+                !(inputVariable in allValues) &&
+                !(
+                  isMessagesPlaceholder(promptMessage) && promptMessage.optional
+                )
+              ) {
+                const error = addLangChainErrorFields(
+                  new Error(
+                    `Missing value for input variable \`${inputVariable.toString()}\``
+                  ),
+                  "INVALID_PROMPT_INPUT"
+                );
+                throw error;
+              }
+              acc[inputVariable] = allValues[inputVariable];
+              return acc;
+            },
+            {} as InputValues
+          );
+        }
         const message = await promptMessage.formatMessages(inputValues);
         resultMessages = resultMessages.concat(message);
       }

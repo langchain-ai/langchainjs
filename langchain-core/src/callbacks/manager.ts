@@ -606,7 +606,7 @@ export class CallbackManagerForToolRun
  *
  * // Example of using LLMChain with OpenAI and a simple prompt
  * const chain = new LLMChain({
- *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 }),
  *   prompt,
  * });
  *
@@ -1251,12 +1251,18 @@ export class CallbackManager
         if (tracingV2Enabled) {
           const tracerV2 = new LangChainTracer();
           callbackManager.addHandler(tracerV2, true);
-
-          // handoff between langchain and langsmith/traceable
-          // override the parent run ID
-          callbackManager._parentRunId =
-            LangChainTracer.getTraceableRunTree()?.id ??
-            callbackManager._parentRunId;
+        }
+      }
+      if (tracingV2Enabled) {
+        // handoff between langchain and langsmith/traceable
+        // override the parent run ID
+        const implicitRunTree = LangChainTracer.getTraceableRunTree();
+        if (implicitRunTree && callbackManager._parentRunId === undefined) {
+          callbackManager._parentRunId = implicitRunTree.id;
+          const tracerV2 = callbackManager.handlers.find(
+            (handler) => handler.name === "langchain_tracer"
+          ) as LangChainTracer | undefined;
+          tracerV2?.updateFromRunTree(implicitRunTree);
         }
       }
     }

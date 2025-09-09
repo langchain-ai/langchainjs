@@ -1,16 +1,16 @@
-import { it, describe, test, expect } from "@jest/globals";
+import { describe, expect, it, test } from "@jest/globals";
 import { v4 } from "uuid";
+import { AIMessage, AIMessageChunk } from "../ai.js";
+import { BaseMessage, MessageContent } from "../base.js";
+import { ChatMessage } from "../chat.js";
+import { HumanMessage } from "../human.js";
+import { SystemMessage } from "../system.js";
+import { ToolMessage } from "../tool.js";
 import {
   filterMessages,
   mergeMessageRuns,
   trimMessages,
 } from "../transformers.js";
-import { AIMessage, AIMessageChunk } from "../ai.js";
-import { ChatMessage } from "../chat.js";
-import { HumanMessage } from "../human.js";
-import { SystemMessage } from "../system.js";
-import { ToolMessage } from "../tool.js";
-import { BaseMessage } from "../base.js";
 import {
   getBufferString,
   mapChatMessagesToStoredMessages,
@@ -141,7 +141,26 @@ describe("mergeMessageRuns", () => {
 });
 
 describe("trimMessages can trim", () => {
-  const messagesAndTokenCounterFactory = () => {
+  const defaultCountTokensByMessageContent = (
+    content: MessageContent
+  ): number => {
+    // treat each message like it adds 3 default tokens at the beginning
+    // of the message and at the end of the message. 3 + 4 + 3 = 10 tokens
+    // per message.
+    const defaultMsgPrefixLen = 3;
+    const defaultContentLen = 4;
+    const defaultMsgSuffixLen = 3;
+
+    const contentLen = Array.isArray(content)
+      ? content.length * defaultContentLen
+      : defaultContentLen;
+
+    return defaultMsgPrefixLen + contentLen + defaultMsgSuffixLen;
+  };
+
+  const messagesAndTokenCounterFactory = ({
+    countTokensByMessageContent = defaultCountTokensByMessageContent,
+  } = {}) => {
     const messages = [
       new SystemMessage(
         "This is a 4 token text. The full message is 10 tokens."
@@ -168,27 +187,10 @@ describe("trimMessages can trim", () => {
     ];
 
     const dummyTokenCounter = (messages: BaseMessage[]): number => {
-      // treat each message like it adds 3 default tokens at the beginning
-      // of the message and at the end of the message. 3 + 4 + 3 = 10 tokens
-      // per message.
-
-      const defaultContentLen = 4;
-      const defaultMsgPrefixLen = 3;
-      const defaultMsgSuffixLen = 3;
-
-      let count = 0;
-      for (const msg of messages) {
-        if (typeof msg.content === "string") {
-          count +=
-            defaultMsgPrefixLen + defaultContentLen + defaultMsgSuffixLen;
-        }
-        if (Array.isArray(msg.content)) {
-          count +=
-            defaultMsgPrefixLen +
-            msg.content.length * defaultContentLen +
-            defaultMsgSuffixLen;
-        }
-      }
+      const count = messages.reduce(
+        (count, msg) => count + countTokensByMessageContent(msg.content),
+        0
+      );
       console.log(count);
       return count;
     };
@@ -373,6 +375,39 @@ describe("trimMessages can trim", () => {
         content: "This is a 4 token text. The full message is 10 tokens.",
         id: "first",
       }),
+    ]);
+  });
+
+  it("First tokens, allowing partial messages, have to trim the last 10 characters of the last message", async () => {
+    // For the purpose of this test, we'll override the dummy token counter to count characters.
+    const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory({
+      countTokensByMessageContent: (content: MessageContent): number =>
+        content.length,
+    });
+
+    const totalCharacters = messages.reduce(
+      (count, msg) => count + msg.content.length,
+      0
+    );
+
+    const trimmedMessages = await trimMessages(messages, {
+      maxTokens: totalCharacters - 10,
+      tokenCounter: dummyTokenCounter,
+      strategy: "first",
+      allowPartial: true,
+      textSplitter: (text: string) => text.split(""),
+    });
+
+    const trimmedMessagesContent = trimmedMessages.map((msg) => msg.content);
+    expect(trimmedMessagesContent).toEqual([
+      "This is a 4 token text. The full message is 10 tokens.",
+      "This is a 4 token text. The full message is 10 tokens.",
+      [
+        { type: "text", text: "This is the FIRST 4 token block." },
+        { type: "text", text: "This is the SECOND 4 token block." },
+      ],
+      "This is a 4 token text. The full message is 10 tokens.",
+      "This is a 4 token text. The full message is ",
     ]);
   });
 

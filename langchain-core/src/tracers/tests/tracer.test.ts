@@ -1,14 +1,24 @@
-import { test, expect, jest } from "@jest/globals";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-promise-executor-return */
+/* eslint-disable no-process-env */
+import { test, expect, jest, afterEach } from "@jest/globals";
 import * as uuid from "uuid";
+import { Client } from "langsmith";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";
-import { Run } from "../base.js";
 import { HumanMessage } from "../../messages/index.js";
 import { FakeTracer } from "../../utils/testing/index.js";
+import { setDefaultLangChainClientSingleton } from "../../singletons/tracer.js";
+import { RunnableLambda } from "../../runnables/index.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 
 const _DATE = 1620000000000;
 
 Date.now = jest.fn(() => _DATE);
+
+afterEach(() => {
+  setDefaultLangChainClientSingleton(new Client());
+});
 
 const serialized: Serialized = {
   lc: 1,
@@ -24,7 +34,7 @@ test("Test LLMRun", async () => {
   await tracer.handleLLMEnd({ generations: [] }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -51,7 +61,7 @@ test("Test LLMRun", async () => {
     dotted_order: `20210503T000000000001Z${runId}`,
     trace_id: runId,
   };
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Chat Model Run", async () => {
@@ -68,6 +78,7 @@ test("Test Chat Model Run", async () => {
     },
     `
     {
+      "_serialized_start_time": "2021-05-03T00:00:00.000001Z",
       "child_execution_order": 1,
       "child_runs": [],
       "dotted_order": "20210503T000000000001Z${runId}",
@@ -138,7 +149,7 @@ test("Test LLM Run no start", async () => {
 test("Test Chain Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -169,13 +180,13 @@ test("Test Chain Run", async () => {
   await tracer.handleChainEnd({ foo: "bar" }, runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Tool Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -206,7 +217,7 @@ test("Test Tool Run", async () => {
   await tracer.handleToolEnd("output", runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test Retriever Run", async () => {
@@ -216,7 +227,7 @@ test("Test Retriever Run", async () => {
     pageContent: "test",
     metadata: { test: "test" },
   });
-  const compareRun: Run = {
+  const compareRun = {
     id: runId,
     name: "test",
     start_time: _DATE,
@@ -248,7 +259,7 @@ test("Test Retriever Run", async () => {
   await tracer.handleRetrieverEnd([document], runId);
   expect(tracer.runs.length).toBe(1);
   const run = tracer.runs[0];
-  expect(run).toEqual(compareRun);
+  expect(run).toMatchObject(compareRun);
 });
 
 test("Test nested runs", async () => {
@@ -280,7 +291,7 @@ test("Test nested runs", async () => {
   );
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId2);
   await tracer.handleChainEnd({ foo: "bar" }, chainRunId);
-  const compareRun: Run = {
+  const compareRun = {
     child_runs: [
       {
         id: toolRunId,
@@ -403,10 +414,37 @@ test("Test nested runs", async () => {
     trace_id: chainRunId,
   };
   expect(tracer.runs.length).toBe(1);
-  expect(tracer.runs[0]).toEqual(compareRun);
+  expect(tracer.runs[0]).toMatchObject(compareRun);
 
   const llmRunId3 = uuid.v4();
   await tracer.handleLLMStart(serialized, ["test"], llmRunId3);
   await tracer.handleLLMEnd({ generations: [[]] }, llmRunId3);
   expect(tracer.runs.length).toBe(2);
+});
+
+test("Test tracer payload snapshots for run create and update", async () => {
+  process.env.LANGSMITH_TRACING = "true";
+  const client = new Client();
+  (client as any).multipartIngestRuns = jest.fn(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return Promise.resolve();
+  });
+  setDefaultLangChainClientSingleton(client);
+  const parentRunnable = RunnableLambda.from(async (input: string) => {
+    const childRunnable = RunnableLambda.from(async (childInput: string) => {
+      return `processed: ${childInput}`;
+    });
+
+    const result = await childRunnable.invoke(input);
+    return `parent: ${result}`;
+  });
+  await parentRunnable.invoke("test input");
+
+  const beforeAwaitTime = new Date();
+  await awaitAllCallbacks();
+  const afterAwaitTime = new Date();
+  expect(afterAwaitTime.getTime() - beforeAwaitTime.getTime()).toBeGreaterThan(
+    500
+  );
+  expect((client as any).multipartIngestRuns).toHaveBeenCalled();
 });

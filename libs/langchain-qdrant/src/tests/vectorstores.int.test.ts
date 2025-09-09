@@ -66,4 +66,31 @@ describe("QdrantVectorStore testcase", () => {
     expect(results[0].metadata).toEqual({});
     expect(results[0].pageContent).toEqual(pageContent);
   });
+
+  test("maxMarginalRelevanceSearch returns diverse results", async () => {
+    const embeddings = new SyntheticEmbeddings({ vectorSize: 128 });
+
+    const docs = [
+      new Document({ pageContent: "apple orange banana" }),
+      new Document({ pageContent: "carrot potato tomato" }),
+      new Document({ pageContent: "rose tulip daisy" }),
+      new Document({ pageContent: "dog cat mouse" }),
+    ];
+
+    const qdrantVectorStore = await QdrantVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      {
+        collectionName: "mmr_test_collection",
+        url: process.env.QDRANT_URL || "http://localhost:6333",
+      }
+    );
+
+    const mmrResults = await qdrantVectorStore.maxMarginalRelevanceSearch(
+      "fruit vegetable animal",
+      { k: 3 }
+    );
+
+    expect(mmrResults.length).toBe(3);
+  });
 });

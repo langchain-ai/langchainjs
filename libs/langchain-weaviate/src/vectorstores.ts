@@ -1,10 +1,18 @@
 import * as uuid from "uuid";
 import {
+  HybridOptions,
+  CollectionConfigCreate,
   configure,
   type DataObject,
   type FilterValue,
+  GenerateOptions,
+  GenerativeConfigRuntime,
+  Metadata,
+  Vectors,
   WeaviateClient,
   type WeaviateField,
+  BaseHybridOptions,
+  MetadataKeys,
 } from "weaviate-client";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -18,38 +26,41 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
 export const flattenObjectForWeaviate = (obj: Record<string, unknown>) => {
   const flattenedObject: Record<string, unknown> = {};
-
   for (const key in obj) {
     if (!Object.hasOwn(obj, key)) {
       continue;
     }
+
+    // Replace any character that is not a letter, a number, or an underscore with '_'
+    const newKey = key.replace(/[^a-zA-Z0-9_]/g, "_");
+
     const value = obj[key];
     if (typeof value === "object" && !Array.isArray(value)) {
       const recursiveResult = flattenObjectForWeaviate(
         value as Record<string, unknown>
       );
-
       for (const deepKey in recursiveResult) {
-        if (Object.hasOwn(obj, key)) {
-          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+        if (Object.hasOwn(recursiveResult, deepKey)) {
+          // Replace any character in the deepKey that is not a letter, a number, or an underscore with '_'
+          const newDeepKey = deepKey.replace(/[^a-zA-Z0-9_]/g, "_");
+          flattenedObject[`${newKey}_${newDeepKey}`] = recursiveResult[deepKey];
         }
       }
     } else if (Array.isArray(value)) {
       if (value.length === 0) {
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       } else if (
         typeof value[0] !== "object" &&
         value.every((el: unknown) => typeof el === typeof value[0])
       ) {
         // Weaviate only supports arrays of primitive types,
         // where all elements are of the same type
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       }
     } else {
-      flattenedObject[key] = value;
+      flattenedObject[newKey] = value;
     }
   }
-
   return flattenedObject;
 };
 
@@ -63,10 +74,19 @@ export interface WeaviateLibArgs {
   /**
    * The name of the class in Weaviate. Must start with a capital letter.
    */
-  indexName: string;
+  indexName?: string;
   textKey?: string;
   metadataKeys?: string[];
   tenant?: string;
+  schema?: CollectionConfigCreate;
+}
+
+export class WeaviateDocument extends Document {
+  generated?: string;
+
+  additional: Partial<Metadata>;
+
+  vectors: Vectors;
 }
 
 /**
@@ -87,6 +107,8 @@ export class WeaviateStore extends VectorStore {
 
   private tenant?: string;
 
+  private schema?: CollectionConfigCreate;
+
   _vectorstoreType(): string {
     return "weaviate";
   }
@@ -95,10 +117,11 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
-    this.indexName = args.indexName;
+    this.indexName = args.indexName || args.schema?.name || "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;
+    this.schema = args.schema;
 
     if (args.metadataKeys) {
       this.queryAttrs = [
@@ -129,18 +152,22 @@ export class WeaviateStore extends VectorStore {
       weaviateStore.indexName
     );
     if (!collection) {
-      if (config.tenant) {
-        await weaviateStore.client.collections.create({
-          name: weaviateStore.indexName,
-          multiTenancy: configure.multiTenancy({
-            enabled: true,
-            autoTenantCreation: true,
-          }),
-        });
+      if (weaviateStore.schema) {
+        await weaviateStore.client.collections.create(weaviateStore.schema);
       } else {
-        await weaviateStore.client.collections.create({
-          name: weaviateStore.indexName,
-        });
+        if (config.tenant) {
+          await weaviateStore.client.collections.create({
+            name: weaviateStore.indexName,
+            multiTenancy: configure.multiTenancy({
+              enabled: true,
+              autoTenantCreation: true,
+            }),
+          });
+        } else {
+          await weaviateStore.client.collections.create({
+            name: weaviateStore.indexName,
+          });
+        }
       }
     }
     return weaviateStore;
@@ -257,6 +284,114 @@ export class WeaviateStore extends VectorStore {
   }
 
   /**
+   * Hybrid search combines the results of a vector search and a
+   * keyword (BM25F) search by fusing the two result sets.
+   * @param query The query to search for.
+   * @param options available options for the search. Check docs for complete list
+   * @returns Promise that resolves the result of the search within the fetched collection.
+   */
+  async hybridSearch(
+    query: string,
+    options?: HybridOptions<undefined>
+  ): Promise<Document[]> {
+    const collection = this.client.collections.get(this.indexName);
+    let query_vector: number[] | undefined;
+    if (!options?.vector) {
+      query_vector = await this.embeddings.embedQuery(query);
+    }
+
+    const options_with_vector = {
+      ...options,
+      vector: options?.vector || query_vector,
+      returnMetadata: [
+        "score",
+        ...((options?.returnMetadata as MetadataKeys) || []),
+      ] as MetadataKeys,
+    };
+    let result;
+    if (this.tenant) {
+      result = await collection.withTenant(this.tenant).query.hybrid(query, {
+        ...options_with_vector,
+      });
+    } else {
+      result = await collection.query.hybrid(query, {
+        ...options_with_vector,
+      });
+    }
+    const documents: Document[] = [];
+
+    for (const data of result.objects) {
+      const { properties = {}, metadata = {} } = data ?? {};
+      const { [this.textKey]: text, ...rest } = properties;
+
+      documents.push(
+        new Document({
+          pageContent: String(text ?? ""),
+          metadata: {
+            ...rest,
+            ...metadata,
+          },
+          id: data.uuid,
+        })
+      );
+    }
+    return documents;
+  }
+
+  /**
+   * Weaviate's Retrieval Augmented Generation (RAG) combines information retrieval
+   * with generative AI models. It first performs the search, then passes both
+   * the search results and your prompt to a generative AI model before returning the generated response.
+   * @param query The query to search for.
+   * @param generate available options for the generation. Check docs for complete list
+   * @param options available options for performing the hybrid search
+   * @returns Promise that resolves the result of the search including the generated data.
+   */
+  async generate(
+    query: string,
+    generate: GenerateOptions<undefined, GenerativeConfigRuntime | undefined>,
+    options?: BaseHybridOptions<undefined>
+  ): Promise<WeaviateDocument[]> {
+    const collection = this.client.collections.get(this.indexName);
+    let result;
+    if (this.tenant) {
+      result = await collection
+        .withTenant(this.tenant)
+        .generate.hybrid(
+          query,
+          { ...(generate || {}) },
+          { ...(options || {}) }
+        );
+    } else {
+      result = await collection.generate.hybrid(
+        query,
+        { ...(generate || {}) },
+        { ...(options || {}) }
+      );
+    }
+    const documents = [];
+    for (const data of result.objects) {
+      const { properties = {} } = data ?? {};
+      const { [this.textKey]: text, ...rest } = properties;
+
+      const doc = new WeaviateDocument({
+        pageContent: String(text ?? ""),
+        metadata: {
+          ...rest,
+        },
+        id: data.uuid,
+      });
+
+      doc.generated = data.generative?.text;
+      doc.vectors = data.vectors;
+      doc.additional = data.metadata || {};
+
+      documents.push(doc);
+    }
+    return documents;
+  }
+
+  /**
    * Method to perform a similarity search on the stored vectors in the
    * Weaviate index. It returns the top k most similar documents and their
    * similarity scores.
@@ -294,6 +429,10 @@ export class WeaviateStore extends VectorStore {
   ): Promise<[Document, number, number, number[]][]> {
     try {
       const collection = this.client.collections.get(this.indexName);
+      // define query attributes to return
+      // if no queryAttrs, show all properties
+      const queryAttrs =
+        this.queryAttrs.length > 1 ? this.queryAttrs : undefined;
       let result;
       if (this.tenant) {
         result = await collection
@@ -302,6 +441,7 @@ export class WeaviateStore extends VectorStore {
             filters: filter,
             limit: k,
             returnMetadata: ["distance", "score"],
+            returnProperties: queryAttrs,
           });
       } else {
         result = await collection.query.nearVector(query, {
@@ -309,6 +449,7 @@ export class WeaviateStore extends VectorStore {
           limit: k,
           includeVector: true,
           returnMetadata: ["distance", "score"],
+          returnProperties: queryAttrs,
         });
       }
 

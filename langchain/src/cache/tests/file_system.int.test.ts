@@ -31,7 +31,7 @@ describe("Test LocalFileCache", () => {
   test("FSCache with a chat model", async () => {
     const cache = await LocalFileCache.create(tmpDir);
 
-    const model = new ChatOpenAI({ cache });
+    const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
     const response1 = await model.invoke("What is something random?");
     const response2 = await model.invoke("What is something random?");
     expect(response1).not.toBeUndefined();
