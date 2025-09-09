@@ -5,6 +5,7 @@ import type {
   Browser,
   PuppeteerLaunchOptions,
   connect,
+  ConnectOptions,
 } from "puppeteer";
 
 import { Document } from "@langchain/core/documents";
@@ -29,7 +30,7 @@ export type PuppeteerEvaluate = (
 ) => Promise<string>;
 
 export type PuppeteerWebBaseLoaderOptions = {
-  launchOptions?: PuppeteerLaunchOptions;
+  launchOptions?: PuppeteerLaunchOptions & ConnectOptions;
   gotoOptions?: PuppeteerGotoOptions;
   evaluate?: PuppeteerEvaluate;
 };
