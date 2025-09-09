@@ -107,6 +107,7 @@ import {
   ResponsesTool,
   ResponsesToolChoice,
 } from "./utils/tools.js";
+import { handleMultiModalOutput } from "./utils/output.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
@@ -2724,8 +2725,13 @@ export class ChatOpenAICompletions<
           additional_kwargs.audio = message.audio;
         }
 
+        const content = handleMultiModalOutput(
+          message.content || "",
+          rawResponse.choices?.[0]?.message
+        );
+
         return new AIMessage({
-          content: message.content || "",
+          content,
           tool_calls: toolCalls,
           invalid_tool_calls: invalidToolCalls,
           additional_kwargs,
