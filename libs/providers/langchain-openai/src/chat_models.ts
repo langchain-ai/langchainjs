@@ -1531,7 +1531,10 @@ export class ChatOpenAIResponses<
       for (const [key, value] of Object.entries(chunk.response)) {
         if (key !== "id") response_metadata[key] = value;
       }
-    } else if (chunk.type === "response.function_call_arguments.delta") {
+    } else if (
+      chunk.type === "response.function_call_arguments.delta" ||
+      chunk.type === "response.custom_tool_call_input.delta"
+    ) {
       tool_call_chunks.push({
         type: "tool_call_chunk",
         args: chunk.delta,
