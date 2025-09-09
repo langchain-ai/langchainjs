@@ -1,7 +1,7 @@
 import type { readFile as ReadFileT } from "node:fs/promises";
 import { Document } from "@langchain/core/documents";
 import { getEnv } from "@langchain/core/utils/env";
-import { BaseDocumentLoader } from "../base.js";
+import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 /**
  * Abstract class that extends the `BaseDocumentLoader` class. It
