@@ -1013,7 +1013,7 @@ importers:
         specifier: ^4.20230922.0
         version: 4.20250801.0
       '@datastax/astra-db-ts':
-        specifier: ^1.0.1
+        specifier: ^1.5.0
         version: 1.5.0
       '@elastic/elasticsearch':
         specifier: ^8.4.0
