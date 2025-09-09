@@ -50,6 +50,7 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@langchain/langgraph": "^0.2.62",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.8",
@@ -70,8 +71,7 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.29.0",
-    "vitest": "^3.1.1",
-    "@langchain/eslint": "workspace:*"
+    "vitest": "^3.1.1"
   },
   "engines": {
     "node": ">=20"

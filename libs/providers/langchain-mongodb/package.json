@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/uuid": "^9",
@@ -48,8 +49,7 @@
     "testcontainers": "^10.25.0",
     "vitest": "^3.2.4",
     "typescript": "~5.8.3",
-    "uuid": "^10.0.0",
-    "@langchain/eslint": "workspace:*"
+    "uuid": "^10.0.0"
   },
   "publishConfig": {
     "access": "public"

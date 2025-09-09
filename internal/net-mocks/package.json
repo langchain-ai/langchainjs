@@ -31,10 +31,10 @@
   "devDependencies": {
     "@langchain/anthropic": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@types/deep-equal": "^1.0.4",
     "eslint": "^9.34.0",
     "prettier": "^3.6.1",
-    "vitest": "^3.2.4",
-    "@langchain/eslint": "workspace:*"
+    "vitest": "^3.2.4"
   }
 }

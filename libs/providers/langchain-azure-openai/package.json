@@ -36,6 +36,7 @@
   "devDependencies": {
     "@azure/identity": "^4.2.1",
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@vitest/coverage-v8": "^3.2.4",
     "dpdm": "^3.14.0",
@@ -44,8 +45,7 @@
     "release-it": "^18.1.2",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
-    "@langchain/eslint": "workspace:*"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

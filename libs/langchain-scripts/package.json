@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
+    "@langchain/eslint": "workspace:*",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",
     "@tsconfig/recommended": "^1.0.3",
@@ -68,8 +69,7 @@
     "release-it": "^19.0.4",
     "release-it-pnpm": "^4.6.6",
     "ts-jest": "^29.1.0",
-    "tsx": "^4.16.2",
-    "@langchain/eslint": "workspace:*"
+    "tsx": "^4.16.2"
   },
   "publishConfig": {
     "access": "public"

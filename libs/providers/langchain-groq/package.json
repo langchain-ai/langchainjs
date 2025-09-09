@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
@@ -51,8 +52,7 @@
     "rollup": "^4.5.2",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
-    "zod": "^4.0.14",
-    "@langchain/eslint": "workspace:*"
+    "zod": "^4.0.14"
   },
   "publishConfig": {
     "access": "public"

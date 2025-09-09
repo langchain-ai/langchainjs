@@ -37,6 +37,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@pinecone-database/pinecone": "^5.0.2",
     "@tsconfig/recommended": "^1.0.3",
@@ -51,8 +52,7 @@
     "release-it": "^19.0.4",
     "release-it-pnpm": "^4.6.6",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
-    "@langchain/eslint": "workspace:*"
+    "vitest": "^3.2.4"
   },
   "publishConfig": {
     "access": "public"

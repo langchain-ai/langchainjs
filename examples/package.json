@@ -120,6 +120,7 @@
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
+    "@langchain/eslint": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/uuid": "^9",
@@ -127,7 +128,6 @@
     "prettier": "^2.8.3",
     "tsx": "^3.12.3",
     "typescript": "~5.1.6",
-    "zod": "^3.25.76",
-    "@langchain/eslint": "workspace:*"
+    "zod": "^3.25.76"
   }
 }

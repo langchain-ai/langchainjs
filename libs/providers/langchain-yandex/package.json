@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
+    "@langchain/eslint": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.3.1",
@@ -38,8 +39,7 @@
     "prettier": "^2.8.3",
     "rollup": "^4.5.2",
     "vitest": "^3.2.4",
-    "typescript": "~5.8.3",
-    "@langchain/eslint": "workspace:*"
+    "typescript": "~5.8.3"
   },
   "publishConfig": {
     "access": "public"
