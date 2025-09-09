@@ -98,6 +98,7 @@ import {
 import {
   getStructuredOutputMethod,
   interopZodResponseFormat,
+  handleMultiModalOutput,
 } from "./utils/output.js";
 import {
   _convertMessagesToOpenAIParams,
@@ -2448,8 +2449,12 @@ export class ChatOpenAICompletions<
           additional_kwargs.audio = message.audio;
         }
 
+        const content = handleMultiModalOutput(
+          message.content || "",
+          rawResponse.choices?.[0]?.message
+        );
         return new AIMessage({
-          content: message.content || "",
+          content,
           tool_calls: toolCalls,
           invalid_tool_calls: invalidToolCalls,
           additional_kwargs,
