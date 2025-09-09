@@ -1,7 +1,7 @@
 import { v5 as uuidv5 } from "uuid";
 import { VectorStore } from "../vectorstores.js";
 import { RecordManagerInterface, UUIDV5_NAMESPACE } from "./record_manager.js";
-import { insecureHash, type HashKeyEncoder } from "../utils/hash.js";
+import { sha256, type HashKeyEncoder } from "../utils/hash.js";
 import { DocumentInterface, Document } from "../documents/document.js";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
 
@@ -51,10 +51,7 @@ export class _HashedDocument implements HashedDocumentInterface {
 
   metadata: Metadata;
 
-  // For backwards compatibility, we use a default key encoder
-  // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
-  // about the security implications of using SHA-1 as a key encoder.
-  private keyEncoder: HashKeyEncoder = insecureHash;
+  private keyEncoder: HashKeyEncoder = sha256;
 
   constructor(fields: HashedDocumentArgs) {
     this.uid = fields.uid;

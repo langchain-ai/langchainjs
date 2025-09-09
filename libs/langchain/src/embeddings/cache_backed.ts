@@ -1,4 +1,4 @@
-import { insecureHash } from "@langchain/core/utils/hash";
+import { sha256 } from "@langchain/core/utils/hash";
 import {
   type EmbeddingsInterface,
   Embeddings,
@@ -152,7 +152,7 @@ export class CacheBackedEmbeddings extends Embeddings {
       Uint8Array
     >({
       store: documentEmbeddingStore,
-      keyEncoder: (key) => (options?.namespace ?? "") + insecureHash(key),
+      keyEncoder: (key) => (options?.namespace ?? "") + sha256(key),
       valueSerializer: (value) => encoder.encode(JSON.stringify(value)),
       valueDeserializer: (serializedValue) =>
         JSON.parse(decoder.decode(serializedValue)),

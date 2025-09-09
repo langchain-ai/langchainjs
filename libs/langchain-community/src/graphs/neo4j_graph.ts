@@ -4,7 +4,7 @@ import neo4j, {
   type Record as Neo4jRecord,
   type Path as Neo4jPath,
 } from "neo4j-driver";
-import { insecureHash } from "@langchain/core/utils/hash";
+import { sha256 } from "@langchain/core/utils/hash";
 import { GraphDocument } from "./document.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -596,7 +596,7 @@ export class Neo4jGraph {
 
     for (const document of graphDocuments) {
       if (!document.source.metadata.id) {
-        document.source.metadata.id = insecureHash(document.source.pageContent);
+        document.source.metadata.id = sha256(document.source.pageContent);
       }
 
       // Import nodes
