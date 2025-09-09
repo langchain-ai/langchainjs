@@ -27,7 +27,7 @@ export interface AstraLibArgs extends AsyncCallerParams {
   token: string;
   endpoint: string;
   collection: string;
-  namespace?: string;
+  keyspace?: string;
   idKey?: string;
   contentKey?: string;
   skipCollectionProvisioning?: boolean;
@@ -70,14 +70,14 @@ export class AstraDBVectorStore extends VectorStore {
       endpoint,
       collection,
       collectionOptions,
-      namespace,
+      keyspace,
       idKey,
       contentKey,
       skipCollectionProvisioning,
       ...callerArgs
     } = args;
     const dataAPIClient = new DataAPIClient(token, { caller: ["langchainjs"] });
-    this.astraDBClient = dataAPIClient.db(endpoint, { namespace });
+    this.astraDBClient = dataAPIClient.db(endpoint, { keyspace });
     this.skipCollectionProvisioning = skipCollectionProvisioning ?? false;
     if (this.skipCollectionProvisioning && collectionOptions) {
       throw new Error(
