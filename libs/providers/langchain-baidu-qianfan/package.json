@@ -28,7 +28,7 @@
     "@baiducloud/qianfan": "^0.1.6"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.1"
+    "@langchain/core": ">=0.2.21 <0.4.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
