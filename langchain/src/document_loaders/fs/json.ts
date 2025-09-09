@@ -169,12 +169,12 @@ export class JSONLinesLoader extends TextLoader {
       .map((line) => JSON.parse(line));
     const pointer = jsonpointer.compile(this.pointer);
     return jsons.map((json) => {
-      const data = pointer.get(json)
+      const data = pointer.get(json);
       if (typeof data === "string") {
         return data;
       }
       if (!data) {
-        return ""
+        return "";
       }
       if (typeof data === "object") {
         return JSON.stringify(data);

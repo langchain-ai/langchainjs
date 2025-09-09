@@ -30,11 +30,10 @@ test("Test JSON loader from complex JSONL file", async () => {
   const docs = await loader.load();
 
   expect(docs.length).toBe(2);
-  expect(docs[0].metadata).toEqual({ source: filePath, line: 1 })
-  const [user, model] = JSON.parse(docs[0].pageContent)
-  const userData = JSON.parse(user.parts[0].text)
-  expect(userData.supplier.name).toEqual("BASF GmbH")
-  const modelData = JSON.parse(model.parts[0].text)
-  expect(modelData.is_company).toBeTruthy()
-
+  expect(docs[0].metadata).toEqual({ source: filePath, line: 1 });
+  const [user, model] = JSON.parse(docs[0].pageContent);
+  const userData = JSON.parse(user.parts[0].text);
+  expect(userData.supplier.name).toEqual("BASF GmbH");
+  const modelData = JSON.parse(model.parts[0].text);
+  expect(modelData.is_company).toBeTruthy();
 });
