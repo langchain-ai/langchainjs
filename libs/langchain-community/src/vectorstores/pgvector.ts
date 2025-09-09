@@ -8,6 +8,75 @@ import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
+/**
+ * Strict metadata filter type that supports various filtering operations.
+ *
+ * For simple equality filters, use:
+ * ```typescript
+ * { key: "value" }
+ * ```
+ *
+ * For advanced filters, use operators:
+ * ```typescript
+ * {
+ *   key: {
+ *     in: ["value1", "value2"],           // Match any of these values
+ *     notIn: ["value3", "value4"],        // Exclude these values
+ *     gt: 10,                             // Greater than (numeric)
+ *     gte: 10,                            // Greater than or equal (numeric)
+ *     lt: 100,                            // Less than (numeric)
+ *     lte: 100,                           // Less than or equal (numeric)
+ *     neq: "unwanted",                    // prop doesn't exist or not equal to value)
+ *     arrayContains: ["item1", "item2"]   // Array contains any of these values
+ *   }
+ * }
+ * ```
+ *
+ * You can also mix simple equality and operator filters:
+ * ```typescript
+ * {
+ *   category: "test",                     // Simple equality
+ *   score: { gte: 80 },                  // Operator filter
+ *   tags: { in: ["test1", "test2"] }           // Another operator filter
+ * }
+ * ```
+ */
+type StrictMetadataFilter = Record<
+  string,
+  | string
+  | number
+  | boolean
+  | {
+      /** Match any of the provided values */
+      in?: (string | number | boolean)[];
+      /** Exclude any of the provided values */
+      notIn?: (string | number | boolean)[];
+      /** Array contains any of the provided values */
+      arrayContains?: (string | number | boolean)[];
+      /** Greater than (for numeric values) */
+      gt?: number;
+      /** Greater than or equal (for numeric values) */
+      gte?: number;
+      /** Less than (for numeric values) */
+      lt?: number;
+      /** Less than or equal (for numeric values) */
+      lte?: number;
+      /** Not equal to */
+      neq?: string | number | boolean;
+    }
+>;
+
+/**
+ * @deprecated Use StrictMetadataFilter for better type safety. This type will be removed.
+ * Legacy metadata filter type for backward compatibility
+ */
+type LegacyMetadataFilter = Record<string, unknown>;
+
+/**
+ * Metadata filter type that supports both strict typing and legacy usage
+ */
+type MetadataFilter = StrictMetadataFilter | LegacyMetadataFilter;
+
 type Metadata = Record<string, unknown>;
 
 export type DistanceStrategy = "cosine" | "innerProduct" | "euclidean";
@@ -33,7 +102,7 @@ export interface PGVectorStoreArgs {
     contentColumnName?: string;
     metadataColumnName?: string;
   };
-  filter?: Metadata;
+  filter?: MetadataFilter;
   verbose?: boolean;
   /**
    * The amount of documents to chunk by when
@@ -109,7 +178,7 @@ export interface PGVectorStoreArgs {
  * ```typescript
  * import type { Document } from '@langchain/core/documents';
  *
- * const document1 = { pageContent: "foo", metadata: { baz: "bar" } };
+ * const document1 = { pageContent: "foo", metadata: { baz: "bar", num: 4 } };
  * const document2 = { pageContent: "thud", metadata: { bar: "baz" } };
  * const document3 = { pageContent: "i will be deleted :(", metadata: {} };
  *
@@ -145,7 +214,6 @@ export interface PGVectorStoreArgs {
  *
  * <br />
  *
- *
  * <details>
  * <summary><strong>Similarity search with filter</strong></summary>
  *
@@ -161,6 +229,29 @@ export interface PGVectorStoreArgs {
  *
  * <br />
  *
+ * <details>
+ * <summary><strong>Similarity search with filter operators</strong></summary>
+ *
+ * Available filter operators: in, notIn, lte, lt, gte, gt, neq
+ *
+ * ```typescript
+ * const resultsWithFilters = await vectorStore.similaritySearch("thud", 1, {
+ *   baz: {
+ *     in: ["bar", "car"],
+ *   },
+ *   num: {
+ *     lte: 10
+ *   }
+ * });
+ *
+ * for (const doc of resultsWithFilters) {
+ *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
+ * }
+ * // Output: * foo [{"baz":"bar"}]
+ * ```
+ * </details>
+ *
+ * <br />
  *
  * <details>
  * <summary><strong>Similarity search with score</strong></summary>
@@ -194,7 +285,7 @@ export interface PGVectorStoreArgs {
  * <br />
  */
 export class PGVectorStore extends VectorStore {
-  declare FilterType: Metadata;
+  declare FilterType: MetadataFilter;
 
   tableName: string;
 
@@ -218,7 +309,7 @@ export class PGVectorStore extends VectorStore {
 
   metadataColumnName: string;
 
-  filter?: Metadata;
+  filter?: MetadataFilter;
 
   _verbose?: boolean;
 
@@ -445,7 +536,11 @@ export class PGVectorStore extends VectorStore {
     }
 
     // Check if we have added ids to the rows.
-    if (rows.length !== 0 && columns.length === rows[0].length - 1) {
+    if (
+      rows[0] !== undefined &&
+      rows.length !== 0 &&
+      columns.length === rows[0].length - 1
+    ) {
       columns.push(this.idColumnName);
     }
 
@@ -548,28 +643,146 @@ export class PGVectorStore extends VectorStore {
   }
 
   /**
+   * Builds WHERE clause conditions and parameters for metadata filtering.
+   *
+   * @param filter - The metadata filter object.
+   * @param paramOffset - Starting parameter index offset.
+   * @returns Object containing whereClauses array and parameters array.
+   */
+  private buildFilterClauses(filter: MetadataFilter, paramOffset = 0) {
+    const whereClauses: string[] = [];
+    const parameters: unknown[] = [];
+    let paramCount = paramOffset;
+
+    for (const [key, value] of Object.entries(filter)) {
+      if (typeof value === "object" && value !== null) {
+        const _value = value as Record<string, unknown>;
+        const currentParamCount = paramCount;
+
+        if (Array.isArray(_value.in)) {
+          const placeholders = _value.in
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+          );
+          parameters.push(..._value.in);
+          paramCount += _value.in.length;
+        }
+
+        if (Array.isArray(_value.notIn)) {
+          const placeholders = _value.notIn
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->>'${key}' NOT IN (${placeholders})`
+          );
+          parameters.push(..._value.notIn);
+          paramCount += _value.notIn.length;
+        }
+
+        if (Array.isArray(_value.arrayContains)) {
+          const placeholders = _value.arrayContains
+            .map(
+              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
+            )
+            .join(",");
+          whereClauses.push(
+            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`
+          );
+          parameters.push(..._value.arrayContains);
+          paramCount += _value.arrayContains.length;
+        }
+
+        const operators = {
+          gt: ">",
+          gte: ">=",
+          lt: "<",
+          lte: "<=",
+        };
+
+        // check if _value has any of the operators as keys and it's numeric
+        for (const [opKey, sqlOp] of Object.entries(operators)) {
+          if (
+            Object.prototype.hasOwnProperty.call(_value, opKey) &&
+            typeof _value[opKey] === "number"
+          ) {
+            paramCount += 1;
+            whereClauses.push(
+              `(${this.metadataColumnName}->>'${key}')::numeric ${sqlOp} $${paramCount}`
+            );
+            parameters.push(_value[opKey]);
+          }
+        }
+
+        // Handle neq operator specially to include NULL values
+        if (Object.prototype.hasOwnProperty.call(_value, "neq")) {
+          paramCount += 1;
+          whereClauses.push(
+            `(${this.metadataColumnName}->>'${key}' IS NULL OR (${this.metadataColumnName}->>'${key}')::text != $${paramCount})`
+          );
+          parameters.push(String(_value.neq));
+        }
+      } else {
+        paramCount += 1;
+        whereClauses.push(
+          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
+        );
+        parameters.push(value);
+      }
+    }
+
+    return { whereClauses, parameters, paramCount };
+  }
+
+  /**
    * Method to delete documents from the vector store. It deletes the
-   * documents whose metadata contains the filter.
+   * documents whose metadata matches the filter conditions.
    *
    * @param filter - An object representing the Metadata filter.
    * @returns Promise that resolves when the documents have been deleted.
    */
-  private async deleteByFilter(filter: Metadata) {
+  private async deleteByFilter(filter: MetadataFilter) {
     let collectionId;
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
     }
 
-    // Set parameters of dynamically generated query
-    const params = collectionId ? [filter, collectionId] : [filter];
+    const baseParameters: unknown[] = [];
+    const baseClauses: string[] = [];
+    let paramOffset = 0;
+
+    // Add collection filter if needed
+    if (collectionId) {
+      paramOffset = 1;
+      baseParameters.push(collectionId);
+      baseClauses.push("collection_id = $1");
+    }
+
+    // Build metadata filter clauses
+    const { whereClauses, parameters } = this.buildFilterClauses(
+      filter,
+      paramOffset
+    );
+
+    // Combine all parameters and clauses
+    const allParameters = [...baseParameters, ...parameters];
+    const allClauses = [...baseClauses, ...whereClauses];
+
+    const whereClause = allClauses.length
+      ? `WHERE ${allClauses.join(" AND ")}`
+      : "";
 
     const queryString = `
       DELETE FROM ${this.computedTableName}
-      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
-      this.metadataColumnName
-    }::jsonb @> $1
+      ${whereClause}
     `;
-    return await this.pool.query(queryString, params);
+
+    return await this.pool.query(queryString, allParameters);
   }
 
   /**
@@ -586,7 +799,10 @@ export class PGVectorStore extends VectorStore {
    * @example <caption>Delete by filter</caption>
    * await vectorStore.delete({ filter: { a: 1, b: 2 } });
    */
-  async delete(params: { ids?: string[]; filter?: Metadata }): Promise<void> {
+  override async delete(params: {
+    ids?: string[];
+    filter?: MetadataFilter;
+  }): Promise<void> {
     const { ids, filter } = params;
 
     if (!(ids || filter)) {
@@ -630,68 +846,29 @@ export class PGVectorStore extends VectorStore {
       collectionId = await this.getOrCreateCollection();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parameters: unknown[] = [embeddingString, k];
-    const whereClauses = [];
+    const baseParameters: unknown[] = [embeddingString, k];
+    const baseClauses: string[] = [];
+    let paramOffset = 2; // embeddingString and k are $1 and $2
 
+    // Add collection filter if needed
     if (collectionId) {
-      whereClauses.push("collection_id = $3");
-      parameters.push(collectionId);
+      paramOffset = 3;
+      baseParameters.push(collectionId);
+      baseClauses.push("collection_id = $3");
     }
 
-    let paramCount = parameters.length;
-    for (const [key, value] of Object.entries(_filter)) {
-      if (typeof value === "object" && value !== null) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const _value: Record<string, any> = value;
-        const currentParamCount = paramCount;
-        if (Array.isArray(_value.in)) {
-          const placeholders = _value.in
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
-            .join(",");
-          whereClauses.push(
-            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
-          );
-          parameters.push(..._value.in);
-          paramCount += _value.in.length;
-        }
-        if (Array.isArray(_value.notIn)) {
-          const placeholders = _value.notIn
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
-            .join(",");
-          whereClauses.push(
-            `${this.metadataColumnName}->>'${key}' NOT IN (${placeholders})`
-          );
-          parameters.push(..._value.notIn);
-          paramCount += _value.notIn.length;
-        }
-        if (Array.isArray(_value.arrayContains)) {
-          const placeholders = _value.arrayContains
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
-            .join(",");
-          whereClauses.push(
-            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`
-          );
-          parameters.push(..._value.arrayContains);
-          paramCount += _value.arrayContains.length;
-        }
-      } else {
-        paramCount += 1;
-        whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
-        );
-        parameters.push(value);
-      }
-    }
+    // Build metadata filter clauses
+    const { whereClauses, parameters } = this.buildFilterClauses(
+      _filter,
+      paramOffset
+    );
 
-    const whereClause = whereClauses.length
-      ? `WHERE ${whereClauses.join(" AND ")}`
+    // Combine all parameters and clauses
+    const allParameters = [...baseParameters, ...parameters];
+    const allClauses = [...baseClauses, ...whereClauses];
+
+    const whereClause = allClauses.length
+      ? `WHERE ${allClauses.join(" AND ")}`
       : "";
 
     const queryString = `
@@ -702,7 +879,7 @@ export class PGVectorStore extends VectorStore {
       LIMIT $2;
       `;
 
-    const documents = (await this.pool.query(queryString, parameters)).rows;
+    const documents = (await this.pool.query(queryString, allParameters)).rows;
 
     const results = [] as [Document, number][];
     for (const doc of documents) {
@@ -822,7 +999,7 @@ export class PGVectorStore extends VectorStore {
    * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
-  static async fromTexts(
+  static override async fromTexts(
     texts: string[],
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
@@ -850,14 +1027,13 @@ export class PGVectorStore extends VectorStore {
    * @param dbConfig - `PGVectorStoreArgs` instance.
    * @returns Promise that resolves with a new instance of `PGVectorStore`.
    */
-  static async fromDocuments(
+  static override async fromDocuments(
     docs: Document[],
     embeddings: EmbeddingsInterface,
     dbConfig: PGVectorStoreArgs & { dimensions?: number }
   ): Promise<PGVectorStore> {
     const instance = await PGVectorStore.initialize(embeddings, dbConfig);
     await instance.addDocuments(docs, { ids: dbConfig.ids });
-
     return instance;
   }
 
@@ -938,7 +1114,7 @@ export class PGVectorStore extends VectorStore {
    *     diversity and 1 to minimum diversity.
    * @returns List of documents selected by maximal marginal relevance.
    */
-  async maxMarginalRelevanceSearch(
+  override async maxMarginalRelevanceSearch(
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
