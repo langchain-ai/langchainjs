@@ -31,7 +31,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.58 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",

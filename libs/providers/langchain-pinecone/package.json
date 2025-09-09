@@ -31,7 +31,7 @@
     "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0",
+    "@langchain/core": "^1.0.0-alpha",
     "@pinecone-database/pinecone": "^5.0.2"
   },
   "devDependencies": {

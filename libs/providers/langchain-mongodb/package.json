@@ -29,7 +29,7 @@
     "mongodb": "^6.17.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",

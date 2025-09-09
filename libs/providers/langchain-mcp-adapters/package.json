@@ -41,7 +41,7 @@
     "debug": "^4.4.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.66",
+    "@langchain/core": "^1.0.0-alpha",
     "zod": "^3.25.76 || ^4"
   },
   "optionalDependencies": {

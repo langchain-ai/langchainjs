@@ -26,7 +26,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.2.21 <0.4.0"
+    "@langchain/core": "^1.0.0-alpha"
   },
   "devDependencies": {
     "@langchain/core": "workspace:*",
