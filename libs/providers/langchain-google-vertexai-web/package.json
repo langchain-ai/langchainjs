@@ -30,9 +30,13 @@
   "dependencies": {
     "@langchain/google-webauth": "^0.2.16"
   },
+  "peerDependencies": {
+    "@langchain/core": "^1.0.0-alpha.1"
+  },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
-    "@langchain/google-common": "^0.2.10",
+    "@langchain/core": "workspace:*",
+    "@langchain/google-common": "^0.2.16",
     "@langchain/standard-tests": "workspace:*",
     "@swc/core": "^1.3.90",
     "@swc/jest": "^0.2.29",

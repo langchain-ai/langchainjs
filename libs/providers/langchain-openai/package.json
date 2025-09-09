@@ -58,6 +58,7 @@
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
+    "uuid": "^11.1.0",
     "vitest": "^3.2.4",
     "zod": "^3.25.76"
   },
