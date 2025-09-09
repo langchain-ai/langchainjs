@@ -85,7 +85,7 @@ const Questions = z.object({
 });
 
 // Create an instance of the model and enforce the output structure
-const model = new ChatOpenAI({ modelName: "gpt-4", temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const structuredModel = model.withStructuredOutput(Questions);
 
 // Define the system prompt
@@ -142,7 +142,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 const attributeInfo: AttributeInfo[] = schemaForMetadata;
 const documentContents = "Brief summary of a movie";
-const llm = new ChatOpenAI({ temperature: 0 });
+const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 const retriever = SelfQueryRetriever.fromLLM({
   llm,
   vectorStore,

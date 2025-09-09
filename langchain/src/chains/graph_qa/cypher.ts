@@ -44,7 +44,7 @@ export interface FromLLMInput {
  * @example
  * ```typescript
  * const chain = new GraphCypherQAChain({
- *   llm: new ChatOpenAI({ temperature: 0 }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *   graph: new Neo4jGraph(),
  * });
  * const res = await chain.invoke("Who played in Pulp Fiction?");

@@ -23,7 +23,7 @@ export function convertOllamaMessagesToLangChain(
   }
 ): AIMessageChunk {
   return new AIMessageChunk({
-    content: messages.content ?? "",
+    content: messages.thinking ?? messages.content ?? "",
     tool_call_chunks: messages.tool_calls?.map((tc) => ({
       name: tc.function.name,
       args: JSON.stringify(tc.function.arguments),

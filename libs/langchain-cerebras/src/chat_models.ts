@@ -30,9 +30,12 @@ import {
 } from "@langchain/core/language_models/base";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import { isZodSchema } from "@langchain/core/utils/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { z } from "zod";
+import {
+  getSchemaDescription,
+  InteropZodType,
+  isInteropZodSchema,
+} from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 
 import {
   convertToCerebrasMessageParams,
@@ -697,7 +700,7 @@ export class ChatCerebras
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -708,7 +711,7 @@ export class ChatCerebras
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -719,7 +722,7 @@ export class ChatCerebras
     RunOutput extends Record<string, any> = Record<string, any>
   >(
     outputSchema:
-      | z.ZodType<RunOutput>
+      | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
@@ -738,9 +741,11 @@ export class ChatCerebras
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: z.ZodType<RunOutput> | Record<string, any> = outputSchema;
+    const schema: InteropZodType<RunOutput> | Record<string, any> =
+      outputSchema;
     const name = config?.name;
-    const description = schema.description ?? "A function available to call.";
+    const description =
+      getSchemaDescription(schema) ?? "A function available to call.";
     const method = config?.method;
     const includeRaw = config?.includeRaw;
     if (method === "jsonMode") {
@@ -750,14 +755,14 @@ export class ChatCerebras
     }
     let functionName = name ?? "extract";
     let tools: ToolDefinition[];
-    if (isZodSchema(schema)) {
+    if (isInteropZodSchema(schema)) {
       tools = [
         {
           type: "function",
           function: {
             name: functionName,
             description,
-            parameters: zodToJsonSchema(schema),
+            parameters: toJsonSchema(schema),
           },
         },
       ];

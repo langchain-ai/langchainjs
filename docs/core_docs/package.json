@@ -77,7 +77,7 @@
     "typescript": "~5.1.6",
     "yaml-loader": "^0.8.0"
   },
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@3.5.1",
   "browserslist": {
     "production": [
       ">0.5%",

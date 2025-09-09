@@ -62,7 +62,7 @@ class AsyncLocalStorageProvider {
 
     let runTree;
     if (langChainTracer && parentRunId) {
-      runTree = langChainTracer.convertToRunTree(parentRunId);
+      runTree = langChainTracer.getRunTreeWithTracingConfig(parentRunId);
     } else if (!avoidCreatingRootRunTree) {
       runTree = new RunTree({
         name: "<runnable_lambda>",

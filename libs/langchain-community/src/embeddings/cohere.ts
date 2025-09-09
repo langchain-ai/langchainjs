@@ -23,7 +23,7 @@ export interface CohereEmbeddingsParams extends EmbeddingsParams {
  * @example
  * ```typescript
  * // Embed a query using the CohereEmbeddings class
- * const model = new ChatOpenAI();
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini" });
  * const res = await model.embedQuery(
  *   "What would be a good company name for a company that makes colorful socks?",
  * );

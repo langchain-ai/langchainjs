@@ -77,7 +77,12 @@ export function _makeMessageChunkFromAnthropicEvent(
     };
   } else if (
     data.type === "content_block_start" &&
-    ["tool_use", "document"].includes(data.content_block.type)
+    [
+      "tool_use",
+      "document",
+      "server_tool_use",
+      "web_search_tool_result",
+    ].includes(data.content_block.type)
   ) {
     const contentBlock = data.content_block;
     let toolCallChunks: ToolCallChunk[];
@@ -101,7 +106,11 @@ export function _makeMessageChunkFromAnthropicEvent(
               {
                 index: data.index,
                 ...data.content_block,
-                input: "",
+                input:
+                  contentBlock.type === "server_tool_use" ||
+                  contentBlock.type === "tool_use"
+                    ? ""
+                    : undefined,
               },
             ],
         additional_kwargs: {},

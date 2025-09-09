@@ -1,7 +1,7 @@
 import { v5 as uuidv5 } from "uuid";
 import { VectorStore } from "../vectorstores.js";
 import { RecordManagerInterface, UUIDV5_NAMESPACE } from "./record_manager.js";
-import { insecureHash } from "../utils/hash.js";
+import { insecureHash, type HashKeyEncoder } from "../utils/hash.js";
 import { DocumentInterface, Document } from "../documents/document.js";
 import { BaseDocumentLoader } from "../document_loaders/base.js";
 
@@ -51,10 +51,19 @@ export class _HashedDocument implements HashedDocumentInterface {
 
   metadata: Metadata;
 
+  // For backwards compatibility, we use a default key encoder
+  // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
+  // about the security implications of using SHA-1 as a key encoder.
+  private keyEncoder: HashKeyEncoder = insecureHash;
+
   constructor(fields: HashedDocumentArgs) {
     this.uid = fields.uid;
     this.pageContent = fields.pageContent;
     this.metadata = fields.metadata;
+  }
+
+  makeDefaultKeyEncoder(keyEncoderFn: HashKeyEncoder): void {
+    this.keyEncoder = keyEncoderFn;
   }
 
   calculateHashes(): void {
@@ -110,13 +119,13 @@ export class _HashedDocument implements HashedDocumentInterface {
   }
 
   private _hashStringToUUID(inputString: string): string {
-    const hash_value = insecureHash(inputString);
+    const hash_value = this.keyEncoder(inputString);
     return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 
   private _hashNestedDictToUUID(data: Record<string, unknown>): string {
     const serialized_data = JSON.stringify(data, Object.keys(data).sort());
-    const hash_value = insecureHash(serialized_data);
+    const hash_value = this.keyEncoder(serialized_data);
     return uuidv5(hash_value, UUIDV5_NAMESPACE);
   }
 }

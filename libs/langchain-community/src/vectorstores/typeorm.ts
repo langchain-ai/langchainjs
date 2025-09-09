@@ -89,9 +89,7 @@ export class TypeORMVectorStore extends VectorStore {
     this.documentEntity = TypeORMDocumentEntity;
 
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      fields.verbose ??
-      false;
+      fields.verbose ?? getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true";
   }
 
   /**

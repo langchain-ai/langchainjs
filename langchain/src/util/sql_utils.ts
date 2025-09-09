@@ -141,6 +141,7 @@ export const getTableAndColumnsName = async (
 
   if (
     appDataSource.options.type === "sqlite" ||
+    appDataSource.options.type === "better-sqlite3" ||
     appDataSource.options.type === "sqljs"
   ) {
     sql =

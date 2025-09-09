@@ -45,7 +45,7 @@ export type HydeRetrieverOptions<V extends VectorStore> =
  * ```typescript
  * const retriever = new HydeRetriever({
  *   vectorStore: new MemoryVectorStore(new OpenAIEmbeddings()),
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   k: 1,
  * });
  * await vectorStore.addDocuments(

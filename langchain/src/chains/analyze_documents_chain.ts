@@ -26,7 +26,7 @@ export interface AnalyzeDocumentChainInput extends Omit<ChainInputs, "memory"> {
  * @augments StuffDocumentsChainInput
  * @example
  * ```typescript
- * const model = new ChatOpenAI({ temperature: 0 });
+ * const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
  * const combineDocsChain = loadSummarizationChain(model);
  * const chain = new AnalyzeDocumentChain({
  *   combineDocumentsChain: combineDocsChain,

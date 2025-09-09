@@ -141,10 +141,14 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
+      },
       announcementBar: {
         content:
-          '<strong class="announcement-bar-text">Help us build the JS tools that power AI apps at companies like Replit, Uber, LinkedIn, GitLab, and more. <a id="js_job_link" href="https://jobs.ashbyhq.com/langchain/05efa205-8560-43fd-bfcc-3f7697561cfb?utm_source=https%3A%2F%2Fjs.langchain.com%2F&utm_campaign=langchainjs_docs" target="_blank">Join our team!</a></strong>',
-        backgroundColor: "#d0c9fe",
+          "These docs will be deprecated and no longer maintained with the release of LangChain v1.0 in October 2025. <a href='https://docs.langchain.com/oss/javascript/langchain/overview' target='_blank'>Visit the v1.0 alpha docs</a>",
+        backgroundColor: "#CC5500",
       },
       prism: {
         theme: {
@@ -273,6 +277,10 @@ const config = {
           {
             title: "Community",
             items: [
+              {
+                label: "LangChain Forum",
+                href: "https://forum.langchain.com/",
+              },
               {
                 label: "Twitter",
                 href: "https://twitter.com/LangChainAI",

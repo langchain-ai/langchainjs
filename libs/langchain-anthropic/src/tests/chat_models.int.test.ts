@@ -9,6 +9,7 @@ import {
   BaseMessage,
   HumanMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import {
@@ -22,8 +23,13 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
 import { ChatAnthropic } from "../chat_models.js";
-import { AnthropicMessageResponse } from "../types.js";
+import {
+  AnthropicMessageResponse,
+  ChatAnthropicContentBlock,
+} from "../types.js";
 
 async function invoke(
   chat: ChatAnthropic,
@@ -1010,65 +1016,248 @@ test("Can accept PDF documents", async () => {
   expect(response.content.length).toBeGreaterThan(10);
 });
 
-test("Citations", async () => {
-  const citationsModel = new ChatAnthropic({
-    model: citationsModelName,
+describe("Citations", () => {
+  test("document blocks", async () => {
+    const citationsModel = new ChatAnthropic({
+      model: citationsModelName,
+    });
+    const messages = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: {
+              type: "text",
+              media_type: "text/plain",
+              data: "The grass the user is asking about is bluegrass. The sky is orange because it's night.",
+            },
+            title: "My Document",
+            context: "This is a trustworthy document.",
+            citations: {
+              enabled: true,
+            },
+          },
+          {
+            type: "text",
+            text: "What color is the grass and sky?",
+          },
+        ],
+      },
+    ];
+
+    const response = await citationsModel.invoke(messages);
+
+    expect(response.content.length).toBeGreaterThan(2);
+    expect(Array.isArray(response.content)).toBe(true);
+    const blocksWithCitations = (response.content as any[]).filter(
+      (block) => block.citations !== undefined
+    );
+    expect(blocksWithCitations.length).toEqual(2);
+    expect(typeof blocksWithCitations[0].citations[0]).toEqual("object");
+
+    const stream = await citationsModel.stream(messages);
+    let aggregated;
+    let chunkHasCitation = false;
+    for await (const chunk of stream) {
+      aggregated = aggregated === undefined ? chunk : concat(aggregated, chunk);
+      if (
+        !chunkHasCitation &&
+        Array.isArray(chunk.content) &&
+        chunk.content.some((c: any) => c.citations !== undefined)
+      ) {
+        chunkHasCitation = true;
+      }
+    }
+    expect(chunkHasCitation).toBe(true);
+    expect(Array.isArray(aggregated?.content)).toBe(true);
+    expect(aggregated?.content.length).toBeGreaterThan(2);
+    expect(
+      (aggregated?.content as any[]).some((c) => c.citations !== undefined)
+    ).toBe(true);
+  });
+  describe("search result blocks", () => {
+    const citationsModel = new ChatAnthropic({
+      model: citationsModelName,
+      clientOptions: {
+        defaultHeaders: {
+          "anthropic-beta": "search-results-2025-06-09",
+        },
+      },
+    });
+
+    const messages = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "search_result",
+            title: "History of France",
+            source: "https://example.com/france-history",
+            citations: { enabled: true },
+            content: [
+              {
+                type: "text",
+                text: "The capital of France is Paris.",
+              },
+              {
+                type: "text",
+                text: "The old capital of France was Lyon.",
+              },
+            ],
+          },
+          {
+            type: "search_result",
+            title: "Geography of France",
+            source: "https://example.com/france-geography",
+            citations: { enabled: true },
+            content: [
+              {
+                type: "text",
+                text: "France is a country in Europe.",
+              },
+              {
+                type: "text",
+                text: "France borders Spain to the south.",
+              },
+            ],
+          },
+          {
+            type: "text",
+            text: "What is the capital of France and where is it located? You must cite your sources.",
+          },
+        ],
+      },
+    ];
+
+    test("without streaming", async () => {
+      const response = await citationsModel.invoke(messages);
+
+      expect(Array.isArray(response.content)).toBe(true);
+      expect(response.content.length).toBeGreaterThan(0);
+
+      // Check that we have cited content
+      const blocksWithCitations = (response.content as any[]).filter(
+        (block) => block.citations !== undefined
+      );
+      expect(blocksWithCitations.length).toBeGreaterThan(0);
+
+      // Verify citation structure
+      const citation = blocksWithCitations[0].citations[0];
+      expect(typeof citation).toBe("object");
+      expect(citation.type).toBe("search_result_location");
+      expect(citation.source).toBeDefined();
+    });
+    test("with streaming", async () => {
+      // Test streaming
+      const stream = await citationsModel.stream(messages);
+      let aggregated;
+      let chunkHasCitation = false;
+      for await (const chunk of stream) {
+        aggregated =
+          aggregated === undefined ? chunk : concat(aggregated, chunk);
+        if (
+          !chunkHasCitation &&
+          Array.isArray(chunk.content) &&
+          chunk.content.some((c: any) => c.citations !== undefined)
+        ) {
+          chunkHasCitation = true;
+        }
+      }
+      expect(chunkHasCitation).toBe(true);
+      expect(Array.isArray(aggregated?.content)).toBe(true);
+      expect(
+        (aggregated?.content as any[]).some((c) => c.citations !== undefined)
+      ).toBe(true);
+    });
   });
 
-  const messages = [
-    {
-      role: "user",
-      content: [
+  test("search result blocks from tool", async () => {
+    const ragTool = tool(
+      (): ChatAnthropicContentBlock[] => [
         {
-          type: "document",
-          source: {
-            type: "text",
-            media_type: "text/plain",
-            data: "The grass the user is asking about is bluegrass. The sky is orange because it's night.",
-          },
-          title: "My Document",
-          context: "This is a trustworthy document.",
-          citations: {
-            enabled: true,
-          },
+          type: "search_result",
+          title: "History of France",
+          source: "https://example.com/france-history",
+          citations: { enabled: true },
+          content: [
+            {
+              type: "text",
+              text: "The capital of France is Paris.",
+            },
+            {
+              type: "text",
+              text: "France was established as a republic in 1792.",
+            },
+          ],
         },
         {
-          type: "text",
-          text: "What color is the grass and sky?",
+          type: "search_result",
+          title: "Geography of France",
+          source: "https://example.com/france-geography",
+          citations: { enabled: true },
+          content: [
+            {
+              type: "text",
+              text: "France is located in Western Europe.",
+            },
+            {
+              type: "text",
+              text: "France has a population of approximately 67 million people.",
+            },
+          ],
         },
       ],
-    },
-  ];
+      {
+        name: "search_knowledge_base",
+        description: "Search the knowledge base for information about France",
+        schema: z.object({
+          query: z.string().describe("The search query"),
+        }),
+      }
+    );
 
-  const response = await citationsModel.invoke(messages);
+    const citationsModel = new ChatAnthropic({
+      model: citationsModelName,
+      clientOptions: {
+        defaultHeaders: {
+          "anthropic-beta": "search-results-2025-06-09",
+        },
+      },
+    }).bindTools([ragTool]);
 
-  expect(response.content.length).toBeGreaterThan(2);
-  expect(Array.isArray(response.content)).toBe(true);
-  const blocksWithCitations = (response.content as any[]).filter(
-    (block) => block.citations !== undefined
-  );
-  expect(blocksWithCitations.length).toEqual(2);
-  expect(typeof blocksWithCitations[0].citations[0]).toEqual("object");
+    const messages = [
+      new HumanMessage(
+        "Search for information about France and tell me what you find with proper citations."
+      ),
+    ];
 
-  const stream = await citationsModel.stream(messages);
-  let aggregated;
-  let chunkHasCitation = false;
-  for await (const chunk of stream) {
-    aggregated = aggregated === undefined ? chunk : concat(aggregated, chunk);
-    if (
-      !chunkHasCitation &&
-      Array.isArray(chunk.content) &&
-      chunk.content.some((c: any) => c.citations !== undefined)
-    ) {
-      chunkHasCitation = true;
-    }
-  }
-  expect(chunkHasCitation).toBe(true);
-  expect(Array.isArray(aggregated?.content)).toBe(true);
-  expect(aggregated?.content.length).toBeGreaterThan(2);
-  expect(
-    (aggregated?.content as any[]).some((c) => c.citations !== undefined)
-  ).toBe(true);
+    const response = await citationsModel.invoke(messages);
+    messages.push(response);
+
+    expect(Array.isArray(response.content)).toBe(true);
+    expect(response.content.length).toBeGreaterThan(0);
+
+    // Check that the model called the tool
+    expect(response.tool_calls?.length).toBeGreaterThan(0);
+    expect(response.tool_calls?.[0].name).toBe("search_knowledge_base");
+
+    const toolResponse = await ragTool.invoke(response.tool_calls![0]);
+    messages.push(toolResponse);
+
+    const response2 = await citationsModel.invoke(messages);
+
+    expect(Array.isArray(response2.content)).toBe(true);
+    expect(response2.content.length).toBeGreaterThan(0);
+    // Make sure that a citation exists somewhere in the content list
+    const citationBlock = (response2.content as any[]).find(
+      (block: any) =>
+        Array.isArray(block.citations) && block.citations.length > 0
+    );
+    expect(citationBlock).toBeDefined();
+    expect(citationBlock.citations[0].type).toBe("search_result_location");
+    expect(citationBlock.citations[0].source).toBeDefined();
+  });
 });
 
 test("Test thinking blocks multiturn invoke", async () => {
@@ -1229,4 +1418,75 @@ test("Test redacted thinking blocks multiturn streaming", async () => {
 
   // test a second time to make sure that we've got input translation working correctly
   await doStreaming(streamingMessages);
+});
+
+test("Can handle google function calling blocks in content", async () => {
+  const chat = new ChatAnthropic({
+    modelName: "claude-3-7-sonnet-latest",
+    maxRetries: 0,
+  });
+  const toolCallId = "tool_call_id";
+  const messages = [
+    new SystemMessage("You're a helpful assistant"),
+    new HumanMessage("What is the weather like in San Francisco?"),
+    new AIMessage({
+      content: [
+        {
+          // Pass a content block with the `functionCall` object that Google returns.
+          functionCall: {
+            args: {
+              location: "san francisco",
+            },
+            name: "get_weather",
+          },
+        },
+      ],
+      tool_calls: [
+        {
+          id: toolCallId,
+          name: "get_weather",
+          args: {
+            location: "san francisco",
+          },
+        },
+      ],
+    }),
+    new ToolMessage({
+      tool_call_id: toolCallId,
+      content: "The weather is sunny",
+    }),
+    new HumanMessage(
+      "Give me a one sentence description of what the sky looks like."
+    ),
+  ];
+  const res = await chat.invoke(messages);
+  expect(res.content.length).toBeGreaterThan(1);
+});
+
+test("Can handle opus 4.1 without passing any args", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+  });
+
+  const response = await model.invoke(
+    "Please respond to this message simply with: Hello"
+  );
+
+  expect(response.content.length).toBeGreaterThan(0);
+});
+
+test("Can handle opus 4.1 with streaming and thinking", async () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-1",
+    thinking: {
+      type: "enabled",
+      budget_tokens: 1024,
+    },
+  });
+
+  const response = await model.invoke(
+    "Please respond to this message simply with: Hello"
+  );
+
+  expect(response.content.length).toBeGreaterThan(0);
 });

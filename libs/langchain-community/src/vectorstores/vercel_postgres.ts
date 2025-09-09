@@ -74,8 +74,7 @@ export class VercelPostgres extends VectorStore {
     this.client = config.client;
 
     this._verbose =
-      getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ??
-      !!config.verbose;
+      config.verbose ?? getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true";
   }
 
   /**

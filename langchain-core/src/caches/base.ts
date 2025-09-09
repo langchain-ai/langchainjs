@@ -1,4 +1,4 @@
-import { insecureHash } from "../utils/hash.js";
+import { insecureHash, type HashKeyEncoder } from "../utils/hash.js";
 import type { Generation, ChatGeneration } from "../outputs.js";
 import { mapStoredMessageToChatMessage } from "../messages/utils.js";
 import { type StoredGeneration } from "../messages/base.js";
@@ -12,8 +12,11 @@ import { type StoredGeneration } from "../messages/base.js";
  * separate concerns and scale horizontally.
  *
  * TODO: Make cache key consistent across versions of LangChain.
+ *
+ * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
+ * This function will be removed in a future version.
  */
-export const getCacheKey = (...strings: string[]): string =>
+export const getCacheKey: HashKeyEncoder = (...strings) =>
   insecureHash(strings.join("_"));
 
 export function deserializeStoredGeneration(
@@ -43,6 +46,21 @@ export function serializeGeneration(generation: Generation) {
  * Base class for all caches. All caches should extend this class.
  */
 export abstract class BaseCache<T = Generation[]> {
+  // For backwards compatibility, we use a default key encoder
+  // that uses SHA-1 to hash the prompt and LLM key. This will also print a warning
+  // about the security implications of using SHA-1 as a cache key.
+  protected keyEncoder: HashKeyEncoder = getCacheKey;
+
+  /**
+   * Sets a custom key encoder function for the cache.
+   * This function should take a prompt and an LLM key and return a string
+   * that will be used as the cache key.
+   * @param keyEncoderFn The custom key encoder function.
+   */
+  makeDefaultKeyEncoder(keyEncoderFn: HashKeyEncoder): void {
+    this.keyEncoder = keyEncoderFn;
+  }
+
   abstract lookup(prompt: string, llmKey: string): Promise<T | null>;
 
   abstract update(prompt: string, llmKey: string, value: T): Promise<void>;
@@ -69,7 +87,9 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
    * @returns The data corresponding to the prompt and LLM key, or null if not found.
    */
   lookup(prompt: string, llmKey: string): Promise<T | null> {
-    return Promise.resolve(this.cache.get(getCacheKey(prompt, llmKey)) ?? null);
+    return Promise.resolve(
+      this.cache.get(this.keyEncoder(prompt, llmKey)) ?? null
+    );
   }
 
   /**
@@ -79,7 +99,7 @@ export class InMemoryCache<T = Generation[]> extends BaseCache<T> {
    * @param value The data to be stored.
    */
   async update(prompt: string, llmKey: string, value: T): Promise<void> {
-    this.cache.set(getCacheKey(prompt, llmKey), value);
+    this.cache.set(this.keyEncoder(prompt, llmKey), value);
   }
 
   /**

@@ -56,12 +56,12 @@ export interface SequentialChainInput extends ChainInputs {
  * const overallChain = new SequentialChain({
  *   chains: [
  *     new LLMChain({
- *       llm: new ChatOpenAI({ temperature: 0 }),
+ *       llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *       prompt: promptTemplate,
  *       outputKey: "synopsis",
  *     }),
  *     new LLMChain({
- *       llm: new OpenAI({ temperature: 0 }),
+ *       llm: new OpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *       prompt: reviewPromptTemplate,
  *       outputKey: "review",
  *     }),
@@ -326,9 +326,8 @@ export class SimpleSequentialChain
   _validateChains() {
     for (const chain of this.chains) {
       if (
-        chain.inputKeys.filter(
-          (k) => !chain.memory?.memoryKeys.includes(k) ?? true
-        ).length !== 1
+        chain.inputKeys.filter((k) => !chain.memory?.memoryKeys.includes(k))
+          .length !== 1
       ) {
         throw new Error(
           `Chains used in SimpleSequentialChain should all have one input, got ${

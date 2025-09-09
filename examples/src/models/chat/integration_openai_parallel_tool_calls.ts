@@ -4,7 +4,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 const model = new ChatOpenAI({
   temperature: 0,
-  model: "gpt-4o",
+  model: "gpt-4o-mini",
 });
 
 // Define your tools

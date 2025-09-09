@@ -39,3 +39,39 @@ test("InMemoryCache works with complex message types", async () => {
     text: "text1",
   });
 });
+
+test("InMemoryCache handles default key encoder", async () => {
+  const cache = new InMemoryCache();
+
+  await cache.update("prompt1", "key1", [
+    {
+      text: "text1",
+    },
+  ]);
+
+  // expect this to call console.warn about SHA-1 usage
+  const result = await cache.lookup("prompt1", "key1");
+
+  expect(result).toBeDefined();
+});
+
+test("InMemoryCache handles custom key encoder", async () => {
+  const cache = new InMemoryCache();
+
+  // use fancy hashing algorithm to encode the key :)
+  cache.makeDefaultKeyEncoder((prompt, key) => `${prompt}###${key}`);
+
+  // expect custom key encoder not to call console.warn
+  await cache.update("prompt1", "key1", [
+    {
+      text: "text1",
+    },
+  ]);
+
+  const result1 = await cache.lookup("prompt1", "key1");
+  expect(result1).toBeDefined();
+  if (!result1) {
+    return;
+  }
+  expect(result1[0].text).toBe("text1");
+});

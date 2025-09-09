@@ -185,6 +185,7 @@ export class JiraDocumentConverter {
       }),
       metadata: {
         id: issue.id,
+        title: issue.fields.summary,
         host: this.host,
         projectKey: this.projectKey,
       },
@@ -316,8 +317,9 @@ export class JiraDocumentConverter {
 export interface JiraProjectLoaderParams {
   host: string;
   projectKey: string;
-  username: string;
-  accessToken: string;
+  username?: string;
+  accessToken?: string;
+  personalAccessToken?: string;
   limitPerRequest?: number;
   createdAfter?: Date;
 }
@@ -330,19 +332,21 @@ const API_ENDPOINTS = {
  * Class representing a document loader for loading pages from Confluence.
  */
 export class JiraProjectLoader extends BaseDocumentLoader {
-  private readonly accessToken: string;
+  private readonly accessToken?: string;
 
   public readonly host: string;
 
   public readonly projectKey: string;
 
-  public readonly username: string;
+  public readonly username?: string;
 
   public readonly limitPerRequest: number;
 
   private readonly createdAfter?: Date;
 
   private readonly documentConverter: JiraDocumentConverter;
+
+  private readonly personalAccessToken?: string;
 
   constructor({
     host,
@@ -351,6 +355,7 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     accessToken,
     limitPerRequest = 100,
     createdAfter,
+    personalAccessToken,
   }: JiraProjectLoaderParams) {
     super();
     this.host = host;
@@ -360,9 +365,13 @@ export class JiraProjectLoader extends BaseDocumentLoader {
     this.limitPerRequest = limitPerRequest;
     this.createdAfter = createdAfter;
     this.documentConverter = new JiraDocumentConverter({ host, projectKey });
+    this.personalAccessToken = personalAccessToken;
   }
 
   private buildAuthorizationHeader(): string {
+    if (this.personalAccessToken) {
+      return `Bearer ${this.personalAccessToken}`;
+    }
     return `Basic ${Buffer.from(
       `${this.username}:${this.accessToken}`
     ).toString("base64")}`;

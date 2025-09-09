@@ -4,7 +4,7 @@ Thank you for contributing to LangChain.js! Your PR will appear in our next rele
 To help streamline the review process, please make sure you read our contribution guidelines:
 https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md
 
-If you are adding an integration (e.g. a new LLM, vector store, or memory), please also read our additional guidelines for integrations:
+If you are adding an integration (e.g. a new LLM, vector store, or memory), please also read our additional guidelines for integrations. You must include tests (if applicable) and documentation for your integration:
 https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md
 
 Replace this block with a description of the change, the issue it fixes (if applicable), and relevant context.

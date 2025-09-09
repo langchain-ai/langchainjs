@@ -574,7 +574,9 @@ export class Milvus extends VectorStore {
     });
     desc.schema.fields.forEach((field) => {
       this.fields.push(field.name);
-      if (field.autoID) {
+      // Only remove autoID fields from this.fields if we're using autoId mode
+      // When autoId is false, we need to include the primary field for upsert operations
+      if (field.autoID && this.autoId) {
         const index = this.fields.indexOf(field.name);
         if (index !== -1) {
           this.fields.splice(index, 1);

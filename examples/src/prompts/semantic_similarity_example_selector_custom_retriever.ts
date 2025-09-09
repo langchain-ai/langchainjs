@@ -80,7 +80,9 @@ const dynamicPrompt = new FewShotPromptTemplate({
   inputVariables: ["query"],
 });
 
-const model = new ChatOpenAI({});
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+});
 
 const chain = dynamicPrompt.pipe(model);
 

@@ -39,7 +39,7 @@ export type ZeroShotAgentInput = Optional<AgentInput, "outputParser">;
  *
  * const agent = new ZeroShotAgent({
  *   llmChain: new LLMChain({
- *     llm: new ChatOpenAI({ temperature: 0 }),
+ *     llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
  *     prompt: ZeroShotAgent.createPrompt([new SerpAPI(), new Calculator()], {
  *       prefix: `Answer the following questions as best you can, but speaking as a pirate might speak. You have access to the following tools:`,
  *       suffix: `Begin! Remember to speak as a pirate when giving your final answer. Use lots of "Args"

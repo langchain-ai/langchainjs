@@ -31,6 +31,7 @@ export interface ToolMessageFieldsWithToolCallId extends ToolMessageFields {
    * @version 0.2.19
    */
   status?: "success" | "error";
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -78,6 +79,8 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
 
   tool_call_id: string;
 
+  metadata?: Record<string, unknown>;
+
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
    *
@@ -109,6 +112,7 @@ export class ToolMessage extends BaseMessage implements DirectToolOutput {
     this.tool_call_id = fields.tool_call_id;
     this.artifact = fields.artifact;
     this.status = fields.status;
+    this.metadata = fields.metadata;
   }
 
   _getType(): MessageType {

@@ -69,7 +69,7 @@ export class PostgresRecordManager implements RecordManagerInterface {
 
   async getTime(): Promise<number> {
     const res = await this.pool.query(
-      "SELECT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)"
+      "SELECT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) AS extract"
     );
     return Number.parseFloat(res.rows[0].extract);
   }

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import pRetry from "p-retry";
 import { v4 as uuidv4 } from "uuid";
 
@@ -59,6 +59,13 @@ import {
 } from "./iter.js";
 import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
+import {
+  getSchemaDescription,
+  InferInteropZodOutput,
+  interopParseAsync,
+  InteropZodType,
+  isSimpleStringZodSchema,
+} from "../utils/types/zod.js";
 
 export { type RunnableInterface, RunnableBatchOptions };
 
@@ -475,6 +482,11 @@ export abstract class Runnable<
     return outputs;
   }
 
+  /** @internal */
+  _concatOutputChunks<O>(first: O, second: O): O {
+    return concat(first, second);
+  }
+
   /**
    * Helper method to transform an Iterator of Input values into an Iterator of
    * Output values, with callbacks.
@@ -499,6 +511,7 @@ export abstract class Runnable<
 
     const config = ensureConfig(options);
     const callbackManager_ = await getCallbackManagerForConfig(config);
+    const outerThis = this;
     async function* wrapInputForTracing() {
       for await (const chunk of inputGenerator) {
         if (finalInputSupported) {
@@ -506,8 +519,11 @@ export abstract class Runnable<
             finalInput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalInput = concat(finalInput, chunk as any);
+              finalInput = outerThis._concatOutputChunks(
+                finalInput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                chunk as any
+              );
             } catch {
               finalInput = undefined;
               finalInputSupported = false;
@@ -565,8 +581,11 @@ export abstract class Runnable<
             finalOutput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = concat(finalOutput, chunk as any);
+              finalOutput = this._concatOutputChunks(
+                finalOutput,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                chunk as any
+              );
             } catch {
               finalOutput = undefined;
               finalOutputSupported = false;
@@ -669,7 +688,7 @@ export abstract class Runnable<
         // Make a best effort to gather, for any type that supports concat.
         // This method should throw an error if gathering fails.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        finalChunk = concat(finalChunk, chunk as any);
+        finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
       }
     }
     yield* this._streamIterator(finalChunk, ensureConfig(options));
@@ -924,8 +943,10 @@ export abstract class Runnable<
     // add each chunk to the output stream
     const outerThis = this;
     async function consumeRunnableStream() {
+      let signal;
+      let listener: (() => void) | null = null;
+
       try {
-        let signal;
         if (options?.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
@@ -938,13 +959,12 @@ export abstract class Runnable<
             // Fallback for Node 18 and below - just use the provided signal
             signal = options.signal;
             // Ensure we still abort our controller when the parent signal aborts
-            options.signal.addEventListener(
-              "abort",
-              () => {
-                abortController.abort();
-              },
-              { once: true }
-            );
+
+            listener = () => {
+              abortController.abort();
+            };
+
+            options.signal.addEventListener("abort", listener, { once: true });
           }
         } else {
           signal = abortController.signal;
@@ -964,6 +984,10 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
+
+        if (signal && listener) {
+          signal.removeEventListener("abort", listener);
+        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
@@ -1201,8 +1225,8 @@ export abstract class Runnable<
   asTool<T extends RunInput = RunInput>(fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<T>;
-  }): RunnableToolLike<z.ZodType<T | ToolCall>, RunOutput> {
+    schema: InteropZodType<T>;
+  }): RunnableToolLike<InteropZodType<T | ToolCall>, RunOutput> {
     return convertRunnableToTool<T, RunOutput>(this, fields);
   }
 }
@@ -1405,6 +1429,11 @@ export class RunnableBinding<
         )
       : await this._mergeConfig(ensureConfig(options), this.kwargs);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
+  }
+
+  /** @internal */
+  override _concatOutputChunks<O>(first: O, second: O): O {
+    return this.bound._concatOutputChunks(first, second);
   }
 
   async *_streamIterator(
@@ -1875,7 +1904,7 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
  * const promptTemplate = PromptTemplate.fromTemplate(
  *   "Tell me a joke about {topic}",
  * );
- * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({})]);
+ * const chain = RunnableSequence.from([promptTemplate, new ChatOpenAI({ model: "gpt-4o-mini" })]);
  * const result = await chain.invoke({ topic: "bears" });
  * ```
  */
@@ -2037,6 +2066,11 @@ export class RunnableSequence<
     return nextStepInputs;
   }
 
+  /** @internal */
+  override _concatOutputChunks<O>(first: O, second: O): O {
+    return this.last._concatOutputChunks(first, second);
+  }
+
   async *_streamIterator(
     input: RunInput,
     options?: RunnableConfig
@@ -2087,7 +2121,7 @@ export class RunnableSequence<
           } else {
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              finalOutput = concat(finalOutput, chunk as any);
+              finalOutput = this._concatOutputChunks(finalOutput, chunk as any);
             } catch (e) {
               finalOutput = undefined;
               concatSupported = false;
@@ -2620,8 +2654,11 @@ export class RunnableLambda<
                 } else {
                   // Make a best effort to gather, for any type that supports concat.
                   try {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    finalOutput = concat(finalOutput, chunk as any);
+                    finalOutput = this._concatOutputChunks(
+                      finalOutput,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      chunk as any
+                    );
                   } catch (e) {
                     finalOutput = chunk as RunOutput;
                   }
@@ -2640,8 +2677,11 @@ export class RunnableLambda<
                 } else {
                   // Make a best effort to gather, for any type that supports concat.
                   try {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    finalOutput = concat(finalOutput, chunk as any);
+                    finalOutput = this._concatOutputChunks(
+                      finalOutput,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      chunk as any
+                    );
                   } catch (e) {
                     finalOutput = chunk as RunOutput;
                   }
@@ -2678,7 +2718,7 @@ export class RunnableLambda<
         // Make a best effort to gather, for any type that supports concat.
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          finalChunk = concat(finalChunk, chunk as any);
+          finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
         } catch (e) {
           finalChunk = chunk;
         }
@@ -2788,9 +2828,9 @@ export class RunnableLambda<
  * );
  *
  * // Invoke the sequence with a single age input
- * const res = sequence.invoke(25);
+ * const res = await sequence.invoke(25);
  *
- * // { years_to_fifty: 25, years_to_hundred: 75 }
+ * // { years_to_fifty: 20, years_to_hundred: 70 }
  * ```
  */
 export class RunnableParallel<RunInput> extends RunnableMap<RunInput> {}
@@ -2984,7 +3024,10 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       for await (const chunk of stream) {
         yield chunk;
         try {
-          output = output === undefined ? output : concat(output, chunk);
+          output =
+            output === undefined
+              ? output
+              : this._concatOutputChunks(output, chunk);
         } catch (e) {
           output = undefined;
         }
@@ -3319,7 +3362,9 @@ export class RunnablePick<
       const picked = this.keys
         .map((key) => [key, input[key]])
         .filter((v) => v[1] !== undefined);
-      return picked.length === 0 ? undefined : Object.fromEntries(picked);
+      return picked.length === 0
+        ? (undefined as RunOutput)
+        : Object.fromEntries(picked);
     }
   }
 
@@ -3370,9 +3415,12 @@ export class RunnablePick<
 }
 
 export interface RunnableToolLikeArgs<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends Omit<RunnableBindingArgs<z.infer<RunInput>, RunOutput>, "config"> {
+> extends Omit<
+    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
+    "config"
+  > {
   name: string;
 
   description?: string;
@@ -3383,9 +3431,9 @@ export interface RunnableToolLikeArgs<
 }
 
 export class RunnableToolLike<
-  RunInput extends z.ZodType = z.ZodType,
+  RunInput extends InteropZodType = InteropZodType,
   RunOutput = unknown
-> extends RunnableBinding<z.infer<RunInput>, RunOutput> {
+> extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
   name: string;
 
   description?: string;
@@ -3394,12 +3442,15 @@ export class RunnableToolLike<
 
   constructor(fields: RunnableToolLikeArgs<RunInput, RunOutput>) {
     const sequence = RunnableSequence.from([
-      RunnableLambda.from(async (input) => {
-        let toolInput: z.TypeOf<RunInput>;
+      RunnableLambda.from<
+        InferInteropZodOutput<RunInput> | ToolCall,
+        InferInteropZodOutput<RunInput>
+      >(async (input) => {
+        let toolInput: InferInteropZodOutput<RunInput>;
 
         if (_isToolCall(input)) {
           try {
-            toolInput = await this.schema.parseAsync(input.args);
+            toolInput = await interopParseAsync(this.schema, input.args);
           } catch (e) {
             throw new ToolInputParsingException(
               `Received tool input did not match expected schema`,
@@ -3439,34 +3490,34 @@ export class RunnableToolLike<
  * @param fields
  * @param {string | undefined} [fields.name] The name of the tool. If not provided, it will default to the name of the runnable.
  * @param {string | undefined} [fields.description] The description of the tool. Falls back to the description on the Zod schema if not provided, or undefined if neither are provided.
- * @param {z.ZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
- * @returns {RunnableToolLike<z.ZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
+ * @param {InteropZodType<RunInput>} [fields.schema] The Zod schema for the input of the tool. Infers the Zod type from the input type of the runnable.
+ * @returns {RunnableToolLike<InteropZodType<RunInput>, RunOutput>} An instance of `RunnableToolLike` which is a runnable that can be used as a tool.
  */
 export function convertRunnableToTool<RunInput, RunOutput>(
   runnable: Runnable<RunInput, RunOutput>,
   fields: {
     name?: string;
     description?: string;
-    schema: z.ZodType<RunInput>;
+    schema: InteropZodType<RunInput>;
   }
-): RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput> {
+): RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput> {
   const name = fields.name ?? runnable.getName();
-  const description = fields.description ?? fields.schema?.description;
+  const description = fields.description ?? getSchemaDescription(fields.schema);
 
-  if (fields.schema.constructor === z.ZodString) {
-    return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
-      name,
-      description,
-      schema: z
-        .object({
-          input: z.string(),
-        })
-        .transform((input) => input.input) as z.ZodType,
-      bound: runnable,
-    });
+  if (isSimpleStringZodSchema(fields.schema)) {
+    return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>(
+      {
+        name,
+        description,
+        schema: z
+          .object({ input: z.string() })
+          .transform((input) => input.input) as InteropZodType,
+        bound: runnable,
+      }
+    );
   }
 
-  return new RunnableToolLike<z.ZodType<RunInput | ToolCall>, RunOutput>({
+  return new RunnableToolLike<InteropZodType<RunInput | ToolCall>, RunOutput>({
     name,
     description,
     schema: fields.schema,

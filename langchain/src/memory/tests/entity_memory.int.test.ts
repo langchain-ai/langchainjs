@@ -57,9 +57,9 @@ test.skip("Test entity memory in a chain", async () => {
 
 test.skip("Test entity memory with a chat model in a chain", async () => {
   const memory = new EntityMemory({
-    llm: new ChatOpenAI({ temperature: 0 }),
+    llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
   });
-  const model = new ChatOpenAI({ temperature: 0.9 });
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 });
   const chain = new LLMChain({
     llm: model,
     prompt: ENTITY_MEMORY_CONVERSATION_TEMPLATE,

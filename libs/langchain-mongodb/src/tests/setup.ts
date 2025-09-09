@@ -33,7 +33,7 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
   private async tryCreateSearchIndex() {
     let client;
     try {
-      client = new MongoClient(uri());
+      client = new MongoClient(uri(), { serverSelectionTimeoutMS: 1_000 });
       await client.connect();
 
       const namespace = "vectorstore.test";

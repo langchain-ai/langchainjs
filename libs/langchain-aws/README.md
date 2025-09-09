@@ -40,12 +40,19 @@ The field you need depends on the package manager you're using, but we recommend
 
 This package contains the `ChatBedrockConverse` class, which is the recommended way to interface with the AWS Bedrock Converse series of models.
 
-To use, install the requirements, and configure your environment.
+To use, install the requirements, and configure your environment following the traditional authentication methods.
 
 ```bash
 export BEDROCK_AWS_REGION=
 export BEDROCK_AWS_SECRET_ACCESS_KEY=
 export BEDROCK_AWS_ACCESS_KEY_ID=
+```
+
+Alternatively, set the `AWS_BEARER_TOKEN_BEDROCK` environment variable locally for API Key authentication. For additional API key details, refer to [docs](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html).
+
+```bash
+export BEDROCK_AWS_REGION=
+export AWS_BEARER_TOKEN_BEDROCK=
 ```
 
 Then initialize

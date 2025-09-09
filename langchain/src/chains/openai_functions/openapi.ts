@@ -1,9 +1,9 @@
 import type { OpenAIClient } from "@langchain/openai";
 import {
-  JsonSchema7ObjectType,
-  JsonSchema7ArrayType,
-  JsonSchema7Type,
-} from "zod-to-json-schema";
+  type JsonSchema7ObjectType,
+  type JsonSchema7ArrayType,
+  type JsonSchema7Type,
+} from "@langchain/core/utils/json_schema";
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";
@@ -193,9 +193,11 @@ export function convertOpenAPISchemaToJSONSchema(
     );
   }
   if (schema.type === "array") {
+    const openAPIItems = spec.getSchema(schema.items) ?? {};
+
     return {
       type: "array",
-      items: convertOpenAPISchemaToJSONSchema(schema.items ?? {}, spec),
+      items: convertOpenAPISchemaToJSONSchema(openAPIItems, spec),
       minItems: schema.minItems,
       maxItems: schema.maxItems,
     } as JsonSchema7ArrayType;
@@ -488,7 +490,7 @@ export async function createOpenAPIChain(
     );
   }
   const {
-    llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613" }),
+    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }),
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"

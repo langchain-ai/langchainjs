@@ -75,9 +75,9 @@ const response = await model.stream([new HumanMessage("Hello world!")]);
 This package also adds support for `CohereEmbeddings` embeddings model.
 
 ```typescript
-import { ChatCohere } from "@langchain/cohere";
+import { CohereEmbeddings } from "@langchain/cohere";
 
-const embeddings = new ChatCohere({
+const embeddings = new CohereEmbeddings({
   apiKey: process.env.COHERE_API_KEY,
 });
 const res = await embeddings.embedQuery("Hello world");

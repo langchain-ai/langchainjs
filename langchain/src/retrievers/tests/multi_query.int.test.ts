@@ -18,7 +18,7 @@ test("Should work with a question input", async () => {
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
-  const model = new ChatOpenAI({});
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const retriever = MultiQueryRetriever.fromLLM({
     llm: model,
     retriever: vectorstore.asRetriever(),
@@ -44,7 +44,7 @@ test("Should work with a keyword", async () => {
     [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }],
     new CohereEmbeddings({ model: "embed-english-v3.0" })
   );
-  const model = new ChatOpenAI({});
+  const model = new ChatOpenAI({ model: "gpt-4o-mini" });
   const retriever = MultiQueryRetriever.fromLLM({
     llm: model,
     retriever: vectorstore.asRetriever(),

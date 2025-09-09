@@ -227,6 +227,7 @@ export interface AnthropicUsage {
   output_tokens: number;
   cache_creation_input_tokens: number | null;
   cache_creation_output_tokens: number | null;
+  cache_read_input_tokens: number | null;
 }
 
 export type AnthropicResponseData =

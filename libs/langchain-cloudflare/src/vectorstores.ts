@@ -96,7 +96,8 @@ export class CloudflareVectorizeStore extends VectorStore {
     options?: { ids?: string[] } | string[]
   ) {
     const ids = Array.isArray(options) ? options : options?.ids;
-    const documentIds = ids == null ? documents.map(() => uuid.v4()) : ids;
+    const documentIds =
+      ids == null ? documents.map((document) => document.id ?? uuid.v4()) : ids;
     const vectorizeVectors = vectors.map((values, idx) => {
       const metadata: Record<string, VectorizeVectorMetadata> = {
         ...documents[idx].metadata,
@@ -160,7 +161,11 @@ export class CloudflareVectorizeStore extends VectorStore {
       for (const res of results.matches) {
         const { [this.textKey]: pageContent, ...metadata } = res.metadata ?? {};
         result.push([
-          new Document({ metadata, pageContent: pageContent as string }),
+          new Document({
+            id: res.id,
+            metadata,
+            pageContent: pageContent as string,
+          }),
           res.score,
         ]);
       }

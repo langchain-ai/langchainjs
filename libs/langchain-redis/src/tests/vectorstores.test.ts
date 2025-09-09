@@ -7,6 +7,7 @@ import { RedisVectorStore } from "../vectorstores.js";
 const createRedisClientMockup = () => {
   const hSetMock = jest.fn();
   const expireMock = jest.fn();
+  const delMock = jest.fn<any>().mockResolvedValue(1);
 
   return {
     ft: {
@@ -22,6 +23,7 @@ const createRedisClientMockup = () => {
     },
     hSet: hSetMock,
     expire: expireMock,
+    del: delMock,
     multi: jest.fn<any>().mockImplementation(() => ({
       exec: jest.fn(),
       hSet: hSetMock,
@@ -270,6 +272,39 @@ describe("RedisVectorStore createIndex when index does not exist", () => {
         STOPWORDS: ["a", "b"],
         LANGUAGE: "German",
       }
+    );
+  });
+});
+
+describe("RedisVectorStore delete", () => {
+  const client = createRedisClientMockup();
+  const embeddings = new FakeEmbeddings();
+
+  const store = new RedisVectorStore(embeddings, {
+    redisClient: client as any,
+    indexName: "documents",
+    keyPrefix: "doc:documents:",
+  });
+
+  test("delete documents by ids", async () => {
+    const deleteIds = ["doc1", "doc2"];
+    await store.delete({ ids: deleteIds });
+
+    expect(client.del).toHaveBeenCalledWith([
+      "doc:documents:doc1",
+      "doc:documents:doc2",
+    ]);
+  });
+
+  test("throws error if ids are not provided", async () => {
+    await expect(store.delete({ ids: [] })).rejects.toThrow(
+      'Invalid parameters passed to "delete".'
+    );
+  });
+
+  test("throws error if deleteAll is provided as false", async () => {
+    await expect(store.delete({ deleteAll: false })).rejects.toThrow(
+      'Invalid parameters passed to "delete".'
     );
   });
 });

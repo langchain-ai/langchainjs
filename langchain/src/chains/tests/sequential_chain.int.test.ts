@@ -56,7 +56,7 @@ test("Test SequentialChain example usage", async () => {
 });
 
 test.skip("Test SequentialChain serialize/deserialize", async () => {
-  const llm1 = new ChatOpenAI();
+  const llm1 = new ChatOpenAI({ model: "gpt-4o-mini" });
   const template1 = `Echo back "{foo} {bar}"`;
   const promptTemplate1 = new PromptTemplate({
     template: template1,
@@ -68,7 +68,7 @@ test.skip("Test SequentialChain serialize/deserialize", async () => {
     outputKey: "baz",
   });
 
-  const llm2 = new ChatOpenAI();
+  const llm2 = new ChatOpenAI({ model: "gpt-4o-mini" });
   const template2 = `Echo back "{baz}"`;
   const promptTemplate2 = new PromptTemplate({
     template: template2,

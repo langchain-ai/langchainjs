@@ -44,7 +44,7 @@ type ValueType = {
  * @example
  * ```typescript
  * const selfQueryRetriever = new SelfQueryRetriever({
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   vectorStore: new SupabaseVectorStore(),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: [],

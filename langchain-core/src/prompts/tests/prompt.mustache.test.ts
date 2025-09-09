@@ -72,7 +72,7 @@ test("section/context variables", async () => {
   expect(formattedPrompt).toEqual(`This
 yo
 is a test.`);
-  expect(prompt.inputVariables).toEqual(["foo"]);
+  expect(prompt.inputVariables).toEqual(["foo", "bar"]);
 });
 
 test("section/context variables with repeats", async () => {
@@ -90,7 +90,7 @@ yo
 
 hello
 is a test.`);
-  expect(promptWithRepeats.inputVariables).toEqual(["foo"]);
+  expect(promptWithRepeats.inputVariables).toEqual(["foo", "bar"]);
 });
 
 test("Escaped variables", async () => {

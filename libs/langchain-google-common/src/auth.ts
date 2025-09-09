@@ -28,6 +28,8 @@ export abstract class GoogleAbstractedFetchClient
 
   abstract request(opts: GoogleAbstractedClientOps): unknown;
 
+  _fetch: typeof fetch = fetch;
+
   async _buildData(res: Response, opts: GoogleAbstractedClientOps) {
     switch (opts.responseType) {
       case "json":
@@ -65,7 +67,7 @@ export abstract class GoogleAbstractedFetchClient
       }
     }
 
-    const res = await fetch(url, fetchOptions);
+    const res = await this._fetch(url, fetchOptions);
 
     if (!res.ok) {
       const resText = await res.text();

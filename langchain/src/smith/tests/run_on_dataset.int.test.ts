@@ -69,7 +69,7 @@ test(`Chat model dataset`, async () => {
       inputs: { query },
     });
     try {
-      const { results } = await wiki.default.search(query, { limit: 10 });
+      const { results } = await wiki.search(query, { limit: 10 });
       const finalResults: Array<{ summary: string; url: string }> = [];
 
       for (const result of results) {
@@ -77,7 +77,7 @@ test(`Chat model dataset`, async () => {
           // Just return the top 2 pages for now
           break;
         }
-        const page = await wiki.default.page(result.title, {
+        const page = await wiki.page(result.title, {
           autoSuggest: false,
         });
         const summary = await page.summary();

@@ -14,7 +14,7 @@ import {
  * @example
  * ```typescript
  * const selfQueryRetriever = SelfQueryRetriever.fromLLM({
- *   llm: new ChatOpenAI(),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
  *   vectorStore: new PineconeStore(),
  *   documentContents: "Brief summary of a movie",
  *   attributeInfo: [],

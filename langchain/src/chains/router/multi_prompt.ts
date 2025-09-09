@@ -16,19 +16,22 @@ import { RouterOutputParser } from "../../output_parsers/router.js";
  * functionality specific to multi-prompt chains.
  * @example
  * ```typescript
- * const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(new ChatOpenAI(), {
- *   promptNames: ["physics", "math", "history"],
- *   promptDescriptions: [
- *     "Good for answering questions about physics",
- *     "Good for answering math questions",
- *     "Good for answering questions about history",
- *   ],
- *   promptTemplates: [
- *     `You are a very smart physics professor. Here is a question:\n{input}\n`,
- *     `You are a very good mathematician. Here is a question:\n{input}\n`,
- *     `You are a very smart history professor. Here is a question:\n{input}\n`,
- *   ],
- * });
+ * const multiPromptChain = MultiPromptChain.fromLLMAndPrompts(
+ *   new ChatOpenAI({ model: "gpt-4o-mini" }),
+ *   {
+ *     promptNames: ["physics", "math", "history"],
+ *     promptDescriptions: [
+ *       "Good for answering questions about physics",
+ *       "Good for answering math questions",
+ *       "Good for answering questions about history",
+ *     ],
+ *     promptTemplates: [
+ *       `You are a very smart physics professor. Here is a question:\n{input}\n`,
+ *       `You are a very good mathematician. Here is a question:\n{input}\n`,
+ *       `You are a very smart history professor. Here is a question:\n{input}\n`,
+ *     ],
+ *   }
+ * );
  * const result = await multiPromptChain.call({
  *   input: "What is the speed of light?",
  * });

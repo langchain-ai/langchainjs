@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 
 // MCP client imports
-import { Connection, MultiServerMCPClient } from "../src/index.js";
+import { type ClientConfig, MultiServerMCPClient } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -20,14 +20,17 @@ dotenv.config();
 /**
  * A custom configuration for Firecrawl
  */
-const config: Record<string, Connection> = {
-  firecrawl: {
-    transport: "sse",
-    url: process.env.FIRECRAWL_SERVER_URL || "http://localhost:8000/v1/mcp",
-    headers: {
-      Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY || "demo"}`,
+const config: ClientConfig = {
+  mcpServers: {
+    firecrawl: {
+      transport: "sse",
+      url: process.env.FIRECRAWL_SERVER_URL || "http://localhost:8000/v1/mcp",
+      headers: {
+        Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY || "demo"}`,
+      },
     },
   },
+  useStandardContentBlocks: true,
 };
 
 /**
@@ -58,7 +61,7 @@ async function runExample() {
 
     // Initialize the LLM
     const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL_NAME || "gpt-3.5-turbo",
+      model: process.env.OPENAI_MODEL_NAME || "gpt-3.5-turbo",
       temperature: 0,
     });
 

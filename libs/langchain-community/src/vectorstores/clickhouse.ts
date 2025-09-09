@@ -17,7 +17,7 @@ export interface ClickHouseLibArgs {
   username: string;
   password: string;
   indexType?: string;
-  indexParam?: Record<string, number>;
+  indexParam?: string | Record<string, number>;
   indexQueryParams?: Record<string, string>;
   columnMap?: ColumnMap;
   database?: string;
@@ -55,7 +55,7 @@ export class ClickHouseStore extends VectorStore {
 
   private indexType: string;
 
-  private indexParam: Record<string, number>;
+  private indexParam: string | Record<string, number>;
 
   private indexQueryParams: Record<string, string>;
 
@@ -225,11 +225,16 @@ export class ClickHouseStore extends VectorStore {
   private async initialize(dimension?: number): Promise<void> {
     const dim = dimension ?? (await this.embeddings.embedQuery("test")).length;
 
-    const indexParamStr = this.indexParam
-      ? Object.entries(this.indexParam)
+    let indexParamStr = "";
+    if (this.indexParam) {
+      if (typeof this.indexParam === "string") {
+        indexParamStr = this.indexParam;
+      } else {
+        indexParamStr = Object.entries(this.indexParam)
           .map(([key, value]) => `'${key}', ${value}`)
-          .join(", ")
-      : "";
+          .join(", ");
+      }
+    }
 
     const query = `
     CREATE TABLE IF NOT EXISTS ${this.database}.${this.table}(

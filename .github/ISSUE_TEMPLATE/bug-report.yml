@@ -1,32 +1,32 @@
 name: "\U0001F41B Bug Report"
-description: Report a bug in LangChain.js. To report a security issue, please instead use the security option below. For questions, please use the GitHub Discussions.
-labels: ["02 Bug Report"]
+description: Report a bug in LangChain.js. To report a security issue, please instead use the security option below. For questions, please use the LangChain forum.
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: >
+      value: |
         Thank you for taking the time to file a bug report. 
         
-        Use this to report bugs in LangChain.js. 
-        
-        If you're not certain that your issue is due to a bug in LangChain, please use [GitHub Discussions](https://github.com/langchain-ai/langchainjs/discussions)
-        to ask for help with your issue.
+        Use this to report BUGS in LangChain.js. For usage questions, feature requests and general design questions, please use the [LangChain Forum](https://forum.langchain.com/).
         
         Relevant links to check before filing a bug report to see if your issue has already been reported, fixed or
         if there's another way to solve your problem:
-        
-        [LangChain.js documentation with the integrated search](https://js.langchain.com/docs/introduction),
-        [API Reference](https://api.js.langchain.com/),
-        [GitHub search](https://github.com/langchain-ai/langchainjs),
-        [LangChain.js Github Discussions](https://github.com/langchain-ai/langchainjs/discussions),
-        [LangChain.js Github Issues](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue),
-        [LangChain.js ChatBot](https://chatjs.langchain.com/)
+
+        * [LangChain Forum](https://forum.langchain.com/),
+        * [LangChain.js Github Issues](https://github.com/langchain-ai/langchainjs/issues?q=is%3Aissue),
+        * [LangChain.js documentation with the integrated search](https://js.langchain.com/docs/introduction),
+        * [LangChain.js how-to guides](https://js.langchain.com/docs/how_to/),
+        * [API Reference](https://api.js.langchain.com/),
+        * [LangChain.js ChatBot](https://chatjs.langchain.com/)
+        * [GitHub search](https://github.com/langchain-ai/langchainjs),
   - type: checkboxes
     id: checks
     attributes:
       label: Checked other resources
       description: Please confirm and check all the following options.
       options:
+        - label: This is a bug, not a usage question. For questions, please use the LangChain Forum (https://forum.langchain.com/).
+          required: true
         - label: I added a very descriptive title to this issue.
           required: true
         - label: I searched the LangChain.js documentation with the integrated search.

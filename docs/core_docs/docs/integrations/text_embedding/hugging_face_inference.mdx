@@ -1,17 +1,17 @@
 # HuggingFace Inference
 
-This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text using by default the `sentence-transformers/distilbert-base-nli-mean-tokens` model. You can pass a different model name to the constructor to use a different model.
+This Embeddings integration uses the HuggingFace Inference API to generate embeddings for a given text, using the `BAAI/bge-base-en-v1.5` model by default. You can pass a different model name to the constructor to use a different model.
 
 ## Setup
 
-You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package and the required peer dep:
+You'll first need to install the [`@langchain/community`](https://www.npmjs.com/package/@langchain/community) package and the required peer dependency:
 
 import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
 
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/community @langchain/core @huggingface/inference@2
+npm install @langchain/community @langchain/core @huggingface/inference@4
 ```
 
 ## Usage
@@ -20,9 +20,18 @@ npm install @langchain/community @langchain/core @huggingface/inference@2
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 
 const embeddings = new HuggingFaceInferenceEmbeddings({
-  apiKey: "YOUR-API-KEY", // In Node.js defaults to process.env.HUGGINGFACEHUB_API_KEY
+  apiKey: "YOUR-API-KEY", // Defaults to process.env.HUGGINGFACEHUB_API_KEY
+  model: "MODEL-NAME", // Defaults to `BAAI/bge-base-en-v1.5` if not provided
+  provider: "MODEL-PROVIDER", // Falls back to auto selection mechanism within Hugging Face's inference API if not provided
 });
 ```
+
+> **Note:**  
+> If you do not provide a `model`, a warning will be logged and the default model `BAAI/bge-base-en-v1.5` will be used.
+> If you do not provide a `provider`, Hugging Face will default to `auto` selection, which will select the first provider available for the model based on your settings at https://hf.co/settings/inference-providers.
+
+> **Hint:**  
+> `hf-inference` is the provider name for models that are hosted directly by Hugging Face.
 
 ## Related
 

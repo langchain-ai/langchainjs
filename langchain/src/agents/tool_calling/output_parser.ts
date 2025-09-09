@@ -33,7 +33,7 @@ export function parseAIMessageToToolAction(
     toolCalls = message.tool_calls;
   } else {
     if (
-      message.additional_kwargs.tool_calls === undefined ||
+      !message.additional_kwargs.tool_calls ||
       message.additional_kwargs.tool_calls.length === 0
     ) {
       return {

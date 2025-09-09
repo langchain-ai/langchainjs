@@ -87,6 +87,7 @@ describe("Tool class tests", () => {
       const configSchema = {
         title: "config schema for GoogleSearch tool",
         type: "object",
+
         properties: {
           maxResults: {
             title: "Max number of results to return",
@@ -100,6 +101,18 @@ describe("Tool class tests", () => {
         },
       };
 
+      const inputSchema = {
+        type: "object",
+        properties: {
+          q: {
+            title: "q",
+            description: "Query for search",
+            type: "string",
+          },
+        },
+        required: ["q"],
+      };
+
       const { function: watsonxTool } = convertUtilityToolToWatsonxTool({
         name: "GoogleSearch",
         description:
@@ -107,13 +120,14 @@ describe("Tool class tests", () => {
         agent_description:
           "Search for online trends, news, current events, real-time information, or research topics.",
         config_schema: configSchema,
+        input_schema: inputSchema,
       });
       if (!watsonxTool) throw new Error("Could parse a tool");
 
       const tool = new WatsonxTool(watsonxTool, service, configSchema);
       tool.config = { maxResults: 2 };
 
-      const res = await tool.invoke({ input: "Who won 2022 World Cup?" });
+      const res = await tool.invoke({ q: "Who won 2022 World Cup?" });
       expect(JSON.parse(res).length).toBeLessThanOrEqual(2);
     });
   });
@@ -153,7 +167,7 @@ describe("Toolkit class tests", () => {
         maxResults: 2,
       });
       const res = await tool?.invoke({
-        input: "Who won F1 in Melbourne 2025?",
+        q: "Who won F1 in Melbourne 2025?",
       });
       const array = JSON.parse(res);
       expect(array.length).toBeLessThanOrEqual(2);
@@ -170,7 +184,7 @@ describe("Toolkit class tests", () => {
         maxResults: 2,
       };
       const res = await tool?.invoke({
-        input: "Who won F1 in Melbourne 2025?",
+        q: "Who won F1 in Melbourne 2025?",
       });
       const array = JSON.parse(res);
       expect(array.length).toBeLessThanOrEqual(2);

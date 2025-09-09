@@ -8,7 +8,7 @@ const cache = new RedisCache(client, {
   ttl: 60, // Optional key expiration value
 });
 
-const model = new ChatOpenAI({ cache });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", cache });
 
 const response1 = await model.invoke("Do something random!");
 console.log(response1);

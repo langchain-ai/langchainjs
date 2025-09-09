@@ -2,13 +2,9 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "target": "ES2021",
-    "lib": [
-      "ES2021",
-      "ES2022.Object",
-      "DOM"
-    ],
+    "lib": ["ES2021", "ES2022.Object", "DOM"],
     "module": "ES2020",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,
@@ -24,6 +20,7 @@
     "langchain/src/**/*",
     "langchain-core/src/**/*",
     "libs/*/src/**/*",
+    "internal/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -31,6 +28,6 @@
     "docs",
     "langchain/dist/",
     "langchain-core/dist/",
-    "libs/*/dist/",
+    "libs/*/dist/"
   ]
 }

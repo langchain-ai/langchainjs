@@ -28,6 +28,25 @@ When using Azure Managed Identity and role-based access control, you must ensure
 
 :::
 
+### Storage configuration
+
+By default, this integration will automatically try to create the database and container if they do not exist. You can configure the database and container names in the constructor:
+
+```typescript
+import { AzureCosmosDBNoSQLChatMessageHistory } from "@langchain/azure-cosmosdb";
+
+const chatHistory = new AzureCosmosDBNoSQLSemanticCache(embeddings, {
+  databaseName: "my_database", // default is "vectorSearchDB"
+  containerName: "my_container", // default is "semanticCacheContainer"
+});
+```
+
+:::important
+
+If you create the container beforehand, make sure to set the partition key to `/id`, as this is required by the integration.
+
+:::
+
 ## Usage example
 
 import Example from "@examples/caches/azure_cosmosdb_nosql/azure_cosmosdb_nosql.ts";

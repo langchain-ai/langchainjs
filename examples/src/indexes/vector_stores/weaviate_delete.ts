@@ -4,7 +4,7 @@ import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {
-  // Something wrong with the weaviate-ts-client types, so we need to disable
+  // Something wrong with the weaviate-client types, so we need to disable
   const client = (weaviate as any).client({
     scheme: process.env.WEAVIATE_SCHEME || "https",
     host: process.env.WEAVIATE_HOST || "localhost",

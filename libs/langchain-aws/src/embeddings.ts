@@ -1,5 +1,6 @@
 import {
   BedrockRuntimeClient,
+  BedrockRuntimeClientConfig,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
@@ -22,6 +23,13 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
    */
   client?: BedrockRuntimeClient;
 
+  /**
+   * Overrideable configuration options for the BedrockRuntimeClient.
+   * Allows customization of client configuration such as requestHandler, etc.
+   * Will be ignored if 'client' is provided.
+   */
+  clientOptions?: BedrockRuntimeClientConfig;
+
   region?: string;
 
   credentials?: CredentialType;
@@ -39,6 +47,10 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  *     secretAccessKey: "your-secret-access-key",
  *   },
  *   model: "amazon.titan-embed-text-v1",
+ *   // Configure client options (e.g., custom request handler)
+ *   // clientOptions: {
+ *   //   requestHandler: myCustomRequestHandler,
+ *   // },
  * });
  *
  * // Embed a query and log the result
@@ -56,16 +68,20 @@ export class BedrockEmbeddings
 
   client: BedrockRuntimeClient;
 
+  clientOptions?: BedrockRuntimeClientConfig;
+
   batchSize = 512;
 
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? "amazon.titan-embed-text-v1";
+    this.clientOptions = fields?.clientOptions;
 
     this.client =
       fields?.client ??
       new BedrockRuntimeClient({
+        ...fields?.clientOptions,
         region: fields?.region,
         credentials: fields?.credentials,
       });

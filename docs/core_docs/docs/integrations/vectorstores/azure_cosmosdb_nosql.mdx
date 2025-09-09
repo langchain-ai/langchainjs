@@ -39,6 +39,70 @@ When using Azure Managed Identity and role-based access control, you must ensure
 
 :::
 
+### Storage configuration
+
+By default, this integration will automatically try to create the database and container if they do not exist. You can configure the database and container names in the constructor:
+
+```typescript
+import { AzureCosmosDBNoSQLChatMessageHistory } from "@langchain/azure-cosmosdb";
+
+const chatHistory = new AzureCosmosDBNoSQLVectorStore(embeddings, {
+  databaseName: "my_database", // default is "vectorSearchDB"
+  containerName: "my_container", // default is "vectorSearchContainer"
+});
+```
+
+:::important
+
+If you create the container beforehand, make sure to set the partition key to `/id`, as this is required by the integration.
+
+:::
+
+### Security considerations when using filters
+
+:::warning
+
+Using filters with user-provided input can be a security risk if the data is not sanitized properly. Follow the recommendation below to prevent potential security issues.
+
+:::
+
+Allowing raw user input to be concatenated into SQL-like clauses - such as `WHERE ${userFilter}` - introduces a critical risk of SQL injection attacks, potentially exposing unintended data or compromising your system's integrity. To mitigate this, always use Azure Cosmos DB's parameterized query mechanism, passing in `@param` placeholders, which cleanly separates the query logic from user-provided input.
+
+Here is an example of unsafe code:
+
+```typescript
+import { AzureCosmosDBNoSQLVectorStore } from "@langchain/azure-cosmosdb";
+
+const store = new AzureCosmosDBNoSQLVectorStore(embeddings, {});
+
+// Unsafe: user-controlled input injected into the query
+const userId = req.query.userId; // e.g. "123' OR 1=1"
+const unsafeQuerySpec = {
+  query: `SELECT * FROM c WHERE c.metadata.userId = '${userId}'`,
+};
+
+await store.delete({ filter: unsafeQuerySpec });
+```
+
+If the attacker provides `123 OR 1=1`, then the query becomes `SELECT * FROM c WHERE c.metadata.userId = '123' OR 1=1`, which forces the condition to always be true, causing it to bypass the intended filter and delete all documents.
+
+To prevent this injection risk, you define a placeholder like `@userId` and Cosmos DB binds the user input separately as a parameter, ensuring it is treated strictly as data and not executable query logic as shown below.
+
+```typescript
+import { SqlQuerySpec } from "@azure/cosmos";
+
+const safeQuerySpec: SqlQuerySpec = {
+  query: "SELECT * FROM c WHERE c.metadata.userId = @userId",
+  parameters: [{ name: "@userId", value: userId }],
+};
+
+await store.delete({ filter: safeQuerySpec });
+```
+
+Now, if the attacker enters `123 OR 1=1`, the input will be treated as a literal string value to match, and not as part of the query structure.
+
+Please refer to the official documentation on [parameterized queries in Azure Cosmos DB for NoSQL](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries) for more usage examples and best practices.
+
 ## Usage example
 
 Below is an example that indexes documents from a file in Azure Cosmos DB for NoSQL, runs a vector search query, and finally uses a chain to answer a question in natural language

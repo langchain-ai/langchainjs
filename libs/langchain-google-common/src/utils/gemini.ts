@@ -31,7 +31,7 @@ import {
 import { StructuredToolParams } from "@langchain/core/tools";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import type {
+import {
   GoogleLLMResponse,
   GoogleAIModelParams,
   GeminiPartText,
@@ -51,10 +51,14 @@ import type {
   GeminiLogprobsResultCandidate,
   GeminiLogprobsTopCandidate,
   ModalityTokenCount,
-} from "../types.js";
-import { GoogleAISafetyError } from "./safety.js";
-import { MediaBlob } from "../experimental/utils/media_core.js";
-import {
+  GeminiUrlContextMetadata,
+  GoogleSpeechConfig,
+  GoogleSpeechConfigSimplified,
+  GoogleSpeechSimplifiedLanguage,
+  GoogleSpeechVoiceLanguage,
+  GoogleSpeechVoice,
+  GoogleSpeechSpeakerName,
+  GoogleSpeakerVoiceConfig,
   GeminiFunctionDeclaration,
   GeminiGenerationConfig,
   GeminiRequest,
@@ -64,6 +68,8 @@ import {
   GoogleAIToolType,
   GeminiSearchToolAttributes,
 } from "../types.js";
+import { GoogleAISafetyError } from "./safety.js";
+import { MediaBlob } from "../experimental/utils/media_core.js";
 import { schemaToGeminiParameters } from "./zod_to_gemini_parameters.js";
 
 export interface FunctionCall {
@@ -222,6 +228,145 @@ const extractMimeType = (
   return null;
 };
 
+export function normalizeSpeechConfig(
+  config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
+): GoogleSpeechConfig | undefined {
+  function isSpeechConfig(
+    config: GoogleSpeechConfig | GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechConfig {
+    return (
+      typeof config === "object" &&
+      (Object.hasOwn(config, "voiceConfig") ||
+        Object.hasOwn(config, "multiSpeakerVoiceConfig"))
+    );
+  }
+
+  function hasLanguage(
+    config: GoogleSpeechConfigSimplified
+  ): config is GoogleSpeechSimplifiedLanguage {
+    return typeof config === "object" && Object.hasOwn(config, "languageCode");
+  }
+
+  function hasVoice(
+    config: GoogleSpeechSimplifiedLanguage
+  ): config is GoogleSpeechVoiceLanguage {
+    return Object.hasOwn(config, "voice");
+  }
+
+  if (typeof config === "undefined") {
+    return undefined;
+  }
+
+  // If this is already a GoogleSpeechConfig, just return it
+  if (isSpeechConfig(config)) {
+    return config;
+  }
+
+  let languageCode: string | undefined;
+  let voice: GoogleSpeechVoice;
+  if (hasLanguage(config)) {
+    languageCode = config.languageCode;
+    voice = hasVoice(config) ? config.voice : config.voices;
+  } else {
+    languageCode = undefined;
+    voice = config;
+  }
+
+  let ret: GoogleSpeechConfig;
+
+  if (typeof voice === "string") {
+    // They just provided the prebuilt voice configuration name. Use it.
+    ret = {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: voice,
+        },
+      },
+    };
+  } else {
+    // This is multi-speaker, so we have speaker/name pairs
+    // If we have just one (why?), turn it into an array for the moment
+    const voices: GoogleSpeechSpeakerName[] = Array.isArray(voice)
+      ? voice
+      : [voice];
+    // Go through all the speaker/name pairs and turn this into the voice config array
+    const speakerVoiceConfigs: GoogleSpeakerVoiceConfig[] = voices.map(
+      (v: GoogleSpeechSpeakerName): GoogleSpeakerVoiceConfig => ({
+        speaker: v.speaker,
+        voiceConfig: {
+          prebuiltVoiceConfig: {
+            voiceName: v.name,
+          },
+        },
+      })
+    );
+    // Create the multi-speaker voice configuration
+    ret = {
+      multiSpeakerVoiceConfig: {
+        speakerVoiceConfigs,
+      },
+    };
+  }
+
+  if (languageCode) {
+    ret.languageCode = languageCode;
+  }
+
+  return ret;
+}
+
+// Compatibility layer for other well known content block types
+export function normalizeMessageContentComplex(
+  content: MessageContentComplex[]
+): MessageContentComplex[] {
+  return content.map((c) => {
+    // OpenAI completions `input_audio`
+    if (
+      c.type === "input_audio" &&
+      "input_audio" in c &&
+      typeof c.input_audio === "object"
+    ) {
+      const { format, data } = c.input_audio;
+      if (format === "wav") {
+        return {
+          type: "audio",
+          source_type: "base64",
+          mime_type: "audio/wav",
+          data,
+        };
+      }
+    }
+    // OpenAI completions `image_url`
+    if (
+      c.type === "image_url" &&
+      "image_url" in c &&
+      typeof c.image_url === "object"
+    ) {
+      const { url } = c.image_url;
+      return {
+        type: "image",
+        source_type: "url",
+        url,
+      };
+    }
+    // OpenAI completions `file`
+    if (
+      c.type === "file" &&
+      "file" in c &&
+      typeof c.file === "object" &&
+      "file_data" in c.file
+    ) {
+      const { file_data } = c.file;
+      return {
+        type: "file",
+        source_type: "base64",
+        data: file_data,
+      };
+    }
+    return c;
+  });
+}
+
 export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function messageContentText(
     content: MessageContentText
@@ -235,7 +380,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
-  function messageContentImageUrl(
+  function messageContentImageUrlData(
     content: MessageContentImageUrl
   ): GeminiPartInlineData | GeminiPartFileData {
     const url: string =
@@ -262,6 +407,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
+  function messageContentImageUrl(
+    content: MessageContentImageUrl
+  ): GeminiPartInlineData | GeminiPartFileData {
+    const ret = messageContentImageUrlData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
+  }
+
   async function blobToFileData(blob: MediaBlob): Promise<GeminiPartFileData> {
     return {
       fileData: {
@@ -277,7 +430,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return config?.mediaManager?.getMediaBlob(uri);
   }
 
-  async function messageContentMedia(
+  async function messageContentMediaData(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
@@ -306,6 +459,41 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     throw new Error(
       `Invalid media content: ${JSON.stringify(content, null, 1)}`
     );
+  }
+
+  function supplementVideoMetadata(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: MessageContentImageUrl | Record<string, any>,
+    ret: GeminiPartInlineData | GeminiPartFileData
+  ): GeminiPartInlineData | GeminiPartFileData {
+    // Add videoMetadata if defined
+    if ("videoMetadata" in content && typeof ret === "object") {
+      // eslint-disable-next-line no-param-reassign
+      ret.videoMetadata = content.videoMetadata;
+    }
+    return ret;
+  }
+
+  async function messageContentMedia(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
+  ): Promise<GeminiPartInlineData | GeminiPartFileData> {
+    const ret = await messageContentMediaData(content);
+    supplementVideoMetadata(content, ret);
+    return ret;
+  }
+
+  function messageContentReasoning(
+    content: MessageContentReasoning
+  ): GeminiPartText | null {
+    if (content?.reasoning && content?.reasoning.length > 0) {
+      return {
+        text: content.reasoning,
+        thought: true,
+      };
+    } else {
+      return null;
+    }
   }
 
   const standardContentBlockConverter: StandardContentBlockConverter<{
@@ -442,9 +630,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         break;
       case "media":
         return await messageContentMedia(content);
+      case "reasoning":
+        return messageContentReasoning(content as MessageContentReasoning);
       default:
         throw new Error(
-          `Unsupported type "${content.type}" received while converting message to message parts: ${content}`
+          `Unsupported type "${
+            content.type
+          }" received while converting message to message parts: ${JSON.stringify(
+            content
+          )}`
         );
     }
     throw new Error(
@@ -477,8 +671,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           ]
         : content;
 
+    // Normalize the content to use standard format
+    const normalizedContent = normalizeMessageContentComplex(messageContent);
+
     // Get all of the parts, even those that don't correctly resolve
-    const allParts = await messageContentComplexToParts(messageContent);
+    const allParts = await messageContentComplexToParts(normalizedContent);
 
     // Remove any invalid parts
     const parts: GeminiPart[] = allParts.reduce(
@@ -546,6 +743,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       toolParts = messageKwargsToParts(message.additional_kwargs);
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
+
+    const signatures: string[] =
+      (message?.additional_kwargs?.signatures as string[]) ?? [];
+    if (signatures.length === parts.length) {
+      for (let co = 0; co < signatures.length; co += 1) {
+        const signature = signatures[co];
+        if (signature && signature.length > 0) {
+          parts[co].thoughtSignature = signature;
+        }
+      }
+    }
+
     return [
       {
         role,
@@ -649,6 +858,20 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     }
   }
 
+  type MessageContentReasoning = {
+    type: "reasoning";
+    reasoning: string;
+  };
+
+  function thoughtPartToMessageContent(
+    part: GeminiPartText
+  ): MessageContentReasoning {
+    return {
+      type: "reasoning",
+      reasoning: part.text,
+    };
+  }
+
   function textPartToMessageContent(part: GeminiPartText): MessageContentText {
     return {
       type: "text",
@@ -656,13 +879,36 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
-  function inlineDataPartToMessageContent(
+  function inlineDataPartToMessageContentImage(
     part: GeminiPartInlineData
   ): MessageContentImageUrl {
     return {
       type: "image_url",
       image_url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`,
     };
+  }
+
+  function inlineDataPartToMessageContentMedia(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    return {
+      type: "media",
+      mimeType: part.inlineData.mimeType,
+      data: part.inlineData.data,
+    };
+  }
+
+  function inlineDataPartToMessageContent(
+    part: GeminiPartInlineData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): MessageContentImageUrl | Record<string, any> {
+    const mimeType = part?.inlineData?.mimeType ?? "";
+    if (mimeType.startsWith("image")) {
+      return inlineDataPartToMessageContentImage(part);
+    } else {
+      return inlineDataPartToMessageContentMedia(part);
+    }
   }
 
   function fileDataPartToMessageContent(
@@ -676,9 +922,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function partsToMessageContent(parts: GeminiPart[]): MessageContent {
     return parts
-      .map((part) => {
+      .map((part: GeminiPart): MessageContentComplex | null => {
         if (part === undefined || part === null) {
           return null;
+        } else if (part.thought) {
+          return thoughtPartToMessageContent(part as GeminiPartText);
         } else if ("text" in part) {
           return textPartToMessageContent(part);
         } else if ("inlineData" in part) {
@@ -859,6 +1107,22 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
+  function candidateToUrlContextMetadata(
+    candidate: GeminiResponseCandidate
+  ): GeminiUrlContextMetadata | undefined {
+    const retrieval =
+      candidate?.urlRetrievalMetadata?.urlRetrievalContexts ?? [];
+    const context = candidate?.urlContextMetadata?.urlMetadata ?? [];
+    const all = [...retrieval, ...context];
+    if (all.length === 0) {
+      return undefined;
+    } else {
+      return {
+        urlMetadata: all,
+      };
+    }
+  }
+
   function addModalityCounts(
     modalityTokenCounts: ModalityTokenCount[],
     details: InputTokenDetails | OutputTokenDetails
@@ -942,6 +1206,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       grounding_metadata: data.candidates[0]?.groundingMetadata,
       finish_reason,
       finish_message: data.candidates[0]?.finishMessage,
+      url_context_metadata: candidateToUrlContextMetadata(data.candidates[0]),
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
     };
@@ -1100,6 +1365,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         if (typeof item.message.content === "string") {
           // If this is a string, turn it into a text type
           ret.push({
+            type: "text",
             text: item.message.content,
           });
         } else {
@@ -1255,6 +1521,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return partsToBaseMessageChunkFields(parts);
   }
 
+  function partsToSignatures(parts: GeminiPart[]): string[] {
+    return parts.map((part: GeminiPart) => part?.thoughtSignature ?? "");
+  }
+
   function partsToBaseMessageChunkFields(
     parts: GeminiPart[]
   ): AIMessageChunkFields {
@@ -1264,6 +1534,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       tool_calls: [],
       invalid_tool_calls: [],
     };
+    fields.additional_kwargs = {};
 
     const rawTools = partsToToolsRaw(parts);
     if (rawTools.length > 0) {
@@ -1293,10 +1564,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           });
         }
       }
-      fields.additional_kwargs = {
-        tool_calls: tools,
-      };
+      fields.additional_kwargs.tool_calls = tools;
     }
+
+    fields.additional_kwargs.signatures = partsToSignatures(parts);
+
     return fields;
   }
 
@@ -1412,6 +1684,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       stopSequences: parameters.stopSequences,
       responseMimeType: parameters.responseMimeType,
       responseModalities: parameters.responseModalities,
+      speechConfig: normalizeSpeechConfig(parameters.speechConfig),
     };
 
     // Add the logprobs if explicitly set
@@ -1428,10 +1701,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // Add thinking configuration if explicitly set
     // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
     if (typeof parameters.maxReasoningTokens !== "undefined") {
+      const includeThoughts = parameters.maxReasoningTokens !== 0;
       ret.thinkingConfig = {
         thinkingBudget: parameters.maxReasoningTokens,
-        // TODO: Expose this configuration to the user once google fully supports it
-        includeThoughts: false,
+        includeThoughts,
       };
     }
 
@@ -1614,6 +1887,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if (parameters.cachedContent) {
       ret.cachedContent = parameters.cachedContent;
     }
+    if (parameters.labels && Object.keys(parameters.labels).length > 0) {
+      ret.labels = parameters.labels;
+    }
     return ret;
   }
 
@@ -1634,9 +1910,6 @@ export function validateGeminiParams(params: GoogleAIModelParams): void {
     throw new Error("`maxOutputTokens` must be a positive integer");
   }
   if (typeof params.maxReasoningTokens !== "undefined") {
-    if (params.maxReasoningTokens < 0) {
-      throw new Error("`maxReasoningTokens` must be non-negative integer");
-    }
     if (typeof params.maxOutputTokens !== "undefined") {
       if (params.maxReasoningTokens >= params.maxOutputTokens) {
         throw new Error(

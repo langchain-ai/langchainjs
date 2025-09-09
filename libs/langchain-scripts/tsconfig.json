@@ -10,7 +10,7 @@
       "DOM"
     ],
     "module": "NodeNext",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "declaration": true,
     "noImplicitReturns": true,

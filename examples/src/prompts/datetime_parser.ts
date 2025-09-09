@@ -14,7 +14,7 @@ const promptWithInstructions = await prompt.partial({
   format_instructions: parser.getFormatInstructions(),
 });
 
-const model = new ChatOpenAI({ temperature: 0 });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
 
 const chain = promptWithInstructions.pipe(model).pipe(parser);
 

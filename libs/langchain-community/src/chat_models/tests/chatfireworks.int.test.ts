@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { describe, test } from "@jest/globals";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {
@@ -102,7 +102,7 @@ describe.skip("ChatFireworks", () => {
         function: {
           name: "get_current_weather",
           description: "Get the current weather in a given location",
-          parameters: zodToJsonSchema(zodSchema),
+          parameters: toJsonSchema(zodSchema),
         },
       },
     ]);

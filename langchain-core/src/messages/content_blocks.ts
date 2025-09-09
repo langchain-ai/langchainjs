@@ -228,7 +228,7 @@ export function parseBase64DataUrl({
  */
 export function parseBase64DataUrl({
   dataUrl,
-  asTypedArray = false,
+  asTypedArray,
 }: {
   dataUrl: string;
   asTypedArray?: false;

@@ -412,6 +412,26 @@ Sha1.prototype.arrayBuffer = function () {
   return buffer;
 };
 
+let hasLoggedWarning = false;
+
+/**
+ * @deprecated Use `makeDefaultKeyEncoder()` to create a custom key encoder.
+ * This function will be removed in a future version.
+ */
 export const insecureHash = (message) => {
+  if (!hasLoggedWarning) {
+    console.warn(
+      [
+        `The default method for hashing keys is insecure and will be replaced in a future version,`,
+        `but hasn't been replaced yet as to not break existing caches. It's recommended that you use`,
+        `a more secure hashing algorithm to avoid cache poisoning.`,
+        ``,
+        `See this page for more information:`,
+        `|`,
+        `└> https://js.langchain.com/docs/troubleshooting/warnings/insecure-cache-algorithm`,
+      ].join("\n")
+    );
+    hasLoggedWarning = true;
+  }
   return new Sha1(true).update(message)["hex"]();
 };

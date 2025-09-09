@@ -16,7 +16,7 @@ import { CREATE_TOOL_DESCRIPTION } from "./descriptions.js";
  *     "https:
  *     "https:
  *   ],
- *   model: new ChatOpenAI({}),
+ *   model: new ChatOpenAI({ model: "gpt-4o-mini" }),
  * });
  * const createInput = `Create a meeting with John Doe next Friday at 4pm - adding to the agenda of it the result of 99 + 99`;
  * const createResult = await googleCalendarCreateTool.invoke({

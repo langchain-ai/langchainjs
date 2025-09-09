@@ -27,7 +27,7 @@ export interface BufferWindowMemoryInput extends BaseChatMemoryInput {
  * AI:`);
  *
  * const chain = new LLMChain({
- *   llm: new ChatOpenAI({ temperature: 0.9 }),
+ *   llm: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.9 }),
  *   prompt,
  *   memory: new BufferWindowMemory({ memoryKey: "chat_history", k: 1 }),
  * });

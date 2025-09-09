@@ -1,4 +1,4 @@
-import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
+import { Embeddings } from "@langchain/core/embeddings";
 import {
   AsyncCaller,
   AsyncCallerCallOptions,
@@ -9,9 +9,19 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { GoogleAIConnection } from "./connection.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
 import {
-  GoogleAIModelRequestParams,
+  BaseGoogleEmbeddingsOptions,
+  BaseGoogleEmbeddingsParams,
   GoogleConnectionParams,
-  GoogleResponse,
+  VertexEmbeddingsInstance,
+  GoogleEmbeddingsResponse,
+  VertexEmbeddingsParameters,
+  GoogleEmbeddingsRequest,
+  VertexEmbeddingsResponse,
+  AIStudioEmbeddingsResponse,
+  VertexEmbeddingsResponsePrediction,
+  AIStudioEmbeddingsRequest,
+  GeminiPartText,
+  VertexEmbeddingsRequest,
 } from "./types.js";
 
 class EmbeddingsConnection<
@@ -19,14 +29,14 @@ class EmbeddingsConnection<
   AuthOptions
 > extends GoogleAIConnection<
   CallOptions,
-  GoogleEmbeddingsInstance[],
+  VertexEmbeddingsInstance[],
   AuthOptions,
   GoogleEmbeddingsResponse
 > {
   convertSystemMessageToHumanContent: boolean | undefined;
 
   constructor(
-    fields: GoogleConnectionParams<AuthOptions> | undefined,
+    fields: BaseGoogleEmbeddingsParams<AuthOptions> | undefined,
     caller: AsyncCaller,
     client: GoogleAbstractedClient,
     streaming: boolean
@@ -34,8 +44,25 @@ class EmbeddingsConnection<
     super(fields, caller, client, streaming);
   }
 
-  async buildUrlMethod(): Promise<string> {
+  buildUrlMethodAiStudio(): string {
+    return "embedContent";
+  }
+
+  buildUrlMethodVertex(): string {
     return "predict";
+  }
+
+  async buildUrlMethod(): Promise<string> {
+    switch (this.platform) {
+      case "gcp":
+        return this.buildUrlMethodVertex();
+      case "gai":
+        return this.buildUrlMethodAiStudio();
+      default:
+        throw new Error(
+          `Unknown platform when building method: ${this.platform}`
+        );
+    }
   }
 
   get modelPublisher(): string {
@@ -43,59 +70,61 @@ class EmbeddingsConnection<
     return "google";
   }
 
-  async formatData(
-    input: GoogleEmbeddingsInstance[],
-    parameters: GoogleAIModelRequestParams
-  ): Promise<unknown> {
+  formatDataAiStudio(
+    input: VertexEmbeddingsInstance[],
+    parameters: VertexEmbeddingsParameters
+  ): AIStudioEmbeddingsRequest {
+    const parts: GeminiPartText[] = input.map(
+      (instance: VertexEmbeddingsInstance) => ({
+        text: instance.content,
+      })
+    );
+    const content = {
+      parts,
+    };
+    const outputDimensionality = parameters?.outputDimensionality;
+
+    const ret: AIStudioEmbeddingsRequest = {
+      content,
+      outputDimensionality,
+    };
+
+    // Remove undefined attributes
+    let key: keyof AIStudioEmbeddingsRequest;
+    for (key in ret) {
+      if (ret[key] === undefined) {
+        delete ret[key];
+      }
+    }
+
+    return ret;
+  }
+
+  formatDataVertex(
+    input: VertexEmbeddingsInstance[],
+    parameters: VertexEmbeddingsParameters
+  ): VertexEmbeddingsRequest {
     return {
       instances: input,
       parameters,
     };
   }
-}
 
-/**
- * Defines the parameters required to initialize a
- * GoogleEmbeddings instance. It extends EmbeddingsParams and
- * GoogleConnectionParams.
- */
-export interface BaseGoogleEmbeddingsParams<AuthOptions>
-  extends EmbeddingsParams,
-    GoogleConnectionParams<AuthOptions> {
-  model: string;
-}
-
-/**
- * Defines additional options specific to the
- * GoogleEmbeddingsInstance. It extends AsyncCallerCallOptions.
- */
-export interface BaseGoogleEmbeddingsOptions extends AsyncCallerCallOptions {}
-
-/**
- * Represents an instance for generating embeddings using the Google
- * Vertex AI API. It contains the content to be embedded.
- */
-export interface GoogleEmbeddingsInstance {
-  content: string;
-}
-
-/**
- * Defines the structure of the embeddings results returned by the Google
- * Vertex AI API. It extends GoogleBasePrediction and contains the
- * embeddings and their statistics.
- */
-export interface GoogleEmbeddingsResponse extends GoogleResponse {
-  data: {
-    predictions: {
-      embeddings: {
-        statistics: {
-          token_count: number;
-          truncated: boolean;
-        };
-        values: number[];
-      };
-    }[];
-  };
+  async formatData(
+    input: VertexEmbeddingsInstance[],
+    parameters: VertexEmbeddingsParameters
+  ): Promise<GoogleEmbeddingsRequest> {
+    switch (this.platform) {
+      case "gcp":
+        return this.formatDataVertex(input, parameters);
+      case "gai":
+        return this.formatDataAiStudio(input, parameters);
+      default:
+        throw new Error(
+          `Unknown platform to format embeddings ${this.platform}`
+        );
+    }
+  }
 }
 
 /**
@@ -108,6 +137,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
 {
   model: string;
 
+  dimensions?: number;
+
   private connection: EmbeddingsConnection<
     BaseGoogleEmbeddingsOptions,
     AuthOptions
@@ -117,6 +148,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     super(fields);
 
     this.model = fields.model;
+    this.dimensions = fields.dimensions ?? fields.outputDimensionality;
+
     this.connection = new EmbeddingsConnection(
       { ...fields, ...this },
       this.caller,
@@ -150,6 +183,53 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
     }
   }
 
+  buildParameters(): VertexEmbeddingsParameters {
+    const ret: VertexEmbeddingsParameters = {
+      outputDimensionality: this.dimensions,
+    };
+
+    // Remove undefined attributes
+    let key: keyof VertexEmbeddingsParameters;
+    for (key in ret) {
+      if (ret[key] === undefined) {
+        delete ret[key];
+      }
+    }
+
+    return ret;
+  }
+
+  vertexResponseToValues(response: VertexEmbeddingsResponse): number[][] {
+    const predictions: VertexEmbeddingsResponsePrediction[] =
+      response?.data?.predictions ?? [];
+    return predictions.map(
+      (prediction: VertexEmbeddingsResponsePrediction): number[] =>
+        prediction.embeddings.values
+    );
+  }
+
+  aiStudioResponseToValues(response: AIStudioEmbeddingsResponse): number[][] {
+    const value: number[] = response?.data?.embedding?.values ?? [];
+    return [value];
+  }
+
+  responseToValues(response: GoogleEmbeddingsResponse): number[][] {
+    switch (this.connection.platform) {
+      case "gcp":
+        return this.vertexResponseToValues(
+          response as VertexEmbeddingsResponse
+        );
+      case "gai":
+        return this.aiStudioResponseToValues(
+          response as AIStudioEmbeddingsResponse
+        );
+      default:
+        throw new Error(
+          `Unknown response platform: ${this.connection.platform}`
+        );
+    }
+  }
+
   /**
    * Takes an array of documents as input and returns a promise that
    * resolves to a 2D array of embeddings for each document. It splits the
@@ -159,13 +239,18 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
    * @returns A promise that resolves to a 2D array of embeddings for each document.
    */
   async embedDocuments(documents: string[]): Promise<number[][]> {
-    const instanceChunks: GoogleEmbeddingsInstance[][] = chunkArray(
+    // Vertex "text-" models could do up 5 documents at once,
+    // but the "gemini-embedding-001" can only do 1.
+    // AI Studio can only do a chunk size of 1.
+    // TODO: Make this configurable
+    const chunkSize = 1;
+    const instanceChunks: VertexEmbeddingsInstance[][] = chunkArray(
       documents.map((document) => ({
         content: document,
       })),
-      5
-    ); // Vertex AI accepts max 5 instances per prediction
-    const parameters = {};
+      chunkSize
+    );
+    const parameters: VertexEmbeddingsParameters = this.buildParameters();
     const options = {};
     const responses = await Promise.all(
       instanceChunks.map((instances) =>
@@ -173,15 +258,8 @@ export abstract class BaseGoogleEmbeddings<AuthOptions>
       )
     );
     const result: number[][] =
-      responses
-        ?.map(
-          (response) =>
-            response?.data?.predictions?.map(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (result: any) => result.embeddings?.values
-            ) ?? []
-        )
-        .flat() ?? [];
+      responses?.map((response) => this.responseToValues(response)).flat() ??
+      [];
     return result;
   }
 

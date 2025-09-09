@@ -6,6 +6,7 @@ import {
   basePull,
   generateModelImportMap,
   generateOptionalImportMap,
+  bindOutputSchema,
 } from "./base.js";
 
 export { basePush as push };
@@ -44,7 +45,7 @@ export async function pull<T extends Runnable>(
       generateOptionalImportMap(options?.modelClass),
       generateModelImportMap(options?.modelClass)
     );
-    return loadedPrompt;
+    return bindOutputSchema(loadedPrompt);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (options?.includeModel) {

@@ -12,7 +12,7 @@ test("createStructuredChatAgent works", async () => {
     "hwchase17/structured-chat-agent"
   );
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo-1106",
+    model: "gpt-3.5-turbo-1106",
     temperature: 0,
   });
   const agent = await createStructuredChatAgent({

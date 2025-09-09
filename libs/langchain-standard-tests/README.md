@@ -3,7 +3,7 @@
 This package contains the base standard tests for LangChain.js. It includes unit, and integration test classes.
 This package is not intended to be used outside of the LangChain.js project, and thus it is not published to npm.
 
-At the moment, we only have support for standard tets for chat models.
+At the moment, we only have support for standard tests for chat models.
 
 ## Usage
 
@@ -11,6 +11,7 @@ Each LangChain.js integration should contain both unit and integration standard 
 The package should have `@langchain/standard-tests` as a dev workspace dependency like so:
 
 `package.json`:
+
 ```json
 {
   "devDependencies": {
@@ -27,6 +28,7 @@ To use the standard tests, you could create two files:
 Your unit test file should look like this:
 
 `chat_models.standard.test.ts`:
+
 ```typescript
 /* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
@@ -46,7 +48,7 @@ class MyChatModelStandardUnitTests extends ChatModelUnitTests<
       constructorArgs: {}, // Any additional constructor args
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`
-    // which we call after instantiating the model will work. 
+    // which we call after instantiating the model will work.
     // (constructor will throw if API key is not set)
     process.env.CHAT_MODEL_API_KEY = "test";
   }
@@ -69,11 +71,11 @@ test("MyChatModelStandardUnitTests", () => {
 });
 ```
 
-To use the standard tests, extend the `ChatModelUnitTests` class, passing in your chat model's call options and message chunk types. Super the constructor with your chat model class, any additional constructor args, and set `chatModelHasToolCalling` and `chatModelHasStructuredOutput` flags if supported.
+To use the standard tests, extend the `ChatModelUnitTests` class, passing in your chat model's call options and message chunk types. Super the constructor with your chat model class, any additional constructor args, and set the `chatModelHasToolCalling` and `chatModelHasStructuredOutput` flags if supported.
 
 Set the model env var in the constructor directly to `process.env` for the tests to run properly. You can optionally override test methods to replace or add code before/after the test runs.
 
-Run all tests by calling `.runTests()`, which returns `true` if all tests pass, `false` otherwise. Tests are called in `try`/`catch` blocks, so failing tests are caught and marked as failed, but the rest still run.
+Run all tests by calling `.runTests()`, which returns `true` if all tests pass, `false` otherwise. Tests are called in `try`/`catch` blocks so that failing tests are caught and marked as failed, but the rest still run.
 
 For integration tests, extend `ChatModelIntegrationTests` instead. Integration tests have an optional arg for all methods (except `withStructuredOutput`) to pass in "invoke" time call options. For example, in the OpenAI integration test:
 

@@ -249,6 +249,7 @@ export class AnalyticDBVectorStore extends VectorStore {
             )
           );
 
+          // @ts-expect-error - Overload issues & ReadableStream issue
           await pipeline(rs, ws);
           // Clear the chunksTableData list for the next batch
           chunksTableData.length = 0;
@@ -277,6 +278,8 @@ export class AnalyticDBVectorStore extends VectorStore {
             `COPY ${this.collectionName}(id, embedding, document, metadata) FROM STDIN`
           )
         );
+
+        // @ts-expect-error - Overload issues & ReadableStream issue
         await pipeline(rs, ws);
       }
     } finally {

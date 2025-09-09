@@ -20,6 +20,8 @@ mkdir -p ./libs/langchain-openai/
 mkdir -p ./libs/langchain-anthropic/
 mkdir -p ./libs/langchain-community/
 mkdir -p ./libs/langchain-cohere/
+mkdir -p ./libs/langchain-ollama/
+mkdir -p ./libs/langchain-google-gauth/
 mkdir -p ./libs/langchain/
 
 cp -r ../langchain-core/!(node_modules) ./libs/langchain-core
@@ -27,6 +29,8 @@ cp -r ../langchain-openai/!(node_modules) ./libs/langchain-openai
 cp -r ../langchain-anthropic/!(node_modules) ./libs/langchain-anthropic
 cp -r ../langchain-community/!(node_modules) ./libs/langchain-community
 cp -r ../langchain-cohere/!(node_modules) ./libs/langchain-cohere
+cp -r ../langchain-ollama/!(node_modules) ./libs/langchain-ollama
+cp -r ../langchain-google-gauth/!(node_modules) ./libs/langchain-google-gauth
 cp -r ../langchain/!(node_modules) ./libs/langchain
 
 # copy cache

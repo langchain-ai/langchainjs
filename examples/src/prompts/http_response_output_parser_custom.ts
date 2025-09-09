@@ -8,7 +8,7 @@ const handler = async () => {
     outputParser: new JsonOutputFunctionsParser({ diff: true }),
   });
 
-  const model = new ChatOpenAI({ temperature: 0 })
+  const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 })
     .bindTools([
       {
         name: "get_current_weather",

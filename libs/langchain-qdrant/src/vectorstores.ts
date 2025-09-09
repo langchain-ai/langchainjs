@@ -8,7 +8,6 @@ import {
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 
 const CONTENT_KEY = "content";
 const METADATA_KEY = "metadata";
@@ -234,13 +233,15 @@ export class QdrantVectorStore extends VectorStore {
 
     await this.ensureCollection();
 
-    const results = await this.client.search(this.collectionName, {
-      vector: query,
-      limit: k,
-      filter,
-      with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
-      with_vector: false,
-    });
+    const results = (
+      await this.client.query(this.collectionName, {
+        query,
+        limit: k,
+        filter,
+        with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
+        with_vector: false,
+      })
+    ).points;
 
     const result: [Document, number][] = (
       results as QdrantSearchResponse[]
@@ -283,26 +284,23 @@ export class QdrantVectorStore extends VectorStore {
 
     await this.ensureCollection();
 
-    const results = await this.client.search(this.collectionName, {
-      vector: queryEmbedding,
-      limit: options?.fetchK ?? 20,
-      filter: options?.filter,
-      with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
-      with_vector: true,
-    });
+    const results = (
+      await this.client.query(this.collectionName, {
+        query: {
+          nearest: queryEmbedding,
+          mmr: {
+            diversity: options.lambda ?? null,
+            candidates_limit: options?.fetchK ?? 20,
+          },
+        },
+        limit: options.k,
+        filter: options?.filter,
+        with_payload: [this.metadataPayloadKey, this.contentPayloadKey],
+        with_vector: true,
+      })
+    ).points;
 
-    const embeddingList = results.map((res) => res.vector) as number[][];
-
-    const mmrIndexes = maximalMarginalRelevance(
-      queryEmbedding,
-      embeddingList,
-      options?.lambda,
-      options.k
-    );
-
-    const topMmrMatches = mmrIndexes.map((idx) => results[idx]);
-
-    const result = (topMmrMatches as QdrantSearchResponse[]).map(
+    const result = (results as QdrantSearchResponse[]).map(
       (res) =>
         new Document({
           id: res.id as string,

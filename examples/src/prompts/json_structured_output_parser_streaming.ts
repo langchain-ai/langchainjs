@@ -12,6 +12,7 @@ const prompt = ChatPromptTemplate.fromTemplate(
   `tell me a long joke about {foo}`
 );
 const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
   temperature: 0,
 })
   .bindTools([

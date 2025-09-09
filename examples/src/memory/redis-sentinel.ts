@@ -21,7 +21,7 @@ const memory = new BufferMemory({
   }),
 });
 
-const model = new ChatOpenAI({ temperature: 0.5 });
+const model = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.5 });
 
 const chain = new ConversationChain({ llm: model, memory });
 

@@ -1,18 +1,14 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: 'node',
-    include: ['**/__tests__/**/*.test.ts'],
+    environment: "node",
+    include: ["**/__tests__/**/*.test.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts'],
-    },
-    setupFiles: ['./vitest.setup.ts'],
-    transformMode: {
-      web: [/\.[jt]sx?$/],
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"],
     },
   },
 });

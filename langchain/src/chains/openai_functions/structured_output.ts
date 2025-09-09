@@ -1,7 +1,8 @@
-import { z } from "zod";
-import { zodToJsonSchema, JsonSchema7Type } from "zod-to-json-schema";
-
-import { Validator } from "@langchain/core/utils/json_schema";
+import {
+  type JsonSchema7Type,
+  Validator,
+  toJsonSchema,
+} from "@langchain/core/utils/json_schema";
 import { ChatOpenAI } from "@langchain/openai";
 import { BasePromptTemplate } from "@langchain/core/prompts";
 import {
@@ -11,6 +12,11 @@ import {
 import { ChatGeneration } from "@langchain/core/outputs";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
+import {
+  InferInteropZodOutput,
+  interopSafeParseAsync,
+  InteropZodObject,
+} from "@langchain/core/utils/types";
 import { LLMChain, type LLMChainInput } from "../llm_chain.js";
 import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js";
 
@@ -21,7 +27,7 @@ import { OutputFunctionsParser } from "../../output_parsers/openai_functions.js"
  * output.
  */
 export type StructuredOutputChainInput<
-  T extends z.AnyZodObject = z.AnyZodObject
+  T extends InteropZodObject = InteropZodObject
 > = Omit<LLMChainInput, "outputParser" | "llm"> & {
   outputSchema?: JsonSchema7Type;
   prompt: BasePromptTemplate;
@@ -30,7 +36,7 @@ export type StructuredOutputChainInput<
 };
 
 export type FunctionCallStructuredOutputParserFields<
-  T extends z.AnyZodObject = z.AnyZodObject
+  T extends InteropZodObject = InteropZodObject
 > = {
   jsonSchema?: JsonSchema7Type;
   zodSchema?: T;
@@ -50,8 +56,8 @@ function isJsonSchema7Type(
  * functionality for parsing the structured output based on a JSON schema.
  */
 export class FunctionCallStructuredOutputParser<
-  T extends z.AnyZodObject
-> extends BaseLLMOutputParser<z.infer<T>> {
+  T extends InteropZodObject
+> extends BaseLLMOutputParser<InferInteropZodOutput<T>> {
   lc_namespace = ["langchain", "chains", "openai_functions"];
 
   protected functionOutputParser = new OutputFunctionsParser();
@@ -113,13 +119,16 @@ export class FunctionCallStructuredOutputParser<
       return value;
     });
     if (this.zodSchema) {
-      const zodParsedResult = this.zodSchema.safeParse(parsedResult);
+      const zodParsedResult = await interopSafeParseAsync(
+        this.zodSchema,
+        parsedResult
+      );
       if (zodParsedResult.success) {
         return zodParsedResult.data;
       } else {
         throw new OutputParserException(
           `Failed to parse. Text: "${initialResult}". Error: ${JSON.stringify(
-            zodParsedResult.error.errors
+            zodParsedResult.error.issues
           )}`,
           initialResult
         );
@@ -152,11 +161,11 @@ export class FunctionCallStructuredOutputParser<
  * @returns OpenAPIChain
  */
 export function createStructuredOutputChain<
-  T extends z.AnyZodObject = z.AnyZodObject
+  T extends InteropZodObject = InteropZodObject
 >(input: StructuredOutputChainInput<T>) {
   const {
     outputSchema,
-    llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo-0613", temperature: 0 }),
+    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613", temperature: 0 }),
     outputKey = "output",
     llmKwargs = {},
     zodSchema,
@@ -191,13 +200,13 @@ export function createStructuredOutputChain<
 }
 
 /** @deprecated Use {@link https://api.js.langchain.com/functions/langchain.chains_openai_functions.createStructuredOutputRunnable.html | createStructuredOutputRunnable} instead */
-export function createStructuredOutputChainFromZod<T extends z.AnyZodObject>(
+export function createStructuredOutputChainFromZod<T extends InteropZodObject>(
   zodSchema: T,
   input: Omit<StructuredOutputChainInput<T>, "outputSchema">
 ) {
   return createStructuredOutputChain<T>({
     ...input,
-    outputSchema: zodToJsonSchema(zodSchema),
+    outputSchema: toJsonSchema(zodSchema),
     zodSchema,
   });
 }
