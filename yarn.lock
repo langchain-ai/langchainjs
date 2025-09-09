@@ -9128,7 +9128,6 @@ __metadata:
     discord.js: ^14.14.1
     dotenv: ^16.0.3
     dpdm: ^3.14.0
-    dria: ^0.0.3
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
     eslint: ^8.33.0
@@ -9280,7 +9279,6 @@ __metadata:
     crypto-js: ^4.2.0
     d3-dsv: ^2.0.0
     discord.js: ^14.14.1
-    dria: ^0.0.3
     duck-duck-scrape: ^2.2.5
     epub2: ^3.0.1
     fast-xml-parser: "*"
@@ -9483,8 +9481,6 @@ __metadata:
     d3-dsv:
       optional: true
     discord.js:
-      optional: true
-    dria:
       optional: true
     duck-duck-scrape:
       optional: true
@@ -23210,16 +23206,6 @@ __metadata:
   bin:
     dpdm: lib/bin/dpdm.js
   checksum: 86870216326db1b5d714d8297271e7cbafb0bb4e4e60b7c8eeffd22cab8cf8a1464b66db5ce62a4ba9ddb4efdba25b7903b8932b5aeb97df0e89374651c77c11
-  languageName: node
-  linkType: hard
-
-"dria@npm:^0.0.3":
-  version: 0.0.3
-  resolution: "dria@npm:0.0.3"
-  dependencies:
-    axios: ^1.6.5
-    zod: ^3.22.4
-  checksum: 69d66479cb015e87425fba7f1741e4d895b4f43844e6b8897d3e7fe38e579097f2c4673d534141419d15a72866adf4db12acb9b59b42681ef2c4ee2d301b9267
   languageName: node
   linkType: hard
 
