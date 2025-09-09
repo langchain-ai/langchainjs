@@ -4,6 +4,7 @@ import {
   BaseMessageChunk,
   mergeContent,
   _mergeDicts,
+  _mergeLists,
   BaseMessageFields,
 } from "./base.js";
 import { getTranslator } from "./block_translators/index.js";
@@ -108,7 +109,8 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         // Add content block tool calls that aren't in the constructor tool calls
         const missingToolCalls = initParams.contentBlocks
           .filter<ContentBlock.Tools.ToolCall>(
-            (block) => block.type === "tool_call"
+            (block): block is ContentBlock.Tools.ToolCall =>
+              block.type === "tool_call"
           )
           .filter(
             (block) =>
@@ -415,12 +417,11 @@ export class AIMessageChunk<
       this.tool_call_chunks !== undefined ||
       chunk.tool_call_chunks !== undefined
     ) {
-      // For tool call chunks, we want to concatenate the arrays instead of merging
-      // items with the same index, since each tool call chunk should remain separate
-      const leftChunks = this.tool_call_chunks ?? [];
-      const rightChunks = chunk.tool_call_chunks ?? [];
-      const rawToolCalls = [...leftChunks, ...rightChunks];
-      if (rawToolCalls.length > 0) {
+      const rawToolCalls = _mergeLists(
+        this.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[],
+        chunk.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[]
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls;
       }
     }
