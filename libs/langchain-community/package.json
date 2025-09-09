@@ -67,7 +67,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/ai": "1.0.12",
     "@cloudflare/workers-types": "^4.20230922.0",
-    "@datastax/astra-db-ts": "^1.0.1",
+    "@datastax/astra-db-ts": "^1.5.0",
     "@elastic/elasticsearch": "^8.4.0",
     "@faker-js/faker": "8.4.1",
     "@getmetal/metal-sdk": "^4.0.0",
