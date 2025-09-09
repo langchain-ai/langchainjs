@@ -25,7 +25,7 @@
     "move:artifacts": "rimraf dist && mkdir -p dist && mv dist_build/* dist/",
     "build:generated": "node bin/build.js --create-entrypoints --pre --tree-shaking",
     "build:turbo": "pnpm --filter @langchain/scripts build",
-    "lint:eslint": "eslint --cache  src/",
+    "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",

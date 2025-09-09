@@ -23,7 +23,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\" \"examples/**/*.ts\"",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
-    "lint:eslint": "eslint --cache  src/ examples/",
+    "lint:eslint": "eslint --cache src/ examples/",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
