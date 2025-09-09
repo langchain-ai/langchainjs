@@ -26,7 +26,8 @@
     "esbuild": "^0.17.18",
     "langchain": "workspace:*",
     "typeorm": "^0.3.25",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "prettier": "^2.8.3"
