@@ -1,7 +1,7 @@
 import { expect, describe, it, vi } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { createAgent, createMiddleware } from "../index.js";
 import {

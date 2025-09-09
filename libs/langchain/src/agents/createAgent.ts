@@ -24,7 +24,7 @@ import { ReactAgent } from "./ReactAgent.js";
  * ```ts
  * import { ChatOpenAI } from "@langchain/openai";
  * import { createAgent, tool } from "langchain";
- * import { z } from "zod";
+ * import { z } from "zod/v3";
  *
  * const model = new ChatOpenAI({
  *   model: "gpt-4o",

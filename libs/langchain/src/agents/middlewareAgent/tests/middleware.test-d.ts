@@ -1,5 +1,5 @@
 import { describe, it, expectTypeOf } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 
 import { createAgent, createMiddleware } from "../index.js";

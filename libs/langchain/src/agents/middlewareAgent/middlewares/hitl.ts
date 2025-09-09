@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { v4 as uuid } from "uuid";
 import { AIMessage, ToolMessage, isAIMessage } from "@langchain/core/messages";
 import { interrupt } from "@langchain/langgraph";

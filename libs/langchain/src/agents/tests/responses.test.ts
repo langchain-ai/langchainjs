@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { createAgent, toolStrategy } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";

@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import z from "zod";
+import z from "zod/v3";
 
 import { createAgent } from "../index.js";
 

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { z } from "zod";
+import { z } from "zod/v3";
 import type {
   AgentMiddleware,
   Runtime,

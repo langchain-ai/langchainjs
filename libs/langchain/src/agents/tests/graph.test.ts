@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
 import type { InteropZodType } from "@langchain/core/utils/types";
 

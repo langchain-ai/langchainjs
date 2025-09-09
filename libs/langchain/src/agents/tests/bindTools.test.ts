@@ -7,7 +7,7 @@ import {
   RunnableLambda,
 } from "@langchain/core/runnables";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import type { AIMessageChunk } from "@langchain/core/messages";
 import type { ChatResult } from "@langchain/core/outputs";
