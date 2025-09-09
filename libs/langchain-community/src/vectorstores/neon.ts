@@ -307,7 +307,6 @@ export class NeonPostgres extends VectorStore {
 
     await sql(`CREATE EXTENSION IF NOT EXISTS vector;`);
     await sql(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
-    await sql(`CREATE SCHEMA IF NOT EXISTS ${this.schemaName};`);
 
     await sql(`
       CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
