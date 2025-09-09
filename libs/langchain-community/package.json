@@ -152,7 +152,6 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
-    "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "eslint": "^8.33.0",
@@ -298,7 +297,6 @@
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
-    "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "faiss-node": "*",
@@ -576,9 +574,6 @@
       "optional": true
     },
     "discord.js": {
-      "optional": true
-    },
-    "dria": {
       "optional": true
     },
     "duck-duck-scrape": {
@@ -2587,17 +2582,6 @@
         "default": "./dist/retrievers/databerry.cjs"
       },
       "input": "./src/retrievers/databerry.ts"
-    },
-    "./retrievers/dria": {
-      "import": {
-        "types": "./dist/retrievers/dria.d.ts",
-        "default": "./dist/retrievers/dria.js"
-      },
-      "require": {
-        "types": "./dist/retrievers/dria.d.cts",
-        "default": "./dist/retrievers/dria.cjs"
-      },
-      "input": "./src/retrievers/dria.ts"
     },
     "./retrievers/metal": {
       "import": {
