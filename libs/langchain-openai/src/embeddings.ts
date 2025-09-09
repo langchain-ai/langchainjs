@@ -50,6 +50,11 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
    * See: https://github.com/openai/openai-python/issues/418#issuecomment-1525939500
    */
   stripNewLines?: boolean;
+
+  /**
+   * The format to return the embeddings in. Can be either 'float' or 'base64'.
+   */
+  encodingFormat?: "float" | "base64";
 }
 
 /**
@@ -87,6 +92,11 @@ export class OpenAIEmbeddings
    * Only supported in `text-embedding-3` and later models.
    */
   dimensions?: number;
+
+  /**
+   * The format to return the embeddings in. Can be either 'float' or 'base64'.
+   */
+  encodingFormat?: "float" | "base64";
 
   timeout?: number;
 
@@ -130,6 +140,7 @@ export class OpenAIEmbeddings
       fieldsWithDefaults?.stripNewLines ?? this.stripNewLines;
     this.timeout = fieldsWithDefaults?.timeout;
     this.dimensions = fieldsWithDefaults?.dimensions;
+    this.encodingFormat = fieldsWithDefaults?.encodingFormat;
 
     this.clientConfig = {
       apiKey,
@@ -160,6 +171,9 @@ export class OpenAIEmbeddings
       if (this.dimensions) {
         params.dimensions = this.dimensions;
       }
+      if (this.encodingFormat) {
+        params.encoding_format = this.encodingFormat;
+      }
       return this.embeddingWithRetry(params);
     });
     const batchResponses = await Promise.all(batchRequests);
@@ -188,6 +202,9 @@ export class OpenAIEmbeddings
     };
     if (this.dimensions) {
       params.dimensions = this.dimensions;
+    }
+    if (this.encodingFormat) {
+      params.encoding_format = this.encodingFormat;
     }
     const { data } = await this.embeddingWithRetry(params);
     return data[0].embedding;
