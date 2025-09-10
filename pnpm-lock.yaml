@@ -650,6 +650,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
