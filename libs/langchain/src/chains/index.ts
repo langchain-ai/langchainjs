@@ -72,7 +72,6 @@ export type {
   SerializedVectorDBQAChain,
   SerializedRefineDocumentsChain,
 } from "./serde.js";
-export { OpenAIModerationChain } from "./openai_moderation.js";
 export {
   MultiRouteChain,
   type MultiRouteChainInput,

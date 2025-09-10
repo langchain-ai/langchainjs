@@ -1,6 +1,8 @@
 import { loadEvaluator } from "langchain/evaluation";
+import { ChatOpenAI } from "@langchain/openai";
 
 const evaluator = await loadEvaluator("labeled_criteria", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   criteria: "correctness",
 });
 

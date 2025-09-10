@@ -45,36 +45,6 @@ export const extraImportMapEntries: Record<
 > = {
   langchain: [
     {
-      modules: ["ChatOpenAI"],
-      alias: ["chat_models", "openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["AzureChatOpenAI"],
-      alias: ["chat_models", "azure_openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["OpenAI"],
-      alias: ["llms", "openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["AzureOpenAI"],
-      alias: ["llms", "azure_openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["OpenAIEmbeddings"],
-      alias: ["embeddings", "openai"],
-      path: "@langchain/openai",
-    },
-    {
-      modules: ["AzureOpenAIEmbeddings"],
-      alias: ["embeddings", "azure_openai"],
-      path: "@langchain/openai",
-    },
-    {
       modules: ["PromptTemplate"],
       alias: ["prompts", "prompt"],
       path: "@langchain/core/prompts",

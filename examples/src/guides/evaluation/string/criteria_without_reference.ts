@@ -1,6 +1,10 @@
 import { loadEvaluator } from "langchain/evaluation";
+import { ChatOpenAI } from "@langchain/openai";
 
-const evaluator = await loadEvaluator("criteria", { criteria: "conciseness" });
+const evaluator = await loadEvaluator("criteria", {
+  criteria: "conciseness",
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+});
 
 const res = await evaluator.evaluateStrings({
   input: "What's 2+2?",
