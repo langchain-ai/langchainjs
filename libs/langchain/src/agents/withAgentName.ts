@@ -1,6 +1,11 @@
 import { BaseMessage, BaseMessageLike } from "@langchain/core/messages";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
-import { RunnableLambda, RunnableSequence } from "@langchain/core/runnables";
+import {
+  Runnable,
+  RunnableLambda,
+  RunnableSequence,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 
 import {
   AgentNameMode,
@@ -23,7 +28,9 @@ import {
  *     Example: "How can I help you" -> "<name>agent_name</name><content>How can I help you?</content>".
  */
 export function withAgentName(
-  model: LanguageModelLike,
+  model:
+    | LanguageModelLike
+    | Runnable<unknown, unknown, RunnableConfig<Record<string, unknown>>>,
   agentNameMode: AgentNameMode
 ): LanguageModelLike {
   let processInputMessage: (message: BaseMessageLike) => BaseMessageLike;
