@@ -569,7 +569,7 @@ export type CreateAgentParams<
   responseFormat?: ResponseFormatType;
 
   /**
-   * Middlewares to run during agent execution.
+   * Middleware instances to run during agent execution.
    * Each middleware can define its own state schema and hook into the agent lifecycle.
    */
   middleware?: readonly AgentMiddleware<any, any, any>[];
@@ -637,19 +637,19 @@ export type InferContextInput<
  */
 export type InferAgentConfig<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = IsAllOptional<
-  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddlewares>
+  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddleware>
 > extends true
   ?
       | LangGraphRunnableConfig<{
           context?: InferContextInput<ContextSchema> &
-            InferMiddlewareContextInputs<TMiddlewares>;
+            InferMiddlewareContextInputs<TMiddleware>;
         }>
       | undefined
   : LangGraphRunnableConfig<{
       context: InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddlewares>;
+        InferMiddlewareContextInputs<TMiddleware>;
     }>;
 
 export type InternalAgentState<

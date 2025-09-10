@@ -75,7 +75,7 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  prepareModelRequestHookMiddlewares?: [
+  prepareModelRequestHookMiddleware?: [
     AgentMiddleware<any, any, any>,
     () => any
   ][];
@@ -526,8 +526,8 @@ export class AgentNode<
     config: LangGraphRunnableConfig
   ): Promise<ModelRequest | undefined> {
     if (
-      !this.#options.prepareModelRequestHookMiddlewares ||
-      this.#options.prepareModelRequestHookMiddlewares.length === 0
+      !this.#options.prepareModelRequestHookMiddleware ||
+      this.#options.prepareModelRequestHookMiddleware.length === 0
     ) {
       return undefined;
     }
@@ -549,8 +549,8 @@ export class AgentNode<
     };
 
     // Execute prepareModelRequest hooks from all middleware
-    const middleware = this.#options.prepareModelRequestHookMiddlewares;
-    for (const [middleware, getMiddlewareState] of middleware) {
+    const middlewareList = this.#options.prepareModelRequestHookMiddleware;
+    for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
       const context = {
         ...(middleware.contextSchema?.parse({}) || {}),

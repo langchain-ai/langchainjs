@@ -18,12 +18,12 @@ import type { AgentMiddleware, ToolCall, ToolResult } from "../types.js";
  * users cannot provide them when invoking the agent.
  */
 export function initializeMiddlewareStates(
-  middleware: readonly AgentMiddleware<any, any, any>[],
+  middlewareList: readonly AgentMiddleware<any, any, any>[],
   state: unknown
 ): Record<string, any> {
   const middlewareStates: Record<string, any> = {};
 
-  for (const middleware of middleware) {
+  for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
       // Create a modified schema where private properties are optional
       const { shape } = middleware.stateSchema;
@@ -92,7 +92,9 @@ export function initializeMiddlewareStates(
  * @param stateSchema - The middleware state schema
  * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
  */
-export function derivePrivateState(stateSchema?: z.ZodObject<z.ZodRawShape>) {
+export function derivePrivateState(
+  stateSchema?: z.ZodObject<z.ZodRawShape>
+): z.ZodObject<z.ZodRawShape> {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
   };
