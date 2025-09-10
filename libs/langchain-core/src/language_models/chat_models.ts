@@ -688,7 +688,6 @@ export abstract class BaseChatModel<
                 total_tokens: 0,
               };
               if (this.outputVersion === "v1") {
-                // eslint-disable-next-line no-param-reassign
                 result.message = castStandardMessageContent(result.message);
               }
             }

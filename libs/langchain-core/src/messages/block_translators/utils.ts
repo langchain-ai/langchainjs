@@ -26,7 +26,7 @@ export function _isNumber(value: unknown): value is number {
 export function safeParseJson<T = unknown>(value: string): T | undefined {
   try {
     return JSON.parse(value);
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }
