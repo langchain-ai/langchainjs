@@ -1,4 +1,4 @@
-/* eslint-disable no-process-env */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach } from "vitest";
 import { z } from "zod/v3";
 

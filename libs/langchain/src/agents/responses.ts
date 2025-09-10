@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
 import {
   InteropZodObject,
@@ -190,7 +191,7 @@ export class ProviderStrategy<T = unknown> {
       }
 
       return content;
-    } catch (error) {
+    } catch {
       // no-op
     }
   }

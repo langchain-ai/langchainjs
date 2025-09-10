@@ -169,7 +169,6 @@ describe("createAgent Integration Tests", () => {
 
         // Modify the query
         if (lastMessage && isHumanMessage(lastMessage)) {
-          // eslint-disable-next-line no-param-reassign
           state.messages[state.messages.length - 1].content =
             "What is 15 multiplied by 8?";
         }

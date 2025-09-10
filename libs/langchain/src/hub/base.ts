@@ -173,7 +173,6 @@ export function bindOutputSchema<T extends Runnable>(loadedSequence: T) {
     "withStructuredOutput" in loadedSequence.last.bound &&
     typeof loadedSequence.last.bound.withStructuredOutput === "function"
   ) {
-    // eslint-disable-next-line no-param-reassign
     loadedSequence.last.bound = loadedSequence.last.bound.withStructuredOutput(
       loadedSequence.first.schema
     );

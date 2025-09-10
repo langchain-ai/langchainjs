@@ -88,6 +88,7 @@ export class AgentNode<
     super({
       name: options.name ?? "model",
       func: (input, config) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.#run(input, config as RunnableConfig) as any,
     });
 

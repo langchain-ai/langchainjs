@@ -416,7 +416,7 @@ async function trimMessagesForSummary(
       allowPartial: true,
       includeSystem: true,
     });
-  } catch (e) {
+  } catch {
     // Fallback to last N messages if trimming fails
     return messages.slice(-DEFAULT_FALLBACK_MESSAGE_COUNT);
   }

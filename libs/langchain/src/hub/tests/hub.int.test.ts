@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { expect, test } from "vitest";
 
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";

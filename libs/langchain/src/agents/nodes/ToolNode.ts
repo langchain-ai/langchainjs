@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
 import {
   BaseMessage,
@@ -19,7 +20,6 @@ import {
   Command,
   Send,
   isGraphInterrupt,
-  type NodeInterrupt,
 } from "@langchain/langgraph";
 
 import { RunnableCallable } from "../RunnableCallable.js";
@@ -122,7 +122,6 @@ const isSendInput = (input: unknown): input is { lg_tool_call: ToolCall } =>
  * // { messages: ToolMessage[] }
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ToolNode<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
@@ -337,6 +336,5 @@ export class ToolNode<
 }
 
 export function isSend(x: unknown): x is Send {
-  // eslint-disable-next-line no-instanceof/no-instanceof
   return x instanceof Send;
 }

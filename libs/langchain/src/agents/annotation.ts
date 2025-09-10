@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseMessage } from "@langchain/core/messages";
 import {
   Annotation,
@@ -41,8 +42,7 @@ export const createAgentBaseAnnotation = () =>
   });
 
 // Full annotation with structuredResponse (for regular cases)
-const createAgentAnnotation = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const createAgentAnnotation = <
   T extends Record<string, any> = Record<string, any>
 >(): AnnotationRoot<{
   structuredResponse: LastValue<T>;
@@ -104,7 +104,6 @@ export type ToAnnotationRoot<A extends AnyAnnotationRoot | InteropZodObject> =
     ? AnnotationRoot<InteropZodToStateDefinition<A>>
     : never;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAnnotationRoot = AnnotationRoot<any>;
 
 /**

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import type {
   InteropZodObject,
@@ -416,7 +416,6 @@ export type DynamicLLMFunction<
 ) => Promise<LanguageModelLike> | LanguageModelLike;
 
 export type CreateAgentParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot

@@ -24,6 +24,7 @@ export function customTool(
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
+        // eslint-disable-next-line no-void
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           pickRunnableConfigKeys(childConfig),
           async () => {

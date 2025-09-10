@@ -145,7 +145,6 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
           // don't include empty content blocks that were added because there was no text block to modify
           if (nameMatch && (!contentMatch || contentMatch[1] === "")) {
             // capture name from text block
-            // eslint-disable-next-line prefer-destructuring
             updatedName = nameMatch[1];
             return false;
           }
@@ -163,7 +162,6 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
           }
 
           // capture name from text block
-          // eslint-disable-next-line prefer-destructuring
           updatedName = nameMatch[1];
 
           return {
@@ -182,9 +180,7 @@ export function _removeInlineAgentName<T extends BaseMessage>(message: T): T {
       return message;
     }
 
-    // eslint-disable-next-line prefer-destructuring
     updatedName = nameMatch[1];
-    // eslint-disable-next-line prefer-destructuring
     updatedContent = contentMatch[1];
   }
 
@@ -213,7 +209,6 @@ export function isBaseChatModel(
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isConfigurableModel(
   model: unknown
 ): model is ConfigurableModelInterface {
@@ -414,8 +409,8 @@ export async function bindTools(
   toolClasses: (ClientTool | ServerTool)[],
   options: Partial<BaseChatModelCallOptions> = {}
 ): Promise<
-  | RunnableSequence<any, any>
-  | RunnableBinding<any, any, RunnableConfig<Record<string, any>>>
+  | RunnableSequence<unknown, unknown>
+  | RunnableBinding<unknown, unknown, RunnableConfig<Record<string, unknown>>>
   | Runnable<BaseLanguageModelInput, AIMessageChunk, BaseChatModelCallOptions>
 > {
   const model = _simpleBindTools(llm, toolClasses, options);

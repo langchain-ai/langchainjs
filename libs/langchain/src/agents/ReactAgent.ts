@@ -46,7 +46,6 @@ type AgentGraph<
 > = CompiledStateGraph<
   ToAnnotationRoot<StateSchema>["State"],
   ToAnnotationRoot<StateSchema>["Update"],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
   ReactAgentAnnotation<StructuredResponseFormat>["spec"] &

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { MiddlewareNode } from "./middleware.js";
 import type {
