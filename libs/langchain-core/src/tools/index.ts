@@ -386,6 +386,24 @@ export class DynamicTool<
   /**
    * @inheritdoc
    */
+  async invoke<
+    TInput extends string | undefined | z.input<typeof toolSchema> | ToolCall,
+    TConfig extends ToolRunnableConfig | undefined
+  >(
+    input: TInput,
+    config?: TConfig
+  ): Promise<ToolReturnType<NonNullable<TInput>, TConfig, ToolOutputType>> {
+    // Ensure runName is set to this tool's name
+    const configWithName = {
+      ...config,
+      runName: config?.runName ?? this.name,
+    } as TConfig;
+    return super.invoke(input, configWithName);
+  }
+
+  /**
+   * @inheritdoc
+   */
   async _call(
     input: DynamicToolInputType,
     runManager?: CallbackManagerForToolRun,
@@ -431,6 +449,24 @@ export class DynamicStructuredTool<
     this.func = fields.func;
     this.returnDirect = fields.returnDirect ?? this.returnDirect;
     this.schema = fields.schema;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  async invoke<
+    TInput extends StructuredToolCallInput<SchemaT, SchemaInputT>,
+    TConfig extends ToolRunnableConfig | undefined
+  >(
+    input: TInput,
+    config?: TConfig
+  ): Promise<ToolReturnType<TInput, TConfig, ToolOutputT>> {
+    // Ensure runName is set to this tool's name
+    const configWithName = {
+      ...config,
+      runName: config?.runName ?? this.name,
+    } as TConfig;
+    return super.invoke(input, configWithName);
   }
 
   /**
