@@ -6,6 +6,8 @@ const currentPackageJson = JSON.parse(
 );
 currentPackageJson.pnpm = { overrides: {} };
 
+const INTERNAL_PACKAGES = ["@langchain/eslint"];
+
 if (
   currentPackageJson.peerDependencies?.["@langchain/core"] &&
   !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")
@@ -34,6 +36,15 @@ for (const [depName, depVersion] of workspaceDependencies) {
   }
 
   const libName = depName.split("/")[1];
+
+  if (INTERNAL_PACKAGES.includes(depName)) {
+    /**
+     * reference the workspace dependency as a file path
+     */
+    currentPackageJson.devDependencies[depName] = `file:/internal/${libName}`;
+    continue;
+  }
+
   /**
    * reference the workspace dependency as a file path
    */
