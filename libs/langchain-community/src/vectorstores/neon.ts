@@ -36,7 +36,7 @@ export class NeonPostgres extends VectorStore {
 
   tableName: string;
 
-  schemaName: string | null;
+  schemaName?: string;
 
   idColumnName: string;
 
@@ -63,7 +63,7 @@ export class NeonPostgres extends VectorStore {
 
     this.neonConnectionString = config.connectionString;
     this.tableName = config.tableName ?? "vectorstore_documents";
-    this.schemaName = config.schemaName ?? null;
+    this.schemaName = config.schemaName;
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
@@ -73,7 +73,7 @@ export class NeonPostgres extends VectorStore {
   }
 
   get computedTableName() {
-    return this.schemaName == null
+    return typeof this.schemaName !== "string"
       ? `${this.tableName}`
       : `"${this.schemaName}"."${this.tableName}"`;
   }

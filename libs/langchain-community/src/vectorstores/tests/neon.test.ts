@@ -15,7 +15,7 @@ describe("NeonPostgres schemaName handling", () => {
       ...baseConfig,
     });
 
-    expect(store.schemaName).toBeNull();
+    expect(store.schemaName).toBeUndefined();
     expect(store.computedTableName).toBe("vector_store");
   });
 
