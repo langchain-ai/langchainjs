@@ -391,28 +391,8 @@ importers:
         specifier: ^9
         version: 9.0.8
       eslint:
-<<<<<<< HEAD
         specifier: ^9.34.0
         version: 9.35.0(jiti@2.5.1)
-=======
-        specifier: ^8.33.0
-        version: 8.57.1
-      eslint-config-airbnb-base:
-        specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
-      eslint-config-prettier:
-        specifier: ^8.6.0
-        version: 8.10.2(eslint@8.57.1)
-      eslint-plugin-import:
-        specifier: ^2.27.5
-        version: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      eslint-plugin-prettier:
-        specifier: ^4.2.1
-        version: 4.2.5(eslint-config-prettier@8.10.2(eslint@8.57.1))(eslint@8.57.1)(prettier@2.8.8)
-      eslint-plugin-unused-imports:
-        specifier: ^3.0.0
-        version: 3.2.0(@typescript-eslint/eslint-plugin@5.62.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1)(typescript@5.1.6))(eslint@8.57.1)
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -627,18 +607,12 @@ importers:
 
   libs/langchain:
     dependencies:
-<<<<<<< HEAD
       '@langchain/langgraph':
         specifier: ^1.0.0-alpha
         version: 1.0.0-alpha.0(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/langgraph-checkpoint':
         specifier: ^0.1.1
         version: 0.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/openai':
-        specifier: workspace:*
-        version: link:../providers/langchain-openai
-=======
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
@@ -673,21 +647,9 @@ importers:
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
-<<<<<<< HEAD
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
-=======
-      '@langchain/openai':
-        specifier: workspace:*
-        version: link:../providers/langchain-openai
-      '@swc/core':
-        specifier: ^1.3.90
-        version: 1.13.3(@swc/helpers@0.5.17)
-      '@swc/jest':
-        specifier: ^0.2.29
-        version: 0.2.39(@swc/core@1.13.3(@swc/helpers@0.5.17))
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -1355,28 +1317,8 @@ importers:
         specifier: ^3.14.0
         version: 3.14.0
       eslint:
-<<<<<<< HEAD
         specifier: ^9.34.0
         version: 9.35.0(jiti@2.5.1)
-=======
-        specifier: ^8.33.0
-        version: 8.57.1
-      eslint-config-airbnb-base:
-        specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
-      eslint-config-prettier:
-        specifier: ^8.6.0
-        version: 8.10.2(eslint@8.57.1)
-      eslint-plugin-import:
-        specifier: ^2.27.5
-        version: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      eslint-plugin-no-instanceof:
-        specifier: ^1.0.1
-        version: 1.0.1
-      eslint-plugin-prettier:
-        specifier: ^4.2.1
-        version: 4.2.5(eslint-config-prettier@8.10.2(eslint@8.57.1))(eslint@8.57.1)(prettier@2.8.8)
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
       ml-matrix:
         specifier: ^6.10.4
         version: 6.12.1
@@ -1613,28 +1555,8 @@ importers:
         specifier: ^3.14.0
         version: 3.14.0
       eslint:
-<<<<<<< HEAD
         specifier: ^9.34.0
         version: 9.35.0(jiti@2.5.1)
-=======
-        specifier: ^8.33.0
-        version: 8.57.1
-      eslint-config-airbnb-base:
-        specifier: ^15.0.0
-        version: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
-      eslint-config-prettier:
-        specifier: ^8.6.0
-        version: 8.10.2(eslint@8.57.1)
-      eslint-plugin-import:
-        specifier: ^2.27.5
-        version: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      eslint-plugin-no-instanceof:
-        specifier: ^1.0.1
-        version: 1.0.1
-      eslint-plugin-prettier:
-        specifier: ^4.2.1
-        version: 4.2.5(eslint-config-prettier@8.10.2(eslint@8.57.1))(eslint@8.57.1)(prettier@2.8.8)
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
@@ -26269,56 +26191,6 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-<<<<<<< HEAD
-=======
-  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      confusing-browser-globals: 1.0.11
-      eslint: 8.57.1
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-      semver: 6.3.1
-
-  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      confusing-browser-globals: 1.0.11
-      eslint: 8.57.1
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-      semver: 6.3.1
-
-  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.38.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      confusing-browser-globals: 1.0.11
-      eslint: 8.57.1
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.38.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-      semver: 6.3.1
-
-  eslint-config-airbnb-base@15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      confusing-browser-globals: 1.0.11
-      eslint: 8.57.1
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-      semver: 6.3.1
-
-  eslint-config-airbnb@19.0.4(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint-plugin-jsx-a11y@6.10.2(eslint@8.57.1))(eslint-plugin-react-hooks@4.6.2(eslint@8.57.1))(eslint-plugin-react@7.37.5(eslint@8.57.1))(eslint@8.57.1):
-    dependencies:
-      eslint: 8.57.1
-      eslint-config-airbnb-base: 15.0.0(eslint-plugin-import@2.32.0(eslint@8.57.1))(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@5.1.6))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
-      eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
-      eslint-plugin-react: 7.37.5(eslint@8.57.1)
-      eslint-plugin-react-hooks: 4.6.2(eslint@8.57.1)
-      object.assign: 4.1.7
-      object.entries: 1.1.9
-
->>>>>>> d46411877 (fix(langchain): remove @langchain/openai as package dependency)
   eslint-config-next@14.2.28(eslint@8.57.1)(typescript@5.1.6):
     dependencies:
       '@next/eslint-plugin-next': 14.2.28
