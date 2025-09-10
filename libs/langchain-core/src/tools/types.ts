@@ -26,8 +26,10 @@ import { JSONSchema } from "../utils/json_schema.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
-export type ToolOutputType = unknown;
-export type ToolInputType = unknown;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolOutputType = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolInputType = any;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
@@ -261,10 +263,8 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<
-  ToolInputType = unknown,
-  ToolOutputType = unknown
-> extends BaseDynamicToolInput {
+export interface DynamicToolInput<ToolInputType, ToolOutputType>
+  extends BaseDynamicToolInput {
   func: (
     input: ToolInputType,
     runManager?: CallbackManagerForToolRun,

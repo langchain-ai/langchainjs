@@ -6,7 +6,7 @@ export type PythonInterpreterToolParams = Parameters<typeof loadPyodide>[0] &
     instance: PyodideInterface;
   };
 
-export class PythonInterpreterTool extends Tool<string> {
+export class PythonInterpreterTool extends Tool {
   static lc_name() {
     return "PythonInterpreterTool";
   }
