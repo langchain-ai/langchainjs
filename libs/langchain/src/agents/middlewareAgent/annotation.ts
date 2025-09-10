@@ -28,7 +28,7 @@ export function createAgentAnnotationConditional<
   TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
-  middlewares: TMiddlewares = [] as unknown as TMiddlewares
+  middleware: TMiddlewares = [] as unknown as TMiddlewares
 ): AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>> {
   const baseAnnotation: Record<string, any> = {
     messages: Annotation<BaseMessage[], Messages>({
@@ -38,7 +38,7 @@ export function createAgentAnnotationConditional<
   };
 
   // Add middleware state properties to the annotation
-  for (const middleware of middlewares) {
+  for (const middleware of middleware) {
     if (middleware.stateSchema) {
       // Parse empty object to get default values
       let parsedDefaults: Record<string, any> = {};

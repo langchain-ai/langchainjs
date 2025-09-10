@@ -72,7 +72,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<T, ContextSchema, InteropZodType<T>> & {
     responseFormat: InteropZodType<T>;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<T, ContextSchema, TMiddlewares>;
 
@@ -96,7 +96,7 @@ export function createAgent<
     T
   > & {
     responseFormat: T;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<
   ExtractZodArrayTypes<T> extends Record<string, any>
@@ -123,7 +123,7 @@ export function createAgent<
     JsonSchemaFormat
   > & {
     responseFormat: JsonSchemaFormat;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<Record<string, unknown>, ContextSchema, TMiddlewares>;
 
@@ -144,7 +144,7 @@ export function createAgent<
     JsonSchemaFormat[]
   > & {
     responseFormat: JsonSchemaFormat[];
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<Record<string, unknown>, ContextSchema, TMiddlewares>;
 
@@ -165,7 +165,7 @@ export function createAgent<
     JsonSchemaFormat | JsonSchemaFormat[]
   > & {
     responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<Record<string, unknown>, ContextSchema, TMiddlewares>;
 
@@ -183,7 +183,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<T, ContextSchema, TypedToolStrategy<T>> & {
     responseFormat: TypedToolStrategy<T>;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<T, ContextSchema, TMiddlewares>;
 
@@ -201,7 +201,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<T, ContextSchema, ToolStrategy<T>> & {
     responseFormat: ToolStrategy<T>;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<T, ContextSchema, TMiddlewares>;
 
@@ -219,7 +219,7 @@ export function createAgent<
 >(
   params: CreateAgentParams<T, ContextSchema, ProviderStrategy<T>> & {
     responseFormat: ProviderStrategy<T>;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<T, ContextSchema, TMiddlewares>;
 
@@ -237,7 +237,7 @@ export function createAgent<
   params: Omit<
     CreateAgentParams<ResponseFormatUndefined, ContextSchema, never>,
     "responseFormat"
-  > & { middlewares?: TMiddlewares }
+  > & { middleware?: TMiddlewares }
 ): ReactAgent<ResponseFormatUndefined, ContextSchema, TMiddlewares>;
 
 // Overload 9: With responseFormat explicitly undefined
@@ -256,7 +256,7 @@ export function createAgent<
     "responseFormat"
   > & {
     responseFormat?: undefined;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<ResponseFormatUndefined, ContextSchema, TMiddlewares>;
 
@@ -278,7 +278,7 @@ export function createAgent<
     ResponseFormat
   > & {
     responseFormat: ResponseFormat;
-    middlewares?: TMiddlewares;
+    middleware?: TMiddlewares;
   }
 ): ReactAgent<StructuredResponseFormat, ContextSchema, TMiddlewares>;
 

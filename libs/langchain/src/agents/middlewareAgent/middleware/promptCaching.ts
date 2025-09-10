@@ -45,7 +45,7 @@ const contextSchema = z.object({
  *
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
- *   middlewares: [
+ *   middleware: [
  *     anthropicPromptCachingMiddleware()
  *   ]
  * });
@@ -62,7 +62,7 @@ const contextSchema = z.object({
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
  *   systemMessage: "You are a helpful assistant with deep knowledge of...", // Long system prompt
- *   middlewares: [cachingMiddleware]
+ *   middleware: [cachingMiddleware]
  * });
  * ```
  *
@@ -71,7 +71,7 @@ const contextSchema = z.object({
  * ```typescript
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
- *   middlewares: [
+ *   middleware: [
  *     anthropicPromptCachingMiddleware({
  *       enableCaching: true,
  *       ttl: "5m"
@@ -104,7 +104,7 @@ const contextSchema = z.object({
  *     ... (extensive policies and guidelines)
  *   `,
  *   tools: [searchKnowledgeBase, createTicket, checkOrderStatus],
- *   middlewares: [
+ *   middleware: [
  *     anthropicPromptCachingMiddleware({
  *       ttl: "1h",  // Long TTL for stable system prompt
  *       minMessagesToCache: 1  // Cache immediately due to large system prompt

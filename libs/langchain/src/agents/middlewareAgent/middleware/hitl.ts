@@ -81,7 +81,7 @@ const contextSchema = z.object({
  * const agent = createAgent({
  *   model: "openai:gpt-4",
  *   tools: [writeFileTool, readFileTool],
- *   middlewares: [hitlMiddleware]
+ *   middleware: [hitlMiddleware]
  * });
  * ```
  *

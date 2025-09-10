@@ -88,7 +88,7 @@ describe("middleware", () => {
     const agent = createAgent({
       llm,
       tools: [],
-      middlewares: [middlewareA, middlewareB, middlewareC] as const,
+      middleware: [middlewareA, middlewareB, middlewareC] as const,
     });
 
     const result = await agent.invoke(initialState);
@@ -147,7 +147,7 @@ describe("middleware", () => {
         customContext: z.string(),
         customContext2: z.number().default(42),
       }),
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     await agent.invoke(
@@ -186,7 +186,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middlewares: [middleware] as const,
+        middleware: [middleware] as const,
       });
       await expect(
         agent.invoke({
@@ -222,7 +222,7 @@ describe("middleware", () => {
             }),
           }),
         ],
-        middlewares: [middleware] as const,
+        middleware: [middleware] as const,
       });
       await expect(
         agent.invoke({

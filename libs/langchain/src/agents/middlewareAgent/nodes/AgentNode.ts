@@ -70,7 +70,7 @@ export interface AgentNodeOptions<
     | "includeAgentName"
     | "name"
     | "responseFormat"
-    | "middlewares"
+    | "middleware"
   > {
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
@@ -548,9 +548,9 @@ export class AgentNode<
       tools: [],
     };
 
-    // Execute prepareModelRequest hooks from all middlewares
-    const middlewares = this.#options.prepareModelRequestHookMiddlewares;
-    for (const [middleware, getMiddlewareState] of middlewares) {
+    // Execute prepareModelRequest hooks from all middleware
+    const middleware = this.#options.prepareModelRequestHookMiddlewares;
+    for (const [middleware, getMiddlewareState] of middleware) {
       // Merge context with default context of middleware
       const context = {
         ...(middleware.contextSchema?.parse({}) || {}),

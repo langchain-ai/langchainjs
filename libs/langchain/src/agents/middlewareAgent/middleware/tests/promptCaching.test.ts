@@ -32,7 +32,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       llm: mockAnthropicModel as any,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Test with enough messages to trigger caching
@@ -66,7 +66,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       llm: mockAnthropicModel as any,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Test with fewer messages than threshold
@@ -93,7 +93,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       llm: mockAnthropicModel as any,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     const messages = [
@@ -117,7 +117,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       llm: mockNonAnthropicModel as any,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     const messages = [
@@ -142,7 +142,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const agent = createAgent({
       llm: mockAnthropicModel as any,
       prompt: "You are a helpful assistant", // Counts as 1 message
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Only 2 user messages, but with system message makes 3 total
@@ -169,7 +169,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     const agent = createAgent({
       llm: mockAnthropicModel as any,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     const messages = [

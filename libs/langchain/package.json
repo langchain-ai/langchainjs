@@ -411,14 +411,14 @@
     },
     "./middleware": {
       "import": {
-        "types": "./dist/agents/middlewareAgent/middlewares/index.d.ts",
-        "default": "./dist/agents/middlewareAgent/middlewares/index.js"
+        "types": "./dist/agents/middlewareAgent/middleware/index.d.ts",
+        "default": "./dist/agents/middlewareAgent/middleware/index.js"
       },
       "require": {
-        "types": "./dist/agents/middlewareAgent/middlewares/index.d.cts",
-        "default": "./dist/agents/middlewareAgent/middlewares/index.cjs"
+        "types": "./dist/agents/middlewareAgent/middleware/index.d.cts",
+        "default": "./dist/agents/middlewareAgent/middleware/index.cjs"
       },
-      "input": "./src/agents/middlewareAgent/middlewares/index.ts"
+      "input": "./src/agents/middlewareAgent/middleware/index.ts"
     },
     "./document": {
       "import": {

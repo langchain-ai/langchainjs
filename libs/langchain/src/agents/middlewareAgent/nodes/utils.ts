@@ -18,12 +18,12 @@ import type { AgentMiddleware, ToolCall, ToolResult } from "../types.js";
  * users cannot provide them when invoking the agent.
  */
 export function initializeMiddlewareStates(
-  middlewares: readonly AgentMiddleware<any, any, any>[],
+  middleware: readonly AgentMiddleware<any, any, any>[],
   state: unknown
 ): Record<string, any> {
   const middlewareStates: Record<string, any> = {};
 
-  for (const middleware of middlewares) {
+  for (const middleware of middleware) {
     if (middleware.stateSchema) {
       // Create a modified schema where private properties are optional
       const { shape } = middleware.stateSchema;

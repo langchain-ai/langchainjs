@@ -140,7 +140,7 @@ export class ReactAgent<
       TMiddlewares
     >(
       this.options.responseFormat !== undefined,
-      this.options.middlewares as TMiddlewares
+      this.options.middleware as TMiddlewares
     );
 
     const workflow = new StateGraph(
@@ -164,11 +164,11 @@ export class ReactAgent<
       () => any
     ][] = [];
 
-    const middlewares = this.options.middlewares ?? [];
-    for (let i = 0; i < middlewares.length; i++) {
+    const middleware = this.options.middleware ?? [];
+    for (let i = 0; i < middleware.length; i++) {
       let beforeModelNode: BeforeModelNode | undefined;
       let afterModelNode: AfterModelNode | undefined;
-      const middleware = middlewares[i];
+      const middleware = middleware[i];
       if (middleware.beforeModel) {
         beforeModelNode = new BeforeModelNode(middleware);
         const name = `before_model_${middleware.name}_${i}`;
@@ -219,7 +219,7 @@ export class ReactAgent<
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
         responseFormat: this.options.responseFormat,
-        middlewares: this.options.middlewares,
+        middleware: this.options.middleware,
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
@@ -441,8 +441,8 @@ export class ReactAgent<
     state: InvokeStateParameter<TMiddlewares>
   ): InvokeStateParameter<TMiddlewares> {
     if (
-      !this.options.middlewares ||
-      this.options.middlewares.length === 0 ||
+      !this.options.middleware ||
+      this.options.middleware.length === 0 ||
       state instanceof Command ||
       !state
     ) {
@@ -450,7 +450,7 @@ export class ReactAgent<
     }
 
     const defaultStates = initializeMiddlewareStates(
-      this.options.middlewares,
+      this.options.middleware,
       state
     );
     const updatedState = { ...state } as InvokeStateParameter<TMiddlewares>;
