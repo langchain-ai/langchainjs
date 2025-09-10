@@ -3,7 +3,6 @@ import { test, expect, beforeAll } from "vitest";
 import { PineconeEmbeddings } from "../embeddings.js";
 
 beforeAll(() => {
-  // eslint-disable-next-line no-process-env
   process.env.PINECONE_API_KEY = "test-api-key";
 });
 

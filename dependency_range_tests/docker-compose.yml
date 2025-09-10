@@ -13,6 +13,7 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
@@ -29,6 +30,7 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 
@@ -46,6 +48,7 @@ services:
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
   community-lowest-deps:
@@ -61,6 +64,7 @@ services:
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
   community-npm-install:
@@ -75,6 +79,7 @@ services:
       - ./scripts/with_standard_tests/community/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/langchain-community:/libs/langchain-community
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/community/npm-install.sh
 
@@ -92,6 +97,7 @@ services:
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
   openai-lowest-deps:
@@ -107,6 +113,7 @@ services:
       - ./scripts/with_standard_tests/openai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 
@@ -124,6 +131,7 @@ services:
       - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
   anthropic-lowest-deps:
@@ -139,6 +147,7 @@ services:
       - ./scripts/with_standard_tests/anthropic/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-anthropic:/libs/providers/langchain-anthropic
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/anthropic/test-with-lowest-deps.sh
 
@@ -156,6 +165,7 @@ services:
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
   google-vertexai-lowest-deps:
@@ -171,6 +181,7 @@ services:
       - ./scripts/with_standard_tests/google-vertexai/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-google-vertexai:/libs/providers/langchain-google-vertexai
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-lowest-deps.sh
 
@@ -188,6 +199,7 @@ services:
       - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
   cohere-lowest-deps:
@@ -203,5 +215,6 @@ services:
       - ./scripts/with_standard_tests/cohere/node/package.json:/package.json
       - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
       - ../libs/providers/langchain-cohere:/libs/providers/langchain-cohere
+      - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-lowest-deps.sh

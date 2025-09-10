@@ -1,4 +1,4 @@
-/* eslint-disable no-promise-executor-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable import/no-extraneous-dependencies */
 import { expect } from "vitest";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -98,7 +98,6 @@ export class _AnyIdToolMessage extends ToolMessage {
 }
 
 export class FakeConfigurableModel extends BaseChatModel {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   _queuedMethodOperations: Record<string, any> = {};
 
   _chatModel: LanguageModelLike;
@@ -244,7 +243,6 @@ export class FakeToolCallingChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>
   >(_: unknown) {
     if (!this.structuredResponse) {

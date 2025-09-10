@@ -60,7 +60,7 @@ export class ASTParser {
         ASTParser.astParseInstance = parse as ParseFunction;
       }
       return ASTParser.astParseInstance;
-    } catch (e) {
+    } catch {
       throw new Error(
         `Failed to import peggy. Please install peggy (i.e. "npm install peggy" or "pnpm install peggy").`
       );

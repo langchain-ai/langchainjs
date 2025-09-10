@@ -320,7 +320,7 @@ export abstract class BaseMessage<
 
   toDict(): StoredMessage {
     return {
-      type: this._getType(),
+      type: this.getType(),
       data: (this.toJSON() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };

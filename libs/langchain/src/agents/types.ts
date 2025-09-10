@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
   InteropZodType,
@@ -43,7 +44,6 @@ import type {
   ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "./responses.js";
-import type { initChatModel } from "../chat_models/universal.js";
 
 export const META_EXTRAS_DESCRIPTION_PREFIX = "lg:";
 
@@ -176,8 +176,10 @@ export interface AgentRuntime<ContextType = Record<string, unknown>> {
 
 export type CreateAgentParams<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  StructuredResponseType extends Record<string, any> = Record<string, any>,
+  StructuredResponseType extends Record<string, unknown> = Record<
+    string,
+    unknown
+  >,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,

@@ -11,7 +11,6 @@ describe("Tests for getPineconeClient", () => {
     expect(client).toHaveProperty("config"); // Config is always set to *at least* the user's api key
 
     const clientWithConfig = getPineconeClient({
-      // eslint-disable-next-line no-process-env
       apiKey: process.env.PINECONE_API_KEY!,
       additionalHeaders: { header: "value" },
     });
@@ -21,10 +20,8 @@ describe("Tests for getPineconeClient", () => {
   });
 
   test("Unhappy path: expect getPineconeClient to throw error if reset PINECONE_API_KEY to empty string", async () => {
-    // eslint-disable-next-line no-process-env
     const originalApiKey = process.env.PINECONE_API_KEY;
     try {
-      // eslint-disable-next-line no-process-env
       process.env.PINECONE_API_KEY = "";
       const errorThrown = async () => {
         getPineconeClient();
@@ -35,7 +32,6 @@ describe("Tests for getPineconeClient", () => {
       );
     } finally {
       // Restore the original value of PINECONE_API_KEY
-      // eslint-disable-next-line no-process-env
       process.env.PINECONE_API_KEY = originalApiKey;
     }
   });

@@ -87,7 +87,6 @@ export type RunnableMapLike<RunInput, RunOutput> = {
   [K in keyof RunOutput]: RunnableLike<RunInput, RunOutput[K]>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RunnableLike<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
@@ -714,15 +713,12 @@ export abstract class Runnable<
   ): AsyncGenerator<RunLogPatch> {
     const { callbacks } = config;
     if (callbacks === undefined) {
-      // eslint-disable-next-line no-param-reassign
       config.callbacks = [logStreamCallbackHandler];
     } else if (Array.isArray(callbacks)) {
-      // eslint-disable-next-line no-param-reassign
       config.callbacks = callbacks.concat([logStreamCallbackHandler]);
     } else {
       const copiedCallbacks = callbacks.copy();
       copiedCallbacks.addHandler(logStreamCallbackHandler, true);
-      // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
     const runnableStreamPromise = this.stream(input, config);
@@ -923,7 +919,6 @@ export abstract class Runnable<
     } else {
       const copiedCallbacks = callbacks.copy();
       copiedCallbacks.addHandler(eventStreamer, true);
-      // eslint-disable-next-line no-param-reassign
       config.callbacks = copiedCallbacks;
     }
     const abortController = new AbortController();
@@ -965,7 +960,6 @@ export abstract class Runnable<
           runId,
           runnableStream
         );
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _ of tappedStream) {
           // Just iterate so that the callback handler picks up events
           if (abortController.signal.aborted) break;
@@ -1472,7 +1466,6 @@ export class RunnableBinding<
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const outerThis = this;
     const generator = async function* () {
       yield* outerThis.bound.streamEvents(
@@ -1712,13 +1705,13 @@ export class RunnableRetry<
 
   protected maxAttemptNumber = 3;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFailedAttempt: RunnableRetryFailedAttemptHandler = () => {};
+  onFailedAttempt: RunnableRetryFailedAttemptHandler = () => {
+    // empty
+  };
 
   constructor(
     fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions> & {
       maxAttemptNumber?: number;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onFailedAttempt?: RunnableRetryFailedAttemptHandler;
     }
   ) {
@@ -2100,7 +2093,7 @@ export class RunnableSequence<
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               finalOutput = concat(finalOutput, chunk as any);
-            } catch (e) {
+            } catch {
               finalOutput = undefined;
               concatSupported = false;
             }
@@ -2604,6 +2597,7 @@ export class RunnableLambda<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
+      // eslint-disable-next-line no-void
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         pickRunnableConfigKeys(childConfig),
         async () => {
@@ -2634,7 +2628,7 @@ export class RunnableLambda<
                   try {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     finalOutput = concat(finalOutput, chunk as any);
-                  } catch (e) {
+                  } catch {
                     finalOutput = chunk as RunOutput;
                   }
                 }
@@ -2654,7 +2648,7 @@ export class RunnableLambda<
                   try {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     finalOutput = concat(finalOutput, chunk as any);
-                  } catch (e) {
+                  } catch {
                     finalOutput = chunk as RunOutput;
                   }
                 }
@@ -2691,7 +2685,7 @@ export class RunnableLambda<
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           finalChunk = concat(finalChunk, chunk as any);
-        } catch (e) {
+        } catch {
           finalChunk = chunk;
         }
       }
@@ -2702,6 +2696,7 @@ export class RunnableLambda<
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
+        // eslint-disable-next-line no-void
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           pickRunnableConfigKeys(childConfig),
           async () => {
@@ -2997,7 +2992,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
         yield chunk;
         try {
           output = output === undefined ? output : concat(output, chunk);
-        } catch (e) {
+        } catch {
           output = undefined;
         }
       }
@@ -3420,7 +3415,7 @@ export class RunnableToolLike<
         if (_isToolCall(input)) {
           try {
             toolInput = await interopParseAsync(this.schema, input.args);
-          } catch (e) {
+          } catch {
             throw new ToolInputParsingException(
               `Received tool input did not match expected schema`,
               JSON.stringify(input.args)

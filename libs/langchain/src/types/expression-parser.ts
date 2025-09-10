@@ -1,7 +1,9 @@
 export interface ParseOptions {
   filename?: string;
   startRule?: "Start";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tracer?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 export type ParseFunction = <Options extends ParseOptions>(

@@ -114,7 +114,7 @@ async function buildProject(
   const hasSerializationFeature =
     typeof pkg.exports === "object" &&
     !Array.isArray(pkg.exports) &&
-    !pkg.exports?.["./load"];
+    pkg.exports?.["./load"];
   const plugins =
     !watch && hasSerializationFeature
       ? [

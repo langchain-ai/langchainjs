@@ -181,7 +181,6 @@ export class PuppeteerWebBaseLoader
     connect: typeof connect;
   }> {
     try {
-      // eslint-disable-next-line import/no-extraneous-dependencies
       const { launch, connect } = await import("puppeteer");
 
       return { launch, connect };

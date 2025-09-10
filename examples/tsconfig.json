@@ -2,8 +2,8 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "dist",
-    "lib": ["ES2021", "ES2022.Object", "DOM"],
-    "target": "ES2021",
+    "lib": ["ES2022", "ES2022.Object", "DOM"],
+    "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
     "sourceMap": true,
@@ -16,6 +16,6 @@
     "useDefineForClassFields": true,
     "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules/", "dist/", "tests/"],
+  "exclude": ["eslint.config.ts", "node_modules/", "dist/", "tests/"],
   "include": ["./src"]
 }

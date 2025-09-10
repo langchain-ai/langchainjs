@@ -139,7 +139,6 @@ export function atee<T>(
       } else if (buffer[0].done) {
         return;
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         yield buffer.shift()!.value;
       }
     }
@@ -215,6 +214,7 @@ export class AsyncGeneratorWithSetup<
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
+      // eslint-disable-next-line no-void
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         pickRunnableConfigKeys(
           params.config as Record<string, unknown> | undefined

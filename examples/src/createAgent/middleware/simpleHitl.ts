@@ -39,7 +39,6 @@ const humanInTheLoopMiddleware = createMiddleware({
     // Add the clarification as a new message
     console.log(`\n✅ Human provided clarification: "${clarification}"`);
 
-    // eslint-disable-next-line consistent-return
     return {
       messages: [
         ...state.messages,
@@ -91,7 +90,6 @@ console.log('   Human provides: "France"');
 // Resume the graph with the clarification
 // The Command is properly typed for resuming from an interrupt
 const resumedResult = await agent.invoke(
-  // @ts-expect-error
   new Command({
     resume: "France",
   }),

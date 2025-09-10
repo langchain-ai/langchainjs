@@ -58,12 +58,11 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
   ) {
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (typeof fields === "string" || fields instanceof RegExp) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // eslint-disable-next-line no-param-reassign
       fields = { regex: fields, outputKeys: outputKeys!, defaultOutputKey };
     }
     // eslint-disable-next-line no-instanceof/no-instanceof
     if (fields.regex instanceof RegExp) {
-      // eslint-disable-next-line no-param-reassign
       fields.regex = {
         pattern: fields.regex.source,
         flags: fields.regex.flags,
@@ -71,7 +70,6 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     }
     super(fields);
     this.regex =
-      // eslint-disable-next-line no-nested-ternary
       typeof fields.regex === "string"
         ? new RegExp(fields.regex)
         : "pattern" in fields.regex

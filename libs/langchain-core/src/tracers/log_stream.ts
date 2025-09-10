@@ -110,7 +110,6 @@ export class RunLog extends RunLogPatch {
 
   static fromRunLogPatch(patch: RunLogPatch) {
     const states = applyPatch({}, patch.ops);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunLog({
       ops: patch.ops,
       state: states[states.length - 1].newDocument as RunState,

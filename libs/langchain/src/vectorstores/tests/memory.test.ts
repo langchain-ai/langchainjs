@@ -181,7 +181,6 @@ test("MemoryVectorStore sorts results in descending order of similarity", async 
   );
   class ContrivedEmbeddings extends Embeddings {
     async embedDocuments(documents: string[]): Promise<number[][]> {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return documents.map((text) => embeddings.get(text)!);
     }
 
@@ -189,7 +188,6 @@ test("MemoryVectorStore sorts results in descending order of similarity", async 
       if (!embeddings.has(text)) {
         throw new Error(`Document ${text} not found`);
       }
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return embeddings.get(text)!;
     }
   }

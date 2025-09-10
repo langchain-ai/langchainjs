@@ -99,14 +99,14 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     tool_call_id?: string,
     name?: string
   ) {
-    if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
-      fields = { content: fields, name, tool_call_id: tool_call_id! };
-    }
-    super(fields);
-    this.tool_call_id = fields.tool_call_id;
-    this.artifact = fields.artifact;
-    this.status = fields.status;
+    const toolMessageFields: ToolMessageFields<TStructure> =
+      typeof fields === "string" || Array.isArray(fields)
+        ? { content: fields, name, tool_call_id: tool_call_id! }
+        : fields;
+    super(toolMessageFields);
+    this.tool_call_id = toolMessageFields.tool_call_id;
+    this.artifact = toolMessageFields.artifact;
+    this.status = toolMessageFields.status;
   }
 
   static isInstance(message: unknown): message is ToolMessage {
@@ -315,7 +315,7 @@ export function defaultToolCallParser(
           args: functionArgs || {},
           id: toolCall.id,
         });
-      } catch (error) {
+      } catch {
         invalidToolCalls.push({
           name: functionName,
           args: toolCall.function.arguments,

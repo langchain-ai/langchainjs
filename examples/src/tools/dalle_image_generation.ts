@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { DallEAPIWrapper } from "@langchain/openai";
 
 const tool = new DallEAPIWrapper({

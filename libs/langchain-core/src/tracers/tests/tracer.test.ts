@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-process-env */
 import { test, expect, vi, afterEach } from "vitest";
 import * as uuid from "uuid";
 import { Client } from "langsmith";

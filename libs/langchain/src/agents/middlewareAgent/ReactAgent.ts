@@ -1,4 +1,5 @@
-/* eslint-disable prefer-destructuring, no-instanceof/no-instanceof, @typescript-eslint/ban-types */
+/* eslint-disable no-instanceof/no-instanceof */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -70,7 +71,6 @@ type AgentGraph<
 > = CompiledStateGraph<
   any,
   any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   any,
   MergedAgentState<StructuredResponseFormat, TMiddlewares>,

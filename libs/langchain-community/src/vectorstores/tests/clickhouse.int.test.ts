@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { test, expect } from "@jest/globals";
 import { Document } from "@langchain/core/documents";
 
@@ -24,7 +23,6 @@ test.skip("ClickHouseStore.fromText", async () => {
   );
 
   // Sleep 1 second to ensure that the search occurs after the successful insertion of data.
-  // eslint-disable-next-line no-promise-executor-return
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const results = await vectorStore.similaritySearch("hello world", 1);
@@ -76,7 +74,6 @@ test.skip("ClickHouseStore.fromExistingIndex", async () => {
   );
 
   // Sleep 1 second to ensure that the search occurs after the successful insertion of data.
-  // eslint-disable-next-line no-promise-executor-return
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const results = await vectorStore.similaritySearch("hello world", 1);

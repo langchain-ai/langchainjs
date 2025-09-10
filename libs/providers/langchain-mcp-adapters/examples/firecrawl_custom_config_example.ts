@@ -5,7 +5,6 @@
  * And getting tools from the Firecrawl server with automatic initialization
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 import dotenv from "dotenv";

@@ -19,9 +19,7 @@ export type VectaraVisitorResult =
   | VectaraOperationResult
   | VectaraComparisonResult
   | VectaraVisitorStructuredQueryResult;
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type VectaraOperationResult = String;
-// eslint-disable-next-line @typescript-eslint/ban-types
 export type VectaraComparisonResult = String;
 export type VectaraVisitorStructuredQueryResult = {
   filter?: { filter?: VectaraOperationResult | VectaraComparisonResult };

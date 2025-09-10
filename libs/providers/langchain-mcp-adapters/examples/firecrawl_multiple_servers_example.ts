@@ -5,7 +5,6 @@
  * It includes both the Firecrawl server for web scraping and the Math server for calculations.
  */
 
-/* eslint-disable no-console */
 import { ChatOpenAI } from "@langchain/openai";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage } from "@langchain/core/messages";

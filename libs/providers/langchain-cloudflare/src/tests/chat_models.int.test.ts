@@ -1,5 +1,3 @@
-/* eslint-disable no-process-env */
-
 import { describe, test, expect } from "vitest";
 import { ChatMessage, HumanMessage } from "@langchain/core/messages";
 import {

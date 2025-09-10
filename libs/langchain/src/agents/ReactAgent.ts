@@ -1,4 +1,4 @@
-/* eslint-disable prefer-destructuring */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 import {
   AnnotationRoot,
@@ -9,12 +9,7 @@ import {
   CompiledStateGraph,
   MessagesAnnotation,
 } from "@langchain/langgraph";
-import {
-  isToolMessage,
-  isAIMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+import { ToolMessage, AIMessage } from "@langchain/core/messages";
 
 import {
   createAgentAnnotationConditional,
@@ -46,7 +41,6 @@ type AgentGraph<
 > = CompiledStateGraph<
   ToAnnotationRoot<StateSchema>["State"],
   ToAnnotationRoot<StateSchema>["Update"],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   typeof MessagesAnnotation.spec & ToAnnotationRoot<StateSchema>["spec"],
   ReactAgentAnnotation<StructuredResponseFormat>["spec"] &
@@ -268,8 +262,8 @@ export class ReactAgent<
   #createPostModelHookRouter() {
     return (state: InternalAgentState<StructuredResponseFormat>) => {
       const messages = state.messages;
-      const toolMessages = messages.filter(isToolMessage);
-      const lastAiMessage = messages.filter(isAIMessage).at(-1);
+      const toolMessages = messages.filter(ToolMessage.isInstance);
+      const lastAiMessage = messages.filter(AIMessage.isInstance).at(-1);
       const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BedrockEmbeddings } from "@langchain/aws";
 
 const embeddings = new BedrockEmbeddings({

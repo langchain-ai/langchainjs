@@ -1,10 +1,4 @@
-// @ts-nocheck
-
-import type {
-  VectorizeIndex,
-  Fetcher,
-  Request,
-} from "@cloudflare/workers-types";
+import type { VectorizeIndex, Ai, Request } from "@cloudflare/workers-types";
 
 import {
   CloudflareVectorizeStore,
@@ -13,7 +7,7 @@ import {
 
 export interface Env {
   VECTORIZE_INDEX: VectorizeIndex;
-  AI: Fetcher;
+  AI: Ai;
 }
 
 export default {
@@ -28,7 +22,9 @@ export default {
     });
     if (pathname === "/") {
       const results = await store.similaritySearch("hello", 5);
-      return Response.json(results);
+      return new Response(JSON.stringify(results), {
+        headers: { "Content-Type": "application/json" },
+      });
     } else if (pathname === "/load") {
       // Upsertion by id is supported
       await store.addDocuments(
@@ -49,12 +45,19 @@ export default {
         { ids: ["id1", "id2", "id3"] }
       );
 
-      return Response.json({ success: true });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
     } else if (pathname === "/clear") {
       await store.delete({ ids: ["id1", "id2", "id3"] });
-      return Response.json({ success: true });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return Response.json({ error: "Not Found" }, { status: 404 });
+    return new Response(JSON.stringify({ error: "Not Found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
   },
 };

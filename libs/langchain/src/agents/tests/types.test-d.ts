@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { SystemMessage, BaseMessage } from "@langchain/core/messages";
@@ -21,6 +20,7 @@ describe("types", () => {
       }),
     });
 
+    // eslint-disable-next-line no-void
     void createAgent({
       llm: new FakeToolCallingModel(),
       prompt: (state, config) => {

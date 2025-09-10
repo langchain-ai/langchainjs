@@ -240,6 +240,7 @@ export class ChatGooglePaLM
 
     // Google Palm doesn't provide streaming as of now. But to support streaming handlers
     // we call the handler with entire response text
+    // eslint-disable-next-line no-void
     void runManager?.handleLLMNewToken(
       chatResult.generations.length > 0 ? chatResult.generations[0].text : ""
     );

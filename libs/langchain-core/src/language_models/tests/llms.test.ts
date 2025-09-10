@@ -1,5 +1,3 @@
-/* eslint-disable no-promise-executor-return */
-
 import { test, expect } from "vitest";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
 import { HumanMessagePromptTemplate } from "../../prompts/chat.js";

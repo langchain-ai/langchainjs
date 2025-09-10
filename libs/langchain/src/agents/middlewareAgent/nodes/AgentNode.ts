@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
@@ -660,7 +661,9 @@ export class AgentNode<
     return modelRunnable;
   }
 
-  static get nodeOptions() {
+  static get nodeOptions(): {
+    input: z.ZodObject<{ messages: z.ZodArray<z.ZodType<BaseMessage>> }>;
+  } {
     return {
       input: z.object({
         messages: z.array(z.custom<BaseMessage>()),

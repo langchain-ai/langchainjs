@@ -3,6 +3,8 @@ const semver = require("semver");
 
 const communityPackageJsonPath = "package.json";
 
+const INTERNAL_PACKAGES = ["@langchain/eslint"];
+
 const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)
 );
@@ -40,6 +42,15 @@ for (const [depName, depVersion] of workspaceDependencies) {
   }
 
   const libName = depName.split("/")[1];
+
+  if (INTERNAL_PACKAGES.includes(depName)) {
+    /**
+     * reference the workspace dependency as a file path
+     */
+    currentPackageJson.devDependencies[depName] = `file:/internal/${libName}`;
+    continue;
+  }
+
   /**
    * reference the workspace dependency as a file path
    */

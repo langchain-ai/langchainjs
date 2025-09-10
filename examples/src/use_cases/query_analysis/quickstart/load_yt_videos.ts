@@ -52,9 +52,7 @@ const dates = [
   new Date("Nov 2, 2023"),
 ];
 docs.forEach((doc, idx) => {
-  // eslint-disable-next-line no-param-reassign
   doc.metadata.publish_year = getYear(dates[idx]);
-  // eslint-disable-next-line no-param-reassign
   doc.metadata.publish_date = dates[idx];
 });
 
