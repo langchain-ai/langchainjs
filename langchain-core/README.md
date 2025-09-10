@@ -1,6 +1,6 @@
 # 🦜🍎️ @langchain/core
 
-[![CI](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml/badge.svg)](https://github.com/langchain-ai/langchainjs/actions/workflows/ci.yml) ![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai)
+![npm](https://img.shields.io/npm/dm/@langchain/core) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchainai.svg?style=social&label=Follow%20%40LangChainAI)](https://twitter.com/langchainai)
 
 `@langchain/core` contains the core abstractions and schemas of LangChain.js, including base classes for language models,
 chat models, vectorstores, retrievers, and runnables.
@@ -8,7 +8,7 @@ chat models, vectorstores, retrievers, and runnables.
 ## 💾 Quick Install
 
 ```bash
-$ yarn add @langchain/core
+yarn add @langchain/core
 ```
 
 ## 🤔 What is this?
@@ -21,7 +21,7 @@ The benefit of having these abstractions is that any provider can implement the 
 For example, you can install other provider-specific packages like this:
 
 ```bash
-$ yarn add @langchain/openai
+yarn add @langchain/openai
 ```
 
 And use them as follows:
@@ -71,22 +71,6 @@ leigh
 
 Note that for compatibility, all used LangChain packages (including the base LangChain package, which itself depends on core!) must share the same version of `@langchain/core`.
 This means that you may need to install/resolve a specific version of `@langchain/core` that matches the dependencies of your used packages.
-
-## 🔗 What is LangChain Expression Language?
-
-LangChain Core also contains LangChain Expression Language, or LCEL, a runtime that allows users to compose arbitrary sequences together and get several benefits that are important when building LLM applications.
-We call these sequences “runnables”.
-
-All runnables expose the same interface with single-invocation, batch, streaming and async methods.
-This design is useful because it is not enough to have a single sync interface when building an LLM application.
-Batch is needed for efficient processing of many inputs.
-Streaming (and streaming of intermediate steps) is needed to show the user that progress is being made.
-Async interfaces are nice when moving into production.
-Rather than having to write multiple implementations for all of those, LCEL allows you to write a runnable once and invoke it in many different ways.
-
-For more check out the [LCEL docs](https://js.langchain.com/docs/concepts/lcel).
-
-![LangChain Stack](../docs/core_docs/static/svg/langchain_stack_062024.svg)
 
 ## 📕 Releases & Versioning
 

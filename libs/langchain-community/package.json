@@ -58,7 +58,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.749.0",
     "@aws-sdk/client-sfn": "^3.749.0",
     "@aws-sdk/credential-provider-node": "^3.749.0",
-    "@aws-sdk/dsql-signer": "^3.738.0",
+    "@aws-sdk/dsql-signer": "^3.844.0",
     "@aws-sdk/types": "^3.734.0",
     "@azure/search-documents": "^12.0.0",
     "@azure/storage-blob": "^12.15.0",
@@ -82,7 +82,7 @@
     "@huggingface/transformers": "^3.5.2",
     "@ibm-cloud/watsonx-ai": "^1.6.10",
     "@jest/globals": "^29.5.0",
-    "@lancedb/lancedb": "^0.13.0",
+    "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
@@ -159,7 +159,6 @@
     "discord.js": "^14.14.1",
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
-    "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "eslint": "^8.33.0",
@@ -256,7 +255,7 @@
     "@huggingface/inference": "^4.0.5",
     "@huggingface/transformers": "^3.5.2",
     "@ibm-cloud/watsonx-ai": "*",
-    "@lancedb/lancedb": "^0.12.0",
+    "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": ">=0.3.58 <0.4.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
@@ -305,7 +304,6 @@
     "crypto-js": "^4.2.0",
     "d3-dsv": "^2.0.0",
     "discord.js": "^14.14.1",
-    "dria": "^0.0.3",
     "duck-duck-scrape": "^2.2.5",
     "epub2": "^3.0.1",
     "fast-xml-parser": "*",
@@ -585,9 +583,6 @@
       "optional": true
     },
     "discord.js": {
-      "optional": true
-    },
-    "dria": {
       "optional": true
     },
     "duck-duck-scrape": {
@@ -2244,15 +2239,6 @@
       },
       "import": "./retrievers/databerry.js",
       "require": "./retrievers/databerry.cjs"
-    },
-    "./retrievers/dria": {
-      "types": {
-        "import": "./retrievers/dria.d.ts",
-        "require": "./retrievers/dria.d.cts",
-        "default": "./retrievers/dria.d.ts"
-      },
-      "import": "./retrievers/dria.js",
-      "require": "./retrievers/dria.cjs"
     },
     "./retrievers/metal": {
       "types": {
@@ -3965,10 +3951,6 @@
     "retrievers/databerry.js",
     "retrievers/databerry.d.ts",
     "retrievers/databerry.d.cts",
-    "retrievers/dria.cjs",
-    "retrievers/dria.js",
-    "retrievers/dria.d.ts",
-    "retrievers/dria.d.cts",
     "retrievers/metal.cjs",
     "retrievers/metal.js",
     "retrievers/metal.d.ts",

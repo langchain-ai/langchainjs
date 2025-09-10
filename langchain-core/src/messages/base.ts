@@ -418,8 +418,12 @@ export function _mergeDicts(
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
+      } else if (["id", "output_version", "model_provider"].includes(key)) {
+        // Keep the incoming value for these fields
+        merged[key] = value;
+      } else {
+        merged[key] += value;
       }
-      merged[key] += value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
       merged[key] = _mergeDicts(merged[key], value);
     } else if (Array.isArray(merged[key])) {
@@ -435,8 +439,10 @@ export function _mergeDicts(
   return merged;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function _mergeLists(left?: any[], right?: any[]) {
+export function _mergeLists<Content extends MessageContentComplex>(
+  left?: Content[],
+  right?: Content[]
+): Content[] | undefined {
   if (left === undefined && right === undefined) {
     return undefined;
   } else if (left === undefined || right === undefined) {
@@ -446,19 +452,36 @@ export function _mergeLists(left?: any[], right?: any[]) {
     for (const item of right) {
       if (
         typeof item === "object" &&
+        item !== null &&
         "index" in item &&
         typeof item.index === "number"
       ) {
         const toMerge = merged.findIndex(
-          (leftItem) => leftItem.index === item.index
+          (leftItem) =>
+            leftItem !== null &&
+            typeof leftItem === "object" &&
+            "index" in leftItem &&
+            leftItem.index === item.index &&
+            // Only merge if IDs match (or both are undefined)
+            ("id" in leftItem && "id" in item
+              ? leftItem.id === item.id
+              : !("id" in leftItem) && !("id" in item))
         );
-        if (toMerge !== -1) {
-          merged[toMerge] = _mergeDicts(merged[toMerge], item);
+        if (
+          toMerge !== -1 &&
+          typeof merged[toMerge] === "object" &&
+          merged[toMerge] !== null
+        ) {
+          merged[toMerge] = _mergeDicts(
+            merged[toMerge] as Record<string, unknown>,
+            item as Record<string, unknown>
+          ) as Content;
         } else {
           merged.push(item);
         }
       } else if (
         typeof item === "object" &&
+        item !== null &&
         "text" in item &&
         item.text === ""
       ) {

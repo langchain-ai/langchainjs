@@ -7,6 +7,66 @@ import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "../chat_models.js";
 
 describe("ChatOpenAI", () => {
+  describe("should initialize with correct values", () => {
+    it("should handle disableStreaming and streaming properties", () => {
+      let chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+      });
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: undefined,
+      } as any);
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: false,
+      });
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: true,
+      });
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      const chatWithNull = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: null,
+      } as any);
+      expect(chatWithNull.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      const chatWithZero = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: 0,
+      } as any);
+      expect(chatWithZero.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      const chatWithEmptyString = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        disableStreaming: "",
+      } as any);
+      expect(chatWithEmptyString.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        streaming: true,
+        disableStreaming: true,
+      });
+      expect(chat.disableStreaming).toBe(true);
+      expect(chat.streaming).toBe(false);
+      chat = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        streaming: true,
+        disableStreaming: false,
+      });
+      expect(chat.disableStreaming).toBe(false);
+      expect(chat.streaming).toBe(true);
+    });
+  });
+
   describe("strict tool calling", () => {
     const weatherTool = {
       type: "function" as const,
@@ -370,6 +430,149 @@ describe("ChatOpenAI", () => {
     ]);
   });
 
+  describe("OpenRouter image response handling", () => {
+    it("Should correctly parse OpenRouter-style image responses", () => {
+      // Create a minimal ChatOpenAI instance to test the method
+      const model = new ChatOpenAI({
+        model: "test-model",
+        apiKey: "test-key",
+      });
+
+      // Access the completions object to test the method
+      const { completions } = model as any;
+
+      // Mock message with images from OpenRouter
+      const mockMessage = {
+        role: "assistant" as const,
+        content: "Here is your image of a cute cat:",
+      };
+
+      const mockRawResponse = {
+        id: "chatcmpl-12345",
+        object: "chat.completion",
+        created: 1234567890,
+        model: "google/gemini-2.5-flash-image-preview",
+        choices: [
+          {
+            index: 0,
+            message: {
+              ...mockMessage,
+              // OpenRouter includes images in a separate array
+              images: [
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+                  },
+                },
+              ],
+            },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      // Test the _convertCompletionsMessageToBaseMessage method
+      const result = completions._convertCompletionsMessageToBaseMessage(
+        mockMessage,
+        mockRawResponse
+      );
+
+      // Verify the result is an AIMessage with structured content
+      expect(result.constructor.name).toBe("AIMessage");
+      expect(result.content).toEqual([
+        {
+          source_type: "text",
+          type: "text",
+          text: "Here is your image of a cute cat:",
+        },
+        {
+          source_type: "url",
+          type: "image",
+          url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+        },
+      ]);
+    });
+
+    it("Should handle OpenRouter responses with multiple images", () => {
+      const model = new ChatOpenAI({
+        model: "test-model",
+        apiKey: "test-key",
+      });
+
+      const { completions } = model as any;
+
+      const mockMessage = {
+        role: "assistant" as const,
+        content: "Here are multiple images:",
+      };
+
+      const mockRawResponse = {
+        id: "chatcmpl-12345",
+        object: "chat.completion",
+        created: 1234567890,
+        model: "google/gemini-2.5-flash-image-preview",
+        choices: [
+          {
+            index: 0,
+            message: {
+              ...mockMessage,
+              images: [
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: "data:image/png;base64,image1",
+                  },
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: "data:image/png;base64,image2",
+                  },
+                },
+              ],
+            },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = completions._convertCompletionsMessageToBaseMessage(
+        mockMessage,
+        mockRawResponse
+      );
+
+      // Verify the response contains structured content with multiple image_urls
+      expect(result.content).toEqual([
+        {
+          source_type: "text",
+          type: "text",
+          text: "Here are multiple images:",
+        },
+        {
+          source_type: "url",
+          type: "image",
+          url: "data:image/png;base64,image1",
+        },
+        {
+          source_type: "url",
+          type: "image",
+          url: "data:image/png;base64,image2",
+        },
+      ]);
+    });
+  });
+
   test("can be constructed with reasoningEffort", async () => {
     const model = new ChatOpenAI({
       model: "gpt-4o-2024-08-06",
@@ -388,5 +591,70 @@ describe("ChatOpenAI", () => {
     // disableStreaming will disable streaming in BaseChatModel
     expect(model.disableStreaming).toBe(true);
     expect(model.streaming).toBe(false);
+  });
+
+  describe("custom tool streaming delta handling", () => {
+    it("should handle response.custom_tool_call_input.delta events", () => {
+      const responses = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        useResponsesApi: true,
+      }) as any;
+
+      // Test custom tool delta event
+      const customToolDelta = {
+        type: "response.custom_tool_call_input.delta",
+        delta: '{"query": "test query"}',
+        output_index: 0,
+      };
+
+      const result =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          customToolDelta
+        );
+
+      expect(result).toBeDefined();
+      expect(result.message.tool_call_chunks).toBeDefined();
+      expect(result.message.tool_call_chunks).toHaveLength(1);
+      expect(result.message.tool_call_chunks[0]).toEqual({
+        type: "tool_call_chunk",
+        args: '{"query": "test query"}',
+        index: 0,
+      });
+    });
+
+    it("should handle both function and custom tool delta events equally", () => {
+      const responses = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        useResponsesApi: true,
+      }) as any;
+
+      // Test function call delta
+      const functionDelta = {
+        type: "response.function_call_arguments.delta",
+        delta: '{"location": "NYC"}',
+        output_index: 0,
+      };
+
+      // Test custom tool delta
+      const customDelta = {
+        type: "response.custom_tool_call_input.delta",
+        delta: '{"location": "NYC"}',
+        output_index: 0,
+      };
+
+      const functionResult =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          functionDelta
+        );
+      const customResult =
+        responses.responses._convertResponsesDeltaToBaseMessageChunk(
+          customDelta
+        );
+
+      // Both should produce identical tool_call_chunks
+      expect(functionResult.message.tool_call_chunks).toEqual(
+        customResult.message.tool_call_chunks
+      );
+    });
   });
 });

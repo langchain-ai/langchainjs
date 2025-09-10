@@ -107,6 +107,7 @@ import {
   ResponsesTool,
   ResponsesToolChoice,
 } from "./utils/tools.js";
+import { handleMultiModalOutput } from "./utils/output.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 
@@ -799,14 +800,14 @@ export abstract class BaseChatOpenAI<
         ? { effort: fields.reasoningEffort }
         : undefined;
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
-    this.disableStreaming = fields?.disableStreaming ?? this.disableStreaming;
+    this.disableStreaming = fields?.disableStreaming === true;
+    this.streaming = fields?.streaming === true;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
-    this.streaming = fields?.streaming ?? false;
     // disable streaming in BaseChatModel if explicitly disabled
     if (this.streaming === false) this.disableStreaming = true;
-    if (this.disableStreaming) this.streaming = false;
+    if (this.disableStreaming === true) this.streaming = false;
 
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
@@ -1837,7 +1838,10 @@ export class ChatOpenAIResponses<
       for (const [key, value] of Object.entries(chunk.response)) {
         if (key !== "id") response_metadata[key] = value;
       }
-    } else if (chunk.type === "response.function_call_arguments.delta") {
+    } else if (
+      chunk.type === "response.function_call_arguments.delta" ||
+      chunk.type === "response.custom_tool_call_input.delta"
+    ) {
       tool_call_chunks.push({
         type: "tool_call_chunk",
         args: chunk.delta,
@@ -2721,8 +2725,13 @@ export class ChatOpenAICompletions<
           additional_kwargs.audio = message.audio;
         }
 
+        const content = handleMultiModalOutput(
+          message.content || "",
+          rawResponse.choices?.[0]?.message
+        );
+
         return new AIMessage({
-          content: message.content || "",
+          content,
           tool_calls: toolCalls,
           invalid_tool_calls: invalidToolCalls,
           additional_kwargs,

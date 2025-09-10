@@ -670,10 +670,6 @@ retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts
 retrievers/databerry.d.cts
-retrievers/dria.cjs
-retrievers/dria.js
-retrievers/dria.d.ts
-retrievers/dria.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts
