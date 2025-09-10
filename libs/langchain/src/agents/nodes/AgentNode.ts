@@ -117,7 +117,7 @@ export class AgentNode<
      */
     const lastMessage = state.messages[state.messages.length - 1];
     if (
-      lastMessage instanceof ToolMessage &&
+      ToolMessage.isInstance(lastMessage) &&
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
@@ -444,7 +444,7 @@ export class AgentNode<
     response: BaseMessage
   ): boolean {
     const allToolsReturnDirect =
-      response instanceof AIMessage &&
+      AIMessage.isInstance(response) &&
       response.tool_calls?.every((call) =>
         this.#options.shouldReturnDirect.has(call.name)
       );

@@ -1,4 +1,3 @@
-/* eslint-disable prefer-destructuring, no-instanceof/no-instanceof */
 import { InteropZodObject } from "@langchain/core/utils/types";
 import {
   AnnotationRoot,
@@ -293,7 +292,7 @@ export class ReactAgent<
         );
       }
 
-      if (messages.at(-1) instanceof ToolMessage) {
+      if (ToolMessage.isInstance(messages.at(-1))) {
         return this.#getEntryPoint();
       }
 
@@ -331,7 +330,7 @@ export class ReactAgent<
       const lastMessage = messages.at(-1);
 
       if (
-        !(lastMessage instanceof AIMessage) ||
+        !AIMessage.isInstance(lastMessage) ||
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
@@ -372,7 +371,7 @@ export class ReactAgent<
 
       // Check if we just executed a returnDirect tool
       if (
-        lastMessage instanceof ToolMessage &&
+        ToolMessage.isInstance(lastMessage) &&
         lastMessage.name &&
         shouldReturnDirect.has(lastMessage.name)
       ) {
