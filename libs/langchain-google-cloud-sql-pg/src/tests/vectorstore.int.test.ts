@@ -108,6 +108,22 @@ describe("VectorStore creation", () => {
     );
   });
 
+  // https://github.com/langchain-ai/langchainjs/issues/8334
+  test("should set metadataColumns if ignoreMetadataColumns is not defined", async () => {
+    const pvectorArgs: PostgresVectorStoreArgs = {
+      metadataColumns: ["page", "source"],
+    };
+
+    vectorStoreInstance = await PostgresVectorStore.initialize(
+      PEInstance,
+      embeddingService,
+      CUSTOM_TABLE,
+      pvectorArgs
+    );
+
+    expect(vectorStoreInstance.metadataColumns).toEqual(["page", "source"]);
+  });
+
   test("should throw an error if idColumn does not exist", async () => {
     const pvectorArgs: PostgresVectorStoreArgs = {
       idColumn: "my_id_column",
