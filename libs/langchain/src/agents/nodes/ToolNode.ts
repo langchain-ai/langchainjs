@@ -12,6 +12,7 @@ import {
   DynamicTool,
   StructuredToolInterface,
   ToolInputParsingException,
+  isRunnableToolLike,
 } from "@langchain/core/tools";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { InteropZodObject } from "@langchain/core/utils/types";
@@ -166,13 +167,17 @@ export class ToolNode<
         throw new Error(`Tool "${call.name}" not found.`);
       }
 
-      const output = await tool.invoke(
-        { ...call, type: "tool_call" },
-        {
-          ...config,
-          signal: mergeAbortSignals(this.signal, config.signal),
-        }
-      );
+      const mergedConfig = {
+        ...config,
+        signal: mergeAbortSignals(this.signal, config.signal),
+      };
+
+      const output = isRunnableToolLike(tool)
+        ? await tool.invoke(call.args, mergedConfig)
+        : await (tool as StructuredToolInterface).invoke(
+            { ...call, type: "tool_call" },
+            mergedConfig
+          );
 
       if (
         (isBaseMessage(output) && output.getType() === "tool") ||

@@ -92,7 +92,9 @@ export function initializeMiddlewareStates(
  * @param stateSchema - The middleware state schema
  * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
  */
-export function derivePrivateState(stateSchema?: z.ZodObject<z.ZodRawShape>) {
+export function derivePrivateState(
+  stateSchema?: z.ZodObject<z.ZodRawShape>
+): z.ZodObject<z.ZodRawShape> {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
   };
