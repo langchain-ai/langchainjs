@@ -14,6 +14,7 @@ type Metadata = Record<string, string | number | Record<"in", string[]>>;
 export interface NeonPostgresArgs {
   connectionString: string;
   tableName?: string;
+  schemaName?: string;
   columns?: {
     idColumnName?: string;
     vectorColumnName?: string;
@@ -34,6 +35,8 @@ export class NeonPostgres extends VectorStore {
   declare FilterType: Metadata;
 
   tableName: string;
+
+  schemaName?: string;
 
   idColumnName: string;
 
@@ -60,12 +63,19 @@ export class NeonPostgres extends VectorStore {
 
     this.neonConnectionString = config.connectionString;
     this.tableName = config.tableName ?? "vectorstore_documents";
+    this.schemaName = config.schemaName;
     this.filter = config.filter;
 
     this.vectorColumnName = config.columns?.vectorColumnName ?? "embedding";
     this.contentColumnName = config.columns?.contentColumnName ?? "text";
     this.idColumnName = config.columns?.idColumnName ?? "id";
     this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
+  }
+
+  get computedTableName() {
+    return typeof this.schemaName !== "string"
+      ? `${this.tableName}`
+      : `"${this.schemaName}"."${this.tableName}"`;
   }
 
   /**
@@ -102,7 +112,7 @@ export class NeonPostgres extends VectorStore {
       return `(${row.map((_, j) => `$${base + 1 + j}`)})`;
     });
     const queryString = `
-    INSERT INTO ${this.tableName} (
+    INSERT INTO ${this.computedTableName} (
         ${useIdColumn ? `${this.idColumnName},` : ""}
         ${this.contentColumnName}, 
         ${this.vectorColumnName}, 
@@ -222,7 +232,7 @@ export class NeonPostgres extends VectorStore {
       : "";
     const queryString = `
       SELECT *, ${this.vectorColumnName} <=> $1 as "_distance"
-      FROM ${this.tableName}
+      FROM ${this.computedTableName}
       ${whereClause}
       ORDER BY "_distance" ASC
       LIMIT $2;`;
@@ -276,7 +286,7 @@ export class NeonPostgres extends VectorStore {
 
     if (params.ids !== undefined) {
       await sql(
-        `DELETE FROM ${this.tableName} 
+        `DELETE FROM ${this.computedTableName} 
         WHERE ${this.idColumnName} 
         IN (${params.ids.map((_, idx) => `$${idx + 1}`)})`,
         params.ids
@@ -297,8 +307,9 @@ export class NeonPostgres extends VectorStore {
 
     await sql(`CREATE EXTENSION IF NOT EXISTS vector;`);
     await sql(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+
     await sql(`
-      CREATE TABLE IF NOT EXISTS ${this.tableName} (
+      CREATE TABLE IF NOT EXISTS ${this.computedTableName} (
         ${this.idColumnName} uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
         ${this.contentColumnName} text,
         ${this.metadataColumnName} jsonb,
