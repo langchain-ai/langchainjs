@@ -535,7 +535,7 @@ export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
 export function hasToolCalls(messages: BaseMessage[]): boolean {
   const lastMessage = messages.at(-1);
   return Boolean(
-    lastMessage instanceof AIMessage &&
+    AIMessage.isInstance(lastMessage) &&
       lastMessage.tool_calls &&
       lastMessage.tool_calls.length > 0
   );

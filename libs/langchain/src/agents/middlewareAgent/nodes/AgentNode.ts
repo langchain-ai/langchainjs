@@ -488,7 +488,7 @@ export class AgentNode<
     response: BaseMessage
   ): boolean {
     const allToolsReturnDirect =
-      response instanceof AIMessage &&
+      AIMessage.isInstance(response) &&
       response.tool_calls?.every((call) =>
         this.#options.shouldReturnDirect.has(call.name)
       );
