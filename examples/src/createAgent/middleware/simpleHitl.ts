@@ -53,7 +53,7 @@ const agent = createAgent({
   model: "openai:gpt-4o-mini",
   tools: [],
   checkpointer,
-  middlewares: [humanInTheLoopMiddleware] as const,
+  middleware: [humanInTheLoopMiddleware] as const,
 });
 
 console.log("🚀 Human in the Loop Example - Missing Information Flow");

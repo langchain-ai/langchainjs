@@ -87,7 +87,7 @@ export type { AgentMiddleware } from "./middlewareAgent/types.js";
  */
 
 // ===== V1 OVERLOADS (WITHOUT MIDDLEWARE) =====
-// These overloads come first to ensure proper type inference when middlewares is NOT provided
+// These overloads come first to ensure proper type inference when middleware is NOT provided
 
 // Overload 1: V1 - With responseFormat as single InteropZodType
 export function createAgent<
@@ -290,15 +290,15 @@ export function createAgent<
 ): ReactAgentV1<StateSchema, StructuredResponseFormat, ContextSchema>;
 
 // ===== V2 OVERLOADS (WITH MIDDLEWARE) =====
-// These overloads explicitly require the middlewares property
+// These overloads explicitly require the middleware property
 
-// Overload 12: With responseFormat as single InteropZodType and middlewares
+// Overload 12: With responseFormat as single InteropZodType and middleware
 export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -306,17 +306,17 @@ export function createAgent<
 >(
   params: CreateAgentParamsV2<T, ContextSchema, InteropZodType<T>> & {
     responseFormat: InteropZodType<T>;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<T, ContextSchema, TMiddlewares>;
+): ReactAgentV2<T, ContextSchema, TMiddleware>;
 
-// Overload 13: With responseFormat as array of InteropZodTypes and middlewares
+// Overload 13: With responseFormat as array of InteropZodTypes and middleware
 export function createAgent<
   T extends readonly InteropZodType<any>[],
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -330,22 +330,22 @@ export function createAgent<
     T
   > & {
     responseFormat: T;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
 ): ReactAgentV2<
   ExtractZodArrayTypes<T> extends Record<string, any>
     ? ExtractZodArrayTypes<T>
     : Record<string, any>,
   ContextSchema,
-  TMiddlewares
+  TMiddleware
 >;
 
-// Overload 14: With responseFormat as JsonSchemaFormat and middlewares
+// Overload 14: With responseFormat as JsonSchemaFormat and middleware
 export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -357,16 +357,16 @@ export function createAgent<
     JsonSchemaFormat
   > & {
     responseFormat: JsonSchemaFormat;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddlewares>;
+): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddleware>;
 
-// Overload 15: With responseFormat as array of JsonSchemaFormat and middlewares
+// Overload 15: With responseFormat as array of JsonSchemaFormat and middleware
 export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -378,16 +378,16 @@ export function createAgent<
     JsonSchemaFormat[]
   > & {
     responseFormat: JsonSchemaFormat[];
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddlewares>;
+): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddleware>;
 
-// Overload 16: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[] and middlewares
+// Overload 16: With responseFormat as union of JsonSchemaFormat | JsonSchemaFormat[] and middleware
 export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -399,17 +399,17 @@ export function createAgent<
     JsonSchemaFormat | JsonSchemaFormat[]
   > & {
     responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddlewares>;
+): ReactAgentV2<Record<string, unknown>, ContextSchema, TMiddleware>;
 
-// Overload 17: With responseFormat as TypedToolStrategy and middlewares
+// Overload 17: With responseFormat as TypedToolStrategy and middleware
 export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -417,17 +417,17 @@ export function createAgent<
 >(
   params: CreateAgentParamsV2<T, ContextSchema, TypedToolStrategy<T>> & {
     responseFormat: TypedToolStrategy<T>;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<T, ContextSchema, TMiddlewares>;
+): ReactAgentV2<T, ContextSchema, TMiddleware>;
 
-// Overload 18: With responseFormat as single ToolStrategy and middlewares
+// Overload 18: With responseFormat as single ToolStrategy and middleware
 export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -435,17 +435,17 @@ export function createAgent<
 >(
   params: CreateAgentParamsV2<T, ContextSchema, ToolStrategy<T>> & {
     responseFormat: ToolStrategy<T>;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<T, ContextSchema, TMiddlewares>;
+): ReactAgentV2<T, ContextSchema, TMiddleware>;
 
-// Overload 19: With responseFormat as ProviderStrategy and middlewares
+// Overload 19: With responseFormat as ProviderStrategy and middleware
 export function createAgent<
   T extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -453,16 +453,16 @@ export function createAgent<
 >(
   params: CreateAgentParamsV2<T, ContextSchema, ProviderStrategy<T>> & {
     responseFormat: ProviderStrategy<T>;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<T, ContextSchema, TMiddlewares>;
+): ReactAgentV2<T, ContextSchema, TMiddleware>;
 
-// Overload 20: Without responseFormat but with middlewares
+// Overload 20: Without responseFormat but with middleware
 export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -471,15 +471,15 @@ export function createAgent<
   params: Omit<
     CreateAgentParamsV2<ResponseFormatUndefined, ContextSchema, never>,
     "responseFormat"
-  > & { middlewares: TMiddlewares }
-): ReactAgentV2<ResponseFormatUndefined, ContextSchema, TMiddlewares>;
+  > & { middleware: TMiddleware }
+): ReactAgentV2<ResponseFormatUndefined, ContextSchema, TMiddleware>;
 
-// Overload 21: With responseFormat explicitly undefined and middlewares
+// Overload 21: With responseFormat explicitly undefined and middleware
 export function createAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -490,17 +490,17 @@ export function createAgent<
     "responseFormat"
   > & {
     responseFormat?: undefined;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<ResponseFormatUndefined, ContextSchema, TMiddlewares>;
+): ReactAgentV2<ResponseFormatUndefined, ContextSchema, TMiddleware>;
 
-// Overload 22: For other ResponseFormat values with middlewares (failsafe)
+// Overload 22: For other ResponseFormat values with middleware (failsafe)
 export function createAgent<
   StructuredResponseFormat extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<
+  TMiddleware extends readonly AgentMiddleware<
     any,
     any,
     any
@@ -508,15 +508,15 @@ export function createAgent<
 >(
   params: CreateAgentParamsV2<StructuredResponseFormat, ContextSchema, any> & {
     responseFormat: any;
-    middlewares: TMiddlewares;
+    middleware: TMiddleware;
   }
-): ReactAgentV2<StructuredResponseFormat, ContextSchema, TMiddlewares>;
+): ReactAgentV2<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
 export function createAgent(params: any): any {
   /**
-   * Check if middlewares property is present
+   * Check if middleware property is present
    */
-  if ("middlewares" in params && params.middlewares !== undefined) {
+  if ("middleware" in params && params.middleware !== undefined) {
     /**
      * The user wants to use the middleware version of the agent.
      * Let's verify that `preModelHook` and `postModelHook` are not provided

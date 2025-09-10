@@ -106,7 +106,7 @@ describe("humanInTheLoopMiddleware", () => {
       prompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
-      middlewares: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware] as const,
     });
 
     const config = {
@@ -240,7 +240,7 @@ describe("humanInTheLoopMiddleware", () => {
       llm,
       checkpointer,
       tools: [writeFileTool],
-      middlewares: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware] as const,
     });
 
     const config = {
@@ -324,7 +324,7 @@ describe("humanInTheLoopMiddleware", () => {
       llm,
       checkpointer,
       tools: [writeFileTool],
-      middlewares: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware] as const,
     });
 
     const config = {
@@ -395,7 +395,7 @@ describe("humanInTheLoopMiddleware", () => {
       llm,
       checkpointer,
       tools: [writeFileTool],
-      middlewares: [hitlMiddleware] as const,
+      middleware: [hitlMiddleware] as const,
     });
 
     const config = {

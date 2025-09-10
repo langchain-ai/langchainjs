@@ -110,7 +110,7 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
  * const agent = createAgent({
  *   llm: model,
  *   tools: [getWeather],
- *   middlewares: [
+ *   middleware: [
  *     summarizationMiddleware({
  *       model: new ChatOpenAI({ model: "gpt-4o" }),
  *       maxTokensBeforeSummary: 4000,

@@ -210,7 +210,7 @@ export type InferMiddlewareInputState<
   : {};
 
 /**
- * Helper type to infer merged state from an array of middlewares (just the middleware states)
+ * Helper type to infer merged state from an array of middleware (just the middleware states)
  */
 export type InferMiddlewareStates<
   T extends readonly AgentMiddleware<any, any, any>[]
@@ -225,7 +225,7 @@ export type InferMiddlewareStates<
   : {};
 
 /**
- * Helper type to infer merged input state from an array of middlewares (with optional defaults)
+ * Helper type to infer merged input state from an array of middleware (with optional defaults)
  */
 export type InferMiddlewareInputStates<
   T extends readonly AgentMiddleware<any, any, any>[]
@@ -240,14 +240,14 @@ export type InferMiddlewareInputStates<
   : {};
 
 /**
- * Helper type to infer merged state from an array of middlewares (includes built-in state)
+ * Helper type to infer merged state from an array of middleware (includes built-in state)
  */
 export type InferMergedState<
   T extends readonly AgentMiddleware<any, any, any>[]
 > = InferMiddlewareStates<T> & AgentBuiltInState;
 
 /**
- * Helper type to infer merged input state from an array of middlewares (includes built-in state)
+ * Helper type to infer merged input state from an array of middleware (includes built-in state)
  */
 export type InferMergedInputState<
   T extends readonly AgentMiddleware<any, any, any>[]
@@ -275,7 +275,7 @@ export type InferMiddlewareContextInput<
   : {};
 
 /**
- * Helper type to infer merged context from an array of middlewares
+ * Helper type to infer merged context from an array of middleware
  */
 export type InferMiddlewareContexts<
   T extends readonly AgentMiddleware<any, any, any>[]
@@ -290,7 +290,7 @@ export type InferMiddlewareContexts<
   : {};
 
 /**
- * Helper type to infer merged input context from an array of middlewares (with optional defaults)
+ * Helper type to infer merged input context from an array of middleware (with optional defaults)
  */
 export type InferMiddlewareContextInputs<
   T extends readonly AgentMiddleware<any, any, any>[]
@@ -472,7 +472,7 @@ export type CreateAgentParams<
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
-   * invocation and allows to access it in hooks such as `prompt` and middlewares.
+   * invocation and allows to access it in hooks such as `prompt` and middleware.
    * As opposed to the agent state, defined in `stateSchema`, the context is not persisted between
    * agent invocations.
    *
@@ -569,10 +569,10 @@ export type CreateAgentParams<
   responseFormat?: ResponseFormatType;
 
   /**
-   * Middlewares to run during agent execution.
+   * Middleware instances to run during agent execution.
    * Each middleware can define its own state schema and hook into the agent lifecycle.
    */
-  middlewares?: readonly AgentMiddleware<any, any, any>[];
+  middleware?: readonly AgentMiddleware<any, any, any>[];
 
   /**
    * An optional name for the agent.
@@ -637,19 +637,19 @@ export type InferContextInput<
  */
 export type InferAgentConfig<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = IsAllOptional<
-  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddlewares>
+  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddleware>
 > extends true
   ?
       | LangGraphRunnableConfig<{
           context?: InferContextInput<ContextSchema> &
-            InferMiddlewareContextInputs<TMiddlewares>;
+            InferMiddlewareContextInputs<TMiddleware>;
         }>
       | undefined
   : LangGraphRunnableConfig<{
       context: InferContextInput<ContextSchema> &
-        InferMiddlewareContextInputs<TMiddlewares>;
+        InferMiddlewareContextInputs<TMiddleware>;
     }>;
 
 export type InternalAgentState<

@@ -15,21 +15,21 @@ import type { AgentMiddleware, InferMiddlewareStates } from "./types.js";
 // Helper type for the merged annotation
 type MergedAnnotationSpec<
   T extends Record<string, any> | ResponseFormatUndefined,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = {
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
 } & (T extends ResponseFormatUndefined
   ? {}
   : { structuredResponse: LastValue<T> }) &
-  InferMiddlewareStates<TMiddlewares>;
+  InferMiddlewareStates<TMiddleware>;
 
 export function createAgentAnnotationConditional<
   T extends Record<string, any> | ResponseFormatUndefined,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
 >(
   hasStructuredResponse = true,
-  middlewares: TMiddlewares = [] as unknown as TMiddlewares
-): AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>> {
+  middlewareList: TMiddleware = [] as unknown as TMiddleware
+): AnnotationRoot<MergedAnnotationSpec<T, TMiddleware>> {
   const baseAnnotation: Record<string, any> = {
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
@@ -38,7 +38,7 @@ export function createAgentAnnotationConditional<
   };
 
   // Add middleware state properties to the annotation
-  for (const middleware of middlewares) {
+  for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
       // Parse empty object to get default values
       let parsedDefaults: Record<string, any> = {};
@@ -70,7 +70,7 @@ export function createAgentAnnotationConditional<
 
   if (!hasStructuredResponse) {
     return Annotation.Root(baseAnnotation) as AnnotationRoot<
-      MergedAnnotationSpec<T, TMiddlewares>
+      MergedAnnotationSpec<T, TMiddleware>
     >;
   }
 
@@ -78,5 +78,5 @@ export function createAgentAnnotationConditional<
     ...baseAnnotation,
     structuredResponse:
       Annotation<T extends ResponseFormatUndefined ? never : T>(),
-  }) as unknown as AnnotationRoot<MergedAnnotationSpec<T, TMiddlewares>>;
+  }) as unknown as AnnotationRoot<MergedAnnotationSpec<T, TMiddleware>>;
 }

@@ -23,7 +23,7 @@ describe("middleware types", () => {
     });
 
     const agent = createAgent({
-      middlewares: [middleware, middleware2] as const,
+      middleware: [middleware, middleware2] as const,
       tools: [],
       model: "gpt-4",
       responseFormat: z.object({
@@ -74,7 +74,7 @@ describe("middleware types", () => {
         customAgentOptionalContextProp: z.string().default("default value"),
         customAgentRequiredContextProp: z.string(),
       }),
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
       tools: [],
       model: "gpt-4",
     });

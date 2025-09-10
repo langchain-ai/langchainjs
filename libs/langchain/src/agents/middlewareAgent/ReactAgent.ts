@@ -47,16 +47,16 @@ type MergedAgentState<
   StructuredResponseFormat extends
     | Record<string, any>
     | ResponseFormatUndefined,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = (StructuredResponseFormat extends ResponseFormatUndefined
   ? BuiltInState
   : BuiltInState & { structuredResponse: StructuredResponseFormat }) &
-  InferMiddlewareStates<TMiddlewares>;
+  InferMiddlewareStates<TMiddleware>;
 
 type InvokeStateParameter<
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[]
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > =
-  | (BuiltInState & InferMiddlewareInputStates<TMiddlewares>)
+  | (BuiltInState & InferMiddlewareInputStates<TMiddleware>)
   | Command<any, any, any>
   | null;
 
@@ -67,13 +67,13 @@ type AgentGraph<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
 > = CompiledStateGraph<
   any,
   any,
   any,
   any,
-  MergedAgentState<StructuredResponseFormat, TMiddlewares>,
+  MergedAgentState<StructuredResponseFormat, TMiddleware>,
   ToAnnotationRoot<ContextSchema>["spec"],
   unknown
 >;
@@ -85,9 +85,9 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddlewares extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
 > {
-  #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
+  #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
@@ -137,10 +137,10 @@ export class ReactAgent<
     // Create a schema that merges agent base schema with middleware state schemas
     const schema = createAgentAnnotationConditional<
       StructuredResponseFormat,
-      TMiddlewares
+      TMiddleware
     >(
       this.options.responseFormat !== undefined,
-      this.options.middlewares as TMiddlewares
+      this.options.middleware as TMiddleware
     );
 
     const workflow = new StateGraph(
@@ -156,7 +156,7 @@ export class ReactAgent<
     // Generate node names for middleware nodes that have hooks
     const beforeModelNodes: { index: number; name: string }[] = [];
     const afterModelNodes: { index: number; name: string }[] = [];
-    const prepareModelRequestHookMiddlewares: [
+    const prepareModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -164,14 +164,14 @@ export class ReactAgent<
       () => any
     ][] = [];
 
-    const middlewares = this.options.middlewares ?? [];
-    for (let i = 0; i < middlewares.length; i++) {
+    const middleware = this.options.middleware ?? [];
+    for (let i = 0; i < middleware.length; i++) {
       let beforeModelNode: BeforeModelNode | undefined;
       let afterModelNode: AfterModelNode | undefined;
-      const middleware = middlewares[i];
-      if (middleware.beforeModel) {
-        beforeModelNode = new BeforeModelNode(middleware);
-        const name = `before_model_${middleware.name}_${i}`;
+      const m = middleware[i];
+      if (m.beforeModel) {
+        beforeModelNode = new BeforeModelNode(m);
+        const name = `before_model_${m.name}_${i}`;
         beforeModelNodes.push({
           index: i,
           name,
@@ -182,9 +182,9 @@ export class ReactAgent<
           beforeModelNode.nodeOptions
         );
       }
-      if (middleware.afterModel) {
-        afterModelNode = new AfterModelNode(middleware);
-        const name = `after_model_${middleware.name}_${i}`;
+      if (m.afterModel) {
+        afterModelNode = new AfterModelNode(m);
+        const name = `after_model_${m.name}_${i}`;
         afterModelNodes.push({
           index: i,
           name,
@@ -196,9 +196,9 @@ export class ReactAgent<
         );
       }
 
-      if (middleware.prepareModelRequest) {
-        prepareModelRequestHookMiddlewares.push([
-          middleware,
+      if (m.prepareModelRequest) {
+        prepareModelRequestHookMiddleware.push([
+          m,
           () => ({
             ...beforeModelNode?.getState(),
             ...afterModelNode?.getState(),
@@ -219,11 +219,11 @@ export class ReactAgent<
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
         responseFormat: this.options.responseFormat,
-        middlewares: this.options.middlewares,
+        middleware: this.options.middleware,
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
-        prepareModelRequestHookMiddlewares,
+        prepareModelRequestHookMiddleware,
       }),
       AgentNode.nodeOptions
     );
@@ -337,7 +337,7 @@ export class ReactAgent<
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
-    }) as AgentGraph<StructuredResponseFormat, ContextSchema, TMiddlewares>;
+    }) as AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
   }
 
   /**
@@ -346,7 +346,7 @@ export class ReactAgent<
   get graph(): AgentGraph<
     StructuredResponseFormat,
     ContextSchema,
-    TMiddlewares
+    TMiddleware
   > {
     return this.#graph;
   }
@@ -438,11 +438,11 @@ export class ReactAgent<
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
-    state: InvokeStateParameter<TMiddlewares>
-  ): InvokeStateParameter<TMiddlewares> {
+    state: InvokeStateParameter<TMiddleware>
+  ): InvokeStateParameter<TMiddleware> {
     if (
-      !this.options.middlewares ||
-      this.options.middlewares.length === 0 ||
+      !this.options.middleware ||
+      this.options.middleware.length === 0 ||
       state instanceof Command ||
       !state
     ) {
@@ -450,10 +450,10 @@ export class ReactAgent<
     }
 
     const defaultStates = initializeMiddlewareStates(
-      this.options.middlewares,
+      this.options.middleware,
       state
     );
-    const updatedState = { ...state } as InvokeStateParameter<TMiddlewares>;
+    const updatedState = { ...state } as InvokeStateParameter<TMiddleware>;
     if (!updatedState) {
       return updatedState;
     }
@@ -462,7 +462,7 @@ export class ReactAgent<
     for (const [key, value] of Object.entries(defaultStates)) {
       if (!(key in updatedState)) {
         // @ts-expect-error - ToDo: fix type
-        updatedState[key as keyof InvokeStateParameter<TMiddlewares>] = value;
+        updatedState[key as keyof InvokeStateParameter<TMiddleware>] = value;
       }
     }
 
@@ -473,23 +473,23 @@ export class ReactAgent<
    * @inheritdoc
    */
   get invoke() {
-    type FullState = MergedAgentState<StructuredResponseFormat, TMiddlewares>;
+    type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
     type FullContext = InferContextInput<ContextSchema> &
-      InferMiddlewareContextInputs<TMiddlewares>;
+      InferMiddlewareContextInputs<TMiddleware>;
 
     // Create overloaded function type based on whether context has required fields
     type InvokeFunction = IsAllOptional<FullContext> extends true
       ? (
-          state: InvokeStateParameter<TMiddlewares>,
+          state: InvokeStateParameter<TMiddleware>,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>
       : (
-          state: InvokeStateParameter<TMiddlewares>,
+          state: InvokeStateParameter<TMiddleware>,
           config?: LangGraphRunnableConfig<FullContext>
         ) => Promise<FullState>;
 
     const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddlewares>,
+      state: InvokeStateParameter<TMiddleware>,
       config?: LangGraphRunnableConfig<FullContext>
     ): Promise<FullState> => {
       const initializedState = this.#initializeMiddlewareStates(state);

@@ -109,7 +109,7 @@ describe("middleware state management", () => {
 
     const agent = createAgent({
       llm,
-      middlewares: [middlewareA, middlewareB, middlewareC] as const,
+      middleware: [middlewareA, middlewareB, middlewareC] as const,
     });
 
     const { messages, ...rest } = await agent.invoke({

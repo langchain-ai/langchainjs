@@ -76,7 +76,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Create a conversation with enough tokens to trigger summarization
@@ -123,7 +123,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Short conversation
@@ -167,7 +167,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Create messages with AI/Tool pairs that should stay together
@@ -211,7 +211,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Messages with existing system message containing a previous summary
@@ -265,7 +265,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Create messages with more than 50 words
@@ -300,7 +300,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     const result = await agent.invoke({ messages: [] });
@@ -323,7 +323,7 @@ describe("summarizationMiddleware", () => {
 
     const agent = createAgent({
       llm: mainModel,
-      middlewares: [middleware] as const,
+      middleware: [middleware] as const,
     });
 
     // Create many messages
