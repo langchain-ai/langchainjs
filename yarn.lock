@@ -5611,16 +5611,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datastax/astra-db-ts@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@datastax/astra-db-ts@npm:1.0.1"
+"@datastax/astra-db-ts@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@datastax/astra-db-ts@npm:1.5.0"
   dependencies:
-    bson-objectid: ^2.0.4
     fetch-h2: ^3.0.2
-    object-hash: ^3.0.0
+    safe-stable-stringify: ^2.4.3
     typed-emitter: ^2.1.0
     uuidv7: ^0.6.3
-  checksum: 23ad42dc978edc5bd473252ed690dd38e75be8451e32b1f0cd35c47003ec9b048a9cd8fcd0b6b0c58654fbdceba6c1e3e566bbf4e550342d2e76c471079b395a
+  checksum: 2c006a5929e8c1c4fde0919640e7079890cb70919604d4f10e6c92ae88e6a139a8472e2db7e1b06899f07322b41f573a43735852eae6cedb63db4cd1422f928b
   languageName: node
   linkType: hard
 
@@ -9033,7 +9032,7 @@ __metadata:
     "@clickhouse/client": ^0.2.5
     "@cloudflare/ai": 1.0.12
     "@cloudflare/workers-types": ^4.20230922.0
-    "@datastax/astra-db-ts": ^1.0.1
+    "@datastax/astra-db-ts": ^1.5.0
     "@elastic/elasticsearch": ^8.4.0
     "@faker-js/faker": 8.4.1
     "@getmetal/metal-sdk": ^4.0.0
@@ -19528,13 +19527,6 @@ __metadata:
   dependencies:
     node-int64: ^0.4.0
   checksum: 9ba4dc58ce86300c862bffc3ae91f00b2a03b01ee07f3564beeeaf82aa243b8b03ba53f123b0b842c190d4399b94697970c8e7cf7b1ea44b61aa28c3526a4449
-  languageName: node
-  linkType: hard
-
-"bson-objectid@npm:^2.0.4":
-  version: 2.0.4
-  resolution: "bson-objectid@npm:2.0.4"
-  checksum: 511a442cf8fb3691279911e53cf9476f9ecbe8f50e5c4887bf251160c48c86d4f1b140f1dfe890bbf9a2b7ce39732ed7caedfee1d1058e83741cef2d0e95082e
   languageName: node
   linkType: hard
 
@@ -37246,6 +37238,13 @@ __metadata:
   version: 2.4.3
   resolution: "safe-stable-stringify@npm:2.4.3"
   checksum: 3aeb64449706ee1f5ad2459fc99648b131d48e7a1fbb608d7c628020177512dc9d94108a5cb61bbc953985d313d0afea6566d243237743e02870490afef04b43
+  languageName: node
+  linkType: hard
+
+"safe-stable-stringify@npm:^2.4.3":
+  version: 2.5.0
+  resolution: "safe-stable-stringify@npm:2.5.0"
+  checksum: d3ce103ed43c6c2f523e39607208bfb1c73aa48179fc5be53c3aa97c118390bffd4d55e012f5393b982b65eb3e0ee954dd57b547930d3f242b0053dcdb923d17
   languageName: node
   linkType: hard
 
