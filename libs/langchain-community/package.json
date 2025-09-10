@@ -1785,13 +1785,15 @@
       "input": "./src/vectorstores/couchbase.ts"
     },
     "./vectorstores/couchbase_search": {
-      "types": {
-        "import": "./vectorstores/couchbase_search.d.ts",
-        "require": "./vectorstores/couchbase_search.d.cts",
-        "default": "./vectorstores/couchbase_search.d.ts"
+      "import": {
+        "types": "./dist/vectorstores/couchbase_search.d.ts",
+        "default": "./dist/vectorstores/couchbase_search.js"
       },
-      "import": "./vectorstores/couchbase_search.js",
-      "require": "./vectorstores/couchbase_search.cjs"
+      "require": {
+        "types": "./dist/vectorstores/couchbase_search.d.cts",
+        "default": "./dist/vectorstores/couchbase_search.cjs"
+      },
+      "input": "./src/vectorstores/couchbase_search.ts"
     },
     "./vectorstores/elasticsearch": {
       "import": {
