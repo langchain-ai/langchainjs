@@ -263,7 +263,8 @@ export interface BaseDynamicToolInput extends ToolParams {
 /**
  * Interface for the input parameters of the DynamicTool class.
  */
-export interface DynamicToolInput<ToolInputType, ToolOutputType>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface DynamicToolInput<ToolInputType = any, ToolOutputType = any>
   extends BaseDynamicToolInput {
   func: (
     input: ToolInputType,

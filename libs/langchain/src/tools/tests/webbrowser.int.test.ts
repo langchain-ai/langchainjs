@@ -10,7 +10,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://www.merriam-webster.com/word-of-the-day","word of the day"`
     );
 
@@ -28,7 +28,7 @@ describe("webbrowser Test suite", () => {
         withCredentials: true,
       },
     });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://www.merriam-webster.com/word-of-the-day",""`
     );
 
@@ -41,7 +41,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(`"",""`);
+    const result = await browser.invoke(`"",""`);
 
     expect(result).toContain("Invalid URL");
   });
@@ -51,7 +51,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"www.merriam-webster.com/word-of-the-day","word of the day"`
     );
 
@@ -63,7 +63,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://www.hDjRBKoAD0EIbF29TWM4rbXDGGM5Nhy4uzNEAdDS.com","word of the day"`
     );
 
@@ -77,7 +77,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://www.musicgateway.com/spotify-pre-save",""`
     );
 
@@ -90,7 +90,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://parade.com/991228/marynliles/couples-goals",""`
     );
     expect(result).not.toEqual("Error: http response 403");
@@ -101,7 +101,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://firstround.com/review/how-to-fix-the-co-founder-fights-youre-sick-of-having-lessons-from-couples-therapist-esther-perel",""`
     );
 
@@ -116,7 +116,7 @@ describe("webbrowser Test suite", () => {
     const embeddings = new OpenAIEmbeddings();
 
     const browser = new WebBrowser({ model, embeddings });
-    const result = await browser.call(
+    const result = await browser.invoke(
       `"https://www.healtheuropa.eu/why-mdma-must-be-reclassified-as-a-schedule-2-drug/95780",""`
     );
     expect(result).toContain("Beckley Foundation");
