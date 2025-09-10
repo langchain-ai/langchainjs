@@ -29,7 +29,7 @@ const result = await chain.invoke({
   input: `prints "Hello LangChain"`,
 });
 
-console.log(JSON.parse(result).stdout);
+console.log(JSON.parse(result as string).stdout);
 
 // To install python packages:
 // This uses the loadPackages command.

@@ -350,7 +350,7 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
       typeof input === "string" || input == null ? { input } : input;
 
     // Call the parent class invoke method with the structured input
-    return super.invoke(structuredInput as any, config);
+    return super.invoke(structuredInput, config);
   }
 }
 
