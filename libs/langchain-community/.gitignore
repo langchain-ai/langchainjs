@@ -174,6 +174,10 @@ embeddings/gradient_ai.cjs
 embeddings/gradient_ai.js
 embeddings/gradient_ai.d.ts
 embeddings/gradient_ai.d.cts
+embeddings/hana_internal.cjs
+embeddings/hana_internal.js
+embeddings/hana_internal.d.ts
+embeddings/hana_internal.d.cts
 embeddings/hf.cjs
 embeddings/hf.js
 embeddings/hf.d.ts
