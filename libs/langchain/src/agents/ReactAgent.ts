@@ -367,7 +367,7 @@ export class ReactAgent<
    */
   #createToolsRouter(shouldReturnDirect: Set<string>) {
     return (state: InternalAgentState<StructuredResponseFormat>) => {
-      const;
+      const messages = state.messages;
       const lastMessage = messages[messages.length - 1];
 
       // Check if we just executed a returnDirect tool
