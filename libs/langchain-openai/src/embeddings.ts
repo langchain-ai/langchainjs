@@ -51,8 +51,7 @@ export interface OpenAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 
   /**
-   * The format to return the embeddings in. Can be either `float` or
-   * [`base64`](https://pypi.org/project/pybase64/).
+   * The format to return the embeddings in. Can be either 'float' or 'base64'.
    */
   encodingFormat?: "float" | "base64";
 }
