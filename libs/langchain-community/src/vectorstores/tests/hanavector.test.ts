@@ -1,6 +1,6 @@
 import { expect } from "@jest/globals";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { HanaDB } from "../hanavector.js";
-import { FakeEmbeddings } from "closevector-common/dist/fake.js";
 
 describe("Sanity check tests", () => {
   it("should sanitize int with illegal value", () => {
