@@ -438,6 +438,11 @@ export class ChatMinimax
     this.replyConstraints = fields?.replyConstraints ?? this.replyConstraints;
     this.defaultBotName = fields?.defaultBotName ?? this.defaultBotName;
 
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        `Minimax model name not specified. Defaulting to "${this.model}".`
+      );
+    }
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
     this.basePath = fields?.configuration?.basePath ?? this.basePath;

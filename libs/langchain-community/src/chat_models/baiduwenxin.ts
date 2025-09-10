@@ -279,6 +279,11 @@ export class ChatBaiduWenxin
     this.topP = fields?.topP ?? this.topP;
     this.penaltyScore = fields?.penaltyScore ?? this.penaltyScore;
 
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        `Baidu Wenxin model name not specified. Defaulting to "${this.model}".`
+      );
+    }
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
     this.model = this.modelName;
 

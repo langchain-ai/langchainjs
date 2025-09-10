@@ -454,9 +454,16 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
       );
     }
 
+    const model = fields?.model;
+    if (!model) {
+      console.warn(
+        `TogetherAI model name not specified. Defaulting to "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free".`
+      );
+    }
+
     super({
       ...fields,
-      model: fields?.model || "mistralai/Mixtral-8x7B-Instruct-v0.1",
+      model: fields?.model || "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
       apiKey: togetherAIApiKey,
       configuration: {
         baseURL: "https://api.together.xyz/v1/",

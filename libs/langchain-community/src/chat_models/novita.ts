@@ -83,6 +83,11 @@ export class ChatNovitaAI extends ChatOpenAICompletions<ChatNovitaCallOptions> {
       );
     }
 
+    if (!fields?.model) {
+      console.warn(
+        'Novita model name not specified. Defaulting to "gryphe/mythomax-l2-13b"'
+      );
+    }
     super({
       ...fields,
       model: fields?.model || "gryphe/mythomax-l2-13b",
