@@ -39,7 +39,6 @@ const humanInTheLoopMiddleware = createMiddleware({
     // Add the clarification as a new message
     console.log(`\n✅ Human provided clarification: "${clarification}"`);
 
-    // eslint-disable-next-line consistent-return
     return {
       messages: [
         ...state.messages,
