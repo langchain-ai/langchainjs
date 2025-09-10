@@ -44,25 +44,6 @@ function getExtractionFunctions(schema: FunctionParameters) {
   ];
 }
 
-/**
- * Function that creates an extraction chain from a Zod schema. It
- * converts the Zod schema to a JSON schema using before creating
- * the extraction chain.
- * @param schema The Zod schema which extracted data should match
- * @param llm Must be a ChatOpenAI or AnthropicFunctions model that supports function calling.
- * @returns A LLMChain instance configured to return data matching the schema.
- */
-export function createExtractionChainFromZod(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: InteropZodObject,
-  llm: BaseChatModel<BaseFunctionCallOptions>
-) {
-  return createExtractionChain(
-    toJsonSchema(schema) as JsonSchema7ObjectType,
-    llm
-  );
-}
-
 const _EXTRACTION_TEMPLATE = `Extract and save the relevant entities mentioned in the following passage together with their properties.
 
 Passage:
@@ -90,4 +71,22 @@ export function createExtractionChain(
     outputParser,
     tags: ["openai_functions", "extraction"],
   });
+}
+
+/**
+ * Function that creates an extraction chain from a Zod schema. It
+ * converts the Zod schema to a JSON schema using before creating
+ * the extraction chain.
+ * @param schema The Zod schema which extracted data should match
+ * @param llm Must be a ChatOpenAI or AnthropicFunctions model that supports function calling.
+ * @returns A LLMChain instance configured to return data matching the schema.
+ */
+export function createExtractionChainFromZod(
+  schema: InteropZodObject,
+  llm: BaseChatModel<BaseFunctionCallOptions>
+) {
+  return createExtractionChain(
+    toJsonSchema(schema) as JsonSchema7ObjectType,
+    llm
+  );
 }
