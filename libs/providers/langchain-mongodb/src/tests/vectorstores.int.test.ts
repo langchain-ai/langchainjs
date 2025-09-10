@@ -46,8 +46,6 @@ beforeAll(async () => {
   const [dbName, collectionName] = namespace.split(".");
   collection = await client.db(dbName).createCollection(collectionName);
 
-  if (!isUsingLocalAtlas()) return;
-
   await collection.createSearchIndex({
     name: "default",
     type: "search",
