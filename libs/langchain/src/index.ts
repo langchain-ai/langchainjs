@@ -45,10 +45,15 @@ export {
 } from "./agents/index.js";
 
 /**
- * LangChain Memory
- * Check in what we want to export here
+ * Re-export essential LangGraph primitives for state persistence, storage,
+ * and execution control to ensure version compatibility across the ecosystem
  */
-export { MemorySaver, InMemoryStore } from "@langchain/langgraph";
+export {
+  MemorySaver,
+  InMemoryStore,
+  Command,
+  interrupt,
+} from "@langchain/langgraph";
 
 /**
  * LangChain Context
