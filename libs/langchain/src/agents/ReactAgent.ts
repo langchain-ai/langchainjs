@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { InteropZodObject } from "@langchain/core/utils/types";
 import {
   AnnotationRoot,
@@ -366,7 +367,7 @@ export class ReactAgent<
    */
   #createToolsRouter(shouldReturnDirect: Set<string>) {
     return (state: InternalAgentState<StructuredResponseFormat>) => {
-      const messages = state.messages;
+      const;
       const lastMessage = messages[messages.length - 1];
 
       // Check if we just executed a returnDirect tool
