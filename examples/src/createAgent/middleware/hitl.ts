@@ -126,7 +126,6 @@ if (state.next && state.next.length > 0) {
 
     // Resume with approval
     const resumedResult = await agent.invoke(
-      // @ts-expect-error
       new Command({
         resume: [{ type: "accept" }], // Approve the tool call
       }),

@@ -91,7 +91,6 @@ console.log('   Human provides: "France"');
 // Resume the graph with the clarification
 // The Command is properly typed for resuming from an interrupt
 const resumedResult = await agent.invoke(
-  // @ts-expect-error
   new Command({
     resume: "France",
   }),
