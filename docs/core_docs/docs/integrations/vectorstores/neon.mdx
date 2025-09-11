@@ -47,6 +47,16 @@ const vectorStore = await NeonPostgres.initialize(embeddings, {
 });
 ```
 
+### Optional
+
+You can put the vector store table in custom db schema by passing `schemaName` to the config options during initialization.
+
+```typescript
+const vectorStore = await NeonPostgres.initialize(embeddings, {
+  connectionString: NEON_POSTGRES_CONNECTION_STRING,
+  schemaName: "mycustomschema",
+});
+
 ## Usage
 
 import CodeBlock from "@theme/CodeBlock";
@@ -58,3 +68,4 @@ import Example from "@examples/indexes/vector_stores/neon/example.ts";
 
 - Vector store [conceptual guide](/docs/concepts/#vectorstores)
 - Vector store [how-to guides](/docs/how_to/#vectorstores)
+```
