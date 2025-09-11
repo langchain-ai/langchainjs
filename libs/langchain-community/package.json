@@ -1773,17 +1773,6 @@
       },
       "input": "./src/vectorstores/convex.ts"
     },
-    "./vectorstores/couchbase": {
-      "import": {
-        "types": "./dist/vectorstores/couchbase.d.ts",
-        "default": "./dist/vectorstores/couchbase.js"
-      },
-      "require": {
-        "types": "./dist/vectorstores/couchbase.d.cts",
-        "default": "./dist/vectorstores/couchbase.cjs"
-      },
-      "input": "./src/vectorstores/couchbase.ts"
-    },
     "./vectorstores/couchbase_search": {
       "import": {
         "types": "./dist/vectorstores/couchbase_search.d.ts",
