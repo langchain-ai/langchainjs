@@ -62,6 +62,24 @@ function convertAIMessageToCerebras(
   );
 
   if (typeof messages.content === "string") {
+    // Check if there are tool calls even with string content
+    if (messages.tool_calls?.length) {
+      const toolCalls: CerebrasToolCall[] = messages.tool_calls.map((tc) => ({
+        id: tc.id!,
+        type: "function",
+        function: {
+          name: tc.name,
+          arguments: JSON.stringify(tc.args),
+        },
+      }));
+      return [
+        {
+          role: "assistant",
+          content: messages.content,
+          tool_calls: toolCalls,
+        },
+      ];
+    }
     return [
       {
         role: "assistant",
@@ -117,11 +135,11 @@ function convertHumanGenericMessagesToCerebras(
       },
     ];
   }
-  return message.content.map((c) => {
+  return message.content.map((c): CerebrasMessageParam => {
     if (c.type === "text") {
       return {
         role: "user",
-        content: c.text,
+        content: c.text as string,
       };
     } else if (c.type === "image_url") {
       if (typeof c.image_url === "string") {
@@ -130,7 +148,12 @@ function convertHumanGenericMessagesToCerebras(
           content: "",
           images: [extractBase64FromDataUrl(c.image_url)],
         };
-      } else if (c.image_url.url && typeof c.image_url.url === "string") {
+      } else if (
+        typeof c.image_url === "object" &&
+        c.image_url !== null &&
+        "url" in c.image_url &&
+        typeof c.image_url.url === "string"
+      ) {
         return {
           role: "user",
           content: "",
@@ -189,16 +212,16 @@ export function convertToCerebrasMessageParams(
   messages: BaseMessage[]
 ): CerebrasMessageParam[] {
   return messages.flatMap((msg) => {
-    if (["human", "generic"].includes(msg._getType())) {
-      return convertHumanGenericMessagesToCerebras(msg);
-    } else if (msg._getType() === "ai") {
-      return convertAIMessageToCerebras(msg);
-    } else if (msg._getType() === "system") {
-      return convertSystemMessageToCerebras(msg);
-    } else if (msg._getType() === "tool") {
+    if (["human", "generic"].includes(msg.getType())) {
+      return convertHumanGenericMessagesToCerebras(msg as HumanMessage);
+    } else if (msg.getType() === "ai") {
+      return convertAIMessageToCerebras(msg as AIMessage);
+    } else if (msg.getType() === "system") {
+      return convertSystemMessageToCerebras(msg as SystemMessage);
+    } else if (msg.getType() === "tool") {
       return convertToolMessageToCerebras(msg as ToolMessage);
     } else {
-      throw new Error(`Unsupported message type: ${msg._getType()}`);
+      throw new Error(`Unsupported message type: ${msg.getType()}`);
     }
   });
 }
