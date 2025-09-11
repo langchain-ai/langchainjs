@@ -447,6 +447,24 @@ test("Can pass tool_choice", async () => {
   expect(input.location).toBeTruthy();
 });
 
+test("Can tool choice set none", async () => {
+  const weatherTool = tool((_) => "no-op", {
+    name: "get_weather",
+    description: zodSchema.description,
+    schema: zodSchema,
+  });
+
+  const modelWithTools = model.bindTools([weatherTool], {
+    tool_choice: "none",
+  });
+
+  const result = await modelWithTools.invoke(
+    "What is the weather in SF today?"
+  );
+
+  expect(result.tool_calls).toStrictEqual([]);
+});
+
 test("bindTools accepts openai formatted tool", async () => {
   const openaiTool = {
     type: "function",
