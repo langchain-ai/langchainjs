@@ -1,5 +1,6 @@
 import { loadEvaluator } from "langchain/evaluation";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 
 const promptTemplate = PromptTemplate.fromTemplate(
   `Given the input context, which do you prefer: A or B?
@@ -19,6 +20,7 @@ Reasoning:
 );
 
 const chain = await loadEvaluator("labeled_pairwise_string", {
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
   chainOptions: {
     prompt: promptTemplate,
   },

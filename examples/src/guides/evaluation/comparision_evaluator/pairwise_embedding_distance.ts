@@ -1,9 +1,12 @@
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { loadEvaluator } from "langchain/evaluation";
 
 const embedding = new OpenAIEmbeddings();
 
-const chain = await loadEvaluator("pairwise_embedding_distance", { embedding });
+const chain = await loadEvaluator("pairwise_embedding_distance", {
+  embedding,
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+});
 
 const res = await chain.evaluateStringPairs({
   prediction: "Seattle is hot in June",

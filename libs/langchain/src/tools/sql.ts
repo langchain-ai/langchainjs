@@ -1,5 +1,4 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { OpenAI } from "@langchain/openai";
 import { Tool } from "@langchain/core/tools";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "../chains/llm_chain.js";
@@ -137,7 +136,7 @@ export class ListTablesSqlTool extends Tool implements SqlTool {
  */
 type QueryCheckerToolArgs = {
   llmChain?: LLMChain;
-  llm?: BaseLanguageModelInterface;
+  llm: BaseLanguageModelInterface;
   _chainType?: never;
 };
 
@@ -183,7 +182,7 @@ If there are any of the above mistakes, rewrite the query. If there are no mista
           template: this.template,
           inputVariables: ["query"],
         });
-        const llm = options?.llm ?? new OpenAI({ temperature: 0 });
+        const llm = options.llm;
         this.llmChain = new LLMChain({ llm, prompt });
       }
     }

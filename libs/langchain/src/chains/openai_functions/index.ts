@@ -9,11 +9,6 @@ export {
 } from "./tagging.js";
 export { type OpenAPIChainOptions, createOpenAPIChain } from "./openapi.js";
 export {
-  type StructuredOutputChainInput,
-  createStructuredOutputChain,
-  createStructuredOutputChainFromZod,
-} from "./structured_output.js";
-export {
   type CreateStructuredOutputRunnableConfig,
   createStructuredOutputRunnable,
   type CreateOpenAIFnRunnableConfig,

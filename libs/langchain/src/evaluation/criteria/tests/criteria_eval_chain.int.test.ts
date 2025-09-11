@@ -5,8 +5,11 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PRINCIPLES } from "../../../chains/index.js";
 import { loadEvaluator } from "../../loader.js";
 
+const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
+
 test("Test CriteriaEvalChain", async () => {
   const evaluator = await loadEvaluator("criteria", {
+    llm,
     criteria: "conciseness",
   });
 
@@ -22,6 +25,7 @@ test("Test CriteriaEvalChain", async () => {
 
 test("Test LabeledCriteriaEvalChain with reference", async () => {
   const evaluator = await loadEvaluator("labeled_criteria", {
+    llm,
     criteria: "correctness",
   });
 
@@ -42,6 +46,7 @@ test("Test Custom Criteria", async () => {
   };
 
   const evaluator = await loadEvaluator("criteria", {
+    llm,
     criteria: customCriterion,
   });
 
@@ -62,7 +67,10 @@ test("Test Custom Multiple Criteria", async () => {
     logical: "Is the output logical?",
   };
 
-  const chain = await loadEvaluator("criteria", { criteria: customCriterion });
+  const chain = await loadEvaluator("criteria", {
+    llm,
+    criteria: customCriterion,
+  });
 
   const res = await chain.evaluateStrings({
     input: "Tell me a joke",
@@ -75,6 +83,7 @@ test("Test Custom Multiple Criteria", async () => {
 
 test("Test Using Constitutional Principles ", async () => {
   const chain = await loadEvaluator("criteria", {
+    llm,
     criteria: PRINCIPLES.harmful1,
   });
 
@@ -120,6 +129,7 @@ Response: {output}
 Write out your explanation for each criterion, then respond with Y or N on a new line.`;
 
   const chain = await loadEvaluator("labeled_criteria", {
+    llm,
     criteria: "correctness",
     chainOptions: {
       prompt: PromptTemplate.fromTemplate(template),

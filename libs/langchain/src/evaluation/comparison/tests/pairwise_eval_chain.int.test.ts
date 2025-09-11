@@ -1,9 +1,14 @@
 import { expect, test } from "vitest";
+import { ChatOpenAI } from "@langchain/openai";
+
 import { loadEvaluator } from "../../loader.js";
+
+const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
 
 test("Test PairwiseStringEvalChain", async () => {
   const chain = await loadEvaluator("pairwise_string", {
     criteria: "conciseness",
+    llm,
   });
 
   const res = await chain.evaluateStringPairs({
@@ -19,6 +24,7 @@ test("Test PairwiseStringEvalChain", async () => {
 test("Test LabeledPairwiseStringEvalChain", async () => {
   const chain = await loadEvaluator("labeled_pairwise_string", {
     criteria: "correctness",
+    llm,
   });
 
   const res = await chain.evaluateStringPairs({
@@ -43,6 +49,7 @@ test("Test Custom  Criteria", async () => {
 
   const chain = await loadEvaluator("pairwise_string", {
     criteria: customCriterion,
+    llm,
   });
 
   const res = await chain.evaluateStringPairs({

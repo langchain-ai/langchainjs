@@ -1,9 +1,12 @@
 import { expect, test } from "vitest";
+import { ChatOpenAI } from "@langchain/openai";
 
 import { loadEvaluator } from "../../loader.js";
 
 test("Test Embedding Distance", async () => {
-  const chain = await loadEvaluator("embedding_distance");
+  const chain = await loadEvaluator("embedding_distance", {
+    llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  });
 
   const res = await chain.evaluateStrings({
     prediction: "I shall go",
@@ -23,7 +26,9 @@ test("Test Embedding Distance", async () => {
 });
 
 test("Test Pairwise Embedding Distance", async () => {
-  const chain = await loadEvaluator("pairwise_embedding_distance");
+  const chain = await loadEvaluator("pairwise_embedding_distance", {
+    llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  });
 
   const res = await chain.evaluateStringPairs({
     prediction: "I shall go",

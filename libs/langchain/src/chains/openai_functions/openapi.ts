@@ -7,7 +7,6 @@ import {
 import type { OpenAPIV3_1 } from "openapi-types";
 
 import { ChainValues } from "@langchain/core/utils/types";
-import { ChatOpenAI } from "@langchain/openai";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { BaseFunctionCallOptions } from "@langchain/core/language_models/base";
 import {
@@ -482,8 +481,13 @@ export async function createOpenAPIChain(
       `Could not parse any valid operations from the provided spec.`
     );
   }
+
+  if (!options.llm) {
+    throw new Error("`llm` option is required");
+  }
+
   const {
-    llm = new ChatOpenAI({ model: "gpt-3.5-turbo-0613" }),
+    llm = options.llm,
     prompt = ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate(
         "Use the provided API's to respond to this user query:\n\n{query}"

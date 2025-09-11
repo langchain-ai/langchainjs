@@ -613,9 +613,6 @@ importers:
       '@langchain/langgraph-checkpoint':
         specifier: ^0.1.1
         version: 0.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/openai':
-        specifier: workspace:*
-        version: link:../providers/langchain-openai
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
@@ -653,6 +650,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10

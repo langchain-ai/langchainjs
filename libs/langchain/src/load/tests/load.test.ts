@@ -142,13 +142,27 @@ test("serialize + deserialize llm", async () => {
   expect(JSON.parse(str).kwargs.model).toBe("davinci");
   expect(JSON.parse(str).kwargs.openai_api_key.type).toBe("secret");
   // Accept secret in secret map
-  const llm2 = await load<OpenAI>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
+  const llm2 = await load<OpenAI>(
+    str,
+    {
+      OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      llms__openai: { OpenAI },
+    }
+  );
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
   // Accept secret as env var
-  const llm3 = await load<OpenAI>(str);
+  const llm3 = await load<OpenAI>(
+    str,
+    {},
+    {},
+    {
+      llms__openai: { OpenAI },
+    }
+  );
   expect(llm3).toBeInstanceOf(OpenAI);
   expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
   expect(JSON.stringify(llm3, null, 2)).toBe(str);
@@ -175,9 +189,16 @@ test("serialize + deserialize llm chain string prompt", async () => {
   expect(JSON.parse(str).kwargs.callbacks).toBeUndefined();
   expect(JSON.parse(str).kwargs.verbose).toBeUndefined();
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
+  const chain2 = await load<LLMChain>(
+    str,
+    {
+      OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      llms__openai: { OpenAI },
+    }
+  );
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -218,9 +239,23 @@ test("serialize + deserialize runnable sequence with new and old ids", async () 
     ...JSON.parse(strWithNewId),
     id: ["langchain", "schema", "runnable", "RunnableSequence"],
   });
-  const runnable2 = await load<RunnableSequence>(strWithOldId);
+  const runnable2 = await load<RunnableSequence>(
+    strWithOldId,
+    {},
+    {},
+    {
+      chat_models__openai: { ChatOpenAI },
+    }
+  );
   expect(runnable2).toBeInstanceOf(RunnableSequence);
-  const runnable3 = await load<RunnableSequence>(strWithNewId);
+  const runnable3 = await load<RunnableSequence>(
+    strWithNewId,
+    {},
+    {},
+    {
+      chat_models__openai: { ChatOpenAI },
+    }
+  );
   expect(runnable3).toBeInstanceOf(RunnableSequence);
 });
 
@@ -244,7 +279,14 @@ test("serialize + deserialize llm chain chat prompt", async () => {
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str);
+  const chain2 = await load<LLMChain>(
+    str,
+    {},
+    {},
+    {
+      chat_models__openai: { ChatOpenAI },
+    }
+  );
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -273,9 +315,16 @@ test.skip("serialize + deserialize Azure llm chain chat prompt", async () => {
   const chain = new LLMChain({ llm, prompt });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    AZURE_OPENAI_API_KEY: "openai-key",
-  });
+  const chain2 = await load<LLMChain>(
+    str,
+    {
+      AZURE_OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      chat_models__azure_openai: { AzureChatOpenAI },
+    }
+  );
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
 });
@@ -298,9 +347,16 @@ test("serialize + deserialize llm chain few shot prompt w/ examples", async () =
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   await expect(
-    load<LLMChain>(str, {
-      OPENAI_API_KEY: "openai-key",
-    })
+    load<LLMChain>(
+      str,
+      {
+        OPENAI_API_KEY: "openai-key",
+      },
+      {},
+      {
+        llms__openai: { OpenAI },
+      }
+    )
   ).rejects.toThrowError(
     'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
@@ -327,9 +383,16 @@ test("serialize + deserialize llm chain few shot prompt w/ selector", async () =
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   await expect(
-    load<LLMChain>(str, {
-      OPENAI_API_KEY: "openai-key",
-    })
+    load<LLMChain>(
+      str,
+      {
+        OPENAI_API_KEY: "openai-key",
+      },
+      {},
+      {
+        llms__openai: { OpenAI },
+      }
+    )
   ).rejects.toThrow(
     'Trying to load an object that doesn\'t implement serialization: $.kwargs.prompt -> {"lc":1,"type":"not_implemented","id":["langchain_core","prompts","few_shot","FewShotPromptTemplate"]}'
   );
@@ -349,9 +412,16 @@ test("serialize + deserialize llmchain with list output parser", async () => {
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
+  const chain2 = await load<LLMChain>(
+    str,
+    {
+      OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      llms__openai: { OpenAI },
+    }
+  );
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
   expect(await chain2.outputParser?.parseResult([{ text: "a, b, c" }])).toEqual(
@@ -376,9 +446,16 @@ test("serialize + deserialize llmchain with regex output parser", async () => {
   const chain = new LLMChain({ llm, prompt, outputParser });
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
-  const chain2 = await load<LLMChain>(str, {
-    OPENAI_API_KEY: "openai-key",
-  });
+  const chain2 = await load<LLMChain>(
+    str,
+    {
+      OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      llms__openai: { OpenAI },
+    }
+  );
   expect(chain2).toBeInstanceOf(LLMChain);
   expect(JSON.stringify(chain2, null, 2)).toBe(str);
   expect(
@@ -413,9 +490,16 @@ test("serialize + deserialize llmchain with struct output parser throws", async 
   const str = JSON.stringify(chain, null, 2);
   expect(stringify(JSON.parse(str))).toMatchSnapshot();
   await expect(
-    load<LLMChain>(str, {
-      OPENAI_API_KEY: "openai-key",
-    })
+    load<LLMChain>(
+      str,
+      {
+        OPENAI_API_KEY: "openai-key",
+      },
+      {},
+      {
+        llms__openai: { OpenAI },
+      }
+    )
   ).rejects.toThrow(
     'Trying to load an object that doesn\'t implement serialization: $.kwargs.output_parser -> {"lc":1,"type":"not_implemented","id":["langchain","output_parsers","structured","StructuredOutputParser"]}'
   );
@@ -453,9 +537,16 @@ test("Should load traces even if the constructor name changes (minified environm
 
 test("Should load a real-world serialized chain", async () => {
   const serializedValue = `{"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnableSequence"], "kwargs": {"first": {"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnableParallel"], "kwargs": {"steps": {"equation_statement": {"lc": 1, "type": "constructor", "id": ["langchain_core", "runnables", "RunnablePassthrough"], "kwargs": {"func": null, "afunc": null, "input_type": null}}}}}, "middle": [{"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "ChatPromptTemplate"], "kwargs": {"input_variables": ["equation_statement"], "messages": [{"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "SystemMessagePromptTemplate"], "kwargs": {"prompt": {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "prompt", "PromptTemplate"], "kwargs": {"input_variables": [], "template": "Write out the following equation using algebraic symbols then solve it. Use the format\\n\\nEQUATION:...\\nSOLUTION:...\\n\\n", "template_format": "f-string", "partial_variables": {}}}}}, {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "chat", "HumanMessagePromptTemplate"], "kwargs": {"prompt": {"lc": 1, "type": "constructor", "id": ["langchain_core", "prompts", "prompt", "PromptTemplate"], "kwargs": {"input_variables": ["equation_statement"], "template": "{equation_statement}", "template_format": "f-string", "partial_variables": {}}}}}]}}, {"lc": 1, "type": "constructor", "id": ["langchain", "chat_models", "openai", "ChatOpenAI"], "kwargs": {"temperature": 0.0, "openai_api_key": {"lc": 1, "type": "secret", "id": ["OPENAI_API_KEY"]}}}], "last": {"lc": 1, "type": "constructor", "id": ["langchain_core", "output_parsers", "string", "StrOutputParser"], "kwargs": {}}}}`;
-  const chain = await load<RunnableSequence>(serializedValue, {
-    OPENAI_API_KEY: "openai-key",
-  });
+  const chain = await load<RunnableSequence>(
+    serializedValue,
+    {
+      OPENAI_API_KEY: "openai-key",
+    },
+    {},
+    {
+      chat_models__openai: { ChatOpenAI },
+    }
+  );
   // @ts-expect-error testing
   expect(chain.first.constructor.lc_name()).toBe("RunnableMap");
   // @ts-expect-error testing

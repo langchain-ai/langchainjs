@@ -1,6 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import { ChatOpenAI } from "@langchain/openai";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import {
   CriteriaLike,
@@ -21,8 +20,13 @@ import {
 import { TrajectoryEvalChain } from "./agents/index.js";
 
 export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
-  llm?: BaseLanguageModelInterface;
-
+  /**
+   * The language model to use for the evaluator.
+   */
+  llm: BaseLanguageModelInterface;
+  /**
+   * The options to pass to the evaluator chain.
+   */
   chainOptions?: Partial<Omit<LLMEvalChainInput, "llm">>;
   /**
    * The criteria to use for the evaluator.
@@ -45,50 +49,43 @@ export type LoadEvaluatorOptions = EmbeddingDistanceEvalChainInput & {
  */
 export async function loadEvaluator<T extends keyof EvaluatorType>(
   type: T,
-  options?: LoadEvaluatorOptions
+  options: LoadEvaluatorOptions
 ): Promise<EvaluatorType[T]> {
-  const { llm, chainOptions, criteria, agentTools } = options || {};
-
-  const llm_ =
-    llm ??
-    new ChatOpenAI({
-      model: "gpt-4",
-      temperature: 0.0,
-    });
+  const { llm, chainOptions, criteria, agentTools } = options;
 
   let evaluator: unknown;
   switch (type) {
     case "criteria":
-      evaluator = await CriteriaEvalChain.fromLLM(llm_, criteria, chainOptions);
+      evaluator = await CriteriaEvalChain.fromLLM(llm, criteria, chainOptions);
       break;
     case "labeled_criteria":
       evaluator = await LabeledCriteriaEvalChain.fromLLM(
-        llm_,
+        llm,
         criteria,
         chainOptions
       );
       break;
     case "pairwise_string":
       evaluator = await PairwiseStringEvalChain.fromLLM(
-        llm_,
+        llm,
         criteria,
         chainOptions
       );
       break;
     case "labeled_pairwise_string":
       evaluator = await LabeledPairwiseStringEvalChain.fromLLM(
-        llm_,
+        llm,
         criteria,
         chainOptions
       );
       break;
     case "trajectory":
       // eslint-disable-next-line no-instanceof/no-instanceof
-      if (!(llm_ instanceof BaseChatModel)) {
+      if (!(llm instanceof BaseChatModel)) {
         throw new Error("LLM must be an instance of a base chat model.");
       }
       evaluator = await TrajectoryEvalChain.fromLLM(
-        llm_,
+        llm,
         agentTools,
         chainOptions
       );
