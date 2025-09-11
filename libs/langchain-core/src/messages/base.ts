@@ -1,4 +1,8 @@
-import { Serializable, SerializedConstructor } from "../load/serializable.js";
+import {
+  Serializable,
+  Serialized,
+  SerializedConstructor,
+} from "../load/serializable.js";
 import { ContentBlock } from "./content/index.js";
 import { isDataContentBlock } from "./content/data.js";
 import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
@@ -377,6 +381,16 @@ export abstract class BaseMessage<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
+  }
+
+  toSerialized() {
+    return super.toJSON();
+  }
+
+  toJSON(): any {
+    const { type, data } = this.toDict();
+    if ("type" in data) delete data.type;
+    return { type, ...data };
   }
 }
 
