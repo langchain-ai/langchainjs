@@ -9,7 +9,11 @@ import {
   BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  type AIMessageChunk,
+  MessageStructure,
+} from "@langchain/core/messages";
 import {
   type RunnableBatchOptions,
   RunnableBinding,
@@ -302,7 +306,11 @@ export class ConfigurableModel<
       fields.queuedMethodOperations ?? this._queuedMethodOperations;
   }
 
-  async _model(config?: RunnableConfig) {
+  async _model(
+    config?: RunnableConfig
+  ): Promise<
+    BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
+  > {
     const params = { ...this._defaultConfig, ...this._modelParams(config) };
     let initializedModel = await _initChatModelHelper(
       params.model,
@@ -344,12 +352,13 @@ export class ConfigurableModel<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): ConfigurableModel<RunInput, CallOptions> {
-    this._queuedMethodOperations.bindTools = [tools, params];
+    const newQueuedOperations = { ...this._queuedMethodOperations };
+    newQueuedOperations.bindTools = [tools, params];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
-      queuedMethodOperations: this._queuedMethodOperations,
+      queuedMethodOperations: newQueuedOperations,
     });
   }
 
@@ -358,12 +367,13 @@ export class ConfigurableModel<
     schema,
     ...args
   ): ReturnType<BaseChatModel["withStructuredOutput"]> => {
-    this._queuedMethodOperations.withStructuredOutput = [schema, ...args];
+    const newQueuedOperations = { ...this._queuedMethodOperations };
+    newQueuedOperations.withStructuredOutput = [schema, ...args];
     return new ConfigurableModel<RunInput, CallOptions>({
       defaultConfig: this._defaultConfig,
       configurableFields: this._configurableFields,
       configPrefix: this._configPrefix,
-      queuedMethodOperations: this._queuedMethodOperations,
+      queuedMethodOperations: newQueuedOperations,
     }) as unknown as ReturnType<BaseChatModel["withStructuredOutput"]>;
   };
 
