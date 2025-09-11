@@ -317,8 +317,7 @@ function extractGenericMessageCustomRole(message: ChatMessage): GroqRoleEnum {
  * @returns The role of the message.
  */
 export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
-  const type = message.getType();
-  switch (type) {
+  switch (message.type) {
     case "system":
       return "system";
     case "ai":
@@ -336,7 +335,7 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
       return extractGenericMessageCustomRole(message);
     }
     default:
-      throw new Error(`Unknown message type: ${type}`);
+      throw new Error(`Unknown message type: ${message.type}`);
   }
 }
 
