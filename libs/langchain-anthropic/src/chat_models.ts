@@ -830,6 +830,7 @@ export class ChatAnthropicMessages<
       | Anthropic.Messages.ToolChoiceAuto
       | Anthropic.Messages.ToolChoiceAny
       | Anthropic.Messages.ToolChoiceTool
+      | Anthropic.Messages.ToolChoiceNone
       | undefined = handleToolChoice(options?.tool_choice);
 
     if (this.thinking.type === "enabled") {
