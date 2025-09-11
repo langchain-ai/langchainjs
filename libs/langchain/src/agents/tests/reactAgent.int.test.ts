@@ -2,10 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, isHumanMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  isHumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import z from "zod/v3";
 
-import { createAgent, providerStrategy } from "../index.js";
+import { createAgent, providerStrategy, createMiddleware } from "../index.js";
+import { anthropicPromptCachingMiddleware } from "../middlewareAgent/middleware/promptCaching.js";
 
 describe("createAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
@@ -254,6 +259,132 @@ describe("createAgent Integration Tests", () => {
       expect(response.someEnum).toBe("b");
       expect(response.someNumber).toBe(0); // expect 0 because it's not set as optional in the schema
       expect(response.someOptionalNumber).toBe(undefined);
+    });
+  });
+
+  describe.only("prepareModelRequest", () => {
+    it("should allow middleware to update model, messages, systemMessage, and modelSettings", async () => {
+      // Setup mocked fetch functions for both providers
+      const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
+      const anthropicFetchMock = vi.fn((url, options) => fetch(url, options));
+
+      // Create a simple tool for testing
+      const simpleTool = tool(
+        async (input: { query: string }) => {
+          return `Tool response for: ${input.query}`;
+        },
+        {
+          name: "simpleTool",
+          schema: z.object({
+            query: z.string().describe("The query to process"),
+          }),
+          description: "A simple tool for testing",
+        }
+      );
+
+      // Create middleware that will change the model and messages
+      const modelSwitchMiddleware = createMiddleware({
+        name: "modelSwitcher",
+        prepareModelRequest: async (_request, _state, _runtime) => {
+          // Create a new ChatAnthropic instance
+          const anthropicModel = new ChatAnthropic({
+            model: "claude-3-5-sonnet-20240620",
+            clientOptions: {
+              fetch: anthropicFetchMock,
+            },
+          });
+
+          // Change the messages to ask a completely different question
+          const newMessages = [
+            new HumanMessage("What is the capital of France?"),
+          ];
+
+          // Set model settings including cache_control for Anthropic prompt caching
+          const modelSettings = {
+            temperature: 0.7,
+            maxTokens: 500,
+            topP: 0.95,
+            metadata: {
+              cache_control: {
+                type: "ephemeral",
+                ttl: "5m",
+              },
+            },
+          };
+
+          // Return partial ModelRequest - tools will be merged from original request
+          return {
+            model: anthropicModel,
+            messages: newMessages,
+            systemMessage: new SystemMessage("You are a geography expert."),
+            modelSettings,
+            tools: _request.tools,
+          };
+        },
+      });
+
+      // Create agent with OpenAI model string and the middleware
+      const agent = createAgent({
+        model: "gpt-4o-mini",
+        tools: [simpleTool],
+        middleware: [
+          modelSwitchMiddleware,
+          anthropicPromptCachingMiddleware({
+            ttl: "5m",
+            minMessagesToCache: 1,
+          }),
+        ] as const,
+      });
+
+      // Invoke the agent
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      });
+
+      // Verify that Anthropic was called (not OpenAI)
+      expect(anthropicFetchMock).toHaveBeenCalled();
+      expect(openAIFetchMock).not.toHaveBeenCalled();
+
+      // Verify the request to Anthropic includes our model settings
+      const anthropicCall = anthropicFetchMock.mock.calls[0];
+      const requestBody = JSON.parse(anthropicCall[1].body);
+
+      // Check that model settings were propagated
+      expect(requestBody.temperature).toBe(0.7);
+      expect(requestBody.max_tokens).toBe(500);
+      expect(requestBody.top_p).toBe(0.95);
+      // Check that cache_control was passed through
+      expect(requestBody.system.at(-1).cache_control).toEqual({
+        type: "ephemeral",
+        ttl: "5m",
+      });
+
+      // Check that the system message was updated
+      expect(requestBody.system).toEqual([
+        expect.objectContaining({
+          type: "text",
+          text: "You are a geography expert.",
+        }),
+      ]);
+
+      // Check that messages were changed to ask about France
+      const userMessage = requestBody.messages.find(
+        (msg: { role: string }) => msg.role === "user"
+      );
+      expect(userMessage.content).toBe("What is the capital of France?");
+
+      // The response should be about France, not Tokyo weather
+      expect(result.messages).toBeDefined();
+      expect(result.messages.length).toBeGreaterThan(0);
+
+      // Find the AI response message
+      const aiResponse = result.messages.find((msg) => msg.type === "ai");
+      expect(aiResponse).toBeDefined();
+      // The response should mention Paris or France, not Tokyo or weather
+      const responseContent =
+        aiResponse?.content?.toString().toLowerCase() || "";
+      expect(responseContent).toMatch(/paris|france/i);
+      expect(responseContent).not.toMatch(/tokyo|weather/i);
     });
   });
 });

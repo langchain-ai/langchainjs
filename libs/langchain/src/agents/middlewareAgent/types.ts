@@ -79,13 +79,6 @@ export interface ToolResult {
   error?: string;
 }
 
-export interface AnthropicModelSettings {
-  cache_control: {
-    type: string;
-    ttl: string;
-  };
-}
-
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
@@ -125,9 +118,29 @@ export interface ModelRequest {
 
   /**
    * The model settings to use for this step.
-   * Currently only supported for Anthropic models.
+   * @example
+   * ```ts
+   * const { createAgent, createMiddleware } from "langchain";
+   *
+   * const agent = createAgent({
+   *   model: "anthropic:claude-3-5-sonnet",
+   *   middleware: [
+   *     createMiddleware({
+   *       name: "PromptCachingMiddleware",
+   *       prepareModelRequest: (options, state, runtime) => {
+   *         // ...
+   *         return {
+   *           modelSettings: {
+   *             temperature: 0.7,
+   *           }
+   *         };
+   *       },
+   *     }),
+   *   ],
+   * });
+   * ```
    */
-  modelSettings?: AnthropicModelSettings | Record<string, any>;
+  modelSettings?: Record<string, any>;
 }
 
 /**
