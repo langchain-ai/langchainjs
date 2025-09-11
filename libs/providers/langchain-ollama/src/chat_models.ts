@@ -111,8 +111,6 @@ export interface ChatOllamaInput
    * @default fetch
    */
   fetch?: typeof fetch;
-  /** Tool choice is not supported for ChatOllama */
-  tool_choice?: never;
 }
 
 /**
