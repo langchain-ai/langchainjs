@@ -26,17 +26,13 @@ const schema = z.object({
 const model = new ChatOllama({
   temperature: 0.1,
   model: "mistral",
-})
-  .bindTools([
-    {
-      name: "information_extraction",
-      description: "Extracts the relevant information from the passage.",
-      schema,
-    },
-  ])
-  .withConfig({
-    tool_choice: "information_extraction",
-  });
+}).bindTools([
+  {
+    name: "information_extraction",
+    description: "Extracts the relevant information from the passage.",
+    schema,
+  },
+]);
 
 // Use a JsonOutputFunctionsParser to get the parsed JSON response directly.
 const chain = prompt.pipe(model).pipe(new JsonOutputFunctionsParser());
