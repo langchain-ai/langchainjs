@@ -16,28 +16,23 @@ To use a tool, respond with a JSON object with the following structure:
 const model = new ChatOllama({
   temperature: 0.1,
   model: "mistral",
-})
-  .bindTools([
-    {
-      name: "get_current_weather",
-      description: "Get the current weather in a given location",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
-          },
-          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+}).bindTools([
+  {
+    name: "get_current_weather",
+    description: "Get the current weather in a given location",
+    parameters: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The city and state, e.g. San Francisco, CA",
         },
-        required: ["location"],
+        unit: { type: "string", enum: ["celsius", "fahrenheit"] },
       },
+      required: ["location"],
     },
-  ])
-  .withConfig({
-    // You can set the `tool_choice` arg to force the model to use a function
-    tool_choice: "get_current_weather",
-  });
+  },
+]);
 
 const response = await model.invoke([
   new SystemMessage(toolSystemPromptTemplate),
