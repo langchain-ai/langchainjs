@@ -292,8 +292,32 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
+/**
+ * Extract the custom role from a message.
+ * @param message - The message to extract the custom role from.
+ * @returns The custom role of the message.
+ */
+function extractGenericMessageCustomRole(message: ChatMessage): GroqRoleEnum {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
+  ) {
+    throw new Error(
+      `Unsupported message role: ${message.role}. Expected "system", "assistant", "user", or "function"`
+    );
+  }
+  return message.role as GroqRoleEnum;
+}
+
+/**
+ * Extract the role from a message.
+ * @param message - The message to extract the role from.
+ * @returns The role of the message.
+ */
 export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
-  const type = message._getType();
+  const type = message.getType();
   switch (type) {
     case "system":
       return "system";
@@ -306,6 +330,11 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
     case "tool":
       // Not yet supported as a type
       return "tool" as GroqRoleEnum;
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
