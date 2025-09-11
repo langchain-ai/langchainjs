@@ -172,7 +172,7 @@ export function drawMermaid(
 }
 
 /**
- * Renders Mermaid graph using the Mermaid.INK API.
+ * @deprecated Use `drawMermaidImage` instead.
  */
 export async function drawMermaidPng(
   mermaidSyntax: string,
@@ -180,7 +180,42 @@ export async function drawMermaidPng(
     backgroundColor?: string;
   }
 ) {
-  let { backgroundColor = "white" } = config ?? {};
+  return drawMermaidImage(mermaidSyntax, {
+    ...config,
+    imageType: "png",
+  });
+}
+
+/**
+ * Renders Mermaid graph using the Mermaid.INK API.
+ *
+ * @example
+ * ```javascript
+ * const image = await drawMermaidImage(mermaidSyntax, {
+ *   backgroundColor: "white",
+ *   imageType: "png",
+ * });
+ * fs.writeFileSync("image.png", image);
+ * ```
+ *
+ * @param mermaidSyntax - The Mermaid syntax to render.
+ * @param config - The configuration for the image.
+ * @returns The image as a Blob.
+ */
+export async function drawMermaidImage(
+  mermaidSyntax: string,
+  config?: {
+    /**
+     * The type of image to render.
+     * @default "png"
+     */
+    imageType?: "png" | "jpeg" | "webp";
+    backgroundColor?: string;
+  }
+) {
+  let backgroundColor = config?.backgroundColor ?? "white";
+  const imageType = config?.imageType ?? "png";
+
   // Use btoa for compatibility, assume ASCII
   const mermaidSyntaxEncoded = btoa(mermaidSyntax);
   // Check if the background color is a hexadecimal color code using regex
@@ -190,7 +225,7 @@ export async function drawMermaidPng(
       backgroundColor = `!${backgroundColor}`;
     }
   }
-  const imageUrl = `https://mermaid.ink/img/${mermaidSyntaxEncoded}?bgColor=${backgroundColor}`;
+  const imageUrl = `https://mermaid.ink/img/${mermaidSyntaxEncoded}?bgColor=${backgroundColor}&type=${imageType}`;
   const res = await fetch(imageUrl);
   if (!res.ok) {
     throw new Error(
