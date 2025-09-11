@@ -6,6 +6,7 @@ import {
   HumanMessage,
   isHumanMessage,
   SystemMessage,
+  AIMessage,
 } from "@langchain/core/messages";
 import z from "zod/v3";
 
@@ -262,7 +263,7 @@ describe("createAgent Integration Tests", () => {
     });
   });
 
-  describe.only("prepareModelRequest", () => {
+  describe("prepareModelRequest", () => {
     it("should allow middleware to update model, messages, systemMessage, and modelSettings", async () => {
       // Setup mocked fetch functions for both providers
       const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
@@ -289,6 +290,9 @@ describe("createAgent Integration Tests", () => {
           // Create a new ChatAnthropic instance
           const anthropicModel = new ChatAnthropic({
             model: "claude-3-5-sonnet-20240620",
+            temperature: 0.7,
+            maxTokens: 500,
+            topP: 0.95,
             clientOptions: {
               fetch: anthropicFetchMock,
             },
@@ -299,25 +303,11 @@ describe("createAgent Integration Tests", () => {
             new HumanMessage("What is the capital of France?"),
           ];
 
-          // Set model settings including cache_control for Anthropic prompt caching
-          const modelSettings = {
-            temperature: 0.7,
-            maxTokens: 500,
-            topP: 0.95,
-            metadata: {
-              cache_control: {
-                type: "ephemeral",
-                ttl: "5m",
-              },
-            },
-          };
-
           // Return partial ModelRequest - tools will be merged from original request
           return {
             model: anthropicModel,
             messages: newMessages,
             systemMessage: new SystemMessage("You are a geography expert."),
-            modelSettings,
             tools: _request.tools,
           };
         },
@@ -385,6 +375,179 @@ describe("createAgent Integration Tests", () => {
         aiResponse?.content?.toString().toLowerCase() || "";
       expect(responseContent).toMatch(/paris|france/i);
       expect(responseContent).not.toMatch(/tokyo|weather/i);
+    });
+
+    it("can change tools and toolChoice in prepareModelRequest", async () => {
+      // Setup mocked fetch for OpenAI
+      const openAIFetchMock = vi.fn();
+
+      // Create tools that will be added by middleware
+      const weatherTool = tool(
+        async (input: { location: string }) => {
+          return `Weather in ${input.location}: Sunny, 72°F`;
+        },
+        {
+          name: "getWeather",
+          schema: z.object({
+            location: z.string().describe("The location to get weather for"),
+          }),
+          description: "Get the current weather for a location",
+        }
+      );
+
+      const newsTool = tool(
+        async (input: { topic: string }) => {
+          return `Latest news on ${input.topic}: Breaking developments...`;
+        },
+        {
+          name: "getNews",
+          schema: z.object({
+            topic: z.string().describe("The topic to get news about"),
+          }),
+          description: "Get the latest news on a topic",
+        }
+      );
+
+      // Create middleware that adds tools and sets toolChoice
+      const toolsMiddleware = {
+        name: "toolsModifier",
+        prepareModelRequest: async () => {
+          // Add tools dynamically
+          const tools = [weatherTool, newsTool];
+
+          // Set toolChoice to force specific tool
+          return {
+            tools,
+            toolChoice: {
+              type: "function" as const,
+              function: {
+                name: "getWeather",
+              },
+            },
+          };
+        },
+      };
+
+      // Create OpenAI model initially without any tools
+      const openAIModel = new ChatOpenAI({
+        model: "gpt-4",
+        temperature: 0,
+        configuration: {
+          fetch: openAIFetchMock,
+        },
+      });
+
+      // Mock the OpenAI response with proper headers
+      openAIFetchMock.mockImplementation(async () => {
+        // Return a proper Response-like object
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            "content-type": "application/json",
+          }),
+          json: async () => ({
+            id: "chatcmpl-test",
+            object: "chat.completion",
+            created: Date.now(),
+            model: "gpt-4",
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_test123",
+                      type: "function",
+                      function: {
+                        name: "getWeather",
+                        arguments: JSON.stringify({ location: "New York" }),
+                      },
+                    },
+                  ],
+                },
+                finish_reason: "tool_calls",
+              },
+            ],
+            usage: {
+              prompt_tokens: 50,
+              completion_tokens: 20,
+              total_tokens: 70,
+            },
+          }),
+          text: async () => "",
+          arrayBuffer: async () => new ArrayBuffer(0),
+          blob: async () => new Blob(),
+          clone: () => ({}),
+          body: null,
+          bodyUsed: false,
+        };
+      });
+
+      // Create agent with the middleware
+      const agent = createAgent({
+        llm: openAIModel,
+        // No tools provided initially
+        tools: [],
+        middleware: [toolsMiddleware],
+      });
+
+      // Invoke the agent
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in New York?")],
+      });
+
+      // Verify the OpenAI API was called with the correct tools and tool_choice
+      expect(openAIFetchMock).toHaveBeenCalledOnce();
+      const [, options] = openAIFetchMock.mock.calls[0];
+      const requestBody = JSON.parse(options.body);
+
+      // Check that tools were added
+      expect(requestBody.tools).toHaveLength(2);
+      expect(requestBody.tools[0]).toMatchObject({
+        type: "function",
+        function: {
+          name: "getWeather",
+          description: "Get the current weather for a location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The location to get weather for",
+              },
+            },
+            required: ["location"],
+            additionalProperties: false,
+          },
+        },
+      });
+      expect(requestBody.tools[1]).toMatchObject({
+        type: "function",
+        function: {
+          name: "getNews",
+          description: "Get the latest news on a topic",
+        },
+      });
+
+      // Check that tool_choice was set correctly
+      expect(requestBody.tool_choice).toEqual({
+        type: "function",
+        function: { name: "getWeather" },
+      });
+
+      // Verify the result contains the tool call
+      const aiResponse = result.messages[result.messages.length - 1];
+      expect(aiResponse).toBeInstanceOf(AIMessage);
+      expect((aiResponse as AIMessage).tool_calls).toHaveLength(1);
+      expect((aiResponse as AIMessage).tool_calls?.[0]).toMatchObject({
+        name: "getWeather",
+        args: { location: "New York" },
+        id: "call_test123",
+      });
     });
   });
 });
