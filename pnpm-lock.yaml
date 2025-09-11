@@ -613,9 +613,6 @@ importers:
       '@langchain/langgraph-checkpoint':
         specifier: ^0.1.1
         version: 0.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/openai':
-        specifier: ^1.0.0-alpha.1 <2.0.0
-        version: 1.0.0-alpha.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
@@ -653,6 +650,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -6002,12 +6002,6 @@ packages:
   '@langchain/openai@0.6.3':
     resolution: {integrity: sha512-dSNuXDTJitDzN8D2wFNqWVELDbBRhMpJiFeiWpHjfPuq7R6wSjzNNY/Uk6x+FLpvbOs/zKNWy5+0q0p3KrCjRQ==}
     engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/openai@1.0.0-alpha.1':
-    resolution: {integrity: sha512-B/YYPfQfUN+y7nrXPAeKwFjAwTrip6THsfiUgB6MMPr1LqHptktcYmLE8aK8AB375mTtwpoiNUJB0FPQcP0xww==}
-    engines: {node: '>=20'}
     peerDependencies:
       '@langchain/core': workspace:*
 
@@ -20697,15 +20691,6 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - ws
-
-  '@langchain/openai@1.0.0-alpha.1(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      js-tiktoken: 1.0.20
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
       - ws

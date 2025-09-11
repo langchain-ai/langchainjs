@@ -36,6 +36,7 @@
     "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
+    "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
@@ -61,15 +62,11 @@
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0-alpha.3 <2.0.0",
-    "@langchain/openai": "^1.0.0-alpha.1 <2.0.0",
     "cheerio": "*",
     "peggy": "^3.0.2",
     "typeorm": "*"
   },
   "peerDependenciesMeta": {
-    "@langchain/openai": {
-      "optional": true
-    },
     "cheerio": {
       "optional": true
     },
