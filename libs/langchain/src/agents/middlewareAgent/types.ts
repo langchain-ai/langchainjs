@@ -115,32 +115,6 @@ export interface ModelRequest {
    * Can be tool names (strings) or tool instances.
    */
   tools: (ClientTool | ServerTool)[];
-
-  /**
-   * The model settings to use for this step.
-   * @example
-   * ```ts
-   * const { createAgent, createMiddleware } from "langchain";
-   *
-   * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
-   *   middleware: [
-   *     createMiddleware({
-   *       name: "PromptCachingMiddleware",
-   *       prepareModelRequest: (options, state, runtime) => {
-   *         // ...
-   *         return {
-   *           modelSettings: {
-   *             temperature: 0.7,
-   *           }
-   *         };
-   *       },
-   *     }),
-   *   ],
-   * });
-   * ```
-   */
-  modelSettings?: Record<string, any>;
 }
 
 /**

@@ -51,7 +51,6 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     await agent.invoke({ messages });
 
-    // Verify the model was called with cache_control in modelSettings
     expect(mockAnthropicModel.invoke).toHaveBeenCalled();
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
     const [systemMessage] = callArgs[0];
@@ -87,7 +86,6 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     await agent.invoke({ messages });
 
-    // Verify the model was called with cache_control in modelSettings
     expect(mockAnthropicModel.invoke).toHaveBeenCalled();
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
     const [systemMessage] = callArgs[0];

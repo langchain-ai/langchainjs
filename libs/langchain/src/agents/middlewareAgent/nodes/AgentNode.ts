@@ -251,12 +251,7 @@ export class AgentNode<
     }
 
     const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const invokeConfig = {
-      ...config,
-      ...(preparedOptions?.modelSettings || {}),
-      signal,
-    };
-
+    const invokeConfig = { ...config, signal };
     const response = (await modelWithTools.invoke(
       modelInput,
       invokeConfig

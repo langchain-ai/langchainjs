@@ -264,7 +264,7 @@ describe("createAgent Integration Tests", () => {
   });
 
   describe("prepareModelRequest", () => {
-    it("should allow middleware to update model, messages, systemMessage, and modelSettings", async () => {
+    it("should allow middleware to update model, messages and systemMessage", async () => {
       // Setup mocked fetch functions for both providers
       const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
       const anthropicFetchMock = vi.fn((url, options) => fetch(url, options));
