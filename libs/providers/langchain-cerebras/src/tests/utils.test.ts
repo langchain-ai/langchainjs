@@ -27,7 +27,9 @@ describe("convertToCerebrasMessageParams", () => {
 
   test("should convert a full conversation with tool calls", () => {
     const messages = [
-      new HumanMessage("Please tell me the current number of globules in the environment."),
+      new HumanMessage(
+        "Please tell me the current number of globules in the environment."
+      ),
       new AIMessage({
         content: "",
         tool_calls: [
@@ -49,11 +51,12 @@ describe("convertToCerebrasMessageParams", () => {
     const result = convertToCerebrasMessageParams(messages);
 
     expect(result).toHaveLength(3);
-    
+
     // Check human message
     expect(result[0]).toEqual({
       role: "user",
-      content: "Please tell me the current number of globules in the environment.",
+      content:
+        "Please tell me the current number of globules in the environment.",
     });
 
     // Check AI message with tool calls
@@ -82,7 +85,10 @@ describe("convertToCerebrasMessageParams", () => {
 
   test("should throw error for non-string tool message content", () => {
     const toolMessage = new ToolMessage({
-      content: [{ type: "text", text: "array" }, { type: "text", text: "content" }],
+      content: [
+        { type: "text", text: "array" },
+        { type: "text", text: "content" },
+      ],
       tool_call_id: "test-id",
       name: "test-tool",
     });
