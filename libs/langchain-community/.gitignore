@@ -382,6 +382,10 @@ vectorstores/couchbase.cjs
 vectorstores/couchbase.js
 vectorstores/couchbase.d.ts
 vectorstores/couchbase.d.cts
+vectorstores/couchbase_search.cjs
+vectorstores/couchbase_search.js
+vectorstores/couchbase_search.d.ts
+vectorstores/couchbase_search.d.cts
 vectorstores/elasticsearch.cjs
 vectorstores/elasticsearch.js
 vectorstores/elasticsearch.d.ts
@@ -670,10 +674,6 @@ retrievers/databerry.cjs
 retrievers/databerry.js
 retrievers/databerry.d.ts
 retrievers/databerry.d.cts
-retrievers/dria.cjs
-retrievers/dria.js
-retrievers/dria.d.ts
-retrievers/dria.d.cts
 retrievers/metal.cjs
 retrievers/metal.js
 retrievers/metal.d.ts

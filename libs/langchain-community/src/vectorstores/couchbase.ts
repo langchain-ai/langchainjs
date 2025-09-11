@@ -16,9 +16,7 @@ import { Document } from "@langchain/core/documents";
 import { v4 as uuid } from "uuid";
 
 /**
- * This interface define the optional fields for adding vector
- * - `ids` - vector of ids for each document. If undefined, then uuid will be used
- * - `metadata` - vector of metadata object for each document
+ * @deprecated This interface has been relocated to `@langchain/community/vectorstores/couchbase_search`. This interface will be removed in a future release.
  */
 export interface AddVectorOptions {
   ids?: string[];
@@ -26,17 +24,7 @@ export interface AddVectorOptions {
 }
 
 /**
- * This interface defines the fields required to initialize a vector store
- * These are the fields part of config:
- * @property {Cluster} cluster - The Couchbase cluster that the store will interact with.
- * @property {string} bucketName - The name of the bucket in the Couchbase cluster.
- * @property {string} scopeName - The name of the scope within the bucket.
- * @property {string} collectionName - The name of the collection within the scope.
- * @property {string} indexName - The name of the index to be used for vector search.
- * @property {string} textKey - The key to be used for text in the documents. Defaults to "text".
- * @property {string} embeddingKey - The key to be used for embeddings in the documents. Defaults to "embedding".
- * @property {boolean} scopedIndex - Whether to use a scoped index for vector search. Defaults to true.
- * @property {AddVectorOptions} addVectorOptions - Options for adding vectors with specific id/metadata
+ * @deprecated Use CouchbaseSearchVectorStoreArgs from `@langchain/community/vectorstores/couchbase_search` instead. This interface will be removed in a future release.
  */
 export interface CouchbaseVectorStoreArgs {
   cluster: Cluster;
@@ -63,10 +51,7 @@ type CouchbaseVectorStoreFilter = {
 };
 
 /**
- * Class for interacting with the Couchbase database. It extends the
- * VectorStore class and provides methods for adding vectors and
- * documents, and searching for similar vectors.
- * Initiate the class using initialize() method.
+ * @deprecated Use CouchbaseSearchVectorStore from `@langchain/community/vectorstores/couchbase_search` instead. This class will be removed in a future release.
  */
 export class CouchbaseVectorStore extends VectorStore {
   declare FilterType: CouchbaseVectorStoreFilter;

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Ollama integration for LangChain.js",
   "type": "module",
   "engines": {
@@ -32,7 +32,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "ollama": "^0.5.12",
+    "ollama": "^0.5.17",
     "uuid": "^10.0.0"
   },
   "peerDependencies": {

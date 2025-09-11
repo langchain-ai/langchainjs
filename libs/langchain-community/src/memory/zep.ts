@@ -1,4 +1,9 @@
-import { Memory, Message, NotFoundError, ZepClient } from "@getzep/zep-js";
+import {
+  Memory as BaseMemory,
+  Message,
+  NotFoundError,
+  ZepClient,
+} from "@getzep/zep-js";
 import {
   InputValues,
   OutputValues,
@@ -16,10 +21,106 @@ import {
 } from "@langchain/core/messages";
 import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
 
+// Simple type for processed Zep memory data
+interface ZepMemoryData {
+  messages: Array<{
+    role: string;
+    content: string;
+  }>;
+  summary?: {
+    content?: string;
+  };
+}
+
+/**
+ * Extracts summary from Zep memory and composes a system prompt.
+ * @param memory - The memory object containing potential summary.
+ * @returns A string containing the summary as a system prompt.
+ */
+export const zepMemoryContextToSystemPrompt = (memory: ZepMemoryData) => {
+  let systemPrompt = "";
+
+  // Extract summary, if present
+  if (memory.summary && memory.summary?.content) {
+    systemPrompt += memory.summary.content;
+  }
+
+  return systemPrompt;
+};
+
+/**
+ * Condenses Zep memory context into a single HumanMessage.
+ * This is particularly useful for models like Claude that have limitations with system messages
+ * (e.g., Anthropic's Claude only supports one system message and doesn't support multiple user messages in a row).
+ *
+ * @param memory - The memory object containing conversation history.
+ * @param humanPrefix - The prefix to use for human messages (default: "Human").
+ * @param aiPrefix - The prefix to use for AI messages (default: "AI").
+ * @returns A HumanMessage containing the condensed memory context.
+ */
+export const condenseZepMemoryIntoHumanMessage = (memory: ZepMemoryData) => {
+  const systemPrompt = zepMemoryContextToSystemPrompt(memory);
+
+  let concatMessages = "";
+
+  // Add message history to the prompt, if present
+  if (memory.messages) {
+    concatMessages = memory.messages
+      .map((msg) => `${msg.role}: ${msg.content}`)
+      .join("\n");
+  }
+
+  return new HumanMessage(
+    `${systemPrompt ? systemPrompt + "\n" : ""}${concatMessages}`
+  );
+};
+
+/**
+ * Converts Zep Memory to a list of BaseMessages, preserving the structure.
+ * Creates a SystemMessage from summary and facts, and converts the rest of the messages
+ * to their corresponding message types.
+ *
+ * @param memory - The memory object containing conversation history.
+ * @param humanPrefix - The prefix to use for human messages (default: "Human").
+ * @param aiPrefix - The prefix to use for AI messages (default: "AI").
+ * @returns An array of BaseMessage objects representing the conversation history.
+ */
+export const zepMemoryToMessages = (
+  memory: ZepMemoryData,
+  humanPrefix = "Human",
+  aiPrefix = "AI"
+) => {
+  const systemPrompt = zepMemoryContextToSystemPrompt(memory);
+
+  let messages: BaseMessage[] = systemPrompt
+    ? [new SystemMessage(systemPrompt)]
+    : [];
+
+  if (memory && memory.messages) {
+    messages = messages.concat(
+      memory.messages
+        .filter((m) => m.content)
+        .map((message) => {
+          const { content, role } = message;
+          if (role === humanPrefix) {
+            return new HumanMessage(content);
+          } else if (role === aiPrefix) {
+            return new AIMessage(content);
+          } else {
+            // default to generic ChatMessage
+            return new ChatMessage(content, role);
+          }
+        })
+    );
+  }
+
+  return messages;
+};
+
 /**
  * Interface defining the structure of the input data for the ZepMemory
  * class. It includes properties like humanPrefix, aiPrefix, memoryKey,
- * baseURL, sessionId, and apiKey.
+ * baseURL, sessionId, apiKey, and separateMessages.
  */
 export interface ZepMemoryInput extends BaseChatMemoryInput {
   humanPrefix?: string;
@@ -34,6 +135,16 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
 
   // apiKey is optional.
   apiKey?: string;
+
+  /**
+   * Whether to return separate messages for chat history with a SystemMessage containing facts and summary,
+   * or return a single HumanMessage with the entire memory context.
+   * Defaults to true (preserving message types) for backward compatibility.
+   *
+   * Keep as true for models that fully support system messages.
+   * Set to false for models like Claude that have limitations with system messages.
+   */
+  separateMessages?: boolean;
 }
 
 /**
@@ -41,6 +152,11 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
  * and saving the chat history, and clearing the memory when needed. It
  * uses the ZepClient to interact with the Zep service for managing the
  * chat session's memory.
+ *
+ * The class provides options for handling different LLM requirements:
+ * - Use separateMessages=true (default) for models that fully support system messages
+ * - Use separateMessages=false for models like Claude that have limitations with system messages
+ *
  * @example
  * ```typescript
  * const sessionId = randomUUID();
@@ -51,6 +167,9 @@ export interface ZepMemoryInput extends BaseChatMemoryInput {
  *   sessionId,
  *   baseURL: zepURL,
  *   apiKey: "change_this_key",
+ *   // Set to false for models like Claude that have limitations with system messages
+ *   // Defaults to true for backward compatibility
+ *   separateMessages: false,
  * });
  *
  * // Create a ChatOpenAI model instance with specific parameters
@@ -91,6 +210,16 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
   private readonly zepInitFailMsg = "ZepClient is not initialized";
 
+  /**
+   * Whether to return separate messages for chat history with a SystemMessage containing facts and summary,
+   * or return a single HumanMessage with the entire memory context.
+   * Defaults to true (preserving message types) for backward compatibility.
+   *
+   * Keep as true for models that fully support system messages.
+   * Set to false for models like Claude that have limitations with system messages.
+   */
+  separateMessages: boolean;
+
   constructor(fields: ZepMemoryInput) {
     super({
       returnMessages: fields?.returnMessages ?? false,
@@ -103,6 +232,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     this.memoryKey = fields.memoryKey ?? this.memoryKey;
     this.baseURL = fields.baseURL;
     this.sessionId = fields.sessionId;
+    this.separateMessages = fields.separateMessages ?? true;
     this.zepClientPromise = ZepClient.init(this.baseURL, fields.apiKey);
   }
 
@@ -128,7 +258,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
 
     const lastN = values.lastN ?? undefined;
 
-    let memory: Memory | null = null;
+    let memory: BaseMemory | null = null;
     try {
       memory = await zepClient.memory.getMemory(this.sessionId, lastN);
     } catch (error) {
@@ -143,38 +273,31 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
       }
     }
 
-    let messages: BaseMessage[] =
-      memory && memory.summary?.content
-        ? [new SystemMessage(memory.summary.content)]
-        : [];
-
-    if (memory) {
-      messages = messages.concat(
-        memory.messages.map((message) => {
-          const { content, role } = message;
-          if (role === this.humanPrefix) {
-            return new HumanMessage(content);
-          } else if (role === this.aiPrefix) {
-            return new AIMessage(content);
-          } else {
-            // default to generic ChatMessage
-            return new ChatMessage(content, role);
-          }
-        })
-      );
-    }
+    // Convert BaseMemory to ZepMemoryData
+    const memoryData: ZepMemoryData = {
+      messages:
+        memory?.messages.map((msg: Message) => ({
+          role: msg.role,
+          content: msg.content,
+        })) || [],
+      summary: memory?.summary,
+    };
 
     if (this.returnMessages) {
       return {
-        [this.memoryKey]: messages,
+        [this.memoryKey]: this.separateMessages
+          ? zepMemoryToMessages(memoryData, this.humanPrefix, this.aiPrefix)
+          : [condenseZepMemoryIntoHumanMessage(memoryData)],
       };
     }
     return {
-      [this.memoryKey]: getBufferString(
-        messages,
-        this.humanPrefix,
-        this.aiPrefix
-      ),
+      [this.memoryKey]: this.separateMessages
+        ? getBufferString(
+            zepMemoryToMessages(memoryData, this.humanPrefix, this.aiPrefix),
+            this.humanPrefix,
+            this.aiPrefix
+          )
+        : condenseZepMemoryIntoHumanMessage(memoryData).content,
     };
   }
 
@@ -192,7 +315,7 @@ export class ZepMemory extends BaseChatMemory implements ZepMemoryInput {
     const output = getOutputValue(outputValues, this.outputKey);
 
     // Create new Memory and Message instances
-    const memory = new Memory({
+    const memory = new BaseMemory({
       messages: [
         new Message({
           role: this.humanPrefix,

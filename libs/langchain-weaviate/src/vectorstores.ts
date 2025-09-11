@@ -1,17 +1,18 @@
 import * as uuid from "uuid";
 import {
-  BaseHybridOptions,
+  HybridOptions,
   CollectionConfigCreate,
   configure,
   type DataObject,
   type FilterValue,
   GenerateOptions,
   GenerativeConfigRuntime,
-  HybridOptions,
   Metadata,
   Vectors,
   WeaviateClient,
   type WeaviateField,
+  BaseHybridOptions,
+  MetadataKeys,
 } from "weaviate-client";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -25,38 +26,41 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 // https://weaviate.io/developers/weaviate/config-refs/datatypes#introduction
 export const flattenObjectForWeaviate = (obj: Record<string, unknown>) => {
   const flattenedObject: Record<string, unknown> = {};
-
   for (const key in obj) {
     if (!Object.hasOwn(obj, key)) {
       continue;
     }
+
+    // Replace any character that is not a letter, a number, or an underscore with '_'
+    const newKey = key.replace(/[^a-zA-Z0-9_]/g, "_");
+
     const value = obj[key];
     if (typeof value === "object" && !Array.isArray(value)) {
       const recursiveResult = flattenObjectForWeaviate(
         value as Record<string, unknown>
       );
-
       for (const deepKey in recursiveResult) {
-        if (Object.hasOwn(obj, key)) {
-          flattenedObject[`${key}_${deepKey}`] = recursiveResult[deepKey];
+        if (Object.hasOwn(recursiveResult, deepKey)) {
+          // Replace any character in the deepKey that is not a letter, a number, or an underscore with '_'
+          const newDeepKey = deepKey.replace(/[^a-zA-Z0-9_]/g, "_");
+          flattenedObject[`${newKey}_${newDeepKey}`] = recursiveResult[deepKey];
         }
       }
     } else if (Array.isArray(value)) {
       if (value.length === 0) {
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       } else if (
         typeof value[0] !== "object" &&
         value.every((el: unknown) => typeof el === typeof value[0])
       ) {
         // Weaviate only supports arrays of primitive types,
         // where all elements are of the same type
-        flattenedObject[key] = value;
+        flattenedObject[newKey] = value;
       }
     } else {
-      flattenedObject[key] = value;
+      flattenedObject[newKey] = value;
     }
   }
-
   return flattenedObject;
 };
 
@@ -291,19 +295,33 @@ export class WeaviateStore extends VectorStore {
     options?: HybridOptions<undefined>
   ): Promise<Document[]> {
     const collection = this.client.collections.get(this.indexName);
+    let query_vector: number[] | undefined;
+    if (!options?.vector) {
+      query_vector = await this.embeddings.embedQuery(query);
+    }
+
+    const options_with_vector = {
+      ...options,
+      vector: options?.vector || query_vector,
+      returnMetadata: [
+        "score",
+        ...((options?.returnMetadata as MetadataKeys) || []),
+      ] as MetadataKeys,
+    };
     let result;
     if (this.tenant) {
       result = await collection.withTenant(this.tenant).query.hybrid(query, {
-        ...(options || {}),
+        ...options_with_vector,
       });
     } else {
       result = await collection.query.hybrid(query, {
-        ...(options || {}),
+        ...options_with_vector,
       });
     }
-    const documents = [];
+    const documents: Document[] = [];
+
     for (const data of result.objects) {
-      const { properties = {} } = data ?? {};
+      const { properties = {}, metadata = {} } = data ?? {};
       const { [this.textKey]: text, ...rest } = properties;
 
       documents.push(
@@ -311,6 +329,7 @@ export class WeaviateStore extends VectorStore {
           pageContent: String(text ?? ""),
           metadata: {
             ...rest,
+            ...metadata,
           },
           id: data.uuid,
         })
@@ -410,6 +429,10 @@ export class WeaviateStore extends VectorStore {
   ): Promise<[Document, number, number, number[]][]> {
     try {
       const collection = this.client.collections.get(this.indexName);
+      // define query attributes to return
+      // if no queryAttrs, show all properties
+      const queryAttrs =
+        this.queryAttrs.length > 1 ? this.queryAttrs : undefined;
       let result;
       if (this.tenant) {
         result = await collection
@@ -418,6 +441,7 @@ export class WeaviateStore extends VectorStore {
             filters: filter,
             limit: k,
             returnMetadata: ["distance", "score"],
+            returnProperties: queryAttrs,
           });
       } else {
         result = await collection.query.nearVector(query, {
@@ -425,6 +449,7 @@ export class WeaviateStore extends VectorStore {
           limit: k,
           includeVector: true,
           returnMetadata: ["distance", "score"],
+          returnProperties: queryAttrs,
         });
       }
 

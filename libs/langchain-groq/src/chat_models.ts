@@ -292,8 +292,32 @@ interface TokenUsage {
   totalTokens?: number;
 }
 
+/**
+ * Extract the custom role from a message.
+ * @param message - The message to extract the custom role from.
+ * @returns The custom role of the message.
+ */
+function extractGenericMessageCustomRole(message: ChatMessage): GroqRoleEnum {
+  if (
+    message.role !== "system" &&
+    message.role !== "assistant" &&
+    message.role !== "user" &&
+    message.role !== "function"
+  ) {
+    throw new Error(
+      `Unsupported message role: ${message.role}. Expected "system", "assistant", "user", or "function"`
+    );
+  }
+  return message.role as GroqRoleEnum;
+}
+
+/**
+ * Extract the role from a message.
+ * @param message - The message to extract the role from.
+ * @returns The role of the message.
+ */
 export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
-  const type = message._getType();
+  const type = message.getType();
   switch (type) {
     case "system":
       return "system";
@@ -306,6 +330,11 @@ export function messageToGroqRole(message: BaseMessage): GroqRoleEnum {
     case "tool":
       // Not yet supported as a type
       return "tool" as GroqRoleEnum;
+    case "generic": {
+      if (!ChatMessage.isInstance(message))
+        throw new Error("Invalid generic chat message");
+      return extractGenericMessageCustomRole(message);
+    }
     default:
       throw new Error(`Unknown message type: ${type}`);
   }
@@ -315,9 +344,6 @@ function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletionsAPI.ChatCompletionMessage> {
   return messages.map((message): ChatCompletionsAPI.ChatCompletionMessage => {
-    if (typeof message.content !== "string") {
-      throw new Error("Non string message content not supported");
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
@@ -1382,9 +1408,22 @@ export class ChatGroq extends BaseChatModel<
         outputSchema = toJsonSchema(schema);
       } else {
         outputParser = new JsonOutputParser<RunOutput>();
+        outputSchema = schema as JsonSchema7Type;
       }
+
+      // Use Groq's structured outputs when we have a complete schema
+      const responseFormat = outputSchema
+        ? {
+            type: "json_schema" as const,
+            json_schema: {
+              name: functionName,
+              schema: outputSchema,
+            },
+          }
+        : { type: "json_object" as const };
+
       llm = this.withConfig({
-        response_format: { type: "json_object" },
+        response_format: responseFormat,
         ls_structured_output_format: {
           kwargs: { method: "jsonMode" },
           schema: outputSchema,

@@ -708,3 +708,56 @@ public class User
       .rejected_prediction_tokens
   ).toBe("number");
 });
+
+test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streaming", async () => {
+  const { tool } = await import("@langchain/core/tools");
+  const { z } = await import("zod");
+  const { HumanMessage, SystemMessage } = await import(
+    "@langchain/core/messages"
+  );
+
+  const llm = new ChatOpenAI({
+    model: "gpt-3.5-turbo-1106",
+    maxTokens: 256,
+  });
+
+  // Tool with empty schema (no parameters)
+  const getCurrentTime = tool(
+    async () => `current time: ${new Date().toLocaleString()}`,
+    {
+      name: "get_current_time",
+      description: "get current time",
+      schema: z.object({}), // Empty schema - this is the bug trigger
+    }
+  );
+
+  const llmWithTools = llm.bindTools([getCurrentTime]);
+
+  const dialogs = [
+    new SystemMessage({ content: "You are a helpful assistant." }),
+    new HumanMessage({ content: "get current time" }),
+  ];
+
+  // Test non-streaming mode - this should work
+  const nonStreamingResult = await llmWithTools.invoke(dialogs);
+  expect(nonStreamingResult.tool_calls).toBeDefined();
+  expect(nonStreamingResult.tool_calls?.length).toBeGreaterThan(0);
+  expect(nonStreamingResult.tool_calls?.[0].name).toBe("get_current_time");
+
+  // Test streaming mode - this should also work but currently doesn't
+  const stream = await llmWithTools.stream(dialogs);
+  let finalChunk;
+  for await (const chunk of stream) {
+    if (!finalChunk) {
+      finalChunk = chunk;
+    } else {
+      finalChunk = finalChunk.concat(chunk);
+    }
+  }
+
+  // This should pass but currently fails due to the bug
+  expect(finalChunk?.tool_calls).toBeDefined();
+  expect(finalChunk?.tool_calls?.length).toBeGreaterThan(0);
+  expect(finalChunk?.tool_calls?.[0].name).toBe("get_current_time");
+  expect(finalChunk?.tool_calls?.[0].args).toEqual({});
+});

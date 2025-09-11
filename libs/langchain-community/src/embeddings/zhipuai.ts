@@ -12,7 +12,7 @@ export interface ZhipuAIEmbeddingsParams extends EmbeddingsParams {
   /**
    * Model Name to use
    */
-  modelName?: "embedding-2";
+  modelName?: "embedding-2" | "embedding-3";
   /**
    * ZhipuAI API key to use
    */

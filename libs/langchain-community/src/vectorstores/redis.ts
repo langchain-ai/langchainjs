@@ -196,7 +196,13 @@ export class RedisVectorStore extends VectorStore {
     await this.createIndex(vectors[0].length);
 
     const info = await this.redisClient.ft.info(this.indexName);
-    const lastKeyCount = parseInt(info.numDocs, 10) || 0;
+    const lastKeyCount =
+      parseInt(
+        info.numDocs ||
+          // @ts-expect-error - num_docs is not typed as not used by all redis connectors
+          info.num_docs,
+        10
+      ) || 0;
     const multi = this.redisClient.multi();
 
     vectors.map(async (vector, idx) => {

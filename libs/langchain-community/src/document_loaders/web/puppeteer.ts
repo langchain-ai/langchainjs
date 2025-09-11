@@ -4,6 +4,8 @@ import type {
   Page,
   Browser,
   PuppeteerLaunchOptions,
+  ConnectOptions,
+  connect,
 } from "puppeteer";
 
 import { Document } from "@langchain/core/documents";
@@ -28,7 +30,7 @@ export type PuppeteerEvaluate = (
 ) => Promise<string>;
 
 export type PuppeteerWebBaseLoaderOptions = {
-  launchOptions?: PuppeteerLaunchOptions;
+  launchOptions?: PuppeteerLaunchOptions & ConnectOptions;
   gotoOptions?: PuppeteerGotoOptions;
   evaluate?: PuppeteerEvaluate;
 };
@@ -65,14 +67,22 @@ export class PuppeteerWebBaseLoader
     url: string,
     options?: PuppeteerWebBaseLoaderOptions
   ): Promise<string> {
-    const { launch } = await PuppeteerWebBaseLoader.imports();
+    const { launch, connect } = await PuppeteerWebBaseLoader.imports();
 
-    const browser = await launch({
-      headless: true,
-      defaultViewport: null,
-      ignoreDefaultArgs: ["--disable-extensions"],
-      ...options?.launchOptions,
-    });
+    let browser: Browser;
+
+    if (options?.launchOptions?.browserWSEndpoint) {
+      browser = await connect({
+        browserWSEndpoint: options?.launchOptions?.browserWSEndpoint,
+      });
+    } else {
+      browser = await launch({
+        headless: true,
+        defaultViewport: null,
+        ignoreDefaultArgs: ["--disable-extensions"],
+        ...options?.launchOptions,
+      });
+    }
     const page = await browser.newPage();
 
     await page.goto(url, {
@@ -123,14 +133,21 @@ export class PuppeteerWebBaseLoader
     url: string,
     options?: PuppeteerWebBaseLoaderOptions
   ): Promise<Document> {
-    const { launch } = await PuppeteerWebBaseLoader.imports();
+    const { launch, connect } = await PuppeteerWebBaseLoader.imports();
 
-    const browser = await launch({
-      headless: true,
-      defaultViewport: null,
-      ignoreDefaultArgs: ["--disable-extensions"],
-      ...options?.launchOptions,
-    });
+    let browser: Browser;
+    if (options?.launchOptions?.browserWSEndpoint) {
+      browser = await connect({
+        browserWSEndpoint: options?.launchOptions?.browserWSEndpoint,
+      });
+    } else {
+      browser = await launch({
+        headless: true,
+        defaultViewport: null,
+        ignoreDefaultArgs: ["--disable-extensions"],
+        ...options?.launchOptions,
+      });
+    }
     const page = await browser.newPage();
 
     await page.goto(url, {
@@ -161,12 +178,13 @@ export class PuppeteerWebBaseLoader
    */
   static async imports(): Promise<{
     launch: typeof launch;
+    connect: typeof connect;
   }> {
     try {
       // eslint-disable-next-line import/no-extraneous-dependencies
-      const { launch } = await import("puppeteer");
+      const { launch, connect } = await import("puppeteer");
 
-      return { launch };
+      return { launch, connect };
     } catch (e) {
       console.error(e);
       throw new Error(

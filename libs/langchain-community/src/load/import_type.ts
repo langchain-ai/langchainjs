@@ -20,7 +20,6 @@ export interface SecretMap {
   CLOUDFLARE_API_TOKEN?: string;
   COHERE_API_KEY?: string;
   DATABERRY_API_KEY?: string;
-  DRIA_API_KEY?: string;
   FIREWORKS_API_KEY?: string;
   FRIENDLI_TEAM?: string;
   FRIENDLI_TOKEN?: string;
