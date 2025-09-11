@@ -212,16 +212,16 @@ export function convertToCerebrasMessageParams(
   messages: BaseMessage[]
 ): CerebrasMessageParam[] {
   return messages.flatMap((msg) => {
-    if (["human", "generic"].includes(msg.type)) {
+    if (["human", "generic"].includes(msg.getType())) {
       return convertHumanGenericMessagesToCerebras(msg as HumanMessage);
-    } else if (msg.type === "ai") {
+    } else if (msg.getType() === "ai") {
       return convertAIMessageToCerebras(msg as AIMessage);
-    } else if (msg.type === "system") {
+    } else if (msg.getType() === "system") {
       return convertSystemMessageToCerebras(msg as SystemMessage);
-    } else if (msg.type === "tool") {
+    } else if (msg.getType() === "tool") {
       return convertToolMessageToCerebras(msg as ToolMessage);
     } else {
-      throw new Error(`Unsupported message type: ${msg.type}`);
+      throw new Error(`Unsupported message type: ${msg.getType()}`);
     }
   });
 }
