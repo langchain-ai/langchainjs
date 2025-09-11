@@ -56,6 +56,8 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   tools?: BindToolsInput[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  /** @deprecated Tool choice is not supported for ChatOllama */
+  tool_choice?: never;
 }
 
 export interface PullModelOptions {
@@ -109,6 +111,8 @@ export interface ChatOllamaInput
    * @default fetch
    */
   fetch?: typeof fetch;
+  /** Tool choice is not supported for ChatOllama */
+  tool_choice?: never;
 }
 
 /**
@@ -596,10 +600,6 @@ export class ChatOllama
   invocationParams(
     options?: this["ParsedCallOptions"]
   ): Omit<OllamaChatRequest, "messages"> {
-    if (options?.tool_choice) {
-      throw new Error("Tool choice is not supported for ChatOllama.");
-    }
-
     return {
       model: this.model,
       format: options?.format ?? this.format,
