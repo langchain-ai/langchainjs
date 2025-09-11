@@ -9,11 +9,7 @@ import {
   BindToolsInput,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import {
-  BaseMessage,
-  type AIMessageChunk,
-  MessageStructure,
-} from "@langchain/core/messages";
+import { BaseMessage, type AIMessageChunk } from "@langchain/core/messages";
 import {
   type RunnableBatchOptions,
   RunnableBinding,
@@ -308,9 +304,7 @@ export class ConfigurableModel<
 
   async _model(
     config?: RunnableConfig
-  ): Promise<
-    BaseChatModel<BaseChatModelCallOptions, AIMessageChunk<MessageStructure>>
-  > {
+  ): Promise<BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>> {
     const params = { ...this._defaultConfig, ...this._modelParams(config) };
     let initializedModel = await _initChatModelHelper(
       params.model,
