@@ -489,6 +489,31 @@ test("Stream token count usage_metadata", async () => {
   );
 });
 
+describe("ChatGoogleGenerativeAI should count tokens correctly", () => {
+  describe("when streaming", () => {
+    test.each(["gemini-1.5-flash", "gemini-2.5-pro"])(
+      "with %s",
+      async (modelName) => {
+        const model = new ChatGoogleGenerativeAI({
+          model: modelName,
+          temperature: 0,
+          maxRetries: 0,
+        });
+        const res = await model.stream("Why is the sky blue? Be concise.");
+        let full: AIMessageChunk | undefined;
+        for await (const chunk of res) {
+          full ??= chunk;
+          full = full.concat(chunk);
+          console.log("langchain:", chunk.usage_metadata);
+        }
+        console.log(modelName, full);
+        // expect(full?.usage_metadata);
+        // expect(res.usage_metadata).toBeDefined();
+      }
+    );
+  });
+});
+
 test("streamUsage excludes token usage", async () => {
   const model = new ChatGoogleGenerativeAI({
     temperature: 0,
