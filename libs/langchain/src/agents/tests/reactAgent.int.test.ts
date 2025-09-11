@@ -2,10 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, isHumanMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  isHumanMessage,
+  SystemMessage,
+  AIMessage,
+} from "@langchain/core/messages";
 import z from "zod/v3";
 
-import { createAgent, providerStrategy } from "../index.js";
+import { createAgent, providerStrategy, createMiddleware } from "../index.js";
+import { anthropicPromptCachingMiddleware } from "../middlewareAgent/middleware/promptCaching.js";
 
 describe("createAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
@@ -254,6 +260,294 @@ describe("createAgent Integration Tests", () => {
       expect(response.someEnum).toBe("b");
       expect(response.someNumber).toBe(0); // expect 0 because it's not set as optional in the schema
       expect(response.someOptionalNumber).toBe(undefined);
+    });
+  });
+
+  describe("prepareModelRequest", () => {
+    it("should allow middleware to update model, messages and systemMessage", async () => {
+      // Setup mocked fetch functions for both providers
+      const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
+      const anthropicFetchMock = vi.fn((url, options) => fetch(url, options));
+
+      // Create a simple tool for testing
+      const simpleTool = tool(
+        async (input: { query: string }) => {
+          return `Tool response for: ${input.query}`;
+        },
+        {
+          name: "simpleTool",
+          schema: z.object({
+            query: z.string().describe("The query to process"),
+          }),
+          description: "A simple tool for testing",
+        }
+      );
+
+      // Create middleware that will change the model and messages
+      const modelSwitchMiddleware = createMiddleware({
+        name: "modelSwitcher",
+        prepareModelRequest: async (_request, _state, _runtime) => {
+          // Create a new ChatAnthropic instance
+          const anthropicModel = new ChatAnthropic({
+            model: "claude-3-5-sonnet-20240620",
+            temperature: 0.7,
+            maxTokens: 500,
+            topP: 0.95,
+            clientOptions: {
+              fetch: anthropicFetchMock,
+            },
+          });
+
+          // Change the messages to ask a completely different question
+          const newMessages = [
+            new HumanMessage("What is the capital of France?"),
+          ];
+
+          // Return partial ModelRequest - tools will be merged from original request
+          return {
+            model: anthropicModel,
+            messages: newMessages,
+            systemMessage: new SystemMessage("You are a geography expert."),
+            tools: _request.tools,
+          };
+        },
+      });
+
+      // Create agent with OpenAI model string and the middleware
+      const agent = createAgent({
+        model: "gpt-4o-mini",
+        tools: [simpleTool],
+        middleware: [
+          modelSwitchMiddleware,
+          anthropicPromptCachingMiddleware({
+            ttl: "5m",
+            minMessagesToCache: 1,
+          }),
+        ] as const,
+      });
+
+      // Invoke the agent
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      });
+
+      // Verify that Anthropic was called (not OpenAI)
+      expect(anthropicFetchMock).toHaveBeenCalled();
+      expect(openAIFetchMock).not.toHaveBeenCalled();
+
+      // Verify the request to Anthropic includes our model settings
+      const anthropicCall = anthropicFetchMock.mock.calls[0];
+      const requestBody = JSON.parse(anthropicCall[1].body);
+
+      // Check that model settings were propagated
+      expect(requestBody.temperature).toBe(0.7);
+      expect(requestBody.max_tokens).toBe(500);
+      expect(requestBody.top_p).toBe(0.95);
+      // Check that cache_control was passed through
+      expect(requestBody.system.at(-1).cache_control).toEqual({
+        type: "ephemeral",
+        ttl: "5m",
+      });
+
+      // Check that the system message was updated
+      expect(requestBody.system).toEqual([
+        expect.objectContaining({
+          type: "text",
+          text: "You are a geography expert.",
+        }),
+      ]);
+
+      // Check that messages were changed to ask about France
+      const userMessage = requestBody.messages.find(
+        (msg: { role: string }) => msg.role === "user"
+      );
+      expect(userMessage.content).toBe("What is the capital of France?");
+
+      // The response should be about France, not Tokyo weather
+      expect(result.messages).toBeDefined();
+      expect(result.messages.length).toBeGreaterThan(0);
+
+      // Find the AI response message
+      const aiResponse = result.messages.find((msg) => msg.type === "ai");
+      expect(aiResponse).toBeDefined();
+      // The response should mention Paris or France, not Tokyo or weather
+      const responseContent =
+        aiResponse?.content?.toString().toLowerCase() || "";
+      expect(responseContent).toMatch(/paris|france/i);
+      expect(responseContent).not.toMatch(/tokyo|weather/i);
+    });
+
+    it("can change tools and toolChoice in prepareModelRequest", async () => {
+      // Setup mocked fetch for OpenAI
+      const openAIFetchMock = vi.fn();
+
+      // Create tools that will be added by middleware
+      const weatherTool = tool(
+        async (input: { location: string }) => {
+          return `Weather in ${input.location}: Sunny, 72°F`;
+        },
+        {
+          name: "getWeather",
+          schema: z.object({
+            location: z.string().describe("The location to get weather for"),
+          }),
+          description: "Get the current weather for a location",
+        }
+      );
+
+      const newsTool = tool(
+        async (input: { topic: string }) => {
+          return `Latest news on ${input.topic}: Breaking developments...`;
+        },
+        {
+          name: "getNews",
+          schema: z.object({
+            topic: z.string().describe("The topic to get news about"),
+          }),
+          description: "Get the latest news on a topic",
+        }
+      );
+
+      // Create middleware that adds tools and sets toolChoice
+      const toolsMiddleware = {
+        name: "toolsModifier",
+        prepareModelRequest: async () => {
+          // Add tools dynamically
+          const tools = [weatherTool, newsTool];
+
+          // Set toolChoice to force specific tool
+          return {
+            tools,
+            toolChoice: {
+              type: "function" as const,
+              function: {
+                name: "getWeather",
+              },
+            },
+          };
+        },
+      };
+
+      // Create OpenAI model initially without any tools
+      const openAIModel = new ChatOpenAI({
+        model: "gpt-4",
+        temperature: 0,
+        configuration: {
+          fetch: openAIFetchMock,
+        },
+      });
+
+      // Mock the OpenAI response with proper headers
+      openAIFetchMock.mockImplementation(async () => {
+        // Return a proper Response-like object
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({
+            "content-type": "application/json",
+          }),
+          json: async () => ({
+            id: "chatcmpl-test",
+            object: "chat.completion",
+            created: Date.now(),
+            model: "gpt-4",
+            choices: [
+              {
+                index: 0,
+                message: {
+                  role: "assistant",
+                  content: null,
+                  tool_calls: [
+                    {
+                      id: "call_test123",
+                      type: "function",
+                      function: {
+                        name: "getWeather",
+                        arguments: JSON.stringify({ location: "New York" }),
+                      },
+                    },
+                  ],
+                },
+                finish_reason: "tool_calls",
+              },
+            ],
+            usage: {
+              prompt_tokens: 50,
+              completion_tokens: 20,
+              total_tokens: 70,
+            },
+          }),
+          text: async () => "",
+          arrayBuffer: async () => new ArrayBuffer(0),
+          blob: async () => new Blob(),
+          clone: () => ({}),
+          body: null,
+          bodyUsed: false,
+        };
+      });
+
+      // Create agent with the middleware
+      const agent = createAgent({
+        llm: openAIModel,
+        // No tools provided initially
+        tools: [],
+        middleware: [toolsMiddleware],
+      });
+
+      // Invoke the agent
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in New York?")],
+      });
+
+      // Verify the OpenAI API was called with the correct tools and tool_choice
+      expect(openAIFetchMock).toHaveBeenCalledOnce();
+      const [, options] = openAIFetchMock.mock.calls[0];
+      const requestBody = JSON.parse(options.body);
+
+      // Check that tools were added
+      expect(requestBody.tools).toHaveLength(2);
+      expect(requestBody.tools[0]).toMatchObject({
+        type: "function",
+        function: {
+          name: "getWeather",
+          description: "Get the current weather for a location",
+          parameters: {
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The location to get weather for",
+              },
+            },
+            required: ["location"],
+            additionalProperties: false,
+          },
+        },
+      });
+      expect(requestBody.tools[1]).toMatchObject({
+        type: "function",
+        function: {
+          name: "getNews",
+          description: "Get the latest news on a topic",
+        },
+      });
+
+      // Check that tool_choice was set correctly
+      expect(requestBody.tool_choice).toEqual({
+        type: "function",
+        function: { name: "getWeather" },
+      });
+
+      // Verify the result contains the tool call
+      const aiResponse = result.messages[result.messages.length - 1];
+      expect(aiResponse).toBeInstanceOf(AIMessage);
+      expect((aiResponse as AIMessage).tool_calls).toHaveLength(1);
+      expect((aiResponse as AIMessage).tool_calls?.[0]).toMatchObject({
+        name: "getWeather",
+        args: { location: "New York" },
+        id: "call_test123",
+      });
     });
   });
 });

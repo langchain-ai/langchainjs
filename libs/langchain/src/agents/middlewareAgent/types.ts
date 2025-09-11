@@ -79,13 +79,6 @@ export interface ToolResult {
   error?: string;
 }
 
-export interface AnthropicModelSettings {
-  cache_control: {
-    type: string;
-    ttl: string;
-  };
-}
-
 /**
  * Configuration for modifying a model call at runtime.
  * All fields are optional and only provided fields will override defaults.
@@ -122,12 +115,6 @@ export interface ModelRequest {
    * Can be tool names (strings) or tool instances.
    */
   tools: (ClientTool | ServerTool)[];
-
-  /**
-   * The model settings to use for this step.
-   * Currently only supported for Anthropic models.
-   */
-  modelSettings?: AnthropicModelSettings | Record<string, any>;
 }
 
 /**

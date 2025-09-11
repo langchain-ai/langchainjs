@@ -6,8 +6,6 @@ import {
   AIMessage,
   ToolMessage,
   SystemMessage,
-  isBaseMessage,
-  isToolMessage,
 } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
@@ -35,7 +33,6 @@ import {
   ModelRequest,
   CreateAgentParams,
   InternalAgentState,
-  AnthropicModelSettings,
   Runtime,
   AgentMiddleware,
 } from "../types.js";
@@ -131,7 +128,7 @@ export class AgentNode<
     const lastMessage = state.messages.at(-1);
     if (
       lastMessage &&
-      isToolMessage(lastMessage) &&
+      ToolMessage.isInstance(lastMessage) &&
       lastMessage.name &&
       this.#options.shouldReturnDirect.has(lastMessage.name)
     ) {
@@ -253,22 +250,8 @@ export class AgentNode<
       modelInput = { ...modelInput, messages: preparedOptions.messages };
     }
 
-    // Add system message if provided
-    if (preparedOptions?.systemMessage) {
-      // Prepend a system message if needed
-      const systemMsg = new SystemMessage(preparedOptions.systemMessage);
-      modelInput = {
-        ...modelInput,
-        messages: [systemMsg, ...modelInput.messages],
-      };
-    }
-
     const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const invokeConfig = {
-      ...config,
-      signal,
-    };
-
+    const invokeConfig = { ...config, signal };
     const response = (await modelWithTools.invoke(
       modelInput,
       invokeConfig
@@ -536,7 +519,7 @@ export class AgentNode<
     let systemMessage: BaseMessage | undefined;
     if (typeof this.#options.prompt === "string") {
       systemMessage = new SystemMessage(this.#options.prompt);
-    } else if (isBaseMessage(this.#options.prompt)) {
+    } else if (BaseMessage.isInstance(this.#options.prompt)) {
       systemMessage = this.#options.prompt;
     }
 
@@ -588,10 +571,7 @@ export class AgentNode<
     model: LanguageModelLike,
     preparedOptions?: ModelRequest
   ): Promise<Runnable> {
-    const options: Partial<BaseChatModelCallOptions & AnthropicModelSettings> =
-      {
-        ...preparedOptions?.modelSettings,
-      };
+    const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(this.#structuredToolInfo);
 
     // Use tools from preparedOptions if provided, otherwise use default tools
@@ -652,7 +632,9 @@ export class AgentNode<
     /**
      * Create a model runnable with the prompt and agent name
      */
-    const modelRunnable = getPromptRunnable(this.#options.prompt).pipe(
+    const modelRunnable = getPromptRunnable(
+      (preparedOptions?.systemMessage as SystemMessage) ?? this.#options.prompt
+    ).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)
         : modelWithTools

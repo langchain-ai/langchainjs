@@ -1,4 +1,3 @@
-/* eslint-disable no-instanceof/no-instanceof */
 import {
   AIMessage,
   AIMessageChunk,

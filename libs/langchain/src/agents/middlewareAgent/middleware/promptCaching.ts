@@ -1,12 +1,28 @@
 import { z } from "zod/v3";
+import {
+  BaseMessage,
+  SystemMessage,
+  ContentBlock,
+} from "@langchain/core/messages";
 import { createMiddleware } from "../middleware.js";
+
+const DEFAULT_ENABLE_CACHING = true;
+const DEFAULT_TTL = "5m";
+const DEFAULT_MIN_MESSAGES_TO_CACHE = 3;
 
 const contextSchema = z.object({
   // Configuration options
-  enableCaching: z.boolean().default(true),
-  ttl: z.enum(["5m", "1h"]).default("5m"),
-  minMessagesToCache: z.number().default(3),
+  enableCaching: z.boolean().default(DEFAULT_ENABLE_CACHING),
+  ttl: z.enum(["5m", "1h"]).default(DEFAULT_TTL),
+  minMessagesToCache: z.number().default(DEFAULT_MIN_MESSAGES_TO_CACHE),
 });
+
+interface CacheControlledMessage extends BaseMessage {
+  cache_control: {
+    type: "ephemeral";
+    ttl: string;
+  };
+}
 
 /**
  * Creates a prompt caching middleware for Anthropic models to optimize API usage.
@@ -132,19 +148,32 @@ export function anthropicPromptCachingMiddleware(
     name: "PromptCachingMiddleware",
     contextSchema,
     prepareModelRequest: (options, state, runtime) => {
+      /**
+       * If the runtime values match the schema default values, use the middleware option
+       * values otherwise use the runtime values. This allows to apply general configurations
+       * for all invocations, and override them for specific invocations.
+       */
       const enableCaching =
-        runtime.context.enableCaching ?? middlewareOptions?.enableCaching;
-      const ttl = runtime.context.ttl ?? middlewareOptions?.ttl;
+        runtime.context.enableCaching === DEFAULT_ENABLE_CACHING
+          ? middlewareOptions?.enableCaching ?? runtime.context.enableCaching
+          : runtime.context.enableCaching ?? middlewareOptions?.enableCaching;
+      const ttl =
+        runtime.context.ttl === DEFAULT_TTL
+          ? middlewareOptions?.ttl ?? runtime.context.ttl
+          : runtime.context.ttl ?? middlewareOptions?.ttl;
       const minMessagesToCache =
-        runtime.context.minMessagesToCache ??
-        middlewareOptions?.minMessagesToCache;
+        runtime.context.minMessagesToCache === DEFAULT_MIN_MESSAGES_TO_CACHE
+          ? middlewareOptions?.minMessagesToCache ??
+            runtime.context.minMessagesToCache
+          : runtime.context.minMessagesToCache ??
+            middlewareOptions?.minMessagesToCache;
 
       // Skip if caching is disabled
       if (!enableCaching) {
         return undefined;
       }
 
-      if (options.model?.getName() !== "anthropic") {
+      if (options.model?.getName() !== "ChatAnthropic") {
         throw new Error(
           "Prompt caching is only supported for Anthropic models"
         );
@@ -157,15 +186,47 @@ export function anthropicPromptCachingMiddleware(
         return options;
       }
 
-      return {
-        ...options,
-        modelSettings: {
+      /**
+       * Add cache_control to the system message
+       */
+      if (options.systemMessage) {
+        const cacheControlledSystemMessage =
+          typeof options.systemMessage.content === "string"
+            ? new SystemMessage({
+                content: [
+                  {
+                    type: "text",
+                    text: options.systemMessage.content,
+                    cache_control: { type: "ephemeral", ttl },
+                  },
+                ],
+              })
+            : new SystemMessage({
+                ...options.systemMessage,
+                content: [
+                  ...options.systemMessage.content.slice(0, -1),
+                  {
+                    ...(options.systemMessage.content.at(-1) as ContentBlock),
+                    cache_control: { type: "ephemeral", ttl },
+                  },
+                ],
+              });
+        options.systemMessage = cacheControlledSystemMessage;
+      } else {
+        /**
+         * Add cache_control to the first message otherwise
+         */
+        const cachedControlledSystemMessage = {
+          ...options.messages[0],
           cache_control: {
             type: "ephemeral",
             ttl,
           },
-        },
-      };
+        } as CacheControlledMessage;
+        options.messages[0] = cachedControlledSystemMessage;
+      }
+
+      return options;
     },
   });
 }
