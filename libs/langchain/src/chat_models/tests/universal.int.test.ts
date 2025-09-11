@@ -239,6 +239,40 @@ test("Can call bindTools", async () => {
   expect(result.tool_calls?.[0].name).toBe("GetWeather");
 });
 
+test("bindTools does not mutate original model instance", async () => {
+  // This test verifies that bindTools doesn't mutate the original ConfigurableModel
+  const originalModel = await initChatModel("gpt-4o-mini", {
+    modelProvider: "openai",
+    temperature: 0,
+    apiKey: openAIApiKey,
+  });
+
+  const weatherTool = tool(() => "Sunny, 75°F", {
+    schema: z.object({
+      location: z.string().describe("The city and state"),
+    }),
+    name: "GetWeather",
+    description: "Get the current weather",
+  });
+
+  // Call bindTools on the model
+  const modelWithTools = originalModel.bindTools([weatherTool]);
+
+  // Invoke the model with tools - it should be able to use tools
+  const toolResult = await modelWithTools.invoke(
+    "What's the weather in San Francisco?"
+  );
+  expect(toolResult.tool_calls).toBeDefined();
+  expect(toolResult.tool_calls?.[0]?.name).toBe("GetWeather");
+
+  // Now invoke the original model - it should NOT have tools bound
+  const originalResult = await originalModel.invoke("What is 2 + 2?");
+  expect(originalResult).toBeDefined();
+  expect(originalResult.content).toBeDefined();
+  // The original model should not have tool calls
+  expect(originalResult.tool_calls).toBeUndefined();
+});
+
 test("Can call withStructuredOutput", async () => {
   const gpt4 = await initChatModel(undefined, {
     modelProvider: "openai",
@@ -262,6 +296,78 @@ test("Can call withStructuredOutput", async () => {
   expect(result).toBeDefined();
   expect(result.location).toBeDefined();
   expect(result.location).not.toBe("");
+});
+
+test("withStructuredOutput does not mutate original model instance", async () => {
+  // This test verifies the fix for issue #8929
+  // where withStructuredOutput would mutate the original ConfigurableModel instance
+  const originalModel = await initChatModel("gpt-4o-mini", {
+    modelProvider: "openai",
+    temperature: 0,
+    apiKey: openAIApiKey,
+  });
+
+  const schema = z.object({
+    answer: z.string().describe("The answer to the question"),
+  });
+
+  // Call withStructuredOutput on the model
+  const structuredModel = originalModel.withStructuredOutput(schema);
+
+  // Invoke the structured model - it should return structured output
+  const structuredResult = await structuredModel.invoke("What is 2 + 2?");
+  expect(structuredResult).toBeDefined();
+  expect(structuredResult.answer).toBeDefined();
+  expect(typeof structuredResult.answer).toBe("string");
+
+  // Now invoke the original model - it should return a regular message, NOT structured output
+  const originalResult = await originalModel.invoke("What is 2 + 2?");
+  expect(originalResult).toBeDefined();
+  expect(originalResult.content).toBeDefined();
+  expect(typeof originalResult.content).toBe("string");
+  // Ensure it's not returning structured output
+  expect((originalResult as any).answer).toBeUndefined();
+});
+
+test("ConfigurableModel works with agent after withStructuredOutput is called", async () => {
+  // This test verifies that a ConfigurableModel can be used with an agent
+  // even after withStructuredOutput has been called on the same instance
+  const model = await initChatModel("gpt-4o-mini", {
+    modelProvider: "openai",
+    temperature: 0,
+    apiKey: openAIApiKey,
+  });
+
+  const schema = z.object({
+    result: z.string().describe("The result"),
+  });
+
+  // Call withStructuredOutput on the model (but don't use the result)
+  model.withStructuredOutput(schema);
+
+  // Create a simple tool for the agent
+  const searchTool = tool(() => "Found: Item 1, Item 2, Item 3", {
+    schema: z.object({ query: z.string() }),
+    name: "search",
+    description: "Search for items",
+  });
+
+  // The original model should still work with the agent
+  const agent = await createAgent({
+    llm: model,
+    tools: [searchTool],
+  });
+
+  const result = await agent.invoke({
+    messages: "Search for items please",
+  });
+
+  expect(result).toBeDefined();
+  expect(result.messages).toBeDefined();
+  expect(result.messages.length).toBeGreaterThan(0);
+  // The result should contain actual messages, not throw an error
+  const lastMessage = result.messages[result.messages.length - 1];
+  expect(lastMessage.content).toBeDefined();
 });
 
 describe("Works with all model providers", () => {
