@@ -22,6 +22,7 @@ import {
   FunctionMessageChunk,
 } from "./function.js";
 import { HumanMessage, HumanMessageChunk } from "./human.js";
+import { RemoveMessage } from "./modifier.js";
 import { SystemMessage, SystemMessageChunk } from "./system.js";
 import {
   ToolCall,
@@ -132,6 +133,8 @@ function _constructMessageFromParams(
       tool_call_id: rest.tool_call_id as string,
       name: rest.name,
     });
+  } else if (type === "remove" && "id" in rest && typeof rest.id === "string") {
+    return new RemoveMessage({ ...rest, id: rest.id });
   } else {
     const error = addLangChainErrorFields(
       new Error(
