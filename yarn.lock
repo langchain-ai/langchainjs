@@ -8709,7 +8709,7 @@ __metadata:
     rimraf: ^5.0.1
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -8749,7 +8749,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -8929,7 +8929,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9002,7 +9002,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9197,7 +9197,7 @@ __metadata:
     web-auth-library: ^1.0.3
     word-extractor: ^1.0.4
     youtubei.js: ^12.2.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
@@ -9613,8 +9613,8 @@ __metadata:
     typescript: ~5.8.3
     uuid: ^10.0.0
     web-streams-polyfill: ^4.0.0
-    zod: ^3.25.32
-    zod-to-json-schema: ^3.22.3
+    zod: ^3.25.76 || ^4
+    zod-to-json-schema: ^3.24.6
   languageName: unknown
   linkType: soft
 
@@ -9752,7 +9752,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.22.4
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9787,7 +9787,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.22.4
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9824,7 +9824,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^11.1.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9860,7 +9860,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.22.4
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9896,7 +9896,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.22.4
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9931,7 +9931,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     web-auth-library: ^1.0.3
-    zod: ^3.23.8
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -9968,7 +9968,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.22.4
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -10100,7 +10100,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -10271,7 +10271,7 @@ __metadata:
     ts-jest: ^29.1.0
     typescript: ~5.8.3
     uuid: ^10.0.0
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -10305,7 +10305,7 @@ __metadata:
     rimraf: ^5.0.1
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.68 <0.4.0"
   languageName: unknown
@@ -10493,7 +10493,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   languageName: unknown
   linkType: soft
 
@@ -10524,7 +10524,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -10647,7 +10647,7 @@ __metadata:
     rollup: ^4.5.2
     ts-jest: ^29.1.0
     typescript: ~5.8.3
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/core": ">=0.3.58 <0.4.0"
   languageName: unknown
@@ -30218,7 +30218,7 @@ __metadata:
     uuid: ^10.0.0
     wikipedia: ^2.1.2
     yaml: ^2.2.1
-    zod: ^3.25.32
+    zod: ^3.25.76 || ^4
   peerDependencies:
     "@langchain/anthropic": "*"
     "@langchain/aws": "*"
@@ -42656,6 +42656,15 @@ __metadata:
   peerDependencies:
     zod: ^3.24.1
   checksum: dc4e5e4c06e9a5494e4b1d8c8363ac907f9d488f36c8e4923e1e5ac4f91f737722f99200cd92a409551e7456d960734d4cabd37935234ca95e290572468ffc08
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:^3.24.6":
+  version: 3.24.6
+  resolution: "zod-to-json-schema@npm:3.24.6"
+  peerDependencies:
+    zod: ^3.24.1
+  checksum: 5f4d29597cfd88d8fb8a539f0169affb8705d67ee9cbe478aa01bb1d2554e0540ca713fa4ddeb2fd834e87e7cdff61fa396f6d1925a9006de70afe6cd68bf7d2
   languageName: node
   linkType: hard
 
