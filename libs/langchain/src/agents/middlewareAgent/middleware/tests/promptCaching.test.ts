@@ -53,52 +53,12 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     expect(mockAnthropicModel.invoke).toHaveBeenCalled();
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
-    const [systemMessage] = callArgs[0];
-    expect(systemMessage).toHaveProperty("cache_control");
-    expect(systemMessage.cache_control).toEqual({
+    const lastMessage = callArgs[0].at(-1);
+    expect(lastMessage.content[0]).toHaveProperty("cache_control");
+    expect(lastMessage.content[0].cache_control).toEqual({
       type: "ephemeral",
       ttl: "5m",
     });
-  });
-
-  it("should add cache_control to on a system message provided to createAgent", async () => {
-    const mockAnthropicModel = createMockAnthropicModel();
-
-    const middleware = anthropicPromptCachingMiddleware({
-      ttl: "5m",
-      minMessagesToCache: 3,
-    });
-
-    const agent = createAgent({
-      llm: mockAnthropicModel as any,
-      middleware: [middleware] as const,
-      prompt: new SystemMessage("You are a helpful assistant"),
-    });
-
-    // Test with enough messages to trigger caching
-    const messages = [
-      new HumanMessage("Hello"),
-      new AIMessage("Hi there!"),
-      new HumanMessage("How are you?"),
-      new AIMessage("I'm doing well, thanks!"),
-      new HumanMessage("What's the weather like?"),
-    ];
-
-    await agent.invoke({ messages });
-
-    expect(mockAnthropicModel.invoke).toHaveBeenCalled();
-    const callArgs = mockAnthropicModel.invoke.mock.calls[0];
-    const [systemMessage] = callArgs[0];
-    expect(systemMessage.content).toEqual([
-      {
-        type: "text",
-        text: "You are a helpful assistant",
-        cache_control: {
-          type: "ephemeral",
-          ttl: "5m",
-        },
-      },
-    ]);
   });
 
   it("should not add cache_control when message count is below threshold", async () => {
@@ -121,8 +81,8 @@ describe("anthropicPromptCachingMiddleware", () => {
     // Verify the model was called without cache_control
     expect(mockAnthropicModel.invoke).toHaveBeenCalled();
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
-    const [systemMessage] = callArgs[0];
-    expect(systemMessage).not.toHaveProperty("cache_control");
+    const lastMessage = callArgs[0].at(-1);
+    expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
   });
 
   it("should respect enableCaching setting", async () => {
@@ -148,8 +108,8 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     // Verify no cache_control was added
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
-    const [systemMessage] = callArgs[0];
-    expect(systemMessage).not.toHaveProperty("cache_control");
+    const lastMessage = callArgs[0].at(-1);
+    expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
   });
 
   it("should throw error for non-Anthropic models", async () => {
@@ -196,16 +156,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const callArgs = mockAnthropicModel.invoke.mock.calls[0];
     const [systemMessage] = callArgs[0];
     expect(systemMessage.type).toBe("system");
-    expect(systemMessage.content).toEqual([
-      {
-        cache_control: {
-          ttl: "1h",
-          type: "ephemeral",
-        },
-        text: "You are a helpful assistant",
-        type: "text",
-      },
-    ]);
+    expect(systemMessage.content).toBe("You are a helpful assistant");
   });
 
   it("should allow runtime context override", async () => {

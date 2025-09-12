@@ -1,9 +1,5 @@
 import { z } from "zod/v3";
-import {
-  BaseMessage,
-  SystemMessage,
-  ContentBlock,
-} from "@langchain/core/messages";
+import { ContentBlock } from "@langchain/core/messages";
 import { createMiddleware } from "../middleware.js";
 
 const DEFAULT_ENABLE_CACHING = true;
@@ -17,19 +13,19 @@ const contextSchema = z.object({
   minMessagesToCache: z.number().default(DEFAULT_MIN_MESSAGES_TO_CACHE),
 });
 
-interface CacheControlledMessage extends BaseMessage {
-  cache_control: {
-    type: "ephemeral";
-    ttl: string;
-  };
+class PromptCachingMiddlewareError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PromptCachingMiddlewareError";
+  }
 }
 
 /**
  * Creates a prompt caching middleware for Anthropic models to optimize API usage.
  *
- * This middleware automatically adds cache control headers to messages when using Anthropic models,
- * enabling their prompt caching feature. This can significantly reduce costs and latency for
- * applications with repetitive prompts, long system messages, or extensive conversation histories.
+ * This middleware automatically adds cache control headers to the last messages when using Anthropic models,
+ * enabling their prompt caching feature. This can significantly reduce costs for applications with repetitive
+ * prompts, long system messages, or extensive conversation histories.
  *
  * ## How It Works
  *
@@ -187,43 +183,39 @@ export function anthropicPromptCachingMiddleware(
       }
 
       /**
-       * Add cache_control to the system message
+       * Add cache_control to the last message
        */
-      if (options.systemMessage) {
-        const cacheControlledSystemMessage =
-          typeof options.systemMessage.content === "string"
-            ? new SystemMessage({
-                content: [
-                  {
-                    type: "text",
-                    text: options.systemMessage.content,
-                    cache_control: { type: "ephemeral", ttl },
-                  },
-                ],
-              })
-            : new SystemMessage({
-                ...options.systemMessage,
-                content: [
-                  ...options.systemMessage.content.slice(0, -1),
-                  {
-                    ...(options.systemMessage.content.at(-1) as ContentBlock),
-                    cache_control: { type: "ephemeral", ttl },
-                  },
-                ],
-              });
-        options.systemMessage = cacheControlledSystemMessage;
-      } else {
-        /**
-         * Add cache_control to the first message otherwise
-         */
-        const cachedControlledSystemMessage = {
-          ...options.messages[0],
-          cache_control: {
-            type: "ephemeral",
-            ttl,
+      const lastMessage = options.messages.at(-1);
+      if (!lastMessage) {
+        return options;
+      }
+
+      if (Array.isArray(lastMessage.content)) {
+        lastMessage.content = [
+          ...lastMessage.content.slice(0, -1),
+          {
+            ...lastMessage.content.at(-1),
+            cache_control: {
+              type: "ephemeral",
+              ttl,
+            },
+          } as ContentBlock,
+        ];
+      } else if (typeof lastMessage.content === "string") {
+        lastMessage.content = [
+          {
+            type: "text",
+            text: lastMessage.content,
+            cache_control: {
+              type: "ephemeral",
+              ttl,
+            },
           },
-        } as CacheControlledMessage;
-        options.messages[0] = cachedControlledSystemMessage;
+        ];
+      } else {
+        throw new PromptCachingMiddlewareError(
+          "Last message content is not a string or array"
+        );
       }
 
       return options;
