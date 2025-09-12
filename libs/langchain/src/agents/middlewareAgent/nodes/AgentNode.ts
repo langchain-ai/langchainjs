@@ -541,10 +541,14 @@ export class AgentNode<
       };
 
       // Create runtime
-      const runtime: Runtime<any> = {
+      const runtime: Runtime<unknown, unknown> = {
         toolCalls: parseToolCalls(state.messages),
         toolResults: parseToolResults(state.messages),
         context,
+        writer: config.writer,
+        interrupt: config.interrupt,
+        signal: config.signal,
+        terminate: (result) => ({ type: "terminate", result }),
       };
 
       const result = await middleware.prepareModelRequest!(

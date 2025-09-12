@@ -5,7 +5,12 @@ import type {
   InteropZodType,
   InferInteropZodInput,
 } from "@langchain/core/utils/types";
-import type { LangGraphRunnableConfig, START } from "@langchain/langgraph";
+import type {
+  LangGraphRunnableConfig,
+  START,
+  PregelOptions,
+  Runtime as LangGraphRuntime,
+} from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { SystemMessage, BaseMessage } from "@langchain/core/messages";
@@ -115,26 +120,18 @@ export interface ModelRequest {
 /**
  * Runtime information available to middleware (readonly).
  */
-export interface Runtime<TContext = unknown> {
+export interface Runtime<TState = unknown, TContext = unknown>
+  extends Partial<
+    Omit<LangGraphRuntime<TContext>, "context" | "configurable">
+  > {
   readonly toolCalls: ToolCall[];
   readonly toolResults: ToolResult[];
-  // readonly tokenUsage: {
-  //   readonly inputTokens: number;
-  //   readonly outputTokens: number;
-  //   readonly totalTokens: number;
-  // };
   readonly context: TContext;
-  // readonly currentIteration: number;
-}
 
-/**
- * Control flow interface for middleware.
- */
-export interface Controls<TState = unknown> {
-  jumpTo(
-    target: "model" | "tools",
-    stateUpdate?: Partial<TState>
-  ): ControlAction<TState>;
+  /**
+   * Terminates the agent with an update to the state or throws an error.
+   * @param result - The result to terminate the agent with.
+   */
   terminate(result?: Partial<TState> | Error): ControlAction<TState>;
 }
 
@@ -142,7 +139,7 @@ export interface Controls<TState = unknown> {
  * Control action type returned by control methods.
  */
 export type ControlAction<TStateSchema> = {
-  type: "jump" | "terminate" | "retry";
+  type: "terminate";
   target?: string;
   stateUpdate?: Partial<TStateSchema>;
   result?: any;
@@ -315,11 +312,7 @@ export interface AgentMiddleware<
   beforeModel?(
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>,
-    controls: Controls<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
-    >
+    runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
       Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
@@ -328,11 +321,7 @@ export interface AgentMiddleware<
   afterModel?(
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
-    runtime: Runtime<TFullContext>,
-    controls: Controls<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
-    >
+    runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
       Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
@@ -631,3 +620,38 @@ export type InternalAgentState<
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
+
+export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
+  Partial<
+    Pick<
+      PregelOptions<any, any, ContextSchema>,
+      | "configurable"
+      | "durability"
+      | "store"
+      | "cache"
+      | "signal"
+      | "recursionLimit"
+      | "maxConcurrency"
+      | "timeout"
+    >
+  > & {
+    context: ContextSchema;
+  };
+
+export type StreamConfiguration<ContextSchema extends Record<string, any>> =
+  Partial<
+    Pick<
+      PregelOptions<any, any, ContextSchema>,
+      | "configurable"
+      | "durability"
+      | "store"
+      | "cache"
+      | "signal"
+      | "streamMode"
+      | "recursionLimit"
+      | "maxConcurrency"
+      | "timeout"
+    >
+  > & {
+    context: ContextSchema;
+  };

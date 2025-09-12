@@ -79,7 +79,7 @@
   },
   "dependencies": {
     "@langchain/textsplitters": "workspace:*",
-    "@langchain/langgraph": "^1.0.0-alpha",
+    "@langchain/langgraph": "next",
     "@langchain/langgraph-checkpoint": "^0.1.1",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
