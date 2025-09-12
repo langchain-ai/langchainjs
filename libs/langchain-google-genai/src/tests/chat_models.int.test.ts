@@ -11,6 +11,7 @@ import {
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -25,6 +26,7 @@ import {
 } from "@google/generative-ai";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import { processEnumFieldsForGemini } from "../utils/zod_to_genai_parameters.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -812,6 +814,69 @@ test("calling tool with no args should work", async () => {
     nextMessage,
   ]);
   expect(finalResult.content).toContain("80");
+});
+
+test("ChatGoogleGenerativeAI handles tools with enum parameters", async () => {
+  const calculatorSchema = z.object({
+    operation: z
+      .enum(["add", "subtract", "multiply", "divide"])
+      .describe("The type of operation to execute."),
+    number1: z.number().describe("The first number to operate on."),
+    number2: z.number().describe("The second number to operate on."),
+  });
+
+  const calculatorTool = tool(
+    async (input) => {
+      const { operation, number1, number2 } = calculatorSchema.parse(input);
+      if (operation === "add") {
+        return `${number1 + number2}`;
+      }
+      if (operation === "subtract") {
+        return `${number1 - number2}`;
+      }
+      if (operation === "multiply") {
+        return `${number1 * number2}`;
+      }
+      if (operation === "divide") {
+        return `${number1 / number2}`;
+      }
+      throw new Error("Invalid operation.");
+    },
+    {
+      name: "calculator",
+      description: "Can perform mathematical operations.",
+      schema: calculatorSchema,
+    }
+  );
+
+  // This should not throw an error
+  expect(() => {
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
+    });
+    const modelWithTools = model.bindTools([calculatorTool]);
+    expect(modelWithTools).toBeDefined();
+  }).not.toThrow();
+
+  // Test the actual schema transformation
+  const jsonSchema = toJsonSchema(calculatorSchema);
+  const processedSchema = processEnumFieldsForGemini(jsonSchema);
+
+  // Verify the enum field has no type
+  expect(processedSchema.properties?.operation?.type).toBeUndefined();
+  expect(processedSchema.properties?.operation?.enum).toEqual([
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+  ]);
+  expect(processedSchema.properties?.operation?.description).toBe(
+    "The type of operation to execute."
+  );
+
+  // Verify other fields retain their types
+  expect(processedSchema.properties?.number1?.type).toBe("number");
+  expect(processedSchema.properties?.number2?.type).toBe("number");
 });
 
 // test("calling tool with no args in agent should work", async () => {

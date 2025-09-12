@@ -1,20 +1,24 @@
 import { test } from "@jest/globals";
 import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
-import { z } from "zod";
+import { z } from "zod/v3";
+
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   AIMessage,
   HumanMessage,
-  StandardAudioBlock,
-  StandardFileBlock,
-  StandardImageBlock,
-  StandardTextBlock,
   SystemMessage,
   ToolMessage,
-  type MessageContentComplex,
+  StandardAudioBlock,
+  StandardImageBlock,
+  StandardTextBlock,
+  StandardFileBlock,
+  MessageContentComplex,
 } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
-import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
+import {
+  removeAdditionalProperties,
+  processEnumFieldsForGemini,
+} from "../utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
   convertMessageContentToParts,
@@ -958,4 +962,117 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
       },
     },
   ]);
+});
+
+test("processEnumFieldsForGemini correctly handles enum fields for Gemini", async () => {
+  // Test case 1: Simple enum
+  const simpleEnumSchema = {
+    type: "string",
+    enum: ["add", "subtract", "multiply", "divide"],
+    description: "Operation type",
+  };
+
+  const processedSimple = processEnumFieldsForGemini(
+    simpleEnumSchema
+  ) as Record<string, unknown>;
+  expect(processedSimple.type).toBeUndefined();
+  expect(processedSimple.enum).toEqual([
+    "add",
+    "subtract",
+    "multiply",
+    "divide",
+  ]);
+  expect(processedSimple.description).toBe("Operation type");
+
+  // Test case 2: Nested object with enum
+  const nestedSchema = {
+    type: "object",
+    properties: {
+      operation: {
+        type: "string",
+        enum: ["add", "subtract"],
+        description: "Math operation",
+      },
+      value: {
+        type: "number",
+        description: "Input value",
+      },
+    },
+    required: ["operation", "value"],
+    additionalProperties: false,
+  };
+
+  const processedNested = processEnumFieldsForGemini(nestedSchema);
+  expect(processedNested.properties?.operation?.type).toBeUndefined();
+  expect(processedNested.properties?.operation?.enum).toEqual([
+    "add",
+    "subtract",
+  ]);
+  expect(processedNested.properties?.value?.type).toBe("number");
+  expect(
+    (processedNested as Record<string, unknown>).additionalProperties
+  ).toBeUndefined();
+
+  // Test case 3: Array with enum items
+  const arrayWithEnumSchema = {
+    type: "array",
+    items: {
+      type: "string",
+      enum: ["red", "green", "blue"],
+    },
+  };
+
+  const processedArray = processEnumFieldsForGemini(
+    arrayWithEnumSchema
+  ) as Record<string, unknown>;
+  expect(
+    (processedArray.items as Record<string, unknown>)?.type
+  ).toBeUndefined();
+  expect((processedArray.items as Record<string, unknown>)?.enum).toEqual([
+    "red",
+    "green",
+    "blue",
+  ]);
+
+  // Test case 4: Non-string enum (should keep type)
+  const numericEnumSchema = {
+    type: "number",
+    enum: [1, 2, 3],
+    description: "Numeric values",
+  };
+
+  const processedNumeric = processEnumFieldsForGemini(
+    numericEnumSchema
+  ) as Record<string, unknown>;
+  expect(processedNumeric.type).toBe("number");
+  expect(processedNumeric.enum).toEqual([1, 2, 3]);
+
+  // Test case 5: Schema with oneOf containing enums
+  const oneOfSchema = {
+    oneOf: [
+      {
+        type: "string",
+        enum: ["option1", "option2"],
+      },
+      {
+        type: "object",
+        properties: {
+          custom: { type: "string" },
+        },
+      },
+    ],
+  };
+
+  const processedOneOf = processEnumFieldsForGemini(oneOfSchema) as Record<
+    string,
+    unknown
+  >;
+  const oneOf = processedOneOf.oneOf as Array<Record<string, unknown>>;
+  expect(oneOf?.[0]?.type).toBeUndefined();
+  expect(oneOf?.[0]?.enum).toEqual(["option1", "option2"]);
+  const props = oneOf?.[1]?.properties as Record<
+    string,
+    Record<string, unknown>
+  >;
+  expect(props?.custom?.type).toBe("string");
 });
