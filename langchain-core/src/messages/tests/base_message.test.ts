@@ -5,6 +5,7 @@ import {
   AIMessage,
   ToolMessage,
   ToolMessageChunk,
+  RemoveMessage,
   AIMessageChunk,
   coerceMessageLikeToMessage,
   SystemMessage,
@@ -551,6 +552,11 @@ describe("Message like coercion", () => {
         content: "10.2",
         tool_call_id: "10.2",
       },
+      {
+        role: "remove",
+        id: "1234",
+        content: "",
+      },
     ].map(coerceMessageLikeToMessage);
     expect(messages).toEqual([
       new SystemMessage({
@@ -582,6 +588,9 @@ describe("Message like coercion", () => {
         name: undefined,
         content: "10.2",
         tool_call_id: "10.2",
+      }),
+      new RemoveMessage({
+        id: "1234",
       }),
     ]);
   });
