@@ -69,6 +69,11 @@ export class ChatCloudflareWorkersAI
   constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
     super(fields ?? {});
 
+    if (!fields?.model) {
+      console.warn(
+        `Cloudflare Workers AI model name not specified. Defaulting to "${this.model}".`
+      );
+    }
     this.model = fields?.model ?? this.model;
     this.streaming = fields?.streaming ?? this.streaming;
     this.cloudflareAccountId =

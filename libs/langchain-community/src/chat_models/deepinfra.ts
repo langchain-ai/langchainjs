@@ -214,6 +214,12 @@ export class ChatDeepInfra
     }
 
     this.apiUrl = API_BASE_URL;
+
+    if (!fields.model) {
+      console.warn(
+        `DeepInfra model name not specified. Defaulting to "${DEFAULT_MODEL}".`
+      );
+    }
     this.model = fields.model ?? DEFAULT_MODEL;
     this.temperature = fields.temperature ?? 0;
     this.maxTokens = fields.maxTokens;

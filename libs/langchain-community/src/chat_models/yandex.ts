@@ -80,6 +80,11 @@ export class ChatYandexGPT extends BaseChatModel {
     this.iamToken = iamToken;
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.temperature = fields?.temperature ?? this.temperature;
+    if (!fields?.model) {
+      console.warn(
+        `YandexGPT model name not specified. Defaulting to "${this.model}".`
+      );
+    }
     this.model = fields?.model ?? this.model;
   }
 

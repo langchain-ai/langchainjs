@@ -495,6 +495,11 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
       );
     }
 
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        'Fireworks model name not specified. Defaulting to "accounts/fireworks/models/llama-v3p1-8b-instruct".'
+      );
+    }
     super({
       ...fields,
       model:
