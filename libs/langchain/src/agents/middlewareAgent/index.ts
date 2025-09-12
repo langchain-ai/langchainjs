@@ -18,44 +18,122 @@ import type {
 import { ReactAgent } from "./ReactAgent.js";
 
 /**
- * Creates a StateGraph agent that relies on a chat model utilizing tool calling.
+ * Creates a production-ready ReAct (Reasoning + Acting) agent that combines language models with tools
+ * and middleware to create systems that can reason about tasks, decide which tools to use, and iteratively
+ * work towards solutions.
  *
- * @example
+ * The agent follows the ReAct pattern, interleaving reasoning steps with tool calls to iteratively
+ * work towards solutions. It can handle multiple tool calls in sequence or parallel, maintain state
+ * across interactions, and provide auditable decision processes.
+ *
+ * ## Core Components
+ *
+ * ### Model
+ * The reasoning engine can be specified as:
+ * - **String identifier**: `"openai:gpt-4o"` for simple setup
+ * - **Model instance**: Configured model object for full control
+ * - **Dynamic function**: Select models at runtime based on state
+ *
+ * ### Tools
+ * Tools give agents the ability to take actions:
+ * - Pass an array of tools created with the `tool` function
+ * - Or provide a configured `ToolNode` for custom error handling
+ *
+ * ### Prompt
+ * Shape how your agent approaches tasks:
+ * - String for simple instructions
+ * - SystemMessage for structured prompts
+ * - Function for dynamic prompts based on state
+ *
+ * ### Middleware
+ * Middleware allows you to extend the agent's behavior:
+ * - Add pre/post-model processing for context injection or validation
+ * - Add dynamic control flows, e.g. terminate invocation or retries
+ * - Add human-in-the-loop capabilities
+ * - Add tool calls to the agent
+ * - Add tool results to the agent
+ *
+ * ## Advanced Features
+ *
+ * - **Structured Output**: Use `responseFormat` with a Zod schema to get typed responses
+ * - **Memory**: Extend the state schema to remember information across interactions
+ * - **Streaming**: Get real-time updates as the agent processes
+ *
+ * @param options - Configuration options for the agent
+ * @param options.llm - The language model as an instance of a chat model
+ * @param options.model - The language model as a string identifier, see more in {@link https://docs.langchain.com/oss/javascript/langchain/models#basic-usage | Models}.
+ * @param options.tools - Array of tools or configured ToolNode
+ * @param options.prompt - System instructions (string, SystemMessage, or function)
+ * @param options.responseFormat - Zod schema for structured output
+ * @param options.stateSchema - Custom state schema for memory
+ * @param options.middleware - Array of middleware for extending agent behavior, see more in {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}.
+ *
+ * @returns A ReactAgent instance with `invoke` and `stream` methods
+ *
+ * @example Basic agent with tools
  * ```ts
- * import { ChatOpenAI } from "@langchain/openai";
  * import { createAgent, tool } from "langchain";
- * import { z } from "zod/v3";
+ * import { z } from "zod";
  *
- * const model = new ChatOpenAI({
- *   model: "gpt-4o",
+ * const search = tool(
+ *   ({ query }) => `Results for: ${query}`,
+ *   {
+ *     name: "search",
+ *     description: "Search for information",
+ *     schema: z.object({
+ *       query: z.string().describe("The search query"),
+ *     })
+ *   }
+ * );
+ *
+ * const agent = createAgent({
+ *   llm: "openai:gpt-4o",
+ *   tools: [search],
  * });
  *
- * const getWeather = tool((input) => {
- *   if (["sf", "san francisco"].includes(input.location.toLowerCase())) {
- *     return "It's 60 degrees and foggy.";
- *   } else {
- *     return "It's 90 degrees and sunny.";
- *   }
- * }, {
- *   name: "get_weather",
- *   description: "Call to get the current weather.",
- *   schema: z.object({
- *     location: z.string().describe("Location to get the weather for."),
- *   })
- * })
+ * const result = await agent.invoke({
+ *   messages: [{ role: "user", content: "Search for ReAct agents" }],
+ * });
+ * ```
  *
- * const agent = createAgent({ llm: model, tools: [getWeather] });
+ * @example Structured output
+ * ```ts
+ * import { createAgent } from "langchain";
+ * import { z } from "zod";
  *
- * const inputs = {
- *   messages: [{ role: "user", content: "what is the weather in SF?" }],
- * };
+ * const ContactInfo = z.object({
+ *   name: z.string(),
+ *   email: z.string(),
+ *   phone: z.string(),
+ * });
  *
- * const stream = await agent.stream(inputs, { streamMode: "values" });
+ * const agent = createAgent({
+ *   llm: "openai:gpt-4o",
+ *   tools: [],
+ *   responseFormat: ContactInfo,
+ * });
  *
- * for await (const { messages } of stream) {
- *   console.log(messages);
+ * const result = await agent.invoke({
+ *   messages: [{
+ *     role: "user",
+ *     content: "Extract: John Doe, john@example.com, (555) 123-4567"
+ *   }],
+ * });
+ *
+ * console.log(result.structuredResponse);
+ * // { name: 'John Doe', email: 'john@example.com', phone: '(555) 123-4567' }
+ * ```
+ *
+ * @example Streaming responses
+ * ```ts
+ * const stream = await agent.stream(
+ *   { messages: [{ role: "user", content: "What's the weather?" }] },
+ *   { streamMode: "values" }
+ * );
+ *
+ * for await (const chunk of stream) {
+ *   // ...
  * }
- * // Returns the messages in the state at each step of execution
  * ```
  */
 // Overload 1: With responseFormat as single InteropZodType

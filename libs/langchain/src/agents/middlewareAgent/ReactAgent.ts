@@ -10,9 +10,9 @@ import {
   Send,
   Command,
   CompiledStateGraph,
-  type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "../utils.js";
@@ -32,8 +32,9 @@ import {
   InferMiddlewareInputStates,
   BuiltInState,
   InferMiddlewareContextInputs,
-  IsAllOptional,
   InferContextInput,
+  InvokeConfiguration,
+  StreamConfiguration,
 } from "./types.js";
 
 import {
@@ -341,7 +342,7 @@ export class ReactAgent<
   }
 
   /**
-   * Get the compiled graph.
+   * Get the compiled {@link https://docs.langchain.com/oss/javascript/langgraph/use-graph-api | StateGraph}.
    */
   get graph(): AgentGraph<
     StructuredResponseFormat,
@@ -461,8 +462,7 @@ export class ReactAgent<
     // Only add defaults for keys that don't exist in current state
     for (const [key, value] of Object.entries(defaultStates)) {
       if (!(key in updatedState)) {
-        // @ts-expect-error - ToDo: fix type
-        updatedState[key as keyof InvokeStateParameter<TMiddleware>] = value;
+        updatedState[key as keyof typeof updatedState] = value;
       }
     }
 
@@ -470,41 +470,126 @@ export class ReactAgent<
   }
 
   /**
-   * @inheritdoc
+   * Executes the agent with the given state and returns the final state after all processing.
+   *
+   * This method runs the agent's entire workflow synchronously, including:
+   * - Processing the input messages through any configured middleware
+   * - Calling the language model to generate responses
+   * - Executing any tool calls made by the model
+   * - Running all middleware hooks (beforeModel, afterModel, etc.)
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   *
+   * @returns A Promise that resolves to the final agent state after execution completes.
+   *          The returned state includes:
+   *          - a `messages` property containing an array with all messages (input, AI responses, tool calls/results)
+   *          - a `structuredResponse` property containing the structured response (if configured)
+   *          - all state values defined in the middleware
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch],
+   *   responseFormat: z.object({
+   *     weather: z.string(),
+   *   }),
+   * });
+   *
+   * const result = await agent.invoke({
+   *   messages: [{ role: "human", content: "What's the weather in Paris?" }]
+   * });
+   *
+   * console.log(result.structuredResponse.weather); // outputs: "It's sunny and 75°F."
+   * ```
    */
-  get invoke() {
+  invoke(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: InvokeConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
-    type FullContext = InferContextInput<ContextSchema> &
-      InferMiddlewareContextInputs<TMiddleware>;
-
-    // Create overloaded function type based on whether context has required fields
-    type InvokeFunction = IsAllOptional<FullContext> extends true
-      ? (
-          state: InvokeStateParameter<TMiddleware>,
-          config?: LangGraphRunnableConfig<FullContext>
-        ) => Promise<FullState>
-      : (
-          state: InvokeStateParameter<TMiddleware>,
-          config?: LangGraphRunnableConfig<FullContext>
-        ) => Promise<FullState>;
-
-    const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddleware>,
-      config?: LangGraphRunnableConfig<FullContext>
-    ): Promise<FullState> => {
-      const initializedState = this.#initializeMiddlewareStates(state);
-      return this.#graph.invoke(
-        initializedState,
-        config as any
-      ) as Promise<FullState>;
-    };
-
-    return invokeFunc;
+    const initializedState = this.#initializeMiddlewareStates(state);
+    return this.#graph.invoke(
+      initializedState,
+      config as unknown as InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    ) as Promise<FullState>;
   }
 
   /**
-   * ToDo(@christian-bromann): Add stream and streamEvents methods
+   * Executes the agent with streaming, returning an async iterable of events as they occur.
+   *
+   * This method runs the agent's workflow similar to `invoke`, but instead of waiting for
+   * completion, it streams events in real-time. This allows you to:
+   * - Display intermediate results to users as they're generated
+   * - Monitor the agent's progress through each step
+   * - Handle tool calls and results as they happen
+   * - Update UI with streaming responses from the LLM
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   *
+   * @returns A Promise that resolves to an IterableReadableStream of events.
+   *          Events include:
+   *          - `on_chat_model_start`: When the LLM begins processing
+   *          - `on_chat_model_stream`: Streaming tokens from the LLM
+   *          - `on_chat_model_end`: When the LLM completes
+   *          - `on_tool_start`: When a tool execution begins
+   *          - `on_tool_end`: When a tool execution completes
+   *          - `on_chain_start`: When middleware chains begin
+   *          - `on_chain_end`: When middleware chains complete
+   *          - And other LangGraph v2 stream events
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch]
+   * });
+   *
+   * const stream = await agent.stream({
+   *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * });
+   *
+   * for await (const event of stream) {
+   *   //
+   * }
+   * ```
    */
+  async stream(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: StreamConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ): Promise<IterableReadableStream<any>> {
+    const initializedState = this.#initializeMiddlewareStates(state);
+    return this.#graph.streamEvents(initializedState, {
+      ...config,
+      version: "v2",
+    } as any) as IterableReadableStream<any>;
+  }
 
   /**
    * Visualize the graph as a PNG image.
