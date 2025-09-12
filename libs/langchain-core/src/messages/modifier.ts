@@ -24,7 +24,10 @@ export class RemoveMessage<
   id: string;
 
   constructor(fields: RemoveMessageFields<TStructure>) {
-    super(fields);
+    super({
+      ...fields,
+      content: [],
+    });
     this.id = fields.id;
   }
 
