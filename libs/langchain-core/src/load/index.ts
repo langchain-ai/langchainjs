@@ -243,3 +243,23 @@ export async function load<T>(
   const json = JSON.parse(text);
   return reviver.call({ ...mappings }, json) as Promise<T>;
 }
+
+export function stringify<T>(instance: T): string {
+  function replacer(this: unknown, key: string, value: unknown): unknown {
+    if (typeof this !== "object" || this == null) return value;
+
+    const origValue = (this as Record<string, unknown>)[key];
+    if (
+      typeof origValue === "object" &&
+      origValue !== null &&
+      "toSerialized" in origValue &&
+      typeof origValue.toSerialized === "function"
+    ) {
+      return origValue.toSerialized();
+    }
+
+    return value;
+  }
+
+  return JSON.stringify(instance, replacer);
+}
