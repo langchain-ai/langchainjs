@@ -29,7 +29,9 @@ await new Promise<void>((resolve, reject) => {
   });
 });
 const embeddings = new OpenAIEmbeddings();
+
 // define instance args
+// check the interface to see all possible options
 const args: HanaDBArgs = {
   connection: client,
   tableName: "testBasics",

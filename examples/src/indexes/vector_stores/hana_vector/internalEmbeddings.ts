@@ -37,6 +37,7 @@ await new Promise<void>((resolve, reject) => {
 });
 
 // Define the arguments for the vector store instance.
+// Check the interface to see all possible options.
 const args: HanaDBArgs = {
   connection: client,
   tableName: "testInternalEmbeddings",
