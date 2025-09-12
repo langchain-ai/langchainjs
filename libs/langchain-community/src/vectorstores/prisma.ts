@@ -303,7 +303,7 @@ export class PrismaVectorStore<
    */
   async addDocuments(documents: Document<TModel>[]) {
     const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
+    return this.addDocumentsWithVectors(
       await this.embeddings.embedDocuments(texts),
       documents
     );
@@ -344,6 +344,58 @@ export class PrismaVectorStore<
           this.Prisma.sql`UPDATE ${tableNameRaw}
             SET ${vectorColumnRaw} = ${`[${vector.join(",")}]`}::vector
             WHERE ${whereClause}
+          `
+        );
+      })
+    );
+  }
+
+  /**
+   * Adds documents with their corresponding vectors to the store using INSERT statements.
+   * This method ensures documents are created if they don't exist, making it compatible
+   * with ParentDocumentRetriever which creates new child documents.
+   * @param vectors The vectors to add.
+   * @param documents The documents associated with the vectors.
+   * @returns A promise that resolves when the documents have been added.
+   */
+  async addDocumentsWithVectors(
+    vectors: number[][],
+    documents: Document<TModel>[]
+  ) {
+    // table name, column name cannot be parametrised
+    // these fields are thus not escaped by Prisma and can be dangerous if user input is used
+    const tableNameRaw = this.Prisma.raw(`"${this.tableName}"`);
+    const vectorColumnRaw = this.Prisma.raw(`"${this.vectorColumnName}"`);
+
+    // Build column names for INSERT statement
+    const columnNames = this.selectColumns.map((col) =>
+      this.Prisma.raw(`"${col}"`)
+    );
+    const allColumns = [...columnNames, vectorColumnRaw];
+
+    await this.db.$transaction(
+      vectors.map((vector, idx) => {
+        const document = documents[idx];
+        const vectorString = `[${vector.join(",")}]`;
+
+        // Build values for each column
+        const columnValues = this.selectColumns.map((col) => {
+          if (col === this.contentColumn) {
+            return document.pageContent;
+          }
+          return document.metadata[col];
+        });
+
+        // Add vector as the last value
+        const allValues = [
+          ...columnValues,
+          this.Prisma.sql`${vectorString}::vector`,
+        ];
+
+        return this.db.$executeRaw(
+          this.Prisma.sql`
+            INSERT INTO ${tableNameRaw} (${this.Prisma.join(allColumns, ", ")})
+            VALUES (${this.Prisma.join(allValues, ", ")})
           `
         );
       })
