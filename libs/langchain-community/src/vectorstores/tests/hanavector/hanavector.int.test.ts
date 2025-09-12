@@ -632,14 +632,35 @@ describe("Tests on HANA Side", () => {
     expect(countResult[0]?.COUNT ?? -1).toBe(DOCUMENTS.length);
   });
 
-  test("test addVector with provided embedding", async () => {
-    await vectorDB.addVectors(
-      [
+  describe("add vector tests", () => {
+
+    test("hanavector add vector with half vector", async () => {
+      const tableName = "ADD_VECTOR_HALF_VECTOR";
+      const vectorColumnType = "HALF_VECTOR";
+      const args: HanaDBArgs = {
+        connection: config.client,
+        tableName,
+        vectorColumnType,
+      };
+      const vectors = [
         [1, 2],
         [3, 4],
         [3, 5],
-      ],
-      [
+      ];
+
+      const generatedEmbeddings = await Promise.all(
+        vectors.map(async (vec) => {
+          const vecString = `[${vec.join(",")}]`;
+          const query = `SELECT TO_HALF_VECTOR('${vecString}') AS VEC FROM sys.DUMMY`;
+          const result = await executeQuery(config.client, query);
+          return result[0].VEC;
+        })
+      );
+
+      vectorDB = new HanaDB(embeddings, args);
+      await vectorDB.initialize();
+
+      await vectorDB.addVectors(vectors, [
         {
           pageContent: "Bye bye",
           metadata: {
@@ -661,8 +682,68 @@ describe("Tests on HANA Side", () => {
             name: "3",
           },
         },
-      ]
-    );
+      ]);
+
+      const res = await executeQuery(
+        config.client,
+        `SELECT VEC_VECTOR FROM ${tableName}`
+      );
+      expect(res.length).toBe(3);
+      for (let i = 0; i < res.length; i += 1) {
+        expect(res[i].VEC_VECTOR).toEqual(generatedEmbeddings[i]);
+      }
+    });
+
+    test("hanavector add vector with real vector", async () => {
+
+      const vectors = [
+        [1, 2],
+        [3, 4],
+        [3, 5],
+      ];
+
+      const generatedEmbeddings = await Promise.all(
+        vectors.map(async (vec) => {
+          const vecString = `[${vec.join(",")}]`;
+          const query = `SELECT TO_REAL_VECTOR('${vecString}') AS VEC FROM sys.DUMMY`;
+          const result = await executeQuery(config.client, query);
+          return result[0].VEC;
+        })
+      );
+
+      await vectorDB.addVectors(vectors, [
+        {
+          pageContent: "Bye bye",
+          metadata: {
+            id: 2,
+            name: "2",
+          },
+        },
+        {
+          pageContent: "Hello world",
+          metadata: {
+            id: 1,
+            name: "1",
+          },
+        },
+        {
+          pageContent: "hello nice world",
+          metadata: {
+            id: 3,
+            name: "3",
+          },
+        },
+      ]);
+
+      const res = await executeQuery(
+        config.client,
+        `SELECT VEC_VECTOR FROM ${TABLE_NAME}`
+      );
+      expect(res.length).toBe(3);
+      for (let i = 0; i < res.length; i += 1) {
+        expect(res[i].VEC_VECTOR).toEqual(generatedEmbeddings[i]);
+      }
+    });
   });
 
   test("hanavector from texts", async () => {
@@ -703,6 +784,27 @@ describe("similarity search tests", () => {
     expect(results[0].pageContent).not.toBe(TEXTS[1]);
   });
 
+  test("test similarity search simple half vector", async () => {
+    const tableName = "TEST_TABLE_SIMILARITY_SEARCH_HALF_VECTOR";
+    const vectorColumnType = "HALF_VECTOR";
+    const args: HanaDBArgs = {
+      connection: config.client,
+      tableName,
+      vectorColumnType,
+    };
+
+    vectorDB = new HanaDB(embeddings, args);
+    await vectorDB.initialize();
+
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    const results = await vectorDB.similaritySearch(TEXTS[0], 1);
+
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+
+    expect(results[0].pageContent).not.toBe(TEXTS[1]);
+  });
+
   describe("similarity search invalid", () => {
     const invalidKs = [0, -4];
 
@@ -723,6 +825,26 @@ describe("similarity search tests", () => {
     expect(results[0][0].pageContent).toBe(TEXTS[0]);
 
     expect(results[0][0].pageContent).not.toBe(TEXTS[1]);
+  });
+
+  test("test similarity search vector with score half vector", async () => {
+    const tableName = "TEST_TABLE_SIMILARITY_SEARCH_WITH_VECTOR_HALF_VECTOR";
+    const vectorColumnType = "HALF_VECTOR";
+    const args: HanaDBArgs = {
+      connection: config.client,
+      tableName,
+      vectorColumnType,
+    };
+    vectorDB = new HanaDB(embeddings, args);
+    await vectorDB.initialize();
+
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    const results = await vectorDB.similaritySearch(TEXTS[0], 1);
+
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+
+    expect(results[0].pageContent).not.toBe(TEXTS[1]);
   });
 
   describe("similarity search vector with score invalid k", () => {
@@ -900,6 +1022,29 @@ describe("delete tests", () => {
 
 describe("max marginal relevance search tests", () => {
   test("max marginal relevance search simple", async () => {
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    const results = await vectorDB.maxMarginalRelevanceSearch(TEXTS[0], {
+      k: 2,
+      fetchK: 20,
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+    expect(results[1].pageContent).not.toBe(TEXTS[0]);
+  });
+
+  test("max marginal relevance search simple half vector", async () => {
+    const tableName = "TEST_TABLE_MMR_HALF_VECTOR";
+    const vectorColumnType = "HALF_VECTOR";
+    const args: HanaDBArgs = {
+      connection: config.client,
+      tableName,
+      vectorColumnType,
+    };
+    vectorDB = new HanaDB(embeddings, args);
+    await vectorDB.initialize();
+    
     await vectorDB.addDocuments(DOCUMENTS);
 
     const results = await vectorDB.maxMarginalRelevanceSearch(TEXTS[0], {

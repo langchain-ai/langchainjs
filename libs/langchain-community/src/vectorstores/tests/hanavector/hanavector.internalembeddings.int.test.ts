@@ -120,6 +120,43 @@ test("hanavector add documents", async () => {
 });
 
 describe("similarity search tests", () => {
+  test("test similarity search simple", async () => {
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    const results = await vectorDB.similaritySearch(TEXTS[0], 1);
+
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+
+    expect(results[0].pageContent).not.toBe(TEXTS[1]);
+  });
+
+  test("test similarity search simple half vector", async () => {
+    const tableName = "TEST_TABLE_INT_EMB_SIMILARITY_SEARCH_HALF_VECTOR";
+    const vectorColumnType = "HALF_VECTOR";
+    const args: HanaDBArgs = {
+      connection: config.client,
+      tableName,
+      vectorColumnType,
+    };
+
+    vectorDB = new HanaDB(config.embeddings, args);
+    await vectorDB.initialize();
+
+    console.log("Table initialized");
+
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    console.log("Documents added");
+
+    const results = await vectorDB.similaritySearch(TEXTS[0], 1);
+
+    console.log("Similarity search done");
+
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+
+    expect(results[0].pageContent).not.toBe(TEXTS[1]);
+  });
+
   test("similarity search with metadata filter (numeric)", async () => {
     await vectorDB.addDocuments(DOCUMENTS);
 
@@ -160,6 +197,29 @@ describe("similarity search tests", () => {
 
 describe("max marginal relevance search tests", () => {
   test("max marginal relevance search simple", async () => {
+    await vectorDB.addDocuments(DOCUMENTS);
+
+    const results = await vectorDB.maxMarginalRelevanceSearch(TEXTS[0], {
+      k: 2,
+      fetchK: 20,
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results[0].pageContent).toBe(TEXTS[0]);
+    expect(results[1].pageContent).not.toBe(TEXTS[0]);
+  });
+
+  test("max marginal relevance search simple half vector", async () => {
+    const tableName = "TEST_TABLE_MMR_HALF_VECTOR";
+    const vectorColumnType = "HALF_VECTOR";
+    const args: HanaDBArgs = {
+      connection: config.client,
+      tableName,
+      vectorColumnType,
+    };
+    vectorDB = new HanaDB(config.embeddings, args);
+    await vectorDB.initialize();
+
     await vectorDB.addDocuments(DOCUMENTS);
 
     const results = await vectorDB.maxMarginalRelevanceSearch(TEXTS[0], {
