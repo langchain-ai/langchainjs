@@ -3,7 +3,6 @@ import { z } from "zod/v3";
 import type {
   AgentMiddleware,
   Runtime,
-  Controls,
   MiddlewareResult,
   AgentBuiltInState,
   ModelRequest,
@@ -51,6 +50,7 @@ export function createMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
+      TSchema,
       TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
@@ -58,11 +58,8 @@ export function createMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
+      TSchema,
       TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
-    >,
-    controls: Controls<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
     >
   ) =>
     | Promise<
@@ -77,11 +74,8 @@ export function createMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
+      TSchema,
       TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
-    >,
-    controls: Controls<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
     >
   ) =>
     | Promise<
@@ -101,17 +95,19 @@ export function createMiddleware<
 
   if (config.prepareModelRequest) {
     middleware.prepareModelRequest = async (options, state, runtime) =>
-      Promise.resolve(config.prepareModelRequest!(options, state, runtime));
+      Promise.resolve(
+        config.prepareModelRequest!(options, state, runtime as any)
+      );
   }
 
   if (config.beforeModel) {
-    middleware.beforeModel = async (state, runtime, controls) =>
-      Promise.resolve(config.beforeModel!(state, runtime, controls));
+    middleware.beforeModel = async (state, runtime) =>
+      Promise.resolve(config.beforeModel!(state, runtime as any));
   }
 
   if (config.afterModel) {
-    middleware.afterModel = async (state, runtime, controls) =>
-      Promise.resolve(config.afterModel!(state, runtime, controls));
+    middleware.afterModel = async (state, runtime) =>
+      Promise.resolve(config.afterModel!(state, runtime as any));
   }
 
   return middleware;
