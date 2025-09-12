@@ -19,7 +19,7 @@ import {
   ChatGoogle,
 } from "@langchain/google-gauth";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { concat } from "@langchain/core/utils/stream";
 import {
   BackedBlobStore,

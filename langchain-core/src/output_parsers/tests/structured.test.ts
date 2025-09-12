@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 
 import { describe, expect, test } from "@jest/globals";

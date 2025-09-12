@@ -64,7 +64,7 @@
     "rimraf": "^5.0.1",
     "ts-jest": "^29.1.0",
     "typescript": "~5.8.3",
-    "zod": "^3.25.32"
+    "zod": "^3.25.76 || ^4"
   },
   "publishConfig": {
     "access": "public"
