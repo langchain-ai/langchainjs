@@ -57,7 +57,7 @@ import {
   isIterableIterator,
   isIterator,
 } from "./iter.js";
-import { _isToolCall, ToolInputParsingException } from "../tools/utils.js";
+import { isToolCall, ToolInputParsingException } from "../tools/utils.js";
 import { ToolCall } from "../messages/tool.js";
 import {
   getSchemaDescription,
@@ -3412,7 +3412,7 @@ export class RunnableToolLike<
       >(async (input) => {
         let toolInput: InferInteropZodOutput<RunInput>;
 
-        if (_isToolCall(input)) {
+        if (isToolCall(input)) {
           try {
             toolInput = await interopParseAsync(this.schema, input.args);
           } catch {
