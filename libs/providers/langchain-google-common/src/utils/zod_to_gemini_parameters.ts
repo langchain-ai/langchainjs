@@ -57,6 +57,25 @@ export function removeAdditionalProperties(
       delete newObj.additionalProperties;
     }
 
+    // Check for union types (anyOf, oneOf) which Gemini doesn't support
+    if ("anyOf" in newObj || "oneOf" in newObj) {
+      throw new Error(
+        "zod_to_gemini_parameters: Gemini cannot handle union types (discriminatedUnion, anyOf, oneOf). " +
+          "Consider using a flat object structure with optional fields instead."
+      );
+    }
+
+    // Convert exclusiveMinimum (from .positive()) to minimum
+    if ("exclusiveMinimum" in newObj && newObj.exclusiveMinimum === 0) {
+      // Convert .positive() to .min(0.01)
+      newObj.minimum = 0.01;
+      delete newObj.exclusiveMinimum;
+    } else if ("exclusiveMinimum" in newObj) {
+      // Convert other exclusiveMinimum to minimum with a small increment
+      newObj.minimum = newObj.exclusiveMinimum + 0.00001;
+      delete newObj.exclusiveMinimum;
+    }
+
     adjustObjectType(newObj);
 
     for (const key in newObj) {
