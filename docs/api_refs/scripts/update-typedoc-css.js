@@ -8,6 +8,38 @@ const CSS = `\n.tsd-navigation {
   display: none;
 }
 
+.tsd-toolbar-icon.menu {
+  display: flex;
+  justify-content: center;
+  margin-left: 1rem;
+}
+
+@media (max-width: 769px) {
+.col-content {
+    margin-top: 1.5rem;
+  }
+#tsd-toolbar-links {
+        display: block
+    }
+    a.title {
+  margin-left: 1.8rem;
+}
+}
+
+@media (min-width: 770px) {
+#tsd-search {
+  display: flex;
+  align-items: center;
+}
+a.title {
+  margin-left: auto;
+  margin-right: auto;
+}
+a.tsd-widget.tsd-toolbar-icon.menu.no-caption {
+    display: none;
+  }
+}
+
 .deprecation-warning {
   background-color: #ef4444;
   border-radius: 0.375rem;
