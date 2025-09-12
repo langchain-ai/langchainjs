@@ -989,6 +989,11 @@ describe("Message", () => {
 
   it("should have v0 content by default", async () => {
     const m = new AIMessage("hello world");
+    const json = m.toJSON();
+
+    expectTypeOf<typeof json.content>().toEqualTypeOf<
+      string | (ContentBlock | ContentBlock.Text)[]
+    >();
     expectTypeOf<typeof m.content>().toEqualTypeOf<
       string | (ContentBlock | ContentBlock.Text)[]
     >();

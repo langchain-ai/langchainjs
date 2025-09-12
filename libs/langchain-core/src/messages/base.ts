@@ -1,8 +1,4 @@
-import {
-  Serializable,
-  Serialized,
-  SerializedConstructor,
-} from "../load/serializable.js";
+import { Serializable, SerializedConstructor } from "../load/serializable.js";
 import { ContentBlock } from "./content/index.js";
 import { isDataContentBlock } from "./content/data.js";
 import { convertToV1FromAnthropicInput } from "./block_translators/anthropic.js";
@@ -190,6 +186,17 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
   return JSON.stringify(helper(obj, 0), null, 2);
 }
 
+// Pseudo-class to allow overriding the return type of `toJSON`
+// which is being set to `Serialized` from `Serializable`.
+abstract class PartialSerialized extends Serializable {
+  abstract lc_namespace: string[];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toJSON(): any {
+    return super.toJSON();
+  }
+}
+
 /**
  * Base class for all types of messages in a conversation. It includes
  * properties like `content`, `name`, and `additional_kwargs`. It also
@@ -199,7 +206,7 @@ export abstract class BaseMessage<
     TStructure extends MessageStructure = MessageStructure,
     TRole extends MessageType = MessageType
   >
-  extends Serializable
+  extends PartialSerialized
   implements Message<TStructure, TRole>
 {
   lc_namespace = ["langchain_core", "messages"];
@@ -324,10 +331,16 @@ export abstract class BaseMessage<
 
   toDict(): StoredMessage {
     return {
-      type: this.getType(),
-      data: (this.toJSON() as SerializedConstructor)
+      type: this.type,
+      data: (this.toSerialized() as SerializedConstructor)
         .kwargs as StoredMessageData,
     };
+  }
+
+  toJSON(): Message<TStructure, TRole> {
+    const { type: _, ...data } = (this.toSerialized() as SerializedConstructor)
+      .kwargs as Message<TStructure, TRole>;
+    return { type: this.type, ...data };
   }
 
   static lc_name() {
@@ -381,16 +394,6 @@ export abstract class BaseMessage<
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
-  }
-
-  toSerialized() {
-    return super.toJSON();
-  }
-
-  toJSON(): any {
-    const { type, data } = this.toDict();
-    if ("type" in data) delete data.type;
-    return { type, ...data };
   }
 }
 
