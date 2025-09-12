@@ -393,6 +393,10 @@ export abstract class BaseCallbackHandler
     ) => BaseCallbackHandler)(this);
   }
 
+  toSerialized(): Serialized {
+    return Serializable.prototype.toSerialized.call(this);
+  }
+
   toJSON(): Serialized {
     return Serializable.prototype.toJSON.call(this);
   }

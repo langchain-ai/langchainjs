@@ -2,7 +2,7 @@
 import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
-import { load } from "@langchain/core/load";
+import { load, stringify } from "@langchain/core/load";
 import { z } from "zod/v3";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import {
@@ -163,7 +163,7 @@ describe("media core", () => {
         },
       },
     };
-    const mblob: MediaBlob = await load(JSON.stringify(serialized), {
+    const mblob: MediaBlob = await load(stringify(serialized), {
       importMap: {
         google_common__experimental__utils__media_core: await import(
           "../experimental/utils/media_core.js"

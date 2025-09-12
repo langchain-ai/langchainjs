@@ -11,7 +11,7 @@ import { Runnable, RunnableLambda } from "../../runnables/base.js";
 import { RunnableConfig } from "../../runnables/config.js";
 import { FakeListChatModel } from "../../utils/testing/index.js";
 import { StructuredPrompt } from "../structured.js";
-import { load } from "../../load/index.js";
+import { load, stringify } from "../../load/index.js";
 
 class FakeStructuredChatModel extends FakeListChatModel {
   withStructuredOutput<
@@ -88,7 +88,7 @@ test("Test format", async () => {
 
   await expect(chain.invoke({})).resolves.toEqual(schema);
 
-  const revived: StructuredPrompt = await load(JSON.stringify(prompt));
+  const revived: StructuredPrompt = await load(stringify(prompt));
 
   expect(JSON.stringify(prompt)).toEqual(
     '{"lc":1,"type":"constructor","id":["langchain_core","prompts","structured","StructuredPrompt"],"kwargs":{"schema_":{"name":"yo","description":"a structured output","parameters":{"name":{"type":"string"},"value":{"type":"integer"}}},"input_variables":[],"messages":[{"lc":1,"type":"constructor","id":["langchain_core","prompts","chat","HumanMessagePromptTemplate"],"kwargs":{"prompt":{"lc":1,"type":"constructor","id":["langchain_core","prompts","prompt","PromptTemplate"],"kwargs":{"input_variables":[],"template_format":"f-string","template":"I\'m very structured, how about you?","schema":{"name":"yo","description":"a structured output","parameters":{"name":{"type":"string"},"value":{"type":"integer"}}}}}}}]}}'
