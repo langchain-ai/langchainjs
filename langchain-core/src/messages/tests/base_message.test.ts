@@ -555,6 +555,7 @@ describe("Message like coercion", () => {
       {
         role: "remove",
         id: "1234",
+        content: "",
       },
     ].map(coerceMessageLikeToMessage);
     expect(messages).toEqual([
