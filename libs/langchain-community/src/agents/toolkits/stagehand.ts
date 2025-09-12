@@ -5,7 +5,7 @@ import {
   StructuredToolInterface,
 } from "@langchain/core/tools";
 import { Stagehand } from "@browserbasehq/stagehand";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 //  Documentation is here:
 //  https://js.langchain.com/docs/integrations/tools/stagehand

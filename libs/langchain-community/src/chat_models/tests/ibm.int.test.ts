@@ -5,7 +5,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";

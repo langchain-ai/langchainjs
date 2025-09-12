@@ -1,5 +1,5 @@
 import type { BaseRetrieverInterface } from "@langchain/core/retrievers";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import {
   DynamicStructuredTool,

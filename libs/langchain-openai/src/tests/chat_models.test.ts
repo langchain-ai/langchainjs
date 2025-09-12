@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-process-env */
-import { z } from "zod";
+import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { load } from "@langchain/core/load";
 import { it, expect, describe, beforeAll, afterAll, jest } from "@jest/globals";

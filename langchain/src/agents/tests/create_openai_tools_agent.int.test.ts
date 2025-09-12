@@ -5,7 +5,7 @@ import { RunnableLambda } from "@langchain/core/runnables";
 import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
 import { AsyncLocalStorageProviderSingleton } from "@langchain/core/singletons";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { AsyncLocalStorage } from "async_hooks";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
 import { pull } from "../../hub/index.js";

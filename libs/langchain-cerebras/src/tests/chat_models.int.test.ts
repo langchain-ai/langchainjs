@@ -6,7 +6,7 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatCerebras } from "../chat_models.js";
 

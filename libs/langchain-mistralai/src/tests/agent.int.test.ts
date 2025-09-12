@@ -4,7 +4,7 @@
 // import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 // import { SystemMessagePromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder, ChatPromptTemplate } from "@langchain/core/prompts";
 // import { DynamicStructuredTool } from "@langchain/core/tools";
-// import { z } from "zod";
+// import { z } from "zod/v3";
 // import { ChatMistralAI } from "../chat_models.js";
 // import { AgentExecutor, createOpenAIToolsAgent, createToolCallingAgent } from "langchain/agents";
 
