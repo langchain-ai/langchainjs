@@ -48,11 +48,11 @@ import IntegrationInstallTooltip from "@mdx_components/integration_install_toolt
 <IntegrationInstallTooltip></IntegrationInstallTooltip>
 
 ```bash npm2yarn
-npm install @langchain/openai @langchain/core
+npm install @langchain/openai @langchain/core @langchain/community
 ```
 
 ```typescript
-import { Milvus } from "langchain/vectorstores/milvus";
+import { Milvus } from "@langchain/community/vectorstores/milvus";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 // text sample from Godel, Escher, Bach
@@ -87,7 +87,7 @@ const response = await vectorStore.similaritySearch("scared", 2);
 ## Query docs from existing collection
 
 ```typescript
-import { Milvus } from "langchain/vectorstores/milvus";
+import { Milvus } from "@langchain/community/vectorstores/milvus";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = await Milvus.fromExistingCollection(
