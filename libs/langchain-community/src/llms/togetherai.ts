@@ -164,6 +164,16 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     return "TogetherAI";
   }
 
+  /**
+   * Check if a model name appears to be a chat/instruct model
+   * @param modelName The model name to check
+   * @returns true if the model appears to be a chat/instruct model
+   */
+  private isChatModel(modelName: string): boolean {
+    const chatModelPatterns = [/instruct/i, /chat/i, /vision/i, /turbo/i];
+    return chatModelPatterns.some((pattern) => pattern.test(modelName));
+  }
+
   constructor(inputs: TogetherAIInputs) {
     super(inputs);
     const apiKey =
@@ -186,6 +196,14 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.safetyModel = inputs.safetyModel;
     this.maxTokens = inputs.maxTokens;
     this.stop = inputs.stop;
+
+    // Warn if user is trying to use a chat model with the wrong class
+    if (this.isChatModel(this.model)) {
+      console.warn(
+        `Warning: Model '${this.model}' appears to be a chat/instruct model. ` +
+          `Consider using ChatTogetherAI from @langchain/community/chat_models/togetherai instead.`
+      );
+    }
   }
 
   _llmType() {
@@ -252,8 +270,17 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       prompt,
       options
     );
+
+    // Add proper error handling for unexpected response formats
+    if (!response.output && !response.choices) {
+      throw new Error(
+        `Unexpected response format from Together AI. The model '${this.model}' may require the ChatTogetherAI class instead of TogetherAI class. ` +
+          `Response: ${JSON.stringify(response, null, 2)}`
+      );
+    }
+
     if (response.output) {
-      return response.output.choices[0]?.text ?? "";
+      return response.output.choices?.[0]?.text ?? "";
     } else {
       return response.choices?.[0]?.text ?? "";
     }
