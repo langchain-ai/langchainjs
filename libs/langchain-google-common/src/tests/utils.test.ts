@@ -3,8 +3,15 @@ import { beforeEach, expect, test } from "@jest/globals";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
-import { z } from "zod";
+import { z } from "zod/v3";
+import { HumanMessage } from "@langchain/core/messages";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
+import { getGeminiAPI } from "../utils/gemini.js";
+import {
+  GeminiPartFileData,
+  GeminiPartInlineData,
+  GeminiRequest,
+} from "../types.js";
 import {
   BackedBlobStore,
   BlobStore,
@@ -531,5 +538,169 @@ describe("streaming", () => {
     expect(chunk).toBeNull();
 
     expect(stream.streamDone).toEqual(true);
+  });
+});
+
+describe("gemini image URL handling", () => {
+  test("handles image_url with external URL and infers MIME type", async () => {
+    const api = getGeminiAPI();
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in the picture?",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "https://example.com/image.jpg",
+          },
+        },
+      ],
+    });
+
+    const formatted = (await api.formatData([message], {})) as GeminiRequest;
+    const imagePart = formatted.contents?.[0]?.parts?.[1] as GeminiPartFileData;
+
+    expect(imagePart).toBeDefined();
+    expect(imagePart).toHaveProperty("fileData");
+    expect(imagePart?.fileData.mimeType).toBe("image/jpeg");
+    expect(imagePart?.fileData.fileUri).toBe("https://example.com/image.jpg");
+  });
+
+  test("handles image_url with png extension", async () => {
+    const api = getGeminiAPI();
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in the picture?",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "https://example.com/photo.png?size=large",
+          },
+        },
+      ],
+    });
+
+    const formatted = (await api.formatData([message], {})) as GeminiRequest;
+    const imagePart = formatted.contents?.[0]?.parts?.[1] as GeminiPartFileData;
+
+    expect(imagePart).toBeDefined();
+    expect(imagePart?.fileData.mimeType).toBe("image/png");
+    expect(imagePart?.fileData.fileUri).toBe(
+      "https://example.com/photo.png?size=large"
+    );
+  });
+
+  test("handles image_url with data URL", async () => {
+    const api = getGeminiAPI();
+    const dataUrl =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in the picture?",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: dataUrl,
+          },
+        },
+      ],
+    });
+
+    const formatted = (await api.formatData([message], {})) as GeminiRequest;
+    const imagePart = formatted.contents?.[0]
+      ?.parts?.[1] as GeminiPartInlineData;
+
+    expect(imagePart).toBeDefined();
+    expect(imagePart?.inlineData.mimeType).toBe("image/png");
+    expect(imagePart?.inlineData.data).toBeDefined();
+  });
+
+  test("handles image_url with unknown extension - uses default", async () => {
+    const api = getGeminiAPI();
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "What is in the picture?",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: "https://example.com/image",
+          },
+        },
+      ],
+    });
+
+    const formatted = (await api.formatData([message], {})) as GeminiRequest;
+    const imagePart = formatted.contents?.[0]?.parts?.[1] as GeminiPartFileData;
+
+    expect(imagePart).toBeDefined();
+    expect(imagePart?.fileData.mimeType).toBe("image/png"); // default fallback
+    expect(imagePart?.fileData.fileUri).toBe("https://example.com/image");
+  });
+
+  test("handles various image extensions correctly", async () => {
+    const api = getGeminiAPI();
+    const testCases = [
+      { ext: "jpeg", mime: "image/jpeg" },
+      { ext: "jpg", mime: "image/jpeg" },
+      { ext: "png", mime: "image/png" },
+      { ext: "gif", mime: "image/gif" },
+      { ext: "webp", mime: "image/webp" },
+      { ext: "bmp", mime: "image/bmp" },
+      { ext: "svg", mime: "image/svg+xml" },
+      { ext: "tiff", mime: "image/tiff" },
+      { ext: "tif", mime: "image/tiff" },
+    ];
+
+    for (const { ext, mime } of testCases) {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "image_url",
+            image_url: {
+              url: `https://example.com/image.${ext}`,
+            },
+          },
+        ],
+      });
+
+      const formatted = (await api.formatData([message], {})) as GeminiRequest;
+      const imagePart = formatted.contents?.[0]
+        ?.parts?.[0] as GeminiPartFileData;
+
+      expect(imagePart).toBeDefined();
+      expect(imagePart?.fileData.mimeType).toBe(mime);
+    }
+  });
+
+  test("handles malformed URLs gracefully", async () => {
+    const api = getGeminiAPI();
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: {
+            url: "not-a-valid-url.jpg",
+          },
+        },
+      ],
+    });
+
+    const formatted = (await api.formatData([message], {})) as GeminiRequest;
+    const imagePart = formatted.contents?.[0]?.parts?.[0] as GeminiPartFileData;
+
+    expect(imagePart).toBeDefined();
+    expect(imagePart?.fileData.mimeType).toBe("image/jpeg");
+    expect(imagePart?.fileData.fileUri).toBe("not-a-valid-url.jpg");
   });
 });
