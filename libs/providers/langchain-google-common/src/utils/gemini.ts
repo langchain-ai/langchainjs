@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import {
+  ContentBlock,
   AIMessage,
   AIMessageChunk,
   AIMessageChunkFields,
   BaseMessage,
   BaseMessageChunk,
   BaseMessageFields,
-  DataContentBlock,
   MessageContent,
   MessageContentComplex,
   MessageContentImageUrl,
@@ -228,6 +228,44 @@ const extractMimeType = (
   return null;
 };
 
+/**
+ * Infers the MIME type from a URL based on its file extension.
+ * This is used as a fallback when the MIME type is not provided.
+ *
+ * @param url - The URL to infer the MIME type from
+ * @returns The inferred MIME type or undefined if it cannot be determined
+ */
+function inferMimeTypeFromUrl(url: string): string | undefined {
+  const mimeTypeMap: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    bmp: "image/bmp",
+    svg: "image/svg+xml",
+    ico: "image/x-icon",
+    tiff: "image/tiff",
+    tif: "image/tiff",
+  };
+
+  try {
+    // Extract the pathname from the URL
+    const pathname = new URL(url).pathname;
+    // Get the file extension (handle query params and fragments)
+    const extension = pathname.split(".").pop()?.toLowerCase().split(/[?#]/)[0];
+    return extension ? mimeTypeMap[extension] : undefined;
+  } catch {
+    // If URL parsing fails, try a simple extension extraction
+    const match = url.match(/\.([a-zA-Z0-9]+)(?:[?#]|$)/);
+    if (match) {
+      const extension = match[1].toLowerCase();
+      return mimeTypeMap[extension];
+    }
+    return undefined;
+  }
+}
+
 export function normalizeSpeechConfig(
   config: GoogleSpeechConfig | GoogleSpeechConfigSimplified | undefined
 ): GoogleSpeechConfig | undefined {
@@ -345,10 +383,11 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         inlineData: mimeTypeAndData,
       };
     } else {
-      // FIXME - need some way to get mime type
+      // Infer MIME type from URL extension
+      const mimeType = inferMimeTypeFromUrl(url) || "image/png";
       return {
         fileData: {
-          mimeType: "image/png",
+          mimeType,
           fileUri: url,
         },
       };
@@ -468,9 +507,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
             },
           };
         } else {
+          // Infer MIME type from URL if not provided
+          let mimeType = block.mime_type;
+          if (!mimeType || mimeType === "") {
+            mimeType = inferMimeTypeFromUrl(block.url) || "image/png";
+          }
           return {
             fileData: {
-              mimeType: block.mime_type ?? "",
+              mimeType,
               fileUri: block.url,
             },
           };
@@ -480,7 +524,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       if (block.source_type === "base64") {
         return {
           inlineData: {
-            mimeType: block.mime_type ?? "",
+            mimeType: block.mime_type || "image/png",
             data: block.data,
           },
         };
@@ -502,7 +546,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         } else {
           return {
             fileData: {
-              mimeType: block.mime_type ?? "",
+              mimeType: block.mime_type || "audio/mpeg",
               fileUri: block.url,
             },
           };
@@ -512,7 +556,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       if (block.source_type === "base64") {
         return {
           inlineData: {
-            mimeType: block.mime_type ?? "",
+            mimeType: block.mime_type || "audio/mpeg",
             data: block.data,
           },
         };
@@ -541,7 +585,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         } else {
           return {
             fileData: {
-              mimeType: block.mime_type ?? "",
+              mimeType: block.mime_type || "application/octet-stream",
               fileUri: block.url,
             },
           };
@@ -551,7 +595,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       if (block.source_type === "base64") {
         return {
           inlineData: {
-            mimeType: block.mime_type ?? "",
+            mimeType: block.mime_type || "application/octet-stream",
             data: block.data,
           },
         };
@@ -725,13 +769,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const contentStr =
       typeof message.content === "string"
         ? message.content
-        : (
-            message.content as (MessageContentComplex | DataContentBlock)[]
-          ).reduce(
-            (
-              acc: string,
-              content: MessageContentComplex | DataContentBlock
-            ) => {
+        : (message.content as ContentBlock[]).reduce(
+            (acc: string, content: ContentBlock) => {
               if (content.type === "text") {
                 return acc + content.text;
               } else {
@@ -866,7 +905,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function partsToMessageContent(parts: GeminiPart[]): MessageContent {
     return parts
-      .map((part: GeminiPart): MessageContentComplex | null => {
+      .map((part: GeminiPart): ContentBlock | null => {
         if (part === undefined || part === null) {
           return null;
         } else if (part.thought) {
@@ -874,7 +913,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         } else if ("text" in part) {
           return textPartToMessageContent(part);
         } else if ("inlineData" in part) {
-          return inlineDataPartToMessageContent(part);
+          return inlineDataPartToMessageContent(part) as ContentBlock;
         } else if ("fileData" in part) {
           return fileDataPartToMessageContent(part);
         } else {
@@ -886,7 +925,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           acc.push(content);
         }
         return acc;
-      }, [] as MessageContentComplex[]);
+      }, [] as ContentBlock[]);
   }
 
   function toolRawToTool(raw: ToolCallRaw): ToolCall {
@@ -1186,7 +1225,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     } else if (chunk.content.length === 0) {
       return "";
     } else if (chunk.content[0].type === "text") {
-      return chunk.content[0].text;
+      return chunk.content[0].text as string;
     } else {
       throw new Error(`Unexpected chunk: ${chunk}`);
     }
@@ -1196,7 +1235,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const fields = partsToBaseMessageChunkFields([part]);
     if (typeof fields.content === "string") {
       return new AIMessageChunk(fields);
-    } else if (fields.content.every((item) => item.type === "text")) {
+    } else if (fields.content?.every((item) => item.type === "text")) {
       const newContent = fields.content
         .map((item) => ("text" in item ? item.text : ""))
         .join("");
@@ -1302,7 +1341,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     } else {
       // We either have complex types, or we want to force them, so turn
       // it into an array of complex types.
-      const ret: MessageContentComplex[] = [];
+      const ret: ContentBlock[] = [];
       gen.forEach((item) => {
         if (typeof item.message.content === "string") {
           // If this is a string, turn it into a text type
