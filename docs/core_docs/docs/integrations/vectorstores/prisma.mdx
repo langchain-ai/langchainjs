@@ -98,6 +98,31 @@ The samples above uses the following schema:
 
 You can remove `namespace` if you don't need it.
 
+## Using UUID columns
+
+When using PostgreSQL's native UUID type (with `@db.Uuid` in your Prisma schema), you need to specify the column types for proper SQL casting:
+
+import UuidExample from "@examples/indexes/vector_stores/prisma_vectorstore/prisma_uuid.ts";
+import UuidSchema from "@examples/indexes/vector_stores/prisma_vectorstore/prisma/schema_uuid.prisma";
+
+<CodeBlock language="typescript">{UuidExample}</CodeBlock>
+
+Example schema with UUID columns:
+
+<CodeBlock language="prisma">{UuidSchema}</CodeBlock>
+
+### Supported column types
+
+The `columnTypes` configuration supports the following PostgreSQL types:
+
+- `uuid`: For UUID columns (`@db.Uuid` in Prisma schema)
+- `integer`: For integer columns
+- `bigint`: For bigint columns
+- `jsonb`: For JSONB columns
+- `text`: For text columns (default behavior)
+
+This configuration ensures that values are properly cast in SQL queries, preventing type mismatch errors like `operator does not exist: uuid = text`.
+
 ## Related
 
 - Vector store [conceptual guide](/docs/concepts/#vectorstores)
