@@ -106,9 +106,15 @@ ${JSON.stringify(toJsonSchema(this.schema))}
    */
   async parse(text: string): Promise<InferInteropZodOutput<T>> {
     try {
-      const json = text.includes("```")
-        ? text.trim().split(/```(?:json)?/)[1]
-        : text.trim();
+      const trimmedText = text.trim();
+
+      const json =
+        // first case: if back ticks appear at the start of the text
+        trimmedText.match(/^```(?:json)?\s*([\s\S]*?)```/)?.[1] ||
+        // second case: if back ticks with `json` appear anywhere in the text
+        trimmedText.match(/```json\s*([\s\S]*?)```/)?.[1] ||
+        // otherwise, return the trimmed text
+        trimmedText;
 
       const escapedJson = json
         .replace(/"([^"\\]*(\\.[^"\\]*)*)"/g, (_match, capturedGroup) => {
