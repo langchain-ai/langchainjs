@@ -381,3 +381,56 @@ describe("StructuredOutputParser.fromZodSchema parsing newlines", () => {
     );
   });
 });
+
+// https://github.com/langchain-ai/langchainjs/issues/8339
+describe("StructuredOutputParser.fromZodSchema parsing json with backticks", () => {
+  const zod3Schema = z.object({
+    name: z.string().describe("Name"),
+    biograph: z.string().describe("Biograph in markdown"),
+  });
+
+  const zod4Schema = z4.object({
+    name: z4.string().describe("Name"),
+    biograph: z4.string().describe("Biograph in markdown"),
+  });
+
+  describe("without backticks", () => {
+    const output =
+      '{"name": "John Doe", "biograph": "john doe is a cool dude"}';
+    const testCase = (schema: InteropZodType) => async () => {
+      const parser = StructuredOutputParser.fromZodSchema(schema);
+      const result = await parser.parse(output);
+      expect(result).toHaveProperty("name", "John Doe");
+      expect(result).toHaveProperty("biograph", "john doe is a cool dude");
+    };
+    test("zod v3", testCase(zod3Schema));
+    test("zod v4", testCase(zod4Schema));
+  });
+  describe("with outer backticks", () => {
+    const output =
+      '```json\n{"name": "John Doe", "biograph": "john doe is a cool dude"}```';
+    const testCase = (schema: InteropZodType) => async () => {
+      const parser = StructuredOutputParser.fromZodSchema(schema);
+      const result = await parser.parse(output);
+      expect(result).toHaveProperty("name", "John Doe");
+      expect(result).toHaveProperty("biograph", "john doe is a cool dude");
+    };
+    test("zod v3", testCase(zod3Schema));
+    test("zod v4", testCase(zod4Schema));
+  });
+  describe("with inner backticks", () => {
+    const output =
+      '{"name": "John Doe", "biograph": "john doe is a ```cool dude```"}';
+    const testCase = (schema: InteropZodType) => async () => {
+      const parser = StructuredOutputParser.fromZodSchema(schema);
+      const result = await parser.parse(output);
+      expect(result).toHaveProperty("name", "John Doe");
+      expect(result).toHaveProperty(
+        "biograph",
+        "john doe is a ```cool dude```"
+      );
+    };
+    test("zod v3", testCase(zod3Schema));
+    test("zod v4", testCase(zod4Schema));
+  });
+});
