@@ -331,7 +331,8 @@ describe("RedisVectorStore with Custom Schema", () => {
                   new Float32Array([0.1, 0.2, 0.3, 0.4]).buffer
                 ),
                 content: "Test document 1",
-                metadata: '{"category":"tech","score":95}',
+                metadata:
+                  '{"category":"tech","score":95,"tags":"javascript,nodejs"}',
                 "metadata.userId": "user123",
                 "metadata.category": "tech",
                 "metadata.score": 95,
@@ -345,7 +346,8 @@ describe("RedisVectorStore with Custom Schema", () => {
                   new Float32Array([0.2, 0.3, 0.4, 0.5]).buffer
                 ),
                 content: "Test document 2",
-                metadata: '{"category":"science","score":87}',
+                metadata:
+                  '{"category":"science","score":87,"tags":"python,ai"}',
                 "metadata.userId": "user456",
                 "metadata.category": "science",
                 "metadata.score": 87,

@@ -273,6 +273,18 @@ export class RedisVectorStore extends VectorStore {
           info.num_docs,
         10
       ) || 0;
+
+    // Validate all metadata against custom schema first
+    if (this.customSchema) {
+      for (let idx = 0; idx < documents.length; idx += 1) {
+        const metadata =
+          documents[idx] && documents[idx].metadata
+            ? documents[idx].metadata
+            : {};
+        this.validateMetadata(metadata);
+      }
+    }
+
     const multi = this.redisClient.multi();
 
     vectors.map(async (vector, idx) => {
@@ -284,9 +296,6 @@ export class RedisVectorStore extends VectorStore {
         documents[idx] && documents[idx].metadata
           ? documents[idx].metadata
           : {};
-
-      // Validate metadata against custom schema
-      this.validateMetadata(metadata);
 
       // Prepare hash fields
       const hashFields: Record<string, string | Buffer> = {
