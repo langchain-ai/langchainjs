@@ -231,6 +231,7 @@ export class AzureCosmsosDBNoSQLChatMessageHistory extends BaseListChatMessageHi
   }
 
   async getContext(): Promise<Record<string, unknown>> {
+    await this.initializeContainer();
     const document = await this.container
       .item(this.sessionId, this.userId)
       .read();
