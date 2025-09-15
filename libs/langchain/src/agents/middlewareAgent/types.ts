@@ -39,6 +39,7 @@ import type {
   ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "../responses.js";
+import type { Interrupt } from "../interrupt.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
 import type { ClientTool, ServerTool, AgentRuntime } from "../types.js";
 
@@ -46,6 +47,7 @@ export type N = typeof START | "model_request" | "tools";
 
 export interface BuiltInState {
   messages: BaseMessage[];
+  __interrupt__?: Interrupt[];
 }
 
 /**
