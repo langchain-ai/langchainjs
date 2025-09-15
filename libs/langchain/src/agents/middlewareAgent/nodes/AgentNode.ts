@@ -44,7 +44,7 @@ import {
   transformResponseFormat,
   ToolStrategyError,
 } from "../../responses.js";
-import { parseToolCalls, parseToolResults } from "./utils.js";
+import { parseToolCalls } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -543,7 +543,6 @@ export class AgentNode<
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {
         toolCalls: parseToolCalls(state.messages),
-        toolResults: parseToolResults(state.messages),
         context,
         writer: config.writer,
         interrupt: config.interrupt,

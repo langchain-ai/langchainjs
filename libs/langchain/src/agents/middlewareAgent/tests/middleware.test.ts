@@ -170,8 +170,8 @@ describe("middleware", () => {
       });
       const middleware = createMiddleware({
         name: "middleware",
-        beforeModel: (_, __, controls) => {
-          return controls.terminate(new Error("middleware terminated"));
+        beforeModel: (_, runtime) => {
+          return runtime.terminate(new Error("middleware terminated"));
         },
       });
       const toolFn = vi.fn();
@@ -204,8 +204,8 @@ describe("middleware", () => {
       const middleware = createMiddleware({
         name: "middleware",
         beforeModel,
-        afterModel: (_, __, controls) => {
-          return controls.terminate(
+        afterModel: (_, runtime) => {
+          return runtime.terminate(
             new Error("middleware terminated in afterModel")
           );
         },
