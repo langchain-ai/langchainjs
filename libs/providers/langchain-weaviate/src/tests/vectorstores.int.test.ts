@@ -254,6 +254,55 @@ test("WeaviateStore with tenant", async () => {
   }
 });
 
+test("WeaviateStore with limited metadatakeys", async () => {
+  const weaviateArgs = {
+    client,
+    indexName: "TestaMetadataKeys",
+    textKey: "text",
+    metadataKeys: ["foo"],
+  };
+  const store = await WeaviateStore.fromTexts(
+    ["hello world"],
+    [{ foo: "bar", bar: "bar" }],
+    new FakeEmbeddings(),
+    weaviateArgs
+  );
+  try {
+    const results = await store.similaritySearch("hello world", 1);
+    expect(results).toEqual([
+      new Document({
+        id: expect.any(String) as unknown as string,
+        pageContent: "hello world",
+        metadata: { foo: "bar" },
+      }),
+    ]);
+  } finally {
+    await client.collections.delete(weaviateArgs.indexName);
+  }
+});
+
+test("invalid metadata name", async () => {
+  const weaviateArgs = {
+    client,
+    indexName: "TestInvalidMetadataKeys",
+    textKey: "text",
+  };
+  await WeaviateStore.fromTexts(
+    ["hello world"],
+    [{ "pdf_metadata__metadata_xmp:createdate": "bar" }],
+    new FakeEmbeddings(),
+    weaviateArgs
+  );
+  try {
+    const total = await client.collections
+      .get(weaviateArgs.indexName)
+      .aggregate.overAll();
+    expect(total.totalCount).toEqual(1);
+  } finally {
+    await client.collections.delete(weaviateArgs.indexName);
+  }
+});
+
 test("WeaviateStore delete with filter", async () => {
   const weaviateArgs = {
     client,
