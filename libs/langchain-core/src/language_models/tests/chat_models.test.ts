@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 import { z } from "zod/v3";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { z as z4 } from "zod/v4";
+import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";

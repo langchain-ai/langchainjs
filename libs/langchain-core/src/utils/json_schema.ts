@@ -1,8 +1,4 @@
 import { toJSONSchema } from "zod/v4/core";
-import {
-  type JsonSchema7Type as JSONSchema,
-  zodToJsonSchema,
-} from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import {
   isZodSchemaV3,
@@ -13,6 +9,10 @@ import {
   ZodObjectV4,
   interopZodTransformInputSchema,
 } from "./types/zod.js";
+import {
+  type JsonSchema7Type as JSONSchema,
+  zodToJsonSchema,
+} from "./zod-to-json-schema/index.js";
 
 export { deepCompareStrict, Validator } from "@cfworker/json-schema";
 
@@ -141,4 +141,4 @@ export {
   type JsonSchema7StringType,
   type JsonSchema7NumberType,
   type JsonSchema7NullableType,
-} from "zod-to-json-schema";
+} from "./zod-to-json-schema/index.js";
