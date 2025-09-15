@@ -64,6 +64,14 @@ export interface ToolCall {
    * The arguments that were passed to the tool.
    */
   args: Record<string, any>;
+  /**
+   * The result of the tool call.
+   */
+  result?: unknown;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
 }
 
 /**
@@ -123,22 +131,37 @@ export interface ModelRequest {
 }
 
 /**
+ * Type helper to check if TContext is an optional Zod schema
+ */
+type IsOptionalZodObject<T> = T extends z.ZodOptional<z.ZodObject<any>>
+  ? true
+  : false;
+
+type IsDefaultZodObject<T> = T extends z.ZodDefault<z.ZodObject<any>>
+  ? true
+  : false;
+
+type WithMaybeContext<TContext> = undefined extends TContext
+  ? { readonly context?: TContext }
+  : IsOptionalZodObject<TContext> extends true
+  ? { readonly context?: TContext }
+  : IsDefaultZodObject<TContext> extends true
+  ? { readonly context?: TContext }
+  : { readonly context: TContext };
+
+/**
  * Runtime information available to middleware (readonly).
  */
-export interface Runtime<TState = unknown, TContext = unknown>
-  extends Partial<
-    Omit<LangGraphRuntime<TContext>, "context" | "configurable">
-  > {
+export type Runtime<TState = unknown, TContext = unknown> = Partial<
+  Omit<LangGraphRuntime<TContext>, "context" | "configurable">
+> & {
   readonly toolCalls: ToolCall[];
-  readonly toolResults: ToolResult[];
-  readonly context: TContext;
-
   /**
    * Terminates the agent with an update to the state or throws an error.
    * @param result - The result to terminate the agent with.
    */
-  terminate(result?: Partial<TState> | Error): ControlAction<TState>;
-}
+  terminate(result: Partial<TState> | Error): ControlAction<TState>;
+} & WithMaybeContext<TContext>;
 
 /**
  * Control action type returned by control methods.
@@ -253,7 +276,9 @@ export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
 export type InferMiddlewareContextInput<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<any, infer C, any>
-  ? C extends z.ZodObject<any>
+  ? C extends z.ZodOptional<infer Inner>
+    ? z.input<Inner> | undefined
+    : C extends z.ZodObject<any>
     ? z.input<C>
     : {}
   : {};
@@ -274,6 +299,21 @@ export type InferMiddlewareContexts<
   : {};
 
 /**
+ * Helper to merge two context types, preserving undefined unions
+ */
+type MergeContextTypes<A, B> = [A] extends [undefined]
+  ? [B] extends [undefined]
+    ? undefined
+    : B | undefined
+  : [B] extends [undefined]
+  ? A | undefined
+  : [A] extends [B]
+  ? A
+  : [B] extends [A]
+  ? B
+  : A & B;
+
+/**
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
  */
 export type InferMiddlewareContextInputs<
@@ -283,7 +323,10 @@ export type InferMiddlewareContextInputs<
   : T extends readonly [infer First, ...infer Rest]
   ? First extends AgentMiddleware<any, any, any>
     ? Rest extends readonly AgentMiddleware<any, any, any>[]
-      ? InferMiddlewareContextInput<First> & InferMiddlewareContextInputs<Rest>
+      ? MergeContextTypes<
+          InferMiddlewareContextInput<First>,
+          InferMiddlewareContextInputs<Rest>
+        >
       : InferMiddlewareContextInput<First>
     : {}
   : {};
@@ -293,7 +336,11 @@ export type InferMiddlewareContextInputs<
  */
 export interface AgentMiddleware<
   TSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
-  TContextSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
+  TContextSchema extends
+    | z.ZodObject<z.ZodRawShape>
+    | z.ZodOptional<z.ZodObject<z.ZodRawShape>>
+    | z.ZodDefault<z.ZodObject<z.ZodRawShape>>
+    | undefined = undefined,
   TFullContext = any
 > {
   stateSchema?: TSchema;
@@ -589,13 +636,25 @@ export type CreateAgentParams<
 };
 
 /**
+ * Helper type to check if a type is optional (includes undefined)
+ */
+type IsOptionalType<T> = undefined extends T ? true : false;
+
+/**
+ * Extract non-undefined part of a union that includes undefined
+ */
+type ExtractNonUndefined<T> = T extends undefined ? never : T;
+
+/**
  * Helper type to check if all properties of a type are optional
  */
-export type IsAllOptional<T> = T extends Record<string, any>
-  ? {} extends T
+export type IsAllOptional<T> = IsOptionalType<T> extends true
+  ? true
+  : ExtractNonUndefined<T> extends Record<string, any>
+  ? {} extends ExtractNonUndefined<T>
     ? true
     : false
-  : true;
+  : IsOptionalType<T>;
 
 /**
  * Helper type to extract input type from context schema (with optional defaults)
@@ -609,14 +668,34 @@ export type InferContextInput<
   : {};
 
 /**
+ * Helper to check if ContextSchema is the default (AnyAnnotationRoot)
+ */
+type IsDefaultContext<T> = [T] extends [AnyAnnotationRoot]
+  ? any extends T
+    ? true
+    : false
+  : false;
+
+/**
  * Helper type to get the required config type based on context schema
  */
 export type InferAgentConfig<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
-> = IsAllOptional<
-  InferContextInput<ContextSchema> & InferMiddlewareContextInputs<TMiddleware>
-> extends true
+> = IsDefaultContext<ContextSchema> extends true
+  ? IsAllOptional<InferMiddlewareContextInputs<TMiddleware>> extends true
+    ?
+        | LangGraphRunnableConfig<{
+            context?: InferMiddlewareContextInputs<TMiddleware>;
+          }>
+        | undefined
+    : LangGraphRunnableConfig<{
+        context: InferMiddlewareContextInputs<TMiddleware>;
+      }>
+  : IsAllOptional<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    > extends true
   ?
       | LangGraphRunnableConfig<{
           context?: InferContextInput<ContextSchema> &
@@ -640,37 +719,41 @@ export type InternalAgentState<
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
 
+/**
+ * Pregel options that are propagated to the agent
+ */
+type CreateAgentPregelOptions =
+  | "configurable"
+  | "durability"
+  | "store"
+  | "cache"
+  | "signal"
+  | "recursionLimit"
+  | "maxConcurrency"
+  | "timeout";
+
 export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
-  Partial<
-    Pick<
-      PregelOptions<any, any, ContextSchema>,
-      | "configurable"
-      | "durability"
-      | "store"
-      | "cache"
-      | "signal"
-      | "recursionLimit"
-      | "maxConcurrency"
-      | "timeout"
-    >
-  > & {
-    context: ContextSchema;
-  };
+  IsAllOptional<ContextSchema> extends true
+    ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
+        context?: Partial<ContextSchema>;
+      }
+    : Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> &
+        WithMaybeContext<ContextSchema>;
 
 export type StreamConfiguration<ContextSchema extends Record<string, any>> =
-  Partial<
-    Pick<
-      PregelOptions<any, any, ContextSchema>,
-      | "configurable"
-      | "durability"
-      | "store"
-      | "cache"
-      | "signal"
-      | "streamMode"
-      | "recursionLimit"
-      | "maxConcurrency"
-      | "timeout"
-    >
-  > & {
-    context: ContextSchema;
-  };
+  IsAllOptional<ContextSchema> extends true
+    ? Partial<
+        Pick<
+          PregelOptions<any, any, any>,
+          CreateAgentPregelOptions | "streamMode"
+        >
+      > & {
+        context?: Partial<ContextSchema>;
+      }
+    : Partial<
+        Pick<
+          PregelOptions<any, any, any>,
+          CreateAgentPregelOptions | "streamMode"
+        >
+      > &
+        WithMaybeContext<ContextSchema>;

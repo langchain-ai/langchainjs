@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import { v4 as uuid } from "uuid";
-import { AIMessage, ToolMessage, isAIMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
@@ -18,17 +18,19 @@ interface ToolApprovalRequest {
   description?: string;
 }
 
-const contextSchema = z.object({
-  toolConfigs: z
-    .record(
-      z.object({
-        requireApproval: z.boolean().optional(),
-        description: z.string().optional(),
-      })
-    )
-    .default({}),
-  messagePrefix: z.string().default("Tool execution requires approval"),
-});
+const contextSchema = z
+  .object({
+    toolConfigs: z
+      .record(
+        z.object({
+          requireApproval: z.boolean().optional(),
+          description: z.string().optional(),
+        })
+      )
+      .default({}),
+    messagePrefix: z.string().default("Tool execution requires approval"),
+  })
+  .optional();
 
 /**
  * Creates a Human-in-the-Loop (HITL) middleware for tool approval and oversight.
@@ -178,7 +180,7 @@ export function humanInTheLoopMiddleware(
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,
-    afterModel: async (state, runtime, controls) => {
+    afterModel: async (state, runtime) => {
       const config = { ...contextSchema.parse(options), ...runtime.context };
       const { messages } = state;
 
@@ -188,10 +190,21 @@ export function humanInTheLoopMiddleware(
 
       const lastMessage = messages[messages.length - 1];
 
-      // Check if it's an AI message with tool calls
-      if (!isAIMessage(lastMessage) || !lastMessage.tool_calls?.length) {
+      /**
+       * Check if it's an AI message with tool calls
+       */
+      if (
+        !AIMessage.isInstance(lastMessage) ||
+        !lastMessage.tool_calls?.length
+      ) {
         return;
       }
+
+      if (!config.toolConfigs) {
+        throw new Error("HumanInTheLoopMiddleware: toolConfigs is required");
+      }
+
+      const toolConfigs = config.toolConfigs;
 
       // Separate tool calls that need interrupts from those that don't
       const interruptToolCalls: ToolCall[] = [];
@@ -205,7 +218,7 @@ export function humanInTheLoopMiddleware(
           args: toolCall.args,
         };
 
-        const toolConfig = config.toolConfigs[normalizedToolCall.name];
+        const toolConfig = toolConfigs[normalizedToolCall.name];
 
         if (toolConfig?.requireApproval) {
           interruptToolCalls.push(normalizedToolCall);
@@ -224,7 +237,7 @@ export function humanInTheLoopMiddleware(
       // Process tool calls that need interrupts
       const requests: ToolApprovalRequest[] = interruptToolCalls.map(
         (toolCall) => {
-          const toolConfig = config.toolConfigs[toolCall.name];
+          const toolConfig = toolConfigs[toolCall.name];
           const description =
             toolConfig?.description ||
             `${config.messagePrefix}\n\nTool: ${
@@ -271,7 +284,7 @@ export function humanInTheLoopMiddleware(
 
           case "ignore":
             // Skip to end - terminate the agent
-            return controls.terminate();
+            return runtime.terminate(state);
 
           case "response": {
             // Return manual tool response and jump back to model
