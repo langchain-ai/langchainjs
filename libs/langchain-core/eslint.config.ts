@@ -1,3 +1,9 @@
-import { langchainConfig } from "@langchain/eslint";
+import { langchainConfig, type ConfigArray } from "@langchain/eslint";
 
-export default langchainConfig;
+const config: ConfigArray = [
+  ...langchainConfig,
+  {
+    ignores: ["src/utils/zod-to-json-schema/**"],
+  },
+];
+export default config;

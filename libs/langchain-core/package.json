@@ -17,7 +17,7 @@
     "build": "pnpm --filter @langchain/build compile @langchain/core",
     "clean": "rm -rf .turbo dist/",
     "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --transform",
+    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "release": "release-it --only-version --config .release-it.json",
@@ -40,7 +40,6 @@
     "p-queue": "^6.6.2",
     "p-retry": "4",
     "uuid": "^10.0.0",
-    "zod-to-json-schema": "^3.22.3",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
