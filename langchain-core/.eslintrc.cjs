@@ -15,8 +15,8 @@ module.exports = {
   ignorePatterns: [
     "src/utils/@cfworker",
     "src/utils/fast-json-patch",
-    "src/utils/js-sha1",
     "src/utils/js-sha256",
+    "src/utils/zod-to-json-schema",
     "src/utils/sax-js",
     ".eslintrc.cjs",
     "scripts",
@@ -70,16 +70,16 @@ module.exports = {
     "no-lonely-if": 0,
     "prefer-rest-params": 0,
     "new-cap": ["error", { properties: false, capIsNew: false }],
-    'jest/no-focused-tests': 'error',
+    "jest/no-focused-tests": "error",
     "arrow-body-style": 0,
     "prefer-destructuring": 0,
   },
   overrides: [
     {
-      files: ['**/*.test.ts'],
+      files: ["**/*.test.ts"],
       rules: {
-        '@typescript-eslint/no-unused-vars': 'off'
-      }
-    }
-  ]
+        "@typescript-eslint/no-unused-vars": "off",
+      },
+    },
+  ],
 };
