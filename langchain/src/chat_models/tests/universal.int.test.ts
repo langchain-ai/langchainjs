@@ -814,3 +814,20 @@ describe("Serialization", () => {
     );
   });
 });
+
+// https://github.com/langchain-ai/langchainjs/issues/8962
+describe("Can be initialized without `modelProvider`", () => {
+  test.each([
+    ["openai", "gpt-4o-mini"],
+    ["anthropic", "claude-3-5-sonnet-20240620"],
+    ["mistralai", "mistral-large-latest"],
+  ])("for %s", async (_, modelName) => {
+    const model = await initChatModel(modelName, {
+      temperature: 0,
+    });
+
+    const modelResult = await model.invoke("what's your name");
+    expect(modelResult).toBeDefined();
+    expect(modelResult.content.length).toBeGreaterThan(0);
+  });
+});
