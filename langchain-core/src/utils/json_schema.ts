@@ -1,6 +1,9 @@
 import { toJSONSchema } from "zod/v4/core";
-import { type JsonSchema7Type, zodToJsonSchema } from "zod-to-json-schema";
 import { dereference, type Schema } from "@cfworker/json-schema";
+import {
+  type JsonSchema7Type,
+  zodToJsonSchema,
+} from "../utils/zod-to-json-schema/index.js";
 import {
   isZodSchemaV3,
   isZodSchemaV4,
@@ -139,4 +142,4 @@ export {
   type JsonSchema7StringType,
   type JsonSchema7NumberType,
   type JsonSchema7NullableType,
-} from "zod-to-json-schema";
+} from "./zod-to-json-schema/index.js";
