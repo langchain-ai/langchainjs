@@ -1,5 +1,12 @@
 # @langchain/openai
 
+## 0.6.12
+
+### Patch Changes
+
+- 41bd944: support base64 embeddings format
+- 707a768: handle undefined disableStreaming to restore streaming functionality
+
 ## 0.6.11
 
 ### Patch Changes

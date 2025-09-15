@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-cloud-sql-pg",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "LangChain.js integrations for Google Cloud SQL for PostgreSQL",
   "type": "module",
   "engines": {

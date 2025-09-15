@@ -1,5 +1,29 @@
 # @langchain/community
 
+## 0.3.56
+
+### Patch Changes
+
+- 6da726f: feat(@langchain/community): add sagemaker endpoint - embedding support
+- 28dd44f: chore(couchbase): Deprecate CouchbaseVectorStore and create CouchbaseSearchVectorStore
+- 9adccfe: chore(@langchain/community): remove Dria retriever
+- 0a640ad: feat(langchain-community): add custom schema option for neon vector store
+- 940e087: fix(astra): replace deprecated 'namespace' param name
+- 8ac8edd: add support for advanced metadata filters in similarity search
+- e9d1136: create index aurora dsql
+- e0b48fd: fix(community): improve TogetherAI error handling for chat models
+- c10ea3e: allow any chars in delimited identifiers in hanavector
+- 9adccfe: chore(@langchain/community): remove Dria retriever
+- Updated dependencies [41bd944]
+- Updated dependencies [6019a7d]
+- Updated dependencies [54f542c]
+- Updated dependencies [707a768]
+- Updated dependencies [caf5579]
+- Updated dependencies [d60f40f]
+  - @langchain/openai@0.6.12
+  - langchain@0.3.34
+  - @langchain/weaviate@0.2.3
+
 ## 0.3.55
 
 ### Patch Changes

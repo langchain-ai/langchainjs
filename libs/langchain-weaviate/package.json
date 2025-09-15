@@ -1,6 +1,6 @@
 {
   "name": "@langchain/weaviate",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Weaviate integration for LangChain.js",
   "type": "module",
   "engines": {

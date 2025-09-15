@@ -1,6 +1,6 @@
 {
   "name": "@langchain/anthropic",
-  "version": "0.3.27",
+  "version": "0.3.28",
   "description": "Anthropic integrations for LangChain.js",
   "type": "module",
   "engines": {

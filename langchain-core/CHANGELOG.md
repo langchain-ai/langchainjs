@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 0.3.76
+
+### Patch Changes
+
+- 41bd944: support base64 embeddings format
+- e90bc0a: fix(core): prevent tool call chunks from merging incorrectly in AIMes…
+- 3a99a40: Fix deserialization of RemoveMessage if represented as a plain object
+- 58e9522: make mustache prompt with nested object working correctly
+- e44dc1b: handle backticks in structured output
+
 ## 0.3.75
 
 ### Patch Changes
