@@ -294,6 +294,28 @@ test("WeaviateStore with limited metadatakeys", async () => {
   }
 });
 
+test("invalid metadata name", async () => {
+  const weaviateArgs = {
+    client,
+    indexName: "TestInvalidMetadataKeys",
+    textKey: "text",
+  };
+  await WeaviateStore.fromTexts(
+    ["hello world"],
+    [{ "pdf_metadata__metadata_xmp:createdate": "bar" }],
+    new FakeEmbeddings(),
+    weaviateArgs
+  );
+  try {
+    const total = await client.collections
+      .get(weaviateArgs.indexName)
+      .aggregate.overAll();
+    expect(total.totalCount).toEqual(1);
+  } finally {
+    await client.collections.delete(weaviateArgs.indexName);
+  }
+});
+
 test("WeaviateStore delete with filter", async () => {
   const weaviateArgs = {
     client,
