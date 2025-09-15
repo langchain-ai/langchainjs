@@ -35,6 +35,31 @@ type OpenAPIExecutionMethod = (
 ) => Promise<string>;
 
 /**
+ * Type representing the composition types of a schema.
+ */
+type CompositionType = "anyOf" | "allOf" | "oneOf";
+
+/**
+ * Gets the composition type of a schema if it exists.
+ * @param schema
+ * @returns The composition type of the schema if it exists.
+ */
+function getCompositionType(
+  schema: OpenAPIV3_1.SchemaObject
+): CompositionType | undefined {
+  if (schema.anyOf !== undefined) {
+    return "anyOf";
+  }
+  if (schema.allOf !== undefined) {
+    return "allOf";
+  }
+  if (schema.oneOf !== undefined) {
+    return "oneOf";
+  }
+  return undefined;
+}
+
+/**
  * Formats a URL by replacing path parameters with their corresponding
  * values.
  * @param url The URL to format.
@@ -157,6 +182,15 @@ export function convertOpenAPISchemaToJSONSchema(
   schema: OpenAPIV3_1.SchemaObject,
   spec: OpenAPISpec
 ): JsonSchema7Type {
+  const compositionType = getCompositionType(schema);
+  if (compositionType !== undefined && schema[compositionType] !== undefined) {
+    return {
+      [compositionType]: schema[compositionType].map((s) =>
+        convertOpenAPISchemaToJSONSchema(spec.getSchema(s), spec)
+      ),
+    } as JsonSchema7Type;
+  }
+
   if (schema.type === "object") {
     return Object.keys(schema.properties ?? {}).reduce(
       (jsonSchema: JsonSchema7ObjectType, propertyName) => {
@@ -187,6 +221,7 @@ export function convertOpenAPISchemaToJSONSchema(
       }
     );
   }
+
   if (schema.type === "array") {
     const openAPIItems = spec.getSchema(schema.items ?? {});
     return {

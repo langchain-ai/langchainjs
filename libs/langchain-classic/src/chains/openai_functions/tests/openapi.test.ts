@@ -142,6 +142,104 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
                 },
               },
             },
+            {
+              name: "anyOfParam",
+              in: "query",
+              schema: {
+                anyOf: [
+                  { $ref: "#/components/schemas/RefObject" },
+                  { type: "number" },
+                ],
+              },
+            },
+            {
+              name: "anyOfArrayParam",
+              in: "query",
+              schema: {
+                type: "array",
+                items: {
+                  anyOf: [
+                    { $ref: "#/components/schemas/RefObject" },
+                    { type: "string" },
+                  ],
+                },
+              },
+            },
+            {
+              name: "allOfParam",
+              in: "query",
+              schema: {
+                allOf: [
+                  { $ref: "#/components/schemas/RefObject" },
+                  {
+                    type: "object",
+                    properties: {
+                      baz: {
+                        type: "string",
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              name: "allOfArrayParam",
+              in: "query",
+              schema: {
+                type: "array",
+                items: {
+                  allOf: [
+                    {
+                      type: "object",
+                      properties: {
+                        foo: {
+                          type: "number",
+                        },
+                      },
+                    },
+                    {
+                      type: "object",
+                      properties: {
+                        bar: {
+                          type: "string",
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              name: "oneOfParam",
+              in: "query",
+              schema: {
+                oneOf: [
+                  { type: "string" },
+                  { type: "number" },
+                  { $ref: "#/components/schemas/RefObject" },
+                ],
+              },
+            },
+            {
+              name: "oneOfArrayParam",
+              in: "query",
+              schema: {
+                type: "array",
+                items: {
+                  oneOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "array",
+                      items: {
+                        type: "string",
+                      },
+                    },
+                  ],
+                },
+              },
+            },
           ],
           responses: {
             "200": {
@@ -222,6 +320,25 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
       throw new Error(`Unexpected type: ${schema.type}`);
     }
     return schema as TypeMap[T];
+  }
+
+  function expectComposition(
+    compositionType: "anyOf" | "allOf" | "oneOf",
+    schema: JsonSchema7Type | undefined
+  ): {
+    [compositionType]: JsonSchema7Type[];
+  } {
+    if (
+      !schema ||
+      Object.keys(schema).length !== 1 ||
+      !(compositionType in schema)
+    ) {
+      throw new Error(`Schema has no ${compositionType}`);
+    }
+
+    return schema as {
+      [compositionType]: JsonSchema7Type[];
+    };
   }
 
   const stringParamSchema = convertOpenAPISchemaToJSONSchema(
@@ -317,6 +434,103 @@ test("Test convert OpenAPI params to JSON Schema", async () => {
       ).properties.nestedObject
     ).properties.inception
   );
+
+  const anyOfParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "anyOfParam"),
+    spec
+  );
+  const typedAnyOfParamSchema = expectComposition("anyOf", anyOfParamSchema);
+  const typedAnyOfParamSchemaItem1 = expectType(
+    "object",
+    typedAnyOfParamSchema.anyOf[0]
+  );
+  expectType("string", typedAnyOfParamSchemaItem1.properties.foo);
+  expectType("number", typedAnyOfParamSchemaItem1.properties.bar);
+  expectType("number", typedAnyOfParamSchema.anyOf[1]);
+
+  const anyOfArrayParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "anyOfArrayParam"),
+    spec
+  );
+  const typedAnyOfArrayParamSchema = expectType("array", anyOfArrayParamSchema);
+  const typedAnyOfArrayParamSchemaItems = expectComposition(
+    "anyOf",
+    typedAnyOfArrayParamSchema.items
+  );
+  const typedAnyOfArrayParamSchemaItem1 = expectType(
+    "object",
+    typedAnyOfArrayParamSchemaItems.anyOf[0]
+  );
+  expectType("string", typedAnyOfArrayParamSchemaItem1.properties.foo);
+  expectType("number", typedAnyOfArrayParamSchemaItem1.properties.bar);
+  expectType("string", typedAnyOfArrayParamSchemaItems.anyOf[1]);
+
+  const allOfParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "allOfParam"),
+    spec
+  );
+  const typedAllOfParamSchema = expectComposition("allOf", allOfParamSchema);
+  const typedAllOfParamSchemaItem1 = expectType(
+    "object",
+    typedAllOfParamSchema.allOf[0]
+  );
+  expectType("string", typedAllOfParamSchemaItem1.properties.foo);
+  expectType("number", typedAllOfParamSchemaItem1.properties.bar);
+  const typedAllOfParamSchemaItem2 = expectType(
+    "object",
+    typedAllOfParamSchema.allOf[1]
+  );
+  expectType("string", typedAllOfParamSchemaItem2.properties.baz);
+
+  const oneOfParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "oneOfParam"),
+    spec
+  );
+  const typedOneOfParamSchema = expectComposition("oneOf", oneOfParamSchema);
+  expectType("string", typedOneOfParamSchema.oneOf[0]);
+  expectType("number", typedOneOfParamSchema.oneOf[1]);
+  const typedOneOfParamSchemaItem3 = expectType(
+    "object",
+    typedOneOfParamSchema.oneOf[2]
+  );
+  expectType("string", typedOneOfParamSchemaItem3.properties.foo);
+  expectType("number", typedOneOfParamSchemaItem3.properties.bar);
+
+  const allOfArrayParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "allOfArrayParam"),
+    spec
+  );
+  const typedAllOfArrayParamSchema = expectType("array", allOfArrayParamSchema);
+  const typedAllOfArrayParamSchemaItems = expectComposition(
+    "allOf",
+    typedAllOfArrayParamSchema.items
+  );
+  const typedAllOfArrayParamSchemaItem1 = expectType(
+    "object",
+    typedAllOfArrayParamSchemaItems.allOf[0]
+  );
+  expectType("number", typedAllOfArrayParamSchemaItem1.properties.foo);
+  const typedAllOfArrayParamSchemaItem2 = expectType(
+    "object",
+    typedAllOfArrayParamSchemaItems.allOf[1]
+  );
+  expectType("string", typedAllOfArrayParamSchemaItem2.properties.bar);
+
+  const oneOfArrayParamSchema = convertOpenAPISchemaToJSONSchema(
+    getParamSchema(createWidget, "oneOfArrayParam"),
+    spec
+  );
+  const typedOneOfArrayParamSchema = expectType("array", oneOfArrayParamSchema);
+  const typedOneOfArrayParamSchemaItems = expectComposition(
+    "oneOf",
+    typedOneOfArrayParamSchema.items
+  );
+  expectType("string", typedOneOfArrayParamSchemaItems.oneOf[0]);
+  const typedOneOfArrayParamSchemaItem2 = expectType(
+    "array",
+    typedOneOfArrayParamSchemaItems.oneOf[1]
+  );
+  expectType("string", typedOneOfArrayParamSchemaItem2.items);
 });
 
 test("Parent required should not include child due to child's internal required", async () => {
