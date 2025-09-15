@@ -54,7 +54,8 @@
     "rimraf": "^5.0.1",
     "typescript": "~5.8.3",
     "uuid": "^11.1.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod-to-json-schema": "^3.24.6"
   },
   "publishConfig": {
     "access": "public"
