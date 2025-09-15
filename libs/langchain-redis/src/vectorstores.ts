@@ -66,8 +66,13 @@ export type RedisVectorStoreIndexOptions = Omit<
  */
 export interface CustomSchemaField {
   type: SchemaFieldTypes;
-  required?: boolean; // Whether this field is required in metadata
-  [key: string]: unknown; // Allow additional field-specific options like SORTABLE, SEPARATOR, etc.
+  required?: boolean;
+  SORTABLE?: boolean | "UNF";
+  NOINDEX?: boolean;
+  SEPARATOR?: string; // For TAG fields
+  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
+  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
+  WEIGHT?: number; // For TEXT fields
 }
 
 /**
@@ -305,11 +310,11 @@ export class RedisVectorStore extends VectorStore {
               Array.isArray(fieldValue)
             ) {
               // For TAG arrays, join with separator (default comma)
-              const separator = (fieldConfig.SEPARATOR as string) || ",";
-              hashFields[indexedFieldName] = fieldValue.join(separator) as string;
+              const separator = fieldConfig.SEPARATOR || ",";
+              hashFields[indexedFieldName] = fieldValue.join(separator);
             } else {
               // For other types, store as-is
-              hashFields[indexedFieldName] = fieldValue as string;
+              hashFields[indexedFieldName] = fieldValue;
             }
           }
         }
