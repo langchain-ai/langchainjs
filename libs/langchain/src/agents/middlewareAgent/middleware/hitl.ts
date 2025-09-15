@@ -6,12 +6,11 @@ import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
 import type { ToolCall } from "../types.js";
-import { HumanResponse } from "../../interrupt.js";
 
 /**
  * Interrupt request for tool approval
  */
-interface ToolApprovalRequest {
+export interface ToolApprovalRequest {
   action: string;
   args: Record<string, any>;
   toolCallId: string;
@@ -206,12 +205,16 @@ export function humanInTheLoopMiddleware(
 
       const toolConfigs = config.toolConfigs;
 
-      // Separate tool calls that need interrupts from those that don't
+      /**
+       * Separate tool calls that need interrupts from those that don't
+       */
       const interruptToolCalls: ToolCall[] = [];
       const autoApprovedToolCalls: ToolCall[] = [];
 
       for (const toolCall of lastMessage.tool_calls) {
-        // Ensure tool call has an ID
+        /**
+         * Ensure tool call has an ID
+         */
         const normalizedToolCall: ToolCall = {
           id: toolCall.id || uuid(),
           name: toolCall.name,
@@ -227,14 +230,16 @@ export function humanInTheLoopMiddleware(
         }
       }
 
-      // If no interrupts needed, return early
+      /**
+       * If no interrupts needed, return early
+       */
       if (!interruptToolCalls.length) {
         return;
       }
 
-      const approvedToolCalls = [...autoApprovedToolCalls];
-
-      // Process tool calls that need interrupts
+      /**
+       * Process tool calls that need interrupts
+       */
       const requests: ToolApprovalRequest[] = interruptToolCalls.map(
         (toolCall) => {
           const toolConfig = toolConfigs[toolCall.name];
@@ -253,13 +258,48 @@ export function humanInTheLoopMiddleware(
         }
       );
 
-      // Interrupt and wait for human responses
-      const responses = (await interrupt(requests)) as HumanResponse[];
+      /**
+       * Interrupt and wait for human responses
+       */
+      const responses = (await interrupt(
+        requests
+      )) as HumanInTheLoopMiddlewareHumanResponse[];
 
-      // Process responses
-      for (let i = 0; i < responses.length; i++) {
-        const response = responses[i];
-        const toolCall = interruptToolCalls[i];
+      /**
+       * double check that all interrupts have a response
+       */
+      const missingResponses: string[] = [];
+      for (const toolCall of interruptToolCalls) {
+        if (!responses?.find((response) => response.id === toolCall.id)) {
+          missingResponses.push(toolCall.name);
+        }
+      }
+      if (missingResponses.length > 0) {
+        throw new Error(
+          `Missing responses for tool calls: ${missingResponses.join(", ")}`
+        );
+      }
+
+      const approvedToolCalls = [...autoApprovedToolCalls];
+      const toolMessages: ToolMessage[] = [];
+
+      /**
+       * Process responses
+       */
+      for (const response of responses) {
+        const toolCall = interruptToolCalls.find(
+          (toolCall) => toolCall.id === response.id
+        );
+
+        if (!toolCall) {
+          throw new Error(
+            `Tool call "${
+              response.id
+            }" not interrupted, interruptToolCalls: ${interruptToolCalls
+              .map((toolCall) => toolCall.id)
+              .join(", ")}`
+          );
+        }
 
         switch (response.type) {
           case "accept":
@@ -267,53 +307,111 @@ export function humanInTheLoopMiddleware(
             break;
 
           case "edit":
-            // For edit, args is an ActionRequest with updated args
+            /**
+             * For edit, args is an ActionRequest with updated args
+             */
             if (
-              response.args &&
+              "args" in response &&
               typeof response.args === "object" &&
-              "args" in response.args
+              response.args !== null
             ) {
               approvedToolCalls.push({
                 ...toolCall,
-                args: (
-                  response.args as { action: string; args: Record<string, any> }
-                ).args,
+                args: response.args,
               });
             }
             break;
 
           case "ignore":
-            // Skip to end - terminate the agent
-            return runtime.terminate(state);
+            /**
+             * Skip to end - terminate the agent
+             */
+            return runtime.terminate({
+              ...state,
+              messages: [
+                ...state.messages,
+                /**
+                 * inject an artificial tool message to indicate that the tool was ignored
+                 */
+                new ToolMessage({
+                  content: `User ignored the tool call for ${toolCall.name} with id ${toolCall.id}`,
+                  tool_call_id: toolCall.id,
+                }),
+              ],
+            });
 
           case "response": {
-            // Return manual tool response and jump back to model
-            // For response, args is a string
-            const toolMessage = new ToolMessage({
-              content: typeof response.args === "string" ? response.args : "",
-              tool_call_id: toolCall.id,
-            });
-            return {
-              messages: [...state.messages, toolMessage],
-              jump_to: "model",
-            };
+            /**
+             * Return manual tool response and jump back to model
+             * For response, args is a string
+             */
+            toolMessages.push(
+              new ToolMessage({
+                content: typeof response.args === "string" ? response.args : "",
+                tool_call_id: toolCall.id,
+              })
+            );
+            break;
           }
           default:
             throw new Error(`Unknown response type: ${(response as any).type}`);
         }
       }
 
-      // Update the last message with approved tool calls
+      /**
+       * Update the last message with approved tool calls
+       */
       const updatedMessage = new AIMessage({
         content: lastMessage.content,
         tool_calls: approvedToolCalls,
         id: lastMessage.id,
       });
 
-      // Replace the last message with the updated one
+      /**
+       * Replace the last message with the updated one
+       */
       return {
-        messages: [...state.messages.slice(0, -1), updatedMessage],
+        messages: [
+          ...state.messages.slice(0, -1),
+          ...toolMessages,
+          updatedMessage,
+        ],
       };
     },
   });
 }
+
+export interface HumanInTheLoopMiddlewareResponse {
+  id: string;
+}
+
+export interface HumanInTheLoopMiddlewareAcceptResponse
+  extends HumanInTheLoopMiddlewareResponse {
+  type: "accept";
+}
+
+export interface HumanInTheLoopMiddlewareIgnoreResponse
+  extends HumanInTheLoopMiddlewareResponse {
+  type: "ignore";
+}
+
+export interface HumanInTheLoopMiddlewareResponseResponse
+  extends HumanInTheLoopMiddlewareResponse {
+  type: "response";
+  args: unknown;
+}
+
+export interface HumanInTheLoopMiddlewareEditResponse
+  extends HumanInTheLoopMiddlewareResponse {
+  type: "edit";
+  args: unknown;
+}
+
+/**
+ * The response provided by a human to an interrupt.
+ */
+export type HumanInTheLoopMiddlewareHumanResponse =
+  | HumanInTheLoopMiddlewareAcceptResponse
+  | HumanInTheLoopMiddlewareIgnoreResponse
+  | HumanInTheLoopMiddlewareResponseResponse
+  | HumanInTheLoopMiddlewareEditResponse;

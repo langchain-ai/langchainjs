@@ -1,69 +1,69 @@
 import { z } from "zod/v3";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createAgent } from "../../index.js";
-import { humanInTheLoopMiddleware } from "../hitl.js";
+import {
+  humanInTheLoopMiddleware,
+  type ToolApprovalRequest,
+  type HumanInTheLoopMiddlewareHumanResponse,
+} from "../hitl.js";
 import {
   FakeToolCallingModel,
   _AnyIdHumanMessage,
   _AnyIdToolMessage,
   _AnyIdAIMessage,
 } from "../../../tests/utils.js";
+import type { Interrupt } from "../../../interrupt.js";
+
+const writeFileFn = vi.fn(
+  async ({ filename, content }: { filename: string; content: string }) => {
+    return `Successfully wrote ${content.length} characters to ${filename}`;
+  }
+);
+
+const calculatorFn = vi.fn(
+  async ({ a, b, operation }: { a: number; b: number; operation: string }) => {
+    switch (operation) {
+      case "add":
+        return `${a} + ${b} = ${a + b}`;
+      case "multiply":
+        return `${a} * ${b} = ${a * b}`;
+      default:
+        return "Unknown operation";
+    }
+  }
+);
+
+// Define tools
+const calculateTool = tool(calculatorFn, {
+  name: "calculator",
+  description: "Perform basic math operations",
+  schema: z.object({
+    a: z.number().describe("First number"),
+    b: z.number().describe("Second number"),
+    operation: z.enum(["add", "multiply"]).describe("Math operation"),
+  }),
+});
+
+const writeFileTool = tool(writeFileFn, {
+  name: "write_file",
+  description: "Write content to a file",
+  schema: z.object({
+    filename: z.string().describe("Name of the file"),
+    content: z.string().describe("Content to write"),
+  }),
+});
 
 describe("humanInTheLoopMiddleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should auto-approve safe tools and interrupt for tools requiring approval", async () => {
-    // Mock tool functions
-    const calculatorFn = vi.fn(
-      async ({
-        a,
-        b,
-        operation,
-      }: {
-        a: number;
-        b: number;
-        operation: string;
-      }) => {
-        switch (operation) {
-          case "add":
-            return `${a} + ${b} = ${a + b}`;
-          case "multiply":
-            return `${a} * ${b} = ${a * b}`;
-          default:
-            return "Unknown operation";
-        }
-      }
-    );
-
-    const writeFileFn = vi.fn(
-      async ({ filename, content }: { filename: string; content: string }) => {
-        return `Successfully wrote ${content.length} characters to ${filename}`;
-      }
-    );
-
-    // Define tools
-    const calculateTool = tool(calculatorFn, {
-      name: "calculator",
-      description: "Perform basic math operations",
-      schema: z.object({
-        a: z.number().describe("First number"),
-        b: z.number().describe("Second number"),
-        operation: z.enum(["add", "multiply"]).describe("Math operation"),
-      }),
-    });
-
-    const writeFileTool = tool(writeFileFn, {
-      name: "write_file",
-      description: "Write content to a file",
-      schema: z.object({
-        filename: z.string().describe("Name of the file"),
-        content: z.string().describe("Content to write"),
-      }),
-    });
-
     // Configure HITL middleware
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
@@ -177,7 +177,7 @@ describe("humanInTheLoopMiddleware", () => {
     llm.index = 1;
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [{ type: "accept" }],
+        resume: [{ id: "call_2", type: "accept" }],
       }),
       config
     );
@@ -200,21 +200,6 @@ describe("humanInTheLoopMiddleware", () => {
   });
 
   it("should handle edit response type", async () => {
-    const writeFileFn = vi.fn(
-      async ({ filename, content }: { filename: string; content: string }) => {
-        return `Successfully wrote ${content.length} characters to ${filename}`;
-      }
-    );
-
-    const writeFileTool = tool(writeFileFn, {
-      name: "write_file",
-      description: "Write content to a file",
-      schema: z.object({
-        filename: z.string(),
-        content: z.string(),
-      }),
-    });
-
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
@@ -262,10 +247,11 @@ describe("humanInTheLoopMiddleware", () => {
       new Command({
         resume: [
           {
+            id: "call_1",
             type: "edit",
             args: {
-              action: "write_file",
-              args: { filename: "safe.txt", content: "Safe content" },
+              filename: "safe.txt",
+              content: "Safe content",
             },
           },
         ],
@@ -288,17 +274,6 @@ describe("humanInTheLoopMiddleware", () => {
    * is failing in dependency range tests
    */
   it.skip("should handle ignore response type", async () => {
-    const writeFileFn = vi.fn();
-
-    const writeFileTool = tool(writeFileFn, {
-      name: "write_file",
-      description: "Write content to a file",
-      schema: z.object({
-        filename: z.string(),
-        content: z.string(),
-      }),
-    });
-
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
@@ -344,7 +319,7 @@ describe("humanInTheLoopMiddleware", () => {
     // Resume with ignore
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [{ type: "ignore" }],
+        resume: [{ id: "call_1", type: "ignore" }],
       }),
       config
     );
@@ -359,17 +334,6 @@ describe("humanInTheLoopMiddleware", () => {
   });
 
   it("should handle manual response type", async () => {
-    const writeFileFn = vi.fn();
-
-    const writeFileTool = tool(writeFileFn, {
-      name: "write_file",
-      description: "Write content to a file",
-      schema: z.object({
-        filename: z.string(),
-        content: z.string(),
-      }),
-    });
-
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
@@ -417,6 +381,7 @@ describe("humanInTheLoopMiddleware", () => {
       new Command({
         resume: [
           {
+            id: "call_1",
             type: "response",
             args: "File operation not allowed in demo mode",
           },
@@ -436,5 +401,175 @@ describe("humanInTheLoopMiddleware", () => {
     expect((messages[messages.length - 1] as ToolMessage).tool_call_id).toBe(
       "call_1"
     );
+  });
+
+  it("should allow to interrupt multiple tools at the same time", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      toolConfigs: {
+        write_file: {
+          requireApproval: true,
+          description: "⚠️ File write operation requires approval",
+        },
+        calculator: {
+          requireApproval: true,
+        },
+      },
+    });
+
+    // Create agent with mocked LLM
+    const llm = new FakeToolCallingModel({
+      toolCalls: [
+        // First call: calculator tool (auto-approved)
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 42, b: 17, operation: "multiply" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "greeting.txt", content: "Hello World" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      llm,
+      checkpointer,
+      prompt:
+        "You are a helpful assistant. Use the tools provided to help the user.",
+      tools: [calculateTool, writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-123",
+      },
+    };
+
+    // Initial invocation
+    const initialResult = await agent.invoke(
+      {
+        messages: [
+          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
+        ],
+      },
+      config
+    );
+
+    // not called due to interrupt
+    expect(calculatorFn).toHaveBeenCalledTimes(0);
+    expect(writeFileFn).toHaveBeenCalledTimes(0);
+
+    const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
+      ToolApprovalRequest[]
+    >;
+    const resume: HumanInTheLoopMiddlewareHumanResponse[] =
+      interruptRequest.value.map((request) => {
+        if (request.action === "calculator") {
+          return { id: request.toolCallId, type: "accept" };
+        } else if (request.action === "write_file") {
+          return {
+            id: request.toolCallId,
+            type: "edit",
+            args: { filename: "safe.txt", content: "Safe content" },
+          };
+        }
+
+        throw new Error(`Unknown action: ${request.action}`);
+      });
+
+    // Resume with approval
+    await agent.invoke(new Command({ resume }), config);
+
+    // Verify tool was called
+    expect(calculatorFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledTimes(1);
+    expect(writeFileFn).toHaveBeenCalledWith(
+      {
+        filename: "safe.txt",
+        content: "Safe content",
+      },
+      expect.anything()
+    );
+    expect(calculatorFn).toHaveBeenCalledWith(
+      {
+        a: 42,
+        b: 17,
+        operation: "multiply",
+      },
+      expect.anything()
+    );
+  });
+
+  it("should throw if not all tool calls have a response", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      toolConfigs: {
+        write_file: {
+          requireApproval: true,
+          description: "⚠️ File write operation requires approval",
+        },
+        calculator: {
+          requireApproval: true,
+        },
+      },
+    });
+
+    // Create agent with mocked LLM
+    const llm = new FakeToolCallingModel({
+      toolCalls: [
+        // First call: calculator tool (auto-approved)
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 42, b: 17, operation: "multiply" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "greeting.txt", content: "Hello World" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      llm,
+      checkpointer,
+      prompt:
+        "You are a helpful assistant. Use the tools provided to help the user.",
+      tools: [calculateTool, writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-123",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [
+          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
+        ],
+      },
+      config
+    );
+
+    // Resume with approval
+    await expect(() =>
+      agent.invoke(
+        new Command({ resume: [{ id: "call_2", type: "ignore" }] }),
+        config
+      )
+    ).rejects.toThrow("Missing responses for tool calls: calculator");
   });
 });
