@@ -271,6 +271,7 @@ export function parseStringDef(
         }
         case "nanoid": {
           addPattern(res, zodPatterns.nanoid, check.message, refs);
+          break;
         }
         case "toLowerCase":
         case "toUpperCase":
