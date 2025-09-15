@@ -15,6 +15,7 @@ module.exports = {
   ignorePatterns: [
     "src/utils/@cfworker",
     "src/utils/fast-json-patch",
+    "src/utils/js-sha1",
     "src/utils/js-sha256",
     "src/utils/zod-to-json-schema",
     "src/utils/sax-js",
