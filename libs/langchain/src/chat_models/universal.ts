@@ -222,6 +222,8 @@ export function _inferModelProvider(modelName: string): string | undefined {
     return "google-vertexai";
   } else if (modelName.startsWith("amazon.")) {
     return "bedrock";
+  } else if (modelName.startsWith("mistral")) {
+    return "mistralai";
   } else {
     return undefined;
   }
