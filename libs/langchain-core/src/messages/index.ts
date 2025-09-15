@@ -15,6 +15,7 @@ export {
   type ToolMessageFields,
   ToolMessage,
   ToolMessageChunk,
+  type ToolCall,
   type InvalidToolCall,
   isToolMessage,
   isToolMessageChunk,

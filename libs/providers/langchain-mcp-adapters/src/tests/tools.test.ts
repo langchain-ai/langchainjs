@@ -15,7 +15,24 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 
-const { loadMcpTools } = await import("../src/tools.js");
+import { loadMcpTools } from "../tools.js";
+
+vi.mock(
+  "@modelcontextprotocol/sdk/client/index.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+);
+vi.mock(
+  "@modelcontextprotocol/sdk/client/stdio.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
+);
+vi.mock(
+  "@modelcontextprotocol/sdk/client/sse.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
+);
+vi.mock(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+);
 
 // Create a mock client
 describe("Simplified Tool Adapter Tests", () => {
@@ -122,14 +139,12 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy in New York."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith(
-        {
-          arguments: {
-            city: "New York",
-          },
-          name: "weather",
-        }
-      );
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        arguments: {
+          city: "New York",
+        },
+        name: "weather",
+      });
     });
 
     test("should load tool with no input parameters", async () => {
@@ -148,7 +163,7 @@ describe("Simplified Tool Adapter Tests", () => {
         })
       );
 
-      mockClient.callTool.mockImplementation((params) => {
+      mockClient.callTool.mockImplementation((_params) => {
         return Promise.resolve({
           content: [
             {
