@@ -212,16 +212,14 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
       throw new Error("Invalid file input.");
     }
 
-
     if (!fs.existsSync(this.resourcesDir)) {
       fs.mkdirSync(this.resourcesDir, { recursive: true });
     }
   }
 
-
   /**
    * Get the list of supported modes.
-   * 
+   *
    * @returns Array of supported mode strings
    */
   get supportedModes(): string[] {
@@ -339,14 +337,13 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
    * @param jsonData - JSON data to convert
    * @returns List of Document objects
    */
-  private _convertJsonToDocuments(
-    jsonData: { pages: DocPage[] }
-  ): Document[] {
+  private _convertJsonToDocuments(jsonData: { pages: DocPage[] }): Document[] {
     if (this.mode === "element") {
       const documentList: Document[] = [];
       for (const docPage of jsonData.pages) {
         for (const docElement of docPage.elements) {
-          const [elementContent, elementMetadata] = this._parseDocElement(docElement);
+          const [elementContent, elementMetadata] =
+            this._parseDocElement(docElement);
           documentList.push(
             new Document({
               pageContent: elementContent,
@@ -364,7 +361,8 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
 
         // Parse elements in the page
         for (const docElement of docPage.elements) {
-          const [elementContent, elementMetadata] = this._parseDocElement(docElement);
+          const [elementContent, elementMetadata] =
+            this._parseDocElement(docElement);
           // Add element content to page content
           pageContent += elementContent + SPLIT_CHAR;
           // Add element metadata to page metadata
@@ -383,7 +381,8 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
       // Parse elements in the document
       for (const docPage of jsonData.pages) {
         for (const docElement of docPage.elements) {
-          const [elementContent, elementMetadata] = this._parseDocElement(docElement);
+          const [elementContent, elementMetadata] =
+            this._parseDocElement(docElement);
           // Add element content to document content
           docContent += elementContent + SPLIT_CHAR;
           // Add element metadata to document metadata
@@ -401,7 +400,9 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
    * @param docElement - The document element to parse
    * @returns The extracted content and metadata as a tuple
    */
-  private _parseDocElement(docElement: DocElement): [string, Record<string, any>] {
+  private _parseDocElement(
+    docElement: DocElement
+  ): [string, Record<string, any>] {
     const elementId = docElement.id;
     const dataType = docElement.type;
     const content = docElement.content ?? {};
@@ -443,12 +444,12 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
 
       // Make content and metadata
       const cleanChartContent = chartContent.replace(/\r\n/g, "\n").trim();
-      elementContent = 
+      elementContent =
         `<figure id="${chartId}" data-category="${dataType}">` +
         `<figcaption> ${chartTitle} </figcaption>` +
         `<pre data-format="csv"> ${cleanChartContent} </pre>` +
         `</figure>`;
-      
+
       elementMetadata = {
         id: chartId,
         type: "chart",
@@ -465,18 +466,22 @@ export class PolarisAIDataInsightLoader extends BaseDocumentLoader {
       const equationFormat = content.rawMath_format || "";
 
       if (!equationValue) {
-        console.warn(`Equation rawMath_value not found for ${elementId} element`);
+        console.warn(
+          `Equation rawMath_value not found for ${elementId} element`
+        );
       }
       if (!equationFormat) {
-        console.warn(`Equation rawMath_format not found for ${elementId} element`);
+        console.warn(
+          `Equation rawMath_format not found for ${elementId} element`
+        );
       }
 
       // Make content and metadata
-      elementContent = 
+      elementContent =
         `<figure id="${equationId}" data-category="${dataType}">` +
         `<pre data-format="${equationFormat}"> ${equationValue} </pre>` +
         `</figure>`;
-      
+
       elementMetadata = {
         id: equationId,
         type: "equation",
