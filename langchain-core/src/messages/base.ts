@@ -462,11 +462,12 @@ export function _mergeLists<Content extends MessageContentComplex>(
             typeof leftItem === "object" &&
             "index" in leftItem &&
             leftItem.index === item.index &&
-            // Only merge if IDs match (or both are undefined)
+            // Only merge if IDs match or one has an ID that is undefined
             ("id" in leftItem && "id" in item
               ? leftItem.id === item.id
-              : !("id" in leftItem) && !("id" in item))
+              : !("id" in leftItem) || !("id" in item))
         );
+        console.log(toMerge);
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
