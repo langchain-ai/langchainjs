@@ -24,7 +24,7 @@
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/**/*.ts examples/**/*.ts",
     "lint:eslint": "eslint --cache src/ examples/",
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
-    "lint:examples": "tsc -p tsconfig.examples.json",
+    "lint:examples": "tsc -p ./examples/tsconfig.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
