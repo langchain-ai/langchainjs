@@ -79,4 +79,37 @@ describe("AIMessageChunk", () => {
     );
     expect(firstCall?.id).toBe("9fb5c937-6944-4173-84be-ad1caee1cedd");
   });
+
+  it("should properly merge tool call chunks that have matching indices no IDs at all", () => {
+    const chunk1 = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: [
+        {
+          name: "add_new_task",
+          type: "tool_call_chunk",
+          index: 0,
+        },
+      ],
+    });
+    const chunk2 = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: [
+        {
+          args: '{"tasks":["buy tomatoes","help child with math"]}',
+          type: "tool_call_chunk",
+          index: 0,
+        },
+      ],
+    });
+
+    const merged = chunk1.concat(chunk2);
+    expect(merged.tool_call_chunks).toHaveLength(1);
+
+    const firstCall = merged.tool_call_chunks?.[0];
+    expect(firstCall?.name).toBe("add_new_task");
+    expect(firstCall?.args).toBe(
+      '{"tasks":["buy tomatoes","help child with math"]}'
+    );
+    expect(firstCall?.id).toBeUndefined();
+  });
 });

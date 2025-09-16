@@ -456,17 +456,15 @@ export function _mergeLists<Content extends MessageContentComplex>(
         "index" in item &&
         typeof item.index === "number"
       ) {
-        const toMerge = merged.findIndex(
-          (leftItem) =>
-            leftItem !== null &&
-            typeof leftItem === "object" &&
-            "index" in leftItem &&
-            leftItem.index === item.index &&
-            // Only merge if IDs match or one has an ID that is undefined
-            ("id" in leftItem && "id" in item
-              ? leftItem.id === item.id
-              : !("id" in leftItem) || !("id" in item))
-        );
+        const toMerge = merged.findIndex((leftItem) => {
+          const isObject = typeof leftItem === "object";
+          const indiciesMatch =
+            "index" in leftItem && leftItem.index === item.index;
+          const idsMatch =
+            "id" in leftItem && "id" in item && leftItem?.id === item?.id;
+          const eitherItemMissingID = !("id" in leftItem) || !("id" in item);
+          return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
+        });
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
