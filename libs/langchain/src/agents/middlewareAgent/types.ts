@@ -43,6 +43,15 @@ export type N = typeof START | "model_request" | "tools";
 export interface BuiltInState {
   messages: BaseMessage[];
   __interrupt__?: Interrupt[];
+  /**
+   * Optional property to control routing after afterModel middleware execution.
+   * When set by middleware, the agent will jump to the specified node instead of
+   * following normal routing logic. The property is automatically cleared after use.
+   *
+   * - "model_request": Jump back to the model for another LLM call
+   * - "tools": Jump to tool execution (requires tools to be available)
+   */
+  jumpTo?: "model_request" | "tools";
 }
 
 /**

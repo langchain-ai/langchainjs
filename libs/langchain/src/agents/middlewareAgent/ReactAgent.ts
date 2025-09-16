@@ -270,6 +270,7 @@ export class ReactAgent<
     if (afterModelNodes.length > 0 && lastAfterModelNode) {
       allNodeWorkflows.addEdge("model_request", lastAfterModelNode.name);
     } else {
+      // If no afterModel nodes, connect model_request directly to model paths
       const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
       if (modelPaths.length === 1) {
         allNodeWorkflows.addEdge("model_request", modelPaths[0]);
@@ -290,19 +291,20 @@ export class ReactAgent<
       );
     }
 
-    // Connect first afterModel node (last to execute) to model paths
+    // Connect first afterModel node (last to execute) to model paths with jumpTo support
     if (afterModelNodes.length > 0) {
       const firstAfterModelNode = afterModelNodes[0].name;
-      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
-      if (modelPaths.length === 1) {
-        allNodeWorkflows.addEdge(firstAfterModelNode, modelPaths[0]);
-      } else {
-        allNodeWorkflows.addConditionalEdges(
-          firstAfterModelNode,
-          this.#createModelRouter(),
-          modelPaths
-        );
-      }
+      const modelPaths = this.#getModelPaths(
+        toolClasses.filter(isClientTool),
+        true
+      );
+
+      // Use afterModel router which includes jumpTo logic
+      allNodeWorkflows.addConditionalEdges(
+        firstAfterModelNode,
+        this.#createAfterModelRouter(toolClasses.filter(isClientTool)),
+        modelPaths
+      );
     }
 
     /**
@@ -355,57 +357,25 @@ export class ReactAgent<
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
+   * @param includeModelRequest whether to include model_request as a valid path (for jumpTo routing)
    * @returns list of possible edge destinations
    */
   #getModelPaths(
-    toolClasses: (ClientTool | ServerTool)[]
-  ): ("tools" | typeof END)[] {
-    const paths: ("tools" | typeof END)[] = [];
+    toolClasses: (ClientTool | ServerTool)[],
+    includeModelRequest: boolean = false
+  ): ("tools" | "model_request" | typeof END)[] {
+    const paths: ("tools" | "model_request" | typeof END)[] = [];
     if (toolClasses.length > 0) {
       paths.push("tools");
+    }
+
+    if (includeModelRequest) {
+      paths.push("model_request");
     }
 
     paths.push(END);
 
     return paths;
-  }
-
-  /**
-   * Create routing function for model node conditional edges.
-   */
-  #createModelRouter() {
-    /**
-     * determine if the agent should continue or not
-     */
-    /**
-     * ToDo: fix type
-     */
-    return (state: any) => {
-      const messages = state.messages;
-      const lastMessage = messages.at(-1);
-
-      if (
-        !AIMessage.isInstance(lastMessage) ||
-        !lastMessage.tool_calls ||
-        lastMessage.tool_calls.length === 0
-      ) {
-        return END;
-      }
-
-      /**
-       * The tool node processes a single message.
-       */
-      if (this.#toolBehaviorVersion === "v1") {
-        return "tools";
-      }
-
-      /**
-       * Route to tools node
-       */
-      return lastMessage.tool_calls.map(
-        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
-      );
-    };
   }
 
   /**
@@ -432,6 +402,157 @@ export class ReactAgent<
 
       // For non-returnDirect tools, always route back to agent
       return "model_request";
+    };
+  }
+
+  /**
+   * Create routing function for model node conditional edges.
+   */
+  #createModelRouter() {
+    /**
+     * determine if the agent should continue or not
+     */
+    return (state: BuiltInState) => {
+      const messages = state.messages;
+      const lastMessage = messages.at(-1);
+
+      if (
+        !AIMessage.isInstance(lastMessage) ||
+        !lastMessage.tool_calls ||
+        lastMessage.tool_calls.length === 0
+      ) {
+        return END;
+      }
+
+      // Check if all tool calls are for structured response extraction
+      const hasOnlyStructuredResponseCalls = lastMessage.tool_calls.every(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      if (hasOnlyStructuredResponseCalls) {
+        // If all tool calls are for structured response extraction, go to END
+        // The AgentNode will handle these internally and return the structured response
+        return END;
+      }
+
+      /**
+       * The tool node processes a single message.
+       */
+      if (this.#toolBehaviorVersion === "v1") {
+        return "tools";
+      }
+
+      /**
+       * Route to tools node (filter out any structured response tool calls)
+       */
+      const regularToolCalls = lastMessage.tool_calls.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return END;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+      );
+    };
+  }
+
+  /**
+   * Create routing function for jumpTo functionality after afterModel hooks.
+   *
+   * This router checks if the `jumpTo` property is set in the state after afterModel middleware
+   * execution. If set, it routes to the specified target ("model_request" or "tools").
+   * If not set, it falls back to the normal model routing logic for afterModel context.
+   *
+   * The jumpTo property is automatically cleared after use to prevent infinite loops.
+   *
+   * @param toolClasses - Available tool classes for validation
+   * @returns Router function that handles jumpTo logic and normal routing
+   */
+  #createAfterModelRouter(toolClasses: (ClientTool | ServerTool)[]) {
+    const hasStructuredResponse = Boolean(this.options.responseFormat);
+
+    return (state: BuiltInState) => {
+      // First, check if we just processed a structured response
+      // If so, ignore any existing jumpTo and go to END
+      const messages = state.messages;
+      const lastMessage = messages.at(-1);
+      if (
+        AIMessage.isInstance(lastMessage) &&
+        (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0)
+      ) {
+        return END;
+      }
+
+      // Check if jumpTo is set in the state
+      if (state.jumpTo) {
+        const jumpTarget = state.jumpTo;
+
+        // Validate that the jump target is available
+        if (jumpTarget === "tools" && toolClasses.length === 0) {
+          // If trying to jump to tools but no tools are available, go to END
+          return END;
+        }
+
+        return jumpTarget;
+      }
+
+      // check if there are pending tool calls
+      const toolMessages = messages.filter(ToolMessage.isInstance);
+      const lastAiMessage = messages.filter(AIMessage.isInstance).at(-1);
+      const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
+        (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
+      );
+      if (pendingToolCalls && pendingToolCalls.length > 0) {
+        return pendingToolCalls.map(
+          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+        );
+      }
+
+      // if we exhausted all tool calls, but still have no structured response tool calls,
+      // go back to model_request
+      const hasStructuredResponseCalls = lastAiMessage?.tool_calls?.some(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      if (
+        pendingToolCalls &&
+        pendingToolCalls.length === 0 &&
+        !hasStructuredResponseCalls &&
+        hasStructuredResponse
+      ) {
+        return "model_request";
+      }
+
+      if (
+        !AIMessage.isInstance(lastMessage) ||
+        !lastMessage.tool_calls ||
+        lastMessage.tool_calls.length === 0
+      ) {
+        return END;
+      }
+
+      // Check if all tool calls are for structured response extraction
+      const hasOnlyStructuredResponseCalls = lastMessage.tool_calls.every(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      // Check if there are any regular tool calls (non-structured response)
+      const hasRegularToolCalls = lastMessage.tool_calls.some(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (hasOnlyStructuredResponseCalls || !hasRegularToolCalls) {
+        return END;
+      }
+
+      /**
+       * For routing from afterModel nodes, always use simple string paths
+       * The Send API is handled at the model_request node level
+       */
+      return "tools";
     };
   }
 

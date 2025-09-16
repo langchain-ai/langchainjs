@@ -38,6 +38,37 @@ const contextSchema = z
  * capabilities before execution. It enables selective approval workflows where certain tools
  * require human intervention while others can execute automatically.
  *
+ * A invocation result that has been interrupted by the middleware will have a `__interrupt__`
+ * property that contains the interrupt request. You can loop over the request to determine
+ * which tools were interrupted, and how to handle them separately.
+ *
+ * ```ts
+ * import { type ToolApprovalRequest, type HumanInTheLoopMiddlewareHumanResponse } from "langchain/middleware";
+ * import { type Interrupt } from "langchain";
+ *
+ * const result = await agent.invoke(request);
+ * const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
+ *   ToolApprovalRequest[]
+ * >;
+ * const resume: HumanInTheLoopMiddlewareHumanResponse[] =
+ *   interruptRequest.value.map((request) => {
+ *     if (request.action === "calculator") {
+ *       return { id: request.toolCallId, type: "accept" };
+ *     } else if (request.action === "write_file") {
+ *       return {
+ *         id: request.toolCallId,
+ *         type: "edit",
+ *         args: { filename: "safe.txt", content: "Safe content" },
+ *       };
+ *     }
+ *
+ *     throw new Error(`Unknown action: ${request.action}`);
+ *   });
+ *
+ * // Resume with approval
+ * await agent.invoke(new Command({ resume }), config);
+ * ```
+ *
  * ## Features
  *
  * - **Selective Tool Approval**: Configure which tools require human approval
@@ -182,12 +213,11 @@ export function humanInTheLoopMiddleware(
     afterModel: async (state, runtime) => {
       const config = { ...contextSchema.parse(options), ...runtime.context };
       const { messages } = state;
-
       if (!messages.length) {
         return;
       }
 
-      const lastMessage = messages[messages.length - 1];
+      const lastMessage = messages.at(-1);
 
       /**
        * Check if it's an AI message with tool calls
@@ -196,7 +226,19 @@ export function humanInTheLoopMiddleware(
         !AIMessage.isInstance(lastMessage) ||
         !lastMessage.tool_calls?.length
       ) {
-        return;
+        // Clear any existing jumpTo property since there are no tool calls to process
+        return { jumpTo: undefined };
+      }
+
+      // Filter out structured response extraction tool calls (they start with "extract-")
+      const regularToolCalls = lastMessage.tool_calls.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      // If all tool calls are structured response extractions, return early
+      if (regularToolCalls.length === 0) {
+        // Clear any existing jumpTo property since we're not processing any real tools
+        return { jumpTo: undefined };
       }
 
       if (!config.toolConfigs) {
@@ -211,7 +253,7 @@ export function humanInTheLoopMiddleware(
       const interruptToolCalls: ToolCall[] = [];
       const autoApprovedToolCalls: ToolCall[] = [];
 
-      for (const toolCall of lastMessage.tool_calls) {
+      for (const toolCall of regularToolCalls) {
         /**
          * Ensure tool call has an ID
          */
@@ -234,7 +276,8 @@ export function humanInTheLoopMiddleware(
        * If no interrupts needed, return early
        */
       if (!interruptToolCalls.length) {
-        return;
+        // Clear any existing jumpTo property since no interrupts are needed
+        return { jumpTo: undefined };
       }
 
       /**
@@ -286,11 +329,10 @@ export function humanInTheLoopMiddleware(
       /**
        * Process responses
        */
-      for (const response of responses) {
-        const toolCall = interruptToolCalls.find(
-          (toolCall) => toolCall.id === response.id
-        );
-
+      for (const [i, response] of Object.entries(responses)) {
+        const toolCall = interruptToolCalls[
+          i as keyof typeof interruptToolCalls
+        ] as ToolCall;
         if (!toolCall) {
           throw new Error(
             `Tool call "${
@@ -359,23 +401,22 @@ export function humanInTheLoopMiddleware(
       }
 
       /**
-       * Update the last message with approved tool calls
+       * Replace the tool calls with the approved tool calls
        */
-      const updatedMessage = new AIMessage({
-        content: lastMessage.content,
-        tool_calls: approvedToolCalls,
-        id: lastMessage.id,
-      });
+      if (AIMessage.isInstance(lastMessage)) {
+        lastMessage.tool_calls = lastMessage.tool_calls?.map((tc) => {
+          const approvedToolCall = approvedToolCalls.find(
+            (atc) => atc.id === tc.id
+          );
+          return approvedToolCall ?? tc;
+        });
+      }
 
       /**
        * Replace the last message with the updated one
        */
       return {
-        messages: [
-          ...state.messages.slice(0, -1),
-          ...toolMessages,
-          updatedMessage,
-        ],
+        messages: [...state.messages, ...toolMessages],
       };
     },
   });

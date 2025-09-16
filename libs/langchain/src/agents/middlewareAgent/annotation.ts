@@ -18,6 +18,7 @@ type MergedAnnotationSpec<
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = {
   messages: BinaryOperatorAggregate<BaseMessage[], Messages>;
+  jumpTo: LastValue<"model_request" | "tools" | undefined>;
 } & (T extends ResponseFormatUndefined
   ? {}
   : { structuredResponse: LastValue<T> }) &
@@ -34,6 +35,10 @@ export function createAgentAnnotationConditional<
     messages: Annotation<BaseMessage[], Messages>({
       reducer: messagesStateReducer,
       default: () => [],
+    }),
+    jumpTo: Annotation<"model_request" | "tools" | undefined>({
+      reducer: (x: any, y: any) => y ?? x,
+      default: () => undefined,
     }),
   };
 
