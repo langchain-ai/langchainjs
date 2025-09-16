@@ -4,7 +4,6 @@ import { Generation } from "@langchain/core/outputs";
 import {
   BaseCache,
   deserializeStoredGeneration,
-  getCacheKey,
   serializeGeneration,
 } from "@langchain/core/caches";
 import { StoredGeneration } from "@langchain/core/messages";
@@ -71,14 +70,14 @@ export class UpstashRedisCache extends BaseCache {
    */
   public async lookup(prompt: string, llmKey: string) {
     let idx = 0;
-    let key = getCacheKey(prompt, llmKey, String(idx));
+    let key = this.keyEncoder(prompt, llmKey, String(idx));
     let value = await this.redisClient.get<StoredGeneration | null>(key);
     const generations: Generation[] = [];
 
     while (value) {
       generations.push(deserializeStoredGeneration(value));
       idx += 1;
-      key = getCacheKey(prompt, llmKey, String(idx));
+      key = this.keyEncoder(prompt, llmKey, String(idx));
       value = await this.redisClient.get<StoredGeneration | null>(key);
     }
 
@@ -92,7 +91,7 @@ export class UpstashRedisCache extends BaseCache {
    */
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
-      const key = getCacheKey(prompt, llmKey, String(i));
+      const key = this.keyEncoder(prompt, llmKey, String(i));
       const serializedValue = JSON.stringify(serializeGeneration(value[i]));
 
       if (this.ttl) {
