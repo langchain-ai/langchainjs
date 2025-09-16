@@ -53,4 +53,3 @@ bun.lock
 coverage/
 
 examples/src/createAgent/*.png
-libs/providers/langchain-mcp-adapters/examples/filesystem_test
