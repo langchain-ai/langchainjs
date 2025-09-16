@@ -40,6 +40,7 @@ server.tool(
       content: [
         {
           type: "text",
+          // eslint-disable-next-line no-process-env
           text: process.env[varName] || "NOT_SET",
         },
       ],
