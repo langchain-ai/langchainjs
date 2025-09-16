@@ -223,28 +223,45 @@ export class MultiServerMCPClient {
       )
     );
 
-    for (const [serverName, connection] of connectionsToInit) {
-      getDebugLog()(
-        `INFO: Initializing connection to server "${serverName}"...`
-      );
+    if (this._handleConnectionErrorsGracefully) {
+      const successfulConnections: [string, ResolvedConnection][] = [];
 
-      if (isResolvedStdioConnection(connection)) {
-        await this._initializeStdioConnection(serverName, connection);
-      } else if (isResolvedStreamableHTTPConnection(connection)) {
-        if (connection.type === "sse" || connection.transport === "sse") {
-          await this._initializeSSEConnection(serverName, connection);
-        } else {
-          await this._initializeStreamableHTTPConnection(
-            serverName,
-            connection
+      for (const [serverName, connection] of connectionsToInit) {
+        try {
+          getDebugLog()(
+            `INFO: Testing connection to server "${serverName}"...`
           );
+
+          await this._testAndInitializeConnection(serverName, connection);
+          successfulConnections.push([serverName, connection]);
+
+          getDebugLog()(
+            `INFO: Successfully connected to server "${serverName}"`
+          );
+        } catch (error) {
+          getDebugLog()(
+            `WARN: Failed to connect to server "${serverName}": ${error}. Skipping this server.`
+          );
+          if (this._connections) {
+            delete this._connections[serverName];
+          }
         }
-      } else {
-        // This should never happen due to the validation in the constructor
-        throw new MCPClientError(
-          `Unsupported transport type for server "${serverName}"`,
-          serverName
+      }
+
+      // If no connections succeeded and we had connections to try, log a warning
+      if (successfulConnections.length === 0 && connectionsToInit.length > 0) {
+        getDebugLog()(
+          `WARN: Failed to connect to any of the ${connectionsToInit.length} configured servers`
         );
+      }
+    } else {
+      // Original behavior: throw on any connection failure
+      for (const [serverName, connection] of connectionsToInit) {
+        getDebugLog()(
+          `INFO: Initializing connection to server "${serverName}"...`
+        );
+
+        await this._testAndInitializeConnection(serverName, connection);
       }
     }
 
@@ -297,6 +314,30 @@ export class MultiServerMCPClient {
     this._transportInstances = {};
 
     getDebugLog()(`INFO: All MCP connections closed`);
+  }
+
+  /**
+   * Test and initialize a connection based on its type
+   */
+  private async _testAndInitializeConnection(
+    serverName: string,
+    connection: ResolvedConnection
+  ): Promise<void> {
+    if (isResolvedStdioConnection(connection)) {
+      await this._initializeStdioConnection(serverName, connection);
+    } else if (isResolvedStreamableHTTPConnection(connection)) {
+      if (connection.type === "sse" || connection.transport === "sse") {
+        await this._initializeSSEConnection(serverName, connection);
+      } else {
+        await this._initializeStreamableHTTPConnection(serverName, connection);
+      }
+    } else {
+      // This should never happen due to the validation in the constructor
+      throw new MCPClientError(
+        `Unsupported transport type for server "${serverName}"`,
+        serverName
+      );
+    }
   }
 
   /**
