@@ -39,7 +39,7 @@ This framework consists of several parts.
 - **Open-source libraries**: Build your applications using LangChain's open-source [building blocks](https://js.langchain.com/docs/concepts/lcel), [components](https://js.langchain.com/docs/concepts), and [third-party integrations](https://js.langchain.com/docs/integrations/platforms/).
   Use [LangGraph.js](https://js.langchain.com/docs/concepts/#langgraphjs) to build stateful agents with first-class streaming and human-in-the-loop support.
 - **Productionization**: Use [LangSmith](https://docs.smith.langchain.com/) to inspect, monitor and evaluate your chains, so that you can continuously optimize and deploy with confidence.
-- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://langchain-ai.github.io/langgraph/cloud/).
+- **Deployment**: Turn your LangGraph applications into production-ready APIs and Assistants with [LangGraph Cloud](https://docs.langchain.com/langgraph-platform/deployment-quickstart).
 
 The LangChain libraries themselves are made up of several different packages.
 
