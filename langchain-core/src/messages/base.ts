@@ -467,7 +467,6 @@ export function _mergeLists<Content extends MessageContentComplex>(
               ? leftItem.id === item.id
               : !("id" in leftItem) || !("id" in item))
         );
-        console.log(toMerge);
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
