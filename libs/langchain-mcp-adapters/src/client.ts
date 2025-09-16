@@ -130,6 +130,8 @@ export class MultiServerMCPClient {
 
   private _config: ResolvedClientConfig;
 
+  private _handleConnectionErrorsGracefully: boolean;
+
   /**
    * Returns clone of server config for inspection purposes.
    *
@@ -138,6 +140,13 @@ export class MultiServerMCPClient {
   get config(): ClientConfig {
     // clone config so it can't be mutated
     return JSON.parse(JSON.stringify(this._config));
+  }
+
+  /**
+   * Returns whether connection errors should be handled gracefully.
+   */
+  get handleConnectionErrorsGracefully(): boolean {
+    return this._handleConnectionErrorsGracefully;
   }
 
   /**
@@ -180,6 +189,8 @@ export class MultiServerMCPClient {
           parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
+        handleConnectionErrorsGracefully:
+          parsedServerConfig.handleConnectionErrorsGracefully,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
       };
@@ -187,6 +198,8 @@ export class MultiServerMCPClient {
 
     this._config = parsedServerConfig;
     this._connections = parsedServerConfig.mcpServers;
+    this._handleConnectionErrorsGracefully =
+      parsedServerConfig.handleConnectionErrorsGracefully;
   }
 
   /**
