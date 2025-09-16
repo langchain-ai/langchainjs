@@ -528,7 +528,7 @@ export class AgentNode<
       model,
       systemMessage,
       messages: state.messages,
-      tools: [],
+      tools: this.#options.toolClasses,
     };
 
     // Execute prepareModelRequest hooks from all middleware
@@ -578,10 +578,10 @@ export class AgentNode<
     const structuredTools = Object.values(this.#structuredToolInfo);
 
     // Use tools from preparedOptions if provided, otherwise use default tools
-    const allTools = this.#options.toolClasses.concat(
+    const allTools = [
       ...structuredTools.map((toolStrategy) => toolStrategy.tool),
-      ...(preparedOptions?.tools || [])
-    );
+      ...(preparedOptions?.tools || this.#options.toolClasses),
+    ];
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"
