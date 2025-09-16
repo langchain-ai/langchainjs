@@ -1,7 +1,6 @@
 import {
   BaseCache,
   deserializeStoredGeneration,
-  getCacheKey,
   serializeGeneration,
 } from "@langchain/core/caches";
 import { Generation } from "@langchain/core/outputs";
@@ -84,7 +83,7 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
   }
 
   private getLlmCache(llmKey: string) {
-    const key = getCacheKey(llmKey);
+    const key = this.keyEncoder(llmKey);
     if (!this.cacheDict[key]) {
       this.cacheDict[key] = new AzureCosmosDBMongoDBVectorStore(
         this.embeddings,
@@ -170,7 +169,7 @@ export class AzureCosmosDBMongoDBSemanticCache extends BaseCache {
    * @param llmKey
    */
   public async clear(llmKey: string) {
-    const key = getCacheKey(llmKey);
+    const key = this.keyEncoder(llmKey);
     if (this.cacheDict[key]) {
       await this.cacheDict[key].delete();
     }
