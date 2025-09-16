@@ -207,8 +207,11 @@ export class MultiServerMCPClient {
    * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
    * but you can call it directly to ensure all connections are established before using the tools.
    *
-   * @returns A map of server names to arrays of tools
-   * @throws {MCPClientError} If initialization fails
+   * When handleConnectionErrorsGracefully is true, servers that fail to connect are skipped
+   * and removed from the connection list. Otherwise, any connection failure will throw an error.
+   *
+   * @returns A map of server names to arrays of tools (only includes successfully connected servers)
+   * @throws {MCPClientError} If initialization fails and handleConnectionErrorsGracefully is false
    */
   async initializeConnections(): Promise<
     Record<string, DynamicStructuredTool[]>
