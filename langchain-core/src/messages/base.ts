@@ -462,7 +462,11 @@ export function _mergeLists<Content extends MessageContentComplex>(
             "index" in leftItem && leftItem.index === item.index;
           const idsMatch =
             "id" in leftItem && "id" in item && leftItem?.id === item?.id;
-          const eitherItemMissingID = !("id" in leftItem) || !("id" in item);
+          const eitherItemMissingID =
+            !("id" in leftItem) ||
+            !leftItem?.id ||
+            !("id" in item) ||
+            !item?.id;
           return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
         });
         if (
