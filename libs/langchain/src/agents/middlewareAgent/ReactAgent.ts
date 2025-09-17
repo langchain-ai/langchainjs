@@ -357,7 +357,7 @@ export class ReactAgent<
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
-   * @param includeModelRequest whether to include model_request as a valid path (for jumpTo routing)
+   * @param includeModelRequest whether to include "model_request" as a valid path (for jumpTo routing)
    * @returns list of possible edge destinations
    */
   #getModelPaths(
@@ -490,13 +490,29 @@ export class ReactAgent<
       if (state.jumpTo) {
         const jumpTarget = state.jumpTo;
 
-        // Validate that the jump target is available
-        if (jumpTarget === "tools" && toolClasses.length === 0) {
+        // If jumpTo is "model", go to model_request node
+        if (jumpTarget === "model") {
+          return "model_request";
+        }
+
+        // If jumpTo is "tools", go to tools node
+        if (jumpTarget === "tools") {
           // If trying to jump to tools but no tools are available, go to END
+          if (toolClasses.length === 0) {
+            return END;
+          }
+
+          return "tools";
+        }
+
+        // If jumpTo is END, go to END
+        if (jumpTarget === END) {
           return END;
         }
 
-        return jumpTarget;
+        throw new Error(
+          `Invalid jump target: ${jumpTarget}, must be "model" or "tools".`
+        );
       }
 
       // check if there are pending tool calls

@@ -51,7 +51,7 @@ export interface BuiltInState {
    * - "model_request": Jump back to the model for another LLM call
    * - "tools": Jump to tool execution (requires tools to be available)
    */
-  jumpTo?: "model_request" | "tools";
+  jumpTo?: "model" | "tools";
 }
 
 /**
