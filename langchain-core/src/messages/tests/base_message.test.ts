@@ -622,6 +622,63 @@ describe("AIMessageChunk", () => {
         },
       ]);
     });
+
+    it("can concatenate tool call chunks without IDs", () => {
+      const chunk = new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            name: "get_weather",
+            args: "",
+            id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '{"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: "location",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '":"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: "San",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: " Francisco",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '"}',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      });
+      expect(chunk.tool_calls).toHaveLength(1);
+      expect(chunk.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+          id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+        },
+      ]);
+    });
   });
 });
 

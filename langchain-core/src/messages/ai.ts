@@ -271,21 +271,36 @@ export class AIMessageChunk extends BaseMessageChunk {
             : undefined,
       };
     } else {
-      const groupedToolCallChunk = fields.tool_call_chunks.reduce(
+      const groupedToolCallChunks = fields.tool_call_chunks.reduce(
         (acc, chunk) => {
-          // Assign a fallback ID if the chunk doesn't have one
-          // This can happen with tools that have empty schemas
-          const groupId = chunk.id || `fallback-${chunk.index || 0}`;
-          acc[groupId] = acc[groupId] ?? [];
-          acc[groupId].push(chunk);
+          const matchedChunkIndex = acc.findIndex(([match]) => {
+            // If chunk has an id and index, match if both are present
+            if ("id" in chunk && "index" in chunk) {
+              return chunk.id === match.id && chunk.index === match.index;
+            }
+            // If chunk has an id, we match on id
+            if ("id" in chunk) {
+              return chunk.id === match.id;
+            }
+            // If chunk has an index, we match on index
+            if ("index" in chunk) {
+              return chunk.index === match.index;
+            }
+            return false;
+          });
+          if (matchedChunkIndex !== -1) {
+            acc[matchedChunkIndex].push(chunk);
+          } else {
+            acc.push([chunk]);
+          }
           return acc;
         },
-        {} as Record<string, ToolCallChunk[]>
+        [] as ToolCallChunk[][]
       );
 
       const toolCalls: ToolCall[] = [];
       const invalidToolCalls: InvalidToolCall[] = [];
-      for (const chunks of Object.values(groupedToolCallChunk)) {
+      for (const chunks of groupedToolCallChunks) {
         let parsedArgs = {};
         const name = chunks[0]?.name ?? "";
         const joinedArgs = chunks.map((c) => c.args || "").join("");
