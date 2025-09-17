@@ -2,56 +2,50 @@
 import { ZodType, ZodTypeDef } from "zod/v3";
 import { test, expect } from "vitest";
 import {
-  StructuredOutputMethodParams,
   StructuredOutputMethodOptions,
   BaseLanguageModelInput,
+  AnyAIMessage,
 } from "../../language_models/base.js";
 import { BaseMessage } from "../../messages/index.js";
-import { Runnable, RunnableLambda } from "../../runnables/base.js";
-import { RunnableConfig } from "../../runnables/config.js";
-import { FakeListChatModel } from "../../utils/testing/index.js";
+import { RunnableLambda } from "../../runnables/base.js";
+import {
+  FakeListChatModel,
+  FakeListChatModelCallOptions,
+} from "../../utils/testing/index.js";
 import { StructuredPrompt } from "../structured.js";
 import { load } from "../../load/index.js";
 
-class FakeStructuredChatModel extends FakeListChatModel {
+class FakeStructuredChatModel<
+  CallOptions extends FakeListChatModelCallOptions = FakeListChatModelCallOptions,
+  TOutput = AnyAIMessage
+> extends FakeListChatModel<CallOptions, TOutput> {
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | Record<string, any>
-      | StructuredOutputMethodParams<RunOutput, false>
-      | ZodType<RunOutput, ZodTypeDef, RunOutput>,
+    _params: Record<string, any> | ZodType<TOutput, ZodTypeDef, TOutput>,
     config?: StructuredOutputMethodOptions<false> | undefined
-  ): Runnable<BaseLanguageModelInput, RunOutput, RunnableConfig>;
+  ): FakeStructuredChatModel<CallOptions, TOutput>;
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | Record<string, any>
-      | StructuredOutputMethodParams<RunOutput, true>
-      | ZodType<RunOutput, ZodTypeDef, RunOutput>,
+    _params: Record<string, any> | ZodType<TOutput, ZodTypeDef, TOutput>,
     config?: StructuredOutputMethodOptions<true> | undefined
-  ): Runnable<
-    BaseLanguageModelInput,
-    { raw: BaseMessage; parsed: RunOutput },
-    RunnableConfig
+  ): FakeStructuredChatModel<
+    CallOptions,
+    { raw: BaseMessage; parsed: TOutput }
   >;
 
   withStructuredOutput<
     RunOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | Record<string, any>
-      | StructuredOutputMethodParams<RunOutput, boolean>
-      | ZodType<RunOutput, ZodTypeDef, RunOutput>,
+    _params: Record<string, any> | ZodType<RunOutput, ZodTypeDef, RunOutput>,
     _config?: StructuredOutputMethodOptions<boolean> | undefined
   ):
-    | Runnable<BaseLanguageModelInput, RunOutput, RunnableConfig>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput },
-        RunnableConfig
+    | FakeStructuredChatModel<CallOptions, TOutput>
+    | FakeStructuredChatModel<
+        CallOptions,
+        { raw: BaseMessage; parsed: TOutput }
       > {
     if (!_config?.includeRaw) {
       if (typeof _params === "object") {

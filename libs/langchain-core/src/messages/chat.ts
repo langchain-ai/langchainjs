@@ -6,7 +6,7 @@ import {
   _mergeDicts,
 } from "./base.js";
 import { $InferMessageContent, MessageStructure } from "./message.js";
-import { Constructor } from "./utils.js";
+import { Constructor } from "../types/type-utils.js";
 
 export interface ChatMessageFields<
   TStructure extends MessageStructure = MessageStructure

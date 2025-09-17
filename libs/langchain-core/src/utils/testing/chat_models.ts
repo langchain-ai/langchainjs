@@ -3,6 +3,8 @@ import {
   BaseChatModel,
   BaseChatModelCallOptions,
   BaseChatModelParams,
+  BindToolsInput,
+  ChatModelOutputParser,
 } from "../../language_models/chat_models.js";
 import { BaseLLMParams } from "../../language_models/llms.js";
 import {
@@ -11,29 +13,25 @@ import {
   AIMessageChunk,
 } from "../../messages/index.js";
 import { type ChatResult, ChatGenerationChunk } from "../../outputs.js";
-import { Runnable, RunnableLambda } from "../../runnables/base.js";
-import { StructuredTool } from "../../tools/index.js";
 import {
-  StructuredOutputMethodParams,
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
 } from "../../language_models/base.js";
-
-import { toJsonSchema } from "../json_schema.js";
+import { JSONSchema, toJsonSchema } from "../json_schema.js";
 import { InteropZodType } from "../types/zod.js";
-
-/** Minimal shape actually needed by `bindTools` */
-export interface ToolSpec {
-  name: string;
-  description?: string;
-  schema: InteropZodType | Record<string, unknown>; // Either a Zod schema *or* a plain JSON-Schema object
-}
+import { RunnableLambda } from "../../runnables/base.js";
 
 /**
  * Interface specific to the Fake Streaming Chat model.
  */
 export interface FakeStreamingChatModelCallOptions
-  extends BaseChatModelCallOptions {}
+  extends BaseChatModelCallOptions {
+  /** Tools to bind to the model for function calling */
+  tools?: BindToolsInput[];
+  /** This key doesn't do anything, but is here to test example call options */
+  temperature?: number;
+}
+
 /**
  * Interface for the Constructor-field specific to the Fake Streaming Chat model (all optional because we fill in defaults).
  */
@@ -54,52 +52,10 @@ export interface FakeStreamingChatModelFields extends BaseChatModelParams {
   thrownErrorString?: string;
 }
 
-export class FakeChatModel extends BaseChatModel {
-  _combineLLMOutput() {
-    return [];
-  }
-
-  _llmType(): string {
-    return "fake";
-  }
-
-  async _generate(
-    messages: BaseMessage[],
-    options?: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    if (options?.stop?.length) {
-      return {
-        generations: [
-          {
-            message: new AIMessage(options.stop[0]),
-            text: options.stop[0],
-          },
-        ],
-      };
-    }
-    const text = messages
-      .map((m) => {
-        if (typeof m.content === "string") {
-          return m.content;
-        }
-        return JSON.stringify(m.content, null, 2);
-      })
-      .join("\n");
-    await runManager?.handleLLMNewToken(text);
-    return {
-      generations: [
-        {
-          message: new AIMessage(text),
-          text,
-        },
-      ],
-      llmOutput: {},
-    };
-  }
-}
-
-export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModelCallOptions> {
+export class FakeStreamingChatModel<
+  CallOptions extends FakeStreamingChatModelCallOptions = FakeStreamingChatModelCallOptions,
+  TOutput = AIMessageChunk
+> extends BaseChatModel<CallOptions, TOutput> {
   sleep = 50;
 
   responses: BaseMessage[] = [];
@@ -110,83 +66,59 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
 
   thrownErrorString?: string;
 
-  private tools: (StructuredTool | ToolSpec)[] = [];
-
-  constructor({
-    sleep = 50,
-    responses = [],
-    chunks = [],
-    toolStyle = "openai",
-    thrownErrorString,
-    ...rest
-  }: FakeStreamingChatModelFields & BaseLLMParams) {
-    super(rest);
-    this.sleep = sleep;
-    this.responses = responses;
-    this.chunks = chunks;
-    this.toolStyle = toolStyle;
-    this.thrownErrorString = thrownErrorString;
+  constructor(protected fields: FakeStreamingChatModelFields & BaseLLMParams) {
+    super(fields);
+    this.sleep = fields.sleep ?? 50;
+    this.responses = fields.responses ?? [];
+    this.chunks = fields.chunks ?? [];
+    this.toolStyle = fields.toolStyle ?? "openai";
+    this.thrownErrorString = fields.thrownErrorString;
   }
 
   _llmType() {
     return "fake";
   }
 
-  bindTools(tools: (StructuredTool | ToolSpec)[]) {
-    const merged = [...this.tools, ...tools];
-
-    const toolDicts = merged.map((t) => {
+  bindTools(tools: BindToolsInput[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toolDicts = tools.map((tool: Record<string, any>) => {
       switch (this.toolStyle) {
         case "openai":
           return {
             type: "function",
             function: {
-              name: t.name,
-              description: t.description,
-              parameters: toJsonSchema(t.schema),
+              name: tool.name,
+              description: tool.description,
+              parameters: toJsonSchema(tool.schema),
             },
           };
         case "anthropic":
           return {
-            name: t.name,
-            description: t.description,
-            input_schema: toJsonSchema(t.schema),
+            name: tool.name,
+            description: tool.description,
+            input_schema: toJsonSchema(tool.schema),
           };
         case "bedrock":
           return {
             toolSpec: {
-              name: t.name,
-              description: t.description,
-              inputSchema: toJsonSchema(t.schema),
+              name: tool.name,
+              description: tool.description,
+              inputSchema: toJsonSchema(tool.schema),
             },
           };
         case "google":
           return {
-            name: t.name,
-            description: t.description,
-            parameters: toJsonSchema(t.schema),
+            name: tool.name,
+            description: tool.description,
+            parameters: toJsonSchema(tool.schema),
           };
         default:
-          throw new Error(`Unsupported tool style: ${this.toolStyle}`);
+          return tool;
       }
     });
 
-    const wrapped =
-      this.toolStyle === "google"
-        ? [{ functionDeclarations: toolDicts }]
-        : toolDicts;
-
-    /* creating a *new* instance – mirrors LangChain .bind semantics for type-safety and avoiding noise */
-    const next = new FakeStreamingChatModel({
-      sleep: this.sleep,
-      responses: this.responses,
-      chunks: this.chunks,
-      toolStyle: this.toolStyle,
-      thrownErrorString: this.thrownErrorString,
-    });
-    next.tools = merged;
-
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+    const mergedTools = [...(this.defaultOptions.tools ?? []), ...toolDicts];
+    return this.withConfig({ tools: mergedTools } as Partial<CallOptions>);
   }
 
   async _generate(
@@ -271,12 +203,65 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
       );
     }
   }
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema: InteropZodType<TOutput> | JSONSchema,
+    config?: StructuredOutputMethodOptions<false>
+  ): FakeStreamingChatModel<CallOptions, TOutput>;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema: InteropZodType<TOutput> | JSONSchema,
+    config?: StructuredOutputMethodOptions<true>
+  ): FakeStreamingChatModel<
+    CallOptions,
+    { raw: AnyAIMessage; parsed: TOutput }
+  >;
+
+  withStructuredOutput<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TOutput extends Record<string, any> = Record<string, any>
+  >(
+    schema: InteropZodType<TOutput> | JSONSchema,
+    config?: StructuredOutputMethodOptions<boolean>
+  ):
+    | FakeStreamingChatModel<CallOptions, TOutput>
+    | FakeStreamingChatModel<
+        CallOptions,
+        { raw: AnyAIMessage; parsed: TOutput }
+      > {
+    return super.withStructuredOutput(schema, config) as
+      | FakeStreamingChatModel<CallOptions, TOutput>
+      | FakeStreamingChatModel<
+          CallOptions,
+          { raw: AnyAIMessage; parsed: TOutput }
+        >;
+  }
+}
+
+/**
+ * Interface for call options specific to the Fake List Chat model.
+ */
+export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
+  /** Error string to throw instead of returning a response (useful in tests) */
+  thrownErrorString?: string;
+
+  /** Tools to bind to the model for function calling */
+  tools?: BindToolsInput[];
+
+  /** This key doesn't do anything, but is here to test example call options */
+  temperature?: number;
 }
 
 /**
  * Interface for the input parameters specific to the Fake List Chat model.
  */
-export interface FakeChatInput extends BaseChatModelParams {
+export interface FakeListChatModelFields extends BaseChatModelParams {
   /** Responses to return */
   responses: string[];
 
@@ -284,10 +269,6 @@ export interface FakeChatInput extends BaseChatModelParams {
   sleep?: number;
 
   emitCustomEvent?: boolean;
-}
-
-export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
-  thrownErrorString?: string;
 }
 
 /**
@@ -310,7 +291,10 @@ export interface FakeListChatModelCallOptions extends BaseChatModelCallOptions {
  * console.log({ secondResponse });
  * ```
  */
-export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOptions> {
+export class FakeListChatModel<
+  CallOptions extends FakeListChatModelCallOptions = FakeListChatModelCallOptions,
+  TOutput = AIMessageChunk
+> extends BaseChatModel<CallOptions, TOutput> {
   static lc_name() {
     return "FakeListChatModel";
   }
@@ -325,7 +309,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   emitCustomEvent = false;
 
-  constructor(params: FakeChatInput) {
+  constructor(params: FakeListChatModelFields) {
     super(params);
     const { responses, sleep, emitCustomEvent } = params;
     this.responses = responses;
@@ -347,8 +331,9 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     await this._sleepIfRequested();
-    if (options?.thrownErrorString) {
-      throw new Error(options.thrownErrorString);
+    const combinedOptions = this._combineCallOptions(options);
+    if (combinedOptions?.thrownErrorString) {
+      throw new Error(combinedOptions.thrownErrorString);
     }
     if (this.emitCustomEvent) {
       await runManager?.handleCustomEvent("some_test_event", {
@@ -356,9 +341,9 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       });
     }
 
-    if (options?.stop?.length) {
+    if (combinedOptions?.stop?.length) {
       return {
-        generations: [this._formatGeneration(options.stop[0])],
+        generations: [this._formatGeneration(combinedOptions.stop[0])],
       };
     } else {
       const response = this._currentResponse();
@@ -380,9 +365,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   async *_streamResponseChunks(
     _messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
+    options: CallOptions,
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    const combinedOptions = this._combineCallOptions(options);
     const response = this._currentResponse();
     this._incrementResponse();
     if (this.emitCustomEvent) {
@@ -393,8 +379,8 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
     for await (const text of response) {
       await this._sleepIfRequested();
-      if (options?.thrownErrorString) {
-        throw new Error(options.thrownErrorString);
+      if (combinedOptions?.thrownErrorString) {
+        throw new Error(combinedOptions.thrownErrorString);
       }
       const chunk = this._createResponseChunk(text);
       yield chunk;
@@ -434,55 +420,100 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     }
   }
 
+  bindTools(tools: BindToolsInput[]) {
+    const mergedTools = [...(this.defaultOptions.tools ?? []), ...tools];
+    return this.withConfig({ tools: mergedTools } as Partial<CallOptions>);
+  }
+
+  protected withOutputParser<TOutput extends Record<string, unknown>>(
+    outputParser: ChatModelOutputParser<TOutput>
+  ): FakeListChatModel<CallOptions, TOutput> {
+    return super.withOutputParser(outputParser) as FakeListChatModel<
+      CallOptions,
+      TOutput
+    >;
+  }
+
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | StructuredOutputMethodParams<RunOutput, false>
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    schema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): FakeListChatModel<CallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | StructuredOutputMethodParams<RunOutput, true>
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    schema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): FakeListChatModel<CallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    _params:
-      | StructuredOutputMethodParams<RunOutput, boolean>
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    _schema: InteropZodType<TOutput> | JSONSchema,
     _config?: StructuredOutputMethodOptions<boolean>
   ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
-    return RunnableLambda.from(async (input) => {
-      const message = await this.invoke(input);
-      if (message.tool_calls?.[0]?.args) {
-        return message.tool_calls[0].args as RunOutput;
-      }
-      if (typeof message.content === "string") {
-        return JSON.parse(message.content);
-      }
-      throw new Error("No structured output found");
-    }) as Runnable;
+    | FakeListChatModel<CallOptions, TOutput>
+    | FakeListChatModel<CallOptions, { raw: AnyAIMessage; parsed: TOutput }> {
+    return this.withOutputParser(
+      RunnableLambda.from<AIMessage, TOutput>((input) => {
+        if (input.tool_calls?.[0]?.args) {
+          return input.tool_calls[0].args as TOutput;
+        }
+        if (typeof input.content === "string") {
+          return JSON.parse(input.content);
+        }
+        throw new Error("No structured output found");
+      })
+    );
+  }
+}
+
+export class FakeChatModel extends BaseChatModel {
+  _combineLLMOutput() {
+    return [];
+  }
+
+  _llmType(): string {
+    return "fake";
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    options?: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    if (options?.stop?.length) {
+      return {
+        generations: [
+          {
+            message: new AIMessage(options.stop[0]),
+            text: options.stop[0],
+          },
+        ],
+      };
+    }
+    const text = messages
+      .map((m) => {
+        if (typeof m.content === "string") {
+          return m.content;
+        }
+        return JSON.stringify(m.content, null, 2);
+      })
+      .join("\n");
+    await runManager?.handleLLMNewToken(text);
+    return {
+      generations: [
+        {
+          message: new AIMessage(text),
+          text,
+        },
+      ],
+      llmOutput: {},
+    };
   }
 }

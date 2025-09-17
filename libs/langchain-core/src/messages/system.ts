@@ -6,7 +6,7 @@ import {
   type BaseMessageFields,
 } from "./base.js";
 import { $InferMessageContent, MessageStructure } from "./message.js";
-import { Constructor } from "./utils.js";
+import { Constructor } from "../types/type-utils.js";
 
 export interface SystemMessageFields<
   TStructure extends MessageStructure = MessageStructure
