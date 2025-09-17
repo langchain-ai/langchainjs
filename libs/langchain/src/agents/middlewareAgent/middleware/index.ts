@@ -2,5 +2,10 @@ export {
   summarizationMiddleware,
   countTokensApproximately,
 } from "./summarization.js";
-export { humanInTheLoopMiddleware, type ToolApprovalRequest } from "./hitl.js";
+export {
+  humanInTheLoopMiddleware,
+  type HumanInTheLoopRequest,
+  type HumanInTheLoopMiddlewareHumanResponse,
+  type ActionRequest,
+} from "./hitl.js";
 export { anthropicPromptCachingMiddleware } from "./promptCaching.js";

@@ -87,7 +87,7 @@ export abstract class MiddlewareNode<
      * If result is undefined, return current state
      */
     if (!result) {
-      return state;
+      return { ...state, jumpTo: undefined };
     }
 
     /**
@@ -99,7 +99,7 @@ export abstract class MiddlewareNode<
         if (result.error) {
           throw result.error;
         }
-        return { ...state, ...(result.result || {}) };
+        return { ...state, ...(result.result || {}), jumpTo: result?.jumpTo };
       }
 
       throw new Error(`Invalid control action: ${JSON.stringify(result)}`);
@@ -108,7 +108,7 @@ export abstract class MiddlewareNode<
     /**
      * If result is a state update, merge it with current state
      */
-    return { ...state, ...result };
+    return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
   get nodeOptions(): {
