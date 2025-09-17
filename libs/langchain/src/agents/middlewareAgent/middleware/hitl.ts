@@ -477,7 +477,7 @@ export function humanInTheLoopMiddleware(
       }
 
       return {
-        jumpTo: "model_request",
+        jumpTo: "model",
         messages: [...state.messages, ...artificialToolMessages],
       };
     },
