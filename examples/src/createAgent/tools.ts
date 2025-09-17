@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { createAgent, InMemoryStore, tool } from "langchain";
+import { createAgent, tool } from "langchain";
+import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 
 const store = new InMemoryStore();
