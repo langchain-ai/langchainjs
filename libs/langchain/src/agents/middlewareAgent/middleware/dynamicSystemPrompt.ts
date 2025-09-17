@@ -48,7 +48,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  *
  * @public
  */
-export function dynamicPrompt<TContextSchema = unknown>(
+export function dynamicSystemPrompt<TContextSchema = unknown>(
   dynamicPrompt: (
     state: AgentBuiltInState,
     runtime: Runtime<TContextSchema>
