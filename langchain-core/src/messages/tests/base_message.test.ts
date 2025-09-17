@@ -466,7 +466,7 @@ describe("Complex AIMessageChunk concat", () => {
     ]);
   });
 
-  it("concatenates tool call chunks without IDs", () => {
+  it("omits tool call chunks without IDs", () => {
     const chunks: ToolCallChunk[] = [
       {
         name: "get_current_time",
@@ -481,14 +481,13 @@ describe("Complex AIMessageChunk concat", () => {
       tool_call_chunks: chunks,
     });
 
-    expect(result.tool_calls?.length).toBe(1);
-    expect(result.invalid_tool_calls?.length).toBe(0);
-    expect(result.tool_calls).toEqual([
+    expect(result.tool_calls?.length).toBe(0);
+    expect(result.invalid_tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls).toEqual([
       {
-        id: "fallback-0", // Should get fallback ID
         name: "get_current_time",
-        args: {},
         type: "tool_call",
+        args: {},
       },
     ]);
   });
@@ -507,11 +506,10 @@ describe("Complex AIMessageChunk concat", () => {
       tool_call_chunks: chunks,
     });
 
-    expect(result.tool_calls?.length).toBe(1);
-    expect(result.invalid_tool_calls?.length).toBe(0);
-    expect(result.tool_calls).toEqual([
+    expect(result.tool_calls?.length).toBe(0);
+    expect(result.invalid_tool_calls?.length).toBe(1);
+    expect(result.invalid_tool_calls).toEqual([
       {
-        id: "fallback-0", // Should get fallback ID with index 0
         name: "get_current_time",
         args: {},
         type: "tool_call",
