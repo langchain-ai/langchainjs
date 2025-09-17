@@ -78,6 +78,7 @@ test("Should not allow mismatched inputs", async () => {
     new FakeLLM({}),
     new StringOutputParser(),
   ]);
+  expect(badChain).toBeDefined();
 });
 
 test("Should not allow improper inputs into a map in a sequence", async () => {

@@ -9,9 +9,7 @@ test("RunnableWithFallbacks", async () => {
   const llm = new FakeLLM({
     thrownErrorString: "Bad error!",
   });
-  await expect(async () => {
-    const result1 = await llm.invoke("What up");
-  }).rejects.toThrow();
+  await expect(async () => llm.invoke("What up")).rejects.toThrow();
   const llmWithFallbacks = llm.withFallbacks({
     fallbacks: [new FakeLLM({})],
   });
@@ -23,9 +21,8 @@ test("RunnableWithFallbacks batch", async () => {
   const llm = new FakeLLM({
     thrownErrorString: "Bad error!",
   });
-  await expect(async () => {
-    const result1 = await llm.batch(["What up"]);
-  }).rejects.toThrow();
+  await expect(async () => llm.batch(["What up"])).rejects.toThrow();
+
   const llmWithFallbacks = llm.withFallbacks({
     fallbacks: [new FakeLLM({})],
   });

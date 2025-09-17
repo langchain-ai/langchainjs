@@ -25,6 +25,7 @@ test("Test grouping traces", async () => {
     "I'm arg1",
     { chain, nextChain }
   );
+  expect(result).toBeDefined();
 });
 
 test("Test TraceGroup object", async () => {

@@ -134,7 +134,6 @@ test("Test ChatModel legacy params withStructuredOutput", async () => {
     }),
   });
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error not in run output type
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
@@ -229,6 +228,7 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
     { includeRaw: true }
   );
   const response = await model.invoke("Hello there!");
+  expect(response).toBeDefined();
 });
 
 test("Test ChatModel withStructuredOutput new syntax using zod v4", async () => {
