@@ -102,7 +102,6 @@ test("Runnable with message history with a chat model", async () => {
   );
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.map((chunk) => chunk.content).join("")).toEqual("Hello world!");
@@ -147,7 +146,6 @@ test("Runnable with message history with a messages in, messages out chain", asy
   );
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.map((chunk) => chunk.content).join("")).toEqual(

@@ -91,7 +91,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
     const delay = testGeminiModelDelay[modelName] ?? 0;
     if (delay) {
-      console.log(`Delaying for ${delay}ms`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   });
@@ -285,7 +284,6 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     for await (const chunk of res) {
       resArray.push(chunk);
     }
-    // console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("withStructuredOutput", async () => {
@@ -363,24 +361,17 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    try {
-      const res = await model.invoke(messages);
+    const res = await model.invoke(messages);
 
-      console.log(res);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/LangChain/);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/LangChain/);
   });
 
   test("Stream token count usage_metadata", async () => {
@@ -398,7 +389,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         res = res.concat(chunk);
       }
     }
-    // console.log(res);
+
     expect(res?.usage_metadata).toBeDefined();
     if (!res?.usage_metadata) {
       return;
@@ -426,7 +417,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
         res = res.concat(chunk);
       }
     }
-    // console.log(res);
+
     expect(res?.usage_metadata).not.toBeDefined();
   });
 
@@ -436,7 +427,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
       modelName,
     });
     const res = await model.invoke("Why is the sky blue? Be concise.");
-    // console.log(res);
+
     expect(res?.usage_metadata).toBeDefined();
     if (!res?.usage_metadata) {
       return;
@@ -650,8 +641,6 @@ test("Context caching", async () => {
     cachedContent:
       "projects/570601939772/locations/us-east5/cachedContents/3718741839184920576",
   });
-
-  console.log(JSON.stringify(res, null, 1));
 });
 
 describe("Express Gemini Chat", () => {
@@ -733,9 +722,6 @@ describe.each(testAnthropicModelNames)(
       expect(connection?.url).toEqual(
         `https://us-east5-aiplatform.googleapis.com/v1/projects/test-vertex-ai-382612/locations/us-east5/publishers/anthropic/models/${modelName}:rawPredict`
       );
-
-      console.log(JSON.stringify(aiMessage, null, 1));
-      console.log(aiMessage.lc_kwargs);
     });
 
     test("system", async () => {
@@ -765,7 +751,6 @@ describe.each(testAnthropicModelNames)(
       const stream = await model.stream("How are you today? Be verbose.");
       const chunks = [];
       for await (const chunk of stream) {
-        console.log(chunk);
         chunks.push(chunk);
       }
       expect(chunks.length).toBeGreaterThan(1);
@@ -974,7 +959,6 @@ describe.each(testAnthropicThinkingModelNames)(
 
       expect(result.tool_calls).toBeDefined();
       expect(result.tool_calls).toHaveLength(1);
-      // console.log("result.tool_calls?.[0]", result.tool_calls?.[0]);
 
       expect(typeof result.tool_calls![0]).toBe("object");
       expect(result.tool_calls![0].name).toBe("weather_poet");

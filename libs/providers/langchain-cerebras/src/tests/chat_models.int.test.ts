@@ -41,7 +41,6 @@ test("invoke with streaming: true", async () => {
   });
   const message = new HumanMessage("What color is the sky?");
   const res = await chat.invoke([message]);
-  console.log({ res });
   expect(res.content.length).toBeGreaterThan(10);
 });
 

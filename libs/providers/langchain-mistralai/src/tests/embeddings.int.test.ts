@@ -62,7 +62,6 @@ test("Test MistralAIEmbeddings can register RequestErrorHook function", async ()
 
   const RequestErrorHook = (): void => {
     addCount();
-    console.log("In request error hook");
   };
   model.requestErrorHooks = [RequestErrorHook];
   model.addAllHooksToHttpClient();

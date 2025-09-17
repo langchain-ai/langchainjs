@@ -228,17 +228,14 @@ describe("Azure CosmosDB NoSQL Semantic Cache", () => {
     const response1 = await model.invoke(
       "Where is the headquarter of Microsoft?"
     );
-    console.log(response1.content);
     // gives similarity score of 0.56 which is less than the threshold of 0.6. The cache
     // will retun null which will allow the model to generate result.
     const response2 = await model.invoke(
       "List all Microsoft offices in India."
     );
     expect(response2.content).not.toEqual(response1.content);
-    console.log(response2.content);
     // gives similarity score of .63 > 0.6
     const response3 = await model.invoke("Tell me something about Microsoft");
     expect(response3.content).toEqual(response1.content);
-    console.log(response3.content);
   });
 });

@@ -5,7 +5,6 @@ import { GoogleEmbeddings, GoogleEmbeddingsInput } from "../embeddings.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onFailedAttempt(err: any): any {
-  console.error(err);
   throw err;
 }
 

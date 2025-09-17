@@ -66,7 +66,6 @@ describe.skip("CouchbaseSearchVectorStore", () => {
     } catch (err: any) {
       if (err.code !== 605) {
         // 605 is bucket_exists error
-        console.error("Error creating bucket:", err);
         throw err;
       }
     }
@@ -163,7 +162,6 @@ describe.skip("CouchbaseSearchVectorStore", () => {
     } catch (err: any) {
       if (err.code !== 12016) {
         // 12016 is index_exists error
-        console.error("Error creating search index:", err);
         throw err;
       }
     }
@@ -173,33 +171,27 @@ describe.skip("CouchbaseSearchVectorStore", () => {
     await cluster.buckets().flushBucket(config.bucketName);
 
     // Initialize store
-    try {
-      const storeConfig: CouchbaseSearchVectorStoreArgs = {
-        cluster,
-        bucketName: config.bucketName,
-        scopeName: config.scopeName,
-        collectionName: config.collectionName,
-        indexName: config.indexName,
-        scopedIndex: false,
-        textKey: config.textKey,
-        embeddingKey: config.embeddingKey,
-      };
+    const storeConfig: CouchbaseSearchVectorStoreArgs = {
+      cluster,
+      bucketName: config.bucketName,
+      scopeName: config.scopeName,
+      collectionName: config.collectionName,
+      indexName: config.indexName,
+      scopedIndex: false,
+      textKey: config.textKey,
+      embeddingKey: config.embeddingKey,
+    };
 
-      store = await CouchbaseSearchVectorStore.initialize(
-        embeddings,
-        storeConfig
-      );
-    } catch (error) {
-      console.error("Failed to initialize test suite:", error);
-      throw error;
-    }
+    store = await CouchbaseSearchVectorStore.initialize(
+      embeddings,
+      storeConfig
+    );
   });
 
   afterAll(async () => {
     if (cluster) {
       await cluster.buckets().flushBucket(config.bucketName);
       await cluster.close();
-      console.log("Couchbase connection closed");
     }
   });
 

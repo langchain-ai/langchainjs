@@ -47,8 +47,7 @@ const preModelHook = (state: any) => {
 };
 
 const postModelHook = (state: any) => {
-  // Simple post-model hook that logs
-  console.log("Post-model hook called");
+  // Simple post-model hook
   return state;
 };
 

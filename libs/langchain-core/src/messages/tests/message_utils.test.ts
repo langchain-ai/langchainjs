@@ -191,7 +191,6 @@ describe("trimMessages can trim", () => {
         (count, msg) => count + countTokensByMessageContent(msg.content),
         0
       );
-      console.log(count);
       return count;
     };
 
@@ -468,7 +467,6 @@ describe("trimMessages can trim", () => {
 
   it("Last 30 tokens, including system message, allowing partial messages, end on HumanMessage", async () => {
     const { messages, dummyTokenCounter } = messagesAndTokenCounterFactory();
-    console.log(messages);
     const trimmedMessages = await trimMessages(messages, {
       maxTokens: 30,
       tokenCounter: dummyTokenCounter,
@@ -506,7 +504,6 @@ describe("trimMessages can trim", () => {
     });
 
     expect(trimmedMessages).toHaveLength(3);
-    console.log(trimmedMessages);
     expect(trimmedMessages).toEqual([
       new SystemMessage(
         "This is a 4 token text. The full message is 10 tokens."
@@ -549,7 +546,6 @@ describe("trimMessages can trim", () => {
       tokenCounter: dummyTokenCounter,
       endOn: [HumanMessage],
     });
-    console.log(trimmedMessages);
     expect(trimmedMessages).toHaveLength(3);
     expect(trimmedMessages).toEqual([
       new HumanMessage({

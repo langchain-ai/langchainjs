@@ -415,7 +415,6 @@ describe("withStructuredOutput", () => {
     ]);
     const chain = prompt.pipe(modelWithStructuredOutput);
     const result = await chain.invoke({});
-    console.log(result);
     expect("operation" in result).toBe(true);
     expect("number1" in result).toBe(true);
     expect("number2" in result).toBe(true);
@@ -972,7 +971,6 @@ test("Test ChatMistralAI can invoke with MessageContent input types", async () =
     }),
   ];
   const response = await model.invoke(messagesListContent);
-  console.log("response", response);
   expect(response.content.length).toBeGreaterThan(1);
 });
 
@@ -1088,7 +1086,6 @@ test("Test ChatMistralAI can register RequestErrorHook function", async () => {
 
   const RequestErrorHook = (): void => {
     addCount();
-    console.log("In request error hook");
   };
   model.requestErrorHooks = [RequestErrorHook];
   model.addAllHooksToHttpClient();

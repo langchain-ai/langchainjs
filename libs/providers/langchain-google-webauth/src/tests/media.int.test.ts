@@ -24,7 +24,7 @@ describe("Google Webauth GCS store", () => {
     };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
-    // console.log(storedBlob);
+
     expect(storedBlob?.path).toEqual(uri);
     expect(await storedBlob?.asString()).toEqual(content);
     expect(storedBlob?.mimetype).toEqual("text/plain");
@@ -52,7 +52,7 @@ describe("Google Webauth GCS store", () => {
     };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
-    // console.log(storedBlob);
+
     expect(storedBlob?.path).toEqual(uri);
     expect(await storedBlob?.asString()).toEqual(content);
     expect(storedBlob?.mimetype).toEqual("text/plain");
@@ -78,7 +78,7 @@ describe("Google Webauth GCS store", () => {
     };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const storedBlob = await blobStore.store(blob);
-    // console.log(storedBlob);
+
     expect(storedBlob?.path).toEqual(uri);
     expect(storedBlob?.size).toEqual(176);
     expect(storedBlob?.mimetype).toEqual("image/png");
@@ -129,7 +129,7 @@ describe("Google Webauth GCS store", () => {
     };
     const blobStore = new BlobStoreGoogleCloudStorage(config);
     const blob = await blobStore.fetch(uri);
-    // console.log(storedBlob);
+
     expect(blob?.path).toEqual(uri);
     expect(blob?.size).toEqual(176);
     expect(blob?.mimetype).toEqual("image/png");
@@ -147,7 +147,6 @@ describe("Google APIKey AIStudioBlobStore", () => {
     });
     const blobStore = new BlobStoreAIStudioFile();
     const storedBlob = await blobStore.store(blob);
-    console.log(storedBlob);
 
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.
@@ -166,7 +165,6 @@ describe("Google APIKey AIStudioBlobStore", () => {
     });
     const blobStore = new BlobStoreAIStudioFile();
     const storedBlob = await blobStore.store(blob);
-    console.log(storedBlob);
 
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.
@@ -188,7 +186,6 @@ describe("Google APIKey AIStudioBlobStore", () => {
       retryTime: -1,
     });
     const storedBlob = await blobStore.store(blob);
-    console.log(storedBlob);
 
     // The blob itself is expected to have no data right now,
     // but this will hopefully change in the future.

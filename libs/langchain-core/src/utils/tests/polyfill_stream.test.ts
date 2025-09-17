@@ -9,7 +9,6 @@ test("Stream the entire way through", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunk);
   }
   expect(chunks.length).toEqual("Hi there!".length);
   expect(chunks.join("")).toEqual("Hi there!");

@@ -25,8 +25,6 @@ test("Test grouping traces", async () => {
     "I'm arg1",
     { chain, nextChain }
   );
-
-  console.log(result);
 });
 
 test("Test TraceGroup object", async () => {

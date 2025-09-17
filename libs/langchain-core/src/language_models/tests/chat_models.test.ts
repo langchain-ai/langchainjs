@@ -92,7 +92,6 @@ test("Test ChatModel uses callbacks", async () => {
     callbacks: [
       {
         handleLLMNewToken: (token: string) => {
-          console.log(token);
           acc += token;
         },
       },
@@ -111,7 +110,6 @@ test("Test ChatModel uses callbacks with a cache", async () => {
     callbacks: [
       {
         handleLLMNewToken: (token: string) => {
-          console.log(token);
           acc += token;
         },
       },
@@ -137,8 +135,6 @@ test("Test ChatModel legacy params withStructuredOutput", async () => {
   });
   const response = await model.invoke("Hello there!");
   // @ts-expect-error not in run output type
-  console.log(response.notthere);
-  console.log(response.nested.somethingelse);
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
@@ -176,10 +172,6 @@ test("Test ChatModel withStructuredOutput with supplied type arg", async () => {
     }),
   });
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error run output type forced to something else
-  console.log(response.nested.somethingelse);
-  // No error here
-  console.log(response.forcedArg);
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
@@ -198,10 +190,6 @@ test("Test ChatModel withStructuredOutput new syntax", async () => {
     })
   );
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error run output type forced to something else
-  console.log(response.nested.somethingelse);
-  // No error here
-  console.log(response.forcedArg);
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
@@ -222,10 +210,6 @@ test("Test ChatModel withStructuredOutput new syntax and JSON schema", async () 
     )
   );
   const response = await model.invoke("Hello there!");
-  // No error here
-  console.log(response.nested.somethingelse);
-  // Also no error here
-  console.log(response.forcedArg);
   expect(response).toEqual({
     test: true,
     nested: { somethingelse: "somevalue" },
@@ -245,10 +229,6 @@ test("Test ChatModel withStructuredOutput new syntax and includeRaw", async () =
     { includeRaw: true }
   );
   const response = await model.invoke("Hello there!");
-  // @ts-expect-error run output includes raw
-  console.log(response.nested.somethingelse);
-  // No error
-  console.log(response.parsed);
 });
 
 test("Test ChatModel withStructuredOutput new syntax using zod v4", async () => {
@@ -406,7 +386,6 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
     emitCustomEvent: true,
     cache: true,
   });
-  console.log(JSON.stringify(model));
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );

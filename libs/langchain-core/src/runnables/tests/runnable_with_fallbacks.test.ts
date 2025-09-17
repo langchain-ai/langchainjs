@@ -11,7 +11,6 @@ test("RunnableWithFallbacks", async () => {
   });
   await expect(async () => {
     const result1 = await llm.invoke("What up");
-    console.log(result1);
   }).rejects.toThrow();
   const llmWithFallbacks = llm.withFallbacks({
     fallbacks: [new FakeLLM({})],
@@ -26,7 +25,6 @@ test("RunnableWithFallbacks batch", async () => {
   });
   await expect(async () => {
     const result1 = await llm.batch(["What up"]);
-    console.log(result1);
   }).rejects.toThrow();
   const llmWithFallbacks = llm.withFallbacks({
     fallbacks: [new FakeLLM({})],
@@ -88,6 +86,5 @@ test("RunnableWithFallbacks stream events with local storage and callbacks added
     }
   }
   expect(chunks.length).toBeGreaterThan(1);
-  console.log(JSON.stringify(chunks, null, 2));
   expect(chunks.map((chunk) => chunk.data.chunk.text).join("")).toEqual("hihi");
 });

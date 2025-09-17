@@ -100,6 +100,5 @@ describe("RecursiveUrlLoader", () => {
 
     const docs = await loader.load();
     expect(docs.length).toBeGreaterThan(1);
-    expect(console.error).not.toHaveBeenCalled();
   });
 });

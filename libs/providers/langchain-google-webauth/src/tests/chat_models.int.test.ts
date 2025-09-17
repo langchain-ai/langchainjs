@@ -64,7 +64,6 @@ class WeatherTool extends StructuredTool {
   name = "get_weather";
 
   async _call(input: WeatherToolSchema) {
-    console.log(`WeatherTool called with input: ${input}`);
     return `The weather in ${JSON.stringify(input.locations)} is 25°C`;
   }
 }
@@ -100,116 +99,77 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
 
   test("invoke", async () => {
     const model = newChatGoogle();
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      console.log(res);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
 
-      const aiMessage = res as AIMessageChunk;
-      console.log(aiMessage);
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
+    const aiMessage = res as AIMessageChunk;
 
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(textContent.text).toEqual("2");
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
   });
 
   test("invoke seed", async () => {
     const model = newChatGoogle({
       seed: 6,
     });
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      console.log(res);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
 
-      const aiMessage = res as AIMessageChunk;
-      console.log(aiMessage);
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
+
+    const aiMessage = res as AIMessageChunk;
+
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
   });
 
   test("generate", async () => {
     const model = newChatGoogle();
-    try {
-      const messages: BaseMessage[] = [
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ];
-      const res = await model.predictMessages(messages);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const messages: BaseMessage[] = [
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ];
+    const res = await model.predictMessages(messages);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-      expect(aiMessage.content.length).toBeGreaterThan(0);
-      expect(aiMessage.content[0]).toBeDefined();
-      console.log(aiMessage);
-
-      // const content = aiMessage.content[0] as MessageContentComplex;
-      // expect(content).toHaveProperty("type");
-      // expect(content.type).toEqual("text");
-
-      // const textContent = content as MessageContentText;
-      // expect(textContent.text).toBeDefined();
-      // expect(["H", "T"]).toContainEqual(textContent.text);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
+    expect(aiMessage.content.length).toBeGreaterThan(0);
+    expect(aiMessage.content[0]).toBeDefined();
   });
 
   test("stream", async () => {
     const model = newChatGoogle();
-    try {
-      const input: BaseLanguageModelInput = new ChatPromptValue([
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ]);
-      const res = await model.stream(input);
-      const resArray: BaseMessageChunk[] = [];
-      for await (const chunk of res) {
-        resArray.push(chunk);
-      }
-      expect(resArray).toBeDefined();
-      expect(resArray.length).toBeGreaterThanOrEqual(1);
-
-      const lastChunk = resArray[resArray.length - 1];
-      expect(lastChunk).toBeDefined();
-      expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
-    } catch (e) {
-      console.error(e);
-      throw e;
+    const input: BaseLanguageModelInput = new ChatPromptValue([
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ]);
+    const res = await model.stream(input);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
     }
+    expect(resArray).toBeDefined();
+    expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+    const lastChunk = resArray[resArray.length - 1];
+    expect(lastChunk).toBeDefined();
+    expect(lastChunk._getType()).toEqual("ai");
+    const aiChunk = lastChunk as AIMessageChunk;
+    expect(aiChunk).toBeDefined();
   });
 
   // Gemma 3 reports: "Function calling is not enabled for models/gemma-3-27b-it"
@@ -218,8 +178,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF and LA");
-    console.log(res);
-    console.log(JSON.stringify(res?.tool_calls?.[0].args));
+
     expect(res.tool_calls?.length).toEqual(1);
     expect(res.tool_calls?.[0].args).toEqual(
       JSON.parse(res.additional_kwargs.tool_calls?.[0].function.arguments ?? "")
@@ -244,7 +203,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const model = newChatGoogle();
     const chat = model.bindTools([new WeatherTool()]);
     const res = await chat.invoke("What is the weather in SF");
-    console.log(res);
+
     const res2 = await chat.invoke([
       new HumanMessage("What is the weather in SF?"),
       new AIMessage({
@@ -266,7 +225,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       new AIMessage("It is currently 24 degrees in SF with hail in SF."),
       new HumanMessage("What did you say the weather was?"),
     ]);
-    console.log(res2);
+
     expect(res2.content).toContain("24");
   });
 
@@ -290,9 +249,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       const model = newChatGoogle().withStructuredOutput(tool);
       const result = await model.invoke("What is the weather in Paris?");
       expect(result).toHaveProperty("location");
-    } catch (x) {
-      console.error(x);
-    }
+    } catch (x) {}
   });
 
   test("withStructuredOutput - null", async () => {
@@ -338,27 +295,17 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    try {
-      const res = await model.invoke(messages);
+    const res = await model.invoke(messages);
 
-      // console.log(res);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/LangChain/);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error(e);
-      console.error(JSON.stringify(e.details, null, 1));
-      throw e;
-    }
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/LangChain/);
   });
 
   // Gemma 3n reports: "Image input modality is not enabled for models/gemma-3n-e4b-it"
@@ -386,31 +333,21 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    try {
-      const res = await model.invoke(messages);
+    const res = await model.invoke(messages);
 
-      // console.log(res);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/blue/);
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/blue/);
-
-      expect(
-        aiMessage?.usage_metadata?.input_token_details?.image
-      ).toBeGreaterThan(0);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error(e);
-      console.error(JSON.stringify(e.details, null, 1));
-      throw e;
-    }
+    expect(
+      aiMessage?.usage_metadata?.input_token_details?.image
+    ).toBeGreaterThan(0);
   });
 
   test("implicit caching", async () => {
@@ -440,6 +377,7 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     const res1 = await model.invoke(messages);
     const size1 = res1?.usage_metadata?.total_tokens ?? 0;
     const response1 = recorder.response;
+    expect(response1).toBeDefined();
 
     const message2: MessageContentComplex[] = [
       {
@@ -451,11 +389,9 @@ describe.each(apiKeyModelNames)("Google APIKey Chat (%s)", (modelName) => {
     messages.push(res1);
     messages.push(new HumanMessageChunk({ content: message2 }));
     const res2 = await model.invoke(messages);
-    console.log(res2);
-    const response2 = recorder.response;
 
-    console.log("response1", JSON.stringify(response1, null, 1));
-    console.log("response2", JSON.stringify(response2, null, 1));
+    const response2 = recorder.response;
+    expect(response2).toBeDefined();
 
     const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
     // expect(cached2).toEqual(size1); // Why isn't this true?
@@ -614,7 +550,6 @@ describe.each(testGeminiModelNames)(
       warnSpy = jest.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
-        console.log(`Delaying for ${delay}ms`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     });
@@ -715,7 +650,7 @@ describe.each(testGeminiModelNames)(
       expect(resArray.length).toBeGreaterThanOrEqual(1);
 
       // resArray.forEach((chunk, index) => {
-      //   console.log('***chunk', index, chunk);
+
       // })
 
       const firstChunk = resArray[0];
@@ -801,7 +736,7 @@ describe.each(testGeminiModelNames)(
       history.push(toolMessage);
 
       const result2 = await model.invoke(history);
-      console.log(result2);
+
       expect(result2.content).toMatch(/21/);
     });
 
@@ -833,7 +768,7 @@ describe.each(testGeminiModelNames)(
       };
       const messages: BaseMessageLike[] = [
         new HumanMessage("Run a test on the cobalt project."),
-        new AIMessage("", {
+        new AIMessage({
           tool_calls: [
             {
               id: "test",
@@ -852,7 +787,6 @@ describe.each(testGeminiModelNames)(
       for await (const chunk of res) {
         resArray.push(chunk);
       }
-      // console.log(JSON.stringify(resArray, null, 2));
     });
 
     test("withStructuredOutput", async () => {
@@ -945,8 +879,6 @@ describe.each(testGeminiModelNames)(
     //   try {
     //     const res = await model.invoke(messages);
 
-    //     console.log(res);
-
     //     expect(res).toBeDefined();
     //     expect(res._getType()).toEqual("ai");
 
@@ -957,7 +889,7 @@ describe.each(testGeminiModelNames)(
     //     const text = aiMessage.content as string;
     //     expect(text).toMatch(/LangChain/);
     //   } catch (e) {
-    //     console.error(e);
+
     //     throw e;
     //   }
     // });
@@ -976,7 +908,7 @@ describe.each(testGeminiModelNames)(
           res = res.concat(chunk);
         }
       }
-      // console.log(res);
+
       expect(res?.usage_metadata).toBeDefined();
       if (!res?.usage_metadata) {
         return;
@@ -1003,7 +935,7 @@ describe.each(testGeminiModelNames)(
           res = res.concat(chunk);
         }
       }
-      // console.log(res);
+
       expect(res?.usage_metadata).not.toBeDefined();
     });
 
@@ -1012,7 +944,7 @@ describe.each(testGeminiModelNames)(
         temperature: 0,
       });
       const res = await model.invoke("Why is the sky blue? Be concise.");
-      // console.log(res);
+
       expect(res?.usage_metadata).toBeDefined();
       if (!res?.usage_metadata) {
         return;
@@ -1073,8 +1005,7 @@ describe.each(testGeminiModelNames)(
       const result = await modelWithTools.invoke(
         "Whats the weather like in paris today?"
       );
-
-      console.log(result);
+      expect(result).toBeDefined();
 
       const func =
         recorder?.request?.data?.tools?.[0]?.functionDeclarations?.[0];
@@ -1177,8 +1108,6 @@ describe.each(testGeminiModelNames)(
       expect(propSum(usage.input_token_details)).toEqual(usage.input_tokens);
       expect(propSum(usage.output_token_details)).toEqual(usage.output_tokens);
       expect(usage.input_token_details).toHaveProperty("audio");
-
-      console.log(response);
     });
 
     test("Supports GoogleSearchRetrievalTool", async () => {
@@ -1216,7 +1145,7 @@ describe.each(testGeminiModelNames)(
       const result = await model.invoke("Who won the 2024 MLB World Series?");
       expect(result.content as string).toContain("Dodgers");
       expect(result).toHaveProperty("response_metadata");
-      console.log(JSON.stringify(result.response_metadata, null, 1));
+
       expect(result.response_metadata).toHaveProperty("groundingMetadata");
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
@@ -1233,7 +1162,7 @@ describe.each(testGeminiModelNames)(
       const prompt = `Summarize this web page: ${url}`;
       const result = await model.invoke(prompt);
       const meta = result.response_metadata;
-      console.log(JSON.stringify(meta, null, 1));
+
       expect(meta).toHaveProperty("url_context_metadata");
       expect(meta).toHaveProperty("groundingMetadata");
       expect(meta).toHaveProperty("groundingSupport");
@@ -1296,31 +1225,21 @@ describe.each(testGeminiModelNames)(
         new HumanMessageChunk({ content: message }),
       ];
 
-      try {
-        const res = await model.invoke(messages);
+      const res = await model.invoke(messages);
 
-        // console.log(res);
+      expect(res).toBeDefined();
+      expect(res._getType()).toEqual("ai");
 
-        expect(res).toBeDefined();
-        expect(res._getType()).toEqual("ai");
+      const aiMessage = res as AIMessageChunk;
+      expect(aiMessage.content).toBeDefined();
 
-        const aiMessage = res as AIMessageChunk;
-        expect(aiMessage.content).toBeDefined();
+      expect(typeof aiMessage.content).toBe("string");
+      const text = aiMessage.content as string;
+      expect(text).toMatch(/blue/);
 
-        expect(typeof aiMessage.content).toBe("string");
-        const text = aiMessage.content as string;
-        expect(text).toMatch(/blue/);
-
-        expect(
-          aiMessage?.usage_metadata?.input_token_details?.image
-        ).toBeGreaterThan(0);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        console.error(e);
-        console.error(JSON.stringify(e.details, null, 1));
-        throw e;
-      }
+      expect(
+        aiMessage?.usage_metadata?.input_token_details?.image
+      ).toBeGreaterThan(0);
     });
 
     // Vertex AI doesn't (yet?) support fps, but does support startOffset and endOffset
@@ -1333,95 +1252,68 @@ describe.each(testGeminiModelNames)(
       const data64 = data.toString("base64");
       const dataUri = `data:${dataType};base64,${data64}`;
 
-      try {
-        const message1: MessageContentComplex[] = [
-          {
-            type: "text",
-            text: "Describe this video in detail.",
+      const message1: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+        },
+      ];
+
+      const messages1: BaseMessage[] = [
+        new HumanMessageChunk({ content: message1 }),
+      ];
+
+      const res1 = await model.invoke(messages1);
+
+      expect(res1).toBeDefined();
+      expect(res1._getType()).toEqual("ai");
+
+      const aiMessage1 = res1 as AIMessageChunk;
+      expect(aiMessage1.content).toBeDefined();
+
+      expect(typeof aiMessage1.content).toBe("string");
+      const text = aiMessage1.content as string;
+      expect(text).toMatch(/rainbow/);
+
+      // Gemini 1.5 does not include audio
+      const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+        ?.video as number;
+      expect(typeof videoTokens1).toEqual("number");
+      expect(videoTokens1).toBeGreaterThan(1024);
+      expect(
+        aiMessage1?.usage_metadata?.input_token_details?.audio
+      ).toBeGreaterThan(0);
+
+      // Now run it again, but this time sample two frames / second
+      const message2: MessageContentComplex[] = [
+        {
+          type: "text",
+          text: "Describe this video in detail.",
+        },
+        {
+          type: "image_url",
+          image_url: dataUri,
+          videoMetadata: {
+            fps: 2.0,
           },
-          {
-            type: "image_url",
-            image_url: dataUri,
-          },
-        ];
+        },
+      ];
 
-        const messages1: BaseMessage[] = [
-          new HumanMessageChunk({ content: message1 }),
-        ];
+      const messages2: BaseMessage[] = [
+        new HumanMessageChunk({ content: message2 }),
+      ];
 
-        const res1 = await model.invoke(messages1);
+      const res2 = await model.invoke(messages2);
+      const aiMessage2 = res2 as AIMessageChunk;
 
-        // console.log(res);
-
-        expect(res1).toBeDefined();
-        expect(res1._getType()).toEqual("ai");
-
-        const aiMessage1 = res1 as AIMessageChunk;
-        expect(aiMessage1.content).toBeDefined();
-
-        expect(typeof aiMessage1.content).toBe("string");
-        const text = aiMessage1.content as string;
-        expect(text).toMatch(/rainbow/);
-
-        // Gemini 1.5 does not include audio
-        const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
-          ?.video as number;
-        expect(typeof videoTokens1).toEqual("number");
-        expect(videoTokens1).toBeGreaterThan(1024);
-        expect(
-          aiMessage1?.usage_metadata?.input_token_details?.audio
-        ).toBeGreaterThan(0);
-
-        // Now run it again, but this time sample two frames / second
-        const message2: MessageContentComplex[] = [
-          {
-            type: "text",
-            text: "Describe this video in detail.",
-          },
-          {
-            type: "image_url",
-            image_url: dataUri,
-            videoMetadata: {
-              fps: 2.0,
-            },
-          },
-        ];
-
-        const messages2: BaseMessage[] = [
-          new HumanMessageChunk({ content: message2 }),
-        ];
-
-        const res2 = await model.invoke(messages2);
-        const aiMessage2 = res2 as AIMessageChunk;
-
-        const videoTokens2 =
-          aiMessage2?.usage_metadata?.input_token_details?.video;
-        expect(typeof videoTokens2).toEqual("number");
-        expect(videoTokens2).toEqual(videoTokens1 * 2);
-
-        console.log(
-          "tokens 1",
-          JSON.stringify(
-            aiMessage1?.usage_metadata?.input_token_details,
-            null,
-            1
-          )
-        );
-        console.log(
-          "tokens 2",
-          JSON.stringify(
-            aiMessage2?.usage_metadata?.input_token_details,
-            null,
-            1
-          )
-        );
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (e: any) {
-        console.error(e);
-        console.error(JSON.stringify(e.details, null, 1));
-        throw e;
-      }
+      const videoTokens2 =
+        aiMessage2?.usage_metadata?.input_token_details?.video;
+      expect(typeof videoTokens2).toEqual("number");
+      expect(videoTokens2).toEqual(videoTokens1 * 2);
     }, 90000);
 
     test("implicit caching", async () => {
@@ -1451,6 +1343,7 @@ describe.each(testGeminiModelNames)(
       const res1 = await model.invoke(messages);
       const size1 = res1?.usage_metadata?.total_tokens ?? 0;
       const response1 = recorder.response;
+      expect(response1).toBeDefined();
 
       const message2: MessageContentComplex[] = [
         {
@@ -1462,11 +1355,9 @@ describe.each(testGeminiModelNames)(
       messages.push(res1);
       messages.push(new HumanMessageChunk({ content: message2 }));
       const res2 = await model.invoke(messages);
-      console.log(res2);
-      const response2 = recorder.response;
 
-      console.log("response1", JSON.stringify(response1, null, 1));
-      console.log("response2", JSON.stringify(response2, null, 1));
+      const response2 = recorder.response;
+      expect(response2).toBeDefined();
 
       const cached2 = res2?.usage_metadata?.input_token_details?.cache_read;
       // expect(cached2).toEqual(size1); // Why isn't this true?
@@ -1533,22 +1424,17 @@ describe.each(testMultimodalModelNames)(
       (content as MessageContentComplex[]).forEach((mc) => {
         if (mc?.type === "image_url") {
           const fn = `/tmp/${platformType}-${modelName}-${imageCount}.png`;
-          console.log(`(Content saved to ${fn})`);
+
           imageCount += 1;
           const url = (mc as MessageContentImageUrl).image_url as string;
           expect(url).toMatch(/^data:image\/png;base64,/);
           const data64 = url.substring("data:image.png;base64,".length);
           const data = Buffer.from(data64, "base64");
           Fs.writeFileSync(fn, data);
-        } else {
-          console.log("Content", mc);
         }
       });
 
       expect(imageCount).toEqual(1);
-
-      // console.log(recorder.response);
-      // console.log(JSON.stringify(res.content, null, 1));
     });
   }
 );
@@ -1614,7 +1500,7 @@ describe.each(testTtsModelNames)(
 
     function writeData(data: string) {
       const fn = `/tmp/tts-${modelName}-${platformType}-${testIndex}-${outputIndex}.pcm`;
-      console.log(`writing to ${fn}`);
+
       Fs.writeFileSync(fn, data, "base64");
     }
 
@@ -1624,7 +1510,7 @@ describe.each(testTtsModelNames)(
       });
       const prompt = "Say cheerfully: Have a wonderful day!";
       const res = await model.invoke(prompt);
-      console.log(JSON.stringify(res, null, 1));
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const content = res?.content?.[0] as Record<string, any>;
       writeData(content.data as string);
@@ -1715,8 +1601,6 @@ describe.each(testTtsModelNames)(
           content.type === "media"
         ) {
           writeData(content.data as string);
-        } else {
-          console.log("content:", content);
         }
       }
     }, 60000);
@@ -1784,7 +1668,6 @@ describe.each(testReasoningModelNames)(
       warnSpy = jest.spyOn(global.console, "warn");
       const delay = testGeminiModelDelay[modelName] ?? 0;
       if (delay) {
-        console.log(`Delaying for ${delay}ms`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     });
@@ -1800,7 +1683,6 @@ describe.each(testReasoningModelNames)(
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
-      console.log(response);
 
       expect(Array.isArray(response.content)).toEqual(false);
       expect(typeof response.content).toEqual("string");
@@ -1818,7 +1700,6 @@ describe.each(testReasoningModelNames)(
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
-      console.log(response);
 
       expect(Array.isArray(response.content)).toEqual(true);
       const content: MessageContentComplex[] =
@@ -1843,7 +1724,6 @@ describe.each(testReasoningModelNames)(
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
-      console.log(response);
 
       expect(Array.isArray(response.content)).toEqual(true);
       const content: MessageContentComplex[] =
@@ -1870,7 +1750,6 @@ describe.each(testReasoningModelNames)(
       const prompt =
         "You roll two dice. What’s the probability they add up to 7? Give me just the answer - do not explain.";
       const response = await model.invoke(prompt);
-      console.log(response);
 
       expect(Array.isArray(response.content)).toEqual(false);
       expect(typeof response.content).toEqual("string");
@@ -1891,7 +1770,6 @@ describe.each(testReasoningModelNames)(
       const history: BaseMessageChunk[] = [new HumanMessageChunk(prompt1)];
       const response1 = await model.invoke(history);
       history.push(response1);
-      console.log(response1);
 
       expect(Array.isArray(response1.content)).toEqual(true);
       const content1: MessageContentComplex[] =
@@ -1907,7 +1785,6 @@ describe.each(testReasoningModelNames)(
       const prompt2 = "How about 1?";
       history.push(new HumanMessageChunk(prompt2));
       const response2 = await model.invoke(history);
-      console.log(response2);
 
       expect(Array.isArray(response2.content)).toEqual(true);
       const content2: MessageContentComplex[] =
