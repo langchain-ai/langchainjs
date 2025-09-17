@@ -418,7 +418,9 @@ export function _mergeDicts(
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
-      } else if (["id", "output_version", "model_provider"].includes(key)) {
+      } else if (
+        ["id", "name", "output_version", "model_provider"].includes(key)
+      ) {
         // Keep the incoming value for these fields
         merged[key] = value;
       } else {
