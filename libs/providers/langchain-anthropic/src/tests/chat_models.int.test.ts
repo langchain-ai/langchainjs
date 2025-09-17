@@ -920,7 +920,6 @@ test.skip("tool caching", async () => {
     }),
   ];
   const res = await model.invoke(messages);
-  console.log(res);
   expect(
     res.usage_metadata?.input_token_details?.cache_creation
   ).toBeGreaterThan(0);

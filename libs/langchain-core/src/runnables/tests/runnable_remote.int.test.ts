@@ -10,7 +10,7 @@ test("invoke hosted langserve", async () => {
   const result = await remote.invoke({
     question: "What is a document loader?",
   });
-  console.log(result);
+  expect(result).toBeDefined();
 });
 
 test("invoke hosted langserve error handling", async () => {
@@ -33,12 +33,10 @@ test("stream hosted langserve", async () => {
   });
   let totalByteSize = 0;
   for await (const chunk of result) {
-    console.log(chunk);
     const jsonString = JSON.stringify(chunk);
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
   }
-  console.log("totalByteSize", totalByteSize);
 });
 
 test("stream error handling hosted langserve", async () => {
@@ -50,7 +48,7 @@ test("stream error handling hosted langserve", async () => {
       question: "What is a document loader?",
     });
     for await (const chunk of result) {
-      console.log(chunk);
+      expect(chunk).toBeDefined();
     }
   }).rejects.toThrowError();
 });
@@ -71,8 +69,6 @@ test("streamLog hosted langserve", async () => {
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
   }
-  console.log("aggregate", aggregate);
-  console.log("totalByteSize", totalByteSize);
 });
 
 test("streamLog error handling hosted langserve", async () => {
@@ -84,7 +80,7 @@ test("streamLog error handling hosted langserve", async () => {
   });
   await expect(async () => {
     for await (const chunk of result) {
-      console.log(chunk);
+      expect(chunk).toBeDefined();
     }
   }).rejects.toThrowError();
 });
@@ -109,8 +105,6 @@ test("streamLog hosted langserve with concat syntax", async () => {
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
   }
-  console.log("final state", state);
-  console.log("totalByteSize", totalByteSize);
 });
 
 test.skip("stream events hosted langserve with concat syntax", async () => {
@@ -127,14 +121,11 @@ test.skip("stream events hosted langserve with concat syntax", async () => {
   let totalByteSize = 0;
   const state = [];
   for await (const chunk of result) {
-    console.log(chunk);
     state.push(chunk);
     const jsonString = JSON.stringify(chunk);
     const byteSize = Buffer.byteLength(jsonString, "utf-8");
     totalByteSize += byteSize;
   }
-  // console.log("final state", state);
-  console.log("totalByteSize", totalByteSize);
 });
 
 test.skip("streamLog with raw messages", async () => {
@@ -145,6 +136,6 @@ test.skip("streamLog with raw messages", async () => {
     configurable: { thread_id: "THREAD_ID", user_id: "USER_ID" },
   });
   for await (const logEvent of events) {
-    console.log(logEvent);
+    expect(logEvent).toBeDefined();
   }
 });

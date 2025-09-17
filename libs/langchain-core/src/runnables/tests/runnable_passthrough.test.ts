@@ -23,7 +23,6 @@ test("RunnablePassthrough can call .assign and pass prev result through", async 
   );
 
   const result = await chainWithAssign.invoke({ input: text });
-  console.log(result);
   expect(result).toEqual({ outputValue: "testing" });
 });
 
@@ -45,7 +44,6 @@ test("RunnablePassthrough can call .assign as the first step with proper typing"
   ]);
 
   const result = await chain.invoke({ otherProp: text });
-  console.log(result);
   expect(result).toEqual({ outputValue: "testing2" });
 });
 
@@ -95,7 +93,6 @@ test("RunnablePassthrough can invoke a function and pass through config", async 
     ) {
       throw new Error("configurable.number is NaN");
     }
-    console.log(config.configurable.number);
     addOneResult = input + config.configurable.number;
   };
   const passthrough = new RunnablePassthrough<number>({

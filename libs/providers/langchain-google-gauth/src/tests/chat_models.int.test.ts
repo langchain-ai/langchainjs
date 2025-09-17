@@ -29,19 +29,18 @@ import { BlobStoreGoogleCloudStorage } from "../media.js";
 describe("GAuth Chat", () => {
   test("invoke", async () => {
     const model = new ChatGoogle();
-    try {
-      const res = await model.invoke("What is 1 + 1?");
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const res = await model.invoke("What is 1 + 1?");
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
 
-      /*
+    /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
       const content = aiMessage.content[0] as MessageContentComplex;
@@ -52,35 +51,30 @@ describe("GAuth Chat", () => {
       expect(textContent.text).toBeDefined();
       expect(textContent.text).toEqual("2");
       */
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
   });
 
   test("generate", async () => {
     const model = new ChatGoogle();
-    try {
-      const messages: BaseMessage[] = [
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ];
-      const res = await model.predictMessages(messages);
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const messages: BaseMessage[] = [
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ];
+    const res = await model.predictMessages(messages);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(["H", "T"]).toContainEqual(text);
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(["H", "T"]).toContainEqual(text);
 
-      /*
+    /*
       expect(aiMessage.content.length).toBeGreaterThan(0);
       expect(aiMessage.content[0]).toBeDefined();
 
@@ -92,42 +86,31 @@ describe("GAuth Chat", () => {
       expect(textContent.text).toBeDefined();
       expect(["H", "T"]).toContainEqual(textContent.text);
       */
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
   });
 
   test("stream", async () => {
     const model = new ChatGoogle();
-    try {
-      const input: BaseLanguageModelInput = new ChatPromptValue([
-        new SystemMessage(
-          "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
-        ),
-        new HumanMessage("Flip it"),
-        new AIMessage("T"),
-        new HumanMessage("Flip the coin again"),
-      ]);
-      const res = await model.stream(input);
-      const resArray: BaseMessageChunk[] = [];
-      for await (const chunk of res) {
-        resArray.push(chunk);
-      }
-      expect(resArray).toBeDefined();
-      expect(resArray.length).toBeGreaterThanOrEqual(1);
-
-      const lastChunk = resArray[resArray.length - 1];
-      expect(lastChunk).toBeDefined();
-      expect(lastChunk._getType()).toEqual("ai");
-      const aiChunk = lastChunk as AIMessageChunk;
-      console.log(aiChunk);
-
-      console.log(JSON.stringify(resArray, null, 2));
-    } catch (e) {
-      console.error(e);
-      throw e;
+    const input: BaseLanguageModelInput = new ChatPromptValue([
+      new SystemMessage(
+        "You will reply to all requests to flip a coin with either H, indicating heads, or T, indicating tails."
+      ),
+      new HumanMessage("Flip it"),
+      new AIMessage("T"),
+      new HumanMessage("Flip the coin again"),
+    ]);
+    const res = await model.stream(input);
+    const resArray: BaseMessageChunk[] = [];
+    for await (const chunk of res) {
+      resArray.push(chunk);
     }
+    expect(resArray).toBeDefined();
+    expect(resArray.length).toBeGreaterThanOrEqual(1);
+
+    const lastChunk = resArray[resArray.length - 1];
+    expect(lastChunk).toBeDefined();
+    expect(lastChunk._getType()).toEqual("ai");
+    const aiChunk = lastChunk as AIMessageChunk;
+    expect(aiChunk).toBeDefined();
   });
 
   test("function", async () => {
@@ -221,7 +204,6 @@ describe("GAuth Chat", () => {
     for await (const chunk of res) {
       resArray.push(chunk);
     }
-    console.log(JSON.stringify(resArray, null, 2));
   });
 
   test("withStructuredOutput", async () => {
@@ -295,23 +277,16 @@ describe("GAuth Chat", () => {
       new HumanMessageChunk({ content: message }),
     ];
 
-    try {
-      const res = await model.invoke(messages);
+    const res = await model.invoke(messages);
 
-      console.log(res);
+    expect(res).toBeDefined();
+    expect(res._getType()).toEqual("ai");
 
-      expect(res).toBeDefined();
-      expect(res._getType()).toEqual("ai");
+    const aiMessage = res as AIMessageChunk;
+    expect(aiMessage.content).toBeDefined();
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/LangChain/);
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
+    expect(typeof aiMessage.content).toBe("string");
+    const text = aiMessage.content as string;
+    expect(text).toMatch(/LangChain/);
   });
 });

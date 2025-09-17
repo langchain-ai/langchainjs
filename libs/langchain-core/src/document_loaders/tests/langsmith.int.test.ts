@@ -14,7 +14,6 @@ test("LangSmithLoader can load with client passed in", async () => {
   const docs = await loader.load();
 
   expect(docs.length).toBeGreaterThanOrEqual(1);
-  console.log(docs[0]);
   const parsedContent = JSON.parse(docs[0].pageContent);
   expect(parsedContent).toHaveProperty("input_key_str");
   expect(parsedContent.input_key_str).toBe("string");

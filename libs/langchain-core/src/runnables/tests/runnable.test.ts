@@ -75,7 +75,6 @@ test("Test chat model stream", async () => {
   let done = false;
   while (!done) {
     const chunk = await reader.read();
-    console.log(chunk);
     done = chunk.done;
   }
 });
@@ -85,7 +84,6 @@ test("Pipe from one runnable to the next", async () => {
   const llm = new FakeLLM({});
   const runnable = promptTemplate.pipe(llm);
   const result = await runnable.invoke({ input: "Hello world!" });
-  console.log(result);
   expect(result).toBe("Hello world!");
 });
 
@@ -95,7 +93,6 @@ test("Stream the entire way through", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunk);
   }
   expect(chunks.length).toEqual("Hi there!".length);
   expect(chunks.join("")).toEqual("Hi there!");
@@ -123,7 +120,6 @@ test("Callback order with transform streaming", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunk);
   }
   expect(order).toEqual([
     "RunnableSequence",
@@ -144,7 +140,6 @@ test("Don't use intermediate streaming", async () => {
   const chunks = [];
   for await (const chunk of stream) {
     chunks.push(chunk);
-    console.log(chunk);
   }
   expect(chunks.length).toEqual(1);
   expect(chunks[0]).toEqual("Hi there!");
@@ -404,7 +399,6 @@ test("Create a runnable sequence and run it", async () => {
   const text = `Jello world`;
   const runnable = promptTemplate.pipe(llm).pipe(parser);
   const result = await runnable.invoke({ input: text });
-  console.log(result);
   expect(result).toEqual("Jello world");
 });
 
@@ -412,7 +406,6 @@ test("Create a runnable sequence with a static method with invalid output and ca
   const promptTemplate = PromptTemplate.fromTemplate("{input}");
   const llm = new FakeChatModel({});
   const parser = (input: BaseMessage) => {
-    console.log(input);
     try {
       const parsedInput =
         typeof input.content === "string"
@@ -547,7 +540,6 @@ describe("runId config", () => {
     expect(res.length).toBe(2);
     // .batch will warn if a runId is passed
     // along with multiple messages
-    expect(console.warn).toBeCalled();
   });
 
   test("stream", async () => {

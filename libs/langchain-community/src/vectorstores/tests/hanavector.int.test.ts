@@ -901,7 +901,6 @@ describe("HNSW Index Creation Tests", () => {
       // Call the createHnswIndex function with no parameters (default values)
       await vector.createHnswIndex();
     } catch (error) {
-      console.log(error);
       exceptionOccurred = true;
     }
 
@@ -942,7 +941,6 @@ describe("HNSW Index Creation Tests", () => {
         indexName: "custom_index",
       });
     } catch (error) {
-      console.log(error);
       exceptionOccurred = true;
     }
 
@@ -1317,7 +1315,6 @@ describe("Filter Tests", () => {
 
       // Perform a similarity search with the filter
       const docs = await vectorDB.similaritySearch("Foo", 5, filter);
-      console.log(docs);
       const ids = docs.map((doc) => doc.metadata.id);
 
       // Check if the returned document IDs match the expected IDs

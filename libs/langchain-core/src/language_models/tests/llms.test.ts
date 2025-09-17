@@ -10,7 +10,6 @@ test("Test FakeLLM uses callbacks", async () => {
     callbacks: [
       {
         handleLLMNewToken: (token: string) => {
-          console.log(token);
           acc += token;
         },
       },
@@ -29,7 +28,6 @@ test("Test FakeLLM uses callbacks with a cache", async () => {
     callbacks: [
       {
         handleLLMNewToken: (token: string) => {
-          console.log(token);
           acc += token;
         },
       },

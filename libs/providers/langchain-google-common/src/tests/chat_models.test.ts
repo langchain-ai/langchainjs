@@ -1228,8 +1228,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const result = await model.invoke(messages);
 
-    console.log(JSON.stringify(record.opts, null, 1));
-
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
     expect(record.opts.data.contents).toHaveLength(1);
@@ -1279,8 +1277,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const result = await model.invoke(messages);
-
-    console.log(JSON.stringify(record.opts, null, 1));
 
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
@@ -1333,8 +1329,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const result = await model.invoke(messages);
-
-    console.log(JSON.stringify(record.opts, null, 1));
 
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
@@ -1423,18 +1417,14 @@ describe("Mock ChatGoogle - Gemini", () => {
           _tags?: string[],
           _metadata?: Record<string, unknown>,
           _runName?: string
-        ): any {
-          console.log("Chat start", llm, messages, runId);
-        },
+        ): any {},
         handleCustomEvent(
           eventName: string,
           data: any,
           runId: string,
           tags?: string[],
           metadata?: Record<string, any>
-        ): any {
-          console.log("Custom event", eventName, runId, data, tags, metadata);
-        },
+        ): any {},
       },
     ];
     const model = new ChatGoogle({
@@ -1462,8 +1452,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const result = await model.invoke(messages);
-
-    console.log(JSON.stringify(record.opts, null, 1));
 
     expect(record.opts).toHaveProperty("data");
     expect(record.opts.data).toHaveProperty("contents");
@@ -1521,8 +1509,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     const model = baseModel.bindTools(tools);
 
     const result = await model.invoke("What?");
-
-    // console.log(JSON.stringify(record, null, 1));
 
     expect(result).toBeDefined();
 
@@ -1597,8 +1583,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(func.parameters?.required).toContain("location");
     expect(func.parameters?.properties?.location?.type).toEqual("string");
     expect(func.parameters?.properties?.location?.nullable).not.toBeDefined();
-
-    console.log(func);
   });
 
   test("4. Functions Bind - zod nullish request", async () => {
@@ -1668,8 +1652,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     const model = baseModel.withStructuredOutput(tool);
 
     await model.invoke("What?");
-
-    // console.log(JSON.stringify(record, null, 1));
 
     const toolsResult = record?.opts?.data?.tools;
     expect(toolsResult).toBeDefined();
@@ -1776,7 +1758,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const result = await model.invoke("What?");
 
-    // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toBe("");
 
@@ -1841,7 +1822,6 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     const result = await model.invoke("What?");
 
-    // console.log(JSON.stringify(result, null, 1));
     expect(result).toHaveProperty("content");
     expect(result.content).toMatch("Okay, I will");
 
@@ -1909,7 +1889,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     };
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),
-      new AIMessage("", {
+      new AIMessage({
         tool_calls: [
           {
             id: "test",
@@ -1925,8 +1905,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
     const result = await model.invoke(messages);
     expect(result).toBeDefined();
-
-    // console.log(JSON.stringify(record?.opts?.data, null, 1));
   });
 
   test("4-5. Functions - conversation with signature", async () => {
@@ -1970,7 +1948,6 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions: authOptions1,
     }).bindTools(tools);
     const res1 = await model1.invoke(messages);
-    console.log(res1);
 
     messages.push(res1);
     messages.push(new ToolMessage(JSON.stringify(toolResult), "test"));
@@ -1985,11 +1962,10 @@ describe("Mock ChatGoogle - Gemini", () => {
       authOptions: authOptions2,
     }).bindTools(tools);
     const res2 = await model2.invoke(messages);
-    console.log(res2);
+    expect(res2).toBeDefined();
 
     // Make sure the request that came back has been correctly re-formatted
     const contents = record2?.opts?.data?.contents;
-    console.log(JSON.stringify(contents, null, 1));
     const modelPart = contents?.[1]?.parts?.[0];
     expect(modelPart).toHaveProperty("thoughtSignature");
     expect(modelPart.thoughtSignature).toEqual("decafe42");
@@ -2231,7 +2207,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     const result = await model.invoke(
       "What are some names for a company that makes fancy socks?"
     );
-    // console.log(JSON.stringify(result,null,1));
     expect(result.response_metadata).toHaveProperty("logprobs");
     expect(result.response_metadata.logprobs).toHaveProperty("content");
     const logprobs = result.response_metadata.logprobs.content;
@@ -2266,7 +2241,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toBeDefined();
 
     const data = record?.opts?.data;
-    console.log(JSON.stringify(data, null, 1));
     expect(data?.generationConfig?.responseModalities).toEqual(["AUDIO"]);
     expect(data?.generationConfig).toHaveProperty("speechConfig");
     expect(
@@ -2311,7 +2285,6 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toBeDefined();
 
     const data = record?.opts?.data;
-    console.log(JSON.stringify(data, null, 1));
     expect(data?.generationConfig?.responseModalities).toEqual(["AUDIO"]);
     expect(data?.generationConfig).toHaveProperty("speechConfig");
     expect(
@@ -2353,7 +2326,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     const messages: BaseMessageLike[] = [new HumanMessage("What is 1+1?")];
     await model.invoke(messages);
 
-    console.log("record", record);
     expect(record.opts).toBeDefined();
     expect(record.opts.data).toBeDefined();
     const { data } = record.opts;
@@ -2410,7 +2382,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
     await model.invoke(messages);
 
-    console.log("record", record?.opts?.data);
     expect(record?.opts?.data).toHaveProperty("thinking");
     expect(record.opts.data.thinking.type).toEqual("enabled");
     expect(record.opts.data.thinking.budget_tokens).toEqual(2000);
@@ -2436,7 +2407,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
     const response = await model.invoke(messages);
 
-    console.log(JSON.stringify(response, null, 1));
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content).toHaveLength(2);
     const content = response.content as ContentBlock[];
@@ -2489,7 +2459,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     ];
     await model.invoke(messages2);
 
-    console.log("record", record?.opts?.data);
     const testMessages = record?.opts?.data?.messages;
     expect(Array.isArray(testMessages)).toEqual(true);
     expect(testMessages).toHaveLength(3);
@@ -2521,7 +2490,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     const messages: BaseMessageLike[] = [new HumanMessage("Hi there")];
     const response = await model.invoke(messages);
 
-    console.log(JSON.stringify(response, null, 1));
     expect(Array.isArray(response.content)).toBe(true);
     expect(response.content).toHaveLength(2);
     const content = response.content as ContentBlock[];
@@ -2567,12 +2535,10 @@ describe("Mock ChatGoogle - Anthropic", () => {
     ];
     await model.invoke(messages2);
 
-    console.log("record", record?.opts?.data);
     const testMessages = record?.opts?.data?.messages;
     expect(Array.isArray(testMessages)).toEqual(true);
     expect(testMessages).toHaveLength(3);
     const content = testMessages[1]?.content;
-    console.log(content);
     expect(Array.isArray(content)).toEqual(true);
     expect(content[0].type).toEqual("redacted_thinking");
     expect(content[0].data).toEqual(
@@ -2614,13 +2580,11 @@ describe("Mock ChatGoogle - Anthropic", () => {
     ];
     await model.invoke(messages2);
 
-    console.log("record", record?.opts?.data);
     const testMessages = record?.opts?.data?.messages;
     expect(Array.isArray(testMessages)).toEqual(true);
     expect(testMessages).toHaveLength(3);
 
     const content = testMessages[1]?.content;
-    console.log(content);
     expect(Array.isArray(content)).toEqual(true);
     expect(content).toHaveLength(3);
     expect(content[0].type).toEqual("thinking");
@@ -2634,7 +2598,6 @@ describe("Mock ChatGoogle - Anthropic", () => {
     expect(Array.isArray(replyContent.content)).toBe(true);
     expect(replyContent.content).toHaveLength(1);
     const toolResultContent = replyContent.content[0];
-    console.log(toolResultContent);
     expect(toolResultContent.type).toEqual("text");
     expect(toolResultContent.text).toEqual("Mock response");
   });

@@ -440,7 +440,6 @@ test("Passing strict true forces the model to conform to the schema", async () =
   expect(result.tool_calls?.length).toBeGreaterThanOrEqual(1);
   expect(result.tool_calls?.[0].name).toBe("get_current_weather");
   expect(result.tool_calls?.[0].args).toHaveProperty("location");
-  console.log(result.tool_calls?.[0].args);
 });
 
 describe("response_format: json_schema", () => {

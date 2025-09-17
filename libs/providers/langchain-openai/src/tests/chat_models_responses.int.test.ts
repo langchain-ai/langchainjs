@@ -838,7 +838,6 @@ describe("gpt-5", () => {
     const model = new ChatOpenAI({ model: "gpt-5" });
     const response = await model.invoke([storyPrompt]);
     expect(response).toBeDefined();
-    console.log(response);
   });
 
   // https://github.com/langchain-ai/langchainjs/issues/8641
