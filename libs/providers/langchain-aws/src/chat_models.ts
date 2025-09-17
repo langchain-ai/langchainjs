@@ -1,7 +1,7 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { AIMessageChunk } from "@langchain/core/messages";
 import type {
-  BaseLanguageModelInput,
+  type AnyAIMessage,
   StructuredOutputMethodOptions,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
@@ -31,18 +31,13 @@ import {
   DefaultProviderInit,
 } from "@aws-sdk/credential-provider-node";
 import type { DocumentType as __DocumentType } from "@smithy/types";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
   getSchemaDescription,
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { JSONSchema, toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
@@ -637,7 +632,7 @@ export interface ChatBedrockConverseCallOptions
  * <br />
  */
 export class ChatBedrockConverse
-  extends BaseChatModel<ChatBedrockConverseCallOptions, AIMessageChunk>
+  extends BaseChatModel<ChatBedrockConverseCallOptions>
   implements ChatBedrockConverseInput
 {
   // Used for tracing, replace with the same name as your class
@@ -779,15 +774,11 @@ export class ChatBedrockConverse
 
   override bindTools(
     tools: ChatBedrockConverseToolType[],
-    kwargs?: Partial<this["ParsedCallOptions"]>
-  ): Runnable<
-    BaseLanguageModelInput,
-    AIMessageChunk,
-    this["ParsedCallOptions"]
-  > {
+    options?: Partial<this["ParsedCallOptions"]>
+  ): this {
     return this.withConfig({
       tools: convertToConverseTools(tools),
-      ...kwargs,
+      ...options,
     });
   }
 
@@ -954,47 +945,32 @@ export class ChatBedrockConverse
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<ChatBedrockConverseCallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<
+    ChatBedrockConverseCallOptions,
+    { raw: AnyAIMessage; parsed: TOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      > {
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema: InteropZodType<TOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
     const description =
       getSchemaDescription(schema) ?? "A function available to call.";
@@ -1046,8 +1022,8 @@ export class ChatBedrockConverse
     }
 
     const llm = this.bindTools(tools, toolChoiceObj);
-    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-      (input: AIMessageChunk): RunOutput => {
+    const outputParser = RunnableLambda.from<AnyAIMessage, TOutput>(
+      (input: AnyAIMessage): TOutput => {
         if (!input.tool_calls || input.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }
@@ -1057,36 +1033,24 @@ export class ChatBedrockConverse
         if (!toolCall) {
           throw new Error(`No tool call found with name ${functionName}.`);
         }
-        return toolCall.args as RunOutput;
+        return toolCall.args as TOutput;
       }
     );
 
     if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "StructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+      return llm.withOutputParser(outputParser);
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AnyAIMessage, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config),
+      })
+    );
+    return llm.withOutputParser(
+      parserWithRaw.withConfig({
+        runName: "StructuredOutput",
+      })
+    );
   }
 }

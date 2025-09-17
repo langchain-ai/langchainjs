@@ -17,14 +17,9 @@ import {
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
   ToolDefinition,
 } from "@langchain/core/language_models/base";
@@ -35,7 +30,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { JSONSchema, toJsonSchema } from "@langchain/core/utils/json_schema";
 
 import {
   convertToCerebrasMessageParams,
@@ -479,11 +474,11 @@ export class ChatCerebras
 
   override bindTools(
     tools: BindToolsInput[],
-    kwargs?: Partial<this["ParsedCallOptions"]>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatCerebrasCallOptions> {
+    options?: Partial<this["ParsedCallOptions"]>
+  ): this {
     return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
-      ...kwargs,
+      ...options,
     });
   }
 
@@ -531,9 +526,9 @@ export class ChatCerebras
         runManager
       )) {
         if (!finalChunk) {
-          finalChunk = chunk.message;
+          finalChunk = chunk.message as AIMessageChunk;
         } else {
-          finalChunk = concat(finalChunk, chunk.message);
+          finalChunk = concat(finalChunk, chunk.message as AIMessageChunk);
         }
       }
 
@@ -697,52 +692,33 @@ export class ChatCerebras
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<TOutput, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<TOutput, { raw: AnyAIMessage; parsed: TOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      > {
+  ) {
     if (config?.strict) {
       throw new Error(
         `"strict" mode is not supported for this model by default.`
       );
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema: InteropZodType<TOutput> | JSONSchema = outputSchema;
     const name = config?.name;
     const description =
       getSchemaDescription(schema) ?? "A function available to call.";
@@ -767,7 +743,7 @@ export class ChatCerebras
         },
       ];
     } else {
-      if ("name" in schema) {
+      if ("name" in schema && typeof schema.name === "string") {
         functionName = schema.name;
       }
       tools = [
@@ -784,9 +760,9 @@ export class ChatCerebras
 
     const llm = this.bindTools(tools, {
       tool_choice: tools[0].function.name,
-    });
-    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-      (input: AIMessageChunk): RunOutput => {
+    } as Partial<ChatCerebrasCallOptions>);
+    const outputParser = RunnableLambda.from<AnyAIMessage, TOutput>(
+      (input: AnyAIMessage): TOutput => {
         if (!input.tool_calls || input.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }
@@ -796,36 +772,28 @@ export class ChatCerebras
         if (!toolCall) {
           throw new Error(`No tool call found with name ${functionName}.`);
         }
-        return toolCall.args as RunOutput;
+        return toolCall.args as TOutput;
       }
     );
 
     if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatCerebrasStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+      return llm.withOutputParser(
+        outputParser.withConfig({
+          runName: "ChatCerebrasStructuredOutput",
+        })
+      );
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "ChatCerebrasStructuredOutput",
-    });
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AnyAIMessage, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config),
+      })
+    );
+    return llm.withOutputParser(
+      parserWithRaw.withConfig({
+        runName: "StructuredOutput",
+      })
+    );
   }
 }

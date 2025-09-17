@@ -33,10 +33,10 @@ import {
   isAIMessage,
 } from "@langchain/core/messages";
 import type {
-  BaseLanguageModelInput,
   BaseLanguageModelCallOptions,
   StructuredOutputMethodOptions,
   FunctionDefinition,
+  AnyAIMessage,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -65,13 +65,9 @@ import {
   makeInvalidToolCall,
   parseToolCall,
 } from "@langchain/core/output_parsers/openai_tools";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-  RunnableBinding,
-} from "@langchain/core/runnables";
-import {
+  JSONSchema,
   JsonSchema7Type,
   toJsonSchema,
 } from "@langchain/core/utils/json_schema";
@@ -1063,17 +1059,13 @@ export class ChatMistralAI<
 
   override bindTools(
     tools: ChatMistralAIToolType[],
-    kwargs?: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    options?: Partial<CallOptions>
+  ): this {
     const mistralTools = _convertToolToMistralTool(tools);
-    return new RunnableBinding({
-      bound: this,
-      kwargs: {
-        ...(kwargs ?? {}),
-        tools: mistralTools,
-      } as Partial<CallOptions>,
-      config: {},
-    });
+    return this.withConfig({
+      ...options,
+      tools: mistralTools,
+    } as Partial<CallOptions>);
   }
 
   /**
@@ -1360,50 +1352,35 @@ export class ChatMistralAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<CallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema: InteropZodType<TOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
 
-    let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let llm: this;
+    let outputParser: BaseLLMOutputParser<TOutput>;
 
     if (method === "jsonMode") {
       let outputSchema: JsonSchema7Type | undefined;
@@ -1411,7 +1388,7 @@ export class ChatMistralAI<
         outputParser = StructuredOutputParser.fromZodSchema(schema);
         outputSchema = toJsonSchema(schema);
       } else {
-        outputParser = new JsonOutputParser<RunOutput>();
+        outputParser = new JsonOutputParser<TOutput>();
       }
       llm = this.withConfig({
         response_format: { type: "json_object" },
@@ -1470,7 +1447,7 @@ export class ChatMistralAI<
         ]).withConfig({
           tool_choice: "any",
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser<TOutput>({
           returnSingle: true,
           keyName: functionName,
         });
@@ -1478,30 +1455,15 @@ export class ChatMistralAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<
-        BaseLanguageModelInput,
-        RunOutput
-      >;
+      return llm.withOutputParser(outputParser);
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]);
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AIMessageChunk, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config).catch(() => null),
+      })
+    );
+    return llm.withOutputParser(parserWithRaw);
   }
 }

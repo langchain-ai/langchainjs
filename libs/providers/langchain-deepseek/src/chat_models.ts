@@ -1,10 +1,11 @@
 import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import { BaseMessage } from "@langchain/core/messages";
-import { Runnable } from "@langchain/core/runnables";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { AIMessageChunk } from "@langchain/core/messages";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { JSONSchema } from "@langchain/core/utils/json_schema";
 import { InteropZodType } from "@langchain/core/utils/types";
 import {
   ChatOpenAICallOptions,
@@ -403,7 +404,10 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
  *
  * <br />
  */
-export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions> {
+export class ChatDeepSeek extends ChatOpenAICompletions<
+  ChatDeepSeekCallOptions,
+  AIMessageChunk
+> {
   static lc_name() {
     return "ChatDeepSeek";
   }
@@ -477,59 +481,35 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<ChatDeepSeekCallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<
+    ChatDeepSeekCallOptions,
+    { raw: AnyAIMessage; parsed: TOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+  ) {
     const ensuredConfig = { ...config };
     // Deepseek does not support json schema yet
     if (ensuredConfig?.method === undefined) {
       ensuredConfig.method = "functionCalling";
     }
-    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
+    return super.withStructuredOutput<TOutput>(outputSchema, config);
   }
 }

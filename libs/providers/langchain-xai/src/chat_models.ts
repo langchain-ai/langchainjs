@@ -1,17 +1,18 @@
 import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import {
+  BaseChatModel,
   BaseChatModelCallOptions,
   BindToolsInput,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import { Serialized } from "@langchain/core/load/serializable";
-import { AIMessageChunk, BaseMessage } from "@langchain/core/messages";
-import { Runnable } from "@langchain/core/runnables";
+import { AIMessageChunk, UsageMetadata } from "@langchain/core/messages";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { JSONSchema } from "@langchain/core/utils/json_schema";
 import { InteropZodType } from "@langchain/core/utils/types";
 import {
   type OpenAICoreRequestOptions,
@@ -514,18 +515,18 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
       | "assistant"
       | "tool"
   ) {
-    const messageChunk: AIMessageChunk =
-      super._convertCompletionsDeltaToBaseMessageChunk(
-        delta,
-        rawResponse,
-        defaultRole
-      );
+    const messageChunk = super._convertCompletionsDeltaToBaseMessageChunk(
+      delta,
+      rawResponse,
+      defaultRole
+    ) as AIMessageChunk;
     // Make concatenating chunks work without merge warning
     if (!rawResponse.choices[0]?.finish_reason) {
       delete messageChunk.response_metadata.usage;
       delete messageChunk.usage_metadata;
     } else {
-      messageChunk.usage_metadata = messageChunk.response_metadata.usage;
+      messageChunk.usage_metadata = messageChunk.response_metadata
+        .usage as UsageMetadata;
     }
     return messageChunk;
   }
@@ -544,60 +545,33 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     return langChainMessage;
   }
 
-  override withStructuredOutput<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<ChatXAICallOptions, TOutput>;
 
-  override withStructuredOutput<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<ChatXAICallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
-  override withStructuredOutput<
+  withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  override withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+  ) {
     const ensuredConfig = { ...config };
     if (ensuredConfig?.method === undefined) {
       ensuredConfig.method = "functionCalling";
     }
-    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
+    return super.withStructuredOutput<TOutput>(outputSchema, ensuredConfig);
   }
 }

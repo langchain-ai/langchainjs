@@ -10,14 +10,10 @@ import {
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnableLambda } from "@langchain/core/runnables";
 import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
 import { BaseLLMOutputParser } from "@langchain/core/output_parsers";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
@@ -173,7 +169,7 @@ export interface ChatGoogleBaseInput<AuthOptions>
  * Integration with a Google chat model.
  */
 export abstract class ChatGoogleBase<AuthOptions>
-  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions, AIMessageChunk>
+  extends BaseChatModel<GoogleAIBaseLanguageModelCallOptions>
   implements ChatGoogleBaseInput<AuthOptions>
 {
   // Used for tracing, replace with the same name as your class
@@ -308,13 +304,12 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   override bindTools(
     tools: GoogleAIToolType[],
-    kwargs?: Partial<GoogleAIBaseLanguageModelCallOptions>
-  ): Runnable<
-    BaseLanguageModelInput,
-    AIMessageChunk,
-    GoogleAIBaseLanguageModelCallOptions
-  > {
-    return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
+    options?: Partial<GoogleAIBaseLanguageModelCallOptions>
+  ): this {
+    return this.withConfig({
+      tools: convertToGeminiTools(tools),
+      ...options,
+    });
   }
 
   // Replace
@@ -435,44 +430,35 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    outputSchema: InteropZodType<TOutput> | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<GoogleAIBaseLanguageModelCallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    outputSchema: InteropZodType<TOutput> | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<
+    GoogleAIBaseLanguageModelCallOptions,
+    { raw: AnyAIMessage; parsed: TOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    outputSchema: InteropZodType<TOutput> | Record<string, any>,
+    config?: StructuredOutputMethodOptions<boolean>
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema: InteropZodType<TOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
@@ -481,7 +467,7 @@ export abstract class ChatGoogleBase<AuthOptions>
     }
 
     let functionName = name ?? "extract";
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let outputParser: BaseLLMOutputParser<TOutput>;
     let tools: GeminiTool[];
     if (isInteropZodSchema(schema)) {
       const jsonSchema = schemaToGeminiParameters(schema);
@@ -525,39 +511,29 @@ export abstract class ChatGoogleBase<AuthOptions>
           functionDeclarations: [geminiFunctionDefinition],
         },
       ];
-      outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+      outputParser = new JsonOutputKeyToolsParser<TOutput>({
         returnSingle: true,
         keyName: functionName,
       });
     }
-    const llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+    const llm = this.bindTools(tools, {
+      tool_choice: functionName,
+    } as Partial<GoogleAIBaseLanguageModelCallOptions>);
 
     if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGoogleStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
+      return llm.withOutputParser(
+        outputParser.withConfig({
+          runName: "ChatGoogleStructuredOutput",
+        })
+      );
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AIMessageChunk, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config).catch(() => null),
+      })
+    );
+    return llm.withOutputParser(parserWithRaw);
   }
 }

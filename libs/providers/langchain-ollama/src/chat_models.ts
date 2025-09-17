@@ -4,7 +4,7 @@ import {
   type BaseMessage,
 } from "@langchain/core/messages";
 import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
@@ -26,11 +26,7 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { RunnableLambda } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -41,7 +37,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { JSONSchema, toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   convertOllamaMessagesToLangChain,
   convertToOllamaMessages,
@@ -575,11 +571,11 @@ export class ChatOllama
 
   override bindTools(
     tools: BindToolsInput[],
-    kwargs?: Partial<this["ParsedCallOptions"]>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOllamaCallOptions> {
+    options?: Partial<this["ParsedCallOptions"]>
+  ): this {
     return this.withConfig({
+      ...options,
       tools: tools.map((tool) => convertToOpenAITool(tool)),
-      ...kwargs,
     });
   }
 
@@ -675,9 +671,9 @@ export class ChatOllama
       runManager
     )) {
       if (!finalChunk) {
-        finalChunk = chunk.message;
+        finalChunk = chunk.message as AIMessageChunk;
       } else {
-        finalChunk = concat(finalChunk, chunk.message);
+        finalChunk = concat(finalChunk, chunk.message as AIMessageChunk);
       }
     }
 
@@ -764,63 +760,30 @@ export class ChatOllama
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<ChatOllamaCallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<
+    ChatOllamaCallOptions,
+    { raw: AnyAIMessage; parsed: TOutput }
+  >;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      >;
-
-  withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        {
-          raw: BaseMessage;
-          parsed: RunOutput;
-        }
-      > {
+  ) {
     if (config?.method === undefined || config?.method === "jsonSchema") {
       const outputSchemaIsZod = isInteropZodSchema(outputSchema);
       const jsonSchema = outputSchemaIsZod
@@ -844,38 +807,21 @@ export class ChatOllama
       });
       const outputParser = outputSchemaIsZod
         ? StructuredOutputParser.fromZodSchema(outputSchema)
-        : new JsonOutputParser<RunOutput>();
+        : new JsonOutputParser<TOutput>();
 
       if (!config?.includeRaw) {
-        return llm.pipe(outputParser) as Runnable<
-          BaseLanguageModelInput,
-          RunOutput
-        >;
+        return llm.withOutputParser(outputParser);
       }
 
-      const parserAssign = RunnablePassthrough.assign({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-      });
-      const parserNone = RunnablePassthrough.assign({
-        parsed: () => null,
-      });
-      const parsedWithFallback = parserAssign.withFallbacks({
-        fallbacks: [parserNone],
-      });
-      return RunnableSequence.from<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >([
-        {
-          raw: llm,
-        },
-        parsedWithFallback,
-      ]);
+      const parserWithRaw = RunnableLambda.from(
+        async (message: AIMessageChunk, config) => ({
+          raw: message,
+          parsed: await outputParser.invoke(message, config).catch(() => null),
+        })
+      );
+      return llm.withOutputParser(parserWithRaw);
     } else {
-      // TODO: Fix this type in core
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
+      return super.withStructuredOutput<TOutput>(outputSchema, config);
     }
   }
 }

@@ -30,7 +30,7 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "dependencies": {
-    "@langchain/openai": "^0.6.0"
+    "@langchain/openai": "workspace:*"
   },
   "peerDependencies": {
     "@langchain/core": ">=0.3.58 <0.4.0"
