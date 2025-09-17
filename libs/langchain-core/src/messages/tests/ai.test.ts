@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AIMessage, AIMessageChunk } from "../ai.js";
+import { ToolCallChunk } from "../tool.js";
 
 describe("AIMessage", () => {
   it("can be constructed with tool calls", () => {
@@ -163,6 +164,120 @@ describe("AIMessage", () => {
 });
 
 describe("AIMessageChunk", () => {
+  describe("constructor", () => {
+    it("omits tool call chunks without IDs", () => {
+      const chunks: ToolCallChunk[] = [
+        {
+          name: "get_current_time",
+          type: "tool_call_chunk",
+          index: 0,
+          // no `id` provided
+        },
+      ];
+
+      const result = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: chunks,
+      });
+
+      expect(result.tool_calls?.length).toBe(0);
+      expect(result.invalid_tool_calls?.length).toBe(1);
+      expect(result.invalid_tool_calls).toEqual([
+        {
+          type: "invalid_tool_call",
+          id: undefined,
+          name: "get_current_time",
+          args: "{}",
+          error: "Malformed args.",
+        },
+      ]);
+    });
+
+    it("omits tool call chunks without IDs and no index", () => {
+      const chunks: ToolCallChunk[] = [
+        {
+          name: "get_current_time",
+          type: "tool_call_chunk",
+          // no `id` or `index` provided
+        },
+      ];
+
+      const result = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: chunks,
+      });
+
+      expect(result.tool_calls?.length).toBe(0);
+      expect(result.invalid_tool_calls?.length).toBe(1);
+      expect(result.invalid_tool_calls).toEqual([
+        {
+          type: "invalid_tool_call",
+          id: undefined,
+          name: "get_current_time",
+          args: "{}",
+          error: "Malformed args.",
+        },
+      ]);
+    });
+
+    it("can concatenate tool call chunks without IDs", () => {
+      const chunk = new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            name: "get_weather",
+            args: "",
+            id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '{"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: "location",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '":"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: "San",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: " Francisco",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+          {
+            args: '"}',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      });
+      expect(chunk.tool_calls).toHaveLength(1);
+      expect(chunk.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+          id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+        },
+      ]);
+    });
+  });
+
   it("should properly merge tool call chunks that have matching indices and ids", () => {
     const chunk1 = new AIMessageChunk({
       content: "",
