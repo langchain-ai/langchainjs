@@ -3,7 +3,7 @@ import { createMiddleware } from "../middleware.js";
 import type { Runtime, AgentBuiltInState } from "../types.js";
 
 /**
- * Dynamic Prompt Middleware
+ * Dynamic System Prompt Middleware
  *
  * Allows setting the system prompt dynamically right before each model invocation.
  * Useful when the prompt depends on the current agent state or per-invocation context.
@@ -21,6 +21,9 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * @example Basic usage with typed context
  * ```ts
  * import { z } from "zod";
+ * import { dynamicSystemPrompt } from "langchain/middleware";
+ * import { createAgent, SystemMessage } from "langchain";
+ *
  * const contextSchema = z.object({ region: z.string().optional() });
  *
  * const middleware = dynamicPromptMiddleware<z.infer<typeof contextSchema>>(
