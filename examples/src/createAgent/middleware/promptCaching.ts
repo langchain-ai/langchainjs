@@ -1,11 +1,11 @@
 import { createAgent, HumanMessage, AIMessage } from "langchain";
-import { anthropicPromptCachingMiddleware } from "langchain/middleware";
+import { anthropicPromptCaching } from "langchain/middleware";
 
 // Example usage
 const agent = createAgent({
   model: "anthropic:claude-sonnet-4-20250514",
   tools: [],
-  middleware: [anthropicPromptCachingMiddleware({ ttl: "5m" })] as const,
+  middleware: [anthropicPromptCaching({ ttl: "5m" })] as const,
 });
 
 // Usage example with a long chat history for testing caching

@@ -1,5 +1,5 @@
 import { createAgent, HumanMessage, tool, MemorySaver } from "langchain";
-import { humanInTheLoopMiddleware } from "langchain/middleware";
+import { humanInTheLoop } from "langchain/middleware";
 import { Command } from "@langchain/langgraph";
 import { z } from "zod";
 
@@ -51,7 +51,7 @@ const writeFileTool = tool(
 );
 
 // Configure HITL middleware
-const hitlMiddleware = humanInTheLoopMiddleware({
+const hitlMiddleware = humanInTheLoop({
   toolConfigs: {
     write_file: {
       requireApproval: true,

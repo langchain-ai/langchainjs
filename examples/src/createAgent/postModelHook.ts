@@ -146,7 +146,6 @@ const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
   tools: [productInfoTool],
   checkpointer: new MemorySaver(),
-  // eslint-disable-next-line object-shorthand
   postModelHook: function postModelHook(state) {
     stats.total += 1;
 
