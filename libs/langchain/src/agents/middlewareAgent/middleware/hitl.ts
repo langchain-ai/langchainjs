@@ -16,6 +16,20 @@ type ToolConfigSchema = z.input<typeof ToolConfigSchema>;
 type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
 
 /**
+ * Represents information about an interrupt.
+ */
+export interface Interrupt<TValue = unknown> {
+  /**
+   * The ID of the interrupt.
+   */
+  id: string;
+  /**
+   * The requests for human input.
+   */
+  value: TValue;
+}
+
+/**
  * Configuration that defines what actions are allowed for a human interrupt.
  * This controls the available interaction options when the graph is paused for human input.
  */
@@ -206,7 +220,7 @@ const contextSchema = z
  * @example
  * Handling approval requests
  * ```typescript
- * import { type HumanInTheLoopRequest, type Interrupt } from "langchain";
+ * import { type HumanInTheLoopRequest, type Interrupt } from "langchain/middleware";
  * import { Command } from "@langchain/langgraph";
  *
  * // Initial agent invocation
