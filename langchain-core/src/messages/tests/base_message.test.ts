@@ -485,9 +485,11 @@ describe("Complex AIMessageChunk concat", () => {
     expect(result.invalid_tool_calls?.length).toBe(1);
     expect(result.invalid_tool_calls).toEqual([
       {
+        type: "invalid_tool_call",
+        id: undefined,
         name: "get_current_time",
-        type: "tool_call",
-        args: {},
+        args: "{}",
+        error: "Malformed args.",
       },
     ]);
   });
@@ -510,9 +512,11 @@ describe("Complex AIMessageChunk concat", () => {
     expect(result.invalid_tool_calls?.length).toBe(1);
     expect(result.invalid_tool_calls).toEqual([
       {
+        type: "invalid_tool_call",
+        id: undefined,
         name: "get_current_time",
-        args: {},
-        type: "tool_call",
+        args: "{}",
+        error: "Malformed args.",
       },
     ]);
   });
