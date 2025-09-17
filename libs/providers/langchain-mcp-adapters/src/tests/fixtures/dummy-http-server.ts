@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 // it's in dev dependencies - not sure why eslint gets mad here.
 // eslint-disable-next-line import/no-extraneous-dependencies
-import express from "express";
+import express, { type Express } from "express";
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -18,7 +18,7 @@ export function createDummyHttpServer(
     supportSSEFallback?: boolean;
     disableStreamableHttp?: boolean;
   }
-) {
+): Express {
   const server = new McpServer({ name, version: "1.0.0" });
 
   // Store captured headers per session
@@ -94,7 +94,7 @@ export function createDummyHttpServer(
     {
       input: z.string().describe("Some input string for the audio tool"),
     },
-    async ({ input }, extra) => {
+    async ({ input }) => {
       // Static base64 encoded minimal WAV file (1-byte silent audio)
       // This is a valid WAV file: RIFF header, WAVE format, fmt chunk (PCM, 44100Hz, 1 channel, 16-bit), data chunk (1 byte of 0x00)
       const base64Audio =
@@ -123,7 +123,7 @@ export function createDummyHttpServer(
     {
       input: z.string().describe("Some input string for the image tool"),
     },
-    async ({ input }, extra) => {
+    async ({ input }) => {
       // Static base64 encoded minimal PNG file (1x1 black pixel)
       const base64Image =
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
@@ -150,7 +150,7 @@ export function createDummyHttpServer(
     {
       input: z.string().describe("Some input string for the resource tool"),
     },
-    async ({ input }, extra) => {
+    async ({ input }) => {
       return {
         content: [
           {
