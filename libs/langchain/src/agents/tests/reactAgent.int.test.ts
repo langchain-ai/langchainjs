@@ -263,7 +263,7 @@ describe("createAgent Integration Tests", () => {
     });
   });
 
-  describe("prepareModelRequest", () => {
+  describe("modifyModelRequest", () => {
     it("should allow middleware to update model, messages and systemMessage", async () => {
       // Setup mocked fetch functions for both providers
       const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
@@ -289,7 +289,7 @@ describe("createAgent Integration Tests", () => {
       // Create middleware that will change the model and messages
       const modelSwitchMiddleware = createMiddleware({
         name: "modelSwitcher",
-        prepareModelRequest: async (_request, _state, _runtime) => {
+        modifyModelRequest: async (_request, _state, _runtime) => {
           // Create a new ChatAnthropic instance
           const anthropicModel = new ChatAnthropic({
             model: "claude-opus-4-20250514",
@@ -400,7 +400,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
       expect(cachedTokens).toBe(1195);
     });
 
-    it("can change tools and toolChoice in prepareModelRequest", async () => {
+    it("can change tools and toolChoice in modifyModelRequest", async () => {
       // Setup mocked fetch for OpenAI
       const openAIFetchMock = vi.fn();
 
@@ -434,7 +434,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
       // Create middleware that adds tools and sets toolChoice
       const toolsMiddleware = {
         name: "toolsModifier",
-        prepareModelRequest: async () => {
+        modifyModelRequest: async () => {
           // Add tools dynamically
           const tools = [weatherTool, newsTool];
 

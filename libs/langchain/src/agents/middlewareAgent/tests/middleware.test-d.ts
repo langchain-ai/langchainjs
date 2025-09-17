@@ -181,7 +181,7 @@ describe("middleware types", () => {
             customRequiredContextProp: string;
           }>();
         },
-        prepareModelRequest: async (_request, _state, runtime) => {
+        modifyModelRequest: async (_request, _state, runtime) => {
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
@@ -236,7 +236,7 @@ describe("middleware types", () => {
             >
           >();
         },
-        prepareModelRequest: async (_request, _state, runtime) => {
+        modifyModelRequest: async (_request, _state, runtime) => {
           expectTypeOf(runtime.context).toEqualTypeOf<
             Partial<
               | {
@@ -286,7 +286,7 @@ describe("middleware types", () => {
             }>
           >();
         },
-        prepareModelRequest: async (_request, _state, runtime) => {
+        modifyModelRequest: async (_request, _state, runtime) => {
           expectTypeOf(runtime.context).toEqualTypeOf<
             Partial<{
               customDefaultContextProp: string;

@@ -361,7 +361,7 @@ export interface AgentMiddleware<
    * @param runtime - Runtime context and metadata
    * @returns Modified options or undefined to pass through
    */
-  prepareModelRequest?(
+  modifyModelRequest?(
     request: ModelRequest,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -481,7 +481,7 @@ export type CreateAgentParams<
    * Prior to `v0.2.46`, the prompt was set using `stateModifier` / `messagesModifier` parameters.
    * This is now deprecated and will be removed in a future release.
    *
-   * Cannot be used together with `prepareModelRequest`.
+   * Cannot be used together with `modifyModelRequest`.
    */
   prompt?: SystemMessage | string;
 
