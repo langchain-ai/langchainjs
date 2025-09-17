@@ -143,7 +143,7 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    prepareModelRequest: (options, state, runtime) => {
+    modifyModelRequest: (options, state, runtime) => {
       /**
        * If the runtime values match the schema default values, use the middleware option
        * values otherwise use the runtime values. This allows to apply general configurations

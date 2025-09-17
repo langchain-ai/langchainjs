@@ -157,7 +157,7 @@ export class ReactAgent<
     // Generate node names for middleware nodes that have hooks
     const beforeModelNodes: { index: number; name: string }[] = [];
     const afterModelNodes: { index: number; name: string }[] = [];
-    const prepareModelRequestHookMiddleware: [
+    const modifyModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -197,8 +197,8 @@ export class ReactAgent<
         );
       }
 
-      if (m.prepareModelRequest) {
-        prepareModelRequestHookMiddleware.push([
+      if (m.modifyModelRequest) {
+        modifyModelRequestHookMiddleware.push([
           m,
           () => ({
             ...beforeModelNode?.getState(),
@@ -224,7 +224,7 @@ export class ReactAgent<
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
-        prepareModelRequestHookMiddleware,
+        modifyModelRequestHookMiddleware,
       }),
       AgentNode.nodeOptions
     );
