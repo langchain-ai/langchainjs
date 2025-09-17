@@ -961,6 +961,26 @@ export abstract class BaseChatModel<
     return result.content;
   }
 
+  /**
+   * Creates a new instance of the chat model with the provided call options.
+   *
+   * This method allows you to override default call options for the model instance,
+   * including tags and metadata. The new instance will inherit all properties from
+   * the current instance while applying the provided configuration.
+   *
+   * @param config - Partial call options to apply to the new instance.
+   * @returns A new instance of the same chat model class with the merged call options.
+   *
+   * @example
+   * ```typescript
+   * const model = new ChatOpenAI({ temperature: 0.5 });
+   * const configuredModel = model.withConfig({
+   *   temperature: 0.8,
+   *   tags: ["experiment"],
+   *   metadata: { version: "1.0" }
+   * });
+   * ```
+   */
   withConfig(config: Partial<CallOptions>): this {
     const Cls = this.constructor as Constructor<this>;
     const instance = new Cls(this.fields);
