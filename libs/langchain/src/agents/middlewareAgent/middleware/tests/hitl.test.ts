@@ -6,7 +6,7 @@ import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createAgent } from "../../index.js";
-import { humanInTheLoopMiddleware } from "../hitl.js";
+import { humanInTheLoop } from "../hitl.js";
 import {
   FakeToolCallingModel,
   _AnyIdHumanMessage,
@@ -14,7 +14,7 @@ import {
   _AnyIdAIMessage,
 } from "../../../tests/utils.js";
 
-describe("humanInTheLoopMiddleware", () => {
+describe("humanInTheLoop", () => {
   it("should auto-approve safe tools and interrupt for tools requiring approval", async () => {
     // Mock tool functions
     const calculatorFn = vi.fn(
@@ -65,7 +65,7 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     // Configure HITL middleware
-    const hitlMiddleware = humanInTheLoopMiddleware({
+    const hitlMiddleware = humanInTheLoop({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -215,7 +215,7 @@ describe("humanInTheLoopMiddleware", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoopMiddleware({
+    const hitlMiddleware = humanInTheLoop({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -299,7 +299,7 @@ describe("humanInTheLoopMiddleware", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoopMiddleware({
+    const hitlMiddleware = humanInTheLoop({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -370,7 +370,7 @@ describe("humanInTheLoopMiddleware", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoopMiddleware({
+    const hitlMiddleware = humanInTheLoop({
       toolConfigs: {
         write_file: {
           requireApproval: true,

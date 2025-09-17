@@ -6,7 +6,7 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { dynamicPromptMiddleware } from "../dynamicPrompt.js";
+import { dynamicPrompt } from "../dynamicPrompt.js";
 import { createAgent } from "../../index.js";
 
 function createMockModel() {
@@ -25,12 +25,12 @@ function createMockModel() {
   };
 }
 
-describe("dynamicPromptMiddleware", () => {
+describe("dynamicPrompt", () => {
   it("should set system message from dynamic prompt before model call", async () => {
     const mockModel = createMockModel();
     const contextSchema = z.object({ region: z.string().optional() });
 
-    const middleware = dynamicPromptMiddleware<z.infer<typeof contextSchema>>(
+    const middleware = dynamicPrompt<z.infer<typeof contextSchema>>(
       (_state, runtime) => {
         const region = runtime.context.region ?? "n/a";
         return new SystemMessage(
@@ -69,7 +69,7 @@ describe("dynamicPromptMiddleware", () => {
     const mockModel = createMockModel();
     const contextSchema = z.object({ region: z.string().optional() });
 
-    const middleware = dynamicPromptMiddleware<z.infer<typeof contextSchema>>(
+    const middleware = dynamicPrompt<z.infer<typeof contextSchema>>(
       (_state, runtime) => {
         const region = runtime.context.region ?? "n/a";
         return `You are a helpful assistant. Region: ${region}`;

@@ -1,7 +1,4 @@
-export {
-  summarizationMiddleware,
-  countTokensApproximately,
-} from "./summarization.js";
-export { humanInTheLoopMiddleware } from "./hitl.js";
-export { anthropicPromptCachingMiddleware } from "./promptCaching.js";
-export { dynamicPromptMiddleware } from "./dynamicPrompt.js";
+export { summarization, countTokensApproximately } from "./summarization.js";
+export { humanInTheLoop } from "./hitl.js";
+export { anthropicPromptCaching } from "./promptCaching.js";
+export { dynamicPrompt } from "./dynamicPrompt.js";

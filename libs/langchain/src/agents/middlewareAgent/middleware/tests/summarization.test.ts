@@ -9,14 +9,11 @@ import {
   isAIMessage,
   isToolMessage,
 } from "@langchain/core/messages";
-import {
-  summarizationMiddleware,
-  countTokensApproximately,
-} from "../summarization.js";
+import { summarization, countTokensApproximately } from "../summarization.js";
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../../tests/utils.js";
 
-describe("summarizationMiddleware", () => {
+describe("summarization", () => {
   // Mock summarization model
   function createMockSummarizationModel() {
     const invokeCallback = vi
@@ -67,7 +64,7 @@ describe("summarizationMiddleware", () => {
     const summarizationModel = createMockSummarizationModel();
     const mainModel = createMockMainModel();
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 200, // Low threshold to trigger easily
       messagesToKeep: 3,
@@ -115,7 +112,7 @@ describe("summarizationMiddleware", () => {
     const summarizationModel = createMockSummarizationModel();
     const mainModel = createMockMainModel();
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 5000, // High threshold
       messagesToKeep: 10,
@@ -159,7 +156,7 @@ describe("summarizationMiddleware", () => {
       ],
     });
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 400,
       messagesToKeep: 4, // Should keep the AI/Tool pair together
@@ -203,7 +200,7 @@ describe("summarizationMiddleware", () => {
     const summarizationModel = createMockSummarizationModel();
     const mainModel = createMockMainModel();
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 100,
       messagesToKeep: 2,
@@ -256,7 +253,7 @@ describe("summarizationMiddleware", () => {
       return wordCount;
     });
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 47, // 47 words
       messagesToKeep: 2,
@@ -292,7 +289,7 @@ describe("summarizationMiddleware", () => {
     const summarizationModel = createMockSummarizationModel();
     const mainModel = createMockMainModel();
 
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 100,
       messagesToKeep: 5,
@@ -315,7 +312,7 @@ describe("summarizationMiddleware", () => {
     const mainModel = createMockMainModel();
 
     const messagesToKeep = 2;
-    const middleware = summarizationMiddleware({
+    const middleware = summarization({
       model: summarizationModel as any,
       maxTokensBeforeSummary: 200,
       messagesToKeep,
