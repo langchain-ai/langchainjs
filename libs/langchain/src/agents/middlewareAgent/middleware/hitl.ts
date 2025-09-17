@@ -1,33 +1,118 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
-import { v4 as uuid } from "uuid";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
-import type { ToolCall } from "../types.js";
+
+const ToolConfigSchema = z.object({
+  allowAccept: z.boolean().optional(),
+  allowEdit: z.boolean().optional(),
+  allowRespond: z.boolean().optional(),
+  description: z.string().optional(),
+});
+
+type ToolConfigSchema = z.input<typeof ToolConfigSchema>;
+type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
 
 /**
- * Interrupt request for tool approval
+ * Configuration that defines what actions are allowed for a human interrupt.
+ * This controls the available interaction options when the graph is paused for human input.
  */
-export interface ToolApprovalRequest {
+export interface HumanInTheLoopConfig
+  extends Omit<ToolConfigSchema, "description"> {}
+
+/**
+ * Represents a request with a name and arguments.
+ */
+export interface ActionRequest {
+  /**
+   * The type or name of action being requested (e.g., "add_numbers")
+   */
   action: string;
+  /**
+   * Key-value pairs of arguments needed for the action (e.g., {"a": 1, "b": 2})
+   */
   args: Record<string, any>;
-  toolCallId: string;
+}
+
+/**
+ * Represents an interrupt triggered by the graph that requires human intervention.
+ *
+ * @param actionRequest - The specific action being requested from the human
+ * @param config - Configuration defining what response types are allowed
+ * @param description - Optional detailed description of what input is needed
+ *
+ * @example
+ * ```ts
+ * const hitlRequest: HumanInTheLoopRequest = {
+ *   actionRequest: { action: "Approve XYZ action", args: { ... } },
+ *   config: { allowAccept: true, allowEdit: true, allowRespond: true },
+ *   description: "Please review the command before execution"
+ * };
+ * response = interrupt([request])[0]
+ * ```
+ */
+export interface HumanInTheLoopRequest {
+  actionRequest: ActionRequest;
+  config: HumanInTheLoopConfig;
+  description?: string;
+}
+
+/**
+ * Response when a human approves the action.
+ */
+export interface AcceptPayload {
+  type: "accept";
+}
+
+/**
+ * Response when a human rejects the action.
+ */
+export interface ResponsePayload {
+  type: "response";
+  args?: string;
+}
+
+/**
+ * Response when a human edits the action.
+ */
+export interface EditPayload {
+  type: "edit";
+  args: ActionRequest;
+}
+
+export type HumanInTheLoopMiddlewareHumanResponse =
+  | AcceptPayload
+  | ResponsePayload
+  | EditPayload;
+
+/**
+ * Configuration for a tool requiring human in the loop.
+ */
+export interface ToolConfig extends HumanInTheLoopConfig {
+  /**
+   * The description attached to the request for human input
+   */
   description?: string;
 }
 
 const contextSchema = z
   .object({
-    toolConfigs: z
-      .record(
-        z.object({
-          requireApproval: z.boolean().optional(),
-          description: z.string().optional(),
-        })
-      )
-      .default({}),
-    messagePrefix: z.string().default("Tool execution requires approval"),
+    /**
+     * Mapping of tool name to allowed actions.
+     * If a tool doesn't have an entry, it's auto-approved by default.
+     *
+     * - `true` -> all actions allowed
+     * - `false` -> indicates that the tool is auto-approved.
+     * - `ToolConfig` -> indicates the specific actions allowed for this tool.
+     */
+    toolConfigs: z.record(z.union([z.boolean(), ToolConfigSchema])).default({}),
+    /**
+     * The prefix to use when constructing action requests.
+     * This is used to provide context about the tool call and the action being requested.
+     */
+    descriptionPrefix: z.string().default("Tool execution requires approval"),
   })
   .optional();
 
@@ -100,13 +185,14 @@ const contextSchema = z
  *
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   toolConfigs: {
+ *     // Interrupt write_file tool and allow edits or accepts
  *     "write_file": {
- *       requireApproval: true,
+ *       allowEdit: true,
+ *       allowAccept: true,
  *       description: "⚠️ File write operation requires approval"
  *     },
- *     "read_file": {
- *       requireApproval: false  // Safe operation, no approval needed
- *     }
+ *     // Auto-approve read_file tool
+ *     "read_file": false
  *   }
  * });
  *
@@ -120,6 +206,7 @@ const contextSchema = z
  * @example
  * Handling approval requests
  * ```typescript
+ * import { type HumanInTheLoopRequest, type Interrupt } from "langchain";
  * import { Command } from "@langchain/langgraph";
  *
  * // Initial agent invocation
@@ -128,15 +215,14 @@ const contextSchema = z
  * }, config);
  *
  * // Check if agent is paused for approval
- * const state = await agent.graph.getState(config);
- * if (state.next?.length > 0) {
- *   // Get interrupt details
- *   const task = state.tasks?.[0];
- *   const requests = task?.interrupts?.[0]?.value;
+ * if (result.__interrupt__) {
+ *   const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
+ *     HumanInTheLoopRequest[]
+ *   >;
  *
  *   // Show tool call details to user
- *   console.log("Tool:", requests[0].action);
- *   console.log("Args:", requests[0].args);
+ *   console.log("Tool:", interruptRequest.value[0].actionRequest);
+ *   console.log("Allowed actions:", interruptRequest.value[0].config);
  *
  *   // Resume with approval
  *   await agent.invoke(
@@ -161,12 +247,13 @@ const contextSchema = z
  * })
  *
  * // Skip tool and terminate agent
- * new Command({ resume: [{ type: "ignore" }] })
+ * new Command({ resume: [{ type: "response" }] })
  *
  * // Provide manual response
  * new Command({
  *   resume: [{
  *     type: "response",
+ *     // this must be a string
  *     args: "File operation not allowed in demo mode"
  *   }]
  * })
@@ -211,193 +298,166 @@ export function humanInTheLoopMiddleware(
     name: "HumanInTheLoopMiddleware",
     contextSchema,
     afterModel: async (state, runtime) => {
-      const config = { ...contextSchema.parse(options), ...runtime.context };
+      const config = contextSchema.parse({ ...options, ...runtime.context });
+      if (!config) {
+        return;
+      }
+
       const { messages } = state;
       if (!messages.length) {
         return;
       }
 
-      const lastMessage = messages.at(-1);
-
       /**
-       * Check if it's an AI message with tool calls
+       * Don't do anything if the last message isn't an AI message with tool calls.
        */
+      const lastMessage = messages.at(-1);
       if (
         !AIMessage.isInstance(lastMessage) ||
         !lastMessage.tool_calls?.length
       ) {
-        // Clear any existing jumpTo property since there are no tool calls to process
-        return { jumpTo: undefined };
-      }
-
-      // Filter out structured response extraction tool calls (they start with "extract-")
-      const regularToolCalls = lastMessage.tool_calls.filter(
-        (toolCall) => !toolCall.name.startsWith("extract-")
-      );
-
-      // If all tool calls are structured response extractions, return early
-      if (regularToolCalls.length === 0) {
-        // Clear any existing jumpTo property since we're not processing any real tools
-        return { jumpTo: undefined };
+        return;
       }
 
       if (!config.toolConfigs) {
         throw new Error("HumanInTheLoopMiddleware: toolConfigs is required");
       }
 
-      const toolConfigs = config.toolConfigs;
+      // Resolve per-tool configs (boolean true -> all actions allowed; false -> auto-approve)
+      const resolvedToolConfigs: Record<string, ToolConfig> = {};
+      for (const [toolName, toolConfig] of Object.entries(config.toolConfigs)) {
+        if (typeof toolConfig === "boolean") {
+          if (toolConfig === true) {
+            resolvedToolConfigs[toolName] = {
+              allowAccept: true,
+              allowEdit: true,
+              allowRespond: true,
+            };
+          }
+        } else {
+          resolvedToolConfigs[toolName] = toolConfig;
+        }
+      }
 
-      /**
-       * Separate tool calls that need interrupts from those that don't
-       */
       const interruptToolCalls: ToolCall[] = [];
       const autoApprovedToolCalls: ToolCall[] = [];
 
-      for (const toolCall of regularToolCalls) {
-        /**
-         * Ensure tool call has an ID
-         */
-        const normalizedToolCall: ToolCall = {
-          id: toolCall.id || uuid(),
-          name: toolCall.name,
-          args: toolCall.args,
-        };
-
-        const toolConfig = toolConfigs[normalizedToolCall.name];
-
-        if (toolConfig?.requireApproval) {
-          interruptToolCalls.push(normalizedToolCall);
+      for (const toolCall of lastMessage.tool_calls) {
+        if (toolCall.name in resolvedToolConfigs) {
+          interruptToolCalls.push(toolCall);
         } else {
-          autoApprovedToolCalls.push(normalizedToolCall);
+          autoApprovedToolCalls.push(toolCall);
         }
       }
 
       /**
-       * If no interrupts needed, return early
+       * No interrupt tool calls, so we can just return.
        */
       if (!interruptToolCalls.length) {
-        // Clear any existing jumpTo property since no interrupts are needed
-        return { jumpTo: undefined };
+        return;
       }
 
-      /**
-       * Process tool calls that need interrupts
-       */
-      const requests: ToolApprovalRequest[] = interruptToolCalls.map(
+      const hitlRequests: HumanInTheLoopRequest[] = interruptToolCalls.map(
         (toolCall) => {
-          const toolConfig = toolConfigs[toolCall.name];
+          const toolConfig = resolvedToolConfigs[toolCall.name]!;
           const description =
-            toolConfig?.description ||
-            `${config.messagePrefix}\n\nTool: ${
+            toolConfig.description ||
+            `${config.descriptionPrefix}\n\nTool: ${
               toolCall.name
             }\nArgs: ${JSON.stringify(toolCall.args, null, 2)}`;
-
           return {
-            action: toolCall.name,
-            args: toolCall.args,
-            toolCallId: toolCall.id,
+            actionRequest: { action: toolCall.name, args: toolCall.args },
+            config: toolConfig,
             description,
           };
         }
       );
 
-      /**
-       * Interrupt and wait for human responses
-       */
       const responses = (await interrupt(
-        requests
+        hitlRequests
       )) as HumanInTheLoopMiddlewareHumanResponse[];
 
-      /**
-       * double check that all interrupts have a response
-       */
-      const missingResponses: string[] = [];
-      for (const toolCall of interruptToolCalls) {
-        if (!responses?.find((response) => response.id === toolCall.id)) {
-          missingResponses.push(toolCall.name);
-        }
-      }
-      if (missingResponses.length > 0) {
+      if (responses.length !== interruptToolCalls.length) {
         throw new Error(
-          `Missing responses for tool calls: ${missingResponses.join(", ")}`
+          `Number of human responses (${responses.length}) does not match number of hanging tool calls (${interruptToolCalls.length}).`
         );
       }
 
-      const approvedToolCalls = [...autoApprovedToolCalls];
-      const toolMessages: ToolMessage[] = [];
+      const approvedToolCalls: ToolCall[] = [...autoApprovedToolCalls];
+      const artificialToolMessages: ToolMessage[] = [];
 
-      /**
-       * Process responses
-       */
-      for (const [i, response] of Object.entries(responses)) {
-        const toolCall = interruptToolCalls[
-          i as keyof typeof interruptToolCalls
-        ] as ToolCall;
-        if (!toolCall) {
-          throw new Error(
-            `Tool call "${
-              response.id
-            }" not interrupted, interruptToolCalls: ${interruptToolCalls
-              .map((toolCall) => toolCall.id)
-              .join(", ")}`
-          );
+      for (const [i, response] of responses.entries()) {
+        const toolCall = interruptToolCalls[i]!;
+        const toolConfig = resolvedToolConfigs[toolCall.name]!;
+
+        if (response.type === "accept" && toolConfig?.allowAccept) {
+          approvedToolCalls.push(toolCall);
+          continue;
         }
 
-        switch (response.type) {
-          case "accept":
-            approvedToolCalls.push(toolCall);
-            break;
+        if (response.type === "edit" && toolConfig?.allowEdit) {
+          const edited = response.args;
+          approvedToolCalls.push({
+            id: toolCall.id,
+            name: edited.action,
+            args: edited.args,
+          });
+          continue;
+        }
 
-          case "edit":
-            /**
-             * For edit, args is an ActionRequest with updated args
-             */
-            if (
-              "args" in response &&
-              typeof response.args === "object" &&
-              response.args !== null
-            ) {
-              approvedToolCalls.push({
-                ...toolCall,
-                args: response.args,
-              });
-            }
-            break;
+        if (response.type === "response" && toolConfig?.allowRespond) {
+          const content =
+            response.args ??
+            `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
 
-          case "ignore":
-            /**
-             * Skip to end - terminate the agent
-             */
-            return runtime.terminate({
-              ...state,
-              messages: [
-                ...state.messages,
-                /**
-                 * inject an artificial tool message to indicate that the tool was ignored
-                 */
-                new ToolMessage({
-                  content: `User ignored the tool call for ${toolCall.name} with id ${toolCall.id}`,
-                  tool_call_id: toolCall.id,
-                }),
-              ],
-            });
-
-          case "response": {
-            /**
-             * Return manual tool response and jump back to model
-             * For response, args is a string
-             */
-            toolMessages.push(
-              new ToolMessage({
-                content: typeof response.args === "string" ? response.args : "",
-                tool_call_id: toolCall.id,
-              })
+          /**
+           * Providing a meaningful error message for this case that should never happen.
+           */
+          if (!toolCall.id) {
+            throw new Error(
+              `Can't provide custom tool response for tool call without an ID: ${toolCall.name}!\n` +
+                "This use case is not expected to happen, please report this as a bug."
             );
-            break;
           }
-          default:
-            throw new Error(`Unknown response type: ${(response as any).type}`);
+
+          /**
+           * ToolMessage expects a string, so we need to throw an error if it's not a string
+           * as we currently have no way to proper type responses from users through the
+           * Command object.
+           */
+          if (typeof content !== "string") {
+            throw new Error(
+              `Tool call response for "${
+                toolCall.name
+              }" must be a string, got ${typeof content}`
+            );
+          }
+
+          artificialToolMessages.push(
+            new ToolMessage({
+              content,
+              name: toolCall.name,
+              tool_call_id: toolCall.id,
+              status: "error",
+            })
+          );
+          continue;
         }
+
+        const allowedActions = [
+          toolConfig?.allowAccept && "accept",
+          toolConfig?.allowEdit && "edit",
+          toolConfig?.allowRespond && "response",
+        ]
+          .filter(Boolean)
+          .join('", "');
+        throw new Error(
+          `Unexpected human response: ${JSON.stringify(
+            response
+          )}. Response action '${response.type}' is not allowed for tool '${
+            toolCall.name
+          }'. Expected one of: "${allowedActions}", based on the tool's configuration.`
+        );
       }
 
       /**
@@ -412,47 +472,14 @@ export function humanInTheLoopMiddleware(
         });
       }
 
-      /**
-       * Replace the last message with the updated one
-       */
+      if (approvedToolCalls.length > 0) {
+        return { messages: [...state.messages, ...artificialToolMessages] };
+      }
+
       return {
-        messages: [...state.messages, ...toolMessages],
+        jumpTo: "model_request",
+        messages: [...state.messages, ...artificialToolMessages],
       };
     },
   });
 }
-
-export interface HumanInTheLoopMiddlewareResponse {
-  id: string;
-}
-
-export interface HumanInTheLoopMiddlewareAcceptResponse
-  extends HumanInTheLoopMiddlewareResponse {
-  type: "accept";
-}
-
-export interface HumanInTheLoopMiddlewareIgnoreResponse
-  extends HumanInTheLoopMiddlewareResponse {
-  type: "ignore";
-}
-
-export interface HumanInTheLoopMiddlewareResponseResponse
-  extends HumanInTheLoopMiddlewareResponse {
-  type: "response";
-  args: unknown;
-}
-
-export interface HumanInTheLoopMiddlewareEditResponse
-  extends HumanInTheLoopMiddlewareResponse {
-  type: "edit";
-  args: unknown;
-}
-
-/**
- * The response provided by a human to an interrupt.
- */
-export type HumanInTheLoopMiddlewareHumanResponse =
-  | HumanInTheLoopMiddlewareAcceptResponse
-  | HumanInTheLoopMiddlewareIgnoreResponse
-  | HumanInTheLoopMiddlewareResponseResponse
-  | HumanInTheLoopMiddlewareEditResponse;

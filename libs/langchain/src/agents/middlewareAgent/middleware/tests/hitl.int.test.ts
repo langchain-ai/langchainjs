@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { describe, it, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { Command } from "@langchain/langgraph";
 
@@ -59,9 +59,7 @@ describe("humanInTheLoopMiddleware", () => {
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
-              calculator: {
-                requireApproval: true,
-              },
+              calculator: true,
             },
           }),
         ] as const,
@@ -88,15 +86,39 @@ describe("humanInTheLoopMiddleware", () => {
       expect(result.__interrupt__?.[0].value).toHaveLength(1);
 
       const interruptRequests = result.__interrupt__?.[0].value as any;
-      expect(interruptRequests[0]).toHaveProperty("action");
-      expect(interruptRequests[0].action).toBe("calculator");
-      expect(interruptRequests[0]).toHaveProperty("args");
+      expect(interruptRequests).toMatchInlineSnapshot(`
+        [
+          {
+            "actionRequest": {
+              "action": "calculator",
+              "args": {
+                "a": 42,
+                "b": 17,
+                "operation": "multiply",
+              },
+            },
+            "config": {
+              "allowAccept": true,
+              "allowEdit": true,
+              "allowRespond": true,
+            },
+            "description": "Tool execution requires approval
+
+        Tool: calculator
+        Args: {
+          "a": 42,
+          "b": 17,
+          "operation": "multiply"
+        }",
+          },
+        ]
+      `);
 
       expect(result).not.toHaveProperty("structuredResponse");
 
       const resume = await agent.invoke(
         new Command({
-          resume: [{ id: interruptRequests[0].toolCallId, type: "accept" }],
+          resume: [{ type: "accept" }],
         }),
         thread
       );
@@ -105,58 +127,69 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     /**
-     * This test is skipped because we see the model re-running tool calls
-     * due to the fact that the tool args update changes context.
+     * This test has to be retried because the model sometimes may
+     * rerun the tool due to the edit.
      */
-    it.skip("should edit tool calls", async () => {
+    it("should edit tool calls", { retry: 3 }, async () => {
       const checkpointer = new MemorySaver();
+      const draftEmailTool = tool(
+        () => {
+          return "Draft email";
+        },
+        {
+          name: "draft_email",
+          description: "Drafts an email",
+          schema: z.object({
+            message: z.string(),
+            to: z.array(z.string()),
+            subject: z.string(),
+          }),
+        }
+      );
       const agent = createAgent({
         llm,
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
-              calculator: {
-                requireApproval: true,
-              },
+              draft_email: true,
             },
           }),
         ] as const,
-        tools: [calculator],
+        tools: [draftEmailTool],
         responseFormat: z.object({
-          result: z.number().describe("The result of the calculation"),
+          success: z
+            .boolean()
+            .describe("Whether the email was drafted successfully"),
         }),
         checkpointer,
       });
 
       const result = await agent.invoke(
         {
-          messages: [new HumanMessage("Calculate 42 * 17")],
+          messages: [
+            new HumanMessage("Draft an email to John Doe, saying hello"),
+          ],
         },
         thread
       );
 
-      expect(result.messages).toHaveLength(2);
-      expect(HumanMessage.isInstance(result.messages[0])).toBe(true);
-      expect(AIMessage.isInstance(result.messages[1])).toBe(true);
-      expect(result).toHaveProperty("__interrupt__");
-      expect(result.__interrupt__).toHaveLength(1);
-      expect(result.__interrupt__?.[0]).toHaveProperty("value");
-      expect(result.__interrupt__?.[0].value).toHaveLength(1);
-
+      const editedMessage =
+        "Hello John Doe,\n\nI hope this message finds you well! Just wanted to say hello.\n\nBest regards,\nHans Claasen";
       const interruptRequests = result.__interrupt__?.[0].value as any;
-      expect(interruptRequests[0]).toHaveProperty("action");
-      expect(interruptRequests[0].action).toBe("calculator");
-      expect(interruptRequests[0]).toHaveProperty("args");
-
-      expect(result).not.toHaveProperty("structuredResponse");
-
       const resume = await agent.invoke(
         new Command({
           resume: [
             {
-              id: interruptRequests[0].toolCallId,
               type: "edit",
-              args: { ...interruptRequests[0].args, operation: "add" },
+              args: {
+                action: "draft_email",
+                args: {
+                  ...interruptRequests[0].actionRequest.args,
+                  message: editedMessage,
+                  to: ["john.doe@example.com"],
+                  subject: "Hello",
+                },
+              },
             },
           ],
         }),
@@ -164,57 +197,23 @@ describe("humanInTheLoopMiddleware", () => {
       );
       expect(resume).toHaveProperty("structuredResponse");
       expect(resume.structuredResponse).toEqual({
-        result: expect.toBeOneOf([59, 714]),
-      });
-    });
-
-    it("should ignore tool calls", async () => {
-      const checkpointer = new MemorySaver();
-      const agent = createAgent({
-        llm,
-        middleware: [
-          humanInTheLoopMiddleware({
-            toolConfigs: {
-              calculator: {
-                requireApproval: true,
-              },
-            },
-          }),
-        ] as const,
-        tools: [calculator],
-        responseFormat: z.object({
-          result: z.number().describe("The result of the calculation"),
-        }),
-        checkpointer,
+        success: true,
       });
 
-      const result = await agent.invoke(
+      const firstAIMessage = resume.messages.find(
+        AIMessage.isInstance
+      ) as AIMessage;
+      expect(firstAIMessage.tool_calls).toEqual([
         {
-          messages: [new HumanMessage("Calculate 42 * 17")],
+          id: expect.any(String),
+          name: "draft_email",
+          args: {
+            message: editedMessage,
+            to: ["john.doe@example.com"],
+            subject: "Hello",
+          },
         },
-        thread
-      );
-
-      const interruptRequests = result.__interrupt__?.[0].value as any;
-      const resume = await agent.invoke(
-        new Command({
-          resume: [
-            {
-              id: interruptRequests[0].toolCallId,
-              type: "ignore",
-            },
-          ],
-        }),
-        thread
-      );
-      expect(resume.messages).toHaveLength(4);
-      const lastToolMessage = resume.messages
-        .filter(ToolMessage.isInstance)
-        .at(-1);
-      expect(lastToolMessage?.content).toMatch(
-        /User ignored the tool call for calculator with id/
-      );
-      expect(resume).not.toHaveProperty("structuredResponse");
+      ]);
     });
 
     it("should respond to tool calls", async () => {
@@ -224,9 +223,7 @@ describe("humanInTheLoopMiddleware", () => {
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
-              calculator: {
-                requireApproval: true,
-              },
+              calculator: true,
             },
           }),
         ] as const,
@@ -237,19 +234,17 @@ describe("humanInTheLoopMiddleware", () => {
         checkpointer,
       });
 
-      const result = await agent.invoke(
+      await agent.invoke(
         {
           messages: [new HumanMessage("What is 123 + 456?")],
         },
         thread
       );
 
-      const interruptRequests = result.__interrupt__?.[0].value as any;
       const resume = await agent.invoke(
         new Command({
           resume: [
             {
-              id: interruptRequests[0].toolCallId,
               type: "response",
               args: "The calculation result is 500 (custom override)",
             },
@@ -271,12 +266,8 @@ describe("humanInTheLoopMiddleware", () => {
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
-              calculator: {
-                requireApproval: true,
-              },
-              name_generator: {
-                requireApproval: true,
-              },
+              calculator: true,
+              name_generator: true,
             },
           }),
         ] as const,
@@ -288,7 +279,7 @@ describe("humanInTheLoopMiddleware", () => {
         checkpointer,
       });
 
-      const result = await agent.invoke(
+      await agent.invoke(
         {
           messages: [
             new HumanMessage(
@@ -299,17 +290,14 @@ describe("humanInTheLoopMiddleware", () => {
         thread
       );
 
-      const interruptRequests = result.__interrupt__?.[0].value as any;
       const resume = await agent.invoke(
         new Command({
           resume: [
             {
-              id: interruptRequests[0].toolCallId,
               type: "response",
               args: "The calculation result is 500 (custom override)",
             },
             {
-              id: interruptRequests[1].toolCallId,
               type: "accept",
             },
           ],

@@ -8,7 +8,7 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { createAgent } from "../../index.js";
 import {
   humanInTheLoopMiddleware,
-  type ToolApprovalRequest,
+  type HumanInTheLoopRequest,
   type HumanInTheLoopMiddlewareHumanResponse,
 } from "../hitl.js";
 import {
@@ -68,12 +68,10 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
-          requireApproval: true,
+          allowAccept: true,
           description: "⚠️ File write operation requires approval",
         },
-        calculator: {
-          requireApproval: false,
-        },
+        calculator: false,
       },
     });
 
@@ -167,17 +165,30 @@ describe("humanInTheLoopMiddleware", () => {
     expect(task.interrupts.length).toBe(1);
 
     const requests = task.interrupts[0].value;
-    expect(requests[0].action).toBe("write_file");
-    expect(requests[0].args).toEqual({
-      filename: "greeting.txt",
-      content: "Hello World",
-    });
+    expect(requests).toMatchInlineSnapshot(`
+      [
+        {
+          "actionRequest": {
+            "action": "write_file",
+            "args": {
+              "content": "Hello World",
+              "filename": "greeting.txt",
+            },
+          },
+          "config": {
+            "allowAccept": true,
+            "description": "⚠️ File write operation requires approval",
+          },
+          "description": "⚠️ File write operation requires approval",
+        },
+      ]
+    `);
 
     // Resume with approval
     llm.index = 1;
     const resumedResult = await agent.invoke(
       new Command({
-        resume: [{ id: "call_2", type: "accept" }],
+        resume: [{ type: "accept" }],
       }),
       config
     );
@@ -202,9 +213,7 @@ describe("humanInTheLoopMiddleware", () => {
   it("should handle edit response type", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
-        write_file: {
-          requireApproval: true,
-        },
+        write_file: true,
       },
     });
 
@@ -247,11 +256,10 @@ describe("humanInTheLoopMiddleware", () => {
       new Command({
         resume: [
           {
-            id: "call_1",
             type: "edit",
             args: {
-              filename: "safe.txt",
-              content: "Safe content",
+              action: "write_file",
+              args: { filename: "safe.txt", content: "Safe content" },
             },
           },
         ],
@@ -270,74 +278,11 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
-  /**
-   * is failing in dependency range tests
-   */
-  it.skip("should handle ignore response type", async () => {
-    const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
-        write_file: {
-          requireApproval: true,
-        },
-      },
-    });
-
-    const llm = new FakeToolCallingModel({
-      toolCalls: [
-        [
-          {
-            id: "call_1",
-            name: "write_file",
-            args: { filename: "ignored.txt", content: "Ignored content" },
-          },
-        ],
-      ],
-    });
-
-    const checkpointer = new MemorySaver();
-    const agent = createAgent({
-      llm,
-      checkpointer,
-      tools: [writeFileTool],
-      middleware: [hitlMiddleware] as const,
-    });
-
-    const config = {
-      configurable: {
-        thread_id: "test-ignore",
-      },
-    };
-
-    // Initial invocation
-    await agent.invoke(
-      {
-        messages: [new HumanMessage("Write to ignored file")],
-      },
-      config
-    );
-
-    // Resume with ignore
-    const resumedResult = await agent.invoke(
-      new Command({
-        resume: [{ id: "call_1", type: "ignore" }],
-      }),
-      config
-    );
-
-    // Verify tool was NOT called
-    expect(writeFileFn).not.toHaveBeenCalled();
-
-    // Verify agent terminated
-    expect(resumedResult.messages.at(-1)?.content).toBe(
-      "Write to ignored file"
-    );
-  });
-
   it("should handle manual response type", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
-          requireApproval: true,
+          allowRespond: true,
         },
       },
     });
@@ -381,7 +326,6 @@ describe("humanInTheLoopMiddleware", () => {
       new Command({
         resume: [
           {
-            id: "call_1",
             type: "response",
             args: "File operation not allowed in demo mode",
           },
@@ -403,16 +347,78 @@ describe("humanInTheLoopMiddleware", () => {
     );
   });
 
+  it("should throw if response is not a string", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      toolConfigs: {
+        write_file: {
+          allowRespond: true,
+        },
+      },
+    });
+
+    const llm = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_1",
+            name: "write_file",
+            args: { filename: "manual.txt", content: "Manual content" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      llm,
+      checkpointer,
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-manual",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Write to manual file")],
+      },
+      config
+    );
+
+    // Resume with manual response
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: [
+            {
+              type: "response",
+              args: {
+                action: "write_file",
+                args: "File operation not allowed in demo mode",
+              },
+            },
+          ],
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      'Tool call response for "write_file" must be a string, got object'
+    );
+  });
+
   it("should allow to interrupt multiple tools at the same time", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
-          requireApproval: true,
+          allowEdit: true,
           description: "⚠️ File write operation requires approval",
         },
-        calculator: {
-          requireApproval: true,
-        },
+        calculator: true,
       },
     });
 
@@ -466,21 +472,23 @@ describe("humanInTheLoopMiddleware", () => {
     expect(writeFileFn).toHaveBeenCalledTimes(0);
 
     const interruptRequest = initialResult.__interrupt__?.[0] as Interrupt<
-      ToolApprovalRequest[]
+      HumanInTheLoopRequest[]
     >;
     const resume: HumanInTheLoopMiddlewareHumanResponse[] =
-      interruptRequest.value.map((request) => {
-        if (request.action === "calculator") {
-          return { id: request.toolCallId, type: "accept" };
-        } else if (request.action === "write_file") {
+      interruptRequest.value.map(({ actionRequest }) => {
+        if (actionRequest.action === "calculator") {
+          return { type: "accept" };
+        } else if (actionRequest.action === "write_file") {
           return {
-            id: request.toolCallId,
             type: "edit",
-            args: { filename: "safe.txt", content: "Safe content" },
+            args: {
+              action: "write_file",
+              args: { filename: "safe.txt", content: "Safe content" },
+            },
           };
         }
 
-        throw new Error(`Unknown action: ${request.action}`);
+        throw new Error(`Unknown action: ${actionRequest.action}`);
       });
 
     // Resume with approval
@@ -510,12 +518,10 @@ describe("humanInTheLoopMiddleware", () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
-          requireApproval: true,
+          allowEdit: true,
           description: "⚠️ File write operation requires approval",
         },
-        calculator: {
-          requireApproval: true,
-        },
+        calculator: true,
       },
     });
 
@@ -570,6 +576,70 @@ describe("humanInTheLoopMiddleware", () => {
         new Command({ resume: [{ id: "call_2", type: "ignore" }] }),
         config
       )
-    ).rejects.toThrow("Missing responses for tool calls: calculator");
+    ).rejects.toThrow(
+      "Number of human responses (1) does not match number of hanging tool calls (2)."
+    );
+  });
+
+  it("should not allow me to approve if I don't have allowAccept", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      toolConfigs: {
+        write_file: {
+          allowEdit: true,
+          description: "⚠️ File write operation requires approval",
+        },
+      },
+    });
+
+    // Create agent with mocked LLM
+    const llm = new FakeToolCallingModel({
+      toolCalls: [
+        // First call: calculator tool (auto-approved)
+        [
+          {
+            id: "call_1",
+            name: "calculator",
+            args: { a: 42, b: 17, operation: "multiply" },
+          },
+          {
+            id: "call_2",
+            name: "write_file",
+            args: { filename: "greeting.txt", content: "Hello World" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      llm,
+      checkpointer,
+      prompt:
+        "You are a helpful assistant. Use the tools provided to help the user.",
+      tools: [writeFileTool],
+      middleware: [hitlMiddleware] as const,
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-123",
+      },
+    };
+
+    // Initial invocation
+    await agent.invoke(
+      {
+        messages: [
+          new HumanMessage("Calculate 42 * 17 and write to greeting.txt"),
+        ],
+      },
+      config
+    );
+
+    await expect(() =>
+      agent.invoke(new Command({ resume: [{ type: "accept" }] }), config)
+    ).rejects.toThrow(
+      'Unexpected human response: {"type":"accept"}. Response action \'accept\' is not allowed for tool \'write_file\'. Expected one of: "edit", based on the tool\'s configuration.'
+    );
   });
 });
