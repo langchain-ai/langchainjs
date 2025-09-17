@@ -552,11 +552,14 @@ describe("Complex AIMessageChunk concat", () => {
     for (const chunk of chunks) {
       finalChunk = finalChunk.concat(chunk);
     }
+    expect(finalChunk.tool_calls).toHaveLength(1);
     expect(finalChunk.tool_calls).toEqual([
       {
         type: "tool_call",
         name: "get_weather",
-        args: "San Francisco",
+        args: {
+          location: "San Francisco",
+        },
         id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
       },
     ]);
