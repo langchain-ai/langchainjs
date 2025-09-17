@@ -12,7 +12,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * If your agent defines a `contextSchema`, pass the inferred type here to get full type-safety
  * for `runtime.context`.
  *
- * @param dynamicPrompt - Function that receives the current agent `state` and `runtime`, and
+ * @param dynamicSystemPrompt - Function that receives the current agent `state` and `runtime`, and
  * returns the system prompt for the next model call. It can return either a `SystemMessage`
  * or a `string` (which will be wrapped in a `SystemMessage`). Supports async.
  *
@@ -26,7 +26,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  *
  * const contextSchema = z.object({ region: z.string().optional() });
  *
- * const middleware = dynamicPromptMiddleware<z.infer<typeof contextSchema>>(
+ * const middleware = dynamicSystemPrompt<z.infer<typeof contextSchema>>(
  *   (_state, runtime) =>
  *     new SystemMessage(
  *       `You are a helpful assistant. Region: ${runtime.context.region ?? "n/a"}`
@@ -44,7 +44,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  *
  * @example Returning a string instead of a SystemMessage
  * ```ts
- * const middleware = dynamicPromptMiddleware((_state, runtime) =>
+ * const middleware = dynamicSystemPrompt((_state, runtime) =>
  *   `You are a helpful assistant. Region: ${runtime.context.region ?? "n/a"}`
  * );
  * ```
@@ -52,15 +52,15 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * @public
  */
 export function dynamicSystemPrompt<TContextSchema = unknown>(
-  dynamicPrompt: (
+  fn: (
     state: AgentBuiltInState,
     runtime: Runtime<TContextSchema>
   ) => SystemMessage | string | Promise<SystemMessage | string>
 ) {
   return createMiddleware({
-    name: "DynamicPromptMiddleware",
+    name: "DynamicSystemPromptMiddleware",
     prepareModelRequest: async (options, state, runtime) => {
-      const system = await dynamicPrompt(
+      const system = await fn(
         state as AgentBuiltInState,
         runtime as Runtime<TContextSchema>
       );
