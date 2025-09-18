@@ -618,17 +618,17 @@ describe("$NormalizedMessageStructure<T>", () => {
     // Properties backfilled for all standard roles
     type AIP = NonNullable<N["properties"]>["ai"];
     expectTypeOf<AIP>().toEqualTypeOf<{
-      response_metadata?: ResponseMetadata | undefined;
-      usage_metadata?: UsageMetadata | undefined;
+      response_metadata: ResponseMetadata;
+      usage_metadata: UsageMetadata;
     }>();
     expectTypeOf<NonNullable<N["properties"]>["human"]>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
     expectTypeOf<NonNullable<N["properties"]>["system"]>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
     expectTypeOf<NonNullable<N["properties"]>["tool"]>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
   });
 });
@@ -841,23 +841,23 @@ describe("$InferMessageProperties<TStructure, TRole>", () => {
 
     type AIProps = $InferMessageProperties<S, "ai">;
     expectTypeOf<AIProps>().toEqualTypeOf<{
-      response_metadata?: ResponseMetadata | undefined;
-      usage_metadata?: UsageMetadata | undefined;
+      response_metadata: ResponseMetadata;
+      usage_metadata: UsageMetadata;
     }>();
 
     type HumanProps = $InferMessageProperties<S, "human">;
     expectTypeOf<HumanProps>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
 
     type SystemProps = $InferMessageProperties<S, "system">;
     expectTypeOf<SystemProps>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
 
     type ToolProps = $InferMessageProperties<S, "tool">;
     expectTypeOf<ToolProps>().toEqualTypeOf<{
-      response_metadata?: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
     }>();
   });
 
@@ -872,12 +872,12 @@ describe("$InferMessageProperties<TStructure, TRole>", () => {
     type HumanProps = $InferMessageProperties<S, "human">;
 
     expectTypeOf<AIProps>().toEqualTypeOf<{
-      response_metadata: ResponseMetadata | undefined;
-      usage_metadata: UsageMetadata | undefined;
+      response_metadata: ResponseMetadata;
+      usage_metadata: UsageMetadata;
       foo: { bar: number };
     }>();
     expectTypeOf<HumanProps>().toEqualTypeOf<{
-      response_metadata: Record<string, unknown> | undefined;
+      response_metadata: Record<string, unknown>;
       metadata: { qux: string };
     }>();
   });
@@ -896,8 +896,8 @@ describe("$InferMessageProperties<TStructure, TRole>", () => {
     type AIProps = $InferMessageProperties<S, "ai">;
 
     expectTypeOf<AIProps>().toEqualTypeOf<{
-      response_metadata: ResponseMetadata | undefined;
-      usage_metadata: UsageMetadata | undefined;
+      response_metadata: ResponseMetadata;
+      usage_metadata: UsageMetadata;
       keep: boolean;
       nested: { a: number };
     }>();
@@ -930,8 +930,8 @@ describe("$InferMessageProperties<TStructure, TRole>", () => {
     type AIProps = $InferMessageProperties<M, "ai">;
 
     expectTypeOf<AIProps>().toEqualTypeOf<{
-      response_metadata: ResponseMetadata | undefined;
-      usage_metadata: UsageMetadata | undefined;
+      response_metadata: ResponseMetadata;
+      usage_metadata: UsageMetadata;
       foo: { bar: string; baz: number };
       baz: { qux: string };
     }>();
@@ -972,9 +972,7 @@ describe("$InferResponseMetadata<TStructure, TRole>", () => {
   // TODO(hntrl): implement
   test("should return `ResponseMetadata | undefined` when using `<MessageStructure, 'ai'>`", async () => {
     type AIResponseMetadata = $InferResponseMetadata<MessageStructure, "ai">;
-    expectTypeOf<AIResponseMetadata>().toEqualTypeOf<
-      ResponseMetadata | undefined
-    >();
+    expectTypeOf<AIResponseMetadata>().toEqualTypeOf<ResponseMetadata>();
   });
 });
 

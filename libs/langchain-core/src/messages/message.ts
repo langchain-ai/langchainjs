@@ -392,7 +392,7 @@ export interface StandardMessageStructure extends MessageStructure {
       /** Metadata about the AI model response */
       response_metadata: ResponseMetadata;
       /** Usage statistics for the AI response */
-      usage_metadata?: UsageMetadata;
+      usage_metadata: UsageMetadata;
     };
     human: {
       /** Metadata about the human message */
@@ -710,7 +710,7 @@ export interface Message<
   /** Array of content blocks that make up the message content */
   content: $InferMessageContent<TStructure, TRole>;
   /** Metadata about the message */
-  response_metadata: Partial<$InferResponseMetadata<TStructure, TRole>>;
+  response_metadata?: Partial<$InferResponseMetadata<TStructure, TRole>>;
 }
 
 /**
