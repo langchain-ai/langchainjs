@@ -210,7 +210,9 @@ const contextSchema = z
  *
  * @param options - Configuration options for the middleware
  * @param options.toolConfigs - Per-tool configuration mapping tool names to their settings
- * @param options.toolConfigs[toolName].requireApproval - Whether the tool requires human approval
+ * @param options.toolConfigs[toolName].allowAccept - Whether the human can approve the current action without changes
+ * @param options.toolConfigs[toolName].allowEdit - Whether the human can reject the current action with feedback
+ * @param options.toolConfigs[toolName].allowRespond - Whether the human can approve the current action with edited content
  * @param options.toolConfigs[toolName].description - Custom approval message for the tool
  * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their ToolConfig.
  *
@@ -304,14 +306,14 @@ const contextSchema = z
  * const hitlMiddleware = humanInTheLoopMiddleware({
  *   toolConfigs: {
  *     "execute_sql": {
- *       requireApproval: true,
+ *       allowAccept: true,
+ *       allowEdit: true,
+ *       allowRespond: true,
  *       description: "🚨 SQL query requires DBA approval\nPlease review for safety and performance"
  *     },
- *     "read_schema": {
- *       requireApproval: false  // Reading metadata is safe
- *     },
+ *     "read_schema": false  // Reading metadata is safe
  *     "delete_records": {
- *       requireApproval: true,
+ *       allowAccept: true,
  *       description: "⛔ DESTRUCTIVE OPERATION - Requires manager approval"
  *     }
  *   },
