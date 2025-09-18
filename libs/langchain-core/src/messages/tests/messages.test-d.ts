@@ -14,6 +14,7 @@ import {
   $InferMessageContentBlocks,
   $InferMessageProperty,
   $InferMessageProperties,
+  $InferResponseMetadata,
 } from "../message.js";
 import { ContentBlock } from "../content/index.js";
 import { ResponseMetadata, UsageMetadata } from "../metadata.js";
@@ -969,6 +970,12 @@ describe("$InferMessageProperty<TStructure, TRole, K>", () => {
 
 describe("$InferResponseMetadata<TStructure, TRole>", () => {
   // TODO(hntrl): implement
+  test("should return `ResponseMetadata | undefined` when using `<MessageStructure, 'ai'>`", async () => {
+    type AIResponseMetadata = $InferResponseMetadata<MessageStructure, "ai">;
+    expectTypeOf<AIResponseMetadata>().toEqualTypeOf<
+      ResponseMetadata | undefined
+    >();
+  });
 });
 
 describe("Message", () => {

@@ -650,7 +650,7 @@ export type $InferResponseMetadata<
   TRole,
   "response_metadata"
 > extends infer P
-  ? [P] extends [unknown]
+  ? [P] extends [never]
     ? Record<string, unknown>
     : P
   : never;
