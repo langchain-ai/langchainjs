@@ -1,7 +1,12 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, jest } from "@jest/globals";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
 import { ChatOpenAI } from "../chat_models.js";
@@ -746,14 +751,37 @@ test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streami
 
   // Test streaming mode - this should also work but currently doesn't
   const stream = await llmWithTools.stream(dialogs);
-  let finalChunk;
+  let finalChunk: AIMessageChunk | undefined;
+  const chunks = [];
   for await (const chunk of stream) {
+    chunks.push(chunk);
     if (!finalChunk) {
       finalChunk = chunk;
     } else {
       finalChunk = finalChunk.concat(chunk);
     }
   }
+
+  expect(chunks.length).toBeGreaterThanOrEqual(4);
+  expect(finalChunk?.tool_calls).toHaveLength(1);
+  expect(finalChunk?.tool_calls?.[0]).toEqual(
+    expect.objectContaining({
+      name: "get_current_time",
+      args: expect.any(Object),
+      id: expect.any(String),
+      type: "tool_call",
+    })
+  );
+  expect(finalChunk?.tool_call_chunks).toHaveLength(1);
+  expect(finalChunk?.tool_call_chunks?.[0]).toEqual(
+    expect.objectContaining({
+      name: "get_current_time",
+      args: "{}",
+      id: expect.any(String),
+      index: 0,
+      type: "tool_call_chunk",
+    })
+  );
 
   // This should pass but currently fails due to the bug
   expect(finalChunk?.tool_calls).toBeDefined();

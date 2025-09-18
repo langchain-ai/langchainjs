@@ -12,19 +12,19 @@ describe("ChatOpenAI", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",
       });
-      expect(chat.disableStreaming).toBe(true);
+      expect(chat.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       chat = new ChatOpenAI({
         model: "gpt-4o-mini",
         disableStreaming: undefined,
       } as any);
-      expect(chat.disableStreaming).toBe(true);
+      expect(chat.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       chat = new ChatOpenAI({
         model: "gpt-4o-mini",
         disableStreaming: false,
       });
-      expect(chat.disableStreaming).toBe(true);
+      expect(chat.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       chat = new ChatOpenAI({
         model: "gpt-4o-mini",
@@ -36,19 +36,19 @@ describe("ChatOpenAI", () => {
         model: "gpt-4o-mini",
         disableStreaming: null,
       } as any);
-      expect(chatWithNull.disableStreaming).toBe(true);
+      expect(chatWithNull.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       const chatWithZero = new ChatOpenAI({
         model: "gpt-4o-mini",
         disableStreaming: 0,
       } as any);
-      expect(chatWithZero.disableStreaming).toBe(true);
+      expect(chatWithZero.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       const chatWithEmptyString = new ChatOpenAI({
         model: "gpt-4o-mini",
         disableStreaming: "",
       } as any);
-      expect(chatWithEmptyString.disableStreaming).toBe(true);
+      expect(chatWithEmptyString.disableStreaming).toBe(false);
       expect(chat.streaming).toBe(false);
       chat = new ChatOpenAI({
         model: "gpt-4o-mini",
