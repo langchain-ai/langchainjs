@@ -1,5 +1,5 @@
 /**
- * Filesystem MCP Server with LangGraph Example
+ * Filesystem MCP Server with LangGraph Example and Graceful Error Handling
  *
  * This example demonstrates how to use the Filesystem MCP server with LangGraph
  * to create a structured workflow for complex file operations.
@@ -8,6 +8,10 @@
  * 1. Clear separation of responsibilities (reasoning vs execution)
  * 2. Conditional routing based on file operation types
  * 3. Structured handling of complex multi-file operations
+ *
+ * It also demonstrates the handleConnectionErrorsGracefully feature by including an
+ * optional server that might not be available - the client will continue working with
+ * the servers that successfully connect.
  */
 
 /* eslint-disable no-console */
@@ -58,11 +62,18 @@ export async function runExample(client?: MultiServerMCPClient) {
               "./examples/filesystem_test", // This directory needs to exist
             ],
           },
+          // This server is not available - demonstrate graceful error handling
+          "optional-math-server": {
+            transport: "http",
+            url: "http://localhost:9999/mcp", // This server likely doesn't exist
+          },
         },
         useStandardContentBlocks: true,
+        // Handle connection errors gracefully - continue with available servers
+        handleConnectionErrorsGracefully: true,
       });
 
-    console.log("Connected to server");
+    console.log("Connected to servers");
 
     // Get all tools (flattened array is the default now)
     const mcpTools = await client.getTools();
@@ -76,6 +87,18 @@ export async function runExample(client?: MultiServerMCPClient) {
         .map((tool) => tool.name)
         .join(", ")}`
     );
+
+    // Check which servers are actually connected
+    console.log("\n=== Server Connection Status ===");
+    const serverNames = ["filesystem", "optional-math-server"];
+    for (const serverName of serverNames) {
+      const serverClient = await client.getClient(serverName);
+      if (serverClient) {
+        console.log(`✅ ${serverName}: Connected`);
+      } else {
+        console.log(`❌ ${serverName}: Failed to connect (skipped gracefully)`);
+      }
+    }
 
     // Create an OpenAI model with tools attached
     const systemMessage = `You are an assistant that helps users with file operations.
