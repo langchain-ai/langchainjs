@@ -280,6 +280,12 @@ export class ChatAlibabaTongyi
     this.maxTokens = fields.maxTokens;
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
+
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        `Alibaba Tongyi model name not specified. Defaulting to "qwen-turbo".`
+      );
+    }
     this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
     this.model = this.modelName;
   }

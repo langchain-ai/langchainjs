@@ -246,6 +246,12 @@ export class ChatZhipuAI extends BaseChatModel implements ChatZhipuAIParams {
     this.topP = fields.topP ?? 0.7;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
+
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        'ZhipuAI model name not specified. Defaulting to "glm-3-turbo".'
+      );
+    }
     this.modelName = fields?.model ?? fields.modelName ?? "glm-3-turbo";
     this.model = this.modelName;
     this.doSample = fields.doSample;

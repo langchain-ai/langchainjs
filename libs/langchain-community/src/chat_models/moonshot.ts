@@ -237,6 +237,12 @@ export class ChatMoonshot extends BaseChatModel implements ChatMoonshotParams {
     this.topP = fields.topP ?? 1;
     this.stop = fields.stop;
     this.maxTokens = fields.maxTokens;
+
+    if (!fields?.model && !fields?.modelName) {
+      console.warn(
+        'Moonshot model name not specified. Defaulting to "moonshot-v1-8k".'
+      );
+    }
     this.modelName = fields?.model ?? fields.modelName ?? "moonshot-v1-8k";
     this.model = this.modelName;
     this.presencePenalty = fields.presencePenalty ?? 0;
