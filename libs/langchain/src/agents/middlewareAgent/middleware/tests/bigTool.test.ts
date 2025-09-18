@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DynamicTool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
-import { bigToolMiddleware } from "../bigTool.js";
+import { bigTool } from "../bigTool.js";
 import type { CustomToolSelector } from "../bigTool.js";
 
 // Helper function to create mock tools
@@ -68,7 +68,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Strategy: all", () => {
     it("should pass through all tools when strategy is 'all'", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all" });
+      const middleware = bigTool({ strategy: "all" });
       const state = createMockState([new HumanMessage("Test query")]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -84,7 +84,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should respect maxTools limit even with 'all' strategy", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all", maxTools: 5 });
+      const middleware = bigTool({ strategy: "all", maxTools: 5 });
       const state = createMockState([new HumanMessage("Test query")]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -100,7 +100,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle empty tools array", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all" });
+      const middleware = bigTool({ strategy: "all" });
       const state = createMockState([new HumanMessage("Test query")]);
       const runtime = createMockRuntime();
       const request = createMockRequest([]);
@@ -117,7 +117,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Strategy: keyword", () => {
     it("should filter tools based on keywords in tool names", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["file"],
@@ -153,7 +153,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should filter tools based on keywords in descriptions", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["database"],
@@ -185,7 +185,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle case insensitive matching", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["FILE"],
@@ -209,7 +209,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle case sensitive matching", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["FILE"],
@@ -234,7 +234,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should return all tools when no keywords provided", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: [],
@@ -258,7 +258,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should fallback to original tools when no matches found", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["nonexistent"],
@@ -285,7 +285,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Strategy: semantic", () => {
     it("should filter tools based on semantic similarity", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "semantic",
         semanticConfig: {
           threshold: 0.1,
@@ -310,7 +310,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should respect similarity threshold", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "semantic",
         semanticConfig: {
           threshold: 0.9, // Very high threshold
@@ -335,7 +335,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should return limited tools when query is empty", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "semantic",
         semanticConfig: {
           threshold: 0.3,
@@ -375,7 +375,7 @@ describe("BigToolMiddleware", () => {
         }),
       ];
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "semantic",
         semanticConfig: {
           threshold: 0.1,
@@ -406,7 +406,7 @@ describe("BigToolMiddleware", () => {
         .fn()
         .mockResolvedValue(mockTools.slice(0, 3));
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "custom",
         customSelector,
       });
@@ -433,7 +433,7 @@ describe("BigToolMiddleware", () => {
     it("should handle custom selector returning empty array", async () => {
       const customSelector: CustomToolSelector = vi.fn().mockResolvedValue([]);
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "custom",
         customSelector,
       });
@@ -456,7 +456,7 @@ describe("BigToolMiddleware", () => {
         .fn()
         .mockRejectedValue(new Error("Selection failed"));
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "custom",
         customSelector,
       });
@@ -487,7 +487,7 @@ describe("BigToolMiddleware", () => {
       const customSelector: CustomToolSelector = vi.fn().mockResolvedValue([]);
       const contextData = { userId: "123", preferences: { maxTools: 5 } };
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "custom",
         customSelector,
       });
@@ -508,7 +508,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Runtime configuration override", () => {
     it("should use runtime context over middleware options", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "all",
         maxTools: 10,
       });
@@ -530,7 +530,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should override strategy at runtime", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "all",
       });
 
@@ -565,7 +565,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Message extraction", () => {
     it("should extract query from last human message", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["database"],
@@ -602,7 +602,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle empty messages array", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all" });
+      const middleware = bigTool({ strategy: "all" });
       const state = createMockState([]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -617,7 +617,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle messages without human messages", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all" });
+      const middleware = bigTool({ strategy: "all" });
       const state = createMockState([new AIMessage("AI message only")]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -634,7 +634,7 @@ describe("BigToolMiddleware", () => {
 
   describe("Edge cases", () => {
     it("should handle undefined middleware options", async () => {
-      const middleware = bigToolMiddleware();
+      const middleware = bigTool();
       const state = createMockState([new HumanMessage("Test query")]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -649,7 +649,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle undefined runtime context", async () => {
-      const middleware = bigToolMiddleware({ strategy: "all" });
+      const middleware = bigTool({ strategy: "all" });
       const state = createMockState([new HumanMessage("Test query")]);
       const runtime = createMockRuntime();
       const request = createMockRequest(mockTools);
@@ -664,7 +664,7 @@ describe("BigToolMiddleware", () => {
     });
 
     it("should handle maxTools larger than available tools", async () => {
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "all",
         maxTools: 100,
       });
@@ -689,7 +689,7 @@ describe("BigToolMiddleware", () => {
         { name: "tool3", description: "Normal tool" }, // Normal tool
       ];
 
-      const middleware = bigToolMiddleware({
+      const middleware = bigTool({
         strategy: "keyword",
         keywordConfig: {
           keywords: ["tool"],

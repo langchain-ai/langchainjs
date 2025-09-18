@@ -14,11 +14,26 @@ export type ToolSelectionStrategy =
 /**
  * Custom tool selector function type
  */
-export type CustomToolSelector<Context = Record<string, unknown>> = (
-  tools: (ClientTool | ServerTool)[],
-  query: string,
-  context: Context
-) => Promise<(ClientTool | ServerTool)[]> | (ClientTool | ServerTool)[];
+const customToolSelector = z
+  .function()
+  .args(
+    z.object({
+      // all tools
+      tools: z.array(z.custom<ClientTool | ServerTool>()).describe("Alltools"),
+      // user query
+      query: z.string(),
+      // agent context
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      context: z.custom<Record<string, any>>(),
+    })
+  )
+  .returns(
+    z.union([
+      z.array(z.custom<ClientTool | ServerTool>()),
+      z.promise(z.array(z.custom<ClientTool | ServerTool>())),
+    ])
+  );
+export type CustomToolSelector = z.infer<typeof customToolSelector>;
 
 /**
  * Keyword matching configuration
@@ -98,13 +113,18 @@ const contextSchema = z.object({
     .object({
       threshold: z.number().min(0).max(1).default(0.3),
       maxTools: z.number().positive().default(10),
+      embedFunction: z
+        .function()
+        .args(z.string())
+        .returns(z.union([z.array(z.number()), z.promise(z.array(z.number()))]))
+        .optional(),
     })
     .optional(),
 
   /**
    * Custom tool selector function
    */
-  customSelector: z.custom<CustomToolSelector>().optional(),
+  customSelector: customToolSelector.optional(),
 });
 
 /**
@@ -209,17 +229,43 @@ function calculateSimpleSimilarity(text1: string, text2: string): number {
 }
 
 /**
+ * Calculate cosine similarity between two vectors
+ */
+function cosine(a: number[], b: number[]): number {
+  const num = a.reduce((s, v, i) => s + v * (b[i] ?? 0), 0);
+  const da = Math.hypot(...a);
+  const db = Math.hypot(...b);
+  return da && db ? num / (da * db) : 0;
+}
+
+/**
  * Semantic similarity-based tool selection
  */
-function selectToolsBySemantic(
+async function selectToolsBySemantic(
   tools: (ClientTool | ServerTool)[],
   config: SemanticMatchConfig,
   query: string
-): (ClientTool | ServerTool)[] {
-  const { threshold = 0.3, maxTools = 10 } = config;
+): Promise<(ClientTool | ServerTool)[]> {
+  const { threshold = 0.3, maxTools = 10, embedFunction } = config;
 
   if (!query.trim()) {
     return tools.slice(0, maxTools);
+  }
+
+  if (embedFunction) {
+    const q = await Promise.resolve(embedFunction(query));
+    const scored = await Promise.all(
+      tools.map(async (tool) => {
+        const t = getToolText(tool);
+        const e = await Promise.resolve(embedFunction(t));
+        return { tool, score: cosine(q, e) };
+      })
+    );
+    return scored
+      .filter(({ score }) => score >= threshold)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, maxTools)
+      .map(({ tool }) => tool);
   }
 
   const toolsWithScores = tools.map((tool) => ({
@@ -275,14 +321,14 @@ function selectToolsBySemantic(
  * @example
  * Basic usage with keyword matching
  * ```typescript
- * import { bigToolMiddleware } from "langchain/middleware";
+ * import { bigTool } from "langchain/middleware";
  * import { createAgent } from "langchain";
  *
  * const agent = createAgent({
  *   model: "openai:gpt-4",
  *   tools: [...manyTools], // 1000+ tools
  *   middleware: [
- *     bigToolMiddleware({
+ *     bigTool({
  *       strategy: "keyword",
  *       maxTools: 20,
  *       keywordConfig: {
@@ -298,19 +344,54 @@ function selectToolsBySemantic(
  * @example
  * Semantic similarity strategy
  * ```typescript
- * const semanticMiddleware = bigToolMiddleware({
+ * // Basic semantic similarity using simple text-overlap
+ * const semanticMiddleware = bigTool({
  *   strategy: "semantic",
  *   semanticConfig: {
  *     threshold: 0.4,
- *     maxTools: 15
- *   }
+ *     maxTools: 15,
+ *   },
+ * });
+ *
+ * // Semantic similarity with a custom embedding function (e.g.cosine ranking)
+ * // Note: embedFunction can be async. It should return a numeric vector.
+ * import { embedText } from "./myEmbeddings";
+ * const semanticWithEmbeddings = bigTool({
+ *   strategy: "semantic",
+ *   semanticConfig: {
+ *     threshold: 0.35,
+ *     maxTools: 10,
+ *     embedFunction: (text: string) => embedText(text),
+ *   },
+ * });
+ *
+ * // Semantic similarity with a vendor embedding function
+ * import OpenAI from "openai";
+ * import { bigTool } from "langchain/middleware";
+ *
+ * const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+ * const embedFunction = async (text: string): Promise<number[]> => {
+ *   const res = await openai.embeddings.create({
+ *     model: "text-embedding-3-small", // or "text-embedding-3-large"
+ *     input: text,
+ *   });
+ *   return res.data[0].embedding;
+ * };
+ *
+ * const middleware = bigTool({
+ *   strategy: "semantic",
+ *   semanticConfig: {
+ *     threshold: 0.35,
+ *     maxTools: 10,
+ *     embedFunction,
+ *   },
  * });
  * ```
  *
  * @example
  * Custom selection logic
  * ```typescript
- * const customMiddleware = bigToolMiddleware({
+ * const customMiddleware = bigTool({
  *   strategy: "custom",
  *   customSelector: async (tools, query, context) => {
  *     // Your custom logic here
@@ -326,45 +407,74 @@ function selectToolsBySemantic(
  * @example
  * Runtime configuration override
  * ```typescript
+ * // Override keyword strategy at runtime
  * await agent.invoke(
  *   { messages: [new HumanMessage("Find files related to user data")] },
  *   {
  *     configurable: {
  *       middleware_context: {
- *         strategy: "keyword",
- *         maxTools: 5,
- *         keywordConfig: {
- *           keywords: ["user", "data", "file"],
- *           minMatches: 2
- *         }
- *       }
- *     }
+ *         bigToolOptions: {
+ *           strategy: "keyword",
+ *           maxTools: 5,
+ *           keywordConfig: {
+ *             keywords: ["user", "data", "file"],
+ *             minMatches: 2,
+ *           },
+ *         },
+ *       },
+ *     },
+ *   }
+ * );
+ *
+ * // Override semantic strategy (including embeddings) at runtime
+ * const embed = (text: string) => embedText(text);
+ * await agent.invoke(
+ *   { messages: [new HumanMessage("Query customer database records")] },
+ *   {
+ *     configurable: {
+ *       middleware_context: {
+ *         bigToolOptions: {
+ *           strategy: "semantic",
+ *           semanticConfig: {
+ *             threshold: 0.4,
+ *             maxTools: 8,
+ *             embedFunction: embed,
+ *           },
+ *         },
+ *       },
+ *     },
  *   }
  * );
  * ```
  */
-export function bigToolMiddleware(
+export function bigTool(
   middlewareOptions?: Partial<z.infer<typeof contextSchema>> & {
     customSelector?: CustomToolSelector;
   }
 ) {
   return createMiddleware({
     name: "BigToolMiddleware",
-    contextSchema,
+    contextSchema: z.object({
+      bigToolOptions: contextSchema,
+    }),
 
     prepareModelRequest: async (request, state, runtime) => {
+      const contextConfiguration = runtime.context.bigToolOptions;
       // Get configuration with fallbacks
       const strategy =
-        DEFAULT_STRATEGY === runtime.context?.strategy
+        DEFAULT_STRATEGY === contextConfiguration?.strategy
           ? middlewareOptions?.strategy ?? DEFAULT_STRATEGY
           : DEFAULT_STRATEGY;
-      const maxTools = runtime.context?.maxTools ?? middlewareOptions?.maxTools;
+      const maxTools =
+        contextConfiguration?.maxTools ?? middlewareOptions?.maxTools;
       const keywordConfig =
-        runtime.context?.keywordConfig ?? middlewareOptions?.keywordConfig;
+        contextConfiguration?.keywordConfig ?? middlewareOptions?.keywordConfig;
       const semanticConfig =
-        runtime.context?.semanticConfig ?? middlewareOptions?.semanticConfig;
+        contextConfiguration?.semanticConfig ??
+        middlewareOptions?.semanticConfig;
       const customSelector =
-        runtime.context?.customSelector ?? middlewareOptions?.customSelector;
+        contextConfiguration?.customSelector ??
+        middlewareOptions?.customSelector;
 
       const originalTools = request.tools;
       let selectedTools = originalTools;
@@ -390,7 +500,7 @@ export function bigToolMiddleware(
 
           case "semantic":
             if (semanticConfig) {
-              selectedTools = selectToolsBySemantic(
+              selectedTools = await selectToolsBySemantic(
                 originalTools,
                 semanticConfig,
                 query
@@ -401,7 +511,11 @@ export function bigToolMiddleware(
           case "custom":
             if (customSelector) {
               selectedTools = await Promise.resolve(
-                customSelector(originalTools, query, runtime.context)
+                customSelector({
+                  tools: originalTools,
+                  query,
+                  context: runtime.context,
+                })
               );
             }
             break;
