@@ -14,7 +14,7 @@ import {
   _AnyIdAIMessage,
 } from "../../../tests/utils.js";
 
-describe("humanInTheLoop", () => {
+describe("humanInTheLoopMiddleware", () => {
   it("should auto-approve safe tools and interrupt for tools requiring approval", async () => {
     // Mock tool functions
     const calculatorFn = vi.fn(

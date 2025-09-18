@@ -16,7 +16,7 @@ import {
 import { createAgent } from "../../index.js";
 import { FakeToolCallingChatModel } from "../../../tests/utils.js";
 
-describe("summarization", () => {
+describe("summarizationMiddleware", () => {
   // Mock summarization model
   function createMockSummarizationModel() {
     const invokeCallback = vi
