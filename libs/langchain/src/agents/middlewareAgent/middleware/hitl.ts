@@ -6,9 +6,21 @@ import { interrupt } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 
 const ToolConfigSchema = z.object({
+  /**
+   * Whether the human can approve the current action without changes
+   */
   allowAccept: z.boolean().optional(),
+  /**
+   * Whether the human can reject the current action with feedback
+   */
   allowEdit: z.boolean().optional(),
+  /**
+   * Whether the human can approve the current action with edited content
+   */
   allowRespond: z.boolean().optional(),
+  /**
+   * The description attached to the request for human input
+   */
   description: z.string().optional(),
 });
 
@@ -30,32 +42,31 @@ export interface Interrupt<TValue = unknown> {
 }
 
 /**
- * Configuration that defines what actions are allowed for a human interrupt.
- * This controls the available interaction options when the graph is paused for human input.
+ * Configuration that defines which reviewer response types are permitted during a human interrupt.
+ * These flags control what the human reviewer may do (e.g., accept/edit/respond),
+ * not the tool action the agent has requested.
  */
 export interface HumanInTheLoopConfig
   extends Omit<ToolConfigSchema, "description"> {}
 
 /**
- * Represents a request with a name and arguments.
+ * Describes the agent-requested tool action (name and arguments).
+ * This is what the AI intends to execute, subject to human review.
  */
 export interface ActionRequest {
   /**
-   * The type or name of action being requested (e.g., "add_numbers")
+   * The tool/action name requested by the agent (e.g., "send_email").
    */
   action: string;
   /**
-   * Key-value pairs of arguments needed for the action (e.g., {"a": 1, "b": 2})
+   * Arguments for the requested tool call (e.g., {"a": 1, "b": 2}).
    */
   args: Record<string, any>;
 }
 
 /**
- * Represents an interrupt triggered by the graph that requires human intervention.
- *
- * @param actionRequest - The specific action being requested from the human
- * @param config - Configuration defining what response types are allowed
- * @param description - Optional detailed description of what input is needed
+ * Represents an interrupt triggered by the graph that requires human intervention
+ * to approve, edit, or respond to an agent-requested tool action.
  *
  * @example
  * ```ts
@@ -68,20 +79,30 @@ export interface ActionRequest {
  * ```
  */
 export interface HumanInTheLoopRequest {
+  /**
+   * The agent-requested tool action to be reviewed.
+   */
   actionRequest: ActionRequest;
+  /**
+   * Which reviewer responses are allowed (accept/edit/respond).
+   */
   config: HumanInTheLoopConfig;
+  /**
+   * Optional human-facing description shown in the approval prompt.
+   */
   description?: string;
 }
 
 /**
- * Response when a human approves the action.
+ * Response when a human approves the agent-requested action.
  */
 export interface AcceptPayload {
   type: "accept";
 }
 
 /**
- * Response when a human rejects the action.
+ * Response when a human provides a manual response instead of executing
+ * the agent-requested action.
  */
 export interface ResponsePayload {
   type: "response";
@@ -89,7 +110,7 @@ export interface ResponsePayload {
 }
 
 /**
- * Response when a human edits the action.
+ * Response when a human edits the agent-requested action (tool name and/or args).
  */
 export interface EditPayload {
   type: "edit";
@@ -106,7 +127,7 @@ export type HumanInTheLoopMiddlewareHumanResponse =
  */
 export interface ToolConfig extends HumanInTheLoopConfig {
   /**
-   * The description attached to the request for human input
+   * Human-facing description shown in the approval request.
    */
   description?: string;
 }
@@ -114,17 +135,21 @@ export interface ToolConfig extends HumanInTheLoopConfig {
 const contextSchema = z
   .object({
     /**
-     * Mapping of tool name to allowed actions.
+     * Mapping of tool name to allowed reviewer responses.
      * If a tool doesn't have an entry, it's auto-approved by default.
      *
-     * - `true` -> all actions allowed
-     * - `false` -> indicates that the tool is auto-approved.
-     * - `ToolConfig` -> indicates the specific actions allowed for this tool.
+     * - `true` -> pause for approval and allow accept/edit/respond
+     * - `false` -> auto-approve (no human review)
+     * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
      */
     toolConfigs: z.record(z.union([z.boolean(), ToolConfigSchema])).default({}),
     /**
-     * The prefix to use when constructing action requests.
-     * This is used to provide context about the tool call and the action being requested.
+     * Prefix used when constructing human-facing approval messages.
+     * Provides context about the tool call being reviewed; does not change the underlying action.
+     *
+     * Note: This prefix is only applied for tools that do not provide a custom
+     * `description` via their {@link ToolConfig}. If a tool specifies a custom
+     * `description`, that per-tool text is used and this prefix is ignored.
      */
     descriptionPrefix: z.string().default("Tool execution requires approval"),
   })
@@ -187,7 +212,7 @@ const contextSchema = z
  * @param options.toolConfigs - Per-tool configuration mapping tool names to their settings
  * @param options.toolConfigs[toolName].requireApproval - Whether the tool requires human approval
  * @param options.toolConfigs[toolName].description - Custom approval message for the tool
- * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval")
+ * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their ToolConfig.
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *

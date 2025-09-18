@@ -54,12 +54,10 @@ const writeFileTool = tool(
 const hitlMiddleware = humanInTheLoopMiddleware({
   toolConfigs: {
     write_file: {
-      requireApproval: true,
+      allowAccept: true,
       description: "⚠️ File write operation requires approval",
     },
-    calculator: {
-      requireApproval: false, // Math is safe
-    },
+    calculator: false, // Math is safe
   },
 });
 
