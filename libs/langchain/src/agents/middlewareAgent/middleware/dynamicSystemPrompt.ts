@@ -12,9 +12,8 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * If your agent defines a `contextSchema`, pass the inferred type here to get full type-safety
  * for `runtime.context`.
  *
- * @param dynamicSystemPrompt - Function that receives the current agent `state` and `runtime`, and
- * returns the system prompt for the next model call. It can return either a `SystemMessage`
- * or a `string` (which will be wrapped in a `SystemMessage`). Supports async.
+ * @param fn - Function that receives the current agent `state` and `runtime`, and
+ * returns the system prompt for the next model call as a string.
  *
  * @returns A middleware instance that sets `systemMessage` for the next model call.
  *
@@ -27,10 +26,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * const contextSchema = z.object({ region: z.string().optional() });
  *
  * const middleware = dynamicSystemPrompt<z.infer<typeof contextSchema>>(
- *   (_state, runtime) =>
- *     new SystemMessage(
- *       `You are a helpful assistant. Region: ${runtime.context.region ?? "n/a"}`
- *     )
+ *   (_state, runtime) => `You are a helpful assistant. Region: ${runtime.context.region ?? "n/a"}`
  * );
  *
  * const agent = createAgent({
@@ -42,20 +38,13 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * await agent.invoke({ messages }, { context: { region: "EU" } });
  * ```
  *
- * @example Returning a string instead of a SystemMessage
- * ```ts
- * const middleware = dynamicSystemPrompt((_state, runtime) =>
- *   `You are a helpful assistant. Region: ${runtime.context.region ?? "n/a"}`
- * );
- * ```
- *
  * @public
  */
-export function dynamicSystemPrompt<TContextSchema = unknown>(
+export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
   fn: (
     state: AgentBuiltInState,
     runtime: Runtime<TContextSchema>
-  ) => SystemMessage | string | Promise<SystemMessage | string>
+  ) => string | Promise<string>
 ) {
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
@@ -64,9 +53,14 @@ export function dynamicSystemPrompt<TContextSchema = unknown>(
         state as AgentBuiltInState,
         runtime as Runtime<TContextSchema>
       );
-      const systemMessage =
-        typeof system === "string" ? new SystemMessage(system) : system;
 
+      if (typeof system !== "string") {
+        throw new Error(
+          "dynamicSystemPromptMiddleware function must return a string"
+        );
+      }
+
+      const systemMessage = new SystemMessage(system);
       return { ...options, systemMessage };
     },
   });

@@ -121,7 +121,9 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
  *
  * ```
  */
-export function summarization(options: z.input<typeof contextSchema>) {
+export function summarizationMiddleware(
+  options: z.input<typeof contextSchema>
+) {
   return createMiddleware({
     name: "SummarizationMiddleware",
     contextSchema,

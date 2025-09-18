@@ -172,7 +172,9 @@ const contextSchema = z.object({
  * @see {@link Command} for resuming interrupted execution
  * @public
  */
-export function humanInTheLoop(options: z.input<typeof contextSchema> = {}) {
+export function humanInTheLoopMiddleware(
+  options: z.input<typeof contextSchema> = {}
+) {
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,

@@ -6,7 +6,7 @@ import { Command } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createAgent } from "../../index.js";
-import { humanInTheLoop } from "../hitl.js";
+import { humanInTheLoopMiddleware } from "../hitl.js";
 import {
   FakeToolCallingModel,
   _AnyIdHumanMessage,
@@ -65,7 +65,7 @@ describe("humanInTheLoop", () => {
     });
 
     // Configure HITL middleware
-    const hitlMiddleware = humanInTheLoop({
+    const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -215,7 +215,7 @@ describe("humanInTheLoop", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoop({
+    const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -299,7 +299,7 @@ describe("humanInTheLoop", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoop({
+    const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
           requireApproval: true,
@@ -370,7 +370,7 @@ describe("humanInTheLoop", () => {
       }),
     });
 
-    const hitlMiddleware = humanInTheLoop({
+    const hitlMiddleware = humanInTheLoopMiddleware({
       toolConfigs: {
         write_file: {
           requireApproval: true,

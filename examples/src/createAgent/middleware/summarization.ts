@@ -1,5 +1,8 @@
 import { createAgent, HumanMessage, AIMessage, BaseMessage } from "langchain";
-import { summarization, countTokensApproximately } from "langchain/middleware";
+import {
+  summarizationMiddleware,
+  countTokensApproximately,
+} from "langchain/middleware";
 import { ChatOpenAI } from "@langchain/openai";
 import { LoremIpsum } from "lorem-ipsum";
 
@@ -22,7 +25,7 @@ const summarizationModel = new ChatOpenAI({
 });
 
 // Create summarization middleware with a low token threshold for demo purposes
-const summaryMiddleware = summarization({
+const summaryMiddleware = summarizationMiddleware({
   model: summarizationModel,
   maxTokensBeforeSummary: 2000, // Low threshold to trigger summarization quickly
   messagesToKeep: 5, // Keep only the last 5 messages after summarization

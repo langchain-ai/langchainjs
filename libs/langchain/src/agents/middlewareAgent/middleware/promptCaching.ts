@@ -137,7 +137,7 @@ class PromptCachingMiddlewareError extends Error {
  * @see {@link https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching} Anthropic's prompt caching documentation
  * @public
  */
-export function anthropicPromptCaching(
+export function anthropicPromptCachingMiddleware(
   middlewareOptions?: Partial<z.infer<typeof contextSchema>>
 ) {
   return createMiddleware({

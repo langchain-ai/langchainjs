@@ -5,7 +5,7 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { anthropicPromptCaching } from "../promptCaching.js";
+import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../index.js";
 
 function createMockAnthropicModel() {
@@ -25,11 +25,11 @@ function createMockAnthropicModel() {
   };
 }
 
-describe("anthropicPromptCaching", () => {
+describe("anthropicPromptCachingMiddleware", () => {
   it("should add cache_control to model settings when conditions are met", async () => {
     const mockAnthropicModel = createMockAnthropicModel();
 
-    const middleware = anthropicPromptCaching({
+    const middleware = anthropicPromptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
     });
@@ -63,7 +63,7 @@ describe("anthropicPromptCaching", () => {
 
   it("should not add cache_control when message count is below threshold", async () => {
     const mockAnthropicModel = createMockAnthropicModel();
-    const middleware = anthropicPromptCaching({
+    const middleware = anthropicPromptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 5, // High threshold
     });
@@ -87,7 +87,7 @@ describe("anthropicPromptCaching", () => {
 
   it("should respect enableCaching setting", async () => {
     const mockAnthropicModel = createMockAnthropicModel();
-    const middleware = anthropicPromptCaching({
+    const middleware = anthropicPromptCachingMiddleware({
       enableCaching: false, // Disabled
       ttl: "5m",
       minMessagesToCache: 1,
@@ -115,7 +115,7 @@ describe("anthropicPromptCaching", () => {
   it("should throw error for non-Anthropic models", async () => {
     const mockNonAnthropicModel = createMockAnthropicModel();
     mockNonAnthropicModel.getName = () => "openai"; // Not Anthropic
-    const middleware = anthropicPromptCaching();
+    const middleware = anthropicPromptCachingMiddleware();
 
     const agent = createAgent({
       llm: mockNonAnthropicModel as any,
@@ -136,7 +136,7 @@ describe("anthropicPromptCaching", () => {
 
   it("should include system message in message count", async () => {
     const mockAnthropicModel = createMockAnthropicModel();
-    const middleware = anthropicPromptCaching({
+    const middleware = anthropicPromptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 3,
     });
@@ -161,7 +161,7 @@ describe("anthropicPromptCaching", () => {
 
   it("should allow runtime context override", async () => {
     const mockAnthropicModel = createMockAnthropicModel();
-    const middleware = anthropicPromptCaching({
+    const middleware = anthropicPromptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
     });

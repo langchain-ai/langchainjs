@@ -6,7 +6,7 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
-import { dynamicSystemPrompt } from "../dynamicSystemPrompt.js";
+import { dynamicSystemPromptMiddleware } from "../dynamicSystemPrompt.js";
 import { createAgent } from "../../index.js";
 
 function createMockModel() {
@@ -30,14 +30,12 @@ describe("dynamicSystemPrompt", () => {
     const mockModel = createMockModel();
     const contextSchema = z.object({ region: z.string().optional() });
 
-    const middleware = dynamicSystemPrompt<z.infer<typeof contextSchema>>(
-      (_state, runtime) => {
-        const region = runtime.context.region ?? "n/a";
-        return new SystemMessage(
-          `You are a helpful assistant. Region: ${region}`
-        );
-      }
-    );
+    const middleware = dynamicSystemPromptMiddleware<
+      z.infer<typeof contextSchema>
+    >((_state, runtime) => {
+      const region = runtime.context.region ?? "n/a";
+      return `You are a helpful assistant. Region: ${region}`;
+    });
 
     const agent = createAgent({
       llm: mockModel as any,
@@ -65,16 +63,19 @@ describe("dynamicSystemPrompt", () => {
     );
   });
 
-  it("should allow to return a string", async () => {
+  it("should throw if the function does not return a string", async () => {
     const mockModel = createMockModel();
     const contextSchema = z.object({ region: z.string().optional() });
 
-    const middleware = dynamicSystemPrompt<z.infer<typeof contextSchema>>(
-      (_state, runtime) => {
-        const region = runtime.context.region ?? "n/a";
-        return `You are a helpful assistant. Region: ${region}`;
-      }
-    );
+    const middleware = dynamicSystemPromptMiddleware<
+      z.infer<typeof contextSchema>
+      // @ts-expect-error - we want to test the error case
+    >((_state, runtime) => {
+      const region = runtime.context.region ?? "n/a";
+      return new SystemMessage(
+        `You are a helpful assistant. Region: ${region}`
+      );
+    });
 
     const agent = createAgent({
       llm: mockModel as any,
@@ -84,21 +85,17 @@ describe("dynamicSystemPrompt", () => {
 
     const messages = [new HumanMessage("Hello"), new AIMessage("Hi there!")];
 
-    await agent.invoke(
-      { messages },
-      {
-        context: {
-          region: "EU",
-        },
-      }
-    );
-
-    expect(mockModel.invoke).toHaveBeenCalled();
-    const callArgs = (mockModel.invoke as any).mock.calls[0];
-    const [firstMessage] = callArgs[0];
-    expect(firstMessage.type).toBe("system");
-    expect(firstMessage.content).toBe(
-      "You are a helpful assistant. Region: EU"
+    await expect(
+      agent.invoke(
+        { messages },
+        {
+          context: {
+            region: "EU",
+          },
+        }
+      )
+    ).rejects.toThrow(
+      "dynamicSystemPromptMiddleware function must return a string"
     );
   });
 });
