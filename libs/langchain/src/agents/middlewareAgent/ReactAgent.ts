@@ -10,9 +10,9 @@ import {
   Send,
   Command,
   CompiledStateGraph,
-  type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
+import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool, validateLLMHasNoBoundTools } from "../utils.js";
@@ -32,8 +32,9 @@ import {
   InferMiddlewareInputStates,
   BuiltInState,
   InferMiddlewareContextInputs,
-  IsAllOptional,
   InferContextInput,
+  InvokeConfiguration,
+  StreamConfiguration,
 } from "./types.js";
 
 import {
@@ -156,7 +157,7 @@ export class ReactAgent<
     // Generate node names for middleware nodes that have hooks
     const beforeModelNodes: { index: number; name: string }[] = [];
     const afterModelNodes: { index: number; name: string }[] = [];
-    const prepareModelRequestHookMiddleware: [
+    const modifyModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
        * ToDo: better type to get the state of middleware
@@ -196,8 +197,8 @@ export class ReactAgent<
         );
       }
 
-      if (m.prepareModelRequest) {
-        prepareModelRequestHookMiddleware.push([
+      if (m.modifyModelRequest) {
+        modifyModelRequestHookMiddleware.push([
           m,
           () => ({
             ...beforeModelNode?.getState(),
@@ -223,7 +224,7 @@ export class ReactAgent<
         toolClasses,
         shouldReturnDirect,
         signal: this.options.signal,
-        prepareModelRequestHookMiddleware,
+        modifyModelRequestHookMiddleware,
       }),
       AgentNode.nodeOptions
     );
@@ -269,6 +270,7 @@ export class ReactAgent<
     if (afterModelNodes.length > 0 && lastAfterModelNode) {
       allNodeWorkflows.addEdge("model_request", lastAfterModelNode.name);
     } else {
+      // If no afterModel nodes, connect model_request directly to model paths
       const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
       if (modelPaths.length === 1) {
         allNodeWorkflows.addEdge("model_request", modelPaths[0]);
@@ -289,19 +291,20 @@ export class ReactAgent<
       );
     }
 
-    // Connect first afterModel node (last to execute) to model paths
+    // Connect first afterModel node (last to execute) to model paths with jumpTo support
     if (afterModelNodes.length > 0) {
       const firstAfterModelNode = afterModelNodes[0].name;
-      const modelPaths = this.#getModelPaths(toolClasses.filter(isClientTool));
-      if (modelPaths.length === 1) {
-        allNodeWorkflows.addEdge(firstAfterModelNode, modelPaths[0]);
-      } else {
-        allNodeWorkflows.addConditionalEdges(
-          firstAfterModelNode,
-          this.#createModelRouter(),
-          modelPaths
-        );
-      }
+      const modelPaths = this.#getModelPaths(
+        toolClasses.filter(isClientTool),
+        true
+      );
+
+      // Use afterModel router which includes jumpTo logic
+      allNodeWorkflows.addConditionalEdges(
+        firstAfterModelNode,
+        this.#createAfterModelRouter(toolClasses.filter(isClientTool)),
+        modelPaths
+      );
     }
 
     /**
@@ -341,7 +344,7 @@ export class ReactAgent<
   }
 
   /**
-   * Get the compiled graph.
+   * Get the compiled {@link https://docs.langchain.com/oss/javascript/langgraph/use-graph-api | StateGraph}.
    */
   get graph(): AgentGraph<
     StructuredResponseFormat,
@@ -354,57 +357,25 @@ export class ReactAgent<
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
+   * @param includeModelRequest whether to include "model_request" as a valid path (for jumpTo routing)
    * @returns list of possible edge destinations
    */
   #getModelPaths(
-    toolClasses: (ClientTool | ServerTool)[]
-  ): ("tools" | typeof END)[] {
-    const paths: ("tools" | typeof END)[] = [];
+    toolClasses: (ClientTool | ServerTool)[],
+    includeModelRequest: boolean = false
+  ): ("tools" | "model_request" | typeof END)[] {
+    const paths: ("tools" | "model_request" | typeof END)[] = [];
     if (toolClasses.length > 0) {
       paths.push("tools");
+    }
+
+    if (includeModelRequest) {
+      paths.push("model_request");
     }
 
     paths.push(END);
 
     return paths;
-  }
-
-  /**
-   * Create routing function for model node conditional edges.
-   */
-  #createModelRouter() {
-    /**
-     * determine if the agent should continue or not
-     */
-    /**
-     * ToDo: fix type
-     */
-    return (state: any) => {
-      const messages = state.messages;
-      const lastMessage = messages.at(-1);
-
-      if (
-        !AIMessage.isInstance(lastMessage) ||
-        !lastMessage.tool_calls ||
-        lastMessage.tool_calls.length === 0
-      ) {
-        return END;
-      }
-
-      /**
-       * The tool node processes a single message.
-       */
-      if (this.#toolBehaviorVersion === "v1") {
-        return "tools";
-      }
-
-      /**
-       * Route to tools node
-       */
-      return lastMessage.tool_calls.map(
-        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
-      );
-    };
   }
 
   /**
@@ -435,6 +406,173 @@ export class ReactAgent<
   }
 
   /**
+   * Create routing function for model node conditional edges.
+   */
+  #createModelRouter() {
+    /**
+     * determine if the agent should continue or not
+     */
+    return (state: BuiltInState) => {
+      const messages = state.messages;
+      const lastMessage = messages.at(-1);
+
+      if (
+        !AIMessage.isInstance(lastMessage) ||
+        !lastMessage.tool_calls ||
+        lastMessage.tool_calls.length === 0
+      ) {
+        return END;
+      }
+
+      // Check if all tool calls are for structured response extraction
+      const hasOnlyStructuredResponseCalls = lastMessage.tool_calls.every(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      if (hasOnlyStructuredResponseCalls) {
+        // If all tool calls are for structured response extraction, go to END
+        // The AgentNode will handle these internally and return the structured response
+        return END;
+      }
+
+      /**
+       * The tool node processes a single message.
+       */
+      if (this.#toolBehaviorVersion === "v1") {
+        return "tools";
+      }
+
+      /**
+       * Route to tools node (filter out any structured response tool calls)
+       */
+      const regularToolCalls = lastMessage.tool_calls.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return END;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+      );
+    };
+  }
+
+  /**
+   * Create routing function for jumpTo functionality after afterModel hooks.
+   *
+   * This router checks if the `jumpTo` property is set in the state after afterModel middleware
+   * execution. If set, it routes to the specified target ("model_request" or "tools").
+   * If not set, it falls back to the normal model routing logic for afterModel context.
+   *
+   * The jumpTo property is automatically cleared after use to prevent infinite loops.
+   *
+   * @param toolClasses - Available tool classes for validation
+   * @returns Router function that handles jumpTo logic and normal routing
+   */
+  #createAfterModelRouter(toolClasses: (ClientTool | ServerTool)[]) {
+    const hasStructuredResponse = Boolean(this.options.responseFormat);
+
+    return (state: BuiltInState) => {
+      // First, check if we just processed a structured response
+      // If so, ignore any existing jumpTo and go to END
+      const messages = state.messages;
+      const lastMessage = messages.at(-1);
+      if (
+        AIMessage.isInstance(lastMessage) &&
+        (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0)
+      ) {
+        return END;
+      }
+
+      // Check if jumpTo is set in the state
+      if (state.jumpTo) {
+        const jumpTarget = state.jumpTo;
+
+        // If jumpTo is "model", go to model_request node
+        if (jumpTarget === "model") {
+          return "model_request";
+        }
+
+        // If jumpTo is "tools", go to tools node
+        if (jumpTarget === "tools") {
+          // If trying to jump to tools but no tools are available, go to END
+          if (toolClasses.length === 0) {
+            return END;
+          }
+
+          return "tools";
+        }
+
+        // If jumpTo is END, go to END
+        if (jumpTarget === END) {
+          return END;
+        }
+
+        throw new Error(
+          `Invalid jump target: ${jumpTarget}, must be "model" or "tools".`
+        );
+      }
+
+      // check if there are pending tool calls
+      const toolMessages = messages.filter(ToolMessage.isInstance);
+      const lastAiMessage = messages.filter(AIMessage.isInstance).at(-1);
+      const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
+        (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
+      );
+      if (pendingToolCalls && pendingToolCalls.length > 0) {
+        return pendingToolCalls.map(
+          (toolCall) => new Send("tools", { ...state, lg_tool_call: toolCall })
+        );
+      }
+
+      // if we exhausted all tool calls, but still have no structured response tool calls,
+      // go back to model_request
+      const hasStructuredResponseCalls = lastAiMessage?.tool_calls?.some(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      if (
+        pendingToolCalls &&
+        pendingToolCalls.length === 0 &&
+        !hasStructuredResponseCalls &&
+        hasStructuredResponse
+      ) {
+        return "model_request";
+      }
+
+      if (
+        !AIMessage.isInstance(lastMessage) ||
+        !lastMessage.tool_calls ||
+        lastMessage.tool_calls.length === 0
+      ) {
+        return END;
+      }
+
+      // Check if all tool calls are for structured response extraction
+      const hasOnlyStructuredResponseCalls = lastMessage.tool_calls.every(
+        (toolCall) => toolCall.name.startsWith("extract-")
+      );
+
+      // Check if there are any regular tool calls (non-structured response)
+      const hasRegularToolCalls = lastMessage.tool_calls.some(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (hasOnlyStructuredResponseCalls || !hasRegularToolCalls) {
+        return END;
+      }
+
+      /**
+       * For routing from afterModel nodes, always use simple string paths
+       * The Send API is handled at the model_request node level
+       */
+      return "tools";
+    };
+  }
+
+  /**
    * Initialize middleware states if not already present in the input state.
    */
   #initializeMiddlewareStates(
@@ -461,8 +599,7 @@ export class ReactAgent<
     // Only add defaults for keys that don't exist in current state
     for (const [key, value] of Object.entries(defaultStates)) {
       if (!(key in updatedState)) {
-        // @ts-expect-error - ToDo: fix type
-        updatedState[key as keyof InvokeStateParameter<TMiddleware>] = value;
+        updatedState[key as keyof typeof updatedState] = value;
       }
     }
 
@@ -470,41 +607,126 @@ export class ReactAgent<
   }
 
   /**
-   * @inheritdoc
+   * Executes the agent with the given state and returns the final state after all processing.
+   *
+   * This method runs the agent's entire workflow synchronously, including:
+   * - Processing the input messages through any configured middleware
+   * - Calling the language model to generate responses
+   * - Executing any tool calls made by the model
+   * - Running all middleware hooks (beforeModel, afterModel, etc.)
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   *
+   * @returns A Promise that resolves to the final agent state after execution completes.
+   *          The returned state includes:
+   *          - a `messages` property containing an array with all messages (input, AI responses, tool calls/results)
+   *          - a `structuredResponse` property containing the structured response (if configured)
+   *          - all state values defined in the middleware
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch],
+   *   responseFormat: z.object({
+   *     weather: z.string(),
+   *   }),
+   * });
+   *
+   * const result = await agent.invoke({
+   *   messages: [{ role: "human", content: "What's the weather in Paris?" }]
+   * });
+   *
+   * console.log(result.structuredResponse.weather); // outputs: "It's sunny and 75°F."
+   * ```
    */
-  get invoke() {
+  invoke(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: InvokeConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
-    type FullContext = InferContextInput<ContextSchema> &
-      InferMiddlewareContextInputs<TMiddleware>;
-
-    // Create overloaded function type based on whether context has required fields
-    type InvokeFunction = IsAllOptional<FullContext> extends true
-      ? (
-          state: InvokeStateParameter<TMiddleware>,
-          config?: LangGraphRunnableConfig<FullContext>
-        ) => Promise<FullState>
-      : (
-          state: InvokeStateParameter<TMiddleware>,
-          config?: LangGraphRunnableConfig<FullContext>
-        ) => Promise<FullState>;
-
-    const invokeFunc: InvokeFunction = async (
-      state: InvokeStateParameter<TMiddleware>,
-      config?: LangGraphRunnableConfig<FullContext>
-    ): Promise<FullState> => {
-      const initializedState = this.#initializeMiddlewareStates(state);
-      return this.#graph.invoke(
-        initializedState,
-        config as any
-      ) as Promise<FullState>;
-    };
-
-    return invokeFunc;
+    const initializedState = this.#initializeMiddlewareStates(state);
+    return this.#graph.invoke(
+      initializedState,
+      config as unknown as InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    ) as Promise<FullState>;
   }
 
   /**
-   * ToDo(@christian-bromann): Add stream and streamEvents methods
+   * Executes the agent with streaming, returning an async iterable of events as they occur.
+   *
+   * This method runs the agent's workflow similar to `invoke`, but instead of waiting for
+   * completion, it streams events in real-time. This allows you to:
+   * - Display intermediate results to users as they're generated
+   * - Monitor the agent's progress through each step
+   * - Handle tool calls and results as they happen
+   * - Update UI with streaming responses from the LLM
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   *
+   * @returns A Promise that resolves to an IterableReadableStream of events.
+   *          Events include:
+   *          - `on_chat_model_start`: When the LLM begins processing
+   *          - `on_chat_model_stream`: Streaming tokens from the LLM
+   *          - `on_chat_model_end`: When the LLM completes
+   *          - `on_tool_start`: When a tool execution begins
+   *          - `on_tool_end`: When a tool execution completes
+   *          - `on_chain_start`: When middleware chains begin
+   *          - `on_chain_end`: When middleware chains complete
+   *          - And other LangGraph v2 stream events
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch]
+   * });
+   *
+   * const stream = await agent.stream({
+   *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * });
+   *
+   * for await (const event of stream) {
+   *   //
+   * }
+   * ```
    */
+  async stream(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: StreamConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ): Promise<IterableReadableStream<any>> {
+    const initializedState = this.#initializeMiddlewareStates(state);
+    return this.#graph.streamEvents(initializedState, {
+      ...config,
+      version: "v2",
+    } as any) as IterableReadableStream<any>;
+  }
 
   /**
    * Visualize the graph as a PNG image.

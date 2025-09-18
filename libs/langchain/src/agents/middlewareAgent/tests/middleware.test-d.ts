@@ -60,42 +60,257 @@ describe("middleware types", () => {
     }>();
   });
 
-  it("a middleware can define a context schema which can be a required property within the runnable config", async () => {
-    const middleware = createMiddleware({
-      name: "Middleware",
-      contextSchema: z.object({
-        customOptionalContextProp: z.string().default("default value"),
-        customRequiredContextProp: z.string(),
-      }),
+  describe("context schema", () => {
+    it("a middleware can define a context schema which can be a required property within the runnable config", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z.object({
+          customOptionalContextProp: z.string().default("default value"),
+          customRequiredContextProp: z.string(),
+        }),
+      });
+
+      const agent = createAgent({
+        contextSchema: z.object({
+          customAgentOptionalContextProp: z.string().default("default value"),
+          customAgentRequiredContextProp: z.string(),
+        }),
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      const state = {
+        messages: [new HumanMessage("Hello, world!")],
+      };
+
+      await agent.invoke(state, {
+        context: {
+          customAgentRequiredContextProp: "123",
+          customRequiredContextProp: "456",
+        },
+      });
+
+      await agent.invoke(state, {
+        context: {
+          customAgentRequiredContextProp: "123",
+          // @ts-expect-error defined as string
+          customRequiredContextProp: 456,
+        },
+      });
     });
 
-    const agent = createAgent({
-      contextSchema: z.object({
-        customAgentOptionalContextProp: z.string().default("default value"),
-        customAgentRequiredContextProp: z.string(),
-      }),
-      middleware: [middleware] as const,
-      tools: [],
-      model: "gpt-4",
+    it("is required to pass in a context if a middleware has context schema that is not optional", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z.object({
+          customRequiredContextProp: z.string(),
+        }),
+      });
+
+      const agent = createAgent({
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Hello, world!")],
+        },
+        // @ts-expect-error Property 'context' is missing
+        {
+          configurable: {
+            thread_id: "test-123",
+          },
+        }
+      );
     });
 
-    const state = {
-      messages: [new HumanMessage("Hello, world!")],
-    };
+    it("doesn't require users to pass in a context if a middleware has optional context schema", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z
+          .object({
+            customOptionalContextProp: z.string().default("default value"),
+          })
+          .optional(),
+      });
 
-    await agent.invoke(state, {
-      context: {
-        customAgentRequiredContextProp: "123",
-        customRequiredContextProp: "456",
-      },
+      const agent = createAgent({
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Hello, world!")],
+        },
+        {
+          configurable: {
+            thread_id: "test-123",
+          },
+        }
+      );
     });
 
-    await agent.invoke(state, {
-      context: {
-        customAgentRequiredContextProp: "123",
-        // @ts-expect-error defined as string
-        customRequiredContextProp: 456,
-      },
+    it("doesn't require users to pass in a context if a middleware has context schema with defaults", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z
+          .object({
+            customDefaultContextProp: z.string().default("default value"),
+            customOptionalContextProp: z.string().optional(),
+            customRequiredContextProp: z.string(),
+          })
+          .default({
+            customRequiredContextProp: "default value",
+          }),
+        beforeModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<{
+            customDefaultContextProp: string;
+            customOptionalContextProp?: string;
+            customRequiredContextProp: string;
+          }>();
+        },
+        afterModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<{
+            customDefaultContextProp: string;
+            customOptionalContextProp?: string;
+            customRequiredContextProp: string;
+          }>();
+        },
+        modifyModelRequest: async (_request, _state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<{
+            customDefaultContextProp: string;
+            customOptionalContextProp?: string;
+            customRequiredContextProp: string;
+          }>();
+        },
+      });
+
+      const agent = createAgent({
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Hello, world!")],
+        },
+        {
+          configurable: {
+            thread_id: "test-123",
+          },
+        }
+      );
+    });
+
+    it("doesn't require users to pass in a context if a middleware has context schema as optional", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z
+          .object({
+            customOptionalContextProp: z.string().default("default value"),
+          })
+          .optional(),
+        beforeModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<
+              | {
+                  customOptionalContextProp: string;
+                }
+              | undefined
+            >
+          >();
+        },
+        afterModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<
+              | {
+                  customOptionalContextProp: string;
+                }
+              | undefined
+            >
+          >();
+        },
+        modifyModelRequest: async (_request, _state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<
+              | {
+                  customOptionalContextProp: string;
+                }
+              | undefined
+            >
+          >();
+        },
+      });
+
+      const agent = createAgent({
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Hello, world!")],
+        },
+        {
+          configurable: {
+            thread_id: "test-123",
+          },
+        }
+      );
+    });
+
+    it("doesn't require users to pass in a context if all middleware context properties are optional", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        contextSchema: z.object({
+          customDefaultContextProp: z.string().optional(),
+        }),
+        beforeModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<{
+              customDefaultContextProp: string;
+            }>
+          >();
+        },
+        afterModel: async (_state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<{
+              customDefaultContextProp: string;
+            }>
+          >();
+        },
+        modifyModelRequest: async (_request, _state, runtime) => {
+          expectTypeOf(runtime.context).toEqualTypeOf<
+            Partial<{
+              customDefaultContextProp: string;
+            }>
+          >();
+        },
+      });
+
+      const agent = createAgent({
+        middleware: [middleware] as const,
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke(
+        {
+          messages: [new HumanMessage("Hello, world!")],
+        },
+        {
+          configurable: {
+            thread_id: "test-123",
+          },
+        }
+      );
     });
   });
 });

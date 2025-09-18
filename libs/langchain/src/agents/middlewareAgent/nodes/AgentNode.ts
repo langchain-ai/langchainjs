@@ -44,7 +44,7 @@ import {
   transformResponseFormat,
   ToolStrategyError,
 } from "../../responses.js";
-import { parseToolCalls, parseToolResults } from "./utils.js";
+import { parseToolCalls } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -72,7 +72,7 @@ export interface AgentNodeOptions<
   toolClasses: (ClientTool | ServerTool)[];
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
-  prepareModelRequestHookMiddleware?: [
+  modifyModelRequestHookMiddleware?: [
     AgentMiddleware<any, any, any>,
     () => any
   ][];
@@ -223,7 +223,7 @@ export class AgentNode<
     const model = await this.#deriveModel(state, config);
 
     /**
-     * Execute prepareModelRequest hooks from beforeModelNodes
+     * Execute modifyModelRequest hooks from beforeModelNodes
      */
     const preparedOptions = await this.#executePrepareModelRequestHooks(
       model,
@@ -509,8 +509,8 @@ export class AgentNode<
     config: LangGraphRunnableConfig
   ): Promise<ModelRequest | undefined> {
     if (
-      !this.#options.prepareModelRequestHookMiddleware ||
-      this.#options.prepareModelRequestHookMiddleware.length === 0
+      !this.#options.modifyModelRequestHookMiddleware ||
+      this.#options.modifyModelRequestHookMiddleware.length === 0
     ) {
       return undefined;
     }
@@ -531,8 +531,8 @@ export class AgentNode<
       tools: [],
     };
 
-    // Execute prepareModelRequest hooks from all middleware
-    const middlewareList = this.#options.prepareModelRequestHookMiddleware;
+    // Execute modifyModelRequest hooks from all middleware
+    const middlewareList = this.#options.modifyModelRequestHookMiddleware;
     for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
       const context = {
@@ -541,13 +541,16 @@ export class AgentNode<
       };
 
       // Create runtime
-      const runtime: Runtime<any> = {
+      const runtime: Runtime<unknown, unknown> = {
         toolCalls: parseToolCalls(state.messages),
-        toolResults: parseToolResults(state.messages),
         context,
+        writer: config.writer,
+        interrupt: config.interrupt,
+        signal: config.signal,
+        terminate: (result) => ({ type: "terminate", result }),
       };
 
-      const result = await middleware.prepareModelRequest!(
+      const result = await middleware.modifyModelRequest!(
         currentOptions,
         {
           messages: state.messages,

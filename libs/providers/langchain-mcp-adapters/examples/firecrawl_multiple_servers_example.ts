@@ -6,8 +6,7 @@
  */
 
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, createAgent } from "langchain";
 import dotenv from "dotenv";
 
 import { ClientConfig, MultiServerMCPClient } from "../src/index.js";
@@ -81,7 +80,7 @@ async function runExample() {
     console.log("\n=== CREATING REACT AGENT ===");
 
     // Create the React agent
-    const agent = createReactAgent({
+    const agent = createAgent({
       llm: model,
       tools: mcpTools,
     });

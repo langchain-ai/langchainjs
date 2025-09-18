@@ -6,16 +6,11 @@ import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { RunnableCallable } from "../../RunnableCallable.js";
 import type {
   Runtime,
-  Controls,
   ControlAction,
   AgentMiddleware,
   MiddlewareResult,
 } from "../types.js";
-import {
-  derivePrivateState,
-  parseToolCalls,
-  parseToolResults,
-} from "./utils.js";
+import { derivePrivateState, parseToolCalls } from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -32,8 +27,7 @@ export abstract class MiddlewareNode<
 
   abstract runHook(
     state: TStateSchema,
-    config?: Runtime<TContextSchema>,
-    controls?: Controls<TStateSchema>
+    config?: Runtime<TStateSchema, TContextSchema>
   ): Promise<MiddlewareResult<TStateSchema>>;
 
   async invokeMiddleware(
@@ -71,21 +65,12 @@ export abstract class MiddlewareNode<
     /**
      * ToDo: implement later
      */
-    const runtime: Runtime<TContextSchema> = {
+    const runtime: Runtime<TStateSchema, TContextSchema> = {
       toolCalls: parseToolCalls(state.messages),
-      toolResults: parseToolResults(state.messages),
       context: filteredContext,
-    };
-
-    const controls: Controls<TStateSchema> = {
-      jumpTo: (
-        target: "model" | "tools",
-        stateUpdate?: Partial<TStateSchema>
-      ): ControlAction<TStateSchema> => ({
-        type: "jump",
-        target,
-        stateUpdate,
-      }),
+      writer: config?.writer,
+      interrupt: config?.interrupt,
+      signal: config?.signal,
       terminate: (
         result?: Partial<TStateSchema> | Error
       ): ControlAction<TStateSchema> => {
@@ -96,42 +81,34 @@ export abstract class MiddlewareNode<
       },
     };
 
-    const result = await this.runHook(state, runtime, controls);
+    const result = await this.runHook(state, runtime);
 
     /**
      * If result is undefined, return current state
      */
     if (!result) {
-      return state;
+      return { ...state, jumpTo: undefined };
     }
 
     /**
      * If result is a control action, handle it
      */
-    // if (typeof result === "object" && "type" in result) {
-    //   // Handle control actions
-    //   const action = result as ControlAction<TStateSchema>;
-    //   if (action.type === "terminate") {
-    //     if (action.error) {
-    //       throw action.error;
-    //     }
-    //     return { ...state, ...(action.result || {}) };
-    //   }
+    if (typeof result === "object" && "type" in result) {
+      // Handle control actions
+      if (result.type === "terminate") {
+        if (result.error) {
+          throw result.error;
+        }
+        return { ...state, ...(result.result || {}), jumpTo: result?.jumpTo };
+      }
 
-    //   if (action.type === "jump") {
-    //     return new Command<any, TStateSchema, string>({
-    //       goto: action.target,
-    //       update: { ...state, ...(action.stateUpdate || {}) },
-    //     });
-    //   }
-
-    //   throw new Error(`Invalid control action: ${JSON.stringify(action)}`);
-    // }
+      throw new Error(`Invalid control action: ${JSON.stringify(result)}`);
+    }
 
     /**
      * If result is a state update, merge it with current state
      */
-    return { ...state, ...result };
+    return { ...state, ...result, jumpTo: result.jumpTo };
   }
 
   get nodeOptions(): {

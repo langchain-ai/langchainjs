@@ -1,6 +1,20 @@
 export { interrupt } from "@langchain/langgraph";
 
 /**
+ * Represents information about an interrupt.
+ */
+export interface Interrupt<TValue = unknown> {
+  /**
+   * The ID of the interrupt.
+   */
+  id: string;
+  /**
+   * The requests for human input.
+   */
+  value: TValue;
+}
+
+/**
  * Configuration interface that defines what actions are allowed for a human interrupt.
  * This controls the available interaction options when the graph is paused for human input.
  */

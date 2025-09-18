@@ -42,6 +42,7 @@ export {
   type HumanInterruptConfig,
   type ActionRequest,
   type HumanResponse,
+  type Interrupt,
 } from "./agents/index.js";
 
 /**

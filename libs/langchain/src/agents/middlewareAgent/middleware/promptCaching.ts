@@ -1,5 +1,7 @@
 import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
+
+import { ConfigurableModel } from "../../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
 
 const DEFAULT_ENABLE_CACHING = true;
@@ -143,7 +145,7 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    prepareModelRequest: (options, state, runtime) => {
+    modifyModelRequest: (options, state, runtime) => {
       /**
        * If the runtime values match the schema default values, use the middleware option
        * values otherwise use the runtime values. This allows to apply general configurations
@@ -165,11 +167,16 @@ export function anthropicPromptCachingMiddleware(
             middlewareOptions?.minMessagesToCache;
 
       // Skip if caching is disabled
-      if (!enableCaching) {
+      if (!enableCaching || !options.model) {
         return undefined;
       }
 
-      if (options.model?.getName() !== "ChatAnthropic") {
+      const isAnthropicModel =
+        options.model.getName() === "ChatAnthropic" ||
+        (options.model.getName() === "ConfigurableModel" &&
+          (options.model as ConfigurableModel)._defaultConfig?.modelProvider ===
+            "anthropic");
+      if (!isAnthropicModel) {
         throw new Error(
           "Prompt caching is only supported for Anthropic models"
         );

@@ -3,7 +3,6 @@ import { z } from "zod/v3";
 import type {
   AgentMiddleware,
   Runtime,
-  Controls,
   MiddlewareResult,
   AgentBuiltInState,
   ModelRequest,
@@ -16,7 +15,7 @@ import type {
  * @param config.name - The name of the middleware
  * @param config.stateSchema - The schema of the middleware state
  * @param config.contextSchema - The schema of the middleware context
- * @param config.prepareModelRequest - The function to prepare the model request
+ * @param config.modifyModelRequest - The function to prepare the model request
  * @param config.beforeModel - The function to run before the model call
  * @param config.afterModel - The function to run after the model call
  * @returns A middleware instance
@@ -41,28 +40,44 @@ import type {
  */
 export function createMiddleware<
   TSchema extends z.ZodObject<any> | undefined = undefined,
-  TContextSchema extends z.ZodObject<any> | undefined = undefined
+  TContextSchema extends
+    | z.ZodObject<any>
+    | z.ZodOptional<z.ZodObject<any>>
+    | z.ZodDefault<z.ZodObject<any>>
+    | undefined = undefined
 >(config: {
   name: string;
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
-  prepareModelRequest?: (
+  modifyModelRequest?: (
     options: ModelRequest,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
+      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+        AgentBuiltInState,
+      TContextSchema extends z.ZodObject<any>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+        ? Partial<z.infer<TContextSchema>>
+        : never
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
   beforeModel?: (
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
-    >,
-    controls: Controls<
       (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
+        AgentBuiltInState,
+      TContextSchema extends z.ZodObject<any>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+        ? Partial<z.infer<TContextSchema>>
+        : never
     >
   ) =>
     | Promise<
@@ -77,11 +92,15 @@ export function createMiddleware<
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      TContextSchema extends z.ZodObject<any> ? z.infer<TContextSchema> : {}
-    >,
-    controls: Controls<
       (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
-        AgentBuiltInState
+        AgentBuiltInState,
+      TContextSchema extends z.ZodObject<any>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+        ? z.infer<TContextSchema>
+        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+        ? Partial<z.infer<TContextSchema>>
+        : never
     >
   ) =>
     | Promise<
@@ -99,19 +118,65 @@ export function createMiddleware<
     contextSchema: config.contextSchema,
   };
 
-  if (config.prepareModelRequest) {
-    middleware.prepareModelRequest = async (options, state, runtime) =>
-      Promise.resolve(config.prepareModelRequest!(options, state, runtime));
+  if (config.modifyModelRequest) {
+    middleware.modifyModelRequest = async (options, state, runtime) =>
+      Promise.resolve(
+        config.modifyModelRequest!(
+          options,
+          state,
+          runtime as Runtime<
+            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+              AgentBuiltInState,
+            TContextSchema extends z.ZodObject<any>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+              ? Partial<z.infer<TContextSchema>>
+              : never
+          >
+        )
+      );
   }
 
   if (config.beforeModel) {
-    middleware.beforeModel = async (state, runtime, controls) =>
-      Promise.resolve(config.beforeModel!(state, runtime, controls));
+    middleware.beforeModel = async (state, runtime) =>
+      Promise.resolve(
+        config.beforeModel!(
+          state,
+          runtime as Runtime<
+            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+              AgentBuiltInState,
+            TContextSchema extends z.ZodObject<any>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+              ? Partial<z.infer<TContextSchema>>
+              : never
+          >
+        )
+      );
   }
 
   if (config.afterModel) {
-    middleware.afterModel = async (state, runtime, controls) =>
-      Promise.resolve(config.afterModel!(state, runtime, controls));
+    middleware.afterModel = async (state, runtime) =>
+      Promise.resolve(
+        config.afterModel!(
+          state,
+          runtime as Runtime<
+            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+              AgentBuiltInState,
+            TContextSchema extends z.ZodObject<any>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
+              ? z.infer<TContextSchema>
+              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
+              ? Partial<z.infer<TContextSchema>>
+              : never
+          >
+        )
+      );
   }
 
   return middleware;
