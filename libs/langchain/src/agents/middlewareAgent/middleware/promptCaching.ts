@@ -171,19 +171,12 @@ export function anthropicPromptCachingMiddleware(
         return undefined;
       }
 
-      if (
-        !options.model ||
-        /**
-         * user passes in a ChatAnthropic instance
-         */
-        (options.model.getName() !== "ChatAnthropic" &&
-          /**
-           * user passes in a model via string, e.g. "anthropic:claude-3-5-sonnet"
-           */
-          "_defaultConfig" in options.model &&
-          (options.model as ConfigurableModel)._defaultConfig?.modelProvider !==
-            "anthropic")
-      ) {
+      const isAnthropicModel =
+        options.model.getName() === "ChatAnthropic" ||
+        (options.model.getName() === "ConfigurableModel" &&
+          (options.model as ConfigurableModel)._defaultConfig?.modelProvider ===
+            "anthropic");
+      if (!isAnthropicModel) {
         throw new Error(
           "Prompt caching is only supported for Anthropic models"
         );

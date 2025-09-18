@@ -5,6 +5,8 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
+
 import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../index.js";
 
@@ -112,26 +114,34 @@ describe("anthropicPromptCachingMiddleware", () => {
     expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
   });
 
-  it("should throw error for non-Anthropic models", async () => {
-    const mockNonAnthropicModel = createMockAnthropicModel();
-    mockNonAnthropicModel.getName = () => "openai"; // Not Anthropic
-    const middleware = anthropicPromptCachingMiddleware();
+  describe("non-Anthropic models", () => {
+    it("should throw error if pass in a non-Anthropic chat instance", async () => {
+      const middleware = anthropicPromptCachingMiddleware();
 
-    const agent = createAgent({
-      llm: mockNonAnthropicModel as any,
-      middleware: [middleware] as const,
+      const agent = createAgent({
+        llm: new ChatOpenAI({ model: "gpt-4o" }),
+        middleware: [middleware] as const,
+      });
+
+      // Should throw error
+      await expect(agent.invoke({ messages: [] })).rejects.toThrow(
+        "Prompt caching is only supported for Anthropic models"
+      );
     });
 
-    const messages = [
-      new HumanMessage("Hello"),
-      new AIMessage("Hi there!"),
-      new HumanMessage("How are you?"),
-    ];
+    it("should throw error if pass in a non-Anthropic model via string", async () => {
+      const middleware = anthropicPromptCachingMiddleware();
 
-    // Should throw error
-    await expect(agent.invoke({ messages })).rejects.toThrow(
-      "Prompt caching is only supported for Anthropic models"
-    );
+      const agent = createAgent({
+        model: "openai:gpt-4o",
+        middleware: [middleware] as const,
+      });
+
+      // Should throw error
+      await expect(agent.invoke({ messages: [] })).rejects.toThrow(
+        "Prompt caching is only supported for Anthropic models"
+      );
+    });
   });
 
   it("should include system message in message count", async () => {
