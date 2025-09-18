@@ -45,10 +45,9 @@ export {
 } from "./agents/index.js";
 
 /**
- * LangChain Memory
- * Check in what we want to export here
+ * LangChain Stores
  */
-export { MemorySaver, InMemoryStore } from "@langchain/langgraph";
+export { InMemoryStore } from "@langchain/core/stores";
 
 /**
  * LangChain Context

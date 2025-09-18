@@ -16,7 +16,8 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool, InMemoryStore } from "langchain";
+import { createAgent, tool } from "langchain";
+import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
 

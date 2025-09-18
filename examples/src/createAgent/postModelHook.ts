@@ -18,7 +18,8 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool, AIMessage, MemorySaver } from "langchain";
+import { createAgent, tool, AIMessage } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
 import { interrupt } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -146,7 +147,6 @@ const agent = createAgent({
   llm: new ChatOpenAI({ model: "gpt-4o", temperature: 0.7 }),
   tools: [productInfoTool],
   checkpointer: new MemorySaver(),
-  // eslint-disable-next-line object-shorthand
   postModelHook: function postModelHook(state) {
     stats.total += 1;
 
