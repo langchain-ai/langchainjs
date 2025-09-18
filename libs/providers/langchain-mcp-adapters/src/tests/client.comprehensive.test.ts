@@ -1,23 +1,31 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
 import { ZodError } from "zod/v3";
-import type { Connection } from "../src/types.js";
-
-import "./mocks.js";
 
 // Import modules after mocking
-const { StdioClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/stdio.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+
+import type { Connection } from "../types.js";
+import { MultiServerMCPClient, MCPClientError } from "../client.js";
+
+vi.mock(
+  "@modelcontextprotocol/sdk/client/index.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
 );
-const { SSEClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/sse.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/stdio.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
 );
-const { StreamableHTTPClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/streamableHttp.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/sse.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
 );
-const { MultiServerMCPClient, MCPClientError } = await import(
-  "../src/client.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
 );
-const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,7 +109,6 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw error during initialization
       expect(() => {
-        // eslint-disable-next-line no-new
         new MultiServerMCPClient(config);
       }).toThrow(ZodError);
     });

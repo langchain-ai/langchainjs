@@ -22,7 +22,6 @@ import {
   HumanMessage,
   AIMessage,
   SystemMessage,
-  isHumanMessage,
 } from "@langchain/core/messages";
 import dotenv from "dotenv";
 
@@ -102,7 +101,7 @@ these tools to answer the user's questions.`;
 
       // Add system message if it's the first call
       let { messages } = state;
-      if (messages.length === 1 && isHumanMessage(messages[0])) {
+      if (messages.length === 1 && HumanMessage.isInstance(messages[0])) {
         messages = [new SystemMessage(systemMessage), ...messages];
       }
 

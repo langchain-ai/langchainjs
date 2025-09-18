@@ -19,7 +19,7 @@ export async function main() {
     "add",
     "Adds two numbers together",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }, extra) => {
+    async ({ a, b }: { a: number; b: number }) => {
       return {
         content: [{ type: "text", text: `${a + b}` }],
       };
@@ -30,7 +30,7 @@ export async function main() {
     "subtract",
     "Subtracts two numbers",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }, extra) => {
+    async ({ a, b }: { a: number; b: number }) => {
       return { content: [{ type: "text", text: `${a - b}` }] };
     }
   );
@@ -39,7 +39,7 @@ export async function main() {
     "multiply",
     "Multiplies two numbers",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }, extra) => {
+    async ({ a, b }: { a: number; b: number }) => {
       return { content: [{ type: "text", text: `${a * b}` }] };
     }
   );
@@ -48,7 +48,7 @@ export async function main() {
     "divide",
     "Divides two numbers",
     calcSchema,
-    async ({ a, b }: { a: number; b: number }, extra) => {
+    async ({ a, b }: { a: number; b: number }) => {
       return { content: [{ type: "text", text: `${a / b}` }] };
     }
   );
@@ -134,7 +134,7 @@ export async function main() {
   app.delete("/mcp", handleSessionRequest);
 
   // Legacy SSE endpoint for older clients
-  app.get("/sse", async (req, res) => {
+  app.get("/sse", async (_req, res) => {
     // Create SSE transport for legacy clients
     const transport = new SSEServerTransport("/messages", res);
     transports.sse[transport.sessionId] = transport;

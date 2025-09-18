@@ -1,4 +1,8 @@
+import path from "node:path";
+import url from "node:url";
 import { langchainConfig, type ConfigArray } from "@langchain/eslint";
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 const config: ConfigArray = [
   ...langchainConfig,
@@ -7,8 +11,8 @@ const config: ConfigArray = [
     files: ["examples/**/*.ts"],
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.examples.json",
-        tsconfigRootDir: import.meta.dirname,
+        project: "./examples/tsconfig.json",
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {
@@ -22,7 +26,7 @@ const config: ConfigArray = [
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.tests.json",
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: __dirname,
       },
     },
   },

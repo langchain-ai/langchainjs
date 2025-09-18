@@ -41,9 +41,9 @@ npm install @langchain/mcp-adapters
 The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
 
 ```ts
-import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 
 // Create client and connect to server
 const client = new MultiServerMCPClient({
@@ -129,7 +129,7 @@ const model = new ChatOpenAI({
 });
 
 // Create the React agent
-const agent = createReactAgent({
+const agent = createAgent({
   llm: model,
   tools,
 });
@@ -166,8 +166,9 @@ export OPENAI_API_KEY=<your_api_key>
 ```ts
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
-import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { loadMcpTools } from "@langchain/mcp-adapters";
 
 // Initialize the ChatOpenAI model
@@ -202,7 +203,7 @@ try {
   });
 
   // Create and run the agent
-  const agent = createReactAgent({ llm: model, tools });
+  const agent = createAgent({ llm: model, tools });
   const agentResponse = await agent.invoke({
     messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
   });

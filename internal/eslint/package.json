@@ -4,8 +4,8 @@
   "description": "Shared ESLint configuration for LangChain.js projects",
   "author": "LangChain",
   "license": "MIT",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "type": "module",
   "keywords": [
     "eslint",

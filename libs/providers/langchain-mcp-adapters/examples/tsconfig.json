@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../",
+    "declaration": false,
+    "strict": true,
+    "noEmit": true // we just want type checking - no need to output for inclusion in the published module
+  },
+  "include": ["./**/*", "../src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
