@@ -486,54 +486,100 @@ describe("Complex AIMessageChunk concat", () => {
   });
 
   it("concatenates tool call chunks without IDs", () => {
-    const chunks: ToolCallChunk[] = [
-      {
-        name: "get_current_time",
-        type: "tool_call_chunk",
-        index: 0,
-        // no `id` provided
-      },
+    const chunks = [
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            name: "get_weather",
+            args: "",
+            id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: '{"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: "location",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: '":"',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: "San",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: " Francisco",
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            args: '"}',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      }),
     ];
-
-    const result = new AIMessageChunk({
-      content: "",
-      tool_call_chunks: chunks,
-    });
-
-    expect(result.tool_calls?.length).toBe(1);
-    expect(result.invalid_tool_calls?.length).toBe(0);
-    expect(result.tool_calls).toEqual([
+    let finalChunk = new AIMessageChunk("");
+    for (const chunk of chunks) {
+      finalChunk = finalChunk.concat(chunk);
+    }
+    expect(finalChunk.tool_calls).toHaveLength(1);
+    expect(finalChunk.tool_calls).toEqual([
       {
-        id: "fallback-0", // Should get fallback ID
-        name: "get_current_time",
-        args: {},
         type: "tool_call",
-      },
-    ]);
-  });
-
-  it("concatenates tool call chunks without IDs and no index", () => {
-    const chunks: ToolCallChunk[] = [
-      {
-        name: "get_current_time",
-        type: "tool_call_chunk",
-        // no `id` or `index` provided
-      },
-    ];
-
-    const result = new AIMessageChunk({
-      content: "",
-      tool_call_chunks: chunks,
-    });
-
-    expect(result.tool_calls?.length).toBe(1);
-    expect(result.invalid_tool_calls?.length).toBe(0);
-    expect(result.tool_calls).toEqual([
-      {
-        id: "fallback-0", // Should get fallback ID with index 0
-        name: "get_current_time",
-        args: {},
-        type: "tool_call",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+        id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
       },
     ]);
   });

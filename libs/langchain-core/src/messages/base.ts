@@ -435,7 +435,9 @@ export function _mergeDicts(
       if (key === "type") {
         // Do not merge 'type' fields
         continue;
-      } else if (["id", "output_version", "model_provider"].includes(key)) {
+      } else if (
+        ["id", "name", "output_version", "model_provider"].includes(key)
+      ) {
         // Keep the incoming value for these fields
         merged[key] = value;
       } else {
@@ -473,17 +475,19 @@ export function _mergeLists<Content extends ContentBlock>(
         "index" in item &&
         typeof item.index === "number"
       ) {
-        const toMerge = merged.findIndex(
-          (leftItem) =>
-            leftItem !== null &&
-            typeof leftItem === "object" &&
-            "index" in leftItem &&
-            leftItem.index === item.index &&
-            // Only merge if IDs match (or both are undefined)
-            ("id" in leftItem && "id" in item
-              ? leftItem.id === item.id
-              : !("id" in leftItem) && !("id" in item))
-        );
+        const toMerge = merged.findIndex((leftItem) => {
+          const isObject = typeof leftItem === "object";
+          const indiciesMatch =
+            "index" in leftItem && leftItem.index === item.index;
+          const idsMatch =
+            "id" in leftItem && "id" in item && leftItem?.id === item?.id;
+          const eitherItemMissingID =
+            !("id" in leftItem) ||
+            !leftItem?.id ||
+            !("id" in item) ||
+            !item?.id;
+          return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
+        });
         if (
           toMerge !== -1 &&
           typeof merged[toMerge] === "object" &&
