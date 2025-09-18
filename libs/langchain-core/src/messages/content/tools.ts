@@ -6,6 +6,9 @@ export const KNOWN_BLOCK_TYPES = [
   "tool_call",
   "tool_call_chunk",
   "invalid_tool_call",
+  "server_tool_call",
+  "server_tool_call_chunk",
+  "server_tool_call_result",
   "web_search_call",
   "web_search_result",
   "code_interpreter",
@@ -91,7 +94,64 @@ export declare namespace Tools {
     index?: string | number;
   }
 
-  /** Content block for a built-in web search tool call. */
+  export interface ServerToolCall<
+    TName extends string = string,
+    TArgs = unknown
+  > extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "server_tool_call";
+    /**
+     * The name of the tool being called
+     */
+    name: TName;
+    /**
+     * The arguments to the tool call
+     */
+    args: TArgs;
+  }
+
+  export interface ServerToolCallChunk<TName extends string = string>
+    extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "server_tool_call_chunk";
+    /**
+     * The name of the tool being called
+     */
+    name?: TName;
+    /**
+     * The arguments to the tool call
+     */
+    args?: string;
+  }
+
+  export interface ServerToolCallResult<TOutput = Record<string, unknown>>
+    extends BaseContentBlock {
+    /**
+     * Type of the content block
+     */
+    readonly type: "server_tool_call_result";
+    /**
+     * The unique identifier of the tool call that this result corresponds to
+     */
+    toolCallId: string;
+    /**
+     * The status of the server tool call
+     */
+    status: "success" | "error";
+    /**
+     * The output of the server tool call
+     */
+    output: TOutput;
+  }
+
+  /**
+   * Content block for a built-in web search tool call.
+   * @deprecated Use ServerToolCall instead
+   */
   export interface WebSearchCall extends BaseContentBlock {
     /**
      * Type of the content block
@@ -103,7 +163,10 @@ export declare namespace Tools {
     query?: string;
   }
 
-  /** Content block for the result of a built-in search tool call */
+  /**
+   * Content block for the result of a built-in search tool call
+   * @deprecated Use ServerToolCallResult instead
+   */
   export interface WebSearchResult extends BaseContentBlock {
     /**
      * Type of the content block
@@ -115,7 +178,10 @@ export declare namespace Tools {
     urls?: string[];
   }
 
-  /** Content block for a built-in code interpreter tool call. */
+  /**
+   * Content block for a built-in code interpreter tool call.
+   * @deprecated Use ServerToolCall instead
+   */
   export interface CodeInterpreterCall extends BaseContentBlock {
     /**
      * Type of the content block
@@ -131,7 +197,10 @@ export declare namespace Tools {
     code?: string;
   }
 
-  /** Content block for the output of a singular code interpreter tool call */
+  /**
+   * Content block for the output of a singular code interpreter tool call
+   * @deprecated Use ServerToolCallResult instead
+   */
   export interface CodeInterpreterOutput {
     readonly type: "code_interpreter_output";
     /**
@@ -153,7 +222,10 @@ export declare namespace Tools {
     fileIds?: string[];
   }
 
-  /** Content block for the result of a code interpreter tool call */
+  /**
+   * Content block for the result of a code interpreter tool call
+   * @deprecated Use ServerToolCallResult instead
+   */
   export interface CodeInterpreterResult extends BaseContentBlock {
     /**
      * Type of the content block
@@ -169,6 +241,9 @@ export declare namespace Tools {
     | ToolCall
     | ToolCallChunk
     | InvalidToolCall
+    | ServerToolCall
+    | ServerToolCallChunk
+    | ServerToolCallResult
     | WebSearchCall
     | WebSearchResult
     | CodeInterpreterCall

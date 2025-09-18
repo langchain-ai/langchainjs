@@ -44,21 +44,23 @@ import {
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
-  convertToConverseTools,
-  convertToBedrockToolChoice,
-  convertToConverseMessages,
-  convertConverseMessageToLangChainMessage,
-  handleConverseStreamContentBlockDelta,
-  handleConverseStreamMetadata,
-  handleConverseStreamContentBlockStart,
-  BedrockConverseToolChoice,
-  supportedToolChoiceValuesForModel,
-} from "./common.js";
-import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
   CredentialType,
 } from "./types.js";
+import {
+  BedrockConverseToolChoice,
+  convertToBedrockToolChoice,
+  convertToConverseTools,
+  supportedToolChoiceValuesForModel,
+} from "./utils/tools.js";
+import { convertToConverseMessages } from "./utils/message_inputs.js";
+import {
+  convertConverseMessageToLangChainMessage,
+  handleConverseStreamContentBlockDelta,
+  handleConverseStreamContentBlockStart,
+  handleConverseStreamMetadata,
+} from "./utils/message_outputs.js";
 
 /**
  * Inputs for ChatBedrockConverse.

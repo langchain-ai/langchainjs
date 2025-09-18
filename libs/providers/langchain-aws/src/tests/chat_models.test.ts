@@ -14,10 +14,8 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it } from "vitest";
-import {
-  convertToConverseMessages,
-  handleConverseStreamContentBlockDelta,
-} from "../common.js";
+import { convertToConverseMessages } from "../utils/message_inputs.js";
+import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 
 describe("convertToConverseMessages", () => {
