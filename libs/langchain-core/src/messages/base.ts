@@ -224,9 +224,7 @@ export abstract class BaseMessage<
     BaseMessageFields<TStructure, TRole>["additional_kwargs"]
   >;
 
-  response_metadata: NonNullable<
-    BaseMessageFields<TStructure, TRole>["response_metadata"]
-  >;
+  response_metadata: BaseMessageFields<TStructure, TRole>["response_metadata"];
 
   /**
    * @deprecated Use .getType() instead or import the proper typeguard.
@@ -413,9 +411,9 @@ export function isOpenAIToolCallArray(
 
 export function _mergeDicts(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  left: Record<string, any>,
+  left: Record<string, any> = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any>
+  right: Record<string, any> = {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   const merged = { ...left };

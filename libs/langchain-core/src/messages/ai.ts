@@ -146,6 +146,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
 
   get contentBlocks(): Array<ContentBlock.Standard> {
     if (
+      this.response_metadata &&
       "output_version" in this.response_metadata &&
       this.response_metadata.output_version === "v1"
     ) {
@@ -153,6 +154,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     }
 
     if (
+      this.response_metadata &&
       "model_provider" in this.response_metadata &&
       typeof this.response_metadata.model_provider === "string"
     ) {
@@ -369,6 +371,7 @@ export class AIMessageChunk<
 
   get contentBlocks(): Array<ContentBlock.Standard> {
     if (
+      this.response_metadata &&
       "output_version" in this.response_metadata &&
       this.response_metadata.output_version === "v1"
     ) {
@@ -376,6 +379,7 @@ export class AIMessageChunk<
     }
 
     if (
+      this.response_metadata &&
       "model_provider" in this.response_metadata &&
       typeof this.response_metadata.model_provider === "string"
     ) {
