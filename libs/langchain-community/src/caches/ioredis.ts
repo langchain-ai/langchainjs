@@ -1,7 +1,6 @@
 import { Redis } from "ioredis";
 import {
   BaseCache,
-  getCacheKey,
   serializeGeneration,
   deserializeStoredGeneration,
 } from "@langchain/core/caches";
@@ -49,7 +48,7 @@ export class RedisCache extends BaseCache {
    */
   public async lookup(prompt: string, llmKey: string) {
     let idx = 0;
-    let key = getCacheKey(prompt, llmKey, String(idx));
+    let key = this.keyEncoder(prompt, llmKey, String(idx));
     let value = await this.redisClient.get(key);
     const generations: Generation[] = [];
 
@@ -57,7 +56,7 @@ export class RedisCache extends BaseCache {
       const storedGeneration = JSON.parse(value);
       generations.push(deserializeStoredGeneration(storedGeneration));
       idx += 1;
-      key = getCacheKey(prompt, llmKey, String(idx));
+      key = this.keyEncoder(prompt, llmKey, String(idx));
       value = await this.redisClient.get(key);
     }
 
@@ -72,7 +71,7 @@ export class RedisCache extends BaseCache {
    */
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
-      const key = getCacheKey(prompt, llmKey, String(i));
+      const key = this.keyEncoder(prompt, llmKey, String(i));
       if (this.ttl !== undefined) {
         await this.redisClient.set(
           key,

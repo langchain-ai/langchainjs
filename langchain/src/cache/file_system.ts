@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 
 import {
   BaseCache,
-  getCacheKey,
   serializeGeneration,
   deserializeStoredGeneration,
 } from "@langchain/core/caches";
@@ -46,7 +45,7 @@ export class LocalFileCache extends BaseCache {
    * @returns An array of Generations if found, null otherwise.
    */
   public async lookup(prompt: string, llmKey: string) {
-    const key = `${getCacheKey(prompt, llmKey)}.json`;
+    const key = `${this.keyEncoder(prompt, llmKey)}.json`;
     try {
       const content = await fs.readFile(path.join(this.cacheDir, key));
       return JSON.parse(content.toString()).map(deserializeStoredGeneration);
@@ -68,7 +67,7 @@ export class LocalFileCache extends BaseCache {
     llmKey: string,
     generations: Generation[]
   ) {
-    const key = `${getCacheKey(prompt, llmKey)}.json`;
+    const key = `${this.keyEncoder(prompt, llmKey)}.json`;
     await fs.writeFile(
       path.join(this.cacheDir, key),
       JSON.stringify(generations.map(serializeGeneration))
