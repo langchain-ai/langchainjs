@@ -224,7 +224,9 @@ export abstract class BaseMessage<
     BaseMessageFields<TStructure, TRole>["additional_kwargs"]
   >;
 
-  response_metadata: BaseMessageFields<TStructure, TRole>["response_metadata"];
+  response_metadata: NonNullable<
+    BaseMessageFields<TStructure, TRole>["response_metadata"]
+  >;
 
   /**
    * @deprecated Use .getType() instead or import the proper typeguard.
