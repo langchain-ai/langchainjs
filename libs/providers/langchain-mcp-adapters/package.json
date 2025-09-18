@@ -61,7 +61,6 @@
     "dotenv": "^16.4.7",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "eslint-plugin-vitest": "^0.5.4",
     "eventsource": "^3.0.6",
     "express": "^5.1.0",
     "langchain": "workspace:*",
