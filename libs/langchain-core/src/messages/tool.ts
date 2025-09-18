@@ -190,7 +190,8 @@ export class ToolMessageChunk<
 
 export interface ToolCall<
   TName extends string = string,
-  TArgs extends Record<string, unknown> = Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TArgs extends Record<string, any> = Record<string, any>
 > {
   readonly type?: "tool_call";
   /**

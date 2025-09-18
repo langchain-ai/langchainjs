@@ -390,21 +390,21 @@ export interface StandardMessageStructure extends MessageStructure {
     /** Properties specific to AI messages */
     ai: {
       /** Metadata about the AI model response */
-      response_metadata?: ResponseMetadata;
+      response_metadata: ResponseMetadata;
       /** Usage statistics for the AI response */
-      usage_metadata?: UsageMetadata;
+      usage_metadata: UsageMetadata;
     };
     human: {
       /** Metadata about the human message */
-      response_metadata?: Record<string, unknown>;
+      response_metadata: Record<string, unknown>;
     };
     system: {
       /** Metadata about the system message */
-      response_metadata?: Record<string, unknown>;
+      response_metadata: Record<string, unknown>;
     };
     tool: {
       /** Metadata about the tool message */
-      response_metadata?: Record<string, unknown>;
+      response_metadata: Record<string, unknown>;
     };
   };
 }
@@ -650,7 +650,7 @@ export type $InferResponseMetadata<
   TRole,
   "response_metadata"
 > extends infer P
-  ? [P] extends [unknown]
+  ? [P] extends [never]
     ? Record<string, unknown>
     : P
   : never;
