@@ -4,6 +4,8 @@ sidebar_position: 2
 
 # How to cache model responses
 
+NOTE: This section is for older language models that take a string as input and return a string as output. Users should be using almost exclusively the newer Chat Models as most model providers have adopted a chat like interface for interacting with language models. See [Chat Model Caching](/docs/how_to/chat_model_caching) for implementing caching, including Semantic Caching with the new chat models.
+
 LangChain provides an optional caching layer for LLMs. This is useful for two reasons:
 
 It can save you money by reducing the number of API calls you make to the LLM provider, if you're often requesting the same completion multiple times.
@@ -196,6 +198,31 @@ npm install -S @cloudflare/workers-types
 import CloudflareExample from "@examples/cache/cloudflare_kv.ts";
 
 <CodeBlock language="typescript">{CloudflareExample}</CodeBlock>
+
+## Caching with MongoDB
+
+NOTE: This section is for using MongoDB as a key-value LLM caching. For **semantic caching** see [MongoDB Atlas Semantic Cache](/docs/integrations/semantic_caching/mongodb_atlas).
+
+LangChain provides MongoDB-based cache support. This is especially useful if your application is already using MongoDB as a database, and you don't want to add another data store integration.
+
+To use this cache, you'll need to install the `mongodb` as well as `@langchain/mongodb`:
+
+```bash npm2yarn
+npm install mongodb @langchain/mongodb @langchain/core
+```
+
+The MongoDB cache integration does not create a collection for your cache storage.
+Assuming you have already set up your collection, you can utilize it for caching as follows:
+
+import MongoDBCacheExample from "@examples/cache/chat_models/mongodb.ts";
+
+<CodeBlock language="typescript">{MongoDBCacheExample}</CodeBlock>
+
+Hint: The key-value cache is stored in the collection using `prompt` as the key, and `llm` as the value. You can speed up fetching cached entries by setting up an index (not a Vector Search index) on prompt.
+
+```
+await db.collection(LLM_CACHE).createIndex({ prompt: 1 })
+```
 
 ## Caching on the File System
 
