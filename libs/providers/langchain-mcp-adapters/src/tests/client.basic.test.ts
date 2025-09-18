@@ -9,20 +9,28 @@ import {
 } from "vitest";
 import { ZodError } from "zod/v3";
 
-import "./mocks.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const { MultiServerMCPClient, MCPClientError } = await import(
-  "../src/client.js"
+import { MultiServerMCPClient, MCPClientError } from "../client.js";
+
+vi.mock(
+  "@modelcontextprotocol/sdk/client/index.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
 );
-const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
-const { StdioClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/stdio.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/stdio.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
 );
-const { SSEClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/sse.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/sse.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
 );
-const { StreamableHTTPClientTransport } = await import(
-  "@modelcontextprotocol/sdk/client/streamableHttp.js"
+vi.mock(
+  "@modelcontextprotocol/sdk/client/streamableHttp.js",
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
 );
 
 describe("MultiServerMCPClient", () => {
@@ -78,7 +86,6 @@ describe("MultiServerMCPClient", () => {
 
     test("should have a compile time error and a runtime error when the config is invalid", () => {
       expect(() => {
-        // eslint-disable-next-line no-new
         new MultiServerMCPClient({
           "test-server": {
             // @ts-expect-error shouldn't match type constraints here
@@ -452,7 +459,6 @@ describe("MultiServerMCPClient", () => {
   describe("streamable HTTP transport", () => {
     test("should throw when streamable HTTP config is missing required fields", () => {
       expect(() => {
-        // eslint-disable-next-line no-new
         new MultiServerMCPClient({
           // @ts-expect-error missing url field
           "test-server": {
@@ -465,7 +471,6 @@ describe("MultiServerMCPClient", () => {
 
     test("should throw when streamable HTTP URL is invalid", () => {
       expect(() => {
-        // eslint-disable-next-line no-new
         new MultiServerMCPClient({
           "test-server": {
             transport: "http",

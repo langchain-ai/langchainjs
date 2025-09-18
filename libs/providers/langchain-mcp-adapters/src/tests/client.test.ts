@@ -3,19 +3,13 @@ import { Server } from "node:http";
 import { join } from "node:path";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-import type {
-  Base64ContentBlock,
-  DataContentBlock,
-  MessageContentComplex,
-  MessageContentText,
-  StandardAudioBlock,
-  MessageContentImageUrl,
-} from "@langchain/core/messages";
-import type { ToolCall } from "@langchain/core/dist/messages/tool.js";
+import type { ContentBlock } from "@langchain/core/messages";
+import type { ToolCall } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import { MultiServerMCPClient } from "../src/client.js";
+
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
-import { type ClientConfig } from "../src/types.js";
+import { MultiServerMCPClient } from "../client.js";
+import { type ClientConfig } from "../types.js";
 
 // Manages dummy MCP servers for testing
 class TestMCPServers {
@@ -700,10 +694,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -764,10 +758,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -832,10 +826,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -894,10 +888,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
         async tokens() {
           return undefined; // No tokens available
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -957,10 +951,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
         async tokens() {
           throw new Error("OAuth provider error: Failed to retrieve tokens");
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -1025,10 +1019,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -1118,10 +1112,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -1213,10 +1207,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expires_in: 3600,
           };
         },
-        async saveTokens(tokens: OAuthTokens) {
+        async saveTokens(_tokens: OAuthTokens) {
           // Mock implementation
         },
-        async saveCodeVerifier(codeVerifier: string) {
+        async saveCodeVerifier(_codeVerifier: string) {
           // Mock implementation
         },
         async codeVerifier() {
@@ -1461,26 +1455,23 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           // Expect content to be an array of MessageContentComplex or DataContentBlock
           expect(Array.isArray(content)).toBe(true);
-          const contentArray = content as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const contentArray = content as ContentBlock[];
 
           const textBlock = contentArray.find(
             (c) => c.type === "text"
-          ) as MessageContentText;
+          ) as ContentBlock.Text;
           expect(textBlock).toBeDefined();
           expect(textBlock.text).toContain("Audio input was: test audio input");
           expect(textBlock.text).toContain("http-audio-test");
 
           const audioBlock = contentArray.find(
             (c) => c.type === "audio"
-          ) as StandardAudioBlock & Base64ContentBlock;
+          ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock).toBeDefined();
           expect(audioBlock.source_type).toBe("base64");
           expect(audioBlock.mime_type).toBe("audio/wav");
           expect(typeof audioBlock.data).toBe("string");
-          expect(audioBlock.data.length).toBeGreaterThan(10);
+          expect(audioBlock.data?.length).toBeGreaterThan(10);
         } finally {
           await client.close();
         }
@@ -1531,20 +1522,17 @@ describe("MultiServerMCPClient Integration Tests", () => {
               args: toolInput,
             });
           expect(imgArtifact).toEqual([]);
-          const imgContentArray = imgContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const imgContentArray = imgContent as ContentBlock[];
 
           const imgTextBlock = imgContentArray.find(
             (c) => c.type === "text"
-          ) as MessageContentText;
+          ) as ContentBlock.Text;
           expect(imgTextBlock.text).toContain(
             "Image input was: test standard blocks"
           );
           const imgBlock = imgContentArray.find(
             (c) => c.type === "image"
-          ) as Base64ContentBlock;
+          ) as ContentBlock.Multimodal.Data;
           expect(imgBlock.source_type).toBe("base64");
           expect(imgBlock.mime_type).toBe("image/png");
           expect(typeof imgBlock.data).toBe("string");
@@ -1557,20 +1545,17 @@ describe("MultiServerMCPClient Integration Tests", () => {
               args: toolInput,
             });
           expect(audioArtifact).toEqual([]);
-          const audioContentArray = audioContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const audioContentArray = audioContent as ContentBlock[];
 
           const audioTextBlock = audioContentArray.find(
             (c) => c.type === "text"
-          ) as MessageContentText;
+          ) as ContentBlock.Text;
           expect(audioTextBlock.text).toContain(
             "Audio input was: test standard blocks"
           );
           const audioBlock = audioContentArray.find(
             (c) => c.type === "audio"
-          ) as StandardAudioBlock & Base64ContentBlock;
+          ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock.source_type).toBe("base64");
           expect(audioBlock.mime_type).toBe("audio/wav");
         } finally {
@@ -1610,26 +1595,21 @@ describe("MultiServerMCPClient Integration Tests", () => {
               args: toolInput,
             });
           expect(imgArtifact).toEqual([]);
-          const imgContentArray = imgContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const imgContentArray = imgContent as ContentBlock[];
 
           const imgTextBlock = imgContentArray.find(
             (c) => c.type === "text"
-          ) as MessageContentText;
+          ) as ContentBlock.Text;
           expect(imgTextBlock.text).toContain(
             "Image input was: test standard blocks"
           );
           // Check for legacy image_url format
           const imgUrlBlock = imgContentArray.find(
             (c) => c.type === "image_url"
-          ) as MessageContentImageUrl;
+          ) as ContentBlock.Multimodal.Data;
           expect(imgUrlBlock).toBeDefined();
-          const imageUrl =
-            typeof imgUrlBlock.image_url === "string"
-              ? imgUrlBlock.image_url
-              : imgUrlBlock.image_url.url;
+          // @ts-expect-error image_url is unknown
+          const imageUrl = imgUrlBlock.image_url?.url;
           expect(imageUrl).toMatch(/^data:image\/png;base64,/);
 
           // Audio should still use StandardAudioBlock
@@ -1642,13 +1622,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
               args: toolInput,
             });
           expect(audioArtifact).toEqual([]);
-          const audioContentArray = audioContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const audioContentArray = audioContent as ContentBlock[];
           const audioBlock = audioContentArray.find(
             (c) => c.type === "audio"
-          ) as StandardAudioBlock & Base64ContentBlock;
+          ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock.source_type).toBe("base64");
           expect(audioBlock.mime_type).toBe("audio/wav");
         } finally {
@@ -1715,14 +1692,16 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(Array.isArray(imgContentResult)).toBe(true);
           expect(imgArtifact).toEqual([]);
 
-          const imgContentArray = imgContentResult as MessageContentComplex[];
+          const imgContentArray = imgContentResult as ContentBlock[];
 
           expect(imgContentArray).toHaveLength(2);
           expect(imgContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(imageToolInput.args.input),
+                text: expect.stringContaining(
+                  imageToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "image_url",
@@ -1737,15 +1716,19 @@ describe("MultiServerMCPClient Integration Tests", () => {
             await resourceTool.invoke(resourceToolInput);
 
           if (typeof resContentResult === "string") {
-            expect(resContentResult).toContain(resourceToolInput.args.input);
+            expect(resContentResult).toContain(
+              resourceToolInput.args.input as string
+            );
           } else {
             expect(Array.isArray(resContentResult)).toBe(true);
-            const resContentArray = resContentResult as MessageContentComplex[];
+            const resContentArray = resContentResult as ContentBlock[];
             expect(resContentArray).toHaveLength(1);
             expect(resContentArray[0]).toEqual(
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(resourceToolInput.args.input),
+                text: expect.stringContaining(
+                  resourceToolInput.args.input as string
+                ),
               })
             );
           }
@@ -1800,7 +1783,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(imageToolInput.args.input),
+                text: expect.stringContaining(
+                  imageToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "image",
@@ -1818,7 +1803,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(resourceToolInput.args.input),
+                text: expect.stringContaining(
+                  resourceToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "resource",
@@ -1835,7 +1822,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(audioToolInput.args.input),
+                text: expect.stringContaining(
+                  audioToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "audio",
@@ -1878,13 +1867,15 @@ describe("MultiServerMCPClient Integration Tests", () => {
             await imageTool.invoke(imageToolInput);
           expect(imgArtifact).toEqual([]);
           expect(Array.isArray(imgContent)).toBe(true);
-          const imgContentArray = imgContent as MessageContentComplex[];
+          const imgContentArray = imgContent as ContentBlock[];
           expect(imgContentArray).toHaveLength(2);
           expect(imgContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(imageToolInput.args.input),
+                text: expect.stringContaining(
+                  imageToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "image_url",
@@ -1899,16 +1890,15 @@ describe("MultiServerMCPClient Integration Tests", () => {
             await resourceTool.invoke(resourceToolInput);
           expect(resArtifact).toEqual([]);
           expect(Array.isArray(resContent)).toBe(true);
-          const resContentArray = resContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
           expect(resContentArray).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
                 type: "text",
-                text: expect.stringContaining(resourceToolInput.args.input),
+                text: expect.stringContaining(
+                  resourceToolInput.args.input as string
+                ),
               }),
               expect.objectContaining({
                 type: "file",
@@ -1959,7 +1949,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           if (typeof imgContent === "string") {
             expect(imgContent).toContain(imageToolInput.args.input);
           } else {
-            const imgContentArray = imgContent as MessageContentComplex[];
+            const imgContentArray = imgContent as ContentBlock[];
             expect(imgContentArray).toHaveLength(1);
             expect(imgContentArray[0]).toEqual(
               expect.objectContaining({ type: "text" })
@@ -1975,10 +1965,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
           expect(resArtifact).toEqual([]);
-          const resContentArray = resContent as (
-            | MessageContentComplex
-            | DataContentBlock
-          )[];
+          const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
           expect(resContentArray).toEqual(
             expect.arrayContaining([
@@ -2026,7 +2013,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: imgContent, artifact: imgArtifact } =
             await imageTool.invoke(imageToolInput);
-          const imgContentArray = imgContent as MessageContentComplex[];
+          const imgContentArray = imgContent as ContentBlock[];
           expect(imgContentArray).toHaveLength(1);
           expect(imgContentArray[0]).toEqual({
             image_url: {
@@ -2037,7 +2024,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(imgArtifact).toHaveLength(1);
           expect(imgArtifact[0]).toEqual({
             type: "text",
-            text: expect.stringContaining(imageToolInput.args.input),
+            text: expect.stringContaining(imageToolInput.args.input as string),
           });
 
           const { content: resContent, artifact: resArtifact } =
@@ -2094,7 +2081,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           if (typeof imgContent === "string") {
             expect(imgContent).toContain(imageToolInput.args.input);
           } else if (Array.isArray(imgContent)) {
-            const imgContentArray = imgContent as DataContentBlock[];
+            const imgContentArray = imgContent as ContentBlock[];
             expect(imgContentArray).toHaveLength(1);
             expect(imgContentArray[0]).toEqual(
               expect.objectContaining({ type: "text", source_type: "text" })
@@ -2114,7 +2101,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const { content: audioContent, artifact: audioArtifact } =
             await audioTool.invoke(audioToolInput);
           expect(audioArtifact).toEqual([]);
-          const audioContentArray = audioContent as DataContentBlock[];
+          const audioContentArray = audioContent as ContentBlock[];
           expect(audioContentArray).toHaveLength(2);
           expect(audioContentArray).toEqual(
             expect.arrayContaining([
@@ -2132,7 +2119,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           if (typeof resContent === "string") {
             expect(resContent).toContain(resourceToolInput.args.input);
           } else if (Array.isArray(resContent)) {
-            const resContentArray = resContent as DataContentBlock[];
+            const resContentArray = resContent as ContentBlock[];
             expect(resContentArray).toHaveLength(1);
             expect(resContentArray[0]).toEqual(
               expect.objectContaining({ type: "text", source_type: "text" })

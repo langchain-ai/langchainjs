@@ -17,13 +17,7 @@ import {
   START,
   MessagesAnnotation,
 } from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import {
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
-  isHumanMessage,
-} from "@langchain/core/messages";
+import { HumanMessage, AIMessage, SystemMessage, ToolNode } from "langchain";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -105,7 +99,7 @@ For reading multiple files, you can use the read_multiple_files tool.`;
 
       // Add system message if it's the first call
       let { messages } = state;
-      if (messages.length === 1 && isHumanMessage(messages[0])) {
+      if (messages.length === 1 && HumanMessage.isInstance(messages[0])) {
         messages = [new SystemMessage(systemMessage), ...messages];
       }
 
