@@ -497,7 +497,8 @@ export abstract class BaseChatOpenAI<
     this.disableStreaming = fields?.disableStreaming === true;
     this.streaming = fields?.streaming === true;
     if (this.disableStreaming) this.streaming = false;
-    if (this.streaming === false) this.disableStreaming = true;
+    // disable streaming in BaseChatModel if explicitly disabled
+    if (fields?.streaming === false) this.disableStreaming = true;
 
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
     if (this.disableStreaming) this.streamUsage = false;
