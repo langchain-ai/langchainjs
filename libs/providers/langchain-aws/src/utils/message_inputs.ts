@@ -5,6 +5,7 @@ import {
   HumanMessage,
   StandardContentBlockConverter,
   ContentBlock,
+  ChatMessage,
 } from "@langchain/core/messages";
 import {
   AIMessage,
@@ -440,7 +441,7 @@ function convertHumanMessageToConverseMessage(
 ): Bedrock.Message {
   if (msg.content === "") {
     throw new Error(
-      `Invalid message content: empty string. '${msg.getType()}' must contain non-empty content.`
+      `Invalid message content: empty string. '${msg.type}' must contain non-empty content.`
     );
   }
 
@@ -522,16 +523,16 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
   }, [] as Bedrock.SystemContentBlock[]);
 
   const converseMessages: Bedrock.Message[] = messages
-    .filter((msg) => msg.getType() !== "system")
+    .filter((msg) => !SystemMessage.isInstance(msg))
     .map((msg) => {
-      if (msg.getType() === "ai") {
+      if (AIMessage.isInstance(msg)) {
         return convertAIMessageToConverseMessage(msg as AIMessage);
-      } else if (msg.getType() === "human" || msg.getType() === "generic") {
+      } else if (HumanMessage.isInstance(msg) || ChatMessage.isInstance(msg)) {
         return convertHumanMessageToConverseMessage(msg as HumanMessage);
-      } else if (msg.getType() === "tool") {
+      } else if (ToolMessage.isInstance(msg)) {
         return convertToolMessageToConverseMessage(msg as ToolMessage);
       } else {
-        throw new Error(`Unsupported message type: ${msg.getType()}`);
+        throw new Error(`Unsupported message type: ${msg.type}`);
       }
     });
 
