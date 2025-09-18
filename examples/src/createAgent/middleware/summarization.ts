@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { createAgent, HumanMessage, AIMessage, BaseMessage } from "langchain";
 import {
   summarizationMiddleware,

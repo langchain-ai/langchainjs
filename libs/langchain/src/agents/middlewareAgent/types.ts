@@ -8,17 +8,12 @@ import type {
 import type { LangGraphRunnableConfig, START } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type {
-  SystemMessage,
-  BaseMessageLike,
-  BaseMessage,
-} from "@langchain/core/messages";
+import type { SystemMessage, BaseMessage } from "@langchain/core/messages";
 import type {
   All,
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
-import type { Runnable } from "@langchain/core/runnables";
 
 import type {
   PreHookAnnotation,
@@ -381,20 +376,6 @@ export interface LLMCall {
   response?: BaseMessage;
 }
 
-/**
- * Duplicate of the Prompt type from ../types.ts
- */
-export type Prompt<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> =
-  | SystemMessage
-  | string
-  | ((
-      state: AgentBuiltInState,
-      config: LangGraphRunnableConfig<ToAnnotationRoot<ContextSchema>["State"]>
-    ) => BaseMessageLike[] | Promise<BaseMessageLike[]>)
-  | Runnable;
-
 export type DynamicLLMFunction<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > = (
@@ -455,7 +436,7 @@ export type CreateAgentParams<
    *
    * Cannot be used together with `prepareModelRequest`.
    */
-  prompt?: Prompt<ContextSchema>;
+  prompt?: SystemMessage | string;
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
