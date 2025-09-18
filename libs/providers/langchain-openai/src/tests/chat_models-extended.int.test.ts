@@ -1,6 +1,11 @@
-import { test, expect } from "vitest";
-
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { test, expect, vi } from "vitest";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import { InMemoryCache } from "@langchain/core/caches";
 
@@ -251,8 +256,8 @@ test("Test ChatOpenAI tool calling with streaming", async () => {
 
 test("ChatOpenAI in JSON mode can cache generations", async () => {
   const memoryCache = new InMemoryCache();
-  const lookupSpy = jest.spyOn(memoryCache, "lookup");
-  const updateSpy = jest.spyOn(memoryCache, "update");
+  const lookupSpy = vi.spyOn(memoryCache, "lookup");
+  const updateSpy = vi.spyOn(memoryCache, "update");
   const chat = new ChatOpenAI({
     model: "gpt-3.5-turbo-1106",
     temperature: 1,
@@ -748,14 +753,37 @@ test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streami
 
   // Test streaming mode - this should also work but currently doesn't
   const stream = await llmWithTools.stream(dialogs);
-  let finalChunk;
+  let finalChunk: AIMessageChunk | undefined;
+  const chunks = [];
   for await (const chunk of stream) {
+    chunks.push(chunk);
     if (!finalChunk) {
       finalChunk = chunk;
     } else {
       finalChunk = finalChunk.concat(chunk);
     }
   }
+
+  expect(chunks.length).toBeGreaterThanOrEqual(4);
+  expect(finalChunk?.tool_calls).toHaveLength(1);
+  expect(finalChunk?.tool_calls?.[0]).toEqual(
+    expect.objectContaining({
+      name: "get_current_time",
+      args: expect.any(Object),
+      id: expect.any(String),
+      type: "tool_call",
+    })
+  );
+  expect(finalChunk?.tool_call_chunks).toHaveLength(1);
+  expect(finalChunk?.tool_call_chunks?.[0]).toEqual(
+    expect.objectContaining({
+      name: "get_current_time",
+      args: "{}",
+      id: expect.any(String),
+      index: 0,
+      type: "tool_call_chunk",
+    })
+  );
 
   // This should pass but currently fails due to the bug
   expect(finalChunk?.tool_calls).toBeDefined();
