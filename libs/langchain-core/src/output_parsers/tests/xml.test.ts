@@ -87,7 +87,6 @@ test("Can parse streams", async () => {
   const result = await streamingLlm.stream(XML_EXAMPLE);
   let finalResult = {};
   for await (const chunk of result) {
-    console.log(chunk);
     finalResult = chunk;
   }
   expect(finalResult).toStrictEqual(expectedResult);

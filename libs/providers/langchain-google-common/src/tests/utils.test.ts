@@ -144,9 +144,7 @@ describe("media core", () => {
   test("MediaBlob serialize", async () => {
     const blob = new Blob(["This is a test"], { type: "text/plain" });
     const mblob = await MediaBlob.fromBlob(blob);
-    console.log("serialize mblob", mblob);
     const serialized = mblob.toJSON() as SerializedConstructor;
-    console.log("serialized", serialized);
     expect(serialized.kwargs).toHaveProperty("data");
     expect(serialized.kwargs.data.value).toEqual("VGhpcyBpcyBhIHRlc3Q=");
   });
@@ -177,7 +175,6 @@ describe("media core", () => {
         ),
       },
     });
-    console.log("deserialize mblob", mblob);
     expect(mblob.dataType).toEqual("text/plain");
     expect(await mblob.asString()).toEqual("This is a test");
   });
@@ -185,7 +182,6 @@ describe("media core", () => {
   test("SimpleWebBlobStore fetch", async () => {
     const webStore = new SimpleWebBlobStore();
     const exampleBlob = await webStore.fetch("http://example.com/");
-    console.log(exampleBlob);
     expect(exampleBlob?.mimetype).toEqual("text/html");
     expect(exampleBlob?.encoding).toEqual("utf-8");
     expect(exampleBlob?.size).toBeGreaterThan(0);

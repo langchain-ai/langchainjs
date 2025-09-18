@@ -18,7 +18,8 @@
  */
 
 import fs from "node:fs/promises";
-import { createAgent, tool, AIMessage, MemorySaver } from "langchain";
+import { createAgent, tool, AIMessage } from "langchain";
+import { MemorySaver } from "@langchain/langgraph";
 import { interrupt } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";

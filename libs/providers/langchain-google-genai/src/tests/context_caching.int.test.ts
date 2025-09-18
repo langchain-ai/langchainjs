@@ -79,6 +79,5 @@ test("Test Google AI", async () => {
       "timestamps they were introduced for the first time."
   );
 
-  console.log(res);
   expect(res).toBeTruthy();
 });

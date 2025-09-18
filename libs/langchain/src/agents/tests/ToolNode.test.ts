@@ -857,7 +857,6 @@ describe("ToolNode error handling", () => {
     const toolCall = { name: "tool_with_interrupt", args: {}, id: "testid" };
     const toolWithError = tool(
       async (_) => {
-        console.log("throwing error");
         throw errorToThrow;
       },
       {

@@ -502,9 +502,7 @@ describe("ChatGoogleGenerativeAI should count tokens correctly", () => {
         for await (const chunk of res) {
           full ??= chunk;
           full = full.concat(chunk);
-          console.log("langchain:", chunk.usage_metadata);
         }
-        console.log(modelName, full);
         // expect(full?.usage_metadata);
         // expect(res.usage_metadata).toBeDefined();
       }

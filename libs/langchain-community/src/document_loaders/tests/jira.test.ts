@@ -258,7 +258,6 @@ export function someJiraIssue(overrides: Partial<JiraIssue> = {}): JiraIssue {
         : undefined,
     },
   };
-  console.log(baseIssue.fields.duedate);
 
   return {
     ...baseIssue,

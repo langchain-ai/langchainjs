@@ -397,7 +397,6 @@ test("Runnable streamEvents method with a runnable map", async () => {
   for await (const event of eventStream) {
     events.push(event);
   }
-  console.log(events);
   expect(events).toEqual([
     {
       run_id: expect.any(String),

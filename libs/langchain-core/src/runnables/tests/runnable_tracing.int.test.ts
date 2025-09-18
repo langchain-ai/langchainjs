@@ -34,5 +34,5 @@ test("Should handle tracing with a date output", async () => {
   const parser = new FakeDateOutputParser();
   const chain = model.pipe(parser);
   const result = await chain.invoke("test", { callbacks: [tracer] });
-  console.log(result);
+  expect(result).toBeDefined();
 });

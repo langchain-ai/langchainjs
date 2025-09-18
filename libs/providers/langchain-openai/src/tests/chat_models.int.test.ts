@@ -1248,7 +1248,6 @@ test("Works with maxCompletionTokens with o3", async () => {
       content: "hi",
     },
   ]);
-  console.log(res);
   expect(res.content).toEqual("testing");
 });
 
@@ -1297,9 +1296,9 @@ test.skip("Allow overriding completions", async () => {
     apiKey: process.env.DEEPSEEK_API_KEY,
   });
   const res = await model.invoke("what color is the sky?");
-  console.log(res);
+  expect(res).toBeDefined();
   const stream = await model.stream("what color is the sky?");
   for await (const chunk of stream) {
-    console.log(chunk);
+    expect(chunk).toBeDefined();
   }
 });

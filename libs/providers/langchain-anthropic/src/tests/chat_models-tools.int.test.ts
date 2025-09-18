@@ -326,7 +326,6 @@ test("stream events with tool calls has raw message content", async () => {
   const chatModelStreamEvents = [];
   for await (const event of eventStream) {
     if (event.event === "on_chat_model_stream") {
-      console.log(event);
       chatModelStreamEvents.push(event);
     }
   }

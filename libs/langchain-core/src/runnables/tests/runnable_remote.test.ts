@@ -201,7 +201,6 @@ describe("RemoteRunnable", () => {
     const stream = await remote.stream({ text: "What are the 5 best apples?" });
     const chunks = [];
     for await (const chunk of stream) {
-      console.log(chunk);
       chunks.push(chunk);
     }
     expect(chunks[0]).toBeInstanceOf(HumanMessage);

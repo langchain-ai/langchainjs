@@ -48,7 +48,6 @@ test("Test Azure Cosmos MongoDB history store", async () => {
   ];
 
   const resultWithHistory = await chatHistory.getMessages();
-  console.log(resultWithHistory);
   expect(resultWithHistory).toEqual(expectedMessages);
 
   await mongoClient.close();

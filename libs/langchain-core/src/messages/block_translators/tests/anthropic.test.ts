@@ -337,7 +337,6 @@ describe("anthropicTranslator", () => {
         expectedChunkContents[i],
       ]);
       for (const [chunk, expectedChunk] of chunkPairs) {
-        console.log(chunk);
         expect(chunk.contentBlocks).toEqual([expectedChunk]);
       }
 

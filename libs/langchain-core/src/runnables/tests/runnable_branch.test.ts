@@ -107,7 +107,6 @@ test("RunnableBranch invoke", async () => {
 
   const chunks = [];
   for await (const chunk of stream) {
-    console.log(chunk);
     chunks.push(chunk);
   }
   expect(chunks.length).toBeGreaterThan(1);
@@ -119,7 +118,6 @@ test("RunnableBranch invoke", async () => {
 
   const chunks2 = [];
   for await (const chunk of stream2) {
-    console.log(chunk);
     chunks2.push(chunk);
   }
   expect(chunks2.length).toBeGreaterThan(1);

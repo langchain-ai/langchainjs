@@ -257,7 +257,6 @@ test("Pipe with a class that implements a runnable interface", async () => {
   const outputParser = new StringOutputParser();
   const runnable = promptTemplate.pipe(llm).pipe(outputParser);
   const result = await runnable.invoke({ input: "Hello world!!" });
-  console.log(result);
   expect(result).toBe("Hello world!!");
 });
 
@@ -267,6 +266,5 @@ test("Runnable sequence with a class that implements a runnable interface", asyn
   const outputParser = new StringOutputParser();
   const runnable = RunnableSequence.from([promptTemplate, llm, outputParser]);
   const result = await runnable.invoke({ input: "Hello sequence!!" });
-  console.log(result);
   expect(result).toBe("Hello sequence!!");
 });
