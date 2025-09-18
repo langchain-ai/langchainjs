@@ -19,7 +19,7 @@
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
     "test": "pnpm test:unit && pnpm test:exports:docker",
-    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!api_refs --filter=!core_docs --filter=!create-langchain-integration",
+    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!api_refs --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
     "test:int": "pnpm run test:int:deps && turbo test:integration ; pnpm run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
