@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { describe, test, expect } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
@@ -124,15 +124,15 @@ test("Test ChatModel uses callbacks with a cache", async () => {
 test("Test ChatModel legacy params withStructuredOutput", async () => {
   const model = new FakeListChatModel({
     responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
-  }).withStructuredOutput({
-    includeRaw: false,
-    schema: z.object({
+  }).withStructuredOutput(
+    z.object({
       test: z.boolean(),
       nested: z.object({
         somethingelse: z.string(),
       }),
     }),
-  });
+    { includeRaw: false }
+  );
   const response = await model.invoke("Hello there!");
   expect(response).toEqual({
     test: true,
@@ -161,15 +161,15 @@ test("Test ChatModel legacy params withStructuredOutput", async () => {
 test("Test ChatModel withStructuredOutput with supplied type arg", async () => {
   const model = new FakeListChatModel({
     responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
-  }).withStructuredOutput<{ forcedArg: number }>({
-    includeRaw: false,
-    schema: z.object({
+  }).withStructuredOutput<{ forcedArg: number }>(
+    z.object({
       test: z.boolean(),
       nested: z.object({
         somethingelse: z.string(),
       }),
     }),
-  });
+    { includeRaw: false }
+  );
   const response = await model.invoke("Hello there!");
   expect(response).toEqual({
     test: true,
@@ -389,4 +389,68 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
+});
+
+describe("Test BaseChatModel can be used declaratively", () => {
+  const toolDefinition = (name: string) => ({
+    type: "function",
+    function: {
+      name,
+      description: "A test tool",
+      parameters: {
+        type: "object",
+      },
+    },
+  });
+
+  it("can string multiple bindTools calls", () => {
+    const model = new FakeListChatModel({ responses: ["hi"] })
+      .bindTools([toolDefinition("foo")])
+      .bindTools([toolDefinition("bar")])
+      .withStructuredOutput(
+        z.object({
+          foo: z.string(),
+          bar: z.string(),
+        })
+      );
+    expect(model.defaultOptions.tools?.length).toBe(2);
+    expect(model.outputParser).toBeDefined();
+  });
+
+  it("can string multiple withStructuredOutput calls", () => {
+    const model = new FakeListChatModel({ responses: ["hi"] })
+      .withStructuredOutput(
+        z.object({
+          foo: z.string(),
+        })
+      )
+      .withStructuredOutput(
+        z.object({
+          bar: z.string(),
+        })
+      );
+    expect(model.outputParser).toBeDefined();
+  });
+
+  it("can string multiple config modifying calls", () => {
+    const model = new FakeListChatModel({ responses: ["hi"] })
+      .withConfig({ temperature: 0.5 })
+      .bindTools([toolDefinition("foo")])
+      .withConfig({ temperature: 0.7 })
+      .withStructuredOutput(
+        z.object({
+          foo: z.string(),
+        })
+      )
+      .bindTools([toolDefinition("bar")])
+      .withStructuredOutput(
+        z.object({
+          bar: z.string(),
+        })
+      );
+    expect(model.defaultOptions.temperature).toBe(0.7);
+    // same case here
+    expect(model.defaultOptions.tools?.length).toBe(2);
+    expect(model.outputParser).toBeDefined();
+  });
 });

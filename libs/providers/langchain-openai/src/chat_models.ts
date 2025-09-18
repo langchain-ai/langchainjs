@@ -32,19 +32,14 @@ import {
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
 import {
+  AnyAIMessage,
   isOpenAITool as isOpenAIFunctionTool,
   type BaseFunctionCallOptions,
-  type BaseLanguageModelInput,
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import {
   JsonOutputParser,
   StructuredOutputParser,
@@ -64,7 +59,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { JSONSchema, toJsonSchema } from "@langchain/core/utils/json_schema";
 import { ResponseInputMessageContentList } from "openai/resources/responses/responses.js";
 import {
   type OpenAICallOptions,
@@ -344,8 +339,6 @@ export abstract class BaseChatOpenAI<
    */
   verbosity?: OpenAIVerbosityParam;
 
-  protected defaultOptions: CallOptions;
-
   _llmType() {
     return "openai";
   }
@@ -576,15 +569,6 @@ export abstract class BaseChatOpenAI<
     return resFormat as ResponseFormatConfiguration | undefined;
   }
 
-  protected _combineCallOptions(
-    additionalOptions?: this["ParsedCallOptions"]
-  ): this["ParsedCallOptions"] {
-    return {
-      ...this.defaultOptions,
-      ...(additionalOptions ?? {}),
-    };
-  }
-
   /** @internal */
   _getClientOptions(
     options: OpenAICoreRequestOptions | undefined
@@ -640,11 +624,11 @@ export abstract class BaseChatOpenAI<
 
   override bindTools(
     tools: ChatOpenAIToolType[],
-    kwargs?: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    options?: Partial<CallOptions>
+  ): this {
     let strict: boolean | undefined;
-    if (kwargs?.strict !== undefined) {
-      strict = kwargs.strict;
+    if (options?.strict !== undefined) {
+      strict = options.strict;
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
@@ -654,22 +638,8 @@ export abstract class BaseChatOpenAI<
           ? tool
           : this._convertChatOpenAIToolToCompletionsTool(tool, { strict })
       ),
-      ...kwargs,
+      ...options,
     } as Partial<CallOptions>);
-  }
-
-  override async stream(input: BaseLanguageModelInput, options?: CallOptions) {
-    return super.stream(
-      input,
-      this._combineCallOptions(options) as CallOptions
-    );
-  }
-
-  override async invoke(input: BaseLanguageModelInput, options?: CallOptions) {
-    return super.invoke(
-      input,
-      this._combineCallOptions(options) as CallOptions
-    );
   }
 
   /** @ignore */
@@ -846,38 +816,29 @@ export abstract class BaseChatOpenAI<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<CallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
   ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+    | BaseChatModel<CallOptions, TOutput>
+    | BaseChatModel<CallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
   /**
    * Add structured output to the model.
@@ -899,13 +860,13 @@ export abstract class BaseChatOpenAI<
    * @returns The model with structured output.
    */
   withStructuredOutput<
-    RunOutput extends Record<string, unknown> = Record<string, unknown>
+    TOutput extends Record<string, unknown> = Record<string, unknown>
   >(
-    outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
+    outputSchema: InteropZodType<TOutput> | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
-    let llm: Runnable<BaseLanguageModelInput>;
-    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+    let llm: this;
+    let outputParser: Runnable<AIMessageChunk, TOutput>;
 
     const { schema, name, includeRaw } = {
       ...config,
@@ -924,7 +885,7 @@ export abstract class BaseChatOpenAI<
       if (isInteropZodSchema(schema)) {
         outputParser = StructuredOutputParser.fromZodSchema(schema);
       } else {
-        outputParser = new JsonOutputParser<RunOutput>();
+        outputParser = new JsonOutputParser<TOutput>();
       }
       const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
@@ -958,16 +919,16 @@ export abstract class BaseChatOpenAI<
       } as Partial<CallOptions>);
       if (isInteropZodSchema(schema)) {
         const altParser = StructuredOutputParser.fromZodSchema(schema);
-        outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
+        outputParser = RunnableLambda.from<AIMessageChunk, TOutput>(
           (aiMessage: AIMessageChunk) => {
             if ("parsed" in aiMessage.additional_kwargs) {
-              return aiMessage.additional_kwargs.parsed as RunOutput;
+              return aiMessage.additional_kwargs.parsed as TOutput;
             }
             return altParser;
           }
         );
       } else {
-        outputParser = new JsonOutputParser<RunOutput>();
+        outputParser = new JsonOutputParser<TOutput>();
       }
     } else {
       let functionName = name ?? "extract";
@@ -1041,7 +1002,7 @@ export abstract class BaseChatOpenAI<
           // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
           ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser<TOutput>({
           returnSingle: true,
           keyName: functionName,
         });
@@ -1049,26 +1010,16 @@ export abstract class BaseChatOpenAI<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<
-        BaseLanguageModelInput,
-        RunOutput
-      >;
+      return llm.withOutputParser(outputParser);
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([{ raw: llm }, parsedWithFallback]);
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AIMessageChunk, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config).catch(() => null),
+      })
+    );
+    return llm.withOutputParser(parserWithRaw);
   }
 }
 
@@ -3134,7 +3085,7 @@ export class ChatOpenAI<
     return [...super.lc_serializable_keys, "useResponsesApi"];
   }
 
-  constructor(protected fields?: ChatOpenAIFields) {
+  constructor(protected fields: ChatOpenAIFields) {
     super(fields);
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
@@ -3206,13 +3157,5 @@ export class ChatOpenAI<
       this._combineCallOptions(options),
       runManager
     );
-  }
-
-  override withConfig(
-    config: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
-    const newModel = new ChatOpenAI<CallOptions>(this.fields);
-    newModel.defaultOptions = { ...this.defaultOptions, ...config };
-    return newModel;
   }
 }

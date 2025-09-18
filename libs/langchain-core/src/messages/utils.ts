@@ -5,7 +5,6 @@ import { AIMessage, AIMessageChunk, AIMessageChunkFields } from "./ai.js";
 import {
   BaseMessageLike,
   BaseMessage,
-  isBaseMessage,
   StoredMessage,
   StoredMessageV1,
   BaseMessageFields,
@@ -148,8 +147,6 @@ export type $MergeDiscriminatedUnion<
   // This converts the mapped type back into a union
 }[A[Key] | B[Key]];
 
-export type Constructor<T> = new (...args: unknown[]) => T;
-
 /**
  * Immediately-invoked function expression.
  *
@@ -283,7 +280,7 @@ export function coerceMessageLikeToMessage(
 ): BaseMessage {
   if (typeof messageLike === "string") {
     return new HumanMessage(messageLike);
-  } else if (isBaseMessage(messageLike)) {
+  } else if (BaseMessage.isInstance(messageLike)) {
     return messageLike;
   }
   if (Array.isArray(messageLike)) {

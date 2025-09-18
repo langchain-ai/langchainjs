@@ -8,10 +8,7 @@ import {
   MessageContent,
   MessageType,
 } from "@langchain/core/messages";
-import {
-  BaseLanguageModelInput,
-  isOpenAITool,
-} from "@langchain/core/language_models/base";
+import { isOpenAITool } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -34,7 +31,6 @@ import {
   ToolMessage,
 } from "@langchain/core/messages/tool";
 import * as uuid from "uuid";
-import { Runnable } from "@langchain/core/runnables";
 import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { CohereClientOptions, getCohereClient } from "./client.js";
@@ -791,7 +787,7 @@ export class ChatCohere<
   override bindTools(
     tools: ChatCohereToolType[],
     kwargs?: Partial<CallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+  ): this {
     return this.withConfig({
       tools: _formatToolsToCohere(tools),
       ...kwargs,

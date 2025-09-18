@@ -1,4 +1,5 @@
 import {
+  JSONSchema,
   JsonSchema7Type,
   toJsonSchema,
 } from "@langchain/core/utils/json_schema";
@@ -48,13 +49,9 @@ import type {
   ChatCompletionTool,
 } from "groq-sdk/resources/chat/completions";
 import type { RequestOptions } from "groq-sdk/core";
+import { RunnableLambda } from "@langchain/core/runnables";
 import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  BaseLanguageModelInput,
+  AnyAIMessage,
   FunctionDefinition,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
@@ -1144,7 +1141,7 @@ export class ChatGroq extends BaseChatModel<
   override bindTools(
     tools: ChatGroqToolType[],
     kwargs?: Partial<ChatGroqCallOptions>
-  ): Runnable<BaseLanguageModelInput, AIMessageChunk, ChatGroqCallOptions> {
+  ): this {
     return this.withConfig({
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
@@ -1357,51 +1354,36 @@ export class ChatGroq extends BaseChatModel<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
+  ): BaseChatModel<ChatGroqCallOptions, TOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
+  ): BaseChatModel<ChatGroqCallOptions, { raw: AnyAIMessage; parsed: TOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    TOutput extends Record<string, any> = Record<string, any>
   >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
+    outputSchema: InteropZodType<TOutput> | JSONSchema,
     config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema: InteropZodType<TOutput> | Record<string, any> = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
 
     let functionName = name ?? "extract";
-    let outputParser: BaseLLMOutputParser<RunOutput>;
-    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: BaseLLMOutputParser<TOutput>;
+    let llm: this;
 
     if (method === "jsonMode") {
       let outputSchema: JsonSchema7Type | undefined;
@@ -1409,7 +1391,7 @@ export class ChatGroq extends BaseChatModel<
         outputParser = StructuredOutputParser.fromZodSchema(schema);
         outputSchema = toJsonSchema(schema);
       } else {
-        outputParser = new JsonOutputParser<RunOutput>();
+        outputParser = new JsonOutputParser<TOutput>();
       }
       llm = this.withConfig({
         response_format: { type: "json_object" },
@@ -1481,7 +1463,7 @@ export class ChatGroq extends BaseChatModel<
             schema,
           },
         });
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
+        outputParser = new JsonOutputKeyToolsParser<TOutput>({
           returnSingle: true,
           keyName: functionName,
         });
@@ -1489,32 +1471,20 @@ export class ChatGroq extends BaseChatModel<
     }
 
     if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGroqStructuredOutput",
-      });
+      return llm.withOutputParser(
+        outputParser.withConfig({
+          runName: "ChatGroqStructuredOutput",
+        })
+      );
     }
 
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "ChatGroqStructuredOutput",
-    });
+    const parserWithRaw = RunnableLambda.from(
+      async (message: AIMessageChunk, config) => ({
+        raw: message,
+        parsed: await outputParser.invoke(message, config).catch(() => null),
+      })
+    );
+    return llm.withOutputParser(parserWithRaw);
   }
 }
 

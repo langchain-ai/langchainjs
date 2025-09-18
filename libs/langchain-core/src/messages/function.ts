@@ -6,7 +6,7 @@ import {
   _mergeDicts,
 } from "./base.js";
 import { MessageStructure } from "./message.js";
-import { Constructor } from "./utils.js";
+import { Constructor } from "../types/type-utils.js";
 
 export interface FunctionMessageFields<
   TStructure extends MessageStructure = MessageStructure

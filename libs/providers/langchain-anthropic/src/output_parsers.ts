@@ -12,7 +12,9 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface AnthropicToolsOutputParserParams<T extends Record<string, any>>
-  extends JsonOutputKeyToolsParserParamsInterop<T> {}
+  extends JsonOutputKeyToolsParserParamsInterop<T> {
+  errorMsgIfNoToolCalls?: string;
+}
 
 export class AnthropicToolsOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,11 +36,16 @@ export class AnthropicToolsOutputParser<
 
   zodSchema?: InteropZodType<T>;
 
+  errorMsgIfNoToolCalls =
+    "No parseable tool calls provided to AnthropicToolsOutputParser.";
+
   constructor(params: AnthropicToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
     this.zodSchema = params.zodSchema;
+    this.errorMsgIfNoToolCalls =
+      params.errorMsgIfNoToolCalls ?? this.errorMsgIfNoToolCalls;
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
@@ -91,9 +98,7 @@ export class AnthropicToolsOutputParser<
       return tool;
     });
     if (tools[0] === undefined) {
-      throw new Error(
-        "No parseable tool calls provided to AnthropicToolsOutputParser."
-      );
+      throw new Error(this.errorMsgIfNoToolCalls);
     }
     const [tool] = tools;
     const validatedResult = await this._validateResult(tool.args);

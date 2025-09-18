@@ -21,7 +21,7 @@ import {
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
-import { Constructor } from "./utils.js";
+import { Constructor } from "../types/type-utils.js";
 
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure
@@ -64,6 +64,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         additional_kwargs: {},
       };
     } else {
+      console.log(fields);
       initParams = fields;
       const rawToolCalls = initParams.additional_kwargs?.tool_calls;
       const toolCalls = initParams.tool_calls;
