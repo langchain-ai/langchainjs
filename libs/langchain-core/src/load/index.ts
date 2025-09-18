@@ -244,7 +244,7 @@ export async function load<T>(
   return reviver.call({ ...mappings }, json) as Promise<T>;
 }
 
-export function stringify<T>(instance: T): string {
+export function dump<T>(instance: T): string {
   function replacer(this: unknown, key: string, value: unknown): unknown {
     if (typeof this !== "object" || this == null) return value;
 
