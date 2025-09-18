@@ -944,7 +944,7 @@ export class ChatBedrockConverse
             text: "",
             message: new AIMessageChunk({
               content: "",
-              response_metadata: chunk,
+              response_metadata: { ...chunk },
             }),
           });
         }

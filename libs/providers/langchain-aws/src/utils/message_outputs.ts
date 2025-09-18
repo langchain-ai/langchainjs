@@ -1,20 +1,7 @@
-import type {
-  MessageContentComplex,
-  BaseMessage,
-  UsageMetadata,
-} from "@langchain/core/messages";
+import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type {
-  Message as BedrockMessage,
-  ConverseResponse,
-  ContentBlockDeltaEvent,
-  ConverseStreamMetadataEvent,
-  ContentBlockStartEvent,
-  ReasoningContentBlock,
-  ReasoningContentBlockDelta,
-  ReasoningTextBlock,
-} from "@aws-sdk/client-bedrock-runtime";
+import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import {
@@ -24,9 +11,9 @@ import {
 } from "../types.js";
 
 export function convertConverseMessageToLangChainMessage(
-  message: BedrockMessage,
-  responseMetadata: Omit<ConverseResponse, "output">
-): BaseMessage {
+  message: Bedrock.Message,
+  responseMetadata: Omit<Bedrock.ConverseResponse, "output">
+): AIMessage {
   if (!message.content) {
     throw new Error("No message content found in response.");
   }
@@ -69,9 +56,32 @@ export function convertConverseMessageToLangChainMessage(
     });
   } else {
     const toolCalls: ToolCall[] = [];
-    const content: MessageContentComplex[] = [];
+    const content: ContentBlock[] = [];
     message.content.forEach((c) => {
-      if (
+      if ("cachePoint" in c) {
+        content.push({ type: "cache_point", cachePoint: c.cachePoint });
+      } else if ("citationsContent" in c) {
+        content.push({
+          type: "citations_content",
+          citationsContent: c.citationsContent,
+        });
+      } else if ("document" in c) {
+        content.push({ type: "document", document: c.document });
+      } else if ("guardContent" in c) {
+        content.push({ type: "guard_content", guardContent: c.guardContent });
+      } else if ("image" in c) {
+        content.push({ type: "image", image: c.image });
+      } else if ("reasoningContent" in c) {
+        content.push(
+          bedrockReasoningBlockToLangchainReasoningBlock(
+            c.reasoningContent as Bedrock.ReasoningContentBlock
+          )
+        );
+      } else if ("text" in c && typeof c.text === "string") {
+        content.push({ type: "text", text: c.text });
+      } else if ("toolResult" in c) {
+        content.push({ type: "tool_result", toolResult: c.toolResult });
+      } else if (
         "toolUse" in c &&
         c.toolUse &&
         c.toolUse.name &&
@@ -84,16 +94,8 @@ export function convertConverseMessageToLangChainMessage(
           args: c.toolUse.input,
           type: "tool_call",
         });
-      } else if ("text" in c && typeof c.text === "string") {
-        content.push({ type: "text", text: c.text });
-      } else if ("reasoningContent" in c) {
-        content.push(
-          bedrockReasoningBlockToLangchainReasoningBlock(
-            c.reasoningContent as ReasoningContentBlock
-          )
-        );
-      } else {
-        content.push(c);
+      } else if ("video" in c) {
+        content.push({ type: "video", video: c.video });
       }
     });
     return new AIMessage({
@@ -107,7 +109,7 @@ export function convertConverseMessageToLangChainMessage(
 }
 
 export function handleConverseStreamContentBlockDelta(
-  contentBlockDelta: ContentBlockDeltaEvent
+  contentBlockDelta: Bedrock.ContentBlockDeltaEvent
 ): ChatGenerationChunk {
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
@@ -157,7 +159,7 @@ export function handleConverseStreamContentBlockDelta(
 }
 
 export function handleConverseStreamContentBlockStart(
-  contentBlockStart: ContentBlockStartEvent
+  contentBlockStart: Bedrock.ContentBlockStartEvent
 ): ChatGenerationChunk {
   const index = contentBlockStart.contentBlockIndex;
   if (contentBlockStart.start?.toolUse) {
@@ -180,7 +182,7 @@ export function handleConverseStreamContentBlockStart(
 }
 
 export function handleConverseStreamMetadata(
-  metadata: ConverseStreamMetadataEvent,
+  metadata: Bedrock.ConverseStreamMetadataEvent,
   extra: {
     streamUsage: boolean;
   }
@@ -206,7 +208,7 @@ export function handleConverseStreamMetadata(
 }
 
 export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
-  reasoningContent: ReasoningContentBlockDelta
+  reasoningContent: Bedrock.ReasoningContentBlockDelta
 ):
   | MessageContentReasoningBlockReasoningTextPartial
   | MessageContentReasoningBlockRedacted {
@@ -233,13 +235,13 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
 }
 
 export function bedrockReasoningBlockToLangchainReasoningBlock(
-  reasoningContent: ReasoningContentBlock
+  reasoningContent: Bedrock.ReasoningContentBlock
 ): MessageContentReasoningBlock {
   const { reasoningText, redactedContent } = reasoningContent;
   if (reasoningText) {
     return {
       type: "reasoning_content",
-      reasoningText: reasoningText as Required<ReasoningTextBlock>,
+      reasoningText: reasoningText as Required<Bedrock.ReasoningTextBlock>,
     };
   }
 

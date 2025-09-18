@@ -1,4 +1,4 @@
-import type {
+import {
   MessageContentComplex,
   BaseMessage,
   SystemMessage,
@@ -14,16 +14,7 @@ import {
   convertToProviderContentBlock,
   isDataContentBlock,
 } from "@langchain/core/messages";
-import type {
-  Message as BedrockMessage,
-  SystemContentBlock as BedrockSystemContentBlock,
-  ContentBlock as BedrockContentBlock,
-  ImageFormat,
-  ReasoningContentBlock,
-  ReasoningTextBlock,
-  DocumentFormat,
-  ToolResultContentBlock,
-} from "@aws-sdk/client-bedrock-runtime";
+import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import {
   MessageContentReasoningBlock,
@@ -46,14 +37,14 @@ function isDefaultCachePoint(block: unknown): boolean {
 
 export function extractImageInfo(
   base64: string
-): BedrockContentBlock.ImageMember {
+): Bedrock.ContentBlock.ImageMember {
   // Extract the format from the base64 string
   const formatMatch = base64.match(/^data:image\/(\w+);base64,/);
-  let format: ImageFormat | undefined;
+  let format: Bedrock.ImageFormat | undefined;
   if (formatMatch) {
     const extractedFormat = formatMatch[1].toLowerCase();
     if (["gif", "jpeg", "png", "webp"].includes(extractedFormat)) {
-      format = extractedFormat as ImageFormat;
+      format = extractedFormat as Bedrock.ImageFormat;
     }
   }
 
@@ -78,15 +69,15 @@ export function extractImageInfo(
 }
 
 const standardContentBlockConverter: StandardContentBlockConverter<{
-  text: BedrockContentBlock.TextMember;
-  image: BedrockContentBlock.ImageMember;
-  file: BedrockContentBlock.DocumentMember;
+  text: Bedrock.ContentBlock.TextMember;
+  image: Bedrock.ContentBlock.ImageMember;
+  file: Bedrock.ContentBlock.DocumentMember;
 }> = {
   providerName: "ChatBedrockConverse",
 
   fromStandardTextBlock(
     block: ContentBlock.Data.StandardTextBlock
-  ): BedrockContentBlock.TextMember {
+  ): Bedrock.ContentBlock.TextMember {
     return {
       text: block.text,
     };
@@ -94,8 +85,8 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 
   fromStandardImageBlock(
     block: ContentBlock.Data.StandardImageBlock
-  ): BedrockContentBlock.ImageMember {
-    let format: ImageFormat | undefined;
+  ): Bedrock.ContentBlock.ImageMember {
+    let format: Bedrock.ImageFormat | undefined;
 
     if (block.source_type === "url") {
       const parsedData = parseBase64DataUrl({
@@ -104,7 +95,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       });
       if (parsedData) {
         const parsedMimeType = parseMimeType(parsedData.mime_type);
-        format = parsedMimeType.type as ImageFormat;
+        format = parsedMimeType.type as Bedrock.ImageFormat;
         return {
           image: {
             format,
@@ -121,7 +112,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
     } else if (block.source_type === "base64") {
       if (block.mime_type) {
         const parsedMimeType = parseMimeType(block.mime_type);
-        format = parsedMimeType.subtype as ImageFormat;
+        format = parsedMimeType.subtype as Bedrock.ImageFormat;
       }
 
       if (format && !["gif", "jpeg", "png", "webp"].includes(format)) {
@@ -152,7 +143,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
 
   fromStandardFileBlock(
     block: ContentBlock.Data.StandardFileBlock
-  ): BedrockContentBlock.DocumentMember {
+  ): Bedrock.ContentBlock.DocumentMember {
     const mimeTypeToDocumentFormat = {
       "text/csv": "csv",
       "application/msword": "doc",
@@ -195,7 +186,7 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
         const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
         const format = mimeTypeToDocumentFormat[
           mimeType as keyof typeof mimeTypeToDocumentFormat
-        ] as DocumentFormat | undefined;
+        ] as Bedrock.DocumentFormat | undefined;
         return {
           document: {
             name,
@@ -212,14 +203,14 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
     }
 
     if (block.source_type === "base64") {
-      let format: DocumentFormat | undefined;
+      let format: Bedrock.DocumentFormat | undefined;
 
       if (block.mime_type) {
         const parsedMimeType = parseMimeType(block.mime_type);
         const mimeType = `${parsedMimeType.type}/${parsedMimeType.subtype}`;
         format = mimeTypeToDocumentFormat[
           mimeType as keyof typeof mimeTypeToDocumentFormat
-        ] as DocumentFormat | undefined;
+        ] as Bedrock.DocumentFormat | undefined;
         if (format === undefined) {
           throw new Error(
             `Unsupported file mime type: "${
@@ -267,14 +258,20 @@ function convertLangChainContentBlockToConverseContentBlock<
 }: {
   block: BlockT;
   onUnknown?: "returnUnmodified";
-}): ContentBlock | BlockT;
+}): Bedrock.ContentBlock | BlockT;
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends
     | MessageContentComplex
     | ContentBlock.Data.DataContentBlock
     | string
->({ block, onUnknown }: { block: BlockT; onUnknown?: "throw" }): ContentBlock;
+>({
+  block,
+  onUnknown,
+}: {
+  block: BlockT;
+  onUnknown?: "throw";
+}): Bedrock.ContentBlock;
 
 function convertLangChainContentBlockToConverseContentBlock<
   BlockT extends
@@ -287,7 +284,7 @@ function convertLangChainContentBlockToConverseContentBlock<
 }: {
   block: BlockT;
   onUnknown?: "throw" | "returnUnmodified";
-}): ContentBlock | BlockT {
+}): Bedrock.ContentBlock | BlockT {
   if (typeof block === "string") {
     return { text: block };
   }
@@ -337,11 +334,11 @@ function convertLangChainContentBlockToConverseContentBlock<
 
 function convertSystemMessageToConverseMessage(
   msg: SystemMessage
-): BedrockSystemContentBlock[] {
+): Bedrock.SystemContentBlock[] {
   if (typeof msg.content === "string") {
     return [{ text: msg.content }];
   } else if (Array.isArray(msg.content) && msg.content.length > 0) {
-    const contentBlocks: BedrockSystemContentBlock[] = [];
+    const contentBlocks: Bedrock.SystemContentBlock[] = [];
     for (const block of msg.content) {
       if (block.type === "text" && typeof block.text === "string") {
         contentBlocks.push({
@@ -362,8 +359,8 @@ function convertSystemMessageToConverseMessage(
   );
 }
 
-function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
-  const assistantMsg: BedrockMessage = {
+function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
+  const assistantMsg: Bedrock.Message = {
     role: "assistant",
     content: [],
   };
@@ -374,7 +371,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
     });
   } else if (Array.isArray(msg.content)) {
     const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
-    const contentBlocks: ContentBlock[] = [];
+    const contentBlocks: Bedrock.ContentBlock[] = [];
     concatenatedBlocks.forEach((block) => {
       if (block.type === "text" && block.text !== "") {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
@@ -440,26 +437,20 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
 
 function convertHumanMessageToConverseMessage(
   msg: HumanMessage
-): BedrockMessage {
+): Bedrock.Message {
   if (msg.content === "") {
     throw new Error(
       `Invalid message content: empty string. '${msg.getType()}' must contain non-empty content.`
     );
   }
 
-  const content: ContentBlock[] = Array.isArray(msg.content)
-    ? msg.content.map((c) =>
-        convertLangChainContentBlockToConverseContentBlock({
-          block: c,
-          onUnknown: "throw",
-        })
-      )
-    : [
-        convertLangChainContentBlockToConverseContentBlock({
-          block: msg.content,
-          onUnknown: "throw",
-        }),
-      ];
+  const contentParts = Array.isArray(msg.content) ? msg.content : [msg.content];
+  const content: Bedrock.ContentBlock[] = contentParts.map((c) =>
+    convertLangChainContentBlockToConverseContentBlock({
+      block: c,
+      onUnknown: "throw",
+    })
+  );
 
   return {
     role: "user" as const,
@@ -467,7 +458,9 @@ function convertHumanMessageToConverseMessage(
   };
 }
 
-function convertToolMessageToConverseMessage(msg: ToolMessage): BedrockMessage {
+function convertToolMessageToConverseMessage(
+  msg: ToolMessage
+): Bedrock.Message {
   const castMsg = msg as ToolMessage;
   if (typeof castMsg.content === "string") {
     return {
@@ -506,9 +499,9 @@ function convertToolMessageToConverseMessage(msg: ToolMessage): BedrockMessage {
                   onUnknown: "returnUnmodified",
                 });
               if (converted !== c) {
-                return converted as ToolResultContentBlock;
+                return converted as Bedrock.ToolResultContentBlock;
               }
-              return { json: c } as ToolResultContentBlock.JsonMember;
+              return { json: c } as Bedrock.ToolResultContentBlock.JsonMember;
             }),
           },
         },
@@ -518,14 +511,17 @@ function convertToolMessageToConverseMessage(msg: ToolMessage): BedrockMessage {
 }
 
 export function convertToConverseMessages(messages: BaseMessage[]): {
-  converseMessages: BedrockMessage[];
-  converseSystem: BedrockSystemContentBlock[];
+  converseMessages: Bedrock.Message[];
+  converseSystem: Bedrock.SystemContentBlock[];
 } {
-  const converseSystem: BedrockSystemContentBlock[] = messages
-    .filter((msg) => msg.getType() === "system")
-    .flatMap((msg) => convertSystemMessageToConverseMessage(msg));
+  const converseSystem = messages.reduce((acc, msg) => {
+    if (SystemMessage.isInstance(msg)) {
+      acc.push(...convertSystemMessageToConverseMessage(msg));
+    }
+    return acc;
+  }, [] as Bedrock.SystemContentBlock[]);
 
-  const converseMessages: BedrockMessage[] = messages
+  const converseMessages: Bedrock.Message[] = messages
     .filter((msg) => msg.getType() !== "system")
     .map((msg) => {
       if (msg.getType() === "ai") {
@@ -540,7 +536,7 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
     });
 
   // Combine consecutive user tool result messages into a single message
-  const combinedConverseMessages = converseMessages.reduce<BedrockMessage[]>(
+  const combinedConverseMessages = converseMessages.reduce<Bedrock.Message[]>(
     (acc, curr) => {
       const lastMessage = acc[acc.length - 1];
 
@@ -566,13 +562,13 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
 
 export function langchainReasoningBlockToBedrockReasoningBlock(
   content: MessageContentReasoningBlock
-): ReasoningContentBlock {
+): Bedrock.ReasoningContentBlock {
   if (content.type !== "reasoning_content") {
     throw new Error("Invalid reasoning content");
   }
   if ("reasoningText" in content) {
     return {
-      reasoningText: content.reasoningText as ReasoningTextBlock,
+      reasoningText: content.reasoningText as Bedrock.ReasoningTextBlock,
     };
   }
   if ("redactedContent" in content) {

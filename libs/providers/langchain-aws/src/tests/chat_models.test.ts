@@ -3,8 +3,8 @@ import {
   HumanMessage,
   AIMessage,
   ToolMessage,
-  AIMessageChunk,
   BaseMessage,
+  BaseMessageChunk,
 } from "@langchain/core/messages";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -113,6 +113,7 @@ describe("convertToConverseMessages", () => {
           content: [
             { type: "text", text: "You're an advanced AI assistant." },
             {
+              type: "cache_point",
               cachePoint: {
                 type: "default",
               },
@@ -130,6 +131,7 @@ describe("convertToConverseMessages", () => {
               text: "What is the capital of France?",
             },
             {
+              type: "cache_point",
               cachePoint: {
                 type: "default",
               },
@@ -147,6 +149,7 @@ describe("convertToConverseMessages", () => {
               text: "Sure! The capital of France is Paris.",
             },
             {
+              type: "cache_point",
               cachePoint: {
                 type: "default",
               },
@@ -437,7 +440,7 @@ test("Streaming supports empty string chunks", async () => {
     },
   ];
 
-  let finalChunk: AIMessageChunk | undefined;
+  let finalChunk: BaseMessageChunk | undefined;
   for (const block of contentBlocks) {
     const chunk = handleConverseStreamContentBlockDelta(block).message;
     finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
