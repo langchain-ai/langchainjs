@@ -172,10 +172,10 @@ export function anthropicPromptCachingMiddleware(
       }
 
       if (
-        !options.model
+        !options.model ||
         /**
          * user passes in a ChatAnthropic instance
-         */ ||
+         */
         (options.model.getName() !== "ChatAnthropic" &&
           /**
            * user passes in a model via string, e.g. "anthropic:claude-3-5-sonnet"
