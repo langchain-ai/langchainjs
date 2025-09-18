@@ -14,7 +14,7 @@ import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatBedrockConverse } from "../chat_models.js";
-import { concatenateLangchainReasoningBlocks } from "../common.js";
+import { concatenateLangchainReasoningBlocks } from "../utils/message_inputs.js";
 import { MessageContentReasoningBlockReasoningText } from "../types.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
