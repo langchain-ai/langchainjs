@@ -11,7 +11,7 @@ import {
 import z from "zod/v3";
 
 import { createAgent, providerStrategy, createMiddleware } from "../index.js";
-import { anthropicPromptCaching } from "../middlewareAgent/middleware/promptCaching.js";
+import { anthropicPromptCachingMiddleware } from "../middlewareAgent/middleware/promptCaching.js";
 
 describe("createAgent Integration Tests", () => {
   const toolMock = vi.fn(async (input: { city: string }) => {
@@ -339,7 +339,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
         tools: [simpleTool],
         middleware: [
           modelSwitchMiddleware,
-          anthropicPromptCaching({
+          anthropicPromptCachingMiddleware({
             ttl: "5m",
             minMessagesToCache: 1,
           }),
