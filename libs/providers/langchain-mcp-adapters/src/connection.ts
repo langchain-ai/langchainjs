@@ -9,8 +9,10 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { LoggingMessageNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod/v3";
 
 import { getDebugLog } from "./logging.js";
 import type {
@@ -19,6 +21,15 @@ import type {
 } from "./types.js";
 
 const debugLog = getDebugLog("connection");
+
+export interface Client extends MCPClient {
+  /**
+   * Fork the client with a new set of headers, it either returns a new client or the same client if the headers are the same
+   * @param headers - The headers to fork the client with
+   * @returns The forked client
+   */
+  fork: (headers: Record<string, string>) => Promise<Client>;
+}
 
 export interface TransportOptions {
   serverName: string;
@@ -30,16 +41,31 @@ type ClientKeyObject = Omit<TransportOptions, "headers"> & {
   headers?: string;
 };
 
-interface Connection {
+export interface Connection {
   transport:
     | StreamableHTTPClientTransport
     | SSEClientTransport
     | StdioClientTransport;
   client: Client;
+  transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
   closeCallback: () => Promise<void>;
 }
 
-const transportTypes = ["streamable-http", "sse", "stdio"] as const;
+const transportTypes = ["http", "sse", "stdio"] as const;
+
+/**
+ * Connection manager configuration
+ */
+type LogMessage =
+  | z.input<typeof LoggingMessageNotificationSchema>
+  | z.output<typeof LoggingMessageNotificationSchema>;
+
+interface ConnectionManagerConfig {
+  /**
+   * log callback for all connections
+   */
+  onLog?: (message: LogMessage) => void | Promise<void>;
+}
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -47,6 +73,11 @@ const transportTypes = ["streamable-http", "sse", "stdio"] as const;
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
+  #onLog?: (message: LogMessage) => void | Promise<void>;
+
+  constructor({ onLog }: ConnectionManagerConfig = {}) {
+    this.#onLog = onLog;
+  }
 
   async createClient(
     type: "stdio",
@@ -54,7 +85,7 @@ export class ConnectionManager {
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "streamable-http",
+    type: "http",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
@@ -67,7 +98,7 @@ export class ConnectionManager {
     ...args:
       | ["stdio", string, ResolvedStdioConnection]
       | ["sse", string, ResolvedStreamableHTTPConnection]
-      | ["streamable-http", string, ResolvedStreamableHTTPConnection]
+      | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
     const [type, serverName, options] = args;
     if (!transportTypes.includes(type)) {
@@ -75,16 +106,24 @@ export class ConnectionManager {
     }
 
     const transport =
-      type === "streamable-http"
+      type === "http"
         ? await this.#createStreamableHTTPTransport(serverName, options)
         : type === "sse"
         ? await this.#createSSETransport(serverName, options)
         : await this.#createStdioTransport(options);
-    const client = new Client({
+    const mcpClient = new MCPClient({
       name: "langchain-mcp-adapter",
       version: "0.1.0",
     });
-    await client.connect(transport);
+    await mcpClient.connect(transport);
+    mcpClient.setNotificationHandler(
+      LoggingMessageNotificationSchema,
+      (message) =>
+        Promise.all([this.#onLog?.(message), options.onLog?.(message)]).then(
+          // we ignore the result of any log callbacks
+          () => undefined
+        )
+    );
 
     const key: ClientKeyObject =
       type === "stdio"
@@ -95,12 +134,58 @@ export class ConnectionManager {
             authProvider: options.authProvider,
           };
 
+    const forkClient = (headers: Record<string, string>): Promise<Client> => {
+      return this.#forkClient(key, headers);
+    };
+
+    const client = new Proxy(mcpClient, {
+      get(target, prop) {
+        if (prop === "fork") {
+          return forkClient.bind(this);
+        }
+
+        return target[prop as keyof MCPClient];
+      },
+    }) as Client;
+
     this.#connections.set(key, {
       transport,
       client,
+      transportOptions: options,
       closeCallback: async () => client.close(),
     });
+
     return client;
+  }
+
+  /**
+   * Allows to fork a client with a new set of headers
+   */
+  #forkClient(
+    key: ClientKeyObject,
+    headers: Record<string, string>
+  ): Promise<Client> {
+    const [, connection] =
+      [...this.#connections.entries()].find(([k]) => key === k) ?? [];
+
+    if (!connection) {
+      throw new Error("Transport not found");
+    }
+
+    const type =
+      connection.transportOptions.type ?? connection.transportOptions.transport;
+    if (type === "stdio") {
+      throw new Error("Forking stdio transport is not supported");
+    }
+
+    console.log("FORK CLIENT", type, key.serverName, {
+      ...connection.transportOptions,
+      headers,
+    });
+    return this.createClient(type as "http", key.serverName, {
+      ...connection.transportOptions,
+      headers,
+    } as ResolvedStreamableHTTPConnection);
   }
 
   /**
@@ -116,6 +201,16 @@ export class ConnectionManager {
     }
 
     return this.#queryConnection(options)?.connection.client;
+  }
+
+  /**
+   * Get all clients
+   * @returns All clients
+   */
+  getAllClients(): Client[] {
+    return Array.from(this.#connections.values()).map(
+      (connection) => connection.client
+    );
   }
 
   /**
@@ -195,14 +290,46 @@ export class ConnectionManager {
     }
   }
 
+  /**
+   * Get the transport for a specific client
+   * @param client - The client to get the transport for
+   */
+  getTransport(
+    client: Client
+  ):
+    | StreamableHTTPClientTransport
+    | SSEClientTransport
+    | StdioClientTransport
+    | undefined;
+  /**
+   * Get the transport for a specific connection combination
+   * @param options - The options to get the transport for
+   */
   getTransport(
     options: TransportOptions
   ):
     | StreamableHTTPClientTransport
     | SSEClientTransport
     | StdioClientTransport
+    | undefined;
+  getTransport(
+    opts: Client | TransportOptions
+  ):
+    | StreamableHTTPClientTransport
+    | SSEClientTransport
+    | StdioClientTransport
     | undefined {
-    const result = this.#queryConnection(options);
+    /**
+     * if a client instance is passed in
+     */
+    if ("listTools" in opts) {
+      const connection = [...this.#connections.values()].find(
+        (connection) => connection.client === opts
+      );
+      return connection?.transport;
+    }
+
+    const result = this.#queryConnection(opts);
     if (result) {
       return result.connection.transport;
     }
@@ -259,6 +386,8 @@ export class ConnectionManager {
       }
     }
 
+    console.log("CREATE STREAMABLE HTTP TRANSPORT", options);
+
     // Only pass options if there are any, otherwise use default constructor
     return Object.keys(options).length > 0
       ? new StreamableHTTPClientTransport(new URL(url), options)
@@ -314,6 +443,7 @@ export class ConnectionManager {
           // Always include Accept header for SSE
           requestHeaders.set("Accept", "text/event-stream");
 
+          console.log("requestHeaders", requestHeaders);
           return fetch(url, {
             ...init,
             headers: requestHeaders,

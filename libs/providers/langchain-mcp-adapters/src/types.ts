@@ -13,7 +13,7 @@ import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { ContentBlock } from "@langchain/core/messages";
 
 import type { UnionToTuple } from "./util.js";
-import { interceptorSchema } from "./interceptor.js";
+import { interceptorSchema, type Interceptor } from "./interceptor.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export type { ContentBlock };
@@ -339,6 +339,7 @@ export const stdioConnectionSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -412,6 +413,7 @@ export const streamableHttpConnectionSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for streamable HTTP transport connection");
 
 /**
@@ -484,23 +486,9 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
-
-    /**
-     * Allows users to add custom interceptors to the MCP client to modify tool calls,
-     * log messages, and receive tool call progress updates.
-     */
-    interceptor: interceptorSchema
-      .describe(
-        "Allows users to add custom interceptors to the MCP client to modify tool calls, log messages, and receive tool call progress updates."
-      )
-      .optional(),
-
-    /**
-     * MCP client middleware
-     * Allows users to add custom middleware to the MCP client
-     */
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for the MCP client");
 
 /**
@@ -606,6 +594,21 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
+
+  /**
+   * `onProgress` callbacks used for tool calls.
+   */
+  onProgress?: Interceptor["onProgress"][];
+
+  /**
+   * `beforeToolCall` callbacks used for tool calls.
+   */
+  beforeToolCall?: Interceptor["beforeToolCall"][];
+
+  /**
+   * `afterToolCall` callbacks used for tool calls.
+   */
+  afterToolCall?: Interceptor["afterToolCall"][];
 };
 
 /**
