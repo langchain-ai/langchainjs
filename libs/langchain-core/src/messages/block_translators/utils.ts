@@ -23,6 +23,11 @@ export function _isNumber(value: unknown): value is number {
   return typeof value === "number";
 }
 
+export function _isBytesArray(value: unknown): value is Uint8Array {
+  // eslint-disable-next-line no-instanceof/no-instanceof
+  return value instanceof Uint8Array;
+}
+
 export function safeParseJson<T = unknown>(value: string): T | undefined {
   try {
     return JSON.parse(value);
