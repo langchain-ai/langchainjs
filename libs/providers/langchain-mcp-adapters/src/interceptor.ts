@@ -1,8 +1,8 @@
 import { z } from "zod/v3";
-import type { ContentBlock } from "@langchain/core/messages";
 import {
   LoggingMessageNotificationSchema,
   ProgressSchema,
+  CallToolResultSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
 const toolInfoSchema = z.object({
@@ -10,16 +10,21 @@ const toolInfoSchema = z.object({
   name: z.string(),
   args: z.unknown(),
 });
+export type ToolInfo = z.output<typeof toolInfoSchema>;
 
 const toolInfoResultSchema = z.object({
   ...toolInfoSchema.shape,
-  result: z.custom<ContentBlock>(),
+  result: CallToolResultSchema,
 });
+export type ToolInfoResult = z.output<typeof toolInfoResultSchema>;
 
-const toolCallInterceptionSchema = z.object({
-  toolInfo: toolInfoSchema,
-  header: z.record(z.string()),
-});
+const toolCallInterceptionSchema = z
+  .object({
+    header: z.record(z.string()),
+    args: z.unknown(),
+  })
+  .partial();
+export type ToolCallInterception = z.output<typeof toolCallInterceptionSchema>;
 
 export const interceptorSchema = z.object({
   /**
@@ -42,6 +47,8 @@ export const interceptorSchema = z.object({
       z.union([
         z.promise(toolCallInterceptionSchema),
         toolCallInterceptionSchema,
+        z.void(),
+        z.promise(z.void()),
       ])
     )
     .optional(),
@@ -63,7 +70,7 @@ export const interceptorSchema = z.object({
   afterToolCall: z
     .function()
     .args(toolInfoResultSchema)
-    .returns(z.promise(z.unknown()))
+    .returns(z.union([z.promise(z.void()), z.void()]))
     .optional(),
 
   /**
@@ -102,5 +109,4 @@ export const interceptorSchema = z.object({
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
 });
-
-export type Interceptor = z.output<typeof interceptorSchema>;
+export type Interceptor = z.input<typeof interceptorSchema>;

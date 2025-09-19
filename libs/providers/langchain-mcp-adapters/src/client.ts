@@ -1,4 +1,3 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   SSEClientTransport,
@@ -10,10 +9,11 @@ import {
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
+import type { LoggingLevel } from "@modelcontextprotocol/sdk/types.js";
 
 import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
-import { ConnectionManager } from "./connection.js";
+import { ConnectionManager, type Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 import {
   type ClientConfig,
@@ -28,7 +28,6 @@ import {
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
-import type { Interceptor } from "./interceptor.js";
 
 const debugLog = getDebugLog();
 
@@ -116,17 +115,15 @@ function isResolvedStreamableHTTPConnection(
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
  */
 export class MultiServerMCPClient {
-  private _serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
+  #serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
 
-  private _connections?: Record<string, ResolvedConnection>;
+  #connections?: Record<string, ResolvedConnection>;
 
-  private _loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
+  #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
 
-  #clientConnections = new ConnectionManager();
+  #clientConnections: ConnectionManager;
 
-  private _config: ResolvedClientConfig;
-
-  #interceptor?: Interceptor;
+  #config: ResolvedClientConfig;
 
   /**
    * Returns clone of server config for inspection purposes.
@@ -135,7 +132,7 @@ export class MultiServerMCPClient {
    */
   get config(): ClientConfig {
     // clone config so it can't be mutated
-    return JSON.parse(JSON.stringify(this._config));
+    return JSON.parse(JSON.stringify(this.#config));
   }
 
   /**
@@ -172,7 +169,7 @@ export class MultiServerMCPClient {
         parsedServerConfig.defaultToolTimeout ??
         serverConfig.defaultToolTimeout;
 
-      this._loadToolsOptions[serverName] = {
+      this.#loadToolsOptions[serverName] = {
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
@@ -180,12 +177,31 @@ export class MultiServerMCPClient {
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
+        onProgress: [
+          parsedServerConfig.onProgress,
+          serverConfig.onProgress,
+        ].filter(Boolean),
+        /**
+         * make sure to place global hooks (e.g. parsedServerConfig) first before
+         * server-specific hooks (e.g. serverConfig) so they can override tool call
+         * configuration.
+         */
+        beforeToolCall: [
+          parsedServerConfig.beforeToolCall,
+          serverConfig.beforeToolCall,
+        ].filter(Boolean),
+        afterToolCall: [
+          parsedServerConfig.afterToolCall,
+          serverConfig.afterToolCall,
+        ].filter(Boolean),
       };
     }
 
-    this._config = parsedServerConfig;
-    this._connections = parsedServerConfig.mcpServers;
-    this.#interceptor = parsedServerConfig.interceptor;
+    this.#config = parsedServerConfig;
+    this.#connections = parsedServerConfig.mcpServers;
+    this.#clientConnections = new ConnectionManager({
+      onLog: parsedServerConfig.onLog,
+    });
   }
 
   /**
@@ -199,11 +215,11 @@ export class MultiServerMCPClient {
   async initializeConnections(
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
-    if (!this._connections || Object.keys(this._connections).length === 0) {
+    if (!this.#connections || Object.keys(this.#connections).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
-    for (const [serverName, connection] of Object.entries(this._connections)) {
+    for (const [serverName, connection] of Object.entries(this.#connections)) {
       if (isResolvedStdioConnection(connection)) {
         debugLog(
           `INFO: Initializing stdio connection to server "${serverName}"...`
@@ -257,7 +273,7 @@ export class MultiServerMCPClient {
       }
     }
 
-    return this._serverNameToTools;
+    return this.#serverNameToTools;
   }
 
   /**
@@ -315,6 +331,42 @@ export class MultiServerMCPClient {
   }
 
   /**
+   * Set the logging level for all servers
+   * @param level - The logging level
+   *
+   * @example
+   * ```ts
+   * await client.setLoggingLevel("debug");
+   * ```
+   */
+  async setLoggingLevel(level: LoggingLevel): Promise<void>;
+  /**
+   * Set the logging level for a specific server
+   * @param serverName - The name of the server
+   * @param level - The logging level
+   *
+   * @example
+   * ```ts
+   * await client.setLoggingLevel("server1", "debug");
+   * ```
+   */
+  async setLoggingLevel(serverName: string, level: LoggingLevel): Promise<void>;
+  async setLoggingLevel(...args: unknown[]): Promise<void> {
+    if (args.length === 1 && typeof args[0] === "string") {
+      const level = args[0] as LoggingLevel;
+      await Promise.all(
+        this.#clientConnections
+          .getAllClients()
+          .map((client) => client.setLoggingLevel(level))
+      );
+      return;
+    }
+
+    const [serverName, level] = args as [string, LoggingLevel];
+    await this.#clientConnections.get(serverName)?.setLoggingLevel(level);
+  }
+
+  /**
    * Get a the MCP client for a specific server. Useful for fetching prompts or resources from that server.
    *
    * @param serverName - The name of the server
@@ -337,7 +389,7 @@ export class MultiServerMCPClient {
    */
   async close(): Promise<void> {
     debugLog(`INFO: Closing all MCP connections...`);
-    this._serverNameToTools = {};
+    this.#serverNameToTools = {};
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
   }
@@ -468,7 +520,7 @@ export class MultiServerMCPClient {
     if (transportType === "http" || transportType == null) {
       try {
         const client = await this.#clientConnections.createClient(
-          "streamable-http",
+          "http",
           serverName,
           connection
         );
@@ -661,10 +713,9 @@ export class MultiServerMCPClient {
       const tools = await loadMcpTools(
         serverName,
         client,
-        this._loadToolsOptions[serverName],
-        this.#interceptor
+        this.#loadToolsOptions[serverName]
       );
-      this._serverNameToTools[serverName] = tools;
+      this.#serverNameToTools[serverName] = tools;
       debugLog(
         `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`
       );
@@ -770,7 +821,7 @@ export class MultiServerMCPClient {
     headers?: Record<string, string>;
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
-    delete this._serverNameToTools[serverName];
+    delete this.#serverNameToTools[serverName];
     await this.#clientConnections.delete({ serverName, authProvider, headers });
   }
 
@@ -781,7 +832,7 @@ export class MultiServerMCPClient {
    */
   private _getAllToolsAsFlatArray(): DynamicStructuredTool[] {
     const allTools: DynamicStructuredTool[] = [];
-    for (const tools of Object.values(this._serverNameToTools)) {
+    for (const tools of Object.values(this.#serverNameToTools)) {
       allTools.push(...tools);
     }
     return allTools;
@@ -796,7 +847,7 @@ export class MultiServerMCPClient {
   private _getToolsFromServers(serverNames: string[]): DynamicStructuredTool[] {
     const allTools: DynamicStructuredTool[] = [];
     for (const serverName of serverNames) {
-      const tools = this._serverNameToTools[serverName];
+      const tools = this.#serverNameToTools[serverName];
       if (tools) {
         allTools.push(...tools);
       }
