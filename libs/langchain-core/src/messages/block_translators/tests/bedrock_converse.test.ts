@@ -188,6 +188,7 @@ describe("ChatBedrockConverseTranslator", () => {
       {
         type: "non_standard",
         value: {
+          type: "guard_content",
           guardContent: { text: { text: "foo" } },
         },
       },
