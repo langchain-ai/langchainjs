@@ -10,9 +10,13 @@ import {
 } from "zod/v3";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import type { ContentBlock } from "@langchain/core/messages";
+
 import type { UnionToTuple } from "./util.js";
+import { interceptorSchema } from "./interceptor.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+export type { ContentBlock };
 
 function isZodObject(
   schema: unknown
@@ -480,6 +484,16 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
+
+    /**
+     * Allows users to add custom interceptors to the MCP client to modify tool calls,
+     * log messages, and receive tool call progress updates.
+     */
+    interceptor: interceptorSchema
+      .describe(
+        "Allows users to add custom interceptors to the MCP client to modify tool calls, log messages, and receive tool call progress updates."
+      )
+      .optional(),
 
     /**
      * MCP client middleware
