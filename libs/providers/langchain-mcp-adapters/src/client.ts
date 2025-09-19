@@ -28,6 +28,7 @@ import {
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
+import type { Interceptor } from "./interceptor.js";
 
 const debugLog = getDebugLog();
 
@@ -125,6 +126,8 @@ export class MultiServerMCPClient {
 
   private _config: ResolvedClientConfig;
 
+  #interceptor?: Interceptor;
+
   /**
    * Returns clone of server config for inspection purposes.
    *
@@ -182,6 +185,7 @@ export class MultiServerMCPClient {
 
     this._config = parsedServerConfig;
     this._connections = parsedServerConfig.mcpServers;
+    this.#interceptor = parsedServerConfig.interceptor;
   }
 
   /**
@@ -657,7 +661,8 @@ export class MultiServerMCPClient {
       const tools = await loadMcpTools(
         serverName,
         client,
-        this._loadToolsOptions[serverName]
+        this._loadToolsOptions[serverName],
+        this.#interceptor
       );
       this._serverNameToTools[serverName] = tools;
       debugLog(

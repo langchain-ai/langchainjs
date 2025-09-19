@@ -11,6 +11,7 @@ import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import debug from "debug";
+import type { Interceptor } from "./interceptor.js";
 import {
   _resolveDetailedOutputHandling,
   type CallToolResult,
@@ -402,6 +403,10 @@ type CallToolArgs = {
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
+  /**
+   * MCP client interceptors
+   */
+  interceptor?: Interceptor;
 };
 
 /**
@@ -421,6 +426,7 @@ async function _callTool({
   config,
   useStandardContentBlocks,
   outputHandling,
+  interceptor,
 }: CallToolArgs): Promise<
   [
     (ContentBlock | ContentBlock.Data.DataContentBlock)[],
@@ -434,6 +440,14 @@ async function _callTool({
     const requestOptions: RequestOptions = {
       ...(config?.timeout ? { timeout: config.timeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
+      ...(typeof interceptor?.onProgress === "function"
+        ? {
+            onprogress: (progress) => {
+              // eslint-disable-next-line @typescript-eslint/no-floating-promises
+              interceptor.onProgress?.(progress);
+            },
+          }
+        : {}),
     };
 
     const callToolArgs: Parameters<typeof client.callTool> = [
@@ -448,8 +462,18 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
+    const beforeToolCallInterception = await interceptor?.beforeToolCall?.({
+      name: toolName,
+      args,
+      serverName,
+    });
+
+    if (beforeToolCallInterception) {
+      // update client headers here
+    }
+
     const result = await client.callTool(...callToolArgs);
-    return _convertCallToolResult({
+    const toolResult = _convertCallToolResult({
       serverName,
       toolName,
       result: result as CallToolResult,
@@ -457,6 +481,15 @@ async function _callTool({
       useStandardContentBlocks,
       outputHandling,
     });
+
+    await interceptor?.afterToolCall?.({
+      name: toolName,
+      args,
+      result: toolResult as unknown as ContentBlock,
+      serverName,
+    });
+
+    return toolResult;
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
@@ -483,7 +516,8 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
 export async function loadMcpTools(
   serverName: string,
   client: Client,
-  options?: LoadMcpToolsOptions
+  options?: LoadMcpToolsOptions,
+  interceptor?: Interceptor
 ): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
@@ -552,6 +586,7 @@ export async function loadMcpTools(
                   config,
                   useStandardContentBlocks,
                   outputHandling,
+                  interceptor,
                 });
               },
             });
