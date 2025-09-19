@@ -2,6 +2,7 @@ import type { AIMessage, AIMessageChunk } from "../ai.js";
 import type { ContentBlock } from "../content/index.js";
 
 import { anthropicTranslator } from "./anthropic.js";
+import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
 import { openaiTranslator } from "./openai.js";
 
 export interface StandardContentBlockTranslator {
@@ -12,14 +13,12 @@ export interface StandardContentBlockTranslator {
 type TranslatorRegistry = Map<string, StandardContentBlockTranslator>;
 
 declare global {
-  // eslint-disable-next-line no-var, vars-on-top
   var lc_block_translators_registry: TranslatorRegistry;
 }
 
 globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", anthropicTranslator],
-  // ["bedrock-converse", bedrockConverseTranslator],
-  // ["bedrock", bedrockTranslator],
+  ["bedrock-converse", ChatBedrockConverseTranslator],
   // ["google-genai", googleGenaiTranslator],
   // ["google-vertexai", googleVertexaiTranslator],
   // ["groq", groqTranslator],

@@ -106,6 +106,27 @@ export declare namespace ContentBlock {
     index?: number;
   }
 
+  /**
+   * Provider-specific content block.
+   *
+   * This is used to represent content blocks that are not part of the standard LangChain content model.
+   * If a provider's non-standard output includes reasoning and tool calls, it should be
+   * the adapter's job to parse that payload and emit the corresponding standard reasoning and tool call blocks.
+   */
+  export interface NonStandard<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TValue extends Record<string, any> = Record<string, any>
+  > extends ContentBlock {
+    /**
+     * Type of the content block
+     */
+    type: "non_standard";
+    /**
+     * Provider-specific data
+     */
+    value: TValue;
+  }
+
   export { Tools };
   export { Multimodal };
   export { Data };
@@ -113,6 +134,7 @@ export declare namespace ContentBlock {
   export type Standard =
     | Text
     | Reasoning
+    | NonStandard
     | Tools.Standard
     | Multimodal.Standard;
 }

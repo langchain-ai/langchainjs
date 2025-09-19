@@ -50,7 +50,10 @@ export function convertConverseMessageToLangChainMessage(
   ) {
     return new AIMessage({
       content: message.content[0].text,
-      response_metadata: responseMetadata,
+      response_metadata: {
+        ...responseMetadata,
+        model_provider: "bedrock-converse",
+      },
       usage_metadata: tokenUsage,
       id: requestId,
     });
@@ -101,7 +104,10 @@ export function convertConverseMessageToLangChainMessage(
     return new AIMessage({
       content: content.length ? content : "",
       tool_calls: toolCalls.length ? toolCalls : undefined,
-      response_metadata: responseMetadata,
+      response_metadata: {
+        ...responseMetadata,
+        model_provider: "bedrock-converse",
+      },
       usage_metadata: tokenUsage,
       id: requestId,
     });
@@ -202,6 +208,7 @@ export function handleConverseStreamMetadata(
       response_metadata: {
         // Use the same key as returned from the Converse API
         metadata,
+        model_provider: "bedrock-converse",
       },
     }),
   });
