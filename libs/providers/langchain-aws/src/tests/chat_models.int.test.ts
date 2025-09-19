@@ -409,7 +409,7 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
     return response;
   }
 
-  const invokeMessages = [new HumanMessage("Hello")];
+  const invokeMessages: BaseMessage[] = [new HumanMessage("Hello")];
 
   invokeMessages.push(await doInvoke(invokeMessages));
   invokeMessages.push(new HumanMessage("What is 42+7?"));
@@ -462,7 +462,7 @@ test("Test reasoning_content blocks multiturn streaming", async () => {
     return full as AIMessageChunk;
   }
 
-  const streamingMessages = [new HumanMessage("Hello")];
+  const streamingMessages: BaseMessage[] = [new HumanMessage("Hello")];
 
   streamingMessages.push(await doStreaming(streamingMessages));
   streamingMessages.push(new HumanMessage("What is 42+7?"));
