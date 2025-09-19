@@ -183,7 +183,7 @@ describe("ChatBedrockConverseTranslator", () => {
       {
         type: "file",
         mimeType: "application/pdf",
-        url: "s3://doc_text_2",
+        fileId: "s3://doc_text_2",
       },
       {
         type: "non_standard",
@@ -227,7 +227,7 @@ describe("ChatBedrockConverseTranslator", () => {
       {
         type: "video",
         mimeType: "video/mp4",
-        url: "s3://video_url",
+        fileId: "s3://video_url",
       },
       {
         type: "non_standard",
@@ -307,7 +307,7 @@ describe("ChatBedrockConverseTranslator", () => {
         mimeType: "image/jpeg",
         data: Buffer.from("image_bytes"),
       },
-      { type: "file", mimeType: "application/pdf", url: "s3://bla" },
+      { type: "file", mimeType: "application/pdf", fileId: "s3://bla" },
     ];
     expect(convertToV1FromChatBedrockConverseInput(message)).toEqual(
       expectedContent

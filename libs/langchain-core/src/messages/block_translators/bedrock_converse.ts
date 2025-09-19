@@ -12,6 +12,7 @@ import {
   iife,
 } from "./utils.js";
 
+// see `/libs/providers/langchain-aws/src/utils/compat.ts:convertFileFormatToMimeType`
 function convertFileFormatToMimeType(format: string): string {
   switch (format) {
     // DocumentBlock
@@ -86,7 +87,7 @@ function convertConverseDocumentBlock(
         return {
           type: "file",
           mimeType,
-          url: block.document.source.s3Location.uri,
+          fileId: block.document.source.s3Location.uri,
         };
       }
       if (_isBytesArray(block.document.source.bytes)) {
@@ -140,7 +141,7 @@ function convertConverseImageBlock(block: ContentBlock): ContentBlock.Standard {
         return {
           type: "image",
           mimeType,
-          url: block.image.source.s3Location.uri,
+          fileId: block.image.source.s3Location.uri,
         };
       }
       if (_isBytesArray(block.image.source.bytes)) {
@@ -171,7 +172,7 @@ function convertConverseVideoBlock(block: ContentBlock): ContentBlock.Standard {
         return {
           type: "video",
           mimeType,
-          url: block.video.source.s3Location.uri,
+          fileId: block.video.source.s3Location.uri,
         };
       }
       if (_isBytesArray(block.video.source.bytes)) {
@@ -304,7 +305,7 @@ function convertToV1FromChatBedrockConverseMessage(
       } else if (_isContentBlock(block, "guard_content")) {
         yield {
           type: "non_standard",
-          value: { guardContent: block.guardContent },
+          value: block,
         };
         continue;
       } else if (_isContentBlock(block, "image") && _isObject(block.image)) {

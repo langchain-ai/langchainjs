@@ -22,6 +22,7 @@ import {
   MessageContentReasoningBlockReasoningText,
   MessageContentReasoningBlockRedacted,
 } from "../types.js";
+import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
 function isDefaultCachePoint(block: unknown): boolean {
   return Boolean(
@@ -361,6 +362,13 @@ function convertSystemMessageToConverseMessage(
 }
 
 function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
+  if (msg.response_metadata.response_format === "v1") {
+    return {
+      role: "assistant",
+      content: convertFromV1ToChatBedrockConverseMessage(msg),
+    };
+  }
+
   const assistantMsg: Bedrock.Message = {
     role: "assistant",
     content: [],
