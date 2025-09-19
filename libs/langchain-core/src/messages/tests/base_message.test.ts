@@ -10,7 +10,7 @@ import {
   coerceMessageLikeToMessage,
   SystemMessage,
 } from "../index.js";
-import { load } from "../../load/index.js";
+import { load, dump } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
 
@@ -98,7 +98,7 @@ test("Deserialisation and serialisation of additional_kwargs and tool_call_id", 
     },
   });
 
-  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  const deserialized: AIMessage = await load(dump(message), config);
   expect(deserialized).toEqual(message);
 });
 
@@ -115,7 +115,7 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
     tool_call_id: "call_tXJNP1S6LHT5tLfaNHCbYCtH",
   });
 
-  const deserialized: ToolMessage = await load(JSON.stringify(message), config);
+  const deserialized: ToolMessage = await load(dump(message), config);
   expect(deserialized).toEqual(message);
 });
 
@@ -134,7 +134,7 @@ test("Deserialisation and serialisation of messages with ID", async () => {
     id: messageId,
   });
 
-  const deserialized: AIMessage = await load(JSON.stringify(message), config);
+  const deserialized: AIMessage = await load(dump(message), config);
   expect(deserialized).toEqual(message);
   expect(deserialized.id).toBe(messageId);
 });
