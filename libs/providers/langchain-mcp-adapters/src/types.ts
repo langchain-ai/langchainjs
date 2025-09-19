@@ -480,6 +480,11 @@ export const clientConfigSchema = z
       )
       .optional()
       .default(false),
+
+    /**
+     * MCP client middleware
+     * Allows users to add custom middleware to the MCP client
+     */
   })
   .and(baseConfigSchema)
   .describe("Configuration for the MCP client");
@@ -638,4 +643,9 @@ export function _resolveAndApplyOverrideHandlingOverrides(
     ...expandedBase,
     ...expandedOverride,
   };
+}
+
+export interface CustomHTTPTransportOptions {
+  authProvider?: OAuthClientProvider;
+  headers?: Record<string, string>;
 }
