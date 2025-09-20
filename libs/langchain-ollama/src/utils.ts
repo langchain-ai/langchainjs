@@ -22,8 +22,14 @@ export function convertOllamaMessagesToLangChain(
     usageMetadata?: UsageMetadata;
   }
 ): AIMessageChunk {
+  // Prepare additional_kwargs to include thinking content if it exists
+  const additionalKwargs: Record<string, any> = {};
+  if (messages.thinking) {
+    additionalKwargs.thinking_content = messages.thinking;
+  }
+
   return new AIMessageChunk({
-    content: messages.thinking ?? messages.content ?? "",
+    content: messages.content ?? "",
     tool_call_chunks: messages.tool_calls?.map((tc) => ({
       name: tc.function.name,
       args: JSON.stringify(tc.function.arguments),
@@ -31,6 +37,7 @@ export function convertOllamaMessagesToLangChain(
       index: 0,
       id: uuidv4(),
     })),
+    additional_kwargs: additionalKwargs,
     response_metadata: extra?.responseMetadata,
     usage_metadata: extra?.usageMetadata,
   });

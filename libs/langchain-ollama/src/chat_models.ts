@@ -56,6 +56,12 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   tools?: BindToolsInput[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  /**
+   * Whether to enable thinking mode for this specific invocation.
+   * Can be a boolean (true/false) or a string intensity level ("high", "medium", "low").
+   * If not provided, falls back to the instance-level think parameter.
+   */
+  think?: boolean | string;
 }
 
 export interface PullModelOptions {
@@ -109,7 +115,13 @@ export interface ChatOllamaInput
    * @default fetch
    */
   fetch?: typeof fetch;
-  think?: boolean;
+  /**
+   * Whether to enable thinking mode for supported models.
+   * Can be a boolean (true/false) or a string intensity level ("high", "medium", "low").
+   * When enabled, the model's reasoning process is captured separately.
+   * @default false
+   */
+  think?: boolean | string;
 }
 
 /**
@@ -490,7 +502,7 @@ export class ChatOllama
 
   baseUrl = "http://127.0.0.1:11434";
 
-  think?: boolean;
+  think?: boolean | string;
 
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
@@ -751,10 +763,8 @@ export class ChatOllama
         usageMetadata.input_tokens + usageMetadata.output_tokens;
       lastMetadata = rest;
 
-      // when think is enabled, try thinking first
-      const token = this.think
-        ? responseMessage.thinking ?? responseMessage.content ?? ""
-        : responseMessage.content ?? "";
+      // always use actual content as token, thinking content is handled in additional_kwargs
+      const token = responseMessage.content ?? "";
 
       yield new ChatGenerationChunk({
         text: token,
