@@ -92,7 +92,7 @@ const messages = [
 
 describe("anthropicPromptCachingMiddleware", () => {
   it("should allow middleware to update model, messages and systemMessage", async () => {
-    const anthropicModel = new ChatAnthropic({
+    const model = new ChatAnthropic({
       model: "claude-opus-4-20250514",
       temperature: 0.7,
       maxTokens: 500,
@@ -101,7 +101,7 @@ describe("anthropicPromptCachingMiddleware", () => {
 
     // Create agent with OpenAI model string and the middleware
     const agent = createAgent({
-      llm: anthropicModel,
+      model,
       tools: [simpleTool],
       prompt: "You are a geography expert.",
       middleware: [
@@ -117,8 +117,7 @@ describe("anthropicPromptCachingMiddleware", () => {
       messages,
     });
 
-    const { anthropicFetchMock, anthropicResponse } = (anthropicModel as any)
-      .mocks;
+    const { anthropicFetchMock, anthropicResponse } = (model as any).mocks;
 
     // Verify that Anthropic was called (not OpenAI)
     expect(anthropicFetchMock).toHaveBeenCalled();

@@ -1546,19 +1546,5 @@ describe("createAgent", () => {
         "Either `model` or `llm` option must be provided to create an agent."
       );
     });
-
-    it("throws if model is not a string", async () => {
-      const model = new FakeToolCallingChatModel({
-        responses: [new AIMessage("ai response")],
-      });
-
-      await expect(() =>
-        createAgent({
-          // @ts-expect-error - model is not a string
-          model,
-          tools: [],
-        }).invoke({ messages: [new HumanMessage("Hello Input!")] })
-      ).rejects.toThrow("`model` option must be a string.");
-    });
   });
 });

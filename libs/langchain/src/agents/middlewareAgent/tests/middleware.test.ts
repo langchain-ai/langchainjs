@@ -21,7 +21,7 @@ describe("middleware", () => {
       middlewareCBeforeModelState: "CBefore",
       middlewareCAfterModelState: "CAfter",
     };
-    const llm = new FakeToolCallingChatModel({
+    const model = new FakeToolCallingChatModel({
       responses: [new AIMessage("The weather in Tokyo is 25°C")],
     });
     const middlewareA = createMiddleware({
@@ -86,7 +86,7 @@ describe("middleware", () => {
       },
     });
     const agent = createAgent({
-      llm,
+      model,
       tools: [],
       middleware: [middlewareA, middlewareB, middlewareC] as const,
     });
@@ -116,7 +116,7 @@ describe("middleware", () => {
   });
 
   it("should propagate context schema to middleware hooks", async () => {
-    const llm = new FakeToolCallingChatModel({
+    const model = new FakeToolCallingChatModel({
       responses: [new AIMessage("The weather in Tokyo is 25°C")],
     });
     const middleware = createMiddleware({
@@ -141,7 +141,7 @@ describe("middleware", () => {
     });
 
     const agent = createAgent({
-      llm,
+      model,
       tools: [],
       contextSchema: z.object({
         customContext: z.string(),
@@ -165,7 +165,7 @@ describe("middleware", () => {
 
   describe("control actions", () => {
     it("should terminate the agent in beforeModel hook", async () => {
-      const llm = new FakeToolCallingChatModel({
+      const model = new FakeToolCallingChatModel({
         responses: [new AIMessage("The weather in Tokyo is 25°C")],
       });
       const middleware = createMiddleware({
@@ -176,7 +176,7 @@ describe("middleware", () => {
       });
       const toolFn = vi.fn();
       const agent = createAgent({
-        llm,
+        model,
         tools: [
           tool(toolFn, {
             name: "tool",
@@ -197,7 +197,7 @@ describe("middleware", () => {
     });
 
     it("should terminate the agent in afterModel hook", async () => {
-      const llm = new FakeToolCallingModel({
+      const model = new FakeToolCallingModel({
         toolCalls: [[{ id: "call_1", name: "tool", args: { name: "test" } }]],
       });
       const beforeModel = vi.fn();
@@ -212,7 +212,7 @@ describe("middleware", () => {
       });
       const toolFn = vi.fn();
       const agent = createAgent({
-        llm,
+        model,
         tools: [
           tool(toolFn, {
             name: "tool",

@@ -6,6 +6,7 @@ import {
   AIMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { dynamicSystemPromptMiddleware } from "../dynamicSystemPrompt.js";
 import { createAgent } from "../../index.js";
 
@@ -27,7 +28,7 @@ function createMockModel() {
 
 describe("dynamicSystemPrompt", () => {
   it("should set system message from dynamic prompt before model call", async () => {
-    const mockModel = createMockModel();
+    const model = createMockModel() as unknown as LanguageModelLike;
     const contextSchema = z.object({ region: z.string().optional() });
 
     const middleware = dynamicSystemPromptMiddleware<
@@ -38,7 +39,7 @@ describe("dynamicSystemPrompt", () => {
     });
 
     const agent = createAgent({
-      llm: mockModel as any,
+      model,
       middleware: [middleware] as const,
       contextSchema,
     });
@@ -54,8 +55,8 @@ describe("dynamicSystemPrompt", () => {
       }
     );
 
-    expect(mockModel.invoke).toHaveBeenCalled();
-    const callArgs = (mockModel.invoke as any).mock.calls[0];
+    expect(model.invoke).toHaveBeenCalled();
+    const callArgs = (model.invoke as any).mock.calls[0];
     const [firstMessage] = callArgs[0];
     expect(firstMessage.type).toBe("system");
     expect(firstMessage.content).toBe(
@@ -64,7 +65,7 @@ describe("dynamicSystemPrompt", () => {
   });
 
   it("should throw if the function does not return a string", async () => {
-    const mockModel = createMockModel();
+    const model = createMockModel() as unknown as LanguageModelLike;
     const contextSchema = z.object({ region: z.string().optional() });
 
     const middleware = dynamicSystemPromptMiddleware<
@@ -78,7 +79,7 @@ describe("dynamicSystemPrompt", () => {
     });
 
     const agent = createAgent({
-      llm: mockModel as any,
+      model,
       middleware: [middleware] as const,
       contextSchema,
     });

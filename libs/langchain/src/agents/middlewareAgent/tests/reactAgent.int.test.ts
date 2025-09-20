@@ -182,7 +182,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     };
 
     // Create OpenAI model initially without any tools
-    const openAIModel = new ChatOpenAI({
+    const model = new ChatOpenAI({
       model: "gpt-4",
       temperature: 0,
       configuration: {
@@ -242,7 +242,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
 
     // Create agent with the middleware
     const agent = createAgent({
-      llm: openAIModel,
+      model,
       // No tools provided initially
       tools: [],
       middleware: [toolsMiddleware],

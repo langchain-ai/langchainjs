@@ -61,7 +61,6 @@ export interface AgentNodeOptions<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, ContextSchema>,
-    | "llm"
     | "model"
     | "prompt"
     | "includeAgentName"
@@ -181,30 +180,13 @@ export class AgentNode<
    * @param config - The config of the agent.
    * @returns The model.
    */
-  #deriveModel(
-    state: InternalAgentState<StructuredResponseFormat> &
-      PreHookAnnotation["State"],
-    config: RunnableConfig
-  ) {
+  #deriveModel() {
+    if (typeof this.#options.model === "string") {
+      return initChatModel(this.#options.model);
+    }
+
     if (this.#options.model) {
-      if (typeof this.#options.model === "string") {
-        return initChatModel(this.#options.model);
-      }
-
-      throw new Error("`model` option must be a string.");
-    }
-
-    const model = this.#options.llm;
-
-    /**
-     * If the model is a function, call it to get the model.
-     */
-    if (typeof model === "function") {
-      return model(state, config);
-    }
-
-    if (model) {
-      return model;
+      return this.#options.model;
     }
 
     throw new Error(
@@ -220,7 +202,7 @@ export class AgentNode<
       lastMessage?: string;
     } = {}
   ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
-    const model = await this.#deriveModel(state, config);
+    const model = await this.#deriveModel();
 
     /**
      * Execute modifyModelRequest hooks from beforeModelNodes
