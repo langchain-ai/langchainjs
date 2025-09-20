@@ -26,6 +26,7 @@ export function convertOllamaMessagesToLangChain(
   }
 ): AIMessageChunk {
   // Prepare additional_kwargs to include thinking content if it exists
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const additionalKwargs: Record<string, any> = {};
   if (messages.thinking) {
     // Calculate incremental thinking content
