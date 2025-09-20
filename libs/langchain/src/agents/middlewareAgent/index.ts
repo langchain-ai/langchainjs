@@ -416,16 +416,19 @@ export function createAgent<
         !agentMethodNames.has(prop as string) &&
         target.graph[prop as keyof typeof target.graph]
       ) {
-        return target.graph[prop as keyof typeof target.graph];
+        const value = target.graph[prop as keyof typeof target.graph];
+        return typeof value === "function" ? value.bind(target.graph) : value;
       }
 
-      return target[
-        prop as keyof ReactAgent<
-          StructuredResponseFormat,
-          ContextSchema,
-          TMiddleware
-        >
-      ];
+      const value =
+        target[
+          prop as keyof ReactAgent<
+            StructuredResponseFormat,
+            ContextSchema,
+            TMiddleware
+          >
+        ];
+      return typeof value === "function" ? value.bind(target) : value;
     },
   });
 }
