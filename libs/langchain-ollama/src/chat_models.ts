@@ -704,6 +704,7 @@ export class ChatOllama
     const nonChunkMessage = new AIMessage({
       id: finalChunk?.id,
       content: finalChunk?.content ?? "",
+      additional_kwargs: finalChunk?.additional_kwargs,
       tool_calls: finalChunk?.tool_calls,
       response_metadata: finalChunk?.response_metadata,
       usage_metadata: finalChunk?.usage_metadata,
