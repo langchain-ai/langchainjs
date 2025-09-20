@@ -10,9 +10,15 @@ import {
 } from "zod/v3";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import type { ContentBlock } from "@langchain/core/messages";
+import type { RunnableConfig } from "@langchain/core/runnables";
+
 import type { UnionToTuple } from "./util.js";
+import { interceptorSchema, type Interceptor } from "./interceptor.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+export type { ContentBlock };
+export type { RunnableConfig };
 
 function isZodObject(
   schema: unknown
@@ -335,6 +341,7 @@ export const stdioConnectionSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -408,6 +415,7 @@ export const streamableHttpConnectionSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for streamable HTTP transport connection");
 
 /**
@@ -482,6 +490,7 @@ export const clientConfigSchema = z
       .default(false),
   })
   .and(baseConfigSchema)
+  .and(interceptorSchema)
   .describe("Configuration for the MCP client");
 
 /**
@@ -587,6 +596,21 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
+
+  /**
+   * `onProgress` callbacks used for tool calls.
+   */
+  onProgress?: Interceptor["onProgress"][];
+
+  /**
+   * `beforeToolCall` callbacks used for tool calls.
+   */
+  beforeToolCall?: Interceptor["beforeToolCall"][];
+
+  /**
+   * `afterToolCall` callbacks used for tool calls.
+   */
+  afterToolCall?: Interceptor["afterToolCall"][];
 };
 
 /**
@@ -638,4 +662,9 @@ export function _resolveAndApplyOverrideHandlingOverrides(
     ...expandedBase,
     ...expandedOverride,
   };
+}
+
+export interface CustomHTTPTransportOptions {
+  authProvider?: OAuthClientProvider;
+  headers?: Record<string, string>;
 }

@@ -7,7 +7,10 @@ import { z } from "zod";
 // Get server name from command line arguments
 const serverName = process.argv[2] || "dummy-server";
 
-const server = new McpServer({ name: serverName, version: "1.0.0" });
+const server = new McpServer(
+  { name: serverName, version: "1.0.0" },
+  { capabilities: { logging: {} } }
+);
 
 // Add test tools that capture request metadata
 server.tool(
@@ -15,6 +18,38 @@ server.tool(
   "A test tool that echoes input and metadata",
   { input: z.string() },
   async ({ input }, extra) => {
+    // Emit a logging message
+    await server.server.notification(
+      {
+        method: "notifications/message",
+        params: {
+          level: "info",
+          message: `test_tool invoked with ${input}`,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      { relatedRequestId: extra.requestId }
+    );
+
+    // Simulate progress updates using progressToken if present
+    const progressToken = extra._meta?.progressToken;
+    if (progressToken !== undefined) {
+      const steps = 3;
+      for (let i = 1; i <= steps; i++) {
+        await server.server.notification(
+          {
+            method: "notifications/progress",
+            params: {
+              progress: i,
+              total: steps,
+              progressToken,
+            },
+          },
+          { relatedRequestId: extra.requestId }
+        );
+      }
+    }
+
     return {
       content: [
         {

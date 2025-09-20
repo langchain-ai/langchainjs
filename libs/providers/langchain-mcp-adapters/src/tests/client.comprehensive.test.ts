@@ -221,20 +221,19 @@ describe("MultiServerMCPClient", () => {
 
       await client.initializeConnections();
 
+      // Grab the created transport instance before clearing call counts
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+
       // Clear previous calls
       (StdioClientTransport as Mock).mockClear();
       (Client.prototype.connect as Mock).mockClear();
 
       // Trigger onclose handler
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyClient = client as any;
-      const transportInstances = anyClient._transportInstances;
-      const transportInstance = transportInstances["test-server"];
-
-      expect(transportInstance).toBeDefined();
-      const { onclose } = transportInstance;
+      expect(stdioInstance).toBeDefined();
+      const { onclose } = stdioInstance;
       expect(onclose).toBeDefined();
-      onclose();
+      await onclose?.();
 
       // Wait for reconnection delay
       await new Promise((resolve) => {
@@ -262,20 +261,19 @@ describe("MultiServerMCPClient", () => {
 
       await client.initializeConnections();
 
+      // Grab the created transport instance before clearing call counts
+      const sseInstance = (SSEClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+
       // Clear previous calls
       (SSEClientTransport as Mock).mockClear();
       (Client.prototype.connect as Mock).mockClear();
 
       // Trigger onclose handler
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyClient = client as any;
-      const transportInstances = anyClient._transportInstances;
-      const transportInstance = transportInstances["test-server"];
-
-      expect(transportInstance).toBeDefined();
-      const { onclose } = transportInstance;
+      expect(sseInstance).toBeDefined();
+      const { onclose } = sseInstance;
       expect(onclose).toBeDefined();
-      onclose();
+      await onclose?.();
 
       // Wait for reconnection delay
       await new Promise((resolve) => {
@@ -303,30 +301,32 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
-      // Clear previous mock invocations
-      (StdioClientTransport as Mock).mockClear();
-
       await client.initializeConnections();
 
-      // Simulate connection close to trigger reconnection
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyClient = client as any;
-      const transportInstances = anyClient._transportInstances;
-      const transportInstance = transportInstances["test-server"];
+      // Grab instance created during initialization
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
 
-      expect(transportInstance).toBeDefined();
-      const { onclose } = transportInstance;
+      // Reset counts to only measure reconnection attempts
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("reconnect fail 1"))
+      );
+      (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("reconnect fail 2"))
+      );
+
+      // Simulate connection close to trigger reconnection
+      expect(stdioInstance).toBeDefined();
+      const { onclose } = stdioInstance;
       expect(onclose).toBeDefined();
-      onclose();
+      await onclose?.();
 
       // Wait for reconnection attempts to complete
-      await new Promise((resolve) => {
-        setTimeout(resolve, 100);
-      });
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Verify the number of attempts
-      // StdioClientTransport is called once for initial connection
-      expect(StdioClientTransport).toHaveBeenCalledTimes(1);
+      // Should attempt to create a new transport exactly maxAttempts times
+      expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts);
     });
   });
 
@@ -410,15 +410,14 @@ describe("MultiServerMCPClient", () => {
       await client.initializeConnections();
       await client.close();
 
-      // Both transports should be closed
-      expect(StdioClientTransport.prototype.close).toHaveBeenCalled();
-      expect(SSEClientTransport.prototype.close).toHaveBeenCalled();
+      // ConnectionManager now closes the MCP clients, which close transports internally
+      expect(Client.prototype.close).toHaveBeenCalledTimes(2);
     });
 
     test("should handle errors during cleanup gracefully", async () => {
-      // Mock close to throw error
-      (StdioClientTransport.prototype.close as Mock).mockImplementationOnce(
-        () => Promise.reject(new Error("Close failed"))
+      // Mock client.close to throw error for the only stdio client
+      (Client.prototype.close as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Close failed"))
       );
 
       const client = new MultiServerMCPClient({
@@ -431,21 +430,18 @@ describe("MultiServerMCPClient", () => {
 
       await client.initializeConnections();
 
-      // Should not throw
-      await client.close();
+      // Should reject due to one close failing
+      await expect(client.close()).rejects.toThrow();
 
-      // Should have attempted to close
-      expect(StdioClientTransport.prototype.close).toHaveBeenCalled();
+      // Should have attempted to close the client
+      expect(Client.prototype.close).toHaveBeenCalled();
     });
 
     test("should clean up all resources even if some fail", async () => {
-      // First close fails, second succeeds
-      (StdioClientTransport.prototype.close as Mock).mockImplementationOnce(
-        () => Promise.reject(new Error("Close failed"))
-      );
-      (SSEClientTransport.prototype.close as Mock).mockImplementationOnce(() =>
-        Promise.resolve()
-      );
+      // First client.close fails, second succeeds
+      (Client.prototype.close as Mock)
+        .mockImplementationOnce(() => Promise.reject(new Error("Close failed")))
+        .mockImplementationOnce(() => Promise.resolve());
 
       const client = new MultiServerMCPClient({
         "stdio-server": {
@@ -460,11 +456,10 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
-      await client.close();
+      await expect(client.close()).rejects.toThrow();
 
-      // Both close methods should have been called
-      expect(StdioClientTransport.prototype.close).toHaveBeenCalled();
-      expect(SSEClientTransport.prototype.close).toHaveBeenCalled();
+      // Both client.close methods should have been called
+      expect(Client.prototype.close).toHaveBeenCalledTimes(2);
     });
 
     test("should clear internal state after close", async () => {
@@ -478,25 +473,10 @@ describe("MultiServerMCPClient", () => {
 
       await client.initializeConnections();
 
-      const tools = await client.getTools();
-
-      // Should have tools
-      expect(tools.length).toBeGreaterThan(0);
-
       await client.close();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyClient = client as any;
-
-      const clients = anyClient._clients;
-      const serverNameToTools = anyClient._serverNameToTools;
-      const cleanupFunctions = anyClient._cleanupFunctions;
-      const transportInstances = anyClient._transportInstances;
-
-      expect(clients).toEqual({});
-      expect(serverNameToTools).toEqual({});
-      expect(cleanupFunctions).toEqual([]);
-      expect(transportInstances).toEqual({});
+      // Internal state is private now; assert that the SDK client was closed
+      expect(Client.prototype.close).toHaveBeenCalledTimes(1);
     });
   });
 

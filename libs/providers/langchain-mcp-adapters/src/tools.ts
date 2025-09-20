@@ -1,4 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   EmbeddedResource,
   ReadResourceResult,
@@ -11,6 +11,7 @@ import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import debug from "debug";
+import type { Interceptor } from "./interceptor.js";
 import {
   _resolveDetailedOutputHandling,
   type CallToolResult,
@@ -19,6 +20,7 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
+import type { Client } from "./connection.js";
 
 // Replace direct initialization with lazy initialization
 let debugLog: debug.Debugger;
@@ -66,7 +68,7 @@ async function* _embeddedResourceToStandardFileBlocks(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number],
-  client: Client
+  client: Client | MCPClient
 ): AsyncGenerator<
   | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
   | (ContentBlock.Data.StandardFileBlock &
@@ -107,28 +109,28 @@ async function* _embeddedResourceToStandardFileBlocks(
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: true,
-  client: Client,
+  client: Client | MCPClient,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock.Data.DataContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: false | undefined,
-  client: Client,
+  client: Client | MCPClient,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: Client | MCPClient,
   toolName: string,
   serverName: string
 ): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: Client | MCPClient,
   toolName: string,
   serverName: string
 ): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]> {
@@ -196,7 +198,7 @@ async function _toolOutputToContentBlocks(
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
   useStandardContentBlocks: boolean | undefined,
-  client: Client,
+  client: Client | MCPClient,
   toolName: string,
   serverName: string
 ): Promise<(EmbeddedResource | ContentBlock.Data.DataContentBlock)[]> {
@@ -246,7 +248,7 @@ type ConvertCallToolResultArgs = {
   /**
    * The MCP client that was used to call the tool
    */
-  client: Client;
+  client: Client | MCPClient;
   /**
    * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
    * image or audio content. This option has no effect on handling of embedded resource tool output.
@@ -384,7 +386,7 @@ type CallToolArgs = {
   /**
    * The MCP client to call the tool on
    */
-  client: Client;
+  client: Client | MCPClient;
   /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
@@ -402,6 +404,21 @@ type CallToolArgs = {
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
+
+  /**
+   * `onProgress` callbacks used for tool calls.
+   */
+  onProgress?: Interceptor["onProgress"][];
+
+  /**
+   * `beforeToolCall` callbacks used for tool calls.
+   */
+  beforeToolCall?: Interceptor["beforeToolCall"][];
+
+  /**
+   * `afterToolCall` callbacks used for tool calls.
+   */
+  afterToolCall?: Interceptor["afterToolCall"][];
 };
 
 /**
@@ -421,6 +438,9 @@ async function _callTool({
   config,
   useStandardContentBlocks,
   outputHandling,
+  onProgress,
+  beforeToolCall,
+  afterToolCall,
 }: CallToolArgs): Promise<
   [
     (ContentBlock | ContentBlock.Data.DataContentBlock)[],
@@ -434,12 +454,59 @@ async function _callTool({
     const requestOptions: RequestOptions = {
       ...(config?.timeout ? { timeout: config.timeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
+      ...(onProgress && onProgress.length > 0
+        ? {
+            onprogress: (progress) => {
+              // eslint-disable-next-line @typescript-eslint/no-floating-promises
+              onProgress.map(async (cb) => cb?.(progress));
+            },
+          }
+        : {}),
     };
 
-    const callToolArgs: Parameters<typeof client.callTool> = [
+    const beforeToolCallInterception = await Promise.all(
+      (beforeToolCall ?? []).map(async (cb) =>
+        cb?.(
+          {
+            name: toolName,
+            args,
+            serverName,
+          },
+          config ?? {}
+        )
+      )
+    );
+
+    const finalArgs = Object.assign(
+      {},
+      args,
+      beforeToolCallInterception.reduce(
+        (acc, curr) => Object.assign(acc, curr?.args),
+        {} as Record<string, unknown>
+      )
+    );
+
+    const finalHeaders = beforeToolCallInterception.reduce(
+      (acc, curr) => Object.assign(acc, curr?.header),
+      {} as Record<string, string>
+    );
+
+    const hasHeaderChanges = Object.entries(finalHeaders).length > 0;
+    if (hasHeaderChanges && typeof (client as Client).fork !== "function") {
+      throw new ToolException(
+        `MCP client for server "${serverName}" does not support header changes`
+      );
+    }
+
+    const finalClient =
+      hasHeaderChanges && typeof (client as Client).fork === "function"
+        ? await (client as Client).fork(finalHeaders)
+        : client;
+
+    const callToolArgs: Parameters<typeof finalClient.callTool> = [
       {
         name: toolName,
-        arguments: args,
+        arguments: finalArgs,
       },
     ];
 
@@ -448,15 +515,46 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
-    const result = await client.callTool(...callToolArgs);
-    return _convertCallToolResult({
+    const result = (await finalClient.callTool(
+      ...callToolArgs
+    )) as CallToolResult;
+    const [content, artifacts] = await _convertCallToolResult({
       serverName,
       toolName,
-      result: result as CallToolResult,
-      client,
+      result,
+      client: finalClient,
       useStandardContentBlocks,
       outputHandling,
     });
+
+    const interceptedResult = await Promise.all(
+      (afterToolCall ?? []).map(async (cb) =>
+        cb?.(
+          {
+            name: toolName,
+            args: finalArgs,
+            result: [content, artifacts],
+            serverName,
+          },
+          config ?? {}
+        )
+      )
+    );
+
+    return interceptedResult.length > 0
+      ? interceptedResult.reduce(
+          ([content, artifacts], curr) =>
+            [
+              curr?.result[0] && curr.result[0].length > 0
+                ? curr.result[0]
+                : content,
+              curr?.result[1] && curr.result[1].length > 0
+                ? curr.result[1]
+                : artifacts,
+            ] as [ContentBlock[], EmbeddedResource[]],
+          [content, artifacts]
+        )
+      : [content, artifacts];
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
@@ -482,7 +580,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
  */
 export async function loadMcpTools(
   serverName: string,
-  client: Client,
+  client: Client | MCPClient,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const {
@@ -552,6 +650,9 @@ export async function loadMcpTools(
                   config,
                   useStandardContentBlocks,
                   outputHandling,
+                  onProgress: options?.onProgress,
+                  beforeToolCall: options?.beforeToolCall,
+                  afterToolCall: options?.afterToolCall,
                 });
               },
             });

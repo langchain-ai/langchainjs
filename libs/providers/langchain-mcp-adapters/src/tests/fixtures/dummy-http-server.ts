@@ -19,7 +19,10 @@ export function createDummyHttpServer(
     disableStreamableHttp?: boolean;
   }
 ): Express {
-  const server = new McpServer({ name, version: "1.0.0" });
+  const server = new McpServer(
+    { name, version: "1.0.0" },
+    { capabilities: { logging: {} } }
+  );
 
   // Store captured headers per session
   const sessionHeaders: Record<string, Record<string, string>> = {};
@@ -30,6 +33,34 @@ export function createDummyHttpServer(
     "A test tool that echoes input and request metadata",
     { input: z.string() },
     async ({ input }, extra) => {
+      // Logging message
+      await server.server.notification(
+        {
+          method: "notifications/message",
+          params: {
+            level: "info",
+            message: `test_tool invoked with ${input}`,
+            timestamp: new Date().toISOString(),
+          },
+        },
+        { relatedRequestId: extra.requestId }
+      );
+
+      // Progress with token if present
+      const progressToken = extra._meta?.progressToken;
+      if (progressToken !== undefined) {
+        const steps = 3;
+        for (let i = 1; i <= steps; i++) {
+          await server.server.notification(
+            {
+              method: "notifications/progress",
+              params: { progress: i, total: steps, progressToken },
+            },
+            { relatedRequestId: extra.requestId }
+          );
+        }
+      }
+
       return {
         content: [
           {
