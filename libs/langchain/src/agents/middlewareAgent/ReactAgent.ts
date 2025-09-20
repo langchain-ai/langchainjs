@@ -310,8 +310,6 @@ export class ReactAgent<
      */
     this.#graph = allNodeWorkflows.compile({
       checkpointer: this.options.checkpointer ?? this.options.checkpointSaver,
-      interruptBefore: this.options.interruptBefore,
-      interruptAfter: this.options.interruptAfter,
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
