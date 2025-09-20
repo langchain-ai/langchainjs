@@ -466,11 +466,14 @@ async function _callTool({
 
     const beforeToolCallInterception = await Promise.all(
       (beforeToolCall ?? []).map(async (cb) =>
-        cb?.({
-          name: toolName,
-          args,
-          serverName,
-        })
+        cb?.(
+          {
+            name: toolName,
+            args,
+            serverName,
+          },
+          config ?? {}
+        )
       )
     );
 
@@ -512,7 +515,9 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
-    const result = (await client.callTool(...callToolArgs)) as CallToolResult;
+    const result = (await finalClient.callTool(
+      ...callToolArgs
+    )) as CallToolResult;
     const [content, artifacts] = await _convertCallToolResult({
       serverName,
       toolName,
@@ -522,18 +527,34 @@ async function _callTool({
       outputHandling,
     });
 
-    await Promise.all(
+    const interceptedResult = await Promise.all(
       (afterToolCall ?? []).map(async (cb) =>
-        cb?.({
-          name: toolName,
-          args: finalArgs,
-          result,
-          serverName,
-        })
+        cb?.(
+          {
+            name: toolName,
+            args: finalArgs,
+            result: [content, artifacts],
+            serverName,
+          },
+          config ?? {}
+        )
       )
     );
 
-    return [content, artifacts];
+    return interceptedResult.length > 0
+      ? interceptedResult.reduce(
+          ([content, artifacts], curr) =>
+            [
+              curr?.result[0] && curr.result[0].length > 0
+                ? curr.result[0]
+                : content,
+              curr?.result[1] && curr.result[1].length > 0
+                ? curr.result[1]
+                : artifacts,
+            ] as [ContentBlock[], EmbeddedResource[]],
+          [content, artifacts]
+        )
+      : [content, artifacts];
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
