@@ -61,7 +61,7 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
    * Can be a boolean (true/false) or a string intensity level ("high", "medium", "low").
    * If not provided, falls back to the instance-level think parameter.
    */
-  think?: boolean | string;
+  think?: boolean | 'high' | 'medium' | 'low';
 }
 
 export interface PullModelOptions {
@@ -121,7 +121,7 @@ export interface ChatOllamaInput
    * When enabled, the model's reasoning process is captured separately.
    * @default false
    */
-  think?: boolean | string;
+  think?: boolean | 'high' | 'medium' | 'low';
 }
 
 /**
@@ -502,7 +502,7 @@ export class ChatOllama
 
   baseUrl = "http://127.0.0.1:11434";
 
-  think?: boolean | string;
+  think?: boolean | 'high' | 'medium' | 'low';
 
   constructor(fields?: ChatOllamaInput) {
     super(fields ?? {});
