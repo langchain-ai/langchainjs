@@ -148,7 +148,12 @@ describe("MultiServerMCPClient", () => {
       await client.initializeConnections();
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
-        new URL("http://localhost:8000/mcp")
+        new URL("http://localhost:8000/mcp"),
+        {
+          requestInit: {
+            headers: {},
+          },
+        }
       );
       expect(Client).toHaveBeenCalled();
       expect(Client.prototype.connect).toHaveBeenCalled();
@@ -171,7 +176,7 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
-      await expect(() => client.initializeConnections()).rejects.toThrow(
+      await expect(client.initializeConnections()).rejects.toThrow(
         MCPClientError
       );
     });
@@ -179,6 +184,7 @@ describe("MultiServerMCPClient", () => {
     test("should throw on tool loading failures", async () => {
       (Client as Mock).mockImplementationOnce(() => ({
         connect: vi.fn().mockReturnValue(Promise.resolve()),
+        setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
         listTools: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Failed to list tools"))),
@@ -192,7 +198,7 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
-      await expect(() => client.initializeConnections()).rejects.toThrow(
+      await expect(client.initializeConnections()).rejects.toThrow(
         MCPClientError
       );
     });
@@ -217,18 +223,17 @@ describe("MultiServerMCPClient", () => {
 
         expect(StdioClientTransport).toHaveBeenCalledTimes(1);
 
+        // Grab the created transport instance before clearing call counts
+        const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+          ?.value as { onclose?: () => Promise<void> | void };
+
         // Reset the call counts to focus on reconnection
         (StdioClientTransport as Mock).mockClear();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyClient = client as any;
-        const transportInstances = anyClient._transportInstances;
-        const transportInstance = transportInstances["test-server"];
-
-        expect(transportInstance).toBeDefined();
-        const { onclose } = transportInstance;
+        expect(stdioInstance).toBeDefined();
+        const { onclose } = stdioInstance;
         expect(onclose).toBeDefined();
-        onclose();
+        await onclose?.();
 
         // Expect a new transport to be created after a delay (for reconnection)
         await new Promise((resolve) => {
@@ -256,17 +261,14 @@ describe("MultiServerMCPClient", () => {
 
         // Reset the call counts to focus on reconnection
         expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+        const sseInstance = (SSEClientTransport as Mock).mock.results[0]
+          ?.value as { onclose?: () => Promise<void> | void };
         (SSEClientTransport as Mock).mockClear();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyClient = client as any;
-        const transportInstances = anyClient._transportInstances;
-        const transportInstance = transportInstances["test-server"];
-
-        expect(transportInstance).toBeDefined();
-        const { onclose } = transportInstance;
+        expect(sseInstance).toBeDefined();
+        const { onclose } = sseInstance;
         expect(onclose).toBeDefined();
-        onclose();
+        await onclose?.();
 
         // Expect a new transport to be created after a delay (for reconnection)
         await new Promise((resolve) => {
@@ -278,13 +280,69 @@ describe("MultiServerMCPClient", () => {
       });
 
       test("should respect maxAttempts setting for reconnection", async () => {
-        // For this test, we'll modify the test to be simpler
-        expect(true).toBe(true);
+        const client = new MultiServerMCPClient({
+          "test-server": {
+            transport: "stdio",
+            command: "python",
+            args: ["./script.py"],
+            restart: {
+              enabled: true,
+              maxAttempts: 2,
+              delayMs: 10,
+            },
+          },
+        });
+
+        await client.initializeConnections();
+
+        // Get instance and then force subsequent reconnect attempts to fail
+        const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+          ?.value as { onclose?: () => Promise<void> | void };
+        expect(stdioInstance).toBeDefined();
+
+        // Clear counts so we only measure reconnection attempts
+        (StdioClientTransport as Mock).mockClear();
+        (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 1"))
+        );
+        (Client.prototype.connect as Mock).mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 2"))
+        );
+
+        await stdioInstance.onclose?.();
+
+        // Wait enough time for both attempts (2 * delayMs + buffer)
+        await new Promise((resolve) => setTimeout(resolve, 80));
+
+        // Should have attempted to create a new transport exactly maxAttempts times
+        expect(StdioClientTransport).toHaveBeenCalledTimes(2);
       });
 
       test("should not attempt reconnection when not enabled", async () => {
-        // For this test, we'll modify the test to be simpler
-        expect(true).toBe(true);
+        const client = new MultiServerMCPClient({
+          "test-server": {
+            transport: "sse",
+            url: "http://localhost:8000/sse",
+            // reconnect not provided -> disabled
+          },
+        });
+
+        await client.initializeConnections();
+
+        expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+
+        // Get transport instance and clear counts to observe reconnection attempts
+        const sseInstance = (SSEClientTransport as Mock).mock.results[0]
+          ?.value as { onclose?: () => Promise<void> | void };
+        (SSEClientTransport as Mock).mockClear();
+
+        // Trigger onclose if defined
+        await sseInstance.onclose?.();
+
+        // Wait some time to ensure no reconnection is attempted
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        expect(SSEClientTransport).not.toHaveBeenCalled();
       });
     });
   });
@@ -300,6 +358,7 @@ describe("MultiServerMCPClient", () => {
 
       (Client as Mock).mockImplementationOnce(() => ({
         connect: vi.fn().mockReturnValue(Promise.resolve()),
+        setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
         listTools: vi
           .fn()
           .mockReturnValue(Promise.resolve({ tools: mockTools })),
@@ -424,21 +483,16 @@ describe("MultiServerMCPClient", () => {
       await client.initializeConnections();
       await client.close();
 
-      // Verify that all transports were closed using the mock functions directly
-      expect(StdioClientTransport.prototype.close).toHaveBeenCalled();
-      expect(SSEClientTransport.prototype.close).toHaveBeenCalled();
-      expect(StreamableHTTPClientTransport.prototype.close).toHaveBeenCalled();
+      // ConnectionManager now closes the MCP client, which in real SDK closes transports.
+      // Assert that all clients were closed.
+      expect(Client.prototype.close).toHaveBeenCalledTimes(3);
     });
 
     test("should handle errors during cleanup gracefully", async () => {
-      const closeMock = vi
-        .fn()
-        .mockReturnValue(Promise.reject(new Error("Close failed")));
-      // Mock close to throw an error
-      (StdioClientTransport as Mock).mockImplementationOnce(() => ({
-        close: closeMock,
-        onclose: null,
-      }));
+      // Mock client.close to throw an error instead of transport.close
+      (Client.prototype.close as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Close failed"))
+      );
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -449,9 +503,9 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
-      await client.close();
+      await expect(client.close()).rejects.toThrow();
 
-      expect(closeMock).toHaveBeenCalledOnce();
+      expect(Client.prototype.close).toHaveBeenCalledOnce();
     });
   });
 
@@ -524,21 +578,16 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
-      await expect(() => client.initializeConnections()).rejects.toThrow(
+      await expect(client.initializeConnections()).rejects.toThrow(
         MCPClientError
       );
     });
 
     test("should handle errors during streamable HTTP cleanup gracefully", async () => {
-      const closeMock = vi
-        .fn()
-        .mockReturnValue(Promise.reject(new Error("Close failed")));
-
-      // Mock close to throw an error
-      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(() => ({
-        close: closeMock,
-        connect: vi.fn().mockReturnValue(Promise.resolve()),
-      }));
+      // Mock client.close to throw an error instead of transport.close
+      (Client.prototype.close as Mock).mockImplementationOnce(() =>
+        Promise.reject(new Error("Close failed"))
+      );
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -548,9 +597,9 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
-      await client.close();
+      await expect(client.close()).rejects.toThrow();
 
-      expect(closeMock).toHaveBeenCalledOnce();
+      expect(Client.prototype.close).toHaveBeenCalledOnce();
     });
   });
 });
