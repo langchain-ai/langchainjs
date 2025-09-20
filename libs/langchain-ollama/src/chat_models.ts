@@ -59,7 +59,6 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
    * Whether to enable thinking mode for this specific invocation.
    * Can be a boolean (true/false) or a string intensity level ("high", "medium", "low").
-   * If not provided, falls back to the instance-level think parameter.
    */
   think?: boolean | 'high' | 'medium' | 'low';
 }
@@ -764,7 +763,7 @@ export class ChatOllama
         usageMetadata.input_tokens + usageMetadata.output_tokens;
       lastMetadata = rest;
 
-      // always use actual content as token, thinking content is handled in additional_kwargs
+      // Use actual content as token, thinking content is handled in additional_kwargs
       const token = responseMessage.content ?? "";
 
       yield new ChatGenerationChunk({

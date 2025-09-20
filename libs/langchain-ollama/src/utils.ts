@@ -28,7 +28,7 @@ export function convertOllamaMessagesToLangChain(
   // Prepare additional_kwargs to include thinking content if it exists
   const additionalKwargs: Record<string, any> = {};
   if (messages.thinking) {
-    // Calculate incremental thinking content (Ollama sends cumulative, but concat expects incremental)
+    // Calculate incremental thinking content
     let incrementalThinking = messages.thinking;
     if (messages.thinking.startsWith(previousThinkingContent)) {
       incrementalThinking = messages.thinking.slice(previousThinkingContent.length);
