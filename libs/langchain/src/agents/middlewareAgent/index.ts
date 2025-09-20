@@ -138,25 +138,7 @@ import { ReactAgent } from "./ReactAgent.js";
  */
 // Overload 1: With responseFormat as single InteropZodType
 export function createAgent<
-  T extends Record<string, any> = Record<string, any>,
-  ContextSchema extends
-    | AnyAnnotationRoot
-    | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<
-    any,
-    any,
-    any
-  >[] = readonly AgentMiddleware<any, any, any>[]
->(
-  params: CreateAgentParams<T, ContextSchema, InteropZodType<T>> & {
-    responseFormat: InteropZodType<T>;
-    middleware?: TMiddleware;
-  }
-): ReactAgent<T, ContextSchema, TMiddleware>;
-
-// Overload 2: With responseFormat as array of InteropZodTypes (infers union type)
-export function createAgent<
-  T extends readonly InteropZodType<any>[],
+  StateSchema extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -167,18 +149,40 @@ export function createAgent<
   >[] = readonly AgentMiddleware<any, any, any>[]
 >(
   params: CreateAgentParams<
-    ExtractZodArrayTypes<T> extends Record<string, any>
-      ? ExtractZodArrayTypes<T>
+    StateSchema,
+    ContextSchema,
+    InteropZodType<StateSchema>
+  > & {
+    responseFormat: InteropZodType<StateSchema>;
+    middleware?: TMiddleware;
+  }
+): ReactAgent<StateSchema, ContextSchema, TMiddleware>;
+
+// Overload 2: With responseFormat as array of InteropZodTypes (infers union type)
+export function createAgent<
+  StateSchema extends readonly InteropZodType<any>[],
+  ContextSchema extends
+    | AnyAnnotationRoot
+    | InteropZodObject = AnyAnnotationRoot,
+  TMiddleware extends readonly AgentMiddleware<
+    any,
+    any,
+    any
+  >[] = readonly AgentMiddleware<any, any, any>[]
+>(
+  params: CreateAgentParams<
+    ExtractZodArrayTypes<StateSchema> extends Record<string, any>
+      ? ExtractZodArrayTypes<StateSchema>
       : Record<string, any>,
     ContextSchema,
-    T
+    StateSchema
   > & {
-    responseFormat: T;
+    responseFormat: StateSchema;
     middleware?: TMiddleware;
   }
 ): ReactAgent<
-  ExtractZodArrayTypes<T> extends Record<string, any>
-    ? ExtractZodArrayTypes<T>
+  ExtractZodArrayTypes<StateSchema> extends Record<string, any>
+    ? ExtractZodArrayTypes<StateSchema>
     : Record<string, any>,
   ContextSchema,
   TMiddleware
@@ -249,7 +253,7 @@ export function createAgent<
 
 // Overload 5: With responseFormat as TypedToolStrategy (for union types from toolStrategy)
 export function createAgent<
-  T extends Record<string, any> = Record<string, any>,
+  StateSchema extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -259,15 +263,19 @@ export function createAgent<
     any
   >[] = readonly AgentMiddleware<any, any, any>[]
 >(
-  params: CreateAgentParams<T, ContextSchema, TypedToolStrategy<T>> & {
-    responseFormat: TypedToolStrategy<T>;
+  params: CreateAgentParams<
+    StateSchema,
+    ContextSchema,
+    TypedToolStrategy<StateSchema>
+  > & {
+    responseFormat: TypedToolStrategy<StateSchema>;
     middleware?: TMiddleware;
   }
-): ReactAgent<T, ContextSchema, TMiddleware>;
+): ReactAgent<StateSchema, ContextSchema, TMiddleware>;
 
 // Overload 6: With responseFormat as single ToolStrategy instance
 export function createAgent<
-  T extends Record<string, any> = Record<string, any>,
+  StateSchema extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -277,15 +285,19 @@ export function createAgent<
     any
   >[] = readonly AgentMiddleware<any, any, any>[]
 >(
-  params: CreateAgentParams<T, ContextSchema, ToolStrategy<T>> & {
-    responseFormat: ToolStrategy<T>;
+  params: CreateAgentParams<
+    StateSchema,
+    ContextSchema,
+    ToolStrategy<StateSchema>
+  > & {
+    responseFormat: ToolStrategy<StateSchema>;
     middleware?: TMiddleware;
   }
-): ReactAgent<T, ContextSchema, TMiddleware>;
+): ReactAgent<StateSchema, ContextSchema, TMiddleware>;
 
 // Overload 7: With responseFormat as ProviderStrategy
 export function createAgent<
-  T extends Record<string, any> = Record<string, any>,
+  StateSchema extends Record<string, any> = Record<string, any>,
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
@@ -295,11 +307,15 @@ export function createAgent<
     any
   >[] = readonly AgentMiddleware<any, any, any>[]
 >(
-  params: CreateAgentParams<T, ContextSchema, ProviderStrategy<T>> & {
-    responseFormat: ProviderStrategy<T>;
+  params: CreateAgentParams<
+    StateSchema,
+    ContextSchema,
+    ProviderStrategy<StateSchema>
+  > & {
+    responseFormat: ProviderStrategy<StateSchema>;
     middleware?: TMiddleware;
   }
-): ReactAgent<T, ContextSchema, TMiddleware>;
+): ReactAgent<StateSchema, ContextSchema, TMiddleware>;
 
 // Overload 8: Without responseFormat property at all - with proper middleware state typing
 export function createAgent<
@@ -368,7 +384,50 @@ export function createAgent<
 >(
   params: CreateAgentParams<StructuredResponseFormat, ContextSchema, any>
 ): ReactAgent<StructuredResponseFormat, ContextSchema, TMiddleware> {
-  return new ReactAgent(params);
+  const agent = new ReactAgent<
+    StructuredResponseFormat,
+    ContextSchema,
+    TMiddleware
+  >(params);
+
+  /**
+   * Derive public method names from ReactAgent prototype so we don't hardcode them
+   */
+  const agentMethodNames = new Set(
+    Object.getOwnPropertyNames(ReactAgent.prototype).filter(
+      (name) =>
+        name !== "constructor" &&
+        name !== "graph" &&
+        typeof ReactAgent.prototype[name as keyof ReactAgent<any, any, any>] ===
+          "function"
+    )
+  );
+
+  /**
+   * Proxy to access `createAgent` functions and graph properties
+   * to ensure LangGraph can properly read the graph of the agent.
+   */
+  return new Proxy(agent, {
+    get(target, prop) {
+      /**
+       * access graph properties if not a `createAgent` function
+       */
+      if (
+        !agentMethodNames.has(prop as string) &&
+        target.graph[prop as keyof typeof target.graph]
+      ) {
+        return target.graph[prop as keyof typeof target.graph];
+      }
+
+      return target[
+        prop as keyof ReactAgent<
+          StructuredResponseFormat,
+          ContextSchema,
+          TMiddleware
+        >
+      ];
+    },
+  });
 }
 
 export { createMiddleware } from "./middleware.js";
