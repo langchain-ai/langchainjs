@@ -115,14 +115,29 @@ function isResolvedStreamableHTTPConnection(
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
  */
 export class MultiServerMCPClient {
+  /**
+   * Cached map of server names to tools
+   */
   #serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
 
-  #connections?: Record<string, ResolvedConnection>;
+  /**
+   * Configured MCP servers
+   */
+  #mcpServers?: Record<string, ResolvedConnection>;
 
+  /**
+   * Cached map of server names to load tools options
+   */
   #loadToolsOptions: Record<string, LoadMcpToolsOptions> = {};
 
+  /**
+   * Connection manager
+   */
   #clientConnections: ConnectionManager;
 
+  /**
+   * Resolved client config
+   */
   #config: ResolvedClientConfig;
 
   /**
@@ -198,7 +213,7 @@ export class MultiServerMCPClient {
     }
 
     this.#config = parsedServerConfig;
-    this.#connections = parsedServerConfig.mcpServers;
+    this.#mcpServers = parsedServerConfig.mcpServers;
     this.#clientConnections = new ConnectionManager({
       onLog: parsedServerConfig.onLog,
     });
@@ -215,11 +230,11 @@ export class MultiServerMCPClient {
   async initializeConnections(
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
-    if (!this.#connections || Object.keys(this.#connections).length === 0) {
+    if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
-    for (const [serverName, connection] of Object.entries(this.#connections)) {
+    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
       if (isResolvedStdioConnection(connection)) {
         debugLog(
           `INFO: Initializing stdio connection to server "${serverName}"...`

@@ -11,12 +11,14 @@ import {
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { ContentBlock } from "@langchain/core/messages";
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import type { UnionToTuple } from "./util.js";
 import { interceptorSchema, type Interceptor } from "./interceptor.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export type { ContentBlock };
+export type { RunnableConfig };
 
 function isZodObject(
   schema: unknown

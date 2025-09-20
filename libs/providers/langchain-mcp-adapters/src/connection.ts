@@ -178,10 +178,6 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    console.log("FORK CLIENT", type, key.serverName, {
-      ...connection.transportOptions,
-      headers,
-    });
     return this.createClient(type as "http", key.serverName, {
       ...connection.transportOptions,
       headers,
@@ -386,8 +382,6 @@ export class ConnectionManager {
       }
     }
 
-    console.log("CREATE STREAMABLE HTTP TRANSPORT", options);
-
     // Only pass options if there are any, otherwise use default constructor
     return Object.keys(options).length > 0
       ? new StreamableHTTPClientTransport(new URL(url), options)
@@ -443,7 +437,6 @@ export class ConnectionManager {
           // Always include Accept header for SSE
           requestHeaders.set("Accept", "text/event-stream");
 
-          console.log("requestHeaders", requestHeaders);
           return fetch(url, {
             ...init,
             headers: requestHeaders,
