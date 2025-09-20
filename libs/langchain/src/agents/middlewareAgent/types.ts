@@ -20,11 +20,7 @@ import type {
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 
-import type {
-  PreHookAnnotation,
-  AnyAnnotationRoot,
-  ToAnnotationRoot,
-} from "../annotation.js";
+import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
 
 import type {
   ResponseFormat,
@@ -36,7 +32,7 @@ import type {
 } from "../responses.js";
 import type { Interrupt } from "../interrupt.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
-import type { ClientTool, ServerTool, AgentRuntime } from "../types.js";
+import type { ClientTool, ServerTool } from "../types.js";
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -423,13 +419,6 @@ export interface LLMCall {
   response?: BaseMessage;
 }
 
-export type DynamicLLMFunction<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> = (
-  state: AgentBuiltInState & PreHookAnnotation["State"],
-  runtime: AgentRuntime<ToAnnotationRoot<ContextSchema>["State"]>
-) => Promise<LanguageModelLike> | LanguageModelLike;
-
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   ContextSchema extends
@@ -446,9 +435,6 @@ export type CreateAgentParams<
     | ProviderStrategy<StructuredResponseType>
     | ResponseFormatUndefined
 > = {
-  /** The chat model that can utilize OpenAI-style tool calling. */
-  llm?: LanguageModelLike | DynamicLLMFunction<ContextSchema>;
-
   /**
    * Initializes a ChatModel based on the provided model name and provider.
    * It supports various model providers and allows for runtime configuration of model parameters.
@@ -462,7 +448,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  model?: string;
+  model?: string | LanguageModelLike;
 
   /** A list of tools or a ToolNode. */
   tools?: ToolNode | (ServerTool | ClientTool)[];

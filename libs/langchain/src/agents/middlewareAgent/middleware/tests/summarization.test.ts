@@ -5,9 +5,6 @@ import {
   AIMessage,
   SystemMessage,
   ToolMessage,
-  isSystemMessage,
-  isAIMessage,
-  isToolMessage,
 } from "@langchain/core/messages";
 import {
   summarizationMiddleware,
@@ -65,7 +62,7 @@ describe("summarizationMiddleware", () => {
 
   it("should trigger summarization when token count exceeds threshold", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
@@ -75,7 +72,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -113,7 +110,7 @@ describe("summarizationMiddleware", () => {
 
   it("should not trigger summarization when below token threshold", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
@@ -122,7 +119,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -153,7 +150,7 @@ describe("summarizationMiddleware", () => {
       ],
     });
 
-    const mainModel = new FakeToolCallingChatModel({
+    const model = new FakeToolCallingChatModel({
       responses: [
         new AIMessage("Based on the weather, I recommend taking an umbrella."),
       ],
@@ -166,7 +163,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -189,10 +186,11 @@ describe("summarizationMiddleware", () => {
 
     // Find the tool-related messages in the result
     const hasToolCall = result.messages.some(
-      (msg) => isAIMessage(msg) && msg.tool_calls && msg.tool_calls.length > 0
+      (msg) =>
+        AIMessage.isInstance(msg) && msg.tool_calls && msg.tool_calls.length > 0
     );
     const hasToolMessage = result.messages.some(
-      (msg) => isToolMessage(msg) && msg.tool_call_id === "call_123"
+      (msg) => ToolMessage.isInstance(msg) && msg.tool_call_id === "call_123"
     );
 
     // Both should be present or both should be absent (not split)
@@ -201,7 +199,7 @@ describe("summarizationMiddleware", () => {
 
   it("should handle existing system message with previous summary", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
@@ -210,7 +208,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -243,7 +241,7 @@ describe("summarizationMiddleware", () => {
 
   it("should use custom token counter when provided", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     // Custom token counter that counts words instead
     const customTokenCounter = vi.fn((messages: any[]) => {
@@ -264,7 +262,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -290,7 +288,7 @@ describe("summarizationMiddleware", () => {
 
   it("should handle empty conversation gracefully", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     const middleware = summarizationMiddleware({
       model: summarizationModel as any,
@@ -299,7 +297,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -312,7 +310,7 @@ describe("summarizationMiddleware", () => {
 
   it("should respect messagesToKeep setting", async () => {
     const summarizationModel = createMockSummarizationModel();
-    const mainModel = createMockMainModel();
+    const model = createMockMainModel();
 
     const messagesToKeep = 2;
     const middleware = summarizationMiddleware({
@@ -322,7 +320,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const agent = createAgent({
-      llm: mainModel,
+      model,
       middleware: [middleware] as const,
     });
 
@@ -338,7 +336,7 @@ describe("summarizationMiddleware", () => {
     // Should have system message + kept messages + new response
     // The exact count depends on where the cutoff happens
     const nonSystemMessages = result.messages.filter(
-      (m) => !isSystemMessage(m)
+      (m) => !SystemMessage.isInstance(m)
     );
     expect(nonSystemMessages.length).toBeGreaterThanOrEqual(messagesToKeep);
     expect(nonSystemMessages.length).toBeLessThanOrEqual(messagesToKeep + 3); // Some buffer for safety

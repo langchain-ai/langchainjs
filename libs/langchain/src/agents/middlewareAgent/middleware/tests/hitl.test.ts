@@ -76,7 +76,7 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     // Create agent with mocked LLM
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         // First call: calculator tool (auto-approved)
         [
@@ -99,7 +99,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       prompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
@@ -142,7 +142,7 @@ describe("humanInTheLoopMiddleware", () => {
     expect(mathMessages[2].content).toBe("42 * 17 = 714");
 
     // Test 2: Write file tool (requires approval)
-    llm.index = 1;
+    model.index = 1;
     await agent.invoke(
       {
         messages: [new HumanMessage("Write 'Hello World' to greeting.txt")],
@@ -185,7 +185,7 @@ describe("humanInTheLoopMiddleware", () => {
     `);
 
     // Resume with approval
-    llm.index = 1;
+    model.index = 1;
     const resumedResult = await agent.invoke(
       new Command({
         resume: [{ type: "accept" }],
@@ -217,7 +217,7 @@ describe("humanInTheLoopMiddleware", () => {
       },
     });
 
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         [
           {
@@ -231,7 +231,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       tools: [writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -287,7 +287,7 @@ describe("humanInTheLoopMiddleware", () => {
       },
     });
 
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         [
           {
@@ -301,7 +301,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       tools: [writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -356,7 +356,7 @@ describe("humanInTheLoopMiddleware", () => {
       },
     });
 
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         [
           {
@@ -370,7 +370,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       tools: [writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -423,7 +423,7 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     // Create agent with mocked LLM
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         // First call: calculator tool (auto-approved)
         [
@@ -443,7 +443,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       prompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
@@ -526,7 +526,7 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     // Create agent with mocked LLM
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         // First call: calculator tool (auto-approved)
         [
@@ -546,7 +546,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       prompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
@@ -592,7 +592,7 @@ describe("humanInTheLoopMiddleware", () => {
     });
 
     // Create agent with mocked LLM
-    const llm = new FakeToolCallingModel({
+    const model = new FakeToolCallingModel({
       toolCalls: [
         // First call: calculator tool (auto-approved)
         [
@@ -612,7 +612,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     const checkpointer = new MemorySaver();
     const agent = createAgent({
-      llm,
+      model,
       checkpointer,
       prompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
