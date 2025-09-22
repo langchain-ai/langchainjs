@@ -1241,6 +1241,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       return new AIMessageChunk({
         ...fields,
         content: newContent,
+        response_metadata: {
+          ...fields.response_metadata,
+          model_provider: "google-vertexai",
+        },
       });
     }
     return new AIMessageChunk(fields);
@@ -1427,6 +1431,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const message = new AIMessageChunk({
       content: combinedContent,
       additional_kwargs: kwargs,
+      response_metadata: {
+        model_provider: "google-vertexai",
+      },
       usage_metadata,
       tool_calls: combinedToolCalls.tool_calls,
       invalid_tool_calls: combinedToolCalls.invalid_tool_calls,
@@ -1485,6 +1492,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const logprobs = candidateToLogprobs(candidate);
     if (logprobs) {
       ret[0].message.response_metadata = {
+        model_provider: "google-vertexai",
         ...ret[0].message.response_metadata,
         logprobs,
         avgLogprobs,
@@ -1513,6 +1521,9 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       tool_call_chunks: [],
       tool_calls: [],
       invalid_tool_calls: [],
+      response_metadata: {
+        model_provider: "google-vertexai",
+      },
     };
     fields.additional_kwargs = {};
 

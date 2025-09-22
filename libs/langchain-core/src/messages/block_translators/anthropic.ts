@@ -256,7 +256,7 @@ export function convertToV1FromAnthropicInput(
       if (stdBlock) {
         yield stdBlock;
       } else {
-        yield block as ContentBlock.Standard;
+        yield { type: "non_standard", value: block };
       }
     }
   }
@@ -341,12 +341,14 @@ export function convertToV1FromAnthropicMessage(
             text,
             annotations: _citations,
           };
+          continue;
         } else {
           yield {
             ...rest,
             type: "text",
             text,
           };
+          continue;
         }
       }
       // ThinkingBlock
@@ -361,9 +363,11 @@ export function convertToV1FromAnthropicMessage(
           reasoning: thinking,
           signature,
         };
+        continue;
       }
       // RedactedThinkingBlock
       else if (_isContentBlock(block, "redacted_thinking")) {
+        yield { type: "non_standard", value: block };
         continue;
       }
       // ToolUseBlock
@@ -378,6 +382,7 @@ export function convertToV1FromAnthropicMessage(
           name: block.name,
           args: block.input,
         };
+        continue;
       }
       // message chunks can have input_json_delta contents
       else if (_isContentBlock(block, "input_json_delta")) {
@@ -390,8 +395,8 @@ export function convertToV1FromAnthropicMessage(
             args: tool_call_chunk.args,
             index: tool_call_chunk.index,
           };
+          continue;
         }
-        // TODO: implement
       }
       // ServerToolUseBlock
       else if (
@@ -417,10 +422,11 @@ export function convertToV1FromAnthropicMessage(
             return "";
           });
           yield {
-            id,
-            type: "web_search_call",
-            query,
+            type: "server_tool_call",
+            name: "web_search",
+            args: { query },
           };
+          continue;
         } else if (block.name === "code_execution") {
           const code = iife(() => {
             if (typeof block.input === "string") {
@@ -437,9 +443,12 @@ export function convertToV1FromAnthropicMessage(
           });
           yield {
             id,
-            type: "code_interpreter_call",
+            type: "server_tool_call",
+            name: "code_execution",
+            args: { code },
             code,
           };
+          continue;
         }
       }
       // WebSearchToolResultBlock
@@ -456,10 +465,14 @@ export function convertToV1FromAnthropicMessage(
           return acc;
         }, []);
         yield {
-          id: tool_use_id,
-          type: "web_search_result",
-          urls,
+          type: "server_tool_call_result",
+          toolCallId: tool_use_id,
+          status: "success",
+          output: {
+            urls,
+          },
         };
+        continue;
       }
       // CodeExecutionToolResultBlock
       else if (
@@ -470,69 +483,64 @@ export function convertToV1FromAnthropicMessage(
         // since `code_execution_tool_result` is an anthropic only block
         const { content, tool_use_id } =
           block as AnthropicCodeExecutionToolResult;
-        const output = iife(() => {
-          if (content.type === "code_execution_tool_result_error") {
-            return [
-              {
-                type: "code_interpreter_output" as const,
-                returnCode: 1,
-                stderr: content.error_code,
-              },
-            ];
-          }
-          if (content.type === "code_execution_result") {
-            const fileIds = Array.isArray(content.content)
-              ? content.content
-                  .filter((content) => content.type === "code_execution_output")
-                  .map((content) => content.file_id)
-              : [];
-            return [
-              {
-                type: "code_interpreter_output" as const,
-                returnCode: content.return_code ?? 0,
-                stderr: content.stderr,
-                stdout: content.stdout,
-                fileIds,
-              },
-            ];
-          }
-          return [];
-        });
         yield {
-          id: tool_use_id,
-          type: "code_interpreter_result",
-          output,
+          type: "server_tool_call_result",
+          toolCallId: tool_use_id,
+          status: "success",
+          output: content,
         };
+        continue;
       }
       // MCPToolUseBlock
-      else if (block.type === "mcp_tool_use") {
+      else if (_isContentBlock(block, "mcp_tool_use")) {
+        yield {
+          type: "server_tool_call",
+          name: "mcp_tool_use",
+          args: block.input,
+        };
         continue;
       }
       // MCPToolResultBlock
-      else if (block.type === "mcp_tool_result") {
+      else if (
+        _isContentBlock(block, "mcp_tool_result") &&
+        _isString(block.tool_use_id) &&
+        _isObject(block.content)
+      ) {
+        yield {
+          type: "server_tool_call_result",
+          toolCallId: block.tool_use_id,
+          status: "success",
+          output: block.content,
+        };
         continue;
       }
       // ContainerUploadBlock
-      else if (block.type === "container_upload") {
+      else if (_isContentBlock(block, "container_upload")) {
+        yield {
+          type: "server_tool_call",
+          name: "container_upload",
+          args: block.input,
+        };
         continue;
       }
       // SearchResultBlockParam
-      else if (block.type === "search_result") {
+      else if (_isContentBlock(block, "search_result")) {
+        yield { type: "non_standard", value: block };
         continue;
       }
       // ToolResultBlockParam
-      else if (block.type === "tool_result") {
-        // TODO: Implement
+      else if (_isContentBlock(block, "tool_result")) {
+        yield { type: "non_standard", value: block };
         continue;
       } else {
         // For all other blocks, we try to convert them to a standard block
         const stdBlock = convertToV1FromAnthropicContentBlock(block);
         if (stdBlock) {
           yield stdBlock;
-        } else {
-          // TODO: non standard?
+          continue;
         }
       }
+      yield { type: "non_standard", value: block };
     }
   }
   return Array.from(iterateContent());

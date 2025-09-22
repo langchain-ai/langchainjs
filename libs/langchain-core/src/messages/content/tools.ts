@@ -9,10 +9,6 @@ export const KNOWN_BLOCK_TYPES = [
   "server_tool_call",
   "server_tool_call_chunk",
   "server_tool_call_result",
-  "web_search_call",
-  "web_search_result",
-  "code_interpreter",
-  "code_interpreter_result",
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -148,104 +144,11 @@ export declare namespace Tools {
     output: TOutput;
   }
 
-  /**
-   * Content block for a built-in web search tool call.
-   * @deprecated Use ServerToolCall instead
-   */
-  export interface WebSearchCall extends BaseContentBlock {
-    /**
-     * Type of the content block
-     */
-    readonly type: "web_search_call";
-    /**
-     * The search query used in the web search tool call
-     */
-    query?: string;
-  }
-
-  /**
-   * Content block for the result of a built-in search tool call
-   * @deprecated Use ServerToolCallResult instead
-   */
-  export interface WebSearchResult extends BaseContentBlock {
-    /**
-     * Type of the content block
-     */
-    readonly type: "web_search_result";
-    /**
-     * List of URLs returned by the web search tool call
-     */
-    urls?: string[];
-  }
-
-  /**
-   * Content block for a built-in code interpreter tool call.
-   * @deprecated Use ServerToolCall instead
-   */
-  export interface CodeInterpreterCall extends BaseContentBlock {
-    /**
-     * Type of the content block
-     */
-    readonly type: "code_interpreter_call";
-    /**
-     * The language of the code executed by the code interpreter tool call
-     */
-    language?: string;
-    /**
-     * The code to be executed by the code interpreter
-     */
-    code?: string;
-  }
-
-  /**
-   * Content block for the output of a singular code interpreter tool call
-   * @deprecated Use ServerToolCallResult instead
-   */
-  export interface CodeInterpreterOutput {
-    readonly type: "code_interpreter_output";
-    /**
-     * The return code of the code interpreter tool call
-     * Example: 0 for success, non-zero for failure
-     */
-    returnCode?: number;
-    /**
-     * Standard error output of the executed code
-     */
-    stderr?: string;
-    /**
-     * Standard output of the executed code
-     */
-    stdout?: string;
-    /**
-     * File IDs of the files created by the code interpreter tool call
-     */
-    fileIds?: string[];
-  }
-
-  /**
-   * Content block for the result of a code interpreter tool call
-   * @deprecated Use ServerToolCallResult instead
-   */
-  export interface CodeInterpreterResult extends BaseContentBlock {
-    /**
-     * Type of the content block
-     */
-    readonly type: "code_interpreter_result";
-    /**
-     * The result of the code interpreter tool call
-     */
-    output: CodeInterpreterOutput[];
-  }
-
   export type Standard =
     | ToolCall
     | ToolCallChunk
     | InvalidToolCall
     | ServerToolCall
     | ServerToolCallChunk
-    | ServerToolCallResult
-    | WebSearchCall
-    | WebSearchResult
-    | CodeInterpreterCall
-    | CodeInterpreterResult;
+    | ServerToolCallResult;
 }
