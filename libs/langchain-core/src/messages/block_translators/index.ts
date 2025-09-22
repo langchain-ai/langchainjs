@@ -1,11 +1,11 @@
 import type { AIMessage, AIMessageChunk } from "../ai.js";
 import type { ContentBlock } from "../content/index.js";
 
-import { anthropicTranslator } from "./anthropic.js";
+import { ChatAnthropicTranslator } from "./anthropic.js";
 import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
 import { ChatGoogleGenAITranslator } from "./google_genai.js";
 import { ChatVertexTranslator } from "./google_vertexai.js";
-import { openaiTranslator } from "./openai.js";
+import { ChatOpenAITranslator } from "./openai.js";
 
 export interface StandardContentBlockTranslator {
   translateContent(message: AIMessage): Array<ContentBlock.Standard>;
@@ -19,11 +19,11 @@ declare global {
 }
 
 globalThis.lc_block_translators_registry ??= new Map([
-  ["anthropic", anthropicTranslator],
+  ["anthropic", ChatAnthropicTranslator],
   ["bedrock-converse", ChatBedrockConverseTranslator],
   ["google-genai", ChatGoogleGenAITranslator],
   ["google-vertexai", ChatVertexTranslator],
-  ["openai", openaiTranslator],
+  ["openai", ChatOpenAITranslator],
 ]);
 
 export function registerTranslator(

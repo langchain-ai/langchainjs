@@ -546,7 +546,7 @@ export function convertToV1FromAnthropicMessage(
   return Array.from(iterateContent());
 }
 
-export const anthropicTranslator: StandardContentBlockTranslator = {
+export const ChatAnthropicTranslator: StandardContentBlockTranslator = {
   translateContent: convertToV1FromAnthropicMessage,
   translateContentChunk: convertToV1FromAnthropicMessage,
 };
