@@ -6,8 +6,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
+import type { Command } from "@langchain/langgraph";
+import type { ToolMessage, MessageStructure } from "@langchain/core/messages";
 
-export { RunnableConfig };
+export type { RunnableConfig, ToolMessage, MessageStructure };
 
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
@@ -16,14 +18,30 @@ const toolCallRequestSchema = z.object({
 });
 export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
 
-const toolResultSchema = z.tuple([
-  z.custom<string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]>(),
-  z.array(
-    z.union([
-      EmbeddedResourceSchema,
-      z.custom<ContentBlock.Data.DataContentBlock>(),
-    ])
-  ),
+/**
+ * Tool result schema that users can return within the `afterToolCall` callback
+ */
+const toolResultSchema = z.union([
+  /**
+   * Command from LangGraph
+   */
+  z.custom<Command>(),
+  /**
+   * 2-tuple of content, artifact
+   */
+  z.tuple([
+    z.custom<string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]>(),
+    z.array(
+      z.union([
+        EmbeddedResourceSchema,
+        z.custom<ContentBlock.Multimodal.Standard>(),
+      ])
+    ),
+  ]),
+  /**
+   * ToolMessage return
+   */
+  z.custom<ToolMessage>(),
 ]);
 export type ToolResult = z.output<typeof toolResultSchema>;
 
