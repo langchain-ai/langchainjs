@@ -221,7 +221,7 @@ export interface ChatMistralAIInput
   numCompletions?: number;
 }
 
-function convertMessagesToMistralMessages(
+export function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
 ): Array<MistralAIMessage> {
   const getRole = (role: MessageType) => {
@@ -343,10 +343,12 @@ function convertMessagesToMistralMessages(
           role: getRole(message.getType()),
           content,
           name: message.name,
-          toolCallId: _convertToolCallIdToMistralCompatible(message.tool_call_id),
+          toolCallId: _convertToolCallIdToMistralCompatible(
+            message.tool_call_id
+          ),
         } as MistralAIMessage,
       ];
-    // Mistral "assistant" role can only support either content or tool calls but not both
+      // Mistral "assistant" role can only support either content or tool calls but not both
     } else if (isAIMessage(message)) {
       if (toolCalls === undefined) {
         return [
