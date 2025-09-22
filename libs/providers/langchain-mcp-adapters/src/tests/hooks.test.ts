@@ -227,6 +227,23 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         await client.close();
       }
     });
+
+    test("afterToolCall supports returning a string", async () => {
+      const { client } = await setup({
+        afterToolCall: () => ({
+          result: "foobar",
+        }),
+      });
+
+      try {
+        const tools = await client.getTools();
+        const t = tools.find((tool) => tool.name.includes("test_tool"))!;
+        const res = await t.invoke({ input: "orig" });
+        expect(res).toEqual("foobar");
+      } finally {
+        await client.close();
+      }
+    });
   });
 
   test("onProgress and onLog hooks", async () => {
