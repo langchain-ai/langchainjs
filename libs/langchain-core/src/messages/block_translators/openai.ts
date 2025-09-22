@@ -293,17 +293,30 @@ export function convertToV1FromResponses(
     ) {
       for (const toolOutput of message.additional_kwargs.tool_outputs) {
         if (_isContentBlock(toolOutput, "web_search_call")) {
+          yield {
+            type: "server_tool_call",
+            name: "web_search",
+            args: { query: toolOutput.query },
+          };
           continue;
         } else if (_isContentBlock(toolOutput, "file_search_call")) {
+          yield {
+            type: "server_tool_call",
+            name: "file_search",
+            args: { query: toolOutput.query },
+          };
           continue;
         } else if (_isContentBlock(toolOutput, "computer_call")) {
+          // no-op
           continue;
         } else if (_isContentBlock(toolOutput, "code_interpreter_call")) {
           if (_isString(toolOutput.code)) {
             yield {
-              type: "code_interpreter_call",
-              code: toolOutput.code,
+              type: "server_tool_call",
+              name: "code_interpreter",
+              args: { code: toolOutput.code },
             };
+            continue;
           }
           if (_isArray(toolOutput.outputs)) {
             const returnCode = iife(() => {
@@ -317,31 +330,47 @@ export function convertToV1FromResponses(
             for (const output of toolOutput.outputs) {
               if (_isContentBlock(output, "logs")) {
                 yield {
-                  type: "code_interpreter_result",
-                  output: [
-                    {
-                      type: "code_interpreter_output",
-                      returnCode,
-                      stderr: [0, undefined].includes(returnCode)
-                        ? undefined
-                        : String(output.logs),
-                      stdout: [0, undefined].includes(returnCode)
-                        ? String(output.logs)
-                        : undefined,
-                    },
-                  ],
+                  type: "server_tool_call_result",
+                  toolCallId: toolOutput.id ?? "",
+                  status: "success",
+                  output: {
+                    type: "code_interpreter_output",
+                    returnCode: returnCode ?? 0,
+                    stderr: [0, undefined].includes(returnCode)
+                      ? undefined
+                      : String(output.logs),
+                    stdout: [0, undefined].includes(returnCode)
+                      ? String(output.logs)
+                      : undefined,
+                  },
                 };
+                continue;
               }
             }
           }
         } else if (_isContentBlock(toolOutput, "mcp_call")) {
+          yield {
+            type: "server_tool_call",
+            name: "mcp_call",
+            args: toolOutput.input,
+          };
           continue;
         } else if (_isContentBlock(toolOutput, "mcp_list_tools")) {
+          yield {
+            type: "server_tool_call",
+            name: "mcp_list_tools",
+            args: toolOutput.input,
+          };
           continue;
         } else if (_isContentBlock(toolOutput, "mcp_approval_request")) {
+          yield { type: "non_standard", value: toolOutput };
           continue;
         } else if (_isContentBlock(toolOutput, "image_generation_call")) {
+          yield { type: "non_standard", value: toolOutput };
           continue;
+        }
+        if (_isObject(toolOutput)) {
+          yield { type: "non_standard", value: toolOutput };
         }
       }
     }

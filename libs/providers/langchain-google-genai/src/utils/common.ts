@@ -694,6 +694,9 @@ export function convertResponseContentToChatGenerationChunk(
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.
       additional_kwargs: {},
+      response_metadata: {
+        model_provider: "google-genai",
+      },
       usage_metadata: extra.usageMetadata,
     }),
     generationInfo,
