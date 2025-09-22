@@ -14,8 +14,8 @@ const client = new MultiServerMCPClient({
       args: ["-y", "@modelcontextprotocol/server-everything"],
     },
   },
-  onLog: (log) => {
-    console.log(`[LOG] ${log.params.data}`);
+  onMessage: (log) => {
+    console.log(`[LOG] ${log.data}`);
   },
   onProgress: (p) => {
     console.log(`[PROGRESS] ${(p.progress / (p.total ?? 1)) * 100}%`);

@@ -11,13 +11,22 @@ import type {
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { LoggingMessageNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod/v3";
+import {
+  LoggingMessageNotificationSchema,
+  CancelledNotificationSchema,
+  InitializedNotificationSchema,
+  PromptListChangedNotificationSchema,
+  ResourceListChangedNotificationSchema,
+  ResourceUpdatedNotificationSchema,
+  RootsListChangedNotificationSchema,
+  ToolListChangedNotificationSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedStdioConnection,
+  ResolvedClientConfig,
 } from "./types.js";
 
 const debugLog = getDebugLog("connection");
@@ -53,19 +62,17 @@ export interface Connection {
 
 const transportTypes = ["http", "sse", "stdio"] as const;
 
-/**
- * Connection manager configuration
- */
-type LogMessage =
-  | z.input<typeof LoggingMessageNotificationSchema>
-  | z.output<typeof LoggingMessageNotificationSchema>;
-
-interface ConnectionManagerConfig {
-  /**
-   * log callback for all connections
-   */
-  onLog?: (message: LogMessage) => void | Promise<void>;
-}
+type ConnectionManagerConfig = Pick<
+  ResolvedClientConfig,
+  | "onCancelled"
+  | "onInitialized"
+  | "onMessage"
+  | "onPromptsListChanged"
+  | "onResourcesListChanged"
+  | "onResourcesUpdated"
+  | "onRootsListChanged"
+  | "onToolsListChanged"
+>;
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -73,10 +80,10 @@ interface ConnectionManagerConfig {
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
-  #onLog?: (message: LogMessage) => void | Promise<void>;
+  #hooks: ConnectionManagerConfig;
 
-  constructor({ onLog }: ConnectionManagerConfig = {}) {
-    this.#onLog = onLog;
+  constructor(hooks: ConnectionManagerConfig = {}) {
+    this.#hooks = hooks;
   }
 
   async createClient(
@@ -116,14 +123,94 @@ export class ConnectionManager {
       version: "0.1.0",
     });
     await mcpClient.connect(transport);
-    mcpClient.setNotificationHandler(
-      LoggingMessageNotificationSchema,
-      (message) =>
-        Promise.all([this.#onLog?.(message), options.onLog?.(message)]).then(
-          // we ignore the result of any log callbacks
-          () => undefined
-        )
-    );
+
+    if (this.#hooks.onMessage) {
+      mcpClient.setNotificationHandler(
+        LoggingMessageNotificationSchema,
+        (notification) =>
+          this.#hooks.onMessage?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onInitialized) {
+      mcpClient.setNotificationHandler(
+        InitializedNotificationSchema,
+        (notification) =>
+          this.#hooks.onInitialized?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onCancelled) {
+      mcpClient.setNotificationHandler(
+        CancelledNotificationSchema,
+        (notification) =>
+          this.#hooks.onCancelled?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onPromptsListChanged) {
+      mcpClient.setNotificationHandler(
+        PromptListChangedNotificationSchema,
+        (notification) =>
+          this.#hooks.onPromptsListChanged?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onResourcesListChanged) {
+      mcpClient.setNotificationHandler(
+        ResourceListChangedNotificationSchema,
+        (notification) =>
+          this.#hooks.onResourcesListChanged?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onResourcesUpdated) {
+      mcpClient.setNotificationHandler(
+        ResourceUpdatedNotificationSchema,
+        (notification) =>
+          this.#hooks.onResourcesUpdated?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onRootsListChanged) {
+      mcpClient.setNotificationHandler(
+        RootsListChangedNotificationSchema,
+        (notification) =>
+          this.#hooks.onRootsListChanged?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
+
+    if (this.#hooks.onToolsListChanged) {
+      mcpClient.setNotificationHandler(
+        ToolListChangedNotificationSchema,
+        (notification) =>
+          this.#hooks.onToolsListChanged?.(notification.params, {
+            server: serverName,
+            options,
+          })
+      );
+    }
 
     const key: ClientKeyObject =
       type === "stdio"

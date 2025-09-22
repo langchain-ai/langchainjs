@@ -1,0 +1,113 @@
+import { test, expectTypeOf } from "vitest";
+import { ToolMessage } from "@langchain/core/messages";
+import { MultiServerMCPClient } from "../client.js";
+import type {
+  ResolvedStreamableHTTPConnection,
+  ResolvedStdioConnection,
+} from "../types.js";
+
+test("check tool hooks types", () => {
+  new MultiServerMCPClient({
+    mcpServers: {
+      filesystem: {
+        transport: "stdio",
+        command: "npx",
+        args: ["-y", "@modelcontextprotocol/server-filesystem", "./"],
+      },
+    },
+    beforeToolCall: (toolCallRequest) => {
+      expectTypeOf(toolCallRequest).toEqualTypeOf<{
+        name: string;
+        serverName: string;
+        args?: unknown;
+      }>();
+    },
+    afterToolCall: (toolCallResult) => {
+      expectTypeOf(toolCallResult.name).toEqualTypeOf<string>();
+      expectTypeOf(toolCallResult.args).toEqualTypeOf<unknown>();
+      expectTypeOf(toolCallResult.serverName).toEqualTypeOf<string>();
+      return {
+        result: new ToolMessage({
+          content: "server-after",
+          tool_call_id: "test-tool-call-id",
+        }),
+      };
+    },
+    onMessage: (message, server) => {
+      expectTypeOf(message.logger).toEqualTypeOf<string | undefined>();
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+    onProgress: (progress, eventSource) => {
+      expectTypeOf(progress).toMatchTypeOf<{
+        percentage?: number;
+        progress?: number;
+        total?: number;
+        message?: string;
+      }>();
+      expectTypeOf(eventSource).toEqualTypeOf<
+        | {
+            type: "tool";
+            name: string;
+            server: string;
+            args?: unknown;
+          }
+        | {
+            type: "unknown";
+          }
+      >();
+    },
+    onCancelled: (notification, server) => {
+      expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onInitialized: (_, server) => {
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onPromptsListChanged: (_, server) => {
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onResourcesListChanged: (_, server) => {
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onResourcesUpdated: (notification, server) => {
+      expectTypeOf(notification.uri).toEqualTypeOf<string>();
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onRootsListChanged: (_, server) => {
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+
+    onToolsListChanged: (_, server) => {
+      expectTypeOf(server).toEqualTypeOf<{
+        server: string;
+        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+      }>();
+    },
+  });
+});

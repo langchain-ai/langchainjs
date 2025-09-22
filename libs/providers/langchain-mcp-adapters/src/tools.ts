@@ -12,7 +12,8 @@ import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { ToolMessage } from "@langchain/core/messages";
 
-import type { Interceptor, ToolResult } from "./interceptor.js";
+import type { Notifications } from "./types.js";
+
 import {
   _resolveDetailedOutputHandling,
   type CallToolResult,
@@ -21,6 +22,7 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
+import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 
@@ -399,17 +401,17 @@ type CallToolArgs = {
   /**
    * `onProgress` callbacks used for tool calls.
    */
-  onProgress?: Interceptor["onProgress"][];
+  onProgress?: Notifications["onProgress"];
 
   /**
    * `beforeToolCall` callbacks used for tool calls.
    */
-  beforeToolCall?: Interceptor["beforeToolCall"][];
+  beforeToolCall?: ToolHooks["beforeToolCall"];
 
   /**
    * `afterToolCall` callbacks used for tool calls.
    */
-  afterToolCall?: Interceptor["afterToolCall"][];
+  afterToolCall?: ToolHooks["afterToolCall"];
 };
 
 type ContentBlocksWithArtifacts = [
@@ -445,44 +447,37 @@ async function _callTool({
     const requestOptions: RequestOptions = {
       ...(config?.timeout ? { timeout: config.timeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
-      ...(onProgress && onProgress.length > 0
+      ...(onProgress
         ? {
             onprogress: (progress) => {
               // eslint-disable-next-line @typescript-eslint/no-floating-promises
-              onProgress.map(async (cb) => cb?.(progress));
+              onProgress?.(progress, {
+                type: "tool",
+                name: toolName,
+                args,
+                server: serverName,
+              });
             },
           }
         : {}),
     };
 
-    const beforeToolCallInterception = await Promise.all(
-      (beforeToolCall ?? []).map(async (cb) =>
-        cb?.(
-          {
-            name: toolName,
-            args,
-            serverName,
-          },
-          config ?? {}
-        )
-      )
+    const beforeToolCallInterception = await beforeToolCall?.(
+      {
+        name: toolName,
+        args,
+        serverName,
+      },
+      config ?? {}
     );
 
     const finalArgs = Object.assign(
-      {},
       args,
-      beforeToolCallInterception.reduce(
-        (acc, curr) => Object.assign(acc, curr?.args),
-        {} as Record<string, unknown>
-      )
+      beforeToolCallInterception?.args || {}
     );
 
-    const finalHeaders = beforeToolCallInterception.reduce(
-      (acc, curr) => Object.assign(acc, curr?.header),
-      {} as Record<string, string>
-    );
-
-    const hasHeaderChanges = Object.entries(finalHeaders).length > 0;
+    const headers = beforeToolCallInterception?.headers || {};
+    const hasHeaderChanges = Object.entries(headers).length > 0;
     if (hasHeaderChanges && typeof (client as Client).fork !== "function") {
       throw new ToolException(
         `MCP client for server "${serverName}" does not support header changes`
@@ -491,7 +486,7 @@ async function _callTool({
 
     const finalClient =
       hasHeaderChanges && typeof (client as Client).fork === "function"
-        ? await (client as Client).fork(finalHeaders)
+        ? await (client as Client).fork(headers)
         : client;
 
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
@@ -518,53 +513,39 @@ async function _callTool({
       outputHandling,
     });
 
-    const interceptedResult = await Promise.all(
-      (afterToolCall ?? []).map(async (cb) =>
-        cb?.(
-          {
-            name: toolName,
-            args: finalArgs,
-            result: [content, artifacts],
-            serverName,
-          },
-          config ?? {}
-        )
-      )
+    const interceptedResult = await afterToolCall?.(
+      {
+        name: toolName,
+        args: finalArgs,
+        result: [content, artifacts],
+        serverName,
+      },
+      config ?? {}
     );
 
-    return interceptedResult.length > 0
-      ? (interceptedResult.reduce(
-          (returnValue, curr) => {
-            if (Array.isArray(curr?.result)) {
-              return [
-                curr?.result[0] && curr.result[0].length > 0
-                  ? curr.result[0]
-                  : content,
-                curr?.result[1] && curr.result[1].length > 0
-                  ? curr.result[1]
-                  : artifacts,
-              ];
-            }
+    if (!interceptedResult) {
+      return [content, artifacts];
+    }
 
-            /**
-             * this is to avoid having LangGraph as a peer dependency for this package
-             */
-            if (
-              typeof curr?.result === "object" &&
-              "constructor" in curr.result &&
-              curr.result.constructor.name === "Command"
-            ) {
-              return curr.result as unknown as ContentBlocksWithArtifacts;
-            }
+    if (Array.isArray(interceptedResult.result)) {
+      return interceptedResult.result as ContentBlocksWithArtifacts;
+    }
 
-            if (curr && ToolMessage.isInstance(curr?.result)) {
-              return [curr.result.contentBlocks, []];
-            }
-            return returnValue;
-          },
-          [content, artifacts] as ToolResult
-        ) as ContentBlocksWithArtifacts)
-      : [content, artifacts];
+    if (ToolMessage.isInstance(interceptedResult.result)) {
+      return [interceptedResult.result.contentBlocks, []];
+    }
+
+    if (
+      typeof interceptedResult?.result === "object" &&
+      "constructor" in interceptedResult.result &&
+      interceptedResult.result.constructor.name === "Command"
+    ) {
+      return interceptedResult.result as unknown as ContentBlocksWithArtifacts;
+    }
+
+    throw new Error(
+      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
+    );
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
