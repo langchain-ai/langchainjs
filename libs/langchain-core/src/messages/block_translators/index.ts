@@ -3,6 +3,7 @@ import type { ContentBlock } from "../content/index.js";
 
 import { anthropicTranslator } from "./anthropic.js";
 import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
+import { ChatVertexTranslator } from "./google_vertexai.js";
 import { openaiTranslator } from "./openai.js";
 
 export interface StandardContentBlockTranslator {
@@ -20,7 +21,7 @@ globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", anthropicTranslator],
   ["bedrock-converse", ChatBedrockConverseTranslator],
   // ["google-genai", googleGenaiTranslator],
-  // ["google-vertexai", googleVertexaiTranslator],
+  ["google-vertexai", ChatVertexTranslator],
   // ["groq", groqTranslator],
   ["openai", openaiTranslator],
   // ["ollama", ollamaTranslator],
