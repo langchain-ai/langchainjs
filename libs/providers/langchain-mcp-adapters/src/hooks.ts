@@ -33,6 +33,10 @@ const toolResultBeforeSchema = z.tuple([
  */
 const toolResultSchema = z.union([
   /**
+   * a basic string result
+   */
+  z.string(),
+  /**
    * Command from LangGraph
    */
   z.custom<Command>(),

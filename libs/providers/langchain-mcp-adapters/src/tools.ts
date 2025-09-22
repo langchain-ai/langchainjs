@@ -414,10 +414,12 @@ type CallToolArgs = {
   afterToolCall?: ToolHooks["afterToolCall"];
 };
 
-type ContentBlocksWithArtifacts = [
-  (ContentBlock | ContentBlock.Multimodal.Standard)[],
-  (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
-];
+type ContentBlocksWithArtifacts =
+  | [
+      (ContentBlock | ContentBlock.Multimodal.Standard)[],
+      (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+    ]
+  | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]];
 
 /**
  * Call an MCP tool.
@@ -525,6 +527,10 @@ async function _callTool({
 
     if (!interceptedResult) {
       return [content, artifacts];
+    }
+
+    if (typeof interceptedResult.result === "string") {
+      return [interceptedResult.result, []];
     }
 
     if (Array.isArray(interceptedResult.result)) {
