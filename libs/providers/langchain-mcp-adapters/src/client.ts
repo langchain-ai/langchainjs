@@ -192,31 +192,20 @@ export class MultiServerMCPClient {
         useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
-        onProgress: [
-          parsedServerConfig.onProgress,
-          serverConfig.onProgress,
-        ].filter(Boolean),
+        onProgress: parsedServerConfig.onProgress,
         /**
          * make sure to place global hooks (e.g. parsedServerConfig) first before
          * server-specific hooks (e.g. serverConfig) so they can override tool call
          * configuration.
          */
-        beforeToolCall: [
-          parsedServerConfig.beforeToolCall,
-          serverConfig.beforeToolCall,
-        ].filter(Boolean),
-        afterToolCall: [
-          parsedServerConfig.afterToolCall,
-          serverConfig.afterToolCall,
-        ].filter(Boolean),
+        beforeToolCall: parsedServerConfig.beforeToolCall,
+        afterToolCall: parsedServerConfig.afterToolCall,
       };
     }
 
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.mcpServers;
-    this.#clientConnections = new ConnectionManager({
-      onLog: parsedServerConfig.onLog,
-    });
+    this.#clientConnections = new ConnectionManager(parsedServerConfig);
   }
 
   /**

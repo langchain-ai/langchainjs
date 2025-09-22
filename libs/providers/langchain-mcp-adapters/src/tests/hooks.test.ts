@@ -5,6 +5,7 @@ import { ToolMessage } from "@langchain/core/messages";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
+import type { ClientConfig } from "../types.js";
 
 type TransportKind = "stdio" | "http" | "sse";
 
@@ -63,12 +64,14 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
 
   const matrix: Array<{
     kind: TransportKind;
-    setup: () => Promise<{ client: MultiServerMCPClient; serverName: string }>;
+    setup: (
+      params?: Partial<ClientConfig>
+    ) => Promise<{ client: MultiServerMCPClient; serverName: string }>;
     supportsHeaders: boolean;
   }> = [
     {
       kind: "stdio",
-      setup: async () => {
+      setup: async (params?: Partial<ClientConfig>) => {
         const { command, args } = servers.createStdio("stdio-interceptor");
         const client = new MultiServerMCPClient({
           mcpServers: {
@@ -86,6 +89,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
             },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
+          ...params,
         });
         return { client, serverName: "stdio" };
       },
@@ -93,7 +97,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     },
     {
       kind: "http",
-      setup: async () => {
+      setup: async (params?: Partial<ClientConfig>) => {
         const { baseUrl } = await servers.createHTTP("http-interceptor", {
           testHeaders: true,
         });
@@ -113,6 +117,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
             header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
+          ...params,
         });
         return { client, serverName: "http" };
       },
@@ -120,7 +125,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     },
     {
       kind: "sse",
-      setup: async () => {
+      setup: async (params?: Partial<ClientConfig>) => {
         const { baseUrl } = await servers.createHTTP("sse-interceptor", {
           supportSSEFallback: true,
           testHeaders: true,
@@ -140,6 +145,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
             header: { "X-Global": "1" },
           }),
           afterToolCall: () => ({ result: ["global-after", []] }),
+          ...params,
         });
         return { client, serverName: "sse" };
       },
@@ -148,107 +154,54 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
   ];
 
   describe.each(matrix)("$kind", ({ setup, supportsHeaders }) => {
-    test("beforeToolCall modifies args (global and override)", async () => {
-      const { client } = await setup();
-
-      // Build a client that ONLY has beforeToolCall (no after), so we can inspect tool output
-      const base = client.config;
-      const clientGlobal = new MultiServerMCPClient({
-        ...base,
-        beforeToolCall: ({ args }: { args: unknown }) => ({
-          args: {
-            ...((args as Record<string, unknown>) ?? {}),
-            input: "global-mod",
-          },
-        }),
-        // ensure no global afterToolCall so tool returns raw JSON text we can parse
-      } as never);
+    test("beforeToolCall modifies args", async () => {
+      const { client } = await setup({
+        afterToolCall: (res) => ({ result: res.result }),
+      });
 
       try {
-        const tools1 = await clientGlobal.getTools();
+        const tools1 = await client.getTools();
         const t1 = tools1.find((tool) => tool.name.includes("test_tool"))!;
         const out1 = (await t1.invoke({ input: "orig" })) as string;
         const parsed1 = JSON.parse(out1);
         expect(parsed1.input).toBe("global-mod");
-
-        // Now override per-server to "server-mod" and verify it wins over global
-        const cfg = clientGlobal.config;
-        const serverKey = Object.keys(cfg.mcpServers)[0];
-        cfg.mcpServers[serverKey].beforeToolCall = () => ({
-          args: { input: "server-mod" },
-        });
-        const clientOverride = new MultiServerMCPClient(cfg);
-        try {
-          const tools2 = await clientOverride.getTools();
-          const t2 = tools2.find((tool) => tool.name.includes("test_tool"))!;
-          const out2 = (await t2.invoke({ input: "orig" })) as string;
-          const parsed2 = JSON.parse(out2);
-          expect(parsed2.input).toBe("server-mod");
-        } finally {
-          await clientOverride.close();
-        }
       } finally {
-        await clientGlobal.close();
         await client.close();
       }
     });
-    test("beforeToolCall modifies args and server-specific overrides global", async () => {
+    test("afterToolCall allows to modify tool result", async () => {
       const { client } = await setup();
 
-      // Invoke tool with server-specific hook via config on server
-      // We pass server-specific hooks in constructor by using per-server config
-      // so recreate client with server-specific overrides
-      await client.close();
-      const cfg = client.config;
-      // augment server-specific before/after
-      const serverKey = Object.keys(cfg.mcpServers)[0];
-      cfg.mcpServers[serverKey] = {
-        ...(cfg.mcpServers[serverKey] as unknown as Record<string, unknown>),
-        beforeToolCall: () => ({ args: { input: "server-mod" } }),
-        afterToolCall: () => ({ result: ["server-after", []] }),
-      } as never;
-      const client2 = new MultiServerMCPClient(cfg);
       try {
-        const tools = await client2.getTools();
+        const tools = await client.getTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
-        expect(res).toBe("server-after");
+        expect(res).toBe("global-after");
       } finally {
-        await client2.close();
+        await client.close();
       }
     });
 
     test("headers in beforeToolCall spawn new connection when supported", async () => {
-      const { client } = await setup();
+      const { client } = await setup({
+        beforeToolCall: () => ({
+          headers: { "X-Check": "present" },
+        }),
+        afterToolCall: (res) => ({ result: res.result }),
+      });
       try {
         if (!supportsHeaders) {
-          // For stdio, attempting to set headers should cause a ToolException
-          const cfg = client.config;
-          const serverKey = Object.keys(cfg.mcpServers)[0];
-          cfg.mcpServers[serverKey].beforeToolCall = () => ({
-            header: { "X-StdIO": "1" },
-          });
-          const c3 = new MultiServerMCPClient(cfg);
-          const stdioTools = await c3.getTools();
+          const stdioTools = await client.getTools();
           const t = stdioTools.find((tool) => tool.name.includes("test_tool"))!;
           await expect(t.invoke({ input: "x" })).rejects.toThrow(
             /Forking stdio transport is not supported/
           );
-          await c3.close();
         } else {
-          // Override to set a concrete header and call header-checking tool
-          const cfg = client.config;
-          const serverKey = Object.keys(cfg.mcpServers)[0];
-          cfg.mcpServers[serverKey].beforeToolCall = () => ({
-            header: { "X-Check": "present" },
-          });
-          const c2 = new MultiServerMCPClient(cfg);
-          const ts = await c2.getTools();
+          const ts = await client.getTools();
           const chk = ts.find((tool) => tool.name.includes("check_headers"));
           // call header checker
           const out = await chk!.invoke({ headerName: "X-Check" });
           expect(out).toBe("present");
-          await c2.close();
         }
       } finally {
         await client.close();
@@ -256,33 +209,22 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     test("afterToolCall supports returning a ToolMessage", async () => {
-      const { client } = await setup();
-
-      // Invoke tool with server-specific hook via config on server
-      // We pass server-specific hooks in constructor by using per-server config
-      // so recreate client with server-specific overrides
-      await client.close();
-      const cfg = client.config;
-      // augment server-specific before/after
-      const serverKey = Object.keys(cfg.mcpServers)[0];
-      cfg.mcpServers[serverKey] = {
-        ...(cfg.mcpServers[serverKey] as unknown as Record<string, unknown>),
-        beforeToolCall: () => ({ args: { input: "server-mod" } }),
+      const { client } = await setup({
         afterToolCall: () => ({
           result: new ToolMessage({
             content: "server-after",
             tool_call_id: "test-tool-call-id",
           }),
         }),
-      } as never;
-      const client2 = new MultiServerMCPClient(cfg);
+      });
+
       try {
-        const tools = await client2.getTools();
+        const tools = await client.getTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toEqual([{ type: "text", text: "server-after" }]);
       } finally {
-        await client2.close();
+        await client.close();
       }
     });
   });
@@ -301,7 +243,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
           automaticSSEFallback: true,
         },
       },
-      onLog: (log) => {
+      onMessage: (log) => {
         const msg =
           (
             log as unknown as {
