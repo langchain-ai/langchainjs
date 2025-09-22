@@ -236,11 +236,7 @@ const client = new MultiServerMCPClient({
 
   // Receive log/notification messages from the server
   onMessage: (log, source) => {
-    const message =
-      (log as { message?: string }).message ??
-      (log as { data?: string }).data ??
-      "";
-    console.log(`[${source.server}] ${message}`);
+    console.log(`[${source.server}] ${log.data}`);
   },
 
   // Receive progress updates (e.g. from long‑running tool calls)
@@ -252,9 +248,7 @@ const client = new MultiServerMCPClient({
         : undefined);
     if (pct != null) {
       const origin =
-        source.type === "tool"
-          ? `${source.server}/${source.name}`
-          : source.server;
+        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
       console.log(`[progress:${origin}] ${pct}%`);
     }
   },
