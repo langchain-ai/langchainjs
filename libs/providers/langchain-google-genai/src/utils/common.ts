@@ -518,6 +518,26 @@ export function mapGenerateContentResultToChatResult(
           type: "text",
           text: p.text,
         };
+      } else if ("inlineData" in p) {
+        return {
+          type: "inlineData",
+          inlineData: p.inlineData,
+        };
+      } else if ("functionCall" in p) {
+        return {
+          type: "functionCall",
+          functionCall: p.functionCall,
+        };
+      } else if ("functionResponse" in p) {
+        return {
+          type: "functionResponse",
+          functionResponse: p.functionResponse,
+        };
+      } else if ("fileData" in p) {
+        return {
+          type: "fileData",
+          fileData: p.fileData,
+        };
       } else if ("executableCode" in p) {
         return {
           type: "executableCode",
@@ -603,6 +623,26 @@ export function convertResponseContentToChatGenerationChunk(
         return {
           type: "text",
           text: p.text,
+        };
+      } else if ("inlineData" in p) {
+        return {
+          type: "inlineData",
+          inlineData: p.inlineData,
+        };
+      } else if ("functionCall" in p) {
+        return {
+          type: "functionCall",
+          functionCall: p.functionCall,
+        };
+      } else if ("functionResponse" in p) {
+        return {
+          type: "functionResponse",
+          functionResponse: p.functionResponse,
+        };
+      } else if ("fileData" in p) {
+        return {
+          type: "fileData",
+          fileData: p.fileData,
         };
       } else if ("executableCode" in p) {
         return {

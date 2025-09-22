@@ -22,6 +22,7 @@ import {
   InputTokenDetails,
   OutputTokenDetails,
   ModalitiesTokenDetails,
+  HumanMessage,
 } from "@langchain/core/messages";
 import {
   ChatGeneration,
@@ -820,24 +821,22 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     message: BaseMessage,
     prevMessage: BaseMessage | undefined
   ): Promise<GeminiContent[]> {
-    const type = message._getType();
-    switch (type) {
-      case "system":
-        return systemMessageToContent(message as SystemMessage);
-      case "human":
-        return roleMessageToContent("user", message);
-      case "ai":
-        return roleMessageToContent("model", message);
-      case "tool":
-        if (!prevMessage) {
-          throw new Error(
-            "Tool messages cannot be the first message passed to the model."
-          );
-        }
-        return toolMessageToContent(message as ToolMessage, prevMessage);
-      default:
-        console.log(`Unsupported message type: ${type}`);
-        return [];
+    if (SystemMessage.isInstance(message)) {
+      return systemMessageToContent(message);
+    } else if (HumanMessage.isInstance(message)) {
+      return roleMessageToContent("user", message);
+    } else if (AIMessage.isInstance(message)) {
+      return roleMessageToContent("model", message);
+    } else if (ToolMessage.isInstance(message)) {
+      if (!prevMessage) {
+        throw new Error(
+          "Tool messages cannot be the first message passed to the model."
+        );
+      }
+      return toolMessageToContent(message, prevMessage);
+    } else {
+      console.log(`Unsupported message type: ${message.type}`);
+      return [];
     }
   }
 
