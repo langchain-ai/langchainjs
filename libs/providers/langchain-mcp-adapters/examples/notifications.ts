@@ -14,11 +14,24 @@ const client = new MultiServerMCPClient({
       args: ["-y", "@modelcontextprotocol/server-everything"],
     },
   },
-  onMessage: (log) => {
-    console.log(`[LOG] ${log.data}`);
+
+  // Receive log/notification messages from the server
+  onMessage: (log, source) => {
+    console.log(`[${source.server}] ${log.data}`);
   },
-  onProgress: (p) => {
-    console.log(`[PROGRESS] ${(p.progress / (p.total ?? 1)) * 100}%`);
+
+  // Receive progress updates (e.g. from long‑running tool calls)
+  onProgress: (progress, source) => {
+    const pct =
+      progress.percentage ??
+      (progress.progress != null && progress.total
+        ? Math.round((progress.progress / progress.total) * 100)
+        : undefined);
+    if (pct != null) {
+      const origin =
+        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
+      console.log(`[progress:${origin}] ${pct}%`);
+    }
   },
 });
 
