@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
+import { ToolMessage } from "@langchain/core/messages";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
@@ -251,6 +252,37 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         }
       } finally {
         await client.close();
+      }
+    });
+
+    test("afterToolCall supports returning a ToolMessage", async () => {
+      const { client } = await setup();
+
+      // Invoke tool with server-specific hook via config on server
+      // We pass server-specific hooks in constructor by using per-server config
+      // so recreate client with server-specific overrides
+      await client.close();
+      const cfg = client.config;
+      // augment server-specific before/after
+      const serverKey = Object.keys(cfg.mcpServers)[0];
+      cfg.mcpServers[serverKey] = {
+        ...(cfg.mcpServers[serverKey] as unknown as Record<string, unknown>),
+        beforeToolCall: () => ({ args: { input: "server-mod" } }),
+        afterToolCall: () => ({
+          result: new ToolMessage({
+            content: "server-after",
+            tool_call_id: "test-tool-call-id",
+          }),
+        }),
+      } as never;
+      const client2 = new MultiServerMCPClient(cfg);
+      try {
+        const tools = await client2.getTools();
+        const t = tools.find((tool) => tool.name.includes("test_tool"))!;
+        const res = await t.invoke({ input: "orig" });
+        expect(res).toEqual([{ type: "text", text: "server-after" }]);
+      } finally {
+        await client2.close();
       }
     });
   });

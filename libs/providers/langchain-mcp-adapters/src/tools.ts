@@ -10,8 +10,9 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import debug from "debug";
-import type { Interceptor } from "./interceptor.js";
+import { ToolMessage } from "@langchain/core/messages";
+
+import type { Interceptor, ToolResult } from "./interceptor.js";
 import {
   _resolveDetailedOutputHandling,
   type CallToolResult,
@@ -21,15 +22,7 @@ import {
   type OutputHandling,
 } from "./types.js";
 import type { Client } from "./connection.js";
-
-// Replace direct initialization with lazy initialization
-let debugLog: debug.Debugger;
-function getDebugLog() {
-  if (!debugLog) {
-    debugLog = debug("@langchain/mcp-adapters:tools");
-  }
-  return debugLog;
-}
+import { getDebugLog } from "./logging.js";
 
 /**
  * Custom error class for tool exceptions
@@ -112,7 +105,7 @@ async function _toolOutputToContentBlocks(
   client: Client | MCPClient,
   toolName: string,
   serverName: string
-): Promise<ContentBlock.Data.DataContentBlock[]>;
+): Promise<ContentBlock.Multimodal.Standard[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: false | undefined,
@@ -126,14 +119,14 @@ async function _toolOutputToContentBlocks(
   client: Client | MCPClient,
   toolName: string,
   serverName: string
-): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]>;
+): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
   client: Client | MCPClient,
   toolName: string,
   serverName: string
-): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]> {
+): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
   const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   switch (content.type) {
     case "text":
@@ -201,7 +194,7 @@ async function _embeddedResourceToArtifact(
   client: Client | MCPClient,
   toolName: string,
   serverName: string
-): Promise<(EmbeddedResource | ContentBlock.Data.DataContentBlock)[]> {
+): Promise<(EmbeddedResource | ContentBlock.Multimodal.Standard)[]> {
   if (useStandardContentBlocks) {
     return _toolOutputToContentBlocks(
       resource,
@@ -294,8 +287,8 @@ async function _convertCallToolResult({
   outputHandling,
 }: ConvertCallToolResultArgs): Promise<
   [
-    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
-    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
+    (ContentBlock | ContentBlock.Multimodal.Standard)[],
+    (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
   ]
 > {
   if (!result) {
@@ -318,28 +311,26 @@ async function _convertCallToolResult({
     );
   }
 
-  const convertedContent: (
-    | ContentBlock
-    | ContentBlock.Data.DataContentBlock
-  )[] = (
-    await Promise.all(
-      result.content
-        .filter(
-          (content: CallToolResultContent) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "content"
-        )
-        .map((content: CallToolResultContent) =>
-          _toolOutputToContentBlocks(
-            content,
-            useStandardContentBlocks,
-            client,
-            toolName,
-            serverName
+  const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
+    (
+      await Promise.all(
+        result.content
+          .filter(
+            (content: CallToolResultContent) =>
+              _getOutputTypeForContentType(content.type, outputHandling) ===
+              "content"
           )
-        )
-    )
-  ).flat();
+          .map((content: CallToolResultContent) =>
+            _toolOutputToContentBlocks(
+              content,
+              useStandardContentBlocks,
+              client,
+              toolName,
+              serverName
+            )
+          )
+      )
+    ).flat();
 
   // Create the text content output
   const artifacts = (
@@ -421,6 +412,11 @@ type CallToolArgs = {
   afterToolCall?: Interceptor["afterToolCall"][];
 };
 
+type ContentBlocksWithArtifacts = [
+  (ContentBlock | ContentBlock.Multimodal.Standard)[],
+  (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+];
+
 /**
  * Call an MCP tool.
  *
@@ -441,12 +437,7 @@ async function _callTool({
   onProgress,
   beforeToolCall,
   afterToolCall,
-}: CallToolArgs): Promise<
-  [
-    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
-    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
-  ]
-> {
+}: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
     getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
@@ -542,18 +533,37 @@ async function _callTool({
     );
 
     return interceptedResult.length > 0
-      ? interceptedResult.reduce(
-          ([content, artifacts], curr) =>
-            [
-              curr?.result[0] && curr.result[0].length > 0
-                ? curr.result[0]
-                : content,
-              curr?.result[1] && curr.result[1].length > 0
-                ? curr.result[1]
-                : artifacts,
-            ] as [ContentBlock[], EmbeddedResource[]],
-          [content, artifacts]
-        )
+      ? (interceptedResult.reduce(
+          (returnValue, curr) => {
+            if (Array.isArray(curr?.result)) {
+              return [
+                curr?.result[0] && curr.result[0].length > 0
+                  ? curr.result[0]
+                  : content,
+                curr?.result[1] && curr.result[1].length > 0
+                  ? curr.result[1]
+                  : artifacts,
+              ];
+            }
+
+            /**
+             * this is to avoid having LangGraph as a peer dependency for this package
+             */
+            if (
+              typeof curr?.result === "object" &&
+              "constructor" in curr.result &&
+              curr.result.constructor.name === "Command"
+            ) {
+              return curr.result as unknown as ContentBlocksWithArtifacts;
+            }
+
+            if (curr && ToolMessage.isInstance(curr?.result)) {
+              return [curr.result.contentBlocks, []];
+            }
+            return returnValue;
+          },
+          [content, artifacts] as ToolResult
+        ) as ContentBlocksWithArtifacts)
       : [content, artifacts];
   } catch (error) {
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
