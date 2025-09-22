@@ -3,6 +3,7 @@ import type { ContentBlock } from "../content/index.js";
 
 import { anthropicTranslator } from "./anthropic.js";
 import { ChatBedrockConverseTranslator } from "./bedrock_converse.js";
+import { ChatGoogleGenAITranslator } from "./google_genai.js";
 import { ChatVertexTranslator } from "./google_vertexai.js";
 import { openaiTranslator } from "./openai.js";
 
@@ -20,11 +21,9 @@ declare global {
 globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", anthropicTranslator],
   ["bedrock-converse", ChatBedrockConverseTranslator],
-  // ["google-genai", googleGenaiTranslator],
+  ["google-genai", ChatGoogleGenAITranslator],
   ["google-vertexai", ChatVertexTranslator],
-  // ["groq", groqTranslator],
   ["openai", openaiTranslator],
-  // ["ollama", ollamaTranslator],
 ]);
 
 export function registerTranslator(
