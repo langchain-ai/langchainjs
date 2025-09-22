@@ -422,7 +422,7 @@ export function convertToV1FromResponsesChunk(
   return Array.from(iterateContent());
 }
 
-export const openaiTranslator: StandardContentBlockTranslator = {
+export const ChatOpenAITranslator: StandardContentBlockTranslator = {
   translateContent: (message) => {
     if (typeof message.content === "string") {
       return convertToV1FromChatCompletions(message);
