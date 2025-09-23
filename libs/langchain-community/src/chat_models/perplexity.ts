@@ -140,6 +140,18 @@ export interface PerplexityChatInput extends BaseChatModelParams {
   /** Filters search results to only include content published before this date. */
   searchBeforeDateFilter?: string;
 
+  /** Filters search results to only include content last updated after this date. */
+  lastUpdatedAfterFilter?: string;
+
+  /** Filters search results to only include content last updated before this date. */
+  lastUpdatedBeforeFilter?: string;
+
+  /** When set to true, disables web search completely and the model will only use its training data to respond. This is useful when you want deterministic responses without external information. */
+  disableSearch?: boolean;
+
+  /** Enables a classifier that decides if web search is needed based on your query. */
+  enableSearchClassifier?: boolean;
+
   /**
    * Configuration for using web search in model responses.
    */
@@ -204,6 +216,14 @@ export class ChatPerplexity
   searchAfterDateFilter?: string;
 
   searchBeforeDateFilter?: string;
+
+  lastUpdatedAfterFilter?: string;
+
+  lastUpdatedBeforeFilter?: string;
+
+  disableSearch?: boolean;
+
+  enableSearchClassifier?: boolean;
 
   webSearchOptions?: WebSearchOptions;
 
@@ -272,6 +292,10 @@ export class ChatPerplexity
       reasoning_effort: this.reasoningEffort,
       search_after_date_filter: this.searchAfterDateFilter,
       search_before_date_filter: this.searchBeforeDateFilter,
+      last_updated_after_filter: this.lastUpdatedAfterFilter,
+      last_updated_before_filter: this.lastUpdatedBeforeFilter,
+      disable_search: this.disableSearch,
+      enable_search_classifier: this.enableSearchClassifier,
       web_search_options: this.webSearchOptions as Record<string, unknown>, // Cast WebSearchOptions to generic type to avoid conflict with OpenAI's WebSearchOptions interface
     };
   }
