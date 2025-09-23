@@ -51,6 +51,7 @@ const _SUPPORTED_PROVIDERS = [
   "cerebras",
   "deepseek",
   "xai",
+  "perplexity",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -115,6 +116,10 @@ async function _initChatModelHelper(
       case "ollama": {
         const { ChatOllama } = await import("@langchain/ollama");
         return new ChatOllama({ model, ...passedParams });
+      }
+      case "perplexity": {
+        const { ChatPerplexity } = await import("@langchain/community/chat_models/perplexity");
+        return new ChatPerplexity({ model, ...passedParams });
       }
       case "mistralai": {
         const { ChatMistralAI } = await import("@langchain/mistralai");
@@ -220,6 +225,8 @@ export function _inferModelProvider(modelName: string): string | undefined {
     return "bedrock";
   } else if (modelName.startsWith("mistral")) {
     return "mistralai";
+  } else if (modelName.startsWith("sonar") || modelName.startsWith("pplx")) {
+    return "perplexity";
   } else {
     return undefined;
   }
