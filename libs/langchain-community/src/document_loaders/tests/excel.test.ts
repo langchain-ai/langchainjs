@@ -22,9 +22,24 @@ beforeAll(async () => {
 
     // Create test data
     const testData = [
-      { Name: "John Doe", Age: 30, Department: "Engineering", Description: "Senior Software Engineer" },
-      { Name: "Jane Smith", Age: 28, Department: "Marketing", Description: "Marketing Manager" },
-      { Name: "Bob Johnson", Age: 35, Department: "Sales", Description: "Sales Director" },
+      {
+        Name: "John Doe",
+        Age: 30,
+        Department: "Engineering",
+        Description: "Senior Software Engineer",
+      },
+      {
+        Name: "Jane Smith",
+        Age: 28,
+        Department: "Marketing",
+        Description: "Marketing Manager",
+      },
+      {
+        Name: "Bob Johnson",
+        Age: 35,
+        Department: "Sales",
+        Description: "Sales Director",
+      },
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -45,12 +60,21 @@ beforeAll(async () => {
     XLSX.writeFile(workbook, xlsxPath);
     XLSX.writeFile(workbook, xlsPath);
   } catch (error) {
-    console.warn("Could not create test Excel files. xlsx package may not be installed:", error);
+    console.warn(
+      "Could not create test Excel files. xlsx package may not be installed:",
+      error
+    );
   }
 });
 
 test("Test Excel loader from .xlsx file - all rows as documents", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
@@ -72,14 +96,20 @@ test("Test Excel loader from .xlsx file - all rows as documents", async () => {
 });
 
 test("Test Excel loader with specific column", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
     sheets: "Sheet1",
-    column: "Description"
+    column: "Description",
   });
   const docs = await loader.load();
 
@@ -90,13 +120,19 @@ test("Test Excel loader with specific column", async () => {
 });
 
 test("Test Excel loader with specific sheet", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
-    sheets: "Products"
+    sheets: "Products",
   });
   const docs = await loader.load();
 
@@ -106,14 +142,20 @@ test("Test Excel loader with specific sheet", async () => {
 });
 
 test("Test Excel loader with CSV output format", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
     sheets: "Sheet1",
-    outputFormat: "csv"
+    outputFormat: "csv",
   });
   const docs = await loader.load();
 
@@ -123,14 +165,20 @@ test("Test Excel loader with CSV output format", async () => {
 });
 
 test("Test Excel loader with HTML output format", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
     sheets: "Products",
-    outputFormat: "html"
+    outputFormat: "html",
   });
   const docs = await loader.load();
 
@@ -141,13 +189,19 @@ test("Test Excel loader with HTML output format", async () => {
 });
 
 test("Test Excel loader from .xls file", async () => {
-  if (!xlsPath || !(await fs.access(xlsPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsPath ||
+    !(await fs
+      .access(xlsPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsPath, {
-    sheets: 0 // Use sheet by index
+    sheets: 0, // Use sheet by index
   });
   const docs = await loader.load();
 
@@ -156,32 +210,44 @@ test("Test Excel loader from .xls file", async () => {
 });
 
 test("Test Excel loader with multiple sheets selection", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
-    sheets: ["Sheet1", "Products"]
+    sheets: ["Sheet1", "Products"],
   });
   const docs = await loader.load();
 
   expect(docs.length).toBe(5); // 3 from Sheet1 + 2 from Products
 
   // Check that we have documents from both sheets
-  const sheets = new Set(docs.map(d => d.metadata.sheet));
+  const sheets = new Set(docs.map((d) => d.metadata.sheet));
   expect(sheets.has("Sheet1")).toBe(true);
   expect(sheets.has("Products")).toBe(true);
 });
 
 test("Test Excel loader with raw output format", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
 
   const loader = new ExcelLoader(xlsxPath, {
-    outputFormat: "raw"
+    outputFormat: "raw",
   });
   const docs = await loader.load();
 
@@ -195,7 +261,13 @@ test("Test Excel loader with raw output format", async () => {
 });
 
 test("Test Excel loader with merged cells handling", async () => {
-  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+  if (
+    !xlsxPath ||
+    !(await fs
+      .access(xlsxPath)
+      .then(() => true)
+      .catch(() => false))
+  ) {
     console.warn("Skipping test - test Excel file not available");
     return;
   }
@@ -215,7 +287,7 @@ test("Test Excel loader with merged cells handling", async () => {
     const ws_data = [
       ["Merged Header", "", "", "Regular"],
       ["A1", "B1", "C1", "D1"],
-      ["A2", "B2", "C2", "D2"]
+      ["A2", "B2", "C2", "D2"],
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
@@ -230,7 +302,7 @@ test("Test Excel loader with merged cells handling", async () => {
     // Test with default behavior (first)
     const loader1 = new ExcelLoader(mergedTestPath, {
       sheets: "MergedSheet",
-      outputFormat: "json"
+      outputFormat: "json",
     });
     const docs1 = await loader1.load();
 
@@ -242,7 +314,7 @@ test("Test Excel loader with merged cells handling", async () => {
     const loader2 = new ExcelLoader(mergedTestPath, {
       sheets: "MergedSheet",
       outputFormat: "json",
-      mergedCellHandling: "duplicate"
+      mergedCellHandling: "duplicate",
     });
     const docs2 = await loader2.load();
 

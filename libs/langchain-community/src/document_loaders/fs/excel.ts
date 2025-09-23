@@ -35,7 +35,7 @@ type ExcelLoaderOptions = {
    * - 'duplicate': Copy the value to all cells in the merged range
    * Default is 'first'.
    */
-  mergedCellHandling?: 'first' | 'duplicate';
+  mergedCellHandling?: "first" | "duplicate";
 };
 
 /**
@@ -112,7 +112,7 @@ export class ExcelLoader extends BufferLoader {
       }
 
       // Handle merged cells if requested
-      if (this.options.mergedCellHandling === 'duplicate') {
+      if (this.options.mergedCellHandling === "duplicate") {
         this.fillMergedCells(worksheet, utils);
       }
 
@@ -234,12 +234,14 @@ export class ExcelLoader extends BufferLoader {
     const sheetsOption = this.options.sheets;
 
     if (Array.isArray(sheetsOption)) {
-      return sheetsOption.map(sheet => {
-        if (typeof sheet === "number") {
-          return allSheets[sheet] || "";
-        }
-        return sheet;
-      }).filter(Boolean);
+      return sheetsOption
+        .map((sheet) => {
+          if (typeof sheet === "number") {
+            return allSheets[sheet] || "";
+          }
+          return sheet;
+        })
+        .filter(Boolean);
     }
 
     if (typeof sheetsOption === "number") {
@@ -255,7 +257,7 @@ export class ExcelLoader extends BufferLoader {
    */
   private isEmptyRow(row: Record<string, any>): boolean {
     return Object.values(row).every(
-      value => value === null || value === undefined || value === ""
+      (value) => value === null || value === undefined || value === ""
     );
   }
 
@@ -264,7 +266,7 @@ export class ExcelLoader extends BufferLoader {
    * This ensures that all cells in a merged range contain the same value
    */
   private fillMergedCells(worksheet: any, utils: any): void {
-    const merges = worksheet['!merges'];
+    const merges = worksheet["!merges"];
     if (!merges || merges.length === 0) {
       return;
     }
