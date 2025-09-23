@@ -13,18 +13,13 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { SystemMessage, BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 import type {
-  All,
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 
-import type {
-  PreHookAnnotation,
-  AnyAnnotationRoot,
-  ToAnnotationRoot,
-} from "../annotation.js";
+import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
 
 import type {
   ResponseFormat,
@@ -36,7 +31,7 @@ import type {
 } from "../responses.js";
 import type { Interrupt } from "../interrupt.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
-import type { ClientTool, ServerTool, AgentRuntime } from "../types.js";
+import type { ClientTool, ServerTool } from "../types.js";
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -423,13 +418,6 @@ export interface LLMCall {
   response?: BaseMessage;
 }
 
-export type DynamicLLMFunction<
-  ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
-> = (
-  state: AgentBuiltInState & PreHookAnnotation["State"],
-  runtime: AgentRuntime<ToAnnotationRoot<ContextSchema>["State"]>
-) => Promise<LanguageModelLike> | LanguageModelLike;
-
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   ContextSchema extends
@@ -446,11 +434,9 @@ export type CreateAgentParams<
     | ProviderStrategy<StructuredResponseType>
     | ResponseFormatUndefined
 > = {
-  /** The chat model that can utilize OpenAI-style tool calling. */
-  llm?: LanguageModelLike | DynamicLLMFunction<ContextSchema>;
-
   /**
-   * Initializes a ChatModel based on the provided model name and provider.
+   * Defines a model to use for the agent. You can either pass in an instance of a LangChain chat model
+   * or a string. If a string is provided the agent initializes a ChatModel based on the provided model name and provider.
    * It supports various model providers and allows for runtime configuration of model parameters.
    *
    * @uses {@link initChatModel}
@@ -461,10 +447,39 @@ export type CreateAgentParams<
    *   // ...
    * });
    * ```
+   *
+   * @example
+   * ```ts
+   * import { ChatOpenAI } from "@langchain/openai";
+   * const agent = createAgent({
+   *   model: new ChatOpenAI({ model: "gpt-4o" }),
+   *   // ...
+   * });
+   * ```
    */
-  model?: string;
+  model?: string | LanguageModelLike;
 
-  /** A list of tools or a ToolNode. */
+  /**
+   * A list of tools or a ToolNode.
+   *
+   * @example
+   * ```ts
+   * import { tool } from "langchain";
+   *
+   * const weatherTool = tool(() => "Sunny!", {
+   *   name: "get_weather",
+   *   description: "Get the weather for a location",
+   *   schema: z.object({
+   *     location: z.string().describe("The location to get weather for"),
+   *   }),
+   * });
+   *
+   * const agent = createAgent({
+   *   tools: [weatherTool],
+   *   // ...
+   * });
+   * ```
+   */
   tools?: ToolNode | (ServerTool | ClientTool)[];
 
   /**
@@ -483,7 +498,7 @@ export type CreateAgentParams<
    *
    * Cannot be used together with `modifyModelRequest`.
    */
-  prompt?: SystemMessage | string;
+  prompt?: string;
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent
@@ -523,10 +538,10 @@ export type CreateAgentParams<
   checkpointSaver?: BaseCheckpointSaver | boolean;
   /** An optional checkpoint saver to persist the agent's state. Alias of "checkpointSaver". */
   checkpointer?: BaseCheckpointSaver | boolean;
-  /** An optional list of node names to interrupt before running. */
-  interruptBefore?: N[] | All;
-  /** An optional list of node names to interrupt after running. */
-  interruptAfter?: N[] | All;
+  /**
+   * An optional store to persist the agent's state.
+   * @see {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Long-term memory}
+   */
   store?: BaseStore;
   /**
    * An optional schema for the final agent output.

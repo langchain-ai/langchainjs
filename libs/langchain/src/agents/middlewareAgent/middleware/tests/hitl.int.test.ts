@@ -43,7 +43,7 @@ const nameGenerator = tool(
   }
 );
 
-const llm = new ChatOpenAI({ model: "gpt-4o" });
+const model = new ChatOpenAI({ model: "gpt-4o" });
 const thread = {
   configurable: {
     thread_id: "test-123",
@@ -55,7 +55,7 @@ describe("humanInTheLoopMiddleware", () => {
     it("should accept tool calls", async () => {
       const checkpointer = new MemorySaver();
       const agent = createAgent({
-        llm,
+        model,
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
@@ -147,7 +147,7 @@ describe("humanInTheLoopMiddleware", () => {
         }
       );
       const agent = createAgent({
-        llm,
+        model,
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
@@ -219,7 +219,7 @@ describe("humanInTheLoopMiddleware", () => {
     it("should respond to tool calls", async () => {
       const checkpointer = new MemorySaver();
       const agent = createAgent({
-        llm,
+        model,
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {
@@ -262,7 +262,7 @@ describe("humanInTheLoopMiddleware", () => {
     it("should respond with structured response for approved tool calls and custom response", async () => {
       const checkpointer = new MemorySaver();
       const agent = createAgent({
-        llm,
+        model,
         middleware: [
           humanInTheLoopMiddleware({
             toolConfigs: {

@@ -15,7 +15,7 @@ import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
-import { isClientTool, validateLLMHasNoBoundTools } from "../utils.js";
+import { isClientTool } from "../utils.js";
 
 import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "../nodes/ToolNode.js";
@@ -96,30 +96,6 @@ export class ReactAgent<
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
   ) {
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
-
-    /**
-     * Check if the LLM already has bound tools and throw if it does.
-     */
-    if (options.llm && typeof options.llm !== "function") {
-      validateLLMHasNoBoundTools(options.llm);
-    }
-
-    /**
-     * validate that model and llm options are not provided together
-     */
-    if (options.llm && options.model) {
-      throw new Error("Cannot provide both `model` and `llm` options.");
-    }
-
-    /**
-     * validate that either model or llm option is provided
-     */
-    if (!options.llm && !options.model) {
-      throw new Error(
-        "Either `model` or `llm` option must be provided to create an agent."
-      );
-    }
-
     const toolClasses =
       (Array.isArray(options.tools) ? options.tools : options.tools?.tools) ??
       [];
@@ -214,7 +190,6 @@ export class ReactAgent<
     allNodeWorkflows.addNode(
       "model_request",
       new AgentNode({
-        llm: this.options.llm,
         model: this.options.model,
         prompt: this.options.prompt,
         includeAgentName: this.options.includeAgentName,
@@ -335,8 +310,6 @@ export class ReactAgent<
      */
     this.#graph = allNodeWorkflows.compile({
       checkpointer: this.options.checkpointer ?? this.options.checkpointSaver,
-      interruptBefore: this.options.interruptBefore,
-      interruptAfter: this.options.interruptAfter,
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,

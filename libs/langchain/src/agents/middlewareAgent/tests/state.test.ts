@@ -8,7 +8,7 @@ import { FakeToolCallingModel } from "../../tests/utils.js";
 describe("middleware state management", () => {
   it("should allow to define private state props with _ that doesn't leak out", async () => {
     expect.assertions(10);
-    const llm = new FakeToolCallingModel({});
+    const model = new FakeToolCallingModel({});
 
     /**
      * Middleware A defines
@@ -108,7 +108,7 @@ describe("middleware state management", () => {
     });
 
     const agent = createAgent({
-      llm,
+      model,
       middleware: [middlewareA, middlewareB, middlewareC] as const,
     });
 
