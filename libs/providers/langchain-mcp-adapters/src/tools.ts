@@ -314,7 +314,7 @@ async function _convertCallToolResult({
 }: ConvertCallToolResultArgs): Promise<
   [
     (ContentBlock | ContentBlock.Multimodal.Standard)[],
-    (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+    (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
   ]
 > {
   if (!result) {
@@ -441,7 +441,7 @@ type CallToolArgs = {
 type ContentBlocksWithArtifacts =
   | [
       (ContentBlock | ContentBlock.Multimodal.Standard)[],
-      (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
+      (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
     ]
   | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]]
   | Command;

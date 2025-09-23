@@ -35,7 +35,10 @@ const debugLog = getDebugLog();
  * Error class for MCP client operations
  */
 export class MCPClientError extends Error {
-  constructor(message: string, public readonly serverName?: string) {
+  constructor(
+    message: string,
+    public readonly serverName?: string
+  ) {
     super(message);
     this.name = "MCPClientError";
   }
@@ -326,7 +329,7 @@ export class MultiServerMCPClient {
 
     const [servers, options] = args as [
       string[],
-      CustomHTTPTransportOptions | undefined
+      CustomHTTPTransportOptions | undefined,
     ];
     await this.initializeConnections(options);
     return servers.length === 0
