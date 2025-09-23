@@ -145,6 +145,12 @@ export class ChatOllama
 
   constructor(fields: OllamaInput & BaseChatModelParams) {
     super(fields);
+
+    if (!fields.model) {
+      console.warn(
+        `Ollama model name not specified. Defaulting to "${this.model}".`
+      );
+    }
     this.model = fields.model ?? this.model;
     this.baseUrl = fields.baseUrl?.endsWith("/")
       ? fields.baseUrl.slice(0, -1)
