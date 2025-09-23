@@ -41,6 +41,7 @@ export {
   createMiddleware,
   toolStrategy,
   providerStrategy,
+  FakeToolCallingModel,
   ToolNode,
   type AgentState,
   type AgentRuntime,

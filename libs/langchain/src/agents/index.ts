@@ -42,6 +42,7 @@ export {
   type ResponseFormat,
 } from "./responses.js";
 export { createMiddleware } from "./middlewareAgent/index.js";
+export { FakeToolCallingModel } from "./tests/utils.js";
 export type { AgentMiddleware } from "./middlewareAgent/types.js";
 
 /**

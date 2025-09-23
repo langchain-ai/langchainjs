@@ -13,7 +13,7 @@ import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { ToolMessage } from "@langchain/core/messages";
-import { Command } from "@langchain/langgraph";
+import { Command, getCurrentTaskInput } from "@langchain/langgraph";
 
 import type { Notifications } from "./types.js";
 
@@ -25,9 +25,11 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
-import type { ToolHooks } from "./hooks.js";
+import type { ToolHooks, State } from "./hooks.js";
 import type { Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
+
+const debugLog = getDebugLog("tools");
 
 /**
  * Custom error class for tool exceptions
@@ -466,7 +468,7 @@ async function _callTool({
   afterToolCall,
 }: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
-    getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
     const requestOptions: RequestOptions = {
@@ -487,12 +489,22 @@ async function _callTool({
         : {}),
     };
 
+    let state: State = { messages: [] };
+    try {
+      state = getCurrentTaskInput(config) as State;
+    } catch (error) {
+      debugLog(
+        `State can't be derrived as LangGraph is not used: ${String(error)}`
+      );
+    }
+
     const beforeToolCallInterception = await beforeToolCall?.(
       {
         name: toolName,
         args,
         serverName,
       },
+      state,
       config ?? {}
     );
 
@@ -545,6 +557,7 @@ async function _callTool({
         result: [content, artifacts],
         serverName,
       },
+      state,
       config ?? {}
     );
 
@@ -578,7 +591,7 @@ async function _callTool({
       throw new ToolException(z.prettifyError(error), error);
     }
 
-    getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
+    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -630,7 +643,7 @@ export async function loadMcpTools(
     mcpTools.push(...(toolsResponse.tools || []));
   } while (toolsResponse.nextCursor);
 
-  getDebugLog()(`INFO: Found ${mcpTools.length} MCP tools`);
+  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
@@ -678,10 +691,10 @@ export async function loadMcpTools(
                 });
               },
             });
-            getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
+            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
           } catch (error) {
-            getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);
+            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }
