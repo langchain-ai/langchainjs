@@ -29,6 +29,12 @@ import type {
   ResolvedClientConfig,
 } from "./types.js";
 
+/**
+ * TSDown automatically creates a JS file that allows us to consume the package.json file
+ * within ESM and CJS modules.
+ */
+import packageJson from "../package.json" with { type: "json" };
+
 const debugLog = getDebugLog("connection");
 
 export interface Client extends MCPClient {
@@ -119,8 +125,8 @@ export class ConnectionManager {
         ? await this.#createSSETransport(serverName, options)
         : await this.#createStdioTransport(options);
     const mcpClient = new MCPClient({
-      name: "langchain-mcp-adapter",
-      version: "0.1.0",
+      name: packageJson.name,
+      version: packageJson.version,
     });
     await mcpClient.connect(transport);
 
