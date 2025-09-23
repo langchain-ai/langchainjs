@@ -29,6 +29,13 @@ type ExcelLoaderOptions = {
    * If not specified, loads all rows with data.
    */
   range?: string;
+  /**
+   * How to handle merged cells in the Excel file.
+   * - 'first': Only the first cell in a merged range has the value (default behavior)
+   * - 'duplicate': Copy the value to all cells in the merged range
+   * Default is 'first'.
+   */
+  mergedCellHandling?: 'first' | 'duplicate';
 };
 
 /**
@@ -56,6 +63,7 @@ export class ExcelLoader extends BufferLoader {
   protected options: ExcelLoaderOptions = {
     outputFormat: "json",
     includeEmptyRows: false,
+    mergedCellHandling: "first",
   };
 
   constructor(filePathOrBlob: string | Blob, options?: ExcelLoaderOptions) {
@@ -101,6 +109,11 @@ export class ExcelLoader extends BufferLoader {
       if (!range) {
         console.warn(`Sheet "${sheetName}" appears to be empty`);
         continue;
+      }
+
+      // Handle merged cells if requested
+      if (this.options.mergedCellHandling === 'duplicate') {
+        this.fillMergedCells(worksheet, utils);
       }
 
       const sheetMetadata = {
@@ -244,6 +257,45 @@ export class ExcelLoader extends BufferLoader {
     return Object.values(row).every(
       value => value === null || value === undefined || value === ""
     );
+  }
+
+  /**
+   * Fills merged cells with their master cell value when mergedCellHandling is 'duplicate'
+   * This ensures that all cells in a merged range contain the same value
+   */
+  private fillMergedCells(worksheet: any, utils: any): void {
+    const merges = worksheet['!merges'];
+    if (!merges || merges.length === 0) {
+      return;
+    }
+
+    for (const merge of merges) {
+      // Get the value from the top-left cell of the merge range
+      const masterCellAddress = utils.encode_cell(merge.s);
+      const masterCell = worksheet[masterCellAddress];
+
+      if (masterCell && masterCell.v !== undefined) {
+        // Fill all cells in the merged range with the master cell's value
+        for (let row = merge.s.r; row <= merge.e.r; row++) {
+          for (let col = merge.s.c; col <= merge.e.c; col++) {
+            // Skip the master cell itself
+            if (row === merge.s.r && col === merge.s.c) {
+              continue;
+            }
+
+            const cellAddress = utils.encode_cell({ r: row, c: col });
+            // Only fill if the cell doesn't already have a value
+            if (!worksheet[cellAddress]) {
+              worksheet[cellAddress] = {
+                t: masterCell.t, // Copy the cell type
+                v: masterCell.v, // Copy the value
+                w: masterCell.w, // Copy the formatted text if available
+              };
+            }
+          }
+        }
+      }
+    }
   }
 }
 

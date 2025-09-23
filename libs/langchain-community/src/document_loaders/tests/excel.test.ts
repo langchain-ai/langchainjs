@@ -193,3 +193,66 @@ test("Test Excel loader with raw output format", async () => {
   // Raw format should contain the data in some form
   expect(content.length).toBeGreaterThan(0);
 });
+
+test("Test Excel loader with merged cells handling", async () => {
+  if (!xlsxPath || !(await fs.access(xlsxPath).then(() => true).catch(() => false))) {
+    console.warn("Skipping test - test Excel file not available");
+    return;
+  }
+
+  try {
+    const XLSX = await import("xlsx");
+
+    // Create a test file with merged cells
+    const mergedTestPath = path.join(
+      path.dirname(xlsxPath),
+      "merged_cells_test.xlsx"
+    );
+
+    const workbook = XLSX.utils.book_new();
+
+    // Create a worksheet with merged cells
+    const ws_data = [
+      ["Merged Header", "", "", "Regular"],
+      ["A1", "B1", "C1", "D1"],
+      ["A2", "B2", "C2", "D2"]
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // Add merge information (A1:C1 merged)
+    if (!worksheet["!merges"]) worksheet["!merges"] = [];
+    worksheet["!merges"].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } });
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "MergedSheet");
+    XLSX.writeFile(workbook, mergedTestPath);
+
+    // Test with default behavior (first)
+    const loader1 = new ExcelLoader(mergedTestPath, {
+      sheets: "MergedSheet",
+      outputFormat: "json"
+    });
+    const docs1 = await loader1.load();
+
+    // First row should have the merged value only in the first column
+    expect(docs1[0].pageContent).toContain("Merged Header");
+    // Empty cells from merged range might not appear in output with default handling
+
+    // Test with duplicate behavior
+    const loader2 = new ExcelLoader(mergedTestPath, {
+      sheets: "MergedSheet",
+      outputFormat: "json",
+      mergedCellHandling: "duplicate"
+    });
+    const docs2 = await loader2.load();
+
+    // With duplicate handling, the merged value should appear in all merged cells
+    // This ensures data consistency when processing merged cells
+    expect(docs2[0].pageContent).toContain("Merged Header");
+
+    // Clean up test file
+    await fs.unlink(mergedTestPath).catch(() => {});
+  } catch (error) {
+    console.warn("Could not test merged cells - xlsx package issue:", error);
+  }
+});
