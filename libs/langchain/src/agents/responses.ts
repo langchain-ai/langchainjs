@@ -7,6 +7,7 @@ import {
   isInteropZodObject,
 } from "@langchain/core/utils/types";
 import { type AIMessage } from "@langchain/core/messages";
+import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 
@@ -14,6 +15,7 @@ import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
+import { hasSupportForJsonSchemaOutput } from "./utils.js";
 
 /**
  * This is a global counter for generating unique names for tools.
@@ -53,31 +55,16 @@ export class ToolStrategy<_T = unknown> {
 
   static fromSchema<S extends InteropZodObject>(
     schema: S,
-    options?: {
-      name?: string;
-      description?: string;
-      strict?: boolean;
-    },
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<S extends InteropZodType<infer U> ? U : unknown>;
 
   static fromSchema(
     schema: Record<string, unknown>,
-    options?: {
-      name?: string;
-      description?: string;
-      strict?: boolean;
-    },
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<Record<string, unknown>>;
 
   static fromSchema(
     schema: InteropZodObject | Record<string, unknown>,
-    options?: {
-      name?: string;
-      description?: string;
-      strict?: boolean;
-    },
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<any> {
     /**
@@ -85,7 +72,7 @@ export class ToolStrategy<_T = unknown> {
      * when parsing the response.
      */
     function getFunctionName(name?: string) {
-      return name ?? options?.name ?? `extract-${++bindingIdentifier}`;
+      return name ?? `extract-${++bindingIdentifier}`;
     }
 
     if (isInteropZodSchema(schema)) {
@@ -94,9 +81,8 @@ export class ToolStrategy<_T = unknown> {
         type: "function" as const,
         function: {
           name: getFunctionName(),
-          strict: options?.strict,
+          strict: false,
           description:
-            options?.description ??
             asJsonSchema.description ??
             "Tool for extracting structured output from the model's response.",
           parameters: asJsonSchema,
@@ -207,7 +193,9 @@ export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
  * - if value is a JSON schema, default to structured output via tool calling
  * - if value is a custom response format, return it as is
  * - if value is an array, ensure all array elements are instance of `ToolStrategy`
- * @param responseFormat
+ * @param responseFormat - The response format to transform, provided by the user
+ * @param options - The response format options for tool strategy
+ * @param model - The model to check if it supports JSON schema output
  * @returns
  */
 export function transformResponseFormat(
@@ -219,7 +207,8 @@ export function transformResponseFormat(
     | ResponseFormat
     | ToolStrategy<any>[]
     | ResponseFormatUndefined,
-  options?: ToolStrategyOptions
+  options?: ToolStrategyOptions,
+  model?: LanguageModelLike | string
 ): ResponseFormat[] {
   if (!responseFormat) {
     return [];
@@ -256,7 +245,7 @@ export function transformResponseFormat(
      */
     if (responseFormat.every((item) => isInteropZodObject(item))) {
       return responseFormat.map((item) =>
-        ToolStrategy.fromSchema(item as InteropZodObject, undefined, options)
+        ToolStrategy.fromSchema(item as InteropZodObject, options)
       );
     }
 
@@ -270,7 +259,7 @@ export function transformResponseFormat(
       )
     ) {
       return responseFormat.map((item) =>
-        ToolStrategy.fromSchema(item as JsonSchemaFormat, undefined, options)
+        ToolStrategy.fromSchema(item as JsonSchemaFormat, options)
       );
     }
 
@@ -280,15 +269,22 @@ export function transformResponseFormat(
     );
   }
 
-  if (isInteropZodObject(responseFormat)) {
-    return [ToolStrategy.fromSchema(responseFormat, undefined, options)];
-  }
-
   if (
     responseFormat instanceof ToolStrategy ||
     responseFormat instanceof ProviderStrategy
   ) {
     return [responseFormat];
+  }
+
+  const useProviderStrategy = hasSupportForJsonSchemaOutput(model);
+
+  /**
+   * `responseFormat` is a Zod schema
+   */
+  if (isInteropZodObject(responseFormat)) {
+    return useProviderStrategy
+      ? [ProviderStrategy.fromSchema(responseFormat)]
+      : [ToolStrategy.fromSchema(responseFormat, options)];
   }
 
   /**
@@ -299,13 +295,9 @@ export function transformResponseFormat(
     responseFormat !== null &&
     "properties" in responseFormat
   ) {
-    return [
-      ToolStrategy.fromSchema(
-        responseFormat as JsonSchemaFormat,
-        undefined,
-        options
-      ),
-    ];
+    return useProviderStrategy
+      ? [ProviderStrategy.fromSchema(responseFormat as JsonSchemaFormat)]
+      : [ToolStrategy.fromSchema(responseFormat as JsonSchemaFormat, options)];
   }
 
   throw new Error(`Invalid response format: ${String(responseFormat)}`);

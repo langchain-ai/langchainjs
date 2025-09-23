@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage, ToolCall } from "@langchain/core/messages";
 import z from "zod/v3";
 
 import { createAgent, providerStrategy } from "../index.js";
@@ -254,6 +254,95 @@ describe("createAgent Integration Tests", () => {
       expect(response.someEnum).toBe("b");
       expect(response.someNumber).toBe(0); // expect 0 because it's not set as optional in the schema
       expect(response.someOptionalNumber).toBe(undefined);
+    });
+  });
+
+  describe("sturctured response format", () => {
+    it("should automatically use provider strategy if the model supports JSON schema output", async () => {
+      const weatherTool = tool(
+        async (input: { city: string }) => {
+          return `Weather in ${input.city}: Sunny, 72°F`;
+        },
+        {
+          name: "getWeather",
+          schema: z.object({
+            city: z.string(),
+          }),
+          description: "Get the current weather for a city",
+        }
+      );
+
+      const agent = createAgent({
+        model: "gpt-4o-mini",
+        tools: [weatherTool],
+        responseFormat: z.object({
+          city: z.string(),
+          temperature: z.number().describe("The temperature in fahrenheit"),
+        }),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      });
+
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse?.city).toBe("Tokyo");
+      expect(result.structuredResponse?.temperature).toBe(72);
+      const toolCalls = result.messages
+        .filter(
+          (msg) =>
+            "tool_calls" in msg &&
+            Array.isArray(msg.tool_calls) &&
+            msg.tool_calls.length > 0
+        )
+        .map((msg) => (msg as AIMessage).tool_calls)
+        .flat() as ToolCall[];
+      expect(toolCalls).toHaveLength(1);
+      expect(toolCalls[0].name).toBe("getWeather");
+    });
+
+    it("should automatically use tool strategy if the model does not support JSON schema output", async () => {
+      const weatherTool = tool(
+        async (input: { city: string }) => {
+          return `Weather in ${input.city}: Sunny, 72°F`;
+        },
+        {
+          name: "getWeather",
+          schema: z.object({
+            city: z.string(),
+          }),
+          description: "Get the current weather for a city",
+        }
+      );
+
+      const agent = createAgent({
+        model: "gpt-3.5-turbo",
+        tools: [weatherTool],
+        responseFormat: z.object({
+          city: z.string(),
+          temperature: z.number().describe("The temperature in fahrenheit"),
+        }),
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("What's the weather in Tokyo?")],
+      });
+
+      expect(result.structuredResponse).toBeDefined();
+      expect(result.structuredResponse?.city).toBe("Tokyo");
+      expect(result.structuredResponse?.temperature).toBe(72);
+      const toolCalls = result.messages
+        .filter(
+          (msg) =>
+            "tool_calls" in msg &&
+            Array.isArray(msg.tool_calls) &&
+            msg.tool_calls.length > 0
+        )
+        .map((msg) => (msg as AIMessage).tool_calls)
+        .flat() as ToolCall[];
+      expect(toolCalls).toHaveLength(2);
+      expect(toolCalls[0].name).toBe("getWeather");
+      expect(toolCalls[1].name).toContain("extract-");
     });
   });
 });

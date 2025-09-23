@@ -77,6 +77,18 @@ export interface AgentNodeOptions<
   ][];
 }
 
+interface NativeResponseFormat {
+  type: "native";
+  strategy: ProviderStrategy;
+}
+
+interface ToolResponseFormat {
+  type: "tool";
+  tools: Record<string, ToolStrategy>;
+}
+
+type ResponseFormat = NativeResponseFormat | ToolResponseFormat;
+
 export class AgentNode<
   StructuredResponseFormat extends Record<string, unknown> = Record<
     string,
@@ -89,8 +101,6 @@ export class AgentNode<
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
 
-  #structuredToolInfo: Record<string, ToolStrategy> = {};
-
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
   ) {
@@ -101,18 +111,64 @@ export class AgentNode<
     });
 
     this.#options = options;
+  }
+
+  /**
+   * Returns response format primtivies based on given model and response format provided by the user.
+   *
+   * If the the user selects a tool output:
+   * - return a record of tools to extract structured output from the model's response
+   *
+   * if the the user selects a native schema output or if the model supports JSON schema output:
+   * - return a provider strategy to extract structured output from the model's response
+   *
+   * @param model - The model to get the response format for.
+   * @returns The response format.
+   */
+  #getResponseFormat(
+    model: string | LanguageModelLike
+  ): ResponseFormat | undefined {
+    if (!this.#options.responseFormat) {
+      return undefined;
+    }
+
+    const strategies = transformResponseFormat(
+      this.#options.responseFormat,
+      undefined,
+      model
+    );
+
+    /**
+     * we either define a list of provider strategies or a list of tool strategies
+     */
+    const isProviderStrategy = strategies.every(
+      (format) => format instanceof ProviderStrategy
+    );
 
     /**
      * Populate a list of structured tool info.
      */
-    this.#structuredToolInfo = (
-      transformResponseFormat(this.#options.responseFormat).filter(
-        (format) => format instanceof ToolStrategy
-      ) as ToolStrategy[]
-    ).reduce((acc, format) => {
-      acc[format.name] = format;
-      return acc;
-    }, {} as Record<string, ToolStrategy>);
+    if (!isProviderStrategy) {
+      return {
+        type: "tool",
+        tools: (
+          strategies.filter(
+            (format) => format instanceof ToolStrategy
+          ) as ToolStrategy[]
+        ).reduce((acc, format) => {
+          acc[format.name] = format;
+          return acc;
+        }, {} as Record<string, ToolStrategy>),
+      };
+    }
+
+    return {
+      type: "native",
+      /**
+       * there can only be one provider strategy
+       */
+      strategy: strategies[0],
+    };
   }
 
   async #run(
@@ -224,10 +280,17 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(finalModel);
 
-    const modelWithTools = await this.#bindTools(finalModel, preparedOptions);
+    const structuredResponseFormat = this.#getResponseFormat(finalModel);
+    const modelWithTools = await this.#bindTools(
+      finalModel,
+      preparedOptions,
+      structuredResponseFormat
+    );
     let modelInput = this.#getModelInputState(state);
 
-    // Use messages from preparedOptions if provided
+    /**
+     * Use messages from preparedOptions if provided
+     */
     if (preparedOptions?.messages) {
       modelInput = { ...modelInput, messages: preparedOptions.messages };
     }
@@ -243,19 +306,22 @@ export class AgentNode<
      * if the user requests a native schema output, try to parse the response
      * and return the structured response if it is valid
      */
-    if (this.#options.responseFormat instanceof ProviderStrategy) {
-      const structuredResponse = this.#options.responseFormat.parse(response);
+    if (structuredResponseFormat?.type === "native") {
+      const structuredResponse =
+        structuredResponseFormat.strategy.parse(response);
       if (structuredResponse) {
         return { structuredResponse, messages: [response] };
       }
+
+      return response;
     }
 
-    if (!response.tool_calls) {
+    if (!structuredResponseFormat || !response.tool_calls) {
       return response;
     }
 
     const toolCalls = response.tool_calls.filter(
-      (call) => call.name in this.#structuredToolInfo
+      (call) => call.name in structuredResponseFormat.tools
     );
 
     /**
@@ -270,14 +336,19 @@ export class AgentNode<
      * scenario is not defined/supported.
      */
     if (toolCalls.length > 1) {
-      return this.#handleMultipleStructuredOutputs(response, toolCalls);
+      return this.#handleMultipleStructuredOutputs(
+        response,
+        toolCalls,
+        structuredResponseFormat
+      );
     }
 
-    const toolStrategy = this.#structuredToolInfo[toolCalls[0].name];
+    const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
     const toolMessageContent = toolStrategy?.options?.toolMessageContent;
     return this.#handleSingleStructuredOutput(
       response,
       toolCalls[0],
+      structuredResponseFormat,
       toolMessageContent ?? options.lastMessage
     );
   }
@@ -290,17 +361,9 @@ export class AgentNode<
    */
   #handleMultipleStructuredOutputs(
     response: AIMessage,
-    toolCalls: ToolCall[]
+    toolCalls: ToolCall[],
+    responseFormat: ToolResponseFormat
   ): Promise<Command> {
-    /**
-     * the following should never happen, let's throw an error if it does
-     */
-    if (this.#options.responseFormat instanceof ProviderStrategy) {
-      throw new Error(
-        "Multiple structured outputs should not apply to native structured output responses"
-      );
-    }
-
     const multipleStructuredOutputsError = new MultipleStructuredOutputsError(
       toolCalls.map((call) => call.name)
     );
@@ -308,7 +371,8 @@ export class AgentNode<
     return this.#handleToolStrategyError(
       multipleStructuredOutputsError,
       response,
-      toolCalls[0]
+      toolCalls[0],
+      responseFormat
     );
   }
 
@@ -320,9 +384,10 @@ export class AgentNode<
   #handleSingleStructuredOutput(
     response: AIMessage,
     toolCall: ToolCall,
+    responseFormat: ToolResponseFormat,
     lastMessage?: string
   ): ResponseHandlerResult<StructuredResponseFormat> {
-    const tool = this.#structuredToolInfo[toolCall.name];
+    const tool = responseFormat.tools[toolCall.name];
 
     try {
       const structuredResponse = tool.parse(
@@ -345,7 +410,8 @@ export class AgentNode<
       return this.#handleToolStrategyError(
         error as ToolStrategyError,
         response,
-        toolCall
+        toolCall,
+        responseFormat
       );
     }
   }
@@ -353,7 +419,8 @@ export class AgentNode<
   async #handleToolStrategyError(
     error: ToolStrategyError,
     response: AIMessage,
-    toolCall: ToolCall
+    toolCall: ToolCall,
+    responseFormat: ToolResponseFormat
   ): Promise<Command> {
     /**
      * Using the `errorHandler` option of the first `ToolStrategy` entry is sufficient here.
@@ -362,7 +429,7 @@ export class AgentNode<
      * schema objects, these will be transformed into multiple `ToolStrategy` entries but all
      * with the same `handleError` option.
      */
-    const errorHandler = Object.values(this.#structuredToolInfo).at(0)?.options
+    const errorHandler = Object.values(responseFormat.tools).at(0)?.options
       ?.handleError;
 
     const toolCallId = toolCall.id;
@@ -554,10 +621,15 @@ export class AgentNode<
 
   async #bindTools(
     model: LanguageModelLike,
-    preparedOptions?: ModelRequest
+    preparedOptions: ModelRequest | undefined,
+    structuredResponseFormat: ResponseFormat | undefined
   ): Promise<Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
-    const structuredTools = Object.values(this.#structuredToolInfo);
+    const structuredTools = Object.values(
+      structuredResponseFormat && "tools" in structuredResponseFormat
+        ? structuredResponseFormat.tools
+        : {}
+    );
 
     // Use tools from preparedOptions if provided, otherwise use default tools
     const allTools = this.#options.toolClasses.concat(
@@ -576,7 +648,7 @@ export class AgentNode<
     /**
      * check if the user requests a native schema output
      */
-    if (this.#options.responseFormat instanceof ProviderStrategy) {
+    if (structuredResponseFormat?.type === "native") {
       /**
        * if the model does not support JSON schema output, throw an error
        */
@@ -587,9 +659,11 @@ export class AgentNode<
       }
 
       const jsonSchemaParams = {
-        name: this.#options.responseFormat.schema?.name ?? "extract",
-        description: getSchemaDescription(this.#options.responseFormat.schema),
-        schema: this.#options.responseFormat.schema,
+        name: structuredResponseFormat.strategy.schema?.name ?? "extract",
+        description: getSchemaDescription(
+          structuredResponseFormat.strategy.schema
+        ),
+        schema: structuredResponseFormat.strategy.schema,
         strict: true,
       };
 
@@ -600,7 +674,7 @@ export class AgentNode<
         },
         ls_structured_output_format: {
           kwargs: { method: "json_schema" },
-          schema: this.#options.responseFormat.schema,
+          schema: structuredResponseFormat.strategy.schema,
         },
         strict: true,
       });

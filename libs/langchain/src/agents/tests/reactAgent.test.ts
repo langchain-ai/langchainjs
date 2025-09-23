@@ -497,7 +497,7 @@ describe("createAgent", () => {
         {
           args: { temperature: 75 },
           id: "2",
-          name: "extract-1",
+          name: "extract-2",
           type: "tool_call" as const,
         },
       ],
@@ -541,8 +541,7 @@ describe("createAgent", () => {
     });
 
     const expectedStructuredResponse: WeatherResponse = { temperature: 75 };
-    const model = new FakeToolCallingModel({
-      toolCalls: [],
+    const model = new FakeToolCallingChatModel({
       structuredResponse: expectedStructuredResponse,
     });
 
@@ -553,12 +552,15 @@ describe("createAgent", () => {
     });
 
     const response = await agent.invoke({
-      messages: [new AIMessage('{"temperature":75}')],
+      messages: [
+        new AIMessage('{"temperature":75}'),
+        new AIMessage("You are a weather assistant"),
+      ],
     });
 
     expect(response.structuredResponse).toEqual(expectedStructuredResponse);
     expect(response.messages).toHaveLength(2);
-    expect((response.messages[1] as ToolMessage).content).toBe(
+    expect((response.messages[0] as ToolMessage).content).toBe(
       `{"temperature":75}`
     );
   });
