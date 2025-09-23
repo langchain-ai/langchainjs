@@ -267,7 +267,7 @@ export abstract class BaseChatOpenAI<
 
   logitBias?: Record<string, number>;
 
-  model = "gpt-3.5-turbo";
+  model = "gpt-4o-mini";
 
   modelKwargs?: OpenAIChatInput["modelKwargs"];
 
