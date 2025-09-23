@@ -1,15 +1,11 @@
 import { z } from "zod/v3";
+import type { Command } from "@langchain/langgraph";
 import { EmbeddedResourceSchema } from "@modelcontextprotocol/sdk/types.js";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { ToolMessage, MessageStructure } from "@langchain/core/messages";
 
 export type { RunnableConfig, ToolMessage, MessageStructure };
-
-/**
- * Mimick the Command type from LangGraph
- */
-export type Command = {};
 
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
