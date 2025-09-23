@@ -3018,8 +3018,8 @@ importers:
         specifier: ^8.0.4
         version: 8.0.4
       prettier:
-        specifier: ^2.8.3
-        version: 2.8.8
+        specifier: ^3.6.2
+        version: 3.6.2
       release-it:
         specifier: ^17.6.0
         version: 17.11.0(typescript@5.8.3)

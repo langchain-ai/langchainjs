@@ -122,8 +122,8 @@ export class ConnectionManager {
       type === "http"
         ? await this.#createStreamableHTTPTransport(serverName, options)
         : type === "sse"
-        ? await this.#createSSETransport(serverName, options)
-        : await this.#createStdioTransport(options);
+          ? await this.#createSSETransport(serverName, options)
+          : await this.#createStdioTransport(options);
     const mcpClient = new MCPClient({
       name: packageJson.name,
       version: packageJson.version,

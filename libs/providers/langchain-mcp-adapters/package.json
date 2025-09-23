@@ -74,7 +74,7 @@
     "express": "^5.1.0",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
-    "prettier": "^2.8.3",
+    "prettier": "^3.6.2",
     "release-it": "^17.6.0",
     "rollup": "^4.39.0",
     "ts-node": "^10.9.2",
