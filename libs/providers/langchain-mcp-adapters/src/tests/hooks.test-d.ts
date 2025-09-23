@@ -1,5 +1,6 @@
 import { test, expectTypeOf } from "vitest";
 import { ToolMessage } from "@langchain/core/messages";
+import { RunnableConfig } from "@langchain/core/runnables";
 import { MultiServerMCPClient } from "../client.js";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -15,14 +16,18 @@ test("check tool hooks types", () => {
         args: ["-y", "@modelcontextprotocol/server-filesystem", "./"],
       },
     },
-    beforeToolCall: (toolCallRequest) => {
+    beforeToolCall: (toolCallRequest, state, runtime) => {
+      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallRequest).toEqualTypeOf<{
         name: string;
         serverName: string;
         args?: unknown;
       }>();
     },
-    afterToolCall: (toolCallResult) => {
+    afterToolCall: (toolCallResult, state, runtime) => {
+      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallResult.name).toEqualTypeOf<string>();
       expectTypeOf(toolCallResult.args).toEqualTypeOf<unknown>();
       expectTypeOf(toolCallResult.serverName).toEqualTypeOf<string>();

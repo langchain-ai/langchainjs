@@ -7,6 +7,14 @@ import type { ToolMessage, MessageStructure } from "@langchain/core/messages";
 
 export type { RunnableConfig, ToolMessage, MessageStructure };
 
+/**
+ * state messages
+ *
+ * Note: this may not be defined in cases you don't use LangGraph or a LangGraph implementation like `createAgent`.
+ * Also state can be defined arbitrarily by the user.
+ */
+export type State = Record<string, unknown>;
+
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
   name: z.string(),
@@ -83,7 +91,7 @@ export const toolHooksSchema = z.object({
    * @example
    * ```ts
    * const interceptor = {
-   *   beforeToolCall: (toolCallRequest) => {
+   *   beforeToolCall: (toolCallRequest, state, runtime) => {
    *     return {
    *       args: {
    *         ...toolCallRequest.args,
@@ -97,7 +105,7 @@ export const toolHooksSchema = z.object({
    */
   beforeToolCall: z
     .function()
-    .args(toolCallRequestSchema, z.custom<RunnableConfig>())
+    .args(toolCallRequestSchema, z.custom<State>(), z.custom<RunnableConfig>())
     .returns(
       z.union([
         z.promise(toolCallModificationSchema),
@@ -122,7 +130,7 @@ export const toolHooksSchema = z.object({
    * @example
    * ```ts
    * const interceptor = {
-   *   afterToolCall: (toolCallResult) => {
+   *   afterToolCall: (toolCallResult, state, runtime) => {
    *     if (toolCallResult.name === "calculator") {
    *       return ["Custom Value", []];
    *     }
@@ -133,7 +141,7 @@ export const toolHooksSchema = z.object({
    */
   afterToolCall: z
     .function()
-    .args(toolCallResultSchema, z.custom<RunnableConfig>())
+    .args(toolCallResultSchema, z.custom<State>(), z.custom<RunnableConfig>())
     .returns(
       z.union([
         z.promise(modifiedToolCallResultSchema.pick({ result: true })),

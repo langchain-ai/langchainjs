@@ -1,10 +1,13 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
-import { ToolMessage } from "@langchain/core/messages";
+import { ToolMessage, BaseMessage } from "@langchain/core/messages";
+import { createAgent, FakeToolCallingModel } from "langchain";
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
+import type { State } from "../hooks.js";
 import type { ClientConfig } from "../types.js";
 
 type TransportKind = "stdio" | "http" | "sse";
@@ -291,6 +294,102 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       await t.invoke({ input: "evt" });
       expect(logs.some((m) => m.includes("test_tool invoked"))).toBe(true);
       expect(progresses).toEqual([33, 67, 100]);
+    } finally {
+      await client.close();
+    }
+  });
+
+  test("hooks have access to state and runtime without LangGraph", async () => {
+    const { baseUrl } = await servers.createHTTP("http-interceptor", {
+      testHeaders: true,
+    });
+    const stateCalls: State[] = [];
+    const runtimeCalls: RunnableConfig[] = [];
+    const client = new MultiServerMCPClient({
+      mcpServers: {
+        http: {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+          automaticSSEFallback: true,
+        },
+      },
+      beforeToolCall: (_, state, runtime) => {
+        stateCalls.push(state);
+        runtimeCalls.push(runtime);
+      },
+      afterToolCall: (_, state, runtime) => {
+        stateCalls.push(state);
+        runtimeCalls.push(runtime);
+      },
+    });
+
+    try {
+      const tools = await client.getTools();
+      const t = tools.find((tool) => tool.name.includes("test_tool"))!;
+      await t.invoke({ input: "orig" });
+      expect(stateCalls).toHaveLength(2);
+      expect(stateCalls).toEqual([{ messages: [] }, { messages: [] }]);
+      expect(runtimeCalls).toHaveLength(2);
+      expect(runtimeCalls[0]).toEqual({
+        tags: [],
+        metadata: {},
+        recursionLimit: 25,
+        runName: "test_tool",
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  test.only("hooks have access to state and runtime with LangGraph", async () => {
+    const model = new FakeToolCallingModel({
+      toolCalls: [[{ name: "test_tool", args: { input: "orig" }, id: "1" }]],
+    });
+    const { baseUrl } = await servers.createHTTP("http-interceptor", {
+      testHeaders: true,
+    });
+    const stateCalls: { messages: BaseMessage[] }[] = [];
+    const runtimeCalls: RunnableConfig[] = [];
+    const client = new MultiServerMCPClient({
+      mcpServers: {
+        http: {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+          automaticSSEFallback: true,
+        },
+      },
+      beforeToolCall: (_, state, runtime) => {
+        stateCalls.push(state as { messages: BaseMessage[] });
+        runtimeCalls.push(runtime);
+        return {
+          args: {
+            input: "I changed the input",
+          },
+        };
+      },
+      afterToolCall: (_, state, runtime) => {
+        stateCalls.push(state as { messages: BaseMessage[] });
+        runtimeCalls.push(runtime);
+      },
+    });
+
+    try {
+      const tools = await client.getTools();
+      const agent = createAgent({
+        llm: model,
+        tools: tools,
+      });
+      const result = await agent.invoke({
+        messages: [{ type: "user", content: "orig" }],
+      });
+      expect(stateCalls).toHaveLength(2);
+      const [beforeState, afterState] = stateCalls;
+      expect(beforeState.messages.length).toEqual(2);
+      expect(afterState.messages.length).toEqual(2);
+      expect(result.messages.pop()?.content).toEqual(
+        `{"input":"I changed the input","serverName":"http-interceptor"}`
+      );
+      expect(result.messages.shift()?.content).toEqual("orig");
     } finally {
       await client.close();
     }
