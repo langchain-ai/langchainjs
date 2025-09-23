@@ -489,7 +489,7 @@ async function _callTool({
         : {}),
     };
 
-    let state: State = { messages: [] };
+    let state: State = {};
     try {
       state = getCurrentTaskInput(config) as State;
     } catch (error) {

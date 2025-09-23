@@ -328,7 +328,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       const t = tools.find((tool) => tool.name.includes("test_tool"))!;
       await t.invoke({ input: "orig" });
       expect(stateCalls).toHaveLength(2);
-      expect(stateCalls).toEqual([{ messages: [] }, { messages: [] }]);
+      expect(stateCalls).toEqual([{}, {}]);
       expect(runtimeCalls).toHaveLength(2);
       expect(runtimeCalls[0]).toEqual({
         tags: [],
