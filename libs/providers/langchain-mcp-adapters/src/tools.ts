@@ -1,3 +1,5 @@
+import { z, ZodError as ZodErrorV4 } from "zod/v4";
+import { ZodError as ZodErrorV3 } from "zod/v3";
 import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   EmbeddedResource,
@@ -11,6 +13,7 @@ import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { ToolMessage } from "@langchain/core/messages";
+import { Command } from "@langchain/langgraph";
 
 import type { Notifications } from "./types.js";
 
@@ -30,9 +33,28 @@ import { getDebugLog } from "./logging.js";
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
-  constructor(message: string) {
+  constructor(message: string, cause?: Error) {
     super(message);
     this.name = "ToolException";
+
+    /**
+     * don't display the large ZodError stack trace
+     */
+    if (
+      cause &&
+      // eslint-disable-next-line no-instanceof/no-instanceof
+      (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
+    ) {
+      const minifiedZodError = new Error(z.prettifyError(cause));
+      const stackByLine = cause.stack?.split("\n") || [];
+      minifiedZodError.stack = cause.stack
+        ?.split("\n")
+        .slice(stackByLine.findIndex((l) => l.includes("    at")))
+        .join("\n");
+      this.cause = minifiedZodError;
+    } else if (cause) {
+      this.cause = cause;
+    }
   }
 }
 
@@ -419,7 +441,8 @@ type ContentBlocksWithArtifacts =
       (ContentBlock | ContentBlock.Multimodal.Standard)[],
       (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
     ]
-  | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]];
+  | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]]
+  | Command;
 
 /**
  * Call an MCP tool.
@@ -541,18 +564,20 @@ async function _callTool({
       return [interceptedResult.result.contentBlocks, []];
     }
 
-    if (
-      typeof interceptedResult?.result === "object" &&
-      "constructor" in interceptedResult.result &&
-      interceptedResult.result.constructor.name === "Command"
-    ) {
-      return interceptedResult.result as unknown as ContentBlocksWithArtifacts;
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (interceptedResult?.result instanceof Command) {
+      return interceptedResult.result;
     }
 
     throw new Error(
       `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
     );
   } catch (error) {
+    // eslint-disable-next-line no-instanceof/no-instanceof
+    if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
+      throw new ToolException(z.prettifyError(error), error);
+    }
+
     getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;

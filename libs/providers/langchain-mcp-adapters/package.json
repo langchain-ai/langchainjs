@@ -42,7 +42,16 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.66"
+    "@langchain/core": "^1.0.0-0 <2.0.0",
+    "@langchain/langgraph": "v1.0.0-0 <2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": false
+    },
+    "@langchain/langgraph": {
+      "optional": false
+    }
   },
   "optionalDependencies": {
     "extended-eventsource": "^1.x"
