@@ -118,7 +118,16 @@ async function _initChatModelHelper(
         return new ChatOllama({ model, ...passedParams });
       }
       case "perplexity": {
-        const { ChatPerplexity } = await import("@langchain/community/chat_models/perplexity");
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Can not install as a proper dependency due to circular dependency
+        const { ChatPerplexity } = await import(
+          // We can not 'expect-error' because if you explicitly build `@langchain/community`
+          // this import will be able to be resolved, thus there will be no error. However
+          // this will never be the case in CI.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - Can not install as a proper dependency due to circular dependency
+          "@langchain/community/chat_models/perplexity"
+        );
         return new ChatPerplexity({ model, ...passedParams });
       }
       case "mistralai": {
@@ -645,6 +654,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - perplexity (@langchain/community/chat_models/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)
