@@ -1,0 +1,189 @@
+---
+hide_table_of_contents: true
+---
+
+# Excel files
+
+The `ExcelLoader` allows you to extract data from Microsoft Excel spreadsheets. It supports both the modern `.xlsx` format and the legacy `.xls` format, providing flexible options for data extraction and formatting.
+
+---
+
+## Setup
+
+To use `ExcelLoader`, you'll need the `@langchain/community` integration along with the `xlsx` package:
+
+### Installation
+
+```bash npm2yarn
+npm install @langchain/community @langchain/core xlsx
+```
+
+## Usage
+
+### Basic Usage
+
+By default, the loader processes all sheets in the workbook and creates one document per row:
+
+```javascript
+import { ExcelLoader } from "@langchain/community/document_loaders/fs/excel";
+
+const loader = new ExcelLoader("data.xlsx");
+const docs = await loader.load();
+
+// Each row becomes a document with key-value pairs
+// docs[0].pageContent: "Name: John Doe\nAge: 30\nDepartment: Engineering"
+```
+
+### Loading Specific Sheets
+
+You can specify which sheets to load by name or index:
+
+```javascript
+// Load by sheet name
+const loader = new ExcelLoader("data.xlsx", {
+  sheets: "Sheet1"
+});
+
+// Load by sheet index (0-based)
+const loader = new ExcelLoader("data.xlsx", {
+  sheets: 0
+});
+
+// Load multiple sheets
+const loader = new ExcelLoader("data.xlsx", {
+  sheets: ["Sheet1", "Products", 2]
+});
+```
+
+### Extracting Specific Columns
+
+When working with JSON output format, you can extract only specific column values as page content:
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  column: "description",
+  sheets: "Products"
+});
+
+const docs = await loader.load();
+// docs[0].pageContent will contain only the "description" column value
+```
+
+### Output Formats
+
+The loader supports multiple output formats to suit different use cases:
+
+#### JSON Format (Default)
+Creates one document per row with key-value pairs:
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  outputFormat: "json"
+});
+```
+
+#### CSV Format
+Returns sheet data as CSV text (one document per sheet):
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  outputFormat: "csv"
+});
+
+const docs = await loader.load();
+// docs[0].pageContent: "Name,Age,Department\nJohn Doe,30,Engineering\n..."
+```
+
+#### HTML Format
+Returns sheet data as an HTML table (one document per sheet):
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  outputFormat: "html"
+});
+
+const docs = await loader.load();
+// docs[0].pageContent: "<table><tr><td>Name</td><td>Age</td>...</table>"
+```
+
+#### Raw Format
+Returns sheet data as tab-separated values (one document per sheet):
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  outputFormat: "raw"
+});
+```
+
+### Advanced Options
+
+#### Including Empty Rows
+
+By default, empty rows are skipped. You can include them if needed:
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  includeEmptyRows: true
+});
+```
+
+#### Specifying a Range
+
+You can load only a specific range of cells:
+
+```javascript
+const loader = new ExcelLoader("data.xlsx", {
+  range: "A1:D10",  // Load only cells from A1 to D10
+  sheets: "Sheet1"
+});
+```
+
+### Working with `.xls` Files
+
+The loader automatically handles both `.xlsx` and `.xls` formats:
+
+```javascript
+const loader = new ExcelLoader("legacy_data.xls");
+const docs = await loader.load();
+```
+
+## Complete Example
+
+```javascript
+import { ExcelLoader } from "@langchain/community/document_loaders/fs/excel";
+
+// Load sales data from specific sheets with custom formatting
+const loader = new ExcelLoader("sales_report.xlsx", {
+  sheets: ["Q1_Sales", "Q2_Sales"],
+  outputFormat: "json",
+  column: "revenue",  // Extract only revenue column
+  includeEmptyRows: false
+});
+
+const docs = await loader.load();
+
+// Process the documents
+docs.forEach((doc, index) => {
+  console.log(`Document ${index + 1}:`);
+  console.log(`Content: ${doc.pageContent}`);
+  console.log(`Sheet: ${doc.metadata.sheet}`);
+  console.log(`Row: ${doc.metadata.row}`);
+  console.log("---");
+});
+```
+
+## Metadata
+
+Each document includes metadata with:
+- `source`: The file path or "blob" for Blob inputs
+- `sheet`: The name of the sheet the data came from
+- `row`: The row number (when using JSON format)
+
+## Use Cases
+
+The ExcelLoader is particularly useful for:
+- Processing financial reports and spreadsheets
+- Loading tabular data for analysis
+- Extracting structured data from forms
+- Converting Excel data for use in RAG applications
+- Migrating data from Excel-based systems
