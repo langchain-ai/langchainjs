@@ -22,12 +22,29 @@ export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
 
 export type ZodObjectV4 = z4.$ZodObject;
 
+export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
+export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
+export type ZodOptionalV3<T extends z3.ZodTypeAny> = z3.ZodOptional<T>;
+export type ZodOptionalV4<T extends z4.SomeType> = z4.$ZodOptional<T>;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
 export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
+export type InteropZodDefault<T = InteropZodObjectShape> =
+  T extends z3.ZodTypeAny
+    ? ZodDefaultV3<T>
+    : T extends z4.SomeType
+    ? ZodDefaultV4<T>
+    : never;
+export type InteropZodOptional<T = InteropZodObjectShape> =
+  T extends z3.ZodTypeAny
+    ? ZodOptionalV3<T>
+    : T extends z4.SomeType
+    ? ZodOptionalV4<T>
+    : never;
 
 export type InteropZodObjectShape<
   T extends InteropZodObject = InteropZodObject
@@ -38,6 +55,18 @@ export type InteropZodObjectShape<
   : never;
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
+
+export type InteropZodInput<T> = T extends z3.ZodType<
+  unknown,
+  z3.ZodTypeDef,
+  infer Input
+>
+  ? Input
+  : T extends z4.$ZodType<unknown, infer Input>
+  ? Input
+  : T extends { _zod: { input: infer Input } }
+  ? Input
+  : never;
 
 // Simplified type inference to avoid circular dependencies
 export type InferInteropZodInput<T> = T extends z3.ZodType<

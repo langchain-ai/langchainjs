@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  InferInteropZodInput,
+  InteropZodObject,
+} from "@langchain/core/utils/types";
 import { interrupt } from "@langchain/langgraph";
 
 import { createMiddleware } from "../middleware.js";
+import type { AgentMiddleware } from "../types.js";
 
 const ToolConfigSchema = z.object({
   /**
@@ -154,6 +159,9 @@ const contextSchema = z
     descriptionPrefix: z.string().default("Tool execution requires approval"),
   })
   .optional();
+export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
+  typeof contextSchema
+>;
 
 /**
  * Creates a Human-in-the-Loop (HITL) middleware for tool approval and oversight.
@@ -333,8 +341,12 @@ const contextSchema = z
  * @public
  */
 export function humanInTheLoopMiddleware(
-  options: z.input<typeof contextSchema> = {}
-) {
+  options: HumanInTheLoopMiddlewareConfig = {}
+): AgentMiddleware<
+  undefined,
+  InteropZodObject,
+  HumanInTheLoopMiddlewareConfig
+> {
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,

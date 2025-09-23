@@ -2,6 +2,11 @@ import { SystemMessage } from "@langchain/core/messages";
 import { createMiddleware } from "../middleware.js";
 import type { Runtime, AgentBuiltInState } from "../types.js";
 
+export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
+  state: AgentBuiltInState,
+  runtime: Runtime<AgentBuiltInState, TContextSchema>
+) => string | Promise<string>;
+
 /**
  * Dynamic System Prompt Middleware
  *
@@ -41,10 +46,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * @public
  */
 export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
-  fn: (
-    state: AgentBuiltInState,
-    runtime: Runtime<AgentBuiltInState, TContextSchema>
-  ) => string | Promise<string>
+  fn: DynamicSystemPromptMiddlewareConfig<TContextSchema>
 ) {
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",

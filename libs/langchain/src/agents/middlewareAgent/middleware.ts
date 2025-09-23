@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
+import type {
+  InteropZodObject,
+  InteropZodDefault,
+  InteropZodOptional,
+  InferInteropZodInput,
+} from "@langchain/core/utils/types";
 import type {
   AgentMiddleware,
   Runtime,
@@ -40,11 +45,11 @@ import type {
  * ```
  */
 export function createMiddleware<
-  TSchema extends z.ZodObject<any> | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends
-    | z.ZodObject<any>
-    | z.ZodOptional<z.ZodObject<any>>
-    | z.ZodDefault<z.ZodObject<any>>
+    | InteropZodObject
+    | InteropZodOptional
+    | InteropZodDefault
     | undefined = undefined
 >(config: {
   /**
@@ -90,18 +95,20 @@ export function createMiddleware<
    * @returns The modified model request or undefined to pass through
    */
   modifyModelRequest?: (
-    request: ModelRequest,
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    options: ModelRequest,
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      TContextSchema extends z.ZodObject<any>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-        ? Partial<z.infer<TContextSchema>>
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodDefault
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodOptional
+        ? Partial<InferInteropZodInput<TContextSchema>>
         : never
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
@@ -114,27 +121,35 @@ export function createMiddleware<
    * @returns The modified middleware state or undefined to pass through
    */
   beforeModel?: (
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      TContextSchema extends z.ZodObject<any>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-        ? Partial<z.infer<TContextSchema>>
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodDefault
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodOptional
+        ? Partial<InferInteropZodInput<TContextSchema>>
         : never
     >
   ) =>
     | Promise<
         MiddlewareResult<
-          Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
         >
       >
     | MiddlewareResult<
-        Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
       >;
   /**
    * The function to run after the model call. This function is called after the model is invoked and before any tools are called.
@@ -145,27 +160,35 @@ export function createMiddleware<
    * @returns The modified middleware state or undefined to pass through
    */
   afterModel?: (
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
-      TContextSchema extends z.ZodObject<any>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-        ? z.infer<TContextSchema>
-        : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-        ? Partial<z.infer<TContextSchema>>
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodDefault
+        ? InferInteropZodInput<TContextSchema>
+        : TContextSchema extends InteropZodOptional
+        ? Partial<InferInteropZodInput<TContextSchema>>
         : never
     >
   ) =>
     | Promise<
         MiddlewareResult<
-          Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+          Partial<
+            TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}
+          >
         >
       >
     | MiddlewareResult<
-        Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+        Partial<
+          TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+        >
       >;
 }): AgentMiddleware<TSchema, TContextSchema, any> {
   const middleware: AgentMiddleware<TSchema, TContextSchema, any> = {
@@ -183,14 +206,16 @@ export function createMiddleware<
           options,
           state,
           runtime as Runtime<
-            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+            (TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}) &
               AgentBuiltInState,
-            TContextSchema extends z.ZodObject<any>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-              ? Partial<z.infer<TContextSchema>>
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodDefault
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodOptional
+              ? Partial<InferInteropZodInput<TContextSchema>>
               : never
           >
         )
@@ -203,14 +228,16 @@ export function createMiddleware<
         config.beforeModel!(
           state,
           runtime as Runtime<
-            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+            (TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}) &
               AgentBuiltInState,
-            TContextSchema extends z.ZodObject<any>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-              ? Partial<z.infer<TContextSchema>>
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodDefault
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodOptional
+              ? Partial<InferInteropZodInput<TContextSchema>>
               : never
           >
         )
@@ -223,14 +250,16 @@ export function createMiddleware<
         config.afterModel!(
           state,
           runtime as Runtime<
-            (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+            (TSchema extends InteropZodObject
+              ? InferInteropZodInput<TSchema>
+              : {}) &
               AgentBuiltInState,
-            TContextSchema extends z.ZodObject<any>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodDefault<z.ZodObject<any>>
-              ? z.infer<TContextSchema>
-              : TContextSchema extends z.ZodOptional<z.ZodObject<any>>
-              ? Partial<z.infer<TContextSchema>>
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodDefault
+              ? InferInteropZodInput<TContextSchema>
+              : TContextSchema extends InteropZodOptional
+              ? Partial<InferInteropZodInput<TContextSchema>>
               : never
           >
         )

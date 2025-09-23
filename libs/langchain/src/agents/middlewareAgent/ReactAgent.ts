@@ -662,9 +662,9 @@ export class ReactAgent<
   /**
    * Initialize middleware states if not already present in the input state.
    */
-  #initializeMiddlewareStates(
+  async #initializeMiddlewareStates(
     state: InvokeStateParameter<TMiddleware>
-  ): InvokeStateParameter<TMiddleware> {
+  ): Promise<InvokeStateParameter<TMiddleware>> {
     if (
       !this.options.middleware ||
       this.options.middleware.length === 0 ||
@@ -674,7 +674,7 @@ export class ReactAgent<
       return state;
     }
 
-    const defaultStates = initializeMiddlewareStates(
+    const defaultStates = await initializeMiddlewareStates(
       this.options.middleware,
       state
     );
@@ -736,7 +736,7 @@ export class ReactAgent<
    * console.log(result.structuredResponse.weather); // outputs: "It's sunny and 75°F."
    * ```
    */
-  invoke(
+  async invoke(
     state: InvokeStateParameter<TMiddleware>,
     config?: InvokeConfiguration<
       InferContextInput<ContextSchema> &
@@ -744,7 +744,7 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
-    const initializedState = this.#initializeMiddlewareStates(state);
+    const initializedState = await this.#initializeMiddlewareStates(state);
     return this.#graph.invoke(
       initializedState,
       config as unknown as InferContextInput<ContextSchema> &
@@ -808,7 +808,7 @@ export class ReactAgent<
         InferMiddlewareContextInputs<TMiddleware>
     >
   ): Promise<IterableReadableStream<any>> {
-    const initializedState = this.#initializeMiddlewareStates(state);
+    const initializedState = await this.#initializeMiddlewareStates(state);
     return this.#graph.streamEvents(initializedState, {
       ...config,
       version: "v2",

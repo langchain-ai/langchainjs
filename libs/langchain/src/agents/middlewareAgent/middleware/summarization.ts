@@ -64,6 +64,8 @@ const contextSchema = z.object({
   summaryPrefix: z.string().default(SUMMARY_PREFIX),
 });
 
+export type SummarizationMiddlewareConfig = z.input<typeof contextSchema>;
+
 /**
  * Default token counter that approximates based on character count
  * @param messages Messages to count tokens for
@@ -122,7 +124,7 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
  * ```
  */
 export function summarizationMiddleware(
-  options: z.input<typeof contextSchema>
+  options: SummarizationMiddlewareConfig
 ) {
   return createMiddleware({
     name: "SummarizationMiddleware",

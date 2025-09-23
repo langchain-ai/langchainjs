@@ -2,7 +2,10 @@
 import { z } from "zod/v3";
 import type {
   InteropZodObject,
+  InteropZodDefault,
+  InteropZodOptional,
   InteropZodType,
+  InteropZodInput,
   InferInteropZodInput,
 } from "@langchain/core/utils/types";
 import type {
@@ -135,13 +138,8 @@ export interface ModelRequest {
 /**
  * Type helper to check if TContext is an optional Zod schema
  */
-type IsOptionalZodObject<T> = T extends z.ZodOptional<z.ZodObject<any>>
-  ? true
-  : false;
-
-type IsDefaultZodObject<T> = T extends z.ZodDefault<z.ZodObject<any>>
-  ? true
-  : false;
+type IsOptionalZodObject<T> = T extends InteropZodOptional ? true : false;
+type IsDefaultZodObject<T> = T extends InteropZodDefault ? true : false;
 
 type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
@@ -201,8 +199,8 @@ type FilterPrivateProps<T> = {
  */
 export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
   T extends AgentMiddleware<infer S, any, any>
-    ? S extends z.ZodObject<any>
-      ? FilterPrivateProps<z.infer<S>>
+    ? S extends InteropZodObject
+      ? FilterPrivateProps<InferInteropZodInput<S>>
       : {}
     : {};
 
@@ -213,8 +211,8 @@ export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
 export type InferMiddlewareInputState<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<infer S, any, any>
-  ? S extends z.ZodObject<any>
-    ? FilterPrivateProps<z.input<S>>
+  ? S extends InteropZodObject
+    ? FilterPrivateProps<InteropZodInput<S>>
     : {}
   : {};
 
@@ -267,8 +265,8 @@ export type InferMergedInputState<
  */
 export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
   T extends AgentMiddleware<any, infer C, any>
-    ? C extends z.ZodObject<any>
-      ? z.infer<C>
+    ? C extends InteropZodObject
+      ? InferInteropZodInput<C>
       : {}
     : {};
 
@@ -279,9 +277,9 @@ export type InferMiddlewareContextInput<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<any, infer C, any>
   ? C extends z.ZodOptional<infer Inner>
-    ? z.input<Inner> | undefined
-    : C extends z.ZodObject<any>
-    ? z.input<C>
+    ? InteropZodInput<Inner> | undefined
+    : C extends InteropZodObject
+    ? InteropZodInput<C>
     : {}
   : {};
 
@@ -346,11 +344,11 @@ export type JumpTo = "model_request" | "tools" | typeof END;
  * Base middleware interface.
  */
 export interface AgentMiddleware<
-  TSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends
-    | z.ZodObject<z.ZodRawShape>
-    | z.ZodOptional<z.ZodObject<z.ZodRawShape>>
-    | z.ZodDefault<z.ZodObject<z.ZodRawShape>>
+    | InteropZodObject
+    | InteropZodDefault
+    | InteropZodOptional
     | undefined = undefined,
   TFullContext = any
 > {
@@ -370,26 +368,36 @@ export interface AgentMiddleware<
    */
   modifyModelRequest?(
     request: ModelRequest,
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
   beforeModel?(
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
-      Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
     >
   >;
   afterModel?(
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
-      Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
     >
   >;
 }

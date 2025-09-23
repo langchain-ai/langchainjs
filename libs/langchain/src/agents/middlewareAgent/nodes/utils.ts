@@ -4,6 +4,7 @@ import {
   ToolMessage,
   AIMessage,
 } from "@langchain/core/messages";
+import { interopSafeParseAsync } from "@langchain/core/utils/types";
 import { z, type ZodIssue, type ZodTypeAny } from "zod/v3";
 import { END } from "@langchain/langgraph";
 
@@ -21,10 +22,10 @@ import type {
  * Private properties (starting with _) are automatically made optional since
  * users cannot provide them when invoking the agent.
  */
-export function initializeMiddlewareStates(
+export async function initializeMiddlewareStates(
   middlewareList: readonly AgentMiddleware<any, any, any>[],
   state: unknown
-): Record<string, any> {
+): Promise<Record<string, any>> {
   const middlewareStates: Record<string, any> = {};
 
   for (const middleware of middlewareList) {
@@ -46,7 +47,7 @@ export function initializeMiddlewareStates(
       const modifiedSchema = z.object(modifiedShape);
 
       // Use safeParse with the modified schema
-      const parseResult = modifiedSchema.safeParse(state);
+      const parseResult = await interopSafeParseAsync(modifiedSchema, state);
 
       if (parseResult.success) {
         Object.assign(middlewareStates, parseResult.data);

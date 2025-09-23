@@ -44,6 +44,7 @@ export {
   ToolNode,
   type AgentState,
   type AgentRuntime,
+  type AgentMiddleware,
   type HumanInterrupt,
   type HumanInterruptConfig,
   type ActionRequest,
