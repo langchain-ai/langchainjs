@@ -50,38 +50,32 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should process valid stdio connection config", () => {
-      const client = new MultiServerMCPClient({
+      new MultiServerMCPClient({
         "test-server": {
           transport: "stdio",
           command: "python",
           args: ["./script.py"],
         },
       });
-      expect(client).toBeDefined();
-      // Additional assertions to verify the connection was processed correctly
     });
 
     test("should process valid SSE connection config", () => {
-      const client = new MultiServerMCPClient({
+      new MultiServerMCPClient({
         "test-server": {
           transport: "sse",
           url: "http://localhost:8000/sse",
           headers: { Authorization: "Bearer token" },
         },
       });
-      expect(client).toBeDefined();
-      // Additional assertions to verify the connection was processed correctly
     });
 
     test("should process valid streamable HTTP connection config", () => {
-      const client = new MultiServerMCPClient({
+      new MultiServerMCPClient({
         "test-server": {
           transport: "http",
           url: "http://localhost:8000/mcp",
         },
       });
-      expect(client).toBeDefined();
-      // Additional assertions to verify the connection was processed correctly
     });
 
     test("should have a compile time error and a runtime error when the config is invalid", () => {
@@ -108,6 +102,11 @@ describe("MultiServerMCPClient", () => {
       });
 
       await client.initializeConnections();
+
+      expect(Client).toHaveBeenCalledWith({
+        name: "@langchain/mcp-adapters",
+        version: expect.any(String),
+      });
 
       expect(StdioClientTransport).toHaveBeenCalledWith({
         command: "python",
