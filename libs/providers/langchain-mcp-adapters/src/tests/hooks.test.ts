@@ -341,7 +341,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     }
   });
 
-  test.only("hooks have access to state and runtime with LangGraph", async () => {
+  test("hooks have access to state and runtime with LangGraph", async () => {
     const model = new FakeToolCallingModel({
       toolCalls: [[{ name: "test_tool", args: { input: "orig" }, id: "1" }]],
     });
