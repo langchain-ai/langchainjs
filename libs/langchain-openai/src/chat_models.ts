@@ -806,7 +806,7 @@ export abstract class BaseChatOpenAI<
     this.verbosity = fields?.verbosity ?? this.verbosity;
 
     // disable streaming in BaseChatModel if explicitly disabled
-    if (this.streaming === false) this.disableStreaming = true;
+    if (fields?.streaming === false) this.disableStreaming = true;
     if (this.disableStreaming === true) this.streaming = false;
 
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
@@ -2904,7 +2904,9 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  *   timeout: undefined,
  *   maxRetries: 2,
  *   // apiKey: "...",
- *   // baseUrl: "...",
+ *   // configuration: {
+ *   //   baseURL: "...",
+ *   // }
  *   // organization: "...",
  *   // other params...
  * });

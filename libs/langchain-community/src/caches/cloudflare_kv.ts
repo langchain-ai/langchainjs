@@ -2,7 +2,6 @@ import type { KVNamespace } from "@cloudflare/workers-types";
 
 import {
   BaseCache,
-  getCacheKey,
   serializeGeneration,
   deserializeStoredGeneration,
 } from "@langchain/core/caches";
@@ -46,14 +45,14 @@ export class CloudflareKVCache extends BaseCache {
    */
   public async lookup(prompt: string, llmKey: string) {
     let idx = 0;
-    let key = getCacheKey(prompt, llmKey, String(idx));
+    let key = this.keyEncoder(prompt, llmKey, String(idx));
     let value = await this.binding.get(key);
     const generations: Generation[] = [];
 
     while (value) {
       generations.push(deserializeStoredGeneration(JSON.parse(value)));
       idx += 1;
-      key = getCacheKey(prompt, llmKey, String(idx));
+      key = this.keyEncoder(prompt, llmKey, String(idx));
       value = await this.binding.get(key);
     }
 
@@ -70,7 +69,7 @@ export class CloudflareKVCache extends BaseCache {
    */
   public async update(prompt: string, llmKey: string, value: Generation[]) {
     for (let i = 0; i < value.length; i += 1) {
-      const key = getCacheKey(prompt, llmKey, String(i));
+      const key = this.keyEncoder(prompt, llmKey, String(i));
       await this.binding.put(
         key,
         JSON.stringify(serializeGeneration(value[i]))
