@@ -9,8 +9,13 @@ import type {
   ControlAction,
   AgentMiddleware,
   MiddlewareResult,
+  JumpToTarget,
 } from "../types.js";
-import { derivePrivateState, parseToolCalls } from "./utils.js";
+import {
+  derivePrivateState,
+  parseToolCalls,
+  parseJumpToTarget,
+} from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -91,6 +96,28 @@ export abstract class MiddlewareNode<
     }
 
     /**
+     * Verify that the jump target is allowed for the middleware
+     */
+    const jumpToConstraint = this.name?.startsWith("BeforeModelNode_")
+      ? this.middleware.beforeModelJumpTo
+      : this.middleware.afterModelJumpTo;
+    if (
+      typeof result.jumpTo === "string" &&
+      !jumpToConstraint?.includes(result.jumpTo as JumpToTarget)
+    ) {
+      const constraint = this.name?.startsWith("BeforeModelNode_")
+        ? "beforeModelJumpTo"
+        : "afterModelJumpTo";
+      const suggestion =
+        jumpToConstraint && jumpToConstraint.length > 0
+          ? `must be one of: ${jumpToConstraint?.join(", ")}.`
+          : `no ${constraint} defined in middleware ${this.middleware.name}.`;
+      throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
+    }
+
+    const jumpTo = parseJumpToTarget(result.jumpTo as string);
+
+    /**
      * If result is a control action, handle it
      */
     if (typeof result === "object" && "type" in result) {
@@ -99,7 +126,11 @@ export abstract class MiddlewareNode<
         if (result.error) {
           throw result.error;
         }
-        return { ...state, ...(result.result || {}), jumpTo: result?.jumpTo };
+        return {
+          ...state,
+          ...(result.result || {}),
+          jumpTo,
+        };
       }
 
       throw new Error(`Invalid control action: ${JSON.stringify(result)}`);
@@ -108,7 +139,7 @@ export abstract class MiddlewareNode<
     /**
      * If result is a state update, merge it with current state
      */
-    return { ...state, ...result, jumpTo: result.jumpTo };
+    return { ...state, ...result, jumpTo };
   }
 
   get nodeOptions(): {

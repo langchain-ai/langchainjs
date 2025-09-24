@@ -232,5 +232,79 @@ describe("middleware", () => {
       expect(toolFn).toHaveBeenCalledTimes(0);
       expect(beforeModel).toHaveBeenCalledTimes(1);
     });
+
+    it("should throw if middleware jumps but target is not defined", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("The weather in Tokyo is 25°C")],
+      });
+      const middleware = createMiddleware({
+        name: "foobar",
+        beforeModel: () => {
+          return {
+            jumpTo: "model",
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+      ).rejects.toThrow(
+        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+      );
+    });
+
+    it("should throw if middleware jumps but target is not defined", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("The weather in Tokyo is 25°C")],
+      });
+      const middleware = createMiddleware({
+        name: "foobar",
+        beforeModelJumpTo: [],
+        beforeModel: () => {
+          return {
+            jumpTo: "model",
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+      ).rejects.toThrow(
+        "Invalid jump target: model, no beforeModelJumpTo defined in middleware foobar."
+      );
+    });
+
+    it("should throw if middleware jumps but target is not valid", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("The weather in Tokyo is 25°C")],
+      });
+      const middleware = createMiddleware({
+        name: "foobar",
+        beforeModelJumpTo: ["tools", "end"],
+        beforeModel: () => {
+          return {
+            jumpTo: "model",
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+      ).rejects.toThrow(
+        "Invalid jump target: model, must be one of: tools, end."
+      );
+    });
   });
 });
