@@ -26,7 +26,6 @@ import {
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
-  hasSupportForJsonSchemaOutput,
 } from "../../utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
 import {
@@ -43,6 +42,7 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
+  hasSupportForJsonSchemaOutput,
 } from "../../responses.js";
 import { parseToolCalls } from "./utils.js";
 

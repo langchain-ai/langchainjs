@@ -8,7 +8,7 @@ import {
   type BinaryOperatorAggregate,
   type LastValue,
 } from "@langchain/langgraph";
-import type { ResponseFormatUndefined } from "../responses.js";
+import type { ResponseFormatUndefined } from "../annotation.js";
 import type { AgentMiddleware, InferMiddlewareStates } from "./types.js";
 
 // Create annotation conditionally - for ResponseFormatUndefined, don't include structuredResponse

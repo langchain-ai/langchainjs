@@ -29,8 +29,8 @@ import {
   enhanceStateSchemaWithMessageReducer,
   type AnyAnnotationRoot,
   type ToAnnotationRoot,
+  type ResponseFormatUndefined,
 } from "./annotation.js";
-import type { ResponseFormatUndefined } from "./responses.js";
 
 type AgentGraph<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot,
