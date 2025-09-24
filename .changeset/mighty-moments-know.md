@@ -2,4 +2,4 @@
 "@langchain/mongodb": minor
 ---
 
-Updates the mongodb vector search package to append client metadata
+Updates the mongodb vector search, memory, and chat history modules to append client metadata
