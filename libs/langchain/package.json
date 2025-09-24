@@ -37,7 +37,6 @@
     "@langchain/core": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
-    "@langchain/xai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",

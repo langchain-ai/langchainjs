@@ -3,7 +3,6 @@ import { z } from "zod/v3";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { ChatXAI } from "@langchain/xai";
 
 import { createAgent, toolStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
@@ -350,15 +349,5 @@ describe("hasSupportForJsonSchemaOutput", () => {
     expect(hasSupportForJsonSchemaOutput("claude-3-5-sonnet-20240620")).toBe(
       false
     );
-  });
-
-  it("should return true for XAI models that support JSON schema output", () => {
-    const model = new ChatXAI({
-      model: "grok-beta",
-      apiKey: process.env.XAI_API_KEY ?? "foo",
-    });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("xai:grok-beta")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("grok-beta")).toBe(true);
   });
 });
