@@ -352,7 +352,7 @@ export function humanInTheLoopMiddleware(
       /**
        * Don't do anything if the last message isn't an AI message with tool calls.
        */
-      const lastMessage = messages
+      const lastMessage = [...messages]
         .reverse()
         .find((msg) => AIMessage.isInstance(msg)) as AIMessage;
       if (!lastMessage || !lastMessage.tool_calls?.length) {
