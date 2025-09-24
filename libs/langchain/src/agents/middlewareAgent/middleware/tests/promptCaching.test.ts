@@ -1,4 +1,11 @@
-import { describe, it, expect, vi, type MockInstance } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  type MockInstance,
+} from "vitest";
 import {
   HumanMessage,
   AIMessage,
@@ -10,26 +17,32 @@ import { ChatOpenAI } from "@langchain/openai";
 import { anthropicPromptCachingMiddleware } from "../promptCaching.js";
 import { createAgent } from "../../index.js";
 
-function createMockAnthropicModel() {
+function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   // Mock Anthropic model
   const invokeCallback = vi
     .fn()
     .mockResolvedValue(new AIMessage("Response from model"));
   return {
-    getName: () => "ChatAnthropic",
+    getName: () => name,
     bindTools: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
     invoke: invokeCallback,
     lc_runnable: true,
-    _modelType: "anthropic",
+    _modelType: modelType,
     _generate: vi.fn(),
-    _llmType: () => "anthropic",
+    _llmType: () => modelType,
   } as unknown as LanguageModelLike;
 }
 
+const consoleWarn = vi.spyOn(console, "warn");
+
 describe("anthropicPromptCachingMiddleware", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should add cache_control to model settings when conditions are met", async () => {
-    const model = createMockAnthropicModel();
+    const model = createMockModel();
 
     const middleware = anthropicPromptCachingMiddleware({
       ttl: "5m",
@@ -64,7 +77,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   });
 
   it("should not add cache_control when message count is below threshold", async () => {
-    const model = createMockAnthropicModel();
+    const model = createMockModel();
     const middleware = anthropicPromptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 5, // High threshold
@@ -88,7 +101,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   });
 
   it("should respect enableCaching setting", async () => {
-    const model = createMockAnthropicModel();
+    const model = createMockModel();
     const middleware = anthropicPromptCachingMiddleware({
       enableCaching: false, // Disabled
       ttl: "5m",
@@ -115,37 +128,109 @@ describe("anthropicPromptCachingMiddleware", () => {
   });
 
   describe("non-Anthropic models", () => {
-    it("should throw error if pass in a non-Anthropic chat instance", async () => {
-      const middleware = anthropicPromptCachingMiddleware();
+    describe("if unsupportedModelBehavior is 'raise'", () => {
+      it("should throw error if pass in a non-Anthropic chat instance", async () => {
+        const middleware = anthropicPromptCachingMiddleware({
+          unsupportedModelBehavior: "raise",
+        });
 
-      const agent = createAgent({
-        model: new ChatOpenAI({ model: "gpt-4o" }),
-        middleware: [middleware] as const,
+        const agent = createAgent({
+          model: new ChatOpenAI({ model: "gpt-4o" }),
+          middleware: [middleware] as const,
+        });
+
+        // Should throw error
+        await expect(agent.invoke({ messages: [] })).rejects.toThrow(
+          "Unsupported model 'ChatOpenAI'. Prompt caching requires an Anthropic model (e.g., 'anthropic:claude-4-0-sonnet')."
+        );
       });
 
-      // Should throw error
-      await expect(agent.invoke({ messages: [] })).rejects.toThrow(
-        "Prompt caching is only supported for Anthropic models"
-      );
+      it("should throw error if pass in a non-Anthropic model via string", async () => {
+        const middleware = anthropicPromptCachingMiddleware({
+          unsupportedModelBehavior: "raise",
+        });
+
+        const agent = createAgent({
+          model: "openai:gpt-4o",
+          middleware: [middleware] as const,
+        });
+
+        // Should throw error
+        await expect(agent.invoke({ messages: [] })).rejects.toThrow(
+          "Unsupported model 'ConfigurableModel (openai)'. Prompt caching requires an Anthropic model (e.g., 'anthropic:claude-4-0-sonnet')."
+        );
+      });
     });
 
-    it("should throw error if pass in a non-Anthropic model via string", async () => {
-      const middleware = anthropicPromptCachingMiddleware();
+    describe("if unsupportedModelBehavior is 'warn'", () => {
+      it("should warn if pass in a non-Anthropic chat instance", async () => {
+        const model = createMockModel("ChatOpenAI", "openai");
+        const middleware = anthropicPromptCachingMiddleware({
+          enableCaching: true,
+          ttl: "5m",
+          minMessagesToCache: 1,
+          unsupportedModelBehavior: "warn",
+        });
 
-      const agent = createAgent({
-        model: "openai:gpt-4o",
-        middleware: [middleware] as const,
+        const agent = createAgent({
+          model,
+          middleware: [middleware] as const,
+        });
+
+        const messages = [
+          new HumanMessage("Hello"),
+          new AIMessage("Hi there!"),
+          new HumanMessage("How are you?"),
+        ];
+
+        await agent.invoke({ messages });
+
+        // Verify no cache_control was added
+        const callArgs = (model.invoke as unknown as MockInstance).mock
+          .calls[0];
+        const lastMessage = callArgs[0].at(-1);
+        expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+        expect(consoleWarn).toHaveBeenCalledWith(
+          expect.stringContaining("Skipping caching for ChatOpenAI")
+        );
       });
+    });
 
-      // Should throw error
-      await expect(agent.invoke({ messages: [] })).rejects.toThrow(
-        "Prompt caching is only supported for Anthropic models"
-      );
+    describe("if unsupportedModelBehavior is 'ignore'", () => {
+      it("should ignore if pass in a non-Anthropic chat instance", async () => {
+        const model = createMockModel("ChatOpenAI", "openai");
+        const middleware = anthropicPromptCachingMiddleware({
+          enableCaching: true,
+          ttl: "5m",
+          minMessagesToCache: 1,
+          unsupportedModelBehavior: "ignore",
+        });
+
+        const agent = createAgent({
+          model,
+          middleware: [middleware] as const,
+        });
+
+        const messages = [
+          new HumanMessage("Hello"),
+          new AIMessage("Hi there!"),
+          new HumanMessage("How are you?"),
+        ];
+
+        await agent.invoke({ messages });
+
+        // Verify no cache_control was added
+        const callArgs = (model.invoke as unknown as MockInstance).mock
+          .calls[0];
+        const lastMessage = callArgs[0].at(-1);
+        expect(lastMessage.content[0]).not.toHaveProperty("cache_control");
+        expect(consoleWarn).not.toHaveBeenCalled();
+      });
     });
   });
 
   it("should include system message in message count", async () => {
-    const model = createMockAnthropicModel();
+    const model = createMockModel();
     const middleware = anthropicPromptCachingMiddleware({
       ttl: "1h",
       minMessagesToCache: 3,
@@ -170,7 +255,7 @@ describe("anthropicPromptCachingMiddleware", () => {
   });
 
   it("should allow runtime context override", async () => {
-    const model = createMockAnthropicModel();
+    const model = createMockModel();
     const middleware = anthropicPromptCachingMiddleware({
       ttl: "5m",
       minMessagesToCache: 3,
