@@ -15,7 +15,14 @@ import {
   getInteropZodDefaultGetter,
   type InteropZodObject,
 } from "@langchain/core/utils/types";
-import type { ResponseFormatUndefined } from "./responses.js";
+
+/**
+ * Special type to indicate that no response format is provided.
+ * When this type is used, the structuredResponse property should not be present in the result.
+ */
+export type ResponseFormatUndefined = {
+  __responseFormatUndefined: true;
+};
 
 export const PreHookAnnotation: AnnotationRoot<{
   llmInputMessages: BinaryOperatorAggregate<BaseMessage[], Messages>;

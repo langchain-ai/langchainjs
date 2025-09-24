@@ -2,9 +2,6 @@ import { describe, it, expect } from "vitest";
 import z from "zod/v3";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
-import { ChatOpenAI } from "@langchain/openai";
-import { ChatAnthropic } from "@langchain/anthropic";
-import { ChatXAI } from "@langchain/xai";
 import {
   Runnable,
   RunnableLambda,
@@ -16,13 +13,8 @@ import {
   _removeInlineAgentName,
   shouldBindTools,
   bindTools,
-  hasSupportForJsonSchemaOutput,
 } from "../utils.js";
-import {
-  FakeToolCallingChatModel,
-  FakeConfigurableModel,
-  FakeToolCallingModel,
-} from "./utils.js";
+import { FakeToolCallingChatModel, FakeConfigurableModel } from "./utils.js";
 
 describe("_addInlineAgentName", () => {
   it("should return non-AI messages unchanged", () => {
@@ -430,59 +422,5 @@ describe("shouldBindTools", () => {
     await expect(
       shouldBindTools(model.bindTools([server]), [tool1, server])
     ).rejects.toThrow();
-  });
-});
-
-describe("hasSupportForJsonSchemaOutput", () => {
-  it("should return false for undefined model", () => {
-    expect(hasSupportForJsonSchemaOutput(undefined)).toBe(false);
-  });
-
-  it("should return true for models that support JSON schema output", () => {
-    const model = new FakeToolCallingModel({});
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    const model2 = new FakeToolCallingChatModel({});
-    expect(hasSupportForJsonSchemaOutput(model2)).toBe(true);
-  });
-
-  it("should return true for OpenAI models that support JSON schema output", () => {
-    const model = new ChatOpenAI({
-      model: "gpt-4o",
-    });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-4o")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("gpt-4o-mini")).toBe(true);
-  });
-
-  it("should return false for OpenAI models that do not support JSON schema output", () => {
-    const model = new ChatOpenAI({
-      model: "gpt-3.5-turbo",
-    });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-3.5-turbo")).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("gpt-3.5-turbo")).toBe(false);
-  });
-
-  it("should return false for Anthropic models that don't support JSON schema output", () => {
-    const model = new ChatAnthropic({
-      model: "claude-3-5-sonnet-20240620",
-    });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(
-      hasSupportForJsonSchemaOutput("anthropic:claude-3-5-sonnet-20240620")
-    ).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("claude-3-5-sonnet-20240620")).toBe(
-      false
-    );
-  });
-
-  it("should return true for XAI models that support JSON schema output", () => {
-    const model = new ChatXAI({
-      model: "grok-beta",
-      apiKey: process.env.XAI_API_KEY ?? "foo",
-    });
-    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("xai:grok-beta")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("grok-beta")).toBe(true);
   });
 });

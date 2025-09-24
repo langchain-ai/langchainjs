@@ -20,7 +20,6 @@ import {
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
-  hasSupportForJsonSchemaOutput,
 } from "../utils.js";
 import {
   InternalAgentState,
@@ -34,6 +33,7 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
+  hasSupportForJsonSchemaOutput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =

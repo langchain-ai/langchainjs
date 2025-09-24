@@ -15,7 +15,8 @@ import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
-import { hasSupportForJsonSchemaOutput } from "./utils.js";
+import type { ResponseFormatUndefined } from "./annotation.js";
+import { isConfigurableModel, isBaseChatModel } from "./model.js";
 
 /**
  * This is a global counter for generating unique names for tools.
@@ -390,14 +391,6 @@ export function providerStrategy(
 }
 
 /**
- * Special type to indicate that no response format is provided.
- * When this type is used, the structuredResponse property should not be present in the result.
- */
-export type ResponseFormatUndefined = {
-  __responseFormatUndefined: true;
-};
-
-/**
  * Type representing a JSON Schema object format.
  * This is a strict type that excludes ToolStrategy and ProviderStrategy instances.
  */
@@ -418,3 +411,77 @@ export type JsonSchemaFormat = {
   // Brand to ensure this is not a ToolStrategy or ProviderStrategy
   __brand?: never;
 };
+
+const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = ["ChatOpenAI", "ChatXAI"];
+const MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
+  "grok",
+  "gpt-5",
+  "gpt-4.1",
+  "gpt-4o",
+  "gpt-oss",
+  "o3-pro",
+  "o3-mini",
+];
+
+/**
+ * Identifies the models that support JSON schema output
+ * @param model - The model to check
+ * @returns True if the model supports JSON schema output, false otherwise
+ */
+export function hasSupportForJsonSchemaOutput(
+  model?: LanguageModelLike | string
+): boolean {
+  if (!model) {
+    return false;
+  }
+
+  if (typeof model === "string") {
+    const modelName = model.split(":").pop() as string;
+    return MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
+      (modelNameSnippet) => modelName.includes(modelNameSnippet)
+    );
+  }
+
+  if (isConfigurableModel(model)) {
+    const configurableModel = model as unknown as {
+      _defaultConfig: { model: string };
+    };
+    return hasSupportForJsonSchemaOutput(
+      configurableModel._defaultConfig.model
+    );
+  }
+
+  if (!isBaseChatModel(model)) {
+    return false;
+  }
+
+  const chatModelClass = model.getName();
+
+  /**
+   * for testing purposes only
+   */
+  if (chatModelClass === "FakeToolCallingChatModel") {
+    return true;
+  }
+
+  if (
+    CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.includes(chatModelClass) &&
+    /**
+     * OpenAI models
+     */ (("model" in model &&
+      MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
+        (modelNameSnippet) =>
+          typeof model.model === "string" &&
+          model.model.includes(modelNameSnippet)
+      )) ||
+      /**
+       * for testing purposes only
+       */
+      (chatModelClass === "FakeToolCallingModel" &&
+        "structuredResponse" in model))
+  ) {
+    return true;
+  }
+
+  return false;
+}
