@@ -28,7 +28,7 @@ import {
 
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
 
-import {
+import type {
   CreateAgentParams,
   AgentMiddleware,
   InferMiddlewareStates,
@@ -38,6 +38,7 @@ import {
   InferContextInput,
   InvokeConfiguration,
   StreamConfiguration,
+  JumpToDestination,
 } from "./types.js";
 
 import {
@@ -518,7 +519,9 @@ export class ReactAgent<
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
-    return (state: BuiltInState) => {
+    return (
+      state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpToDestination }
+    ) => {
       // First, check if we just processed a structured response
       // If so, ignore any existing jumpTo and go to END
       const messages = state.messages;
@@ -532,12 +535,10 @@ export class ReactAgent<
 
       // Check if jumpTo is set in the state and allowed
       if (allowJump && state.jumpTo) {
-        const jumpTarget = state.jumpTo;
-        const destination = parseJumpToTarget(jumpTarget);
-        if (destination === END) {
+        if (state.jumpTo === END) {
           return END;
         }
-        if (destination === "tools") {
+        if (state.jumpTo === "tools") {
           // If trying to jump to tools but no tools are available, go to END
           if (toolClasses.length === 0) {
             return END;
