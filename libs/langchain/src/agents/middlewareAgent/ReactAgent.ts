@@ -26,6 +26,7 @@ import { initializeMiddlewareStates } from "./nodes/utils.js";
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
 
 import {
+  ToolCallResults,
   CreateAgentParams,
   AgentMiddleware,
   InferMiddlewareStates,
@@ -141,13 +142,25 @@ export class ReactAgent<
       () => any
     ][] = [];
 
+    /**
+     * add single tool node for all tools
+     */
+    let getToolCalls: () => ToolCallResults[] = () => [];
+    if (toolClasses.length > 0) {
+      const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
+        signal: this.options.signal,
+      });
+      allNodeWorkflows.addNode("tools", toolNode);
+      getToolCalls = () => toolNode.getToolCalls();
+    }
+
     const middleware = this.options.middleware ?? [];
     for (let i = 0; i < middleware.length; i++) {
       let beforeModelNode: BeforeModelNode | undefined;
       let afterModelNode: AfterModelNode | undefined;
       const m = middleware[i];
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m);
+        beforeModelNode = new BeforeModelNode(m, { getToolCalls });
         const name = `before_model_${m.name}_${i}`;
         beforeModelNodes.push({
           index: i,
@@ -160,7 +173,7 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m);
+        afterModelNode = new AfterModelNode(m, { getToolCalls });
         const name = `after_model_${m.name}_${i}`;
         afterModelNodes.push({
           index: i,
@@ -200,19 +213,10 @@ export class ReactAgent<
         shouldReturnDirect,
         signal: this.options.signal,
         modifyModelRequestHookMiddleware,
+        getToolCalls,
       }),
       AgentNode.nodeOptions
     );
-
-    /**
-     * add single tool node for all tools
-     */
-    if (toolClasses.length > 0) {
-      const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
-        signal: this.options.signal,
-      });
-      allNodeWorkflows.addNode("tools", toolNode);
-    }
 
     /**
      * Add Edges

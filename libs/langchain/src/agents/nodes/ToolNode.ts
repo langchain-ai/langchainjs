@@ -30,6 +30,7 @@ import {
 } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
+import type { ToolCallResults } from "../middlewareAgent/types.js";
 
 export interface ToolNodeOptions {
   /**
@@ -126,6 +127,8 @@ export class ToolNode<
   StateSchema extends AnyAnnotationRoot | InteropZodObject = any,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = any
 > extends RunnableCallable<StateSchema, ContextSchema> {
+  #toolCalls: ToolCallResults[] = [];
+
   tools: (StructuredToolInterface | DynamicTool | RunnableToolLike)[];
 
   trace = false;
@@ -156,11 +159,23 @@ export class ToolNode<
     this.signal = options?.signal;
   }
 
+  getToolCalls(): ToolCallResults[] {
+    return this.#toolCalls;
+  }
+
   protected async runTool(
     call: ToolCall,
     config: RunnableConfig
   ): Promise<ToolMessage | Command> {
     const tool = this.tools.find((tool) => tool.name === call.name);
+    const toolCallResult: ToolCallResults = {
+      id: call.id!,
+      name: call.name,
+      args: call.args,
+      result: undefined,
+      error: undefined,
+    };
+
     try {
       if (tool === undefined) {
         throw new Error(`Tool "${call.name}" not found.`);
@@ -173,6 +188,9 @@ export class ToolNode<
           signal: mergeAbortSignals(this.signal, config.signal),
         }
       );
+
+      toolCallResult.result = output;
+      this.#toolCalls.push(toolCallResult);
 
       if (
         (isBaseMessage(output) && output.getType() === "tool") ||
@@ -187,6 +205,9 @@ export class ToolNode<
         tool_call_id: call.id!,
       });
     } catch (e: unknown) {
+      toolCallResult.error = e instanceof Error ? e.message : String(e);
+      this.#toolCalls.push(toolCallResult);
+
       /**
        * If tool invocation fails due to input parsing error, throw a {@link ToolInvocationError}
        */
