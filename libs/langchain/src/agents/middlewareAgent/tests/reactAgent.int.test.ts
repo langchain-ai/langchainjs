@@ -305,7 +305,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
   });
 });
 
-describe("sturctured response format", () => {
+describe("structured response format", () => {
   it("should automatically use provider strategy if the model supports JSON schema output", async () => {
     const weatherTool = tool(
       async (input: { city: string }) => {
