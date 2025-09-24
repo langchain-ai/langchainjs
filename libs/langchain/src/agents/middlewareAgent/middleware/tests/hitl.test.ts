@@ -66,7 +66,7 @@ describe("humanInTheLoopMiddleware", () => {
   it("should auto-approve safe tools and interrupt for tools requiring approval", async () => {
     // Configure HITL middleware
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowAccept: true,
           description: "⚠️ File write operation requires approval",
@@ -212,7 +212,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should handle edit response type", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: true,
       },
     });
@@ -280,7 +280,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should handle manual response type", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowRespond: true,
         },
@@ -349,7 +349,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should throw if response is not a string", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowRespond: true,
         },
@@ -413,7 +413,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should allow to interrupt multiple tools at the same time", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowEdit: true,
           description: "⚠️ File write operation requires approval",
@@ -516,7 +516,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should throw if not all tool calls have a response", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowEdit: true,
           description: "⚠️ File write operation requires approval",
@@ -583,7 +583,7 @@ describe("humanInTheLoopMiddleware", () => {
 
   it("should not allow me to approve if I don't have allowAccept", async () => {
     const hitlMiddleware = humanInTheLoopMiddleware({
-      toolConfigs: {
+      interruptOn: {
         write_file: {
           allowEdit: true,
           description: "⚠️ File write operation requires approval",

@@ -142,7 +142,7 @@ const contextSchema = z
      * - `false` -> auto-approve (no human review)
      * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
      */
-    toolConfigs: z.record(z.union([z.boolean(), ToolConfigSchema])).default({}),
+    interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])).default({}),
     /**
      * Prefix used when constructing human-facing approval messages.
      * Provides context about the tool call being reviewed; does not change the underlying action.
@@ -209,11 +209,11 @@ const contextSchema = z
  * - `response`: Provide a manual response instead of executing the tool
  *
  * @param options - Configuration options for the middleware
- * @param options.toolConfigs - Per-tool configuration mapping tool names to their settings
- * @param options.toolConfigs[toolName].allowAccept - Whether the human can approve the current action without changes
- * @param options.toolConfigs[toolName].allowEdit - Whether the human can reject the current action with feedback
- * @param options.toolConfigs[toolName].allowRespond - Whether the human can approve the current action with edited content
- * @param options.toolConfigs[toolName].description - Custom approval message for the tool
+ * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
+ * @param options.interruptOn[toolName].allowAccept - Whether the human can approve the current action without changes
+ * @param options.interruptOn[toolName].allowEdit - Whether the human can reject the current action with feedback
+ * @param options.interruptOn[toolName].allowRespond - Whether the human can approve the current action with edited content
+ * @param options.interruptOn[toolName].description - Custom approval message for the tool
  * @param options.messagePrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their ToolConfig.
  *
  * @returns A middleware instance that can be passed to `createAgent`
@@ -225,7 +225,7 @@ const contextSchema = z
  * import { createAgent } from "langchain";
  *
  * const hitlMiddleware = humanInTheLoopMiddleware({
- *   toolConfigs: {
+ *   interruptOn: {
  *     // Interrupt write_file tool and allow edits or accepts
  *     "write_file": {
  *       allowEdit: true,
@@ -304,7 +304,7 @@ const contextSchema = z
  * Production use case with database operations
  * ```typescript
  * const hitlMiddleware = humanInTheLoopMiddleware({
- *   toolConfigs: {
+ *   interruptOn: {
  *     "execute_sql": {
  *       allowAccept: true,
  *       allowEdit: true,
@@ -352,20 +352,20 @@ export function humanInTheLoopMiddleware(
       /**
        * Don't do anything if the last message isn't an AI message with tool calls.
        */
-      const lastMessage = messages
+      const lastMessage = [...messages]
         .reverse()
         .find((msg) => AIMessage.isInstance(msg)) as AIMessage;
       if (!lastMessage || !lastMessage.tool_calls?.length) {
         return;
       }
 
-      if (!config.toolConfigs) {
-        throw new Error("HumanInTheLoopMiddleware: toolConfigs is required");
+      if (!config.interruptOn) {
+        throw new Error("HumanInTheLoopMiddleware: interruptOn is required");
       }
 
       // Resolve per-tool configs (boolean true -> all actions allowed; false -> auto-approve)
       const resolvedToolConfigs: Record<string, ToolConfig> = {};
-      for (const [toolName, toolConfig] of Object.entries(config.toolConfigs)) {
+      for (const [toolName, toolConfig] of Object.entries(config.interruptOn)) {
         if (typeof toolConfig === "boolean") {
           if (toolConfig === true) {
             resolvedToolConfigs[toolName] = {

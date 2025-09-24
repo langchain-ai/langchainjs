@@ -58,7 +58,7 @@ describe("humanInTheLoopMiddleware", () => {
         model,
         middleware: [
           humanInTheLoopMiddleware({
-            toolConfigs: {
+            interruptOn: {
               calculator: true,
             },
           }),
@@ -150,7 +150,7 @@ describe("humanInTheLoopMiddleware", () => {
         model,
         middleware: [
           humanInTheLoopMiddleware({
-            toolConfigs: {
+            interruptOn: {
               draft_email: true,
             },
           }),
@@ -222,7 +222,7 @@ describe("humanInTheLoopMiddleware", () => {
         model,
         middleware: [
           humanInTheLoopMiddleware({
-            toolConfigs: {
+            interruptOn: {
               calculator: true,
             },
           }),
@@ -265,7 +265,7 @@ describe("humanInTheLoopMiddleware", () => {
         model,
         middleware: [
           humanInTheLoopMiddleware({
-            toolConfigs: {
+            interruptOn: {
               calculator: true,
               name_generator: true,
             },

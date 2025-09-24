@@ -52,7 +52,7 @@ const writeFileTool = tool(
 
 // Configure HITL middleware
 const hitlMiddleware = humanInTheLoopMiddleware({
-  toolConfigs: {
+  interruptOn: {
     write_file: {
       allowAccept: true,
       description: "⚠️ File write operation requires approval",
