@@ -12,7 +12,7 @@ export function isBaseChatModel(
   return (
     "invoke" in model &&
     typeof model.invoke === "function" &&
-    "_modelType" in model
+    "_streamResponseChunks" in model
   );
 }
 
