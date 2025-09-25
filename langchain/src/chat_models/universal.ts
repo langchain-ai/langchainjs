@@ -117,19 +117,6 @@ async function _initChatModelHelper(
         const { ChatOllama } = await import("@langchain/ollama");
         return new ChatOllama({ model, ...passedParams });
       }
-      case "perplexity": {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore - Can not install as a proper dependency due to circular dependency
-        const { ChatPerplexity } = await import(
-          // We can not 'expect-error' because if you explicitly build `@langchain/community`
-          // this import will be able to be resolved, thus there will be no error. However
-          // this will never be the case in CI.
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore - Can not install as a proper dependency due to circular dependency
-          "@langchain/community/chat_models/perplexity"
-        );
-        return new ChatPerplexity({ model, ...passedParams });
-      }
       case "mistralai": {
         const { ChatMistralAI } = await import("@langchain/mistralai");
         return new ChatMistralAI({ model, ...passedParams });
@@ -179,6 +166,19 @@ async function _initChatModelHelper(
           "@langchain/community/chat_models/togetherai"
         );
         return new ChatTogetherAI({ model, ...passedParams });
+      }
+      case "perplexity": {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Can not install as a proper dependency due to circular dependency
+        const { ChatPerplexity } = await import(
+          // We can not 'expect-error' because if you explicitly build `@langchain/community`
+          // this import will be able to be resolved, thus there will be no error. However
+          // this will never be the case in CI.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - Can not install as a proper dependency due to circular dependency
+          "@langchain/community/chat_models/perplexity"
+        );
+        return new ChatPerplexity({ model, ...passedParams });
       }
       default: {
         const supported = _SUPPORTED_PROVIDERS.join(", ");
