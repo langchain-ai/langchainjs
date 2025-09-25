@@ -676,9 +676,6 @@ export class AgentNode<
     /**
      * Bind tools to the model if they are not already bound.
      */
-    console.log(
-      `BIND ${allTools.length} tools: ${allTools.map((t) => t.name).join(", ")}`
-    );
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
       tool_choice: toolChoice,
