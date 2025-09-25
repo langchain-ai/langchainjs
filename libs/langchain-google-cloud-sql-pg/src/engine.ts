@@ -224,7 +224,7 @@ export class PostgresEngine {
    * @param schemaName The schema name to store Postgres database table. Default: "public". Parameter is not escaped. Do not use with end user input.
    * @param contentColumn Name of the column to store document content. Default: "content".
    * @param embeddingColumn Name of the column to store vector embeddings. Default: "embedding".
-   * @param embeddingColumnType Type of the embedding column ("vector" | "halfvec" | "bit" | "sparsevec"). Default: "vector".
+   * @param embeddingColumnType Type of the embedding column ("vector" | "halfvec" | "bit" | "sparsevec"). Default: "vector". More info on HNSW-supported types: https://github.com/pgvector/pgvector#hnsw
    * @param metadataColumns Optional - A list of Columns to create for custom metadata. Default: [].
    * @param metadataJsonColumn Optional - The column to store extra metadata in JSON format. Default: "langchain_metadata".
    * @param idColumn Optional - Column to store ids. Default: "langchain_id" column name with data type UUID.
