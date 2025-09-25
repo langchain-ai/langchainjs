@@ -6,6 +6,8 @@ import type {
   InteropZodType,
   InteropZodInput,
   InferInteropZodInput,
+  ZodOptionalV3,
+  ZodOptionalV4,
 } from "@langchain/core/utils/types";
 import type {
   LangGraphRunnableConfig,
@@ -112,7 +114,7 @@ export interface ModelRequest {
   /**
    * The system message for this step.
    */
-  systemMessage?: BaseMessage;
+  systemMessage?: string;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:
@@ -137,8 +139,8 @@ export interface ModelRequest {
 /**
  * Type helper to check if TContext is an optional Zod schema
  */
-type IsOptionalZodObject<T> = T extends InteropZodOptional ? true : false;
-type IsDefaultZodObject<T> = T extends InteropZodDefault ? true : false;
+type IsOptionalZodObject<T> = T extends InteropZodOptional<any> ? true : false;
+type IsDefaultZodObject<T> = T extends InteropZodDefault<any> ? true : false;
 
 type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
@@ -347,7 +349,7 @@ export interface AgentMiddleware<
   TContextSchema extends
     | InteropZodObject
     | InteropZodDefault
-    | InteropZodOptional
+    | InteropZodOptional<any>
     | undefined = undefined,
   TFullContext = any
 > {
@@ -356,6 +358,7 @@ export interface AgentMiddleware<
   name: string;
   beforeModelJumpTo?: JumpToTarget[];
   afterModelJumpTo?: JumpToTarget[];
+  tools?: (ClientTool | ServerTool)[];
   /**
    * Runs before each LLM call, can modify call parameters, changes are not persistent
    * e.g. if you change `model`, it will only be changed for the next model call

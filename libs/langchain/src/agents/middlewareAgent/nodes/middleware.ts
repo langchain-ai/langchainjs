@@ -54,11 +54,10 @@ export abstract class MiddlewareNode<
       const schemaShape = this.middleware.contextSchema?.shape;
       if (schemaShape) {
         const relevantContext: Record<string, unknown> = {};
-        if (config?.context) {
-          for (const key of Object.keys(schemaShape)) {
-            if (key in config.context) {
-              relevantContext[key] = config.context[key];
-            }
+        const invokeContext = config?.context || {};
+        for (const key of Object.keys(schemaShape)) {
+          if (key in invokeContext) {
+            relevantContext[key] = invokeContext[key];
           }
         }
         /**

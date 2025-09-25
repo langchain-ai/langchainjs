@@ -42,6 +42,7 @@ export {
   toolStrategy,
   providerStrategy,
   ToolNode,
+  type ReactAgent,
   type AgentState,
   type AgentRuntime,
   type AgentMiddleware,

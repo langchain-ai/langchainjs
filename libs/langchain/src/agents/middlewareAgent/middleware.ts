@@ -14,6 +14,7 @@ import type {
   ModelRequest,
   JumpToTarget,
 } from "./types.js";
+import type { ClientTool, ServerTool } from "../types.js";
 
 /**
  * Creates a middleware instance with automatic schema inference.
@@ -49,7 +50,7 @@ export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends
     | InteropZodObject
-    | InteropZodOptional
+    | InteropZodOptional<any>
     | InteropZodDefault
     | undefined = undefined
 >(config: {
@@ -82,6 +83,10 @@ export function createMiddleware<
    */
   afterModelJumpTo?: JumpToTarget[];
   /**
+   * Additional tools registered by the middleware.
+   */
+  tools?: (ClientTool | ServerTool)[];
+  /**
    * The function to modify the model request. This function is called after the `beforeModel` hook of this middleware and before the model is invoked.
    * It allows to modify the model request before it is passed to the model.
    *
@@ -108,7 +113,7 @@ export function createMiddleware<
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodOptional
+        : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
@@ -133,7 +138,7 @@ export function createMiddleware<
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodOptional
+        : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
@@ -172,7 +177,7 @@ export function createMiddleware<
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodOptional
+        : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
@@ -198,6 +203,7 @@ export function createMiddleware<
     contextSchema: config.contextSchema,
     beforeModelJumpTo: config.beforeModelJumpTo,
     afterModelJumpTo: config.afterModelJumpTo,
+    tools: config.tools ?? [],
   };
 
   if (config.modifyModelRequest) {
@@ -215,7 +221,7 @@ export function createMiddleware<
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional
+              : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
@@ -237,7 +243,7 @@ export function createMiddleware<
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional
+              : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
@@ -259,7 +265,7 @@ export function createMiddleware<
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodOptional
+              : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >

@@ -246,9 +246,7 @@ export class AgentNode<
       return this.#options.model;
     }
 
-    throw new Error(
-      "No model option was provided, either via `model` or via `llm` option."
-    );
+    throw new Error("No model option was provided, either via `model` option.");
   }
 
   async #invokeModel(
@@ -566,12 +564,7 @@ export class AgentNode<
     }
 
     // Get the prompt for system message
-    let systemMessage: BaseMessage | undefined;
-    if (typeof this.#options.prompt === "string") {
-      systemMessage = new SystemMessage(this.#options.prompt);
-    } else if (BaseMessage.isInstance(this.#options.prompt)) {
-      systemMessage = this.#options.prompt;
-    }
+    const systemMessage = this.#options.prompt;
 
     // Prepare the initial call options
     let currentOptions: ModelRequest = {
@@ -683,6 +676,9 @@ export class AgentNode<
     /**
      * Bind tools to the model if they are not already bound.
      */
+    console.log(
+      `BIND ${allTools.length} tools: ${allTools.map((t) => t.name).join(", ")}`
+    );
     const modelWithTools = await bindTools(model, allTools, {
       ...options,
       tool_choice: toolChoice,
@@ -692,7 +688,9 @@ export class AgentNode<
      * Create a model runnable with the prompt and agent name
      */
     const modelRunnable = getPromptRunnable(
-      (preparedOptions?.systemMessage as SystemMessage) ?? this.#options.prompt
+      preparedOptions?.systemMessage
+        ? new SystemMessage(preparedOptions.systemMessage)
+        : this.#options.prompt
     ).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)

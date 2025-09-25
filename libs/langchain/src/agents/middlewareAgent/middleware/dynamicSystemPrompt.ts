@@ -1,4 +1,3 @@
-import { SystemMessage } from "@langchain/core/messages";
 import { createMiddleware } from "../middleware.js";
 import type { Runtime, AgentBuiltInState } from "../types.js";
 
@@ -51,18 +50,17 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
     modifyModelRequest: async (options, state, runtime) => {
-      const system = await fn(
+      const systemMessage = await fn(
         state as AgentBuiltInState,
         runtime as Runtime<AgentBuiltInState, TContextSchema>
       );
 
-      if (typeof system !== "string") {
+      if (typeof systemMessage !== "string") {
         throw new Error(
           "dynamicSystemPromptMiddleware function must return a string"
         );
       }
 
-      const systemMessage = new SystemMessage(system);
       return { ...options, systemMessage };
     },
   });

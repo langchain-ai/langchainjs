@@ -54,8 +54,10 @@ type MergedAgentState<
     | ResponseFormatUndefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = (StructuredResponseFormat extends ResponseFormatUndefined
-  ? BuiltInState
-  : BuiltInState & { structuredResponse: StructuredResponseFormat }) &
+  ? Omit<BuiltInState, "jumpTo">
+  : Omit<BuiltInState, "jumpTo"> & {
+      structuredResponse: StructuredResponseFormat;
+    }) &
   InferMiddlewareStates<TMiddleware>;
 
 type InvokeStateParameter<
@@ -90,7 +92,11 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<
+    any,
+    any,
+    any
+  >[] = readonly AgentMiddleware<any, any, any>[]
 > {
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
@@ -103,6 +109,14 @@ export class ReactAgent<
     const toolClasses =
       (Array.isArray(options.tools) ? options.tools : options.tools?.tools) ??
       [];
+
+    /**
+     * append tools from middleware
+     */
+    const middlewareTools = (this.options.middleware
+      ?.filter((m) => m.tools)
+      .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
+    toolClasses.push(...middlewareTools);
 
     /**
      * If any of the tools are configured to return_directly after running,
