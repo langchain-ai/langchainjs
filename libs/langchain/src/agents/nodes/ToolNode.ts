@@ -30,7 +30,6 @@ import {
 } from "../annotation.js";
 import { mergeAbortSignals } from "./utils.js";
 import { ToolInvocationError } from "../errors.js";
-import type { ToolCallResults } from "../middlewareAgent/types.js";
 
 export interface ToolNodeOptions {
   /**
@@ -358,4 +357,30 @@ export class ToolNode<
 
 export function isSend(x: unknown): x is Send {
   return x instanceof Send;
+}
+
+/**
+ * Information about a tool call that has been executed.
+ */
+export interface ToolCallResults {
+  /**
+   * The ID of the tool call.
+   */
+  id: string;
+  /**
+   * The name of the tool that was called.
+   */
+  name: string;
+  /**
+   * The arguments that were passed to the tool.
+   */
+  args: Record<string, any>;
+  /**
+   * The result of the tool call.
+   */
+  result?: ToolMessage | string;
+  /**
+   * An optional error message if the tool call failed.
+   */
+  error?: string;
 }
