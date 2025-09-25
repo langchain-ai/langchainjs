@@ -7,7 +7,6 @@ import {
   HumanMessage,
   SystemMessage,
   AIMessage,
-  ToolCall,
 } from "@langchain/core/messages";
 
 import { createMiddleware, createAgent } from "../index.js";
@@ -344,7 +343,7 @@ describe("structured response format", () => {
           msg.tool_calls.length > 0
       )
       .map((msg) => (msg as AIMessage).tool_calls)
-      .flat() as ToolCall[];
+      .flat() as { name: string }[];
     expect(toolCalls).toHaveLength(1);
     expect(toolCalls[0].name).toBe("getWeather");
   });
@@ -387,7 +386,7 @@ describe("structured response format", () => {
           msg.tool_calls.length > 0
       )
       .map((msg) => (msg as AIMessage).tool_calls)
-      .flat() as ToolCall[];
+      .flat() as { name: string }[];
     expect(toolCalls).toHaveLength(2);
     expect(toolCalls[0].name).toBe("getWeather");
     expect(toolCalls[1].name).toContain("extract-");
