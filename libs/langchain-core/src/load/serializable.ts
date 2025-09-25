@@ -159,7 +159,7 @@ export abstract class Serializable implements SerializableInterface {
     }
   }
 
-  toJSON(): Serialized {
+  toSerialized(): Serialized {
     if (!this.lc_serializable) {
       return this.toJSONNotImplemented();
     }
@@ -230,6 +230,10 @@ export abstract class Serializable implements SerializableInterface {
         aliases
       ),
     };
+  }
+
+  toJSON(): Serialized {
+    return this.toSerialized();
   }
 
   toJSONNotImplemented(): SerializedNotImplemented {
