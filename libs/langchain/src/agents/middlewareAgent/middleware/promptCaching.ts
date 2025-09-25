@@ -7,12 +7,34 @@ import { createMiddleware } from "../middleware.js";
 const DEFAULT_ENABLE_CACHING = true;
 const DEFAULT_TTL = "5m";
 const DEFAULT_MIN_MESSAGES_TO_CACHE = 3;
+const DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR = "warn";
 
 const contextSchema = z.object({
-  // Configuration options
+  /**
+   * Whether to enable prompt caching.
+   * @default true
+   */
   enableCaching: z.boolean().default(DEFAULT_ENABLE_CACHING),
+  /**
+   * The time-to-live for the cached prompt.
+   * @default "5m"
+   */
   ttl: z.enum(["5m", "1h"]).default(DEFAULT_TTL),
+  /**
+   * The minimum number of messages required before caching is applied.
+   * @default 3
+   */
   minMessagesToCache: z.number().default(DEFAULT_MIN_MESSAGES_TO_CACHE),
+  /**
+   * The behavior to take when an unsupported model is used.
+   * - "ignore" will ignore the unsupported model and continue without caching.
+   * - "warn" will warn the user and continue without caching.
+   * - "raise" will raise an error and stop the agent.
+   * @default "warn"
+   */
+  unsupportedModelBehavior: z
+    .enum(["ignore", "warn", "raise"])
+    .default(DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR),
 });
 
 class PromptCachingMiddlewareError extends Error {
@@ -46,6 +68,7 @@ class PromptCachingMiddlewareError extends Error {
  * @param middlewareOptions.enableCaching - Whether to enable prompt caching (default: `true`)
  * @param middlewareOptions.ttl - Cache time-to-live: `"5m"` for 5 minutes or `"1h"` for 1 hour (default: `"5m"`)
  * @param middlewareOptions.minMessagesToCache - Minimum number of messages required before caching is applied (default: `3`)
+ * @param middlewareOptions.unsupportedModelBehavior - The behavior to take when an unsupported model is used (default: `"warn"`)
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *
@@ -165,6 +188,13 @@ export function anthropicPromptCachingMiddleware(
             runtime.context.minMessagesToCache
           : runtime.context.minMessagesToCache ??
             middlewareOptions?.minMessagesToCache;
+      const unsupportedModelBehavior =
+        runtime.context.unsupportedModelBehavior ===
+        DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR
+          ? middlewareOptions?.unsupportedModelBehavior ??
+            runtime.context.unsupportedModelBehavior
+          : runtime.context.unsupportedModelBehavior ??
+            middlewareOptions?.unsupportedModelBehavior;
 
       // Skip if caching is disabled
       if (!enableCaching || !options.model) {
@@ -177,9 +207,28 @@ export function anthropicPromptCachingMiddleware(
           (options.model as ConfigurableModel)._defaultConfig?.modelProvider ===
             "anthropic");
       if (!isAnthropicModel) {
-        throw new Error(
-          "Prompt caching is only supported for Anthropic models"
-        );
+        // Get model name for better error context
+        const modelName = options.model.getName();
+        const modelInfo =
+          options.model.getName() === "ConfigurableModel"
+            ? `${modelName} (${
+                (options.model as ConfigurableModel)._defaultConfig
+                  ?.modelProvider
+              })`
+            : modelName;
+
+        const baseMessage = `Unsupported model '${modelInfo}'. Prompt caching requires an Anthropic model`;
+
+        if (unsupportedModelBehavior === "raise") {
+          throw new PromptCachingMiddlewareError(
+            `${baseMessage} (e.g., 'anthropic:claude-4-0-sonnet').`
+          );
+        } else if (unsupportedModelBehavior === "warn") {
+          console.warn(
+            `PromptCachingMiddleware: Skipping caching for ${modelName}. Consider switching to an Anthropic model for caching benefits.`
+          );
+        }
+        return undefined;
       }
 
       const messagesCount =
