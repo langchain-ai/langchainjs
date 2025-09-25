@@ -7,6 +7,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/tools/discord",
   "langchain_community/tools/gmail",
   "langchain_community/tools/google_calendar",
+  "langchain_community/tools/file_management",
   "langchain_community/agents/toolkits/aws_sfn",
   "langchain_community/agents/toolkits/ibm",
   "langchain_community/agents/toolkits/stagehand",

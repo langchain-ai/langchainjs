@@ -63,6 +63,7 @@ export const config = {
     "tools/tavily_search": "tools/tavily_search",
     "tools/wikipedia_query_run": "tools/wikipedia_query_run",
     "tools/wolframalpha": "tools/wolframalpha",
+    "tools/file_management": "tools/file_management/index",
     // toolkits
     "agents/toolkits/aws_sfn": "agents/toolkits/aws_sfn",
     "agents/toolkits/base": "agents/toolkits/base",
@@ -359,6 +360,7 @@ export const config = {
     "tools/discord",
     "tools/gmail",
     "tools/google_calendar",
+    "tools/file_management",
     "agents/toolkits/aws_sfn",
     "agents/toolkits/ibm",
     "agents/toolkits/stagehand",
