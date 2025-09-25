@@ -3,14 +3,22 @@
 import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 
-import { RunnableCallable } from "../../RunnableCallable.js";
+import {
+  RunnableCallable,
+  RunnableCallableArgs,
+} from "../../RunnableCallable.js";
 import type {
   Runtime,
+  ToolCallResults,
   ControlAction,
   AgentMiddleware,
   MiddlewareResult,
 } from "../types.js";
-import { derivePrivateState, parseToolCalls } from "./utils.js";
+import { derivePrivateState } from "./utils.js";
+
+export interface MiddlewareNodeOptions {
+  getToolCalls: () => ToolCallResults[];
+}
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -24,6 +32,16 @@ export abstract class MiddlewareNode<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;
+
+  options: MiddlewareNodeOptions;
+
+  constructor(
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
+    options: MiddlewareNodeOptions
+  ) {
+    super(fields);
+    this.options = options;
+  }
 
   abstract runHook(
     state: TStateSchema,
@@ -66,7 +84,7 @@ export abstract class MiddlewareNode<
      * ToDo: implement later
      */
     const runtime: Runtime<TStateSchema, TContextSchema> = {
-      toolCalls: parseToolCalls(state.messages),
+      toolCalls: this.options.getToolCalls(),
       context: filteredContext,
       writer: config?.writer,
       interrupt: config?.interrupt,

@@ -13,7 +13,7 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, ToolMessage } from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
@@ -52,7 +52,7 @@ export interface BuiltInState {
 /**
  * Information about a tool call that has been executed.
  */
-export interface ToolCall {
+export interface ToolCallResults {
   /**
    * The ID of the tool call.
    */
@@ -68,7 +68,7 @@ export interface ToolCall {
   /**
    * The result of the tool call.
    */
-  result?: unknown;
+  result?: ToolMessage | string;
   /**
    * An optional error message if the tool call failed.
    */
@@ -156,7 +156,7 @@ type WithMaybeContext<TContext> = undefined extends TContext
 export type Runtime<TState = unknown, TContext = unknown> = Partial<
   Omit<LangGraphRuntime<TContext>, "context" | "configurable">
 > & {
-  readonly toolCalls: ToolCall[];
+  readonly toolCalls: ToolCallResults[];
   /**
    * Terminates the agent with an update to the state or throws an error.
    * @param result - The result to terminate the agent with.

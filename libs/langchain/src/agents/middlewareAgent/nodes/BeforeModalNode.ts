@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RunnableConfig } from "@langchain/core/runnables";
-import { MiddlewareNode } from "./middleware.js";
+import { MiddlewareNode, MiddlewareNodeOptions } from "./middleware.js";
 import type { AgentMiddleware, MiddlewareResult, Runtime } from "../types.js";
 
 /**
@@ -12,14 +12,20 @@ export class BeforeModelNode<
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "beforeModalNodes"];
 
-  constructor(public middleware: AgentMiddleware<any, any, any>) {
-    super({
-      name: `BeforeModelNode_${middleware.name}`,
-      func: async (
-        state: TStateSchema,
-        config?: RunnableConfig<TContextSchema>
-      ) => this.invokeMiddleware(state, config),
-    });
+  constructor(
+    public middleware: AgentMiddleware<any, any, any>,
+    options: MiddlewareNodeOptions
+  ) {
+    super(
+      {
+        name: `BeforeModelNode_${middleware.name}`,
+        func: async (
+          state: TStateSchema,
+          config?: RunnableConfig<TContextSchema>
+        ) => this.invokeMiddleware(state, config),
+      },
+      options
+    );
   }
 
   runHook(state: TStateSchema, runtime: Runtime<TStateSchema, TContextSchema>) {

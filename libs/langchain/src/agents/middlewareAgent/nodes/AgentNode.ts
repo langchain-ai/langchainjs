@@ -35,6 +35,7 @@ import {
   InternalAgentState,
   Runtime,
   AgentMiddleware,
+  ToolCallResults,
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
@@ -44,7 +45,6 @@ import {
   transformResponseFormat,
   ToolStrategyError,
 } from "../../responses.js";
-import { parseToolCalls } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -75,6 +75,7 @@ export interface AgentNodeOptions<
     AgentMiddleware<any, any, any>,
     () => any
   ][];
+  getToolCalls: () => ToolCallResults[];
 }
 
 export class AgentNode<
@@ -524,7 +525,7 @@ export class AgentNode<
 
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {
-        toolCalls: parseToolCalls(state.messages),
+        toolCalls: this.#options.getToolCalls(),
         context,
         writer: config.writer,
         interrupt: config.interrupt,
