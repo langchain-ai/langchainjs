@@ -211,7 +211,7 @@ export class ReactAgent<
       "model_request",
       new AgentNode({
         model: this.options.model,
-        prompt: this.options.prompt,
+        systemPrompt: this.options.systemPrompt,
         includeAgentName: this.options.includeAgentName,
         name: this.options.name,
         responseFormat: this.options.responseFormat,

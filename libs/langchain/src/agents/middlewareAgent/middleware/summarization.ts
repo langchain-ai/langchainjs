@@ -144,7 +144,7 @@ export function summarizationMiddleware(
         return;
       }
 
-      const { systemMessage, conversationMessages } =
+      const { systemPrompt, conversationMessages } =
         splitSystemMessage(messages);
       const cutoffIndex = findSafeCutoff(
         conversationMessages,
@@ -156,7 +156,7 @@ export function summarizationMiddleware(
       }
 
       const { messagesToSummarize, preservedMessages } = partitionMessages(
-        systemMessage,
+        systemPrompt,
         conversationMessages,
         cutoffIndex
       );
@@ -169,7 +169,7 @@ export function summarizationMiddleware(
       );
 
       const updatedSystemMessage = buildUpdatedSystemMessage(
-        systemMessage,
+        systemPrompt,
         summary,
         config.summaryPrefix
       );
@@ -200,17 +200,17 @@ function ensureMessageIds(messages: BaseMessage[]): void {
  * Separate system message from conversation messages
  */
 function splitSystemMessage(messages: BaseMessage[]): {
-  systemMessage: SystemMessage | null;
+  systemPrompt: SystemMessage | null;
   conversationMessages: BaseMessage[];
 } {
   if (messages.length > 0 && isSystemMessage(messages[0])) {
     return {
-      systemMessage: messages[0] as SystemMessage,
+      systemPrompt: messages[0] as SystemMessage,
       conversationMessages: messages.slice(1),
     };
   }
   return {
-    systemMessage: null,
+    systemPrompt: null,
     conversationMessages: messages,
   };
 }
@@ -219,7 +219,7 @@ function splitSystemMessage(messages: BaseMessage[]): {
  * Partition messages into those to summarize and those to preserve
  */
 function partitionMessages(
-  systemMessage: SystemMessage | null,
+  systemPrompt: SystemMessage | null,
   conversationMessages: BaseMessage[],
   cutoffIndex: number
 ): { messagesToSummarize: BaseMessage[]; preservedMessages: BaseMessage[] } {
@@ -227,8 +227,8 @@ function partitionMessages(
   const preservedMessages = conversationMessages.slice(cutoffIndex);
 
   // Include system message in messages to summarize to capture previous summaries
-  if (systemMessage) {
-    messagesToSummarize.unshift(systemMessage);
+  if (systemPrompt) {
+    messagesToSummarize.unshift(systemPrompt);
   }
 
   return { messagesToSummarize, preservedMessages };

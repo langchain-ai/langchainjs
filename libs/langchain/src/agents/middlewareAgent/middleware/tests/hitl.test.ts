@@ -101,7 +101,7 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      prompt:
+      systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -448,7 +448,7 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      prompt:
+      systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -551,7 +551,7 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      prompt:
+      systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [calculateTool, writeFileTool],
       middleware: [hitlMiddleware] as const,
@@ -617,7 +617,7 @@ describe("humanInTheLoopMiddleware", () => {
     const agent = createAgent({
       model,
       checkpointer,
-      prompt:
+      systemPrompt:
         "You are a helpful assistant. Use the tools provided to help the user.",
       tools: [writeFileTool],
       middleware: [hitlMiddleware] as const,

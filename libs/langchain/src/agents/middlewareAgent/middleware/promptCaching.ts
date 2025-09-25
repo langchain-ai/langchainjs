@@ -98,7 +98,7 @@ class PromptCachingMiddlewareError extends Error {
  *
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
- *   systemMessage: "You are a helpful assistant with deep knowledge of...", // Long system prompt
+ *   systemPrompt: "You are a helpful assistant with deep knowledge of...", // Long system prompt
  *   middleware: [cachingMiddleware]
  * });
  * ```
@@ -132,7 +132,7 @@ class PromptCachingMiddlewareError extends Error {
  * ```typescript
  * const supportAgent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",
- *   systemMessage: `You are a customer support agent for ACME Corp.
+ *   systemPrompt: `You are a customer support agent for ACME Corp.
  *
  *     Company policies:
  *     - Always be polite and professional
@@ -232,7 +232,7 @@ export function anthropicPromptCachingMiddleware(
       }
 
       const messagesCount =
-        state.messages.length + (options.systemMessage ? 1 : 0);
+        state.messages.length + (options.systemPrompt ? 1 : 0);
 
       if (messagesCount < minMessagesToCache) {
         return options;

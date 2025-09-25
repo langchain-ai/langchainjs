@@ -1,4 +1,3 @@
-import { SystemMessage } from "@langchain/core/messages";
 import { createMiddleware } from "../middleware.js";
 import type { Runtime, AgentBuiltInState } from "../types.js";
 
@@ -15,7 +14,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
  * @param fn - Function that receives the current agent `state` and `runtime`, and
  * returns the system prompt for the next model call as a string.
  *
- * @returns A middleware instance that sets `systemMessage` for the next model call.
+ * @returns A middleware instance that sets `systemPrompt` for the next model call.
  *
  * @example Basic usage with typed context
  * ```ts
@@ -49,19 +48,18 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
     modifyModelRequest: async (options, state, runtime) => {
-      const system = await fn(
+      const systemPrompt = await fn(
         state as AgentBuiltInState,
         runtime as Runtime<AgentBuiltInState, TContextSchema>
       );
 
-      if (typeof system !== "string") {
+      if (typeof systemPrompt !== "string") {
         throw new Error(
           "dynamicSystemPromptMiddleware function must return a string"
         );
       }
 
-      const systemMessage = new SystemMessage(system);
-      return { ...options, systemMessage };
+      return { ...options, systemPrompt };
     },
   });
 }
