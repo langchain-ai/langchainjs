@@ -585,7 +585,8 @@ export class AgentNode<
     for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
       const context =
-        middleware.contextSchema?.parse(config?.context || {}) ?? {};
+        middleware.contextSchema?.parse(config?.context || {}) ??
+        config?.context;
 
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {
