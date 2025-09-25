@@ -115,6 +115,14 @@ export class ReactAgent<
     ];
 
     /**
+     * append tools from middleware
+     */
+    const middlewareTools = (this.options.middleware
+      ?.filter((m) => m.tools)
+      .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
+    toolClasses.push(...middlewareTools);
+
+    /**
      * If any of the tools are configured to return_directly after running,
      * our graph needs to check if these were called
      */
