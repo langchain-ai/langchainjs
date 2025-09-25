@@ -25,7 +25,13 @@ export { initChatModel } from "./chat_models/universal.js";
 /**
  * LangChain Tools
  */
-export { tool, DynamicStructuredTool } from "@langchain/core/tools";
+export {
+  tool,
+  Tool,
+  DynamicTool,
+  StructuredTool,
+  DynamicStructuredTool,
+} from "@langchain/core/tools";
 
 /**
  * LangChain Agents

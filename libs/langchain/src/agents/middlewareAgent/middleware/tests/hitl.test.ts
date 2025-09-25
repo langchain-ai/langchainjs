@@ -139,6 +139,9 @@ describe("humanInTheLoopMiddleware", () => {
     expect(mathMessages[0]).toEqual(
       new _AnyIdHumanMessage("Calculate 42 * 17")
     );
+    expect(mathMessages[1].content).toEqual(
+      expect.stringContaining("You are a helpful assistant.")
+    );
     expect(mathMessages[2].content).toBe("42 * 17 = 714");
 
     // Test 2: Write file tool (requires approval)

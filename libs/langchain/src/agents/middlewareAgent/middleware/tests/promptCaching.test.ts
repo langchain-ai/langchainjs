@@ -25,6 +25,7 @@ function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
   return {
     getName: () => name,
     bindTools: vi.fn().mockReturnThis(),
+    _streamResponseChunks: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
     invoke: invokeCallback,
     lc_runnable: true,

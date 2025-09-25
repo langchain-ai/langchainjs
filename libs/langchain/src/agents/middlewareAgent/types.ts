@@ -27,9 +27,9 @@ import type {
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
-  ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "../responses.js";
+import type { ResponseFormatUndefined } from "../annotation.js";
 import type { Interrupt } from "../interrupt.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
 import type { ClientTool, ServerTool } from "../types.js";

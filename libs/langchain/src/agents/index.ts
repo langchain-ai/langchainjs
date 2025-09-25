@@ -13,7 +13,10 @@ import { ReactAgent as ReactAgentV1 } from "./ReactAgent.js";
 import { createAgent as createAgentV2 } from "./middlewareAgent/index.js";
 import { ReactAgent as ReactAgentV2 } from "./middlewareAgent/ReactAgent.js";
 
-import { type AnyAnnotationRoot } from "./annotation.js";
+import type {
+  AnyAnnotationRoot,
+  ResponseFormatUndefined,
+} from "./annotation.js";
 import type { CreateAgentParams, ExtractZodArrayTypes } from "./types.js";
 import type {
   CreateAgentParams as CreateAgentParamsV2,
@@ -23,7 +26,6 @@ import type {
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
-  ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "./responses.js";
 

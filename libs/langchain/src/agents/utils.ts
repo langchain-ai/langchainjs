@@ -27,12 +27,8 @@ import {
 
 import { MultipleToolsBoundError } from "./errors.js";
 import { PROMPT_RUNNABLE_NAME } from "./constants.js";
-import {
-  ServerTool,
-  ClientTool,
-  ConfigurableModelInterface,
-  Prompt,
-} from "./types.js";
+import { ServerTool, ClientTool, Prompt } from "./types.js";
+import { isBaseChatModel, isConfigurableModel } from "./model.js";
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
@@ -196,28 +192,6 @@ export function isClientTool(
   tool: ClientTool | ServerTool
 ): tool is ClientTool {
   return Runnable.isRunnable(tool);
-}
-
-export function isBaseChatModel(
-  model: LanguageModelLike
-): model is BaseChatModel {
-  return (
-    "invoke" in model &&
-    typeof model.invoke === "function" &&
-    "_modelType" in model
-  );
-}
-
-export function isConfigurableModel(
-  model: unknown
-): model is ConfigurableModelInterface {
-  return (
-    typeof model === "object" &&
-    model != null &&
-    "_queuedMethodOperations" in model &&
-    "_model" in model &&
-    typeof model._model === "function"
-  );
 }
 
 function _isChatModelWithBindTools(
@@ -533,54 +507,4 @@ export function hasToolCalls(messages: BaseMessage[]): boolean {
       lastMessage.tool_calls &&
       lastMessage.tool_calls.length > 0
   );
-}
-
-/**
- * Check if the model name supports structured output
- * @param modelName - The name of the model
- * @returns True if the model supports structured output, false otherwise
- */
-export function hasSupportForStructuredOutput(modelName?: string): boolean {
-  return (
-    modelName?.startsWith("gpt-4") || modelName?.startsWith("gpt-5") || false
-  );
-}
-
-const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
-  "ChatOpenAI",
-  "FakeToolCallingModel",
-];
-
-/**
- * Identifies the models that support JSON schema output
- * @param model - The model to check
- * @returns True if the model supports JSON schema output, false otherwise
- */
-export function hasSupportForJsonSchemaOutput(
-  model: LanguageModelLike
-): boolean {
-  if (!isBaseChatModel(model)) {
-    return false;
-  }
-
-  const chatModelClass = model.getName();
-  if (
-    CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.includes(chatModelClass) &&
-    ((chatModelClass === "ChatOpenAI" &&
-      /**
-       * OpenAI models
-       */
-      "model" in model &&
-      typeof model.model === "string" &&
-      model.model.startsWith("gpt-4")) ||
-      /**
-       * for testing purposes only
-       */
-      (chatModelClass === "FakeToolCallingModel" &&
-        "structuredResponse" in model))
-  ) {
-    return true;
-  }
-
-  return false;
 }

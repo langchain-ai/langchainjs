@@ -17,6 +17,7 @@ function createMockModel() {
   return {
     getName: () => "mock",
     bindTools: vi.fn().mockReturnThis(),
+    _streamResponseChunks: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
     invoke: invokeCallback,
     lc_runnable: true,

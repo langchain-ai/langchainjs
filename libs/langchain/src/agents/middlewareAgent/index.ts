@@ -4,7 +4,10 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 
-import { type AnyAnnotationRoot } from "../annotation.js";
+import type {
+  AnyAnnotationRoot,
+  ResponseFormatUndefined,
+} from "../annotation.js";
 import type { CreateAgentParams, AgentMiddleware } from "./types.js";
 import type { ExtractZodArrayTypes } from "../types.js";
 import type {
@@ -12,7 +15,6 @@ import type {
   TypedToolStrategy,
   ProviderStrategy,
   ResponseFormat,
-  ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "../responses.js";
 import { ReactAgent } from "./ReactAgent.js";

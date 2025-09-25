@@ -10,7 +10,6 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type {
   SystemMessage,
   BaseMessageLike,
@@ -35,13 +34,13 @@ import type {
   PreHookAnnotation,
   AnyAnnotationRoot,
   ToAnnotationRoot,
+  ResponseFormatUndefined,
 } from "./annotation.js";
 import type {
   ResponseFormat,
   ToolStrategy,
   TypedToolStrategy,
   ProviderStrategy,
-  ResponseFormatUndefined,
   JsonSchemaFormat,
 } from "./responses.js";
 
@@ -435,11 +434,6 @@ export type CreateAgentParams<
    */
   version?: "v1" | "v2";
 };
-
-export interface ConfigurableModelInterface {
-  _queuedMethodOperations: Record<string, unknown>;
-  _model: () => Promise<BaseChatModel>;
-}
 
 export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
