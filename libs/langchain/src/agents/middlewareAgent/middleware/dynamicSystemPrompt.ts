@@ -19,7 +19,7 @@ export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
  * @param fn - Function that receives the current agent `state` and `runtime`, and
  * returns the system prompt for the next model call as a string.
  *
- * @returns A middleware instance that sets `systemMessage` for the next model call.
+ * @returns A middleware instance that sets `systemPrompt` for the next model call.
  *
  * @example Basic usage with typed context
  * ```ts
@@ -50,18 +50,18 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
   return createMiddleware({
     name: "DynamicSystemPromptMiddleware",
     modifyModelRequest: async (options, state, runtime) => {
-      const systemMessage = await fn(
+      const systemPrompt = await fn(
         state as AgentBuiltInState,
         runtime as Runtime<AgentBuiltInState, TContextSchema>
       );
 
-      if (typeof systemMessage !== "string") {
+      if (typeof systemPrompt !== "string") {
         throw new Error(
           "dynamicSystemPromptMiddleware function must return a string"
         );
       }
 
-      return { ...options, systemMessage };
+      return { ...options, systemPrompt };
     },
   });
 }

@@ -8,7 +8,7 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { createMiddleware, createAgent } from "../index.js";
 
 describe("modifyModelRequest", () => {
-  it("should allow middleware to update model, messages and systemMessage", async () => {
+  it("should allow middleware to update model, messages and systemPrompt", async () => {
     // Setup mocked fetch functions for both providers
     const openAIFetchMock = vi.fn((url, options) => fetch(url, options));
     const anthropicResponse = vi.fn((res) => res.clone());
@@ -70,7 +70,7 @@ Please provide a clear, direct, and authoritative answer, as this information wi
         return {
           model: anthropicModel,
           messages: newMessages,
-          systemMessage: "You are a geography expert.",
+          systemPrompt: "You are a geography expert.",
           toolChoice: "none",
           tools: [],
         };

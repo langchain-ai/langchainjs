@@ -98,11 +98,9 @@ describe("summarizationMiddleware", () => {
 
     // Verify the result has a system message with summary
     expect(result.messages[0]).toBeInstanceOf(SystemMessage);
-    const systemMessage = result.messages[0] as SystemMessage;
-    expect(systemMessage.content).toContain(
-      "## Previous conversation summary:"
-    );
-    expect(systemMessage.content).toContain("Previous conversation covered:");
+    const systemPrompt = result.messages[0] as SystemMessage;
+    expect(systemPrompt.content).toContain("## Previous conversation summary:");
+    expect(systemPrompt.content).toContain("Previous conversation covered:");
 
     // Verify only recent messages are kept (plus the new response)
     expect(result.messages.length).toBeLessThanOrEqual(5); // system + kept messages + new response
@@ -226,17 +224,15 @@ describe("summarizationMiddleware", () => {
 
     // Verify system message is updated with new summary
     expect(result.messages[0]).toBeInstanceOf(SystemMessage);
-    const systemMessage = result.messages[0] as SystemMessage;
-    expect(systemMessage.content).toContain("You are a helpful assistant");
-    expect(systemMessage.content).toContain(
-      "## Previous conversation summary:"
-    );
+    const systemPrompt = result.messages[0] as SystemMessage;
+    expect(systemPrompt.content).toContain("You are a helpful assistant");
+    expect(systemPrompt.content).toContain("## Previous conversation summary:");
 
     // Should have replaced the old summary with new one
-    expect(systemMessage.content).not.toContain(
+    expect(systemPrompt.content).not.toContain(
       "Previous discussion about databases"
     );
-    expect(systemMessage.content).toContain("Previous conversation covered:");
+    expect(systemPrompt.content).toContain("Previous conversation covered:");
   });
 
   it("should use custom token counter when provided", async () => {

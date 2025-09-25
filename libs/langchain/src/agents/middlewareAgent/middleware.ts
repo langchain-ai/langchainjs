@@ -93,7 +93,7 @@ export function createMiddleware<
    * @param request - The model request
    * @param request.model - The model to use for this step.
    * @param request.messages - The messages to send to the model.
-   * @param request.systemMessage - The system message for this step.
+   * @param request.systemPrompt - The system message for this step.
    * @param request.toolChoice - The tool choice configuration for this step.
    * @param request.tools - The tools to make available for this step.
    * @param state - The middleware state
