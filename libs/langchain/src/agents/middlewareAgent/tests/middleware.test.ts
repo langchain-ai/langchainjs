@@ -1,6 +1,7 @@
 import { expect, describe, it, vi } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { z } from "zod/v3";
 
 import { createAgent, createMiddleware } from "../index.js";
@@ -8,6 +9,24 @@ import {
   FakeToolCallingChatModel,
   FakeToolCallingModel,
 } from "../../tests/utils.js";
+
+function createMockModel(name = "ChatAnthropic", model = "anthropic") {
+  // Mock Anthropic model
+  const invokeCallback = vi
+    .fn()
+    .mockResolvedValue(new AIMessage("Response from model"));
+  return {
+    getName: () => name,
+    bindTools: vi.fn().mockReturnThis(),
+    _streamResponseChunks: vi.fn().mockReturnThis(),
+    bind: vi.fn().mockReturnThis(),
+    invoke: invokeCallback,
+    lc_runnable: true,
+    _modelType: model,
+    _generate: vi.fn(),
+    _llmType: () => model,
+  } as unknown as LanguageModelLike;
+}
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -231,6 +250,52 @@ describe("middleware", () => {
       ).rejects.toThrow("middleware terminated in afterModel");
       expect(toolFn).toHaveBeenCalledTimes(0);
       expect(beforeModel).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("modifyModelRequest", () => {
+    it("should allow to add", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const model = createMockModel() as any;
+      const tools = [
+        tool(async () => "Tool response", {
+          name: "toolA",
+        }),
+        tool(async () => "Tool response", {
+          name: "toolB",
+        }),
+        tool(async () => "Tool response", {
+          name: "toolC",
+        }),
+      ];
+      const middleware = createMiddleware({
+        name: "middleware",
+        modifyModelRequest: async (request) => {
+          return {
+            ...request,
+            tools: [
+              tool(async () => "Tool response", {
+                name: "toolD",
+              }),
+            ],
+            toolChoice: "required",
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools,
+        middleware: [middleware] as const,
+      });
+      await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
+      expect(model.bindTools).toHaveBeenCalledWith(
+        [expect.objectContaining({ name: "toolD" })],
+        {
+          tool_choice: "required",
+        }
+      );
     });
   });
 });
