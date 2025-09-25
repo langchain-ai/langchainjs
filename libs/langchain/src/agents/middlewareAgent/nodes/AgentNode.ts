@@ -598,6 +598,25 @@ export class AgentNode<
         }
       );
 
+      /**
+       * raise meaningful error if unknown tools were selected
+       */
+      const unknownTools =
+        result?.tools?.filter(
+          (tool) => !this.#options.toolClasses.some((t) => t.name === tool)
+        ) ?? [];
+      if (unknownTools.length > 0) {
+        throw new Error(
+          `Unknown tools selected in middleware "${
+            middleware.name
+          }": ${unknownTools.join(
+            ", "
+          )}, available tools: ${this.#options.toolClasses
+            .map((t) => t.name)
+            .join(", ")}!`
+        );
+      }
+
       if (result) {
         currentOptions = { ...currentOptions, ...result };
       }
@@ -620,14 +639,15 @@ export class AgentNode<
 
     // Use tools from preparedOptions if provided, otherwise use default tools
     const preparedTools = preparedOptions?.tools ?? [];
-    const allTools = (
-      preparedTools.length > 0
+    const allTools = [
+      ...(preparedTools.length > 0
         ? this.#options.toolClasses.filter(
             (tool) =>
               typeof tool.name === "string" && preparedTools.includes(tool.name)
           )
-        : this.#options.toolClasses
-    ).concat(...structuredTools.map((toolStrategy) => toolStrategy.tool));
+        : this.#options.toolClasses),
+      ...structuredTools.map((toolStrategy) => toolStrategy.tool),
+    ];
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"

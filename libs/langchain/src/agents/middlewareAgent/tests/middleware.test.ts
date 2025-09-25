@@ -328,20 +328,21 @@ describe("middleware", () => {
   });
 
   describe("modifyModelRequest", () => {
+    const tools = [
+      tool(async () => "Tool response", {
+        name: "toolA",
+      }),
+      tool(async () => "Tool response", {
+        name: "toolB",
+      }),
+      tool(async () => "Tool response", {
+        name: "toolC",
+      }),
+    ];
+
     it("should allow to add", async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const model = createMockModel() as any;
-      const tools = [
-        tool(async () => "Tool response", {
-          name: "toolA",
-        }),
-        tool(async () => "Tool response", {
-          name: "toolB",
-        }),
-        tool(async () => "Tool response", {
-          name: "toolC",
-        }),
-      ];
       const middleware = createMiddleware({
         name: "middleware",
         tools: [
@@ -370,6 +371,38 @@ describe("middleware", () => {
         {
           tool_choice: "required",
         }
+      );
+    });
+
+    it("should throw if unknown tools were selected", async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const model = createMockModel() as any;
+      const middleware = createMiddleware({
+        name: "testMiddleware",
+        tools: [
+          tool(async () => "Tool response", {
+            name: "toolD",
+          }),
+        ],
+        modifyModelRequest: async (request) => {
+          return {
+            ...request,
+            tools: ["foobar"],
+            toolChoice: "required",
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools,
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Hello, world!")],
+        })
+      ).rejects.toThrow(
+        'Unknown tools selected in middleware "testMiddleware": foobar, available tools: toolA, toolB, toolC, toolD!'
       );
     });
   });

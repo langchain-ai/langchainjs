@@ -100,17 +100,19 @@ export class ReactAgent<
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
   ) {
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
-    const toolClasses =
-      (Array.isArray(options.tools) ? options.tools : options.tools?.tools) ??
-      [];
 
     /**
-     * append tools from middleware
+     * define complete list of tools based on options and middleware
      */
     const middlewareTools = (this.options.middleware
       ?.filter((m) => m.tools)
       .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
-    toolClasses.push(...middlewareTools);
+    const toolClasses = [
+      ...((Array.isArray(options.tools)
+        ? options.tools
+        : options.tools?.tools) ?? []),
+      ...middlewareTools,
+    ];
 
     /**
      * If any of the tools are configured to return_directly after running,
