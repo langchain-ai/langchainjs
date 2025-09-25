@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
-import { HumanMessage, AIMessage, ToolCall } from "@langchain/core/messages";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import z from "zod/v3";
 
 import { createAgent, providerStrategy } from "../index.js";
@@ -296,7 +296,7 @@ describe("createAgent Integration Tests", () => {
             msg.tool_calls.length > 0
         )
         .map((msg) => (msg as AIMessage).tool_calls)
-        .flat() as ToolCall[];
+        .flat() as { name: string }[];
       expect(toolCalls).toHaveLength(1);
       expect(toolCalls[0].name).toBe("getWeather");
     });
@@ -339,7 +339,7 @@ describe("createAgent Integration Tests", () => {
             msg.tool_calls.length > 0
         )
         .map((msg) => (msg as AIMessage).tool_calls)
-        .flat() as ToolCall[];
+        .flat() as { name: string }[];
       expect(toolCalls).toHaveLength(2);
       expect(toolCalls[0].name).toBe("getWeather");
       expect(toolCalls[1].name).toContain("extract-");
