@@ -8,6 +8,7 @@ import type {
   ModelRequest,
   JumpToTarget,
 } from "./types.js";
+import type { ClientTool, ServerTool } from "../types.js";
 
 /**
  * Creates a middleware instance with automatic schema inference.
@@ -75,6 +76,10 @@ export function createMiddleware<
    * Explitictly defines which targets are allowed to be jumped to from the `afterModel` hook.
    */
   afterModelJumpTo?: JumpToTarget[];
+  /**
+   * Additional tools registered by the middleware.
+   */
+  tools?: (ClientTool | ServerTool)[];
   /**
    * The function to modify the model request. This function is called after the `beforeModel` hook of this middleware and before the model is invoked.
    * It allows to modify the model request before it is passed to the model.
@@ -174,6 +179,7 @@ export function createMiddleware<
     contextSchema: config.contextSchema,
     beforeModelJumpTo: config.beforeModelJumpTo,
     afterModelJumpTo: config.afterModelJumpTo,
+    tools: config.tools ?? [],
   };
 
   if (config.modifyModelRequest) {

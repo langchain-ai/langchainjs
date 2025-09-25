@@ -240,9 +240,7 @@ export class AgentNode<
       return this.#options.model;
     }
 
-    throw new Error(
-      "No model option was provided, either via `model` or via `llm` option."
-    );
+    throw new Error("No model option was provided, either via `model` option.");
   }
 
   async #invokeModel(
@@ -623,7 +621,12 @@ export class AgentNode<
     // Use tools from preparedOptions if provided, otherwise use default tools
     const preparedTools = preparedOptions?.tools ?? [];
     const allTools = (
-      preparedTools.length > 0 ? preparedTools : this.#options.toolClasses
+      preparedTools.length > 0
+        ? this.#options.toolClasses.filter(
+            (tool) =>
+              typeof tool.name === "string" && preparedTools.includes(tool.name)
+          )
+        : this.#options.toolClasses
     ).concat(...structuredTools.map((toolStrategy) => toolStrategy.tool));
 
     /**

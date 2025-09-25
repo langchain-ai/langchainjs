@@ -127,9 +127,8 @@ export interface ModelRequest {
 
   /**
    * The tools to make available for this step.
-   * Can be tool names (strings) or tool instances.
    */
-  tools: (ClientTool | ServerTool)[];
+  tools: string[];
 }
 
 /**
@@ -359,6 +358,7 @@ export interface AgentMiddleware<
   name: string;
   beforeModelJumpTo?: JumpToTarget[];
   afterModelJumpTo?: JumpToTarget[];
+  tools?: (ClientTool | ServerTool)[];
   /**
    * Runs before each LLM call, can modify call parameters, changes are not persistent
    * e.g. if you change `model`, it will only be changed for the next model call
