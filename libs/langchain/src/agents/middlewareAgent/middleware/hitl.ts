@@ -338,6 +338,7 @@ export function humanInTheLoopMiddleware(
   return createMiddleware({
     name: "HumanInTheLoopMiddleware",
     contextSchema,
+    afterModelJumpTo: ["model"],
     afterModel: async (state, runtime) => {
       const config = contextSchema.parse({ ...options, ...runtime.context });
       if (!config) {

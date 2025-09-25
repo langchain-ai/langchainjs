@@ -21,11 +21,14 @@ import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "../nodes/ToolNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
 import { AfterModelNode } from "./nodes/AfterModalNode.js";
-import { initializeMiddlewareStates } from "./nodes/utils.js";
+import {
+  initializeMiddlewareStates,
+  parseJumpToTarget,
+} from "./nodes/utils.js";
 
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
 
-import {
+import type {
   CreateAgentParams,
   AgentMiddleware,
   InferMiddlewareStates,
@@ -35,6 +38,7 @@ import {
   InferContextInput,
   InvokeConfiguration,
   StreamConfiguration,
+  JumpTo,
 } from "./types.js";
 
 import {
@@ -131,8 +135,16 @@ export class ReactAgent<
     >;
 
     // Generate node names for middleware nodes that have hooks
-    const beforeModelNodes: { index: number; name: string }[] = [];
-    const afterModelNodes: { index: number; name: string }[] = [];
+    const beforeModelNodes: {
+      index: number;
+      name: string;
+      allowed?: string[];
+    }[] = [];
+    const afterModelNodes: {
+      index: number;
+      name: string;
+      allowed?: string[];
+    }[] = [];
     const modifyModelRequestHookMiddleware: [
       AgentMiddleware,
       /**
@@ -141,17 +153,24 @@ export class ReactAgent<
       () => any
     ][] = [];
 
+    const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
     for (let i = 0; i < middleware.length; i++) {
       let beforeModelNode: BeforeModelNode | undefined;
       let afterModelNode: AfterModelNode | undefined;
       const m = middleware[i];
+      if (middlewareNames.has(m.name)) {
+        throw new Error(`Middleware ${m.name} is defined multiple times`);
+      }
+
+      middlewareNames.add(m.name);
       if (m.beforeModel) {
         beforeModelNode = new BeforeModelNode(m);
-        const name = `before_model_${m.name}_${i}`;
+        const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
           name,
+          allowed: m.beforeModelJumpTo,
         });
         allNodeWorkflows.addNode(
           name,
@@ -161,10 +180,11 @@ export class ReactAgent<
       }
       if (m.afterModel) {
         afterModelNode = new AfterModelNode(m);
-        const name = `after_model_${m.name}_${i}`;
+        const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
           name,
+          allowed: m.afterModelJumpTo,
         });
         allNodeWorkflows.addNode(
           name,
@@ -226,18 +246,35 @@ export class ReactAgent<
       allNodeWorkflows.addEdge(START, "model_request");
     }
 
-    // Connect beforeModel nodes in sequence
-    for (let i = 0; i < beforeModelNodes.length - 1; i++) {
-      allNodeWorkflows.addEdge(
-        beforeModelNodes[i].name,
-        beforeModelNodes[i + 1].name
-      );
-    }
+    // Connect beforeModel nodes; add conditional routing ONLY if allowed jumps are specified
+    for (let i = 0; i < beforeModelNodes.length; i++) {
+      const node = beforeModelNodes[i];
+      const current = node.name;
+      const isLast = i === beforeModelNodes.length - 1;
+      const nextDefault = isLast
+        ? "model_request"
+        : beforeModelNodes[i + 1].name;
 
-    // Connect last beforeModel node to agent
-    const lastBeforeModelNode = beforeModelNodes.at(-1);
-    if (beforeModelNodes.length > 0 && lastBeforeModelNode) {
-      allNodeWorkflows.addEdge(lastBeforeModelNode.name, "model_request");
+      if (node.allowed && node.allowed.length > 0) {
+        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const allowedMapped = node.allowed
+          .map((t) => parseJumpToTarget(t))
+          .filter((dest) => dest !== "tools" || hasTools);
+        const destinations = Array.from(
+          new Set([nextDefault, ...allowedMapped])
+        ) as ("tools" | "model_request" | typeof END)[];
+
+        allNodeWorkflows.addConditionalEdges(
+          current,
+          this.#createBeforeModelRouter(
+            toolClasses.filter(isClientTool),
+            nextDefault
+          ),
+          destinations
+        );
+      } else {
+        allNodeWorkflows.addEdge(current, nextDefault);
+      }
     }
 
     // Connect agent to last afterModel node (for reverse order execution)
@@ -258,27 +295,59 @@ export class ReactAgent<
       }
     }
 
-    // Connect afterModel nodes in reverse sequence
+    // Connect afterModel nodes in reverse sequence; add conditional routing ONLY if allowed jumps are specified per node
     for (let i = afterModelNodes.length - 1; i > 0; i--) {
-      allNodeWorkflows.addEdge(
-        afterModelNodes[i].name,
-        afterModelNodes[i - 1].name
-      );
+      const node = afterModelNodes[i];
+      const current = node.name;
+      const nextDefault = afterModelNodes[i - 1].name;
+
+      if (node.allowed && node.allowed.length > 0) {
+        const hasTools = toolClasses.filter(isClientTool).length > 0;
+        const allowedMapped = node.allowed
+          .map((t) => parseJumpToTarget(t))
+          .filter((dest) => dest !== "tools" || hasTools);
+        const destinations = Array.from(
+          new Set([nextDefault, ...allowedMapped])
+        ) as ("tools" | "model_request" | typeof END)[];
+
+        allNodeWorkflows.addConditionalEdges(
+          current,
+          this.#createAfterModelSequenceRouter(
+            toolClasses.filter(isClientTool),
+            node.allowed,
+            nextDefault
+          ),
+          destinations
+        );
+      } else {
+        allNodeWorkflows.addEdge(current, nextDefault);
+      }
     }
 
     // Connect first afterModel node (last to execute) to model paths with jumpTo support
     if (afterModelNodes.length > 0) {
-      const firstAfterModelNode = afterModelNodes[0].name;
+      const firstAfterModel = afterModelNodes[0];
+      const firstAfterModelNode = firstAfterModel.name;
       const modelPaths = this.#getModelPaths(
         toolClasses.filter(isClientTool),
         true
+      ).filter(
+        (p) => p !== "tools" || toolClasses.filter(isClientTool).length > 0
       );
 
-      // Use afterModel router which includes jumpTo logic
+      const allowJump = Boolean(
+        firstAfterModel.allowed && firstAfterModel.allowed.length > 0
+      );
+
+      const destinations = modelPaths;
+
       allNodeWorkflows.addConditionalEdges(
         firstAfterModelNode,
-        this.#createAfterModelRouter(toolClasses.filter(isClientTool)),
-        modelPaths
+        this.#createAfterModelRouter(
+          toolClasses.filter(isClientTool),
+          allowJump
+        ),
+        destinations
       );
     }
 
@@ -444,10 +513,13 @@ export class ReactAgent<
    * @param toolClasses - Available tool classes for validation
    * @returns Router function that handles jumpTo logic and normal routing
    */
-  #createAfterModelRouter(toolClasses: (ClientTool | ServerTool)[]) {
+  #createAfterModelRouter(
+    toolClasses: (ClientTool | ServerTool)[],
+    allowJump: boolean
+  ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
-    return (state: BuiltInState) => {
+    return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
       // First, check if we just processed a structured response
       // If so, ignore any existing jumpTo and go to END
       const messages = state.messages;
@@ -459,33 +531,20 @@ export class ReactAgent<
         return END;
       }
 
-      // Check if jumpTo is set in the state
-      if (state.jumpTo) {
-        const jumpTarget = state.jumpTo;
-
-        // If jumpTo is "model", go to model_request node
-        if (jumpTarget === "model") {
-          return "model_request";
+      // Check if jumpTo is set in the state and allowed
+      if (allowJump && state.jumpTo) {
+        if (state.jumpTo === END) {
+          return END;
         }
-
-        // If jumpTo is "tools", go to tools node
-        if (jumpTarget === "tools") {
+        if (state.jumpTo === "tools") {
           // If trying to jump to tools but no tools are available, go to END
           if (toolClasses.length === 0) {
             return END;
           }
-
-          return "tools";
+          return new Send("tools", { ...state, jumpTo: undefined });
         }
-
-        // If jumpTo is END, go to END
-        if (jumpTarget === END) {
-          return END;
-        }
-
-        throw new Error(
-          `Invalid jump target: ${jumpTarget}, must be "model" or "tools".`
-        );
+        // destination === "model_request"
+        return new Send("model_request", { ...state, jumpTo: undefined });
       }
 
       // check if there are pending tool calls
@@ -542,6 +601,61 @@ export class ReactAgent<
        * The Send API is handled at the model_request node level
        */
       return "tools";
+    };
+  }
+
+  /**
+   * Router for afterModel sequence nodes (connecting later middlewares to earlier ones),
+   * honoring allowed jump targets and defaulting to the next node.
+   */
+  #createAfterModelSequenceRouter(
+    toolClasses: (ClientTool | ServerTool)[],
+    allowed: string[],
+    nextDefault: string
+  ) {
+    const allowedSet = new Set(allowed.map((t) => parseJumpToTarget(t)));
+    return (state: BuiltInState) => {
+      if (state.jumpTo) {
+        const dest = parseJumpToTarget(state.jumpTo);
+        if (dest === END && allowedSet.has(END)) {
+          return END;
+        }
+        if (dest === "tools" && allowedSet.has("tools")) {
+          if (toolClasses.length === 0) return END;
+          return new Send("tools", { ...state, jumpTo: undefined });
+        }
+        if (dest === "model_request" && allowedSet.has("model_request")) {
+          return new Send("model_request", { ...state, jumpTo: undefined });
+        }
+      }
+      return nextDefault as any;
+    };
+  }
+
+  /**
+   * Create routing function for jumpTo functionality after beforeModel hooks.
+   * Falls back to the default next node if no jumpTo is present.
+   */
+  #createBeforeModelRouter(
+    toolClasses: (ClientTool | ServerTool)[],
+    nextDefault: string
+  ) {
+    return (state: BuiltInState) => {
+      if (!state.jumpTo) {
+        return nextDefault;
+      }
+      const destination = parseJumpToTarget(state.jumpTo);
+      if (destination === END) {
+        return END;
+      }
+      if (destination === "tools") {
+        if (toolClasses.length === 0) {
+          return END;
+        }
+        return new Send("tools", { ...state, jumpTo: undefined });
+      }
+      // destination === "model_request"
+      return new Send("model_request", { ...state, jumpTo: undefined });
     };
   }
 

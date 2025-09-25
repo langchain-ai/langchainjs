@@ -10,6 +10,7 @@ import type {
   START,
   PregelOptions,
   Runtime as LangGraphRuntime,
+  END,
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
@@ -19,8 +20,8 @@ import type {
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
 
+import { JUMP_TO_TARGETS } from "./constants.js";
 import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
-
 import type {
   ResponseFormat,
   ToolStrategy,
@@ -46,7 +47,7 @@ export interface BuiltInState {
    * - "model_request": Jump back to the model for another LLM call
    * - "tools": Jump to tool execution (requires tools to be available)
    */
-  jumpTo?: "model" | "tools";
+  jumpTo?: JumpToTarget;
 }
 
 /**
@@ -333,6 +334,15 @@ export type InferMiddlewareContextInputs<
   : {};
 
 /**
+ * jump targets (user facing)
+ */
+export type JumpToTarget = (typeof JUMP_TO_TARGETS)[number];
+/**
+ * jump targets (internal)
+ */
+export type JumpTo = "model_request" | "tools" | typeof END;
+
+/**
  * Base middleware interface.
  */
 export interface AgentMiddleware<
@@ -347,6 +357,8 @@ export interface AgentMiddleware<
   stateSchema?: TSchema;
   contextSchema?: TContextSchema;
   name: string;
+  beforeModelJumpTo?: JumpToTarget[];
+  afterModelJumpTo?: JumpToTarget[];
   /**
    * Runs before each LLM call, can modify call parameters, changes are not persistent
    * e.g. if you change `model`, it will only be changed for the next model call

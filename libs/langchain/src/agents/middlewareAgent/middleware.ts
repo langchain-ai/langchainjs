@@ -6,6 +6,7 @@ import type {
   MiddlewareResult,
   AgentBuiltInState,
   ModelRequest,
+  JumpToTarget,
 } from "./types.js";
 
 /**
@@ -46,11 +47,50 @@ export function createMiddleware<
     | z.ZodDefault<z.ZodObject<any>>
     | undefined = undefined
 >(config: {
+  /**
+   * The name of the middleware
+   */
   name: string;
+  /**
+   * The schema of the middleware state. Middleware state is persisted between multiple invocations. It can be either:
+   * - A Zod object
+   * - A Zod optional object
+   * - A Zod default object
+   * - Undefined
+   */
   stateSchema?: TSchema;
+  /**
+   * The schema of the middleware context. Middleware context is read-only and not persisted between multiple invocations. It can be either:
+   * - A Zod object
+   * - A Zod optional object
+   * - A Zod default object
+   * - Undefined
+   */
   contextSchema?: TContextSchema;
+  /**
+   * Explitictly defines which targets are allowed to be jumped to from the `beforeModel` hook.
+   */
+  beforeModelJumpTo?: JumpToTarget[];
+  /**
+   * Explitictly defines which targets are allowed to be jumped to from the `afterModel` hook.
+   */
+  afterModelJumpTo?: JumpToTarget[];
+  /**
+   * The function to modify the model request. This function is called after the `beforeModel` hook of this middleware and before the model is invoked.
+   * It allows to modify the model request before it is passed to the model.
+   *
+   * @param request - The model request
+   * @param request.model - The model to use for this step.
+   * @param request.messages - The messages to send to the model.
+   * @param request.systemMessage - The system message for this step.
+   * @param request.toolChoice - The tool choice configuration for this step.
+   * @param request.tools - The tools to make available for this step.
+   * @param state - The middleware state
+   * @param runtime - The middleware runtime
+   * @returns The modified model request or undefined to pass through
+   */
   modifyModelRequest?: (
-    options: ModelRequest,
+    request: ModelRequest,
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
     runtime: Runtime<
@@ -65,6 +105,14 @@ export function createMiddleware<
         : never
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
+  /**
+   * The function to run before the model call. This function is called before the model is invoked and before the `modifyModelRequest` hook.
+   * It allows to modify the state of the agent.
+   *
+   * @param state - The middleware state
+   * @param runtime - The middleware runtime
+   * @returns The modified middleware state or undefined to pass through
+   */
   beforeModel?: (
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -88,6 +136,14 @@ export function createMiddleware<
     | MiddlewareResult<
         Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
       >;
+  /**
+   * The function to run after the model call. This function is called after the model is invoked and before any tools are called.
+   * It allows to modify the state of the agent after the model is invoked, e.g. to update tool call parameters.
+   *
+   * @param state - The middleware state
+   * @param runtime - The middleware runtime
+   * @returns The modified middleware state or undefined to pass through
+   */
   afterModel?: (
     state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
       AgentBuiltInState,
@@ -116,6 +172,8 @@ export function createMiddleware<
     name: config.name,
     stateSchema: config.stateSchema,
     contextSchema: config.contextSchema,
+    beforeModelJumpTo: config.beforeModelJumpTo,
+    afterModelJumpTo: config.afterModelJumpTo,
   };
 
   if (config.modifyModelRequest) {

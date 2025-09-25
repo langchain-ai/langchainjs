@@ -5,8 +5,14 @@ import {
   AIMessage,
 } from "@langchain/core/messages";
 import { z, type ZodIssue, type ZodTypeAny } from "zod/v3";
+import { END } from "@langchain/langgraph";
 
-import type { AgentMiddleware, ToolCall, ToolResult } from "../types.js";
+import type {
+  AgentMiddleware,
+  ToolCall,
+  ToolResult,
+  JumpTo,
+} from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -158,4 +164,27 @@ function parseToolResults(messages: BaseMessage[]): ToolResult[] {
       id: (message as ToolMessage).tool_call_id,
       result: (message as ToolMessage).content,
     }));
+}
+
+/**
+ * Parse `jumpTo` target from user facing labels to a LangGraph node names
+ */
+export function parseJumpToTarget(target: string): JumpTo;
+export function parseJumpToTarget(target?: string): JumpTo | undefined {
+  if (!target) {
+    return undefined;
+  }
+  if (target === "model") {
+    return "model_request";
+  }
+  if (target === "tools") {
+    return "tools";
+  }
+  if (target === "end") {
+    return END;
+  }
+
+  throw new Error(
+    `Invalid jump target: ${target}, must be "model", "tools" or "end".`
+  );
 }

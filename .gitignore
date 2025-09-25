@@ -53,3 +53,5 @@ bun.lock
 coverage/
 
 examples/src/createAgent/*.png
+# LangGraph API
+.langgraph_api
