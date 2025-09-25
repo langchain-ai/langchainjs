@@ -14,6 +14,7 @@ import { type BaseChatModelCallOptions } from "@langchain/core/language_models/c
 import {
   InteropZodObject,
   getSchemaDescription,
+  interopParse,
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
@@ -584,9 +585,9 @@ export class AgentNode<
     const middlewareList = this.#options.modifyModelRequestHookMiddleware;
     for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
-      const context =
-        middleware.contextSchema?.parse(config?.context || {}) ??
-        config?.context;
+      const context = middleware.contextSchema
+        ? interopParse(middleware.contextSchema, config?.context || {})
+        : config?.context;
 
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {

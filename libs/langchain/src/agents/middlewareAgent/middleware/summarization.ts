@@ -11,6 +11,10 @@ import {
   isAIMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import {
+  interopParse,
+  InferInteropZodOutput,
+} from "@langchain/core/utils/types";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 
@@ -130,7 +134,10 @@ export function summarizationMiddleware(
     name: "SummarizationMiddleware",
     contextSchema,
     beforeModel: async (state, runtime) => {
-      const config = { ...contextSchema.parse(options), ...runtime.context };
+      const config = {
+        ...interopParse(contextSchema, options),
+        ...runtime.context,
+      } as InferInteropZodOutput<typeof contextSchema>;
       const { messages } = state;
 
       // Ensure all messages have IDs

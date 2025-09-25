@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
 import type {
   InteropZodObject,
   InteropZodDefault,
@@ -276,7 +275,7 @@ export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
 export type InferMiddlewareContextInput<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<any, infer C, any>
-  ? C extends z.ZodOptional<infer Inner>
+  ? C extends InteropZodOptional<infer Inner>
     ? InteropZodInput<Inner> | undefined
     : C extends InteropZodObject
     ? InteropZodInput<C>

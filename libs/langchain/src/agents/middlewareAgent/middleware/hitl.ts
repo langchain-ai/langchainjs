@@ -4,6 +4,7 @@ import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import {
   InferInteropZodInput,
   InteropZodObject,
+  interopParse,
 } from "@langchain/core/utils/types";
 import { interrupt } from "@langchain/langgraph";
 
@@ -137,28 +138,26 @@ export interface ToolConfig extends HumanInTheLoopConfig {
   description?: string;
 }
 
-const contextSchema = z
-  .object({
-    /**
-     * Mapping of tool name to allowed reviewer responses.
-     * If a tool doesn't have an entry, it's auto-approved by default.
-     *
-     * - `true` -> pause for approval and allow accept/edit/respond
-     * - `false` -> auto-approve (no human review)
-     * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
-     */
-    interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])).default({}),
-    /**
-     * Prefix used when constructing human-facing approval messages.
-     * Provides context about the tool call being reviewed; does not change the underlying action.
-     *
-     * Note: This prefix is only applied for tools that do not provide a custom
-     * `description` via their {@link ToolConfig}. If a tool specifies a custom
-     * `description`, that per-tool text is used and this prefix is ignored.
-     */
-    descriptionPrefix: z.string().default("Tool execution requires approval"),
-  })
-  .optional();
+const contextSchema = z.object({
+  /**
+   * Mapping of tool name to allowed reviewer responses.
+   * If a tool doesn't have an entry, it's auto-approved by default.
+   *
+   * - `true` -> pause for approval and allow accept/edit/respond
+   * - `false` -> auto-approve (no human review)
+   * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
+   */
+  interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])),
+  /**
+   * Prefix used when constructing human-facing approval messages.
+   * Provides context about the tool call being reviewed; does not change the underlying action.
+   *
+   * Note: This prefix is only applied for tools that do not provide a custom
+   * `description` via their {@link ToolConfig}. If a tool specifies a custom
+   * `description`, that per-tool text is used and this prefix is ignored.
+   */
+  descriptionPrefix: z.string().default("Tool execution requires approval"),
+});
 export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 >;
@@ -341,7 +340,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @public
  */
 export function humanInTheLoopMiddleware(
-  options: HumanInTheLoopMiddlewareConfig = {}
+  options: HumanInTheLoopMiddlewareConfig
 ): AgentMiddleware<
   undefined,
   InteropZodObject,
@@ -352,7 +351,7 @@ export function humanInTheLoopMiddleware(
     contextSchema,
     afterModelJumpTo: ["model"],
     afterModel: async (state, runtime) => {
-      const config = contextSchema.parse({ ...options, ...runtime.context });
+      const config = interopParse(contextSchema, { ...options, ...runtime.context });
       if (!config) {
         return;
       }

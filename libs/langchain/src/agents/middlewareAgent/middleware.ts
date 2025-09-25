@@ -4,6 +4,7 @@ import type {
   InteropZodDefault,
   InteropZodOptional,
   InferInteropZodInput,
+  InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import type {
   AgentMiddleware,
@@ -104,11 +105,11 @@ export function createMiddleware<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional
-        ? Partial<InferInteropZodInput<TContextSchema>>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
@@ -129,11 +130,11 @@ export function createMiddleware<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional
-        ? Partial<InferInteropZodInput<TContextSchema>>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
   ) =>
@@ -168,11 +169,11 @@ export function createMiddleware<
       (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault
-        ? InferInteropZodInput<TContextSchema>
+        ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional
-        ? Partial<InferInteropZodInput<TContextSchema>>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
         : never
     >
   ) =>
@@ -211,11 +212,11 @@ export function createMiddleware<
               : {}) &
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional
-              ? Partial<InferInteropZodInput<TContextSchema>>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
         )
@@ -233,11 +234,11 @@ export function createMiddleware<
               : {}) &
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional
-              ? Partial<InferInteropZodInput<TContextSchema>>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
         )
@@ -255,11 +256,11 @@ export function createMiddleware<
               : {}) &
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault
-              ? InferInteropZodInput<TContextSchema>
+              ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional
-              ? Partial<InferInteropZodInput<TContextSchema>>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
         )
