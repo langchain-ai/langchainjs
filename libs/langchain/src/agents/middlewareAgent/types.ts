@@ -333,8 +333,14 @@ export type InferMiddlewareContextInputs<
     : {}
   : {};
 
+/**
+ * jump targets (user facing)
+ */
 export type JumpToTarget = (typeof JUMP_TO_TARGETS)[number];
-export type JumpToDestination = "model_request" | "tools" | typeof END;
+/**
+ * jump targets (internal)
+ */
+export type JumpTo = "model_request" | "tools" | typeof END;
 
 /**
  * Base middleware interface.

@@ -38,7 +38,7 @@ import type {
   InferContextInput,
   InvokeConfiguration,
   StreamConfiguration,
-  JumpToDestination,
+  JumpTo,
 } from "./types.js";
 
 import {
@@ -519,9 +519,7 @@ export class ReactAgent<
   ) {
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
-    return (
-      state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpToDestination }
-    ) => {
+    return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
       // First, check if we just processed a structured response
       // If so, ignore any existing jumpTo and go to END
       const messages = state.messages;

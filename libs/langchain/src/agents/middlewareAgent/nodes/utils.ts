@@ -11,7 +11,7 @@ import type {
   AgentMiddleware,
   ToolCall,
   ToolResult,
-  JumpToDestination,
+  JumpTo,
 } from "../types.js";
 
 /**
@@ -167,12 +167,10 @@ function parseToolResults(messages: BaseMessage[]): ToolResult[] {
 }
 
 /**
- * Parse jumpTo target to a LangGraph target
+ * Parse `jumpTo` target from user facing labels to a LangGraph node names
  */
-export function parseJumpToTarget(target: string): JumpToDestination;
-export function parseJumpToTarget(
-  target?: string
-): JumpToDestination | undefined {
+export function parseJumpToTarget(target: string): JumpTo;
+export function parseJumpToTarget(target?: string): JumpTo | undefined {
   if (!target) {
     return undefined;
   }
