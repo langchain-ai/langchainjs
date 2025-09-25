@@ -1,6 +1,4 @@
-import { z, ZodError as ZodErrorV4 } from "zod/v4";
-import { ZodError as ZodErrorV3 } from "zod/v3";
-import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   EmbeddedResource,
   ReadResourceResult,
@@ -12,11 +10,7 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { ToolMessage } from "@langchain/core/messages";
-import { Command, getCurrentTaskInput } from "@langchain/langgraph";
-
-import type { Notifications } from "./types.js";
-
+import debug from "debug";
 import {
   _resolveDetailedOutputHandling,
   type CallToolResult,
@@ -25,38 +19,23 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
-import type { ToolHooks, State } from "./hooks.js";
-import type { Client } from "./connection.js";
-import { getDebugLog } from "./logging.js";
 
-const debugLog = getDebugLog("tools");
+// Replace direct initialization with lazy initialization
+let debugLog: debug.Debugger;
+function getDebugLog() {
+  if (!debugLog) {
+    debugLog = debug("@langchain/mcp-adapters:tools");
+  }
+  return debugLog;
+}
 
 /**
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
-  constructor(message: string, cause?: Error) {
+  constructor(message: string) {
     super(message);
     this.name = "ToolException";
-
-    /**
-     * don't display the large ZodError stack trace
-     */
-    if (
-      cause &&
-      // eslint-disable-next-line no-instanceof/no-instanceof
-      (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
-    ) {
-      const minifiedZodError = new Error(z.prettifyError(cause));
-      const stackByLine = cause.stack?.split("\n") || [];
-      minifiedZodError.stack = cause.stack
-        ?.split("\n")
-        .slice(stackByLine.findIndex((l) => l.includes("    at")))
-        .join("\n");
-      this.cause = minifiedZodError;
-    } else if (cause) {
-      this.cause = cause;
-    }
   }
 }
 
@@ -87,7 +66,7 @@ async function* _embeddedResourceToStandardFileBlocks(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number],
-  client: Client | MCPClient
+  client: Client
 ): AsyncGenerator<
   | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
   | (ContentBlock.Data.StandardFileBlock &
@@ -128,31 +107,31 @@ async function* _embeddedResourceToStandardFileBlocks(
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: true,
-  client: Client | MCPClient,
+  client: Client,
   toolName: string,
   serverName: string
-): Promise<ContentBlock.Multimodal.Standard[]>;
+): Promise<ContentBlock.Data.DataContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: false | undefined,
-  client: Client | MCPClient,
+  client: Client,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: Client,
   toolName: string,
   serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
+): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: Client,
   toolName: string,
   serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
+): Promise<(ContentBlock | ContentBlock.Data.DataContentBlock)[]> {
   const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   switch (content.type) {
     case "text":
@@ -217,10 +196,10 @@ async function _toolOutputToContentBlocks(
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: Client,
   toolName: string,
   serverName: string
-): Promise<(EmbeddedResource | ContentBlock.Multimodal.Standard)[]> {
+): Promise<(EmbeddedResource | ContentBlock.Data.DataContentBlock)[]> {
   if (useStandardContentBlocks) {
     return _toolOutputToContentBlocks(
       resource,
@@ -267,7 +246,7 @@ type ConvertCallToolResultArgs = {
   /**
    * The MCP client that was used to call the tool
    */
-  client: Client | MCPClient;
+  client: Client;
   /**
    * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
    * image or audio content. This option has no effect on handling of embedded resource tool output.
@@ -313,8 +292,8 @@ async function _convertCallToolResult({
   outputHandling,
 }: ConvertCallToolResultArgs): Promise<
   [
-    (ContentBlock | ContentBlock.Multimodal.Standard)[],
-    (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
+    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
+    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
   ]
 > {
   if (!result) {
@@ -337,26 +316,28 @@ async function _convertCallToolResult({
     );
   }
 
-  const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
-    (
-      await Promise.all(
-        result.content
-          .filter(
-            (content: CallToolResultContent) =>
-              _getOutputTypeForContentType(content.type, outputHandling) ===
-              "content"
+  const convertedContent: (
+    | ContentBlock
+    | ContentBlock.Data.DataContentBlock
+  )[] = (
+    await Promise.all(
+      result.content
+        .filter(
+          (content: CallToolResultContent) =>
+            _getOutputTypeForContentType(content.type, outputHandling) ===
+            "content"
+        )
+        .map((content: CallToolResultContent) =>
+          _toolOutputToContentBlocks(
+            content,
+            useStandardContentBlocks,
+            client,
+            toolName,
+            serverName
           )
-          .map((content: CallToolResultContent) =>
-            _toolOutputToContentBlocks(
-              content,
-              useStandardContentBlocks,
-              client,
-              toolName,
-              serverName
-            )
-          )
-      )
-    ).flat();
+        )
+    )
+  ).flat();
 
   // Create the text content output
   const artifacts = (
@@ -403,7 +384,7 @@ type CallToolArgs = {
   /**
    * The MCP client to call the tool on
    */
-  client: Client | MCPClient;
+  client: Client;
   /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
@@ -421,30 +402,7 @@ type CallToolArgs = {
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
-
-  /**
-   * `onProgress` callbacks used for tool calls.
-   */
-  onProgress?: Notifications["onProgress"];
-
-  /**
-   * `beforeToolCall` callbacks used for tool calls.
-   */
-  beforeToolCall?: ToolHooks["beforeToolCall"];
-
-  /**
-   * `afterToolCall` callbacks used for tool calls.
-   */
-  afterToolCall?: ToolHooks["afterToolCall"];
 };
-
-type ContentBlocksWithArtifacts =
-  | [
-      (ContentBlock | ContentBlock.Multimodal.Standard)[],
-      (EmbeddedResource | ContentBlock.Multimodal.Standard)[],
-    ]
-  | [string, (EmbeddedResource | ContentBlock.Multimodal.Standard)[]]
-  | Command;
 
 /**
  * Call an MCP tool.
@@ -463,73 +421,25 @@ async function _callTool({
   config,
   useStandardContentBlocks,
   outputHandling,
-  onProgress,
-  beforeToolCall,
-  afterToolCall,
-}: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
+}: CallToolArgs): Promise<
+  [
+    (ContentBlock | ContentBlock.Data.DataContentBlock)[],
+    (EmbeddedResource | ContentBlock.Data.DataContentBlock)[]
+  ]
+> {
   try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+    getDebugLog()(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
 
     // Extract timeout from RunnableConfig and pass to MCP SDK
     const requestOptions: RequestOptions = {
       ...(config?.timeout ? { timeout: config.timeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
-      ...(onProgress
-        ? {
-            onprogress: (progress) => {
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
-              onProgress?.(progress, {
-                type: "tool",
-                name: toolName,
-                args,
-                server: serverName,
-              });
-            },
-          }
-        : {}),
     };
 
-    let state: State = {};
-    try {
-      state = getCurrentTaskInput(config) as State;
-    } catch (error) {
-      debugLog(
-        `State can't be derrived as LangGraph is not used: ${String(error)}`
-      );
-    }
-
-    const beforeToolCallInterception = await beforeToolCall?.(
+    const callToolArgs: Parameters<typeof client.callTool> = [
       {
         name: toolName,
-        args,
-        serverName,
-      },
-      state,
-      config ?? {}
-    );
-
-    const finalArgs = Object.assign(
-      args,
-      beforeToolCallInterception?.args || {}
-    );
-
-    const headers = beforeToolCallInterception?.headers || {};
-    const hasHeaderChanges = Object.entries(headers).length > 0;
-    if (hasHeaderChanges && typeof (client as Client).fork !== "function") {
-      throw new ToolException(
-        `MCP client for server "${serverName}" does not support header changes`
-      );
-    }
-
-    const finalClient =
-      hasHeaderChanges && typeof (client as Client).fork === "function"
-        ? await (client as Client).fork(headers)
-        : client;
-
-    const callToolArgs: Parameters<typeof finalClient.callTool> = [
-      {
-        name: toolName,
-        arguments: finalArgs,
+        arguments: args,
       },
     ];
 
@@ -538,60 +448,17 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
-    const result = (await finalClient.callTool(
-      ...callToolArgs
-    )) as CallToolResult;
-    const [content, artifacts] = await _convertCallToolResult({
+    const result = await client.callTool(...callToolArgs);
+    return _convertCallToolResult({
       serverName,
       toolName,
-      result,
-      client: finalClient,
+      result: result as CallToolResult,
+      client,
       useStandardContentBlocks,
       outputHandling,
     });
-
-    const interceptedResult = await afterToolCall?.(
-      {
-        name: toolName,
-        args: finalArgs,
-        result: [content, artifacts],
-        serverName,
-      },
-      state,
-      config ?? {}
-    );
-
-    if (!interceptedResult) {
-      return [content, artifacts];
-    }
-
-    if (typeof interceptedResult.result === "string") {
-      return [interceptedResult.result, []];
-    }
-
-    if (Array.isArray(interceptedResult.result)) {
-      return interceptedResult.result as ContentBlocksWithArtifacts;
-    }
-
-    if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result.contentBlocks, []];
-    }
-
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (interceptedResult?.result instanceof Command) {
-      return interceptedResult.result;
-    }
-
-    throw new Error(
-      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
-    );
   } catch (error) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
-    if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
-      throw new ToolException(z.prettifyError(error), error);
-    }
-
-    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
+    getDebugLog()(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -615,7 +482,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
  */
 export async function loadMcpTools(
   serverName: string,
-  client: Client | MCPClient,
+  client: Client,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const {
@@ -643,7 +510,7 @@ export async function loadMcpTools(
     mcpTools.push(...(toolsResponse.tools || []));
   } while (toolsResponse.nextCursor);
 
-  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
+  getDebugLog()(`INFO: Found ${mcpTools.length} MCP tools`);
 
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
@@ -685,16 +552,13 @@ export async function loadMcpTools(
                   config,
                   useStandardContentBlocks,
                   outputHandling,
-                  onProgress: options?.onProgress,
-                  beforeToolCall: options?.beforeToolCall,
-                  afterToolCall: options?.afterToolCall,
                 });
               },
             });
-            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
+            getDebugLog()(`INFO: Successfully loaded tool: ${dst.name}`);
             return dst;
           } catch (error) {
-            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
+            getDebugLog()(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }
