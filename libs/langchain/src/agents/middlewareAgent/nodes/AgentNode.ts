@@ -584,10 +584,8 @@ export class AgentNode<
     const middlewareList = this.#options.modifyModelRequestHookMiddleware;
     for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
-      const context = {
-        ...(middleware.contextSchema?.parse({}) || {}),
-        ...(config?.context || {}),
-      };
+      const context =
+        middleware.contextSchema?.parse(config?.context || {}) ?? {};
 
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {
@@ -632,10 +630,10 @@ export class AgentNode<
     );
 
     // Use tools from preparedOptions if provided, otherwise use default tools
-    const allTools = this.#options.toolClasses.concat(
-      ...structuredTools.map((toolStrategy) => toolStrategy.tool),
-      ...(preparedOptions?.tools || [])
-    );
+    const preparedTools = preparedOptions?.tools ?? [];
+    const allTools = (
+      preparedTools.length > 0 ? preparedTools : this.#options.toolClasses
+    ).concat(...structuredTools.map((toolStrategy) => toolStrategy.tool));
 
     /**
      * If there are structured tools, we need to set the tool choice to "any"
