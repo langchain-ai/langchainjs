@@ -351,14 +351,15 @@ describe("middleware", () => {
       ];
       const middleware = createMiddleware({
         name: "middleware",
+        tools: [
+          tool(async () => "Tool response", {
+            name: "toolD",
+          }),
+        ],
         modifyModelRequest: async (request) => {
           return {
             ...request,
-            tools: [
-              tool(async () => "Tool response", {
-                name: "toolD",
-              }),
-            ],
+            tools: ["toolD"],
             toolChoice: "required",
           };
         },

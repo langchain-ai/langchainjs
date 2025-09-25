@@ -54,6 +54,11 @@ export {
 } from "./agents/index.js";
 
 /**
+ * `createAgent` pre-built middleware
+ */
+export * from "./agents/middlewareAgent/middleware/index.js";
+
+/**
  * LangChain Stores
  */
 export { InMemoryStore } from "@langchain/core/stores";

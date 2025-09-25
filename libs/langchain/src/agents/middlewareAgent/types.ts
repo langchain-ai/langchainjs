@@ -129,9 +129,8 @@ export interface ModelRequest {
 
   /**
    * The tools to make available for this step.
-   * Can be tool names (strings) or tool instances.
    */
-  tools: (ClientTool | ServerTool)[];
+  tools: string[];
 }
 
 /**
