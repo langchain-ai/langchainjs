@@ -4,11 +4,9 @@ import {
   BaseMessage,
   AIMessage,
   SystemMessage,
-  isToolMessage,
+  ToolMessage,
   RemoveMessage,
   trimMessages,
-  isSystemMessage,
-  isAIMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
@@ -203,7 +201,7 @@ function splitSystemMessage(messages: BaseMessage[]): {
   systemPrompt: SystemMessage | null;
   conversationMessages: BaseMessage[];
 } {
-  if (messages.length > 0 && isSystemMessage(messages[0])) {
+  if (messages.length > 0 && SystemMessage.isInstance(messages[0])) {
     return {
       systemPrompt: messages[0] as SystemMessage,
       conversationMessages: messages.slice(1),
@@ -318,7 +316,7 @@ function isSafeCutoffPoint(
  */
 function hasToolCalls(message: BaseMessage): boolean {
   return (
-    isAIMessage(message) &&
+    AIMessage.isInstance(message) &&
     "tool_calls" in message &&
     Array.isArray(message.tool_calls) &&
     message.tool_calls.length > 0
@@ -353,7 +351,10 @@ function cutoffSeparatesToolPair(
 ): boolean {
   for (let j = aiMessageIndex + 1; j < messages.length; j++) {
     const message = messages[j];
-    if (isToolMessage(message) && toolCallIds.has(message.tool_call_id)) {
+    if (
+      ToolMessage.isInstance(message) &&
+      toolCallIds.has(message.tool_call_id)
+    ) {
       const aiBeforeCutoff = aiMessageIndex < cutoffIndex;
       const toolBeforeCutoff = j < cutoffIndex;
       if (aiBeforeCutoff !== toolBeforeCutoff) {
