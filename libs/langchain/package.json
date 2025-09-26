@@ -61,7 +61,7 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-alpha.6 <2.0.0",
+    "@langchain/core": "^1.0.0-alpha.5 <2.0.0",
     "cheerio": "*",
     "peggy": "^3.0.2",
     "typeorm": "*"
