@@ -191,30 +191,41 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorOptions) {
             systemMessage += `\n\nNote: You have selected more tools than the maximum allowed. You can select up to ${maxTools} tools.`;
             attempts++;
           } else if (invalidTools.length === 0) {
-            break; // Success
+            /**
+             * Success
+             */
+            break;
           } else if (attempts < maxRetries) {
-            // Retry with feedback about invalid tools
+            /**
+             * Retry with feedback about invalid tools
+             */
             systemMessage += `\n\nNote: The following tools are not available: ${invalidTools.join(
               ", "
             )}. Please select only from the available tools.`;
             attempts++;
           } else {
-            // Filter out invalid tools on final attempt
+            /**
+             * Filter out invalid tools on final attempt
+             */
             selectedToolNames = selectedToolNames.filter((name) =>
               validToolNames.includes(name)
             );
             break;
           }
-        } catch (error) {
+        } catch {
+          /**
+           * Fall back to using all tools
+           */
           if (attempts >= maxRetries) {
-            console.warn("Tool selection failed, using all tools:", error);
-            return request; // Fall back to using all tools
+            return request;
           }
           attempts++;
         }
       }
 
-      // Filter tools based on selection
+      /**
+       * Filter tools based on selection
+       */
       const selectedTools = toolInfo
         .filter(({ name }) => selectedToolNames.includes(name))
         .map(({ name }) => name);
