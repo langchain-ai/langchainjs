@@ -65,7 +65,7 @@ const hitlMiddleware = humanInTheLoopMiddleware({
 const agent = createAgent({
   model: "openai:gpt-4o-mini",
   checkpointSaver,
-  prompt:
+  systemPrompt:
     "You are a helpful assistant. Use the tools provided to help the user.",
   tools: [calculateTool, writeFileTool],
   middleware: [hitlMiddleware] as const,
