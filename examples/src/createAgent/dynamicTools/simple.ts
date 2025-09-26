@@ -37,7 +37,7 @@ const vcsToolGate = createMiddleware({
     const provider = runtime.context.vcsProvider.toLowerCase();
     const active =
       provider === "gitlab" ? [gitlabCreateIssue] : [githubCreateIssue];
-    return { ...request, tools: active };
+    return { ...request, tools: active.map((t) => t.name) };
   },
 });
 
