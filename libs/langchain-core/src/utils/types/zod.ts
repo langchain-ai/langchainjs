@@ -56,18 +56,6 @@ export type InteropZodObjectShape<
 
 export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
 
-export type InteropZodInput<T> = T extends z3.ZodType<
-  unknown,
-  z3.ZodTypeDef,
-  infer Input
->
-  ? Input
-  : T extends z4.$ZodType<unknown, infer Input>
-  ? Input
-  : T extends { _zod: { input: infer Input } }
-  ? Input
-  : never;
-
 // Simplified type inference to avoid circular dependencies
 export type InferInteropZodInput<T> = T extends z3.ZodType<
   unknown,

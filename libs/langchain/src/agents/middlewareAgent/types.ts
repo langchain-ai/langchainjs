@@ -4,10 +4,7 @@ import type {
   InteropZodDefault,
   InteropZodOptional,
   InteropZodType,
-  InteropZodInput,
   InferInteropZodInput,
-  ZodOptionalV3,
-  ZodOptionalV4,
 } from "@langchain/core/utils/types";
 import type {
   LangGraphRunnableConfig,
@@ -213,7 +210,7 @@ export type InferMiddlewareInputState<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<infer S, any, any>
   ? S extends InteropZodObject
-    ? FilterPrivateProps<InteropZodInput<S>>
+    ? FilterPrivateProps<InferInteropZodInput<S>>
     : {}
   : {};
 
@@ -278,9 +275,9 @@ export type InferMiddlewareContextInput<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<any, infer C, any>
   ? C extends InteropZodOptional<infer Inner>
-    ? InteropZodInput<Inner> | undefined
+    ? InferInteropZodInput<Inner> | undefined
     : C extends InteropZodObject
-    ? InteropZodInput<C>
+    ? InferInteropZodInput<C>
     : {}
   : {};
 
