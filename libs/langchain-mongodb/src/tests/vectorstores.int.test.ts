@@ -12,6 +12,7 @@ import { Document as BSONDocument } from "bson";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
+import { VERSION } from "../version.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
@@ -112,6 +113,18 @@ function getEmbeddings() {
   }
   return new OpenAIEmbeddings();
 }
+
+test("MongoDBStore sets client metadata", () => {
+  const spy = jest.spyOn(client, "appendMetadata");
+  // eslint-disable-next-line no-new
+  new PatchedVectorStore(
+    getEmbeddings(), {
+      collection,
+    }
+  );
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector", version: VERSION });
+  jest.clearAllMocks();
+});
 
 test("MongoDBAtlasVectorSearch with external ids", async () => {
   const vectorStore = new PatchedVectorStore(getEmbeddings(), {
