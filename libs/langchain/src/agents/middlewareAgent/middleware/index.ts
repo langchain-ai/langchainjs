@@ -18,3 +18,7 @@ export {
   dynamicSystemPromptMiddleware,
   type DynamicSystemPromptMiddlewareConfig,
 } from "./dynamicSystemPrompt.js";
+export {
+  llmToolSelectorMiddleware,
+  type LLMToolSelectorConfig,
+} from "./bigTool.js";
