@@ -558,28 +558,39 @@ export class AgentNode<
       return undefined;
     }
 
-    // Get the prompt for system message
+    /**
+     * Get the prompt for system message
+     */
     const systemPrompt = this.#options.systemPrompt;
 
-    // Prepare the initial call options
+    /**
+     * Prepare the initial call options
+     */
     let currentOptions: ModelRequest = {
       model,
       systemPrompt,
       messages: state.messages,
-      tools: [],
+      tools: this.#options.toolClasses.map((tool) => tool.name as string),
     };
 
-    // Execute modifyModelRequest hooks from all middleware
+    /**
+     * Execute modifyModelRequest hooks from all middleware
+     */
     const middlewareList = this.#options.modifyModelRequestHookMiddleware;
     for (const [middleware, getMiddlewareState] of middlewareList) {
-      // Merge context with default context of middleware
+      /**
+       * Merge context with default context of middleware
+       */
       const context = middleware.contextSchema
         ? interopParse(middleware.contextSchema, config?.context || {})
         : config?.context;
 
-      // Create runtime
+      /**
+       * Create runtime
+       */
       const runtime: Runtime<unknown, unknown> = {
         toolCalls: parseToolCalls(state.messages),
+        tools: this.#options.toolClasses,
         context,
         writer: config.writer,
         interrupt: config.interrupt,
@@ -593,10 +604,13 @@ export class AgentNode<
           messages: state.messages,
           ...getMiddlewareState(),
         },
-        {
+        /**
+         * ensure runtime is frozen to prevent modifications
+         */
+        Object.freeze({
           ...runtime,
           context,
-        }
+        })
       );
 
       /**
