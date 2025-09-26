@@ -82,7 +82,7 @@ class PromptCachingMiddlewareError extends Error {
  * Basic usage with default settings
  * ```typescript
  * import { createAgent } from "langchain";
- * import { anthropicPromptCachingMiddleware } from "langchain/middleware";
+ * import { anthropicPromptCachingMiddleware } from "langchain";
  *
  * const agent = createAgent({
  *   model: "anthropic:claude-3-5-sonnet",

@@ -1,8 +1,5 @@
 import { createAgent, HumanMessage, AIMessage, BaseMessage } from "langchain";
-import {
-  summarizationMiddleware,
-  countTokensApproximately,
-} from "langchain/middleware";
+import { summarizationMiddleware, countTokensApproximately } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { LoremIpsum } from "lorem-ipsum";
 
