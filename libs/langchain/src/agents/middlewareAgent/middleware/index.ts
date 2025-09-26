@@ -14,3 +14,4 @@ export {
   llmToolSelectorMiddleware,
   type LLMToolSelectorOptions,
 } from "./bigTool.js";
+export { toolSequenceMiddleware } from "./toolSequence.js";
