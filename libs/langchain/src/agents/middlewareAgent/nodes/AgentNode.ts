@@ -559,11 +559,7 @@ export class AgentNode<
     }
 
     // Get the prompt for system message
-<<<<<<< HEAD
-    const systemMessage = this.#options.prompt;
-=======
     const systemPrompt = this.#options.systemPrompt;
->>>>>>> a4a9d0765 (fix(langchain/createAgent): systemPrompt everywhere)
 
     // Prepare the initial call options
     let currentOptions: ModelRequest = {
