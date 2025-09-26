@@ -168,7 +168,7 @@ export class AgentNode<
       /**
        * there can only be one provider strategy
        */
-      strategy: strategies[0],
+      strategy: strategies[0] as ProviderStrategy,
     };
   }
 
