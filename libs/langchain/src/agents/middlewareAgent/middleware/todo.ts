@@ -235,6 +235,40 @@ const writeTodos = tool(
   }
 );
 
+/**
+ * Creates a middleware that provides todo list management capabilities to agents.
+ *
+ * This middleware adds a `write_todos` tool that allows agents to create and manage
+ * structured task lists for complex multi-step operations. It's designed to help
+ * agents track progress, organize complex tasks, and provide users with visibility
+ * into task completion status.
+ *
+ * The middleware automatically injects system prompts that guide the agent on when
+ * and how to use the todo functionality effectively.
+ *
+ * @example
+ * ```typescript
+ * import { todoMiddleware } from './middleware/todo.js';
+ * import { createAgent } from '../index.js';
+ *
+ * const agent = createAgent({
+ *   model: chatModel,
+ *   middleware: [todoMiddleware()],
+ * });
+ *
+ * // Agent now has access to write_todos tool and todo state tracking
+ * const result = await agent.invoke({
+ *   messages: [new HumanMessage("Help me refactor my codebase")]
+ * });
+ *
+ * console.log(result.todos); // Array of todo items with status tracking
+ * ```
+ *
+ * @returns A configured middleware instance that provides todo management capabilities
+ *
+ * @see {@link TodoMiddlewareState} for the state schema
+ * @see {@link writeTodos} for the tool implementation
+ */
 export function todoMiddleware() {
   return createMiddleware({
     name: "todoMiddleware",
