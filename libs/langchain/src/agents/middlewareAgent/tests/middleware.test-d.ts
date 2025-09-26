@@ -181,12 +181,18 @@ describe("middleware types", () => {
             customRequiredContextProp: string;
           }>();
         },
-        modifyModelRequest: async (_request, _state, runtime) => {
+        modifyModelRequest: async (request, _state, runtime) => {
+          expectTypeOf(request.tools).toEqualTypeOf<string[]>();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
             customRequiredContextProp: string;
           }>();
+
+          return {
+            ...request,
+            tools: ["toolA"],
+          };
         },
       });
 

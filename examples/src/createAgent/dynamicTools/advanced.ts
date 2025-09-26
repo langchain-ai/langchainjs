@@ -73,7 +73,7 @@ const selectToolsMiddleware = createMiddleware({
       ? // only give me the most relevant tool
         await selectTopKBySimilarity(last.content as string, 1)
       : fullCatalog.slice(0, 5);
-    return { ...request, tools: active };
+    return { ...request, tools: active.map((t) => t.name) };
   },
 });
 

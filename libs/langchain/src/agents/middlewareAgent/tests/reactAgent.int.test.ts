@@ -160,13 +160,10 @@ Please provide a clear, direct, and authoritative answer, as this information wi
     // Create middleware that adds tools and sets toolChoice
     const toolsMiddleware = {
       name: "toolsModifier",
+      tools: [weatherTool, newsTool],
       modifyModelRequest: async () => {
-        // Add tools dynamically
-        const tools = [weatherTool, newsTool];
-
         // Set toolChoice to force specific tool
         return {
-          tools,
           toolChoice: {
             type: "function" as const,
             function: {
