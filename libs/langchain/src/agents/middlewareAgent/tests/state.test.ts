@@ -7,14 +7,6 @@ import { FakeToolCallingModel } from "../../tests/utils.js";
 
 describe("middleware state management", () => {
   it("should allow to define private state props with _ that doesn't leak out", async () => {
-    /**
-     * skip as test requires primitives from `@langchain/core` that aren't released yet
-     * and fails in dependency range tests, remove after next release
-     */
-    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-      return;
-    }
-
     expect.assertions(10);
     const model = new FakeToolCallingModel({});
 

@@ -336,14 +336,6 @@ describe("middleware", () => {
 
   describe("modifyModelRequest", () => {
     it("should allow to add", async () => {
-      /**
-       * skip as test requires primitives from `@langchain/core` that aren't released yet
-       * and fails in dependency range tests, remove after next release
-       */
-      if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
-        return;
-      }
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const model = createMockModel() as any;
       const tools = [
