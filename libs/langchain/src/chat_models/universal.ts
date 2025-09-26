@@ -115,6 +115,11 @@ export const MODEL_PROVIDER_CONFIG = {
     className: "ChatTogetherAI",
     hasCircularDependency: true,
   },
+  perplexity: {
+    package: "@langchain/community/chat_models/perplexity",
+    className: "ChatPerplexity",
+    hasCircularDependency: true,
+  },
 } as const;
 
 const SUPPORTED_PROVIDERS = Object.keys(
@@ -224,6 +229,8 @@ export function _inferModelProvider(modelName: string): string | undefined {
     return "bedrock";
   } else if (modelName.startsWith("mistral")) {
     return "mistralai";
+  } else if (modelName.startsWith("sonar") || modelName.startsWith("pplx")) {
+    return "perplexity";
   } else {
     return undefined;
   }
@@ -643,6 +650,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - perplexity (@langchain/community/chat_models/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)

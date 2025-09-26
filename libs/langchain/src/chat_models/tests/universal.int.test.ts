@@ -566,6 +566,17 @@ describe("Works with all model providers", () => {
     expect(deepSeekResult).toBeDefined();
     expect(deepSeekResult.content.length).toBeGreaterThan(0);
   });
+
+  it("Can invoke perplexity", async () => {
+    const perplexity = await initChatModel("sonar-pro", {
+      modelProvider: "perplexity",
+      temperature: 0,
+    });
+
+    const perplexityResult = await perplexity.invoke("what's your name");
+    expect(perplexityResult).toBeDefined();
+    expect(perplexityResult.content.length).toBeGreaterThan(0);
+  });
 });
 
 test("Is compatible with agents", async () => {
