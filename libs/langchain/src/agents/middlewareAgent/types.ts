@@ -155,6 +155,10 @@ export type Runtime<TState = unknown, TContext = unknown> = Partial<
 > & {
   readonly toolCalls: ToolCall[];
   /**
+   * All tool instances that are provided to the agent.
+   */
+  readonly tools: (ClientTool | ServerTool)[];
+  /**
    * Terminates the agent with an update to the state or throws an error.
    * @param result - The result to terminate the agent with.
    */
