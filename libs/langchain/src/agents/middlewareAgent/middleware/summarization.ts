@@ -111,7 +111,7 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
  *
  * @example
  * ```ts
- * import { summarizationMiddleware } from "langchain/middleware";
+ * import { summarizationMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  *
  * const agent = createAgent({

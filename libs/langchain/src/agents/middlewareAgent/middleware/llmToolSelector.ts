@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 
@@ -26,7 +26,7 @@ export const LLMToolSelectorOptionsSchema = z.object({
   /**
    * The language model to use for tool selection (default: the provided model from the agent options).
    */
-  model: z.string().or(z.instanceof(BaseChatModel)).optional(),
+  model: z.string().or(z.instanceof(BaseLanguageModel)).optional(),
   /**
    * System prompt for the tool selection model.
    */
@@ -78,7 +78,9 @@ export type LLMToolSelectorConfig = InferInteropZodInput<
  * });
  * ```
  */
-export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
+export function llmToolSelectorMiddleware(
+  options: LLMToolSelectorConfig
+): ReturnType<typeof createMiddleware> {
   return createMiddleware({
     name: "LLMToolSelector",
     contextSchema: LLMToolSelectorOptionsSchema,
@@ -151,13 +153,13 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
        * Create tool selection model
        */
       const toolSelectionModel = !model
-        ? (request.model as BaseChatModel)
+        ? (request.model as BaseLanguageModel)
         : typeof model === "string"
         ? await initChatModel(model)
         : model;
 
       const validToolNames = toolInfo.map(({ name }) => name);
-      const structuredModel = await toolSelectionModel.withStructuredOutput(
+      const structuredModel = await toolSelectionModel.withStructuredOutput?.(
         ToolSelectionSchema
       );
 
@@ -166,12 +168,12 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
 
       while (attempts <= maxRetries) {
         try {
-          const response = await structuredModel.invoke([
+          const response = await structuredModel?.invoke([
             { role: "system", content: systemMessage },
             { role: "user", content: userContent },
           ]);
 
-          selectedToolNames = response.selectedTools;
+          selectedToolNames = response?.selectedTools ?? [];
 
           /**
            * Validate that selected tools exist

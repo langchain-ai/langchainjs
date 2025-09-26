@@ -1,5 +1,5 @@
 import { createAgent, HumanMessage, AIMessage } from "langchain";
-import { anthropicPromptCachingMiddleware } from "langchain/middleware";
+import { anthropicPromptCachingMiddleware } from "langchain";
 
 // Example usage
 const agent = createAgent({

@@ -24,7 +24,7 @@ export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
  * @example Basic usage with typed context
  * ```ts
  * import { z } from "zod";
- * import { dynamicSystemPrompt } from "langchain/middleware";
+ * import { dynamicSystemPrompt } from "langchain";
  * import { createAgent, SystemMessage } from "langchain";
  *
  * const contextSchema = z.object({ region: z.string().optional() });

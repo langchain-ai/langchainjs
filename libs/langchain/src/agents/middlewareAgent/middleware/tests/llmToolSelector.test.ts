@@ -11,7 +11,7 @@ import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
-import { llmToolSelectorMiddleware } from "../bigTool.js";
+import { llmToolSelectorMiddleware } from "../llmToolSelector.js";
 import { createAgent } from "../../index.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
