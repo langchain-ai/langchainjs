@@ -50,8 +50,8 @@ export function createMiddleware<
   TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends
     | InteropZodObject
-    | InteropZodOptional<any>
-    | InteropZodDefault
+    | InteropZodOptional<InteropZodObject>
+    | InteropZodDefault<InteropZodObject>
     | undefined = undefined
 >(config: {
   /**
@@ -111,7 +111,7 @@ export function createMiddleware<
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodDefault
+        : TContextSchema extends InteropZodDefault<any>
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
@@ -136,7 +136,7 @@ export function createMiddleware<
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodDefault
+        : TContextSchema extends InteropZodDefault<any>
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
@@ -175,7 +175,7 @@ export function createMiddleware<
         AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
-        : TContextSchema extends InteropZodDefault
+        : TContextSchema extends InteropZodDefault<any>
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodOptional<any>
         ? Partial<InferInteropZodOutput<TContextSchema>>
@@ -219,7 +219,7 @@ export function createMiddleware<
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault
+              : TContextSchema extends InteropZodDefault<any>
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>
@@ -241,7 +241,7 @@ export function createMiddleware<
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault
+              : TContextSchema extends InteropZodDefault<any>
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>
@@ -263,7 +263,7 @@ export function createMiddleware<
               AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
-              : TContextSchema extends InteropZodDefault
+              : TContextSchema extends InteropZodDefault<any>
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodOptional<any>
               ? Partial<InferInteropZodOutput<TContextSchema>>

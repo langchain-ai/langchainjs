@@ -136,28 +136,26 @@ export interface ToolConfig extends HumanInTheLoopConfig {
   description?: string;
 }
 
-const contextSchema = z
-  .object({
-    /**
-     * Mapping of tool name to allowed reviewer responses.
-     * If a tool doesn't have an entry, it's auto-approved by default.
-     *
-     * - `true` -> pause for approval and allow accept/edit/respond
-     * - `false` -> auto-approve (no human review)
-     * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
-     */
-    interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])),
-    /**
-     * Prefix used when constructing human-facing approval messages.
-     * Provides context about the tool call being reviewed; does not change the underlying action.
-     *
-     * Note: This prefix is only applied for tools that do not provide a custom
-     * `description` via their {@link ToolConfig}. If a tool specifies a custom
-     * `description`, that per-tool text is used and this prefix is ignored.
-     */
-    descriptionPrefix: z.string().default("Tool execution requires approval"),
-  })
-  .optional();
+const contextSchema = z.object({
+  /**
+   * Mapping of tool name to allowed reviewer responses.
+   * If a tool doesn't have an entry, it's auto-approved by default.
+   *
+   * - `true` -> pause for approval and allow accept/edit/respond
+   * - `false` -> auto-approve (no human review)
+   * - `ToolConfig` -> explicitly specify which reviewer responses are allowed for this tool
+   */
+  interruptOn: z.record(z.union([z.boolean(), ToolConfigSchema])).optional(),
+  /**
+   * Prefix used when constructing human-facing approval messages.
+   * Provides context about the tool call being reviewed; does not change the underlying action.
+   *
+   * Note: This prefix is only applied for tools that do not provide a custom
+   * `description` via their {@link ToolConfig}. If a tool specifies a custom
+   * `description`, that per-tool text is used and this prefix is ignored.
+   */
+  descriptionPrefix: z.string().default("Tool execution requires approval"),
+});
 export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 >;
@@ -370,8 +368,11 @@ export function humanInTheLoopMiddleware(
         return;
       }
 
+      /**
+       * If the user omits the interruptOn config, we don't do anything.
+       */
       if (!config.interruptOn) {
-        throw new Error("HumanInTheLoopMiddleware: interruptOn is required");
+        return;
       }
 
       // Resolve per-tool configs (boolean true -> all actions allowed; false -> auto-approve)
