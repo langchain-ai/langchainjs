@@ -76,6 +76,7 @@ export abstract class MiddlewareNode<
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
+      tools: this.middleware.tools ?? [],
       terminate: (
         result?: Partial<TStateSchema> | Error
       ): ControlAction<TStateSchema> => {
