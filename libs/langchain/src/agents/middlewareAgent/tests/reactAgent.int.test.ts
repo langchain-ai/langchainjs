@@ -3,11 +3,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  HumanMessage,
-  SystemMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware, createAgent } from "../index.js";
 
