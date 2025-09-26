@@ -2,6 +2,7 @@
 /* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
+import { interopParse } from "@langchain/core/utils/types";
 
 import { RunnableCallable } from "../../RunnableCallable.js";
 import type {
@@ -44,24 +45,27 @@ export abstract class MiddlewareNode<
      */
     let filteredContext = {} as TContextSchema;
     /**
-     * Check both config.context and config.configurable.context
+     * Parse context using middleware's contextSchema to apply defaults and validation
      */
-    if (this.middleware.contextSchema && config?.context) {
+    if (this.middleware.contextSchema) {
       /**
        * Extract only the fields relevant to this middleware's schema
        */
       const schemaShape = this.middleware.contextSchema?.shape;
       if (schemaShape) {
         const relevantContext: Record<string, unknown> = {};
+        const invokeContext = config?.context || {};
         for (const key of Object.keys(schemaShape)) {
-          if (key in config.context) {
-            relevantContext[key] = config.context[key];
+          if (key in invokeContext) {
+            relevantContext[key] = invokeContext[key];
           }
         }
         /**
-         * Parse to apply defaults and validation
+         * Parse to apply defaults and validation, even if relevantContext is empty
+         * This will throw if required fields are missing and no defaults exist
          */
-        filteredContext = this.middleware.contextSchema.parse(
+        filteredContext = interopParse(
+          this.middleware.contextSchema,
           relevantContext
         ) as TContextSchema;
       }

@@ -30,6 +30,13 @@ function createMockModel(name = "ChatAnthropic", model = "anthropic") {
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
+    /**
+     * skip as test requires primitives from `@langchain/core` that aren't released yet
+     * and fails in dependency range tests, remove after next release
+     */
+    if (process.env.LC_DEPENDENCY_RANGE_TESTS) {
+      return;
+    }
     const prompt = new HumanMessage("What is the weather in Tokyo?");
     const initialState = {
       messages: [prompt],

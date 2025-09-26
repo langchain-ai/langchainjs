@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { z } from "zod/v3";
 import {
   type BaseMessage,
   ToolMessage,
   AIMessage,
 } from "@langchain/core/messages";
-import { z, type ZodIssue, type ZodTypeAny } from "zod/v3";
+import {
+  interopSafeParseAsync,
+  interopZodObjectMakeFieldsOptional,
+} from "@langchain/core/utils/types";
+import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
 
 import type {
@@ -21,32 +26,22 @@ import type {
  * Private properties (starting with _) are automatically made optional since
  * users cannot provide them when invoking the agent.
  */
-export function initializeMiddlewareStates(
+export async function initializeMiddlewareStates(
   middlewareList: readonly AgentMiddleware<any, any, any>[],
   state: unknown
-): Record<string, any> {
+): Promise<Record<string, any>> {
   const middlewareStates: Record<string, any> = {};
 
   for (const middleware of middlewareList) {
     if (middleware.stateSchema) {
       // Create a modified schema where private properties are optional
-      const { shape } = middleware.stateSchema;
-      const modifiedShape: Record<string, any> = {};
-
-      for (const [key, value] of Object.entries(shape)) {
-        if (key.startsWith("_")) {
-          // Make private properties optional
-          modifiedShape[key] = (value as ZodTypeAny).optional();
-        } else {
-          // Keep public properties as-is
-          modifiedShape[key] = value;
-        }
-      }
-
-      const modifiedSchema = z.object(modifiedShape);
+      const modifiedSchema = interopZodObjectMakeFieldsOptional(
+        middleware.stateSchema,
+        (key) => key.startsWith("_")
+      );
 
       // Use safeParse with the modified schema
-      const parseResult = modifiedSchema.safeParse(state);
+      const parseResult = await interopSafeParseAsync(modifiedSchema, state);
 
       if (parseResult.success) {
         Object.assign(middlewareStates, parseResult.data);

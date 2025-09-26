@@ -14,6 +14,7 @@ import { type BaseChatModelCallOptions } from "@langchain/core/language_models/c
 import {
   InteropZodObject,
   getSchemaDescription,
+  interopParse,
 } from "@langchain/core/utils/types";
 import type { ToolCall } from "@langchain/core/messages/tool";
 
@@ -167,7 +168,7 @@ export class AgentNode<
       /**
        * there can only be one provider strategy
        */
-      strategy: strategies[0],
+      strategy: strategies[0] as ProviderStrategy,
     };
   }
 
@@ -245,9 +246,7 @@ export class AgentNode<
       return this.#options.model;
     }
 
-    throw new Error(
-      "No model option was provided, either via `model` or via `llm` option."
-    );
+    throw new Error("No model option was provided, either via `model` option.");
   }
 
   async #invokeModel(
@@ -565,12 +564,7 @@ export class AgentNode<
     }
 
     // Get the prompt for system message
-    let systemMessage: BaseMessage | undefined;
-    if (typeof this.#options.prompt === "string") {
-      systemMessage = new SystemMessage(this.#options.prompt);
-    } else if (BaseMessage.isInstance(this.#options.prompt)) {
-      systemMessage = this.#options.prompt;
-    }
+    const systemMessage = this.#options.prompt;
 
     // Prepare the initial call options
     let currentOptions: ModelRequest = {
@@ -584,9 +578,9 @@ export class AgentNode<
     const middlewareList = this.#options.modifyModelRequestHookMiddleware;
     for (const [middleware, getMiddlewareState] of middlewareList) {
       // Merge context with default context of middleware
-      const context =
-        middleware.contextSchema?.parse(config?.context || {}) ??
-        config?.context;
+      const context = middleware.contextSchema
+        ? interopParse(middleware.contextSchema, config?.context || {})
+        : config?.context;
 
       // Create runtime
       const runtime: Runtime<unknown, unknown> = {
@@ -691,7 +685,9 @@ export class AgentNode<
      * Create a model runnable with the prompt and agent name
      */
     const modelRunnable = getPromptRunnable(
-      (preparedOptions?.systemMessage as SystemMessage) ?? this.#options.prompt
+      preparedOptions?.systemMessage
+        ? new SystemMessage(preparedOptions.systemMessage)
+        : this.#options.prompt
     ).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)

@@ -43,7 +43,7 @@ export {
 } from "./responses.js";
 export { createMiddleware } from "./middlewareAgent/index.js";
 export type { AgentMiddleware } from "./middlewareAgent/types.js";
-
+export type { ReactAgent } from "./middlewareAgent/ReactAgent.js";
 /**
  * Agents combine language models with tools to create systems that can reason
  * about tasks, decide which tools to use, and iteratively work towards solutions.

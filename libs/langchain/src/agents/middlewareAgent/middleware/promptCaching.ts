@@ -1,5 +1,6 @@
 import { z } from "zod/v3";
 import { ContentBlock } from "@langchain/core/messages";
+import { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { ConfigurableModel } from "../../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
@@ -36,6 +37,9 @@ const contextSchema = z.object({
     .enum(["ignore", "warn", "raise"])
     .default(DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR),
 });
+export type PromptCachingMiddlewareConfig = Partial<
+  InferInteropZodInput<typeof contextSchema>
+>;
 
 class PromptCachingMiddlewareError extends Error {
   constructor(message: string) {
@@ -163,7 +167,7 @@ class PromptCachingMiddlewareError extends Error {
  * @public
  */
 export function anthropicPromptCachingMiddleware(
-  middlewareOptions?: Partial<z.infer<typeof contextSchema>>
+  middlewareOptions?: PromptCachingMiddlewareConfig
 ) {
   return createMiddleware({
     name: "PromptCachingMiddleware",
@@ -187,7 +191,8 @@ export function anthropicPromptCachingMiddleware(
           ? middlewareOptions?.minMessagesToCache ??
             runtime.context.minMessagesToCache
           : runtime.context.minMessagesToCache ??
-            middlewareOptions?.minMessagesToCache;
+            middlewareOptions?.minMessagesToCache ??
+            DEFAULT_MIN_MESSAGES_TO_CACHE;
       const unsupportedModelBehavior =
         runtime.context.unsupportedModelBehavior ===
         DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR

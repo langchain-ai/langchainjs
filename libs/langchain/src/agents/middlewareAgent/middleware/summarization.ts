@@ -4,13 +4,16 @@ import {
   BaseMessage,
   AIMessage,
   SystemMessage,
-  isToolMessage,
+  ToolMessage,
   RemoveMessage,
   trimMessages,
-  isSystemMessage,
-  isAIMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import {
+  interopParse,
+  InferInteropZodOutput,
+  InferInteropZodInput,
+} from "@langchain/core/utils/types";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 
@@ -63,6 +66,10 @@ const contextSchema = z.object({
   summaryPrompt: z.string().default(DEFAULT_SUMMARY_PROMPT),
   summaryPrefix: z.string().default(SUMMARY_PREFIX),
 });
+
+export type SummarizationMiddlewareConfig = InferInteropZodInput<
+  typeof contextSchema
+>;
 
 /**
  * Default token counter that approximates based on character count
@@ -122,13 +129,43 @@ export function countTokensApproximately(messages: BaseMessage[]): number {
  * ```
  */
 export function summarizationMiddleware(
-  options: z.input<typeof contextSchema>
+  options: SummarizationMiddlewareConfig
 ) {
   return createMiddleware({
     name: "SummarizationMiddleware",
     contextSchema,
     beforeModel: async (state, runtime) => {
-      const config = { ...contextSchema.parse(options), ...runtime.context };
+      /**
+       * Parse user options to get their explicit values
+       */
+      const userOptions = interopParse(contextSchema, options);
+
+      /**
+       * Merge context with user options, preferring user options when context has default values
+       */
+      const config = {
+        model: userOptions.model,
+        maxTokensBeforeSummary:
+          runtime.context.maxTokensBeforeSummary !== undefined
+            ? runtime.context.maxTokensBeforeSummary
+            : userOptions.maxTokensBeforeSummary,
+        messagesToKeep:
+          runtime.context.messagesToKeep === DEFAULT_MESSAGES_TO_KEEP
+            ? userOptions.messagesToKeep
+            : runtime.context.messagesToKeep ?? userOptions.messagesToKeep,
+        tokenCounter:
+          runtime.context.tokenCounter !== undefined
+            ? runtime.context.tokenCounter
+            : userOptions.tokenCounter,
+        summaryPrompt:
+          runtime.context.summaryPrompt === DEFAULT_SUMMARY_PROMPT
+            ? userOptions.summaryPrompt
+            : runtime.context.summaryPrompt ?? userOptions.summaryPrompt,
+        summaryPrefix:
+          runtime.context.summaryPrefix === SUMMARY_PREFIX
+            ? userOptions.summaryPrefix
+            : runtime.context.summaryPrefix ?? userOptions.summaryPrefix,
+      } as InferInteropZodOutput<typeof contextSchema>;
       const { messages } = state;
 
       // Ensure all messages have IDs
@@ -203,7 +240,7 @@ function splitSystemMessage(messages: BaseMessage[]): {
   systemMessage: SystemMessage | null;
   conversationMessages: BaseMessage[];
 } {
-  if (messages.length > 0 && isSystemMessage(messages[0])) {
+  if (messages.length > 0 && SystemMessage.isInstance(messages[0])) {
     return {
       systemMessage: messages[0] as SystemMessage,
       conversationMessages: messages.slice(1),
@@ -318,7 +355,7 @@ function isSafeCutoffPoint(
  */
 function hasToolCalls(message: BaseMessage): boolean {
   return (
-    isAIMessage(message) &&
+    AIMessage.isInstance(message) &&
     "tool_calls" in message &&
     Array.isArray(message.tool_calls) &&
     message.tool_calls.length > 0
@@ -353,7 +390,10 @@ function cutoffSeparatesToolPair(
 ): boolean {
   for (let j = aiMessageIndex + 1; j < messages.length; j++) {
     const message = messages[j];
-    if (isToolMessage(message) && toolCallIds.has(message.tool_call_id)) {
+    if (
+      ToolMessage.isInstance(message) &&
+      toolCallIds.has(message.tool_call_id)
+    ) {
       const aiBeforeCutoff = aiMessageIndex < cutoffIndex;
       const toolBeforeCutoff = j < cutoffIndex;
       if (aiBeforeCutoff !== toolBeforeCutoff) {

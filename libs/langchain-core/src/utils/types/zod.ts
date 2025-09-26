@@ -22,12 +22,29 @@ export type ZodObjectV3 = z3.ZodObject<any, any, any, any>;
 
 export type ZodObjectV4 = z4.$ZodObject;
 
+export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
+export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
+export type ZodOptionalV3<T extends z3.ZodTypeAny> = z3.ZodOptional<T>;
+export type ZodOptionalV4<T extends z4.SomeType> = z4.$ZodOptional<T>;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type InteropZodType<Output = any, Input = Output> =
   | z3.ZodType<Output, z3.ZodTypeDef, Input>
   | z4.$ZodType<Output, Input>;
 
 export type InteropZodObject = ZodObjectV3 | ZodObjectV4;
+export type InteropZodDefault<T = InteropZodObjectShape> =
+  T extends z3.ZodTypeAny
+    ? ZodDefaultV3<T>
+    : T extends z4.SomeType
+    ? ZodDefaultV4<T>
+    : never;
+export type InteropZodOptional<T = InteropZodObjectShape> =
+  T extends z3.ZodTypeAny
+    ? ZodOptionalV3<T>
+    : T extends z4.SomeType
+    ? ZodOptionalV4<T>
+    : never;
 
 export type InteropZodObjectShape<
   T extends InteropZodObject = InteropZodObject
@@ -178,7 +195,7 @@ export async function interopSafeParseAsync<T>(
     }
   }
   if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return schema.safeParse(input);
+    return await schema.safeParseAsync(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }
@@ -198,10 +215,10 @@ export async function interopParseAsync<T>(
   input: unknown
 ): Promise<T> {
   if (isZodSchemaV4(schema)) {
-    return parse(schema, input);
+    return await parseAsync(schema, input);
   }
   if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return schema.parse(input);
+    return await schema.parseAsync(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }
@@ -779,4 +796,68 @@ export function interopZodTransformInputSchema(
   }
 
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
+}
+
+/**
+ * Creates a modified version of a Zod object schema where fields matching a predicate are made optional.
+ * Supports both Zod v3 and v4 schemas and preserves the original schema version.
+ *
+ * @template T - The type of the Zod object schema.
+ * @param {T} schema - The Zod object schema instance (either v3 or v4).
+ * @param {(key: string, value: InteropZodType) => boolean} predicate - Function to determine which fields should be optional.
+ * @returns {InteropZodObject} The modified Zod object schema.
+ * @throws {Error} If the schema is not a Zod v3 or v4 object.
+ */
+export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
+  schema: T,
+  predicate: (key: string, value: InteropZodType) => boolean
+): InteropZodObject {
+  if (isZodSchemaV3(schema)) {
+    const shape = getInteropZodObjectShape(schema);
+    const modifiedShape: Record<string, z3.ZodTypeAny> = {};
+
+    for (const [key, value] of Object.entries(shape)) {
+      if (predicate(key, value)) {
+        // Make this field optional using v3 methods
+        modifiedShape[key] = (value as z3.ZodTypeAny).optional();
+      } else {
+        // Keep field as-is
+        modifiedShape[key] = value;
+      }
+    }
+
+    // Use v3's extend method to create a new schema with the modified shape
+    return schema.extend(modifiedShape as z3.ZodRawShape);
+  }
+
+  if (isZodSchemaV4(schema)) {
+    const shape = getInteropZodObjectShape(schema);
+    const outputShape: Mutable<z4.$ZodShape> = { ...schema._zod.def.shape };
+
+    for (const [key, value] of Object.entries(shape)) {
+      if (predicate(key, value)) {
+        // Make this field optional using v4 methods
+        outputShape[key] = new $ZodOptional({
+          type: "optional" as const,
+          innerType: value as z4.$ZodType,
+        });
+      }
+      // Otherwise keep the field as-is (already in outputShape)
+    }
+
+    const modifiedSchema = clone<ZodObjectV4>(schema, {
+      ...schema._zod.def,
+      shape: outputShape,
+    });
+
+    // Preserve metadata
+    const meta = globalRegistry.get(schema);
+    if (meta) globalRegistry.add(modifiedSchema, meta);
+
+    return modifiedSchema;
+  }
+
+  throw new Error(
+    "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
+  );
 }

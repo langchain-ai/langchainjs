@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode } from "./middleware.js";
-import type { AgentMiddleware, MiddlewareResult, Runtime } from "../types.js";
+import type {
+  AgentBuiltInState,
+  AgentMiddleware,
+  MiddlewareResult,
+  Runtime,
+} from "../types.js";
 
 /**
  * Node for executing a single middleware's beforeModel hook.
@@ -24,7 +29,7 @@ export class BeforeModelNode<
 
   runHook(state: TStateSchema, runtime: Runtime<TStateSchema, TContextSchema>) {
     return this.middleware.beforeModel!(
-      state,
+      state as Record<string, any> & AgentBuiltInState,
       runtime as Runtime<TStateSchema, unknown>
     ) as Promise<MiddlewareResult<TStateSchema>>;
   }

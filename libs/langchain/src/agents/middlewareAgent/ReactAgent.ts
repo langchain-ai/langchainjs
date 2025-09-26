@@ -54,8 +54,10 @@ type MergedAgentState<
     | ResponseFormatUndefined,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = (StructuredResponseFormat extends ResponseFormatUndefined
-  ? BuiltInState
-  : BuiltInState & { structuredResponse: StructuredResponseFormat }) &
+  ? Omit<BuiltInState, "jumpTo">
+  : Omit<BuiltInState, "jumpTo"> & {
+      structuredResponse: StructuredResponseFormat;
+    }) &
   InferMiddlewareStates<TMiddleware>;
 
 type InvokeStateParameter<
@@ -90,7 +92,11 @@ export class ReactAgent<
   ContextSchema extends
     | AnyAnnotationRoot
     | InteropZodObject = AnyAnnotationRoot,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = []
+  TMiddleware extends readonly AgentMiddleware<
+    any,
+    any,
+    any
+  >[] = readonly AgentMiddleware<any, any, any>[]
 > {
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
@@ -103,6 +109,14 @@ export class ReactAgent<
     const toolClasses =
       (Array.isArray(options.tools) ? options.tools : options.tools?.tools) ??
       [];
+
+    /**
+     * append tools from middleware
+     */
+    const middlewareTools = (this.options.middleware
+      ?.filter((m) => m.tools)
+      .flatMap((m) => m.tools) ?? []) as (ClientTool | ServerTool)[];
+    toolClasses.push(...middlewareTools);
 
     /**
      * If any of the tools are configured to return_directly after running,
@@ -662,9 +676,9 @@ export class ReactAgent<
   /**
    * Initialize middleware states if not already present in the input state.
    */
-  #initializeMiddlewareStates(
+  async #initializeMiddlewareStates(
     state: InvokeStateParameter<TMiddleware>
-  ): InvokeStateParameter<TMiddleware> {
+  ): Promise<InvokeStateParameter<TMiddleware>> {
     if (
       !this.options.middleware ||
       this.options.middleware.length === 0 ||
@@ -674,7 +688,7 @@ export class ReactAgent<
       return state;
     }
 
-    const defaultStates = initializeMiddlewareStates(
+    const defaultStates = await initializeMiddlewareStates(
       this.options.middleware,
       state
     );
@@ -736,7 +750,7 @@ export class ReactAgent<
    * console.log(result.structuredResponse.weather); // outputs: "It's sunny and 75°F."
    * ```
    */
-  invoke(
+  async invoke(
     state: InvokeStateParameter<TMiddleware>,
     config?: InvokeConfiguration<
       InferContextInput<ContextSchema> &
@@ -744,7 +758,7 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
-    const initializedState = this.#initializeMiddlewareStates(state);
+    const initializedState = await this.#initializeMiddlewareStates(state);
     return this.#graph.invoke(
       initializedState,
       config as unknown as InferContextInput<ContextSchema> &
@@ -808,7 +822,7 @@ export class ReactAgent<
         InferMiddlewareContextInputs<TMiddleware>
     >
   ): Promise<IterableReadableStream<any>> {
-    const initializedState = this.#initializeMiddlewareStates(state);
+    const initializedState = await this.#initializeMiddlewareStates(state);
     return this.#graph.streamEvents(initializedState, {
       ...config,
       version: "v2",

@@ -174,10 +174,7 @@ export class ToolNode<
         }
       );
 
-      if (
-        (isBaseMessage(output) && output.getType() === "tool") ||
-        isCommand(output)
-      ) {
+      if (ToolMessage.isInstance(output) || isCommand(output)) {
         return output as ToolMessage | Command;
       }
 

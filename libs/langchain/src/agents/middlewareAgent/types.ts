@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v3";
 import type {
   InteropZodObject,
+  InteropZodDefault,
+  InteropZodOptional,
   InteropZodType,
   InferInteropZodInput,
+  InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import type {
   LangGraphRunnableConfig,
@@ -110,7 +112,7 @@ export interface ModelRequest {
   /**
    * The system message for this step.
    */
-  systemMessage?: BaseMessage;
+  systemMessage?: string;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:
@@ -135,15 +137,10 @@ export interface ModelRequest {
 /**
  * Type helper to check if TContext is an optional Zod schema
  */
-type IsOptionalZodObject<T> = T extends z.ZodOptional<z.ZodObject<any>>
-  ? true
-  : false;
+type IsOptionalZodObject<T> = T extends InteropZodOptional<any> ? true : false;
+type IsDefaultZodObject<T> = T extends InteropZodDefault<any> ? true : false;
 
-type IsDefaultZodObject<T> = T extends z.ZodDefault<z.ZodObject<any>>
-  ? true
-  : false;
-
-type WithMaybeContext<TContext> = undefined extends TContext
+export type WithMaybeContext<TContext> = undefined extends TContext
   ? { readonly context?: TContext }
   : IsOptionalZodObject<TContext> extends true
   ? { readonly context?: TContext }
@@ -201,8 +198,8 @@ type FilterPrivateProps<T> = {
  */
 export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
   T extends AgentMiddleware<infer S, any, any>
-    ? S extends z.ZodObject<any>
-      ? FilterPrivateProps<z.infer<S>>
+    ? S extends InteropZodObject
+      ? FilterPrivateProps<InferInteropZodOutput<S>>
       : {}
     : {};
 
@@ -213,8 +210,8 @@ export type InferMiddlewareState<T extends AgentMiddleware<any, any, any>> =
 export type InferMiddlewareInputState<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<infer S, any, any>
-  ? S extends z.ZodObject<any>
-    ? FilterPrivateProps<z.input<S>>
+  ? S extends InteropZodObject
+    ? FilterPrivateProps<InferInteropZodInput<S>>
     : {}
   : {};
 
@@ -267,8 +264,8 @@ export type InferMergedInputState<
  */
 export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
   T extends AgentMiddleware<any, infer C, any>
-    ? C extends z.ZodObject<any>
-      ? z.infer<C>
+    ? C extends InteropZodObject
+      ? InferInteropZodInput<C>
       : {}
     : {};
 
@@ -278,10 +275,10 @@ export type InferMiddlewareContext<T extends AgentMiddleware<any, any, any>> =
 export type InferMiddlewareContextInput<
   T extends AgentMiddleware<any, any, any>
 > = T extends AgentMiddleware<any, infer C, any>
-  ? C extends z.ZodOptional<infer Inner>
-    ? z.input<Inner> | undefined
-    : C extends z.ZodObject<any>
-    ? z.input<C>
+  ? C extends InteropZodOptional<infer Inner>
+    ? InferInteropZodInput<Inner> | undefined
+    : C extends InteropZodObject
+    ? InferInteropZodInput<C>
     : {}
   : {};
 
@@ -346,11 +343,11 @@ export type JumpTo = "model_request" | "tools" | typeof END;
  * Base middleware interface.
  */
 export interface AgentMiddleware<
-  TSchema extends z.ZodObject<z.ZodRawShape> | undefined = undefined,
+  TSchema extends InteropZodObject | undefined = undefined,
   TContextSchema extends
-    | z.ZodObject<z.ZodRawShape>
-    | z.ZodOptional<z.ZodObject<z.ZodRawShape>>
-    | z.ZodDefault<z.ZodObject<z.ZodRawShape>>
+    | InteropZodObject
+    | InteropZodDefault<InteropZodObject>
+    | InteropZodOptional<InteropZodObject>
     | undefined = undefined,
   TFullContext = any
 > {
@@ -359,6 +356,7 @@ export interface AgentMiddleware<
   name: string;
   beforeModelJumpTo?: JumpToTarget[];
   afterModelJumpTo?: JumpToTarget[];
+  tools?: (ClientTool | ServerTool)[];
   /**
    * Runs before each LLM call, can modify call parameters, changes are not persistent
    * e.g. if you change `model`, it will only be changed for the next model call
@@ -370,26 +368,36 @@ export interface AgentMiddleware<
    */
   modifyModelRequest?(
     request: ModelRequest,
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
   beforeModel?(
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
-      Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
     >
   >;
   afterModel?(
-    state: (TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}) &
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<
     MiddlewareResult<
-      Partial<TSchema extends z.ZodObject<any> ? z.infer<TSchema> : {}>
+      Partial<
+        TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}
+      >
     >
   >;
 }
@@ -667,13 +675,17 @@ type ExtractNonUndefined<T> = T extends undefined ? never : T;
 /**
  * Helper type to check if all properties of a type are optional
  */
-export type IsAllOptional<T> = IsOptionalType<T> extends true
-  ? true
-  : ExtractNonUndefined<T> extends Record<string, any>
-  ? {} extends ExtractNonUndefined<T>
+export type IsAllOptional<T> =
+  // If T includes undefined, then it's optional (can be omitted entirely)
+  undefined extends T
     ? true
-    : false
-  : IsOptionalType<T>;
+    : IsOptionalType<T> extends true
+    ? true
+    : ExtractNonUndefined<T> extends Record<string, any>
+    ? {} extends ExtractNonUndefined<T>
+      ? true
+      : false
+    : IsOptionalType<T>;
 
 /**
  * Helper type to extract input type from context schema (with optional defaults)
@@ -702,7 +714,12 @@ export type InferAgentConfig<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > = IsDefaultContext<ContextSchema> extends true
-  ? IsAllOptional<InferMiddlewareContextInputs<TMiddleware>> extends true
+  ? // No agent context schema, only middleware context
+    TMiddleware extends readonly []
+    ? LangGraphRunnableConfig | undefined // No middleware, no context needed
+    : WithMaybeContext<InferMiddlewareContextInputs<TMiddleware>> extends {
+        readonly context?: any;
+      }
     ?
         | LangGraphRunnableConfig<{
             context?: InferMiddlewareContextInputs<TMiddleware>;
@@ -711,10 +728,11 @@ export type InferAgentConfig<
     : LangGraphRunnableConfig<{
         context: InferMiddlewareContextInputs<TMiddleware>;
       }>
-  : IsAllOptional<
+  : // Has agent context schema
+  WithMaybeContext<
       InferContextInput<ContextSchema> &
         InferMiddlewareContextInputs<TMiddleware>
-    > extends true
+    > extends { readonly context?: any }
   ?
       | LangGraphRunnableConfig<{
           context?: InferContextInput<ContextSchema> &
@@ -751,8 +769,21 @@ type CreateAgentPregelOptions =
   | "maxConcurrency"
   | "timeout";
 
+/**
+ * Decide whether provided configuration requires a context
+ */
 export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
-  IsAllOptional<ContextSchema> extends true
+  /**
+   * If the context schema is a default object, `context` can be optional
+   */
+  ContextSchema extends InteropZodDefault<any>
+    ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
+        context?: Partial<ContextSchema>;
+      }
+    : /**
+     * If the context schema is all optional, `context` can be optional
+     */
+    IsAllOptional<ContextSchema> extends true
     ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
         context?: Partial<ContextSchema>;
       }
@@ -760,7 +791,17 @@ export type InvokeConfiguration<ContextSchema extends Record<string, any>> =
         WithMaybeContext<ContextSchema>;
 
 export type StreamConfiguration<ContextSchema extends Record<string, any>> =
-  IsAllOptional<ContextSchema> extends true
+  /**
+   * If the context schema is a default object, `context` can be optional
+   */
+  ContextSchema extends InteropZodDefault<any>
+    ? Partial<Pick<PregelOptions<any, any, any>, CreateAgentPregelOptions>> & {
+        context?: Partial<ContextSchema>;
+      }
+    : /**
+     * If the context schema is all optional, `context` can be optional
+     */
+    IsAllOptional<ContextSchema> extends true
     ? Partial<
         Pick<
           PregelOptions<any, any, any>,
