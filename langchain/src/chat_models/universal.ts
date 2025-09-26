@@ -51,6 +51,7 @@ const _SUPPORTED_PROVIDERS = [
   "cerebras",
   "deepseek",
   "xai",
+  "perplexity",
 ] as const;
 
 export type ChatModelProvider = (typeof _SUPPORTED_PROVIDERS)[number];
@@ -166,6 +167,19 @@ async function _initChatModelHelper(
         );
         return new ChatTogetherAI({ model, ...passedParams });
       }
+      case "perplexity": {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Can not install as a proper dependency due to circular dependency
+        const { ChatPerplexity } = await import(
+          // We can not 'expect-error' because if you explicitly build `@langchain/community`
+          // this import will be able to be resolved, thus there will be no error. However
+          // this will never be the case in CI.
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - Can not install as a proper dependency due to circular dependency
+          "@langchain/community/chat_models/perplexity"
+        );
+        return new ChatPerplexity({ model, ...passedParams });
+      }
       default: {
         const supported = _SUPPORTED_PROVIDERS.join(", ");
         throw new Error(
@@ -220,6 +234,8 @@ export function _inferModelProvider(modelName: string): string | undefined {
     return "bedrock";
   } else if (modelName.startsWith("mistral")) {
     return "mistralai";
+  } else if (modelName.startsWith("sonar") || modelName.startsWith("pplx")) {
+    return "perplexity";
   } else {
     return undefined;
   }
@@ -638,6 +654,7 @@ export async function initChatModel<
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
+ *   - perplexity (@langchain/community/chat_models/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)
