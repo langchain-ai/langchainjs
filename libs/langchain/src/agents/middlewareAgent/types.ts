@@ -112,7 +112,7 @@ export interface ModelRequest {
   /**
    * The system message for this step.
    */
-  systemMessage?: string;
+  systemPrompt?: string;
   /**
    * Tool choice configuration (model-specific format).
    * Can be one of:
@@ -518,7 +518,7 @@ export type CreateAgentParams<
    *
    * Cannot be used together with `modifyModelRequest`.
    */
-  prompt?: string;
+  systemPrompt?: string;
 
   /**
    * An optional schema for the context. It allows to pass in a typed context object into the agent

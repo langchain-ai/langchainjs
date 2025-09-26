@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
-import {
-  BaseMessage,
-  AIMessage,
-  ToolMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
+import { BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod/v3";
 import { Command, type LangGraphRunnableConfig } from "@langchain/langgraph";
 import { type LanguageModelLike } from "@langchain/core/language_models/base";
@@ -63,7 +58,7 @@ export interface AgentNodeOptions<
 > extends Pick<
     CreateAgentParams<StructuredResponseFormat, ContextSchema>,
     | "model"
-    | "prompt"
+    | "systemPrompt"
     | "includeAgentName"
     | "name"
     | "responseFormat"
@@ -564,12 +559,12 @@ export class AgentNode<
     }
 
     // Get the prompt for system message
-    const systemMessage = this.#options.prompt;
+    const systemPrompt = this.#options.systemPrompt;
 
     // Prepare the initial call options
     let currentOptions: ModelRequest = {
       model,
-      systemMessage,
+      systemPrompt,
       messages: state.messages,
       tools: [],
     };
@@ -685,9 +680,7 @@ export class AgentNode<
      * Create a model runnable with the prompt and agent name
      */
     const modelRunnable = getPromptRunnable(
-      preparedOptions?.systemMessage
-        ? new SystemMessage(preparedOptions.systemMessage)
-        : this.#options.prompt
+      preparedOptions?.systemPrompt ?? this.#options.systemPrompt
     ).pipe(
       this.#options.includeAgentName === "inline"
         ? withAgentName(modelWithTools, this.#options.includeAgentName)

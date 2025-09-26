@@ -91,7 +91,7 @@ const messages = [
 ];
 
 describe("anthropicPromptCachingMiddleware", () => {
-  it("should allow middleware to update model, messages and systemMessage", async () => {
+  it("should allow middleware to update model, messages and systemPrompt", async () => {
     const model = new ChatAnthropic({
       model: "claude-opus-4-20250514",
       temperature: 0.7,
@@ -103,7 +103,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const agent = createAgent({
       model,
       tools: [simpleTool],
-      prompt: "You are a geography expert.",
+      systemPrompt: "You are a geography expert.",
       middleware: [
         anthropicPromptCachingMiddleware({
           ttl: "5m",
@@ -164,7 +164,7 @@ describe("anthropicPromptCachingMiddleware", () => {
     const agent = createAgent({
       model: "anthropic:claude-opus-4-20250514",
       tools: [simpleTool],
-      prompt: "You are a geography expert.",
+      systemPrompt: "You are a geography expert.",
       middleware: [
         anthropicPromptCachingMiddleware({
           ttl: "5m",
