@@ -118,6 +118,7 @@
     "@types/crypto-js": "^4.2.2",
     "@types/d3-dsv": "^3.0.7",
     "@types/flat": "^5.0.2",
+    "@types/glob-to-regexp": "^0.4.4",
     "@types/html-to-text": "^9",
     "@types/jsdom": "^21.1.1",
     "@types/jsonwebtoken": "^9",
@@ -308,6 +309,7 @@
     "epub2": "^3.0.1",
     "fast-xml-parser": "*",
     "firebase-admin": "^11.9.0 || ^12.0.0 || ^13.0.0",
+    "glob-to-regexp": "^0.4.1",
     "google-auth-library": "*",
     "googleapis": "*",
     "hnswlib-node": "^3.0.0",
@@ -997,6 +999,15 @@
       },
       "import": "./tools/wolframalpha.js",
       "require": "./tools/wolframalpha.cjs"
+    },
+    "./tools/file_management": {
+      "types": {
+        "import": "./tools/file_management.d.ts",
+        "require": "./tools/file_management.d.cts",
+        "default": "./tools/file_management.d.ts"
+      },
+      "import": "./tools/file_management.js",
+      "require": "./tools/file_management.cjs"
     },
     "./agents/toolkits/aws_sfn": {
       "types": {
@@ -3408,6 +3419,10 @@
     "tools/wolframalpha.js",
     "tools/wolframalpha.d.ts",
     "tools/wolframalpha.d.cts",
+    "tools/file_management.cjs",
+    "tools/file_management.js",
+    "tools/file_management.d.ts",
+    "tools/file_management.d.cts",
     "agents/toolkits/aws_sfn.cjs",
     "agents/toolkits/aws_sfn.js",
     "agents/toolkits/aws_sfn.d.ts",

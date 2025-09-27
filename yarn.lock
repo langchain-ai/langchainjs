@@ -9085,6 +9085,7 @@ __metadata:
     "@types/crypto-js": ^4.2.2
     "@types/d3-dsv": ^3.0.7
     "@types/flat": ^5.0.2
+    "@types/glob-to-regexp": ^0.4.4
     "@types/html-to-text": ^9
     "@types/jsdom": ^21.1.1
     "@types/jsonwebtoken": ^9
@@ -9282,6 +9283,7 @@ __metadata:
     epub2: ^3.0.1
     fast-xml-parser: "*"
     firebase-admin: ^11.9.0 || ^12.0.0 || ^13.0.0
+    glob-to-regexp: ^0.4.1
     google-auth-library: "*"
     googleapis: "*"
     hnswlib-node: ^3.0.0
@@ -15957,6 +15959,13 @@ __metadata:
   version: 7946.0.16
   resolution: "@types/geojson@npm:7946.0.16"
   checksum: d66e5e023f43b3e7121448117af1930af7d06410a32a585a8bc9c6bb5d97e0d656cd93d99e31fa432976c32e98d4b780f82bf1fd1acd20ccf952eb6b8e39edf2
+  languageName: node
+  linkType: hard
+
+"@types/glob-to-regexp@npm:^0.4.4":
+  version: 0.4.4
+  resolution: "@types/glob-to-regexp@npm:0.4.4"
+  checksum: be9c924d664592a16129c825aa392365335ce455c34e1c9d3f6dd8b45371088bb5d4a45bbb576559f2b63d4f8bcf464cbd5baafb08cdf89b71d3b6a79356b747
   languageName: node
   linkType: hard
 
