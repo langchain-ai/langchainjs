@@ -41,6 +41,7 @@ export {
   createMiddleware,
   toolStrategy,
   providerStrategy,
+  FakeToolCallingModel,
   ToolNode,
   type ReactAgent,
   type AgentState,

@@ -42,7 +42,16 @@
     "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.66"
+    "@langchain/core": "^1.0.0-0 <2.0.0",
+    "@langchain/langgraph": "v1.0.0-0 <2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": false
+    },
+    "@langchain/langgraph": {
+      "optional": false
+    }
   },
   "optionalDependencies": {
     "extended-eventsource": "^1.x"
@@ -65,7 +74,7 @@
     "express": "^5.1.0",
     "langchain": "workspace:*",
     "npm-run-all2": "^8.0.4",
-    "prettier": "^2.8.3",
+    "prettier": "^3.6.2",
     "release-it": "^17.6.0",
     "rollup": "^4.39.0",
     "ts-node": "^10.9.2",
@@ -74,7 +83,7 @@
     "vitest": "^3.1.1"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.10.0"
   },
   "directories": {
     "example": "examples"

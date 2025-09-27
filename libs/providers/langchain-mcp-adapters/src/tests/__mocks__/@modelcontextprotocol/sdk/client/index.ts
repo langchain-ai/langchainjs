@@ -4,6 +4,7 @@ import { vi } from "vitest";
 
 const clientPrototype = {
   connect: vi.fn().mockReturnValue(Promise.resolve()),
+  setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
   listTools: vi.fn().mockReturnValue(
     Promise.resolve({
       tools: [
