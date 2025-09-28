@@ -163,17 +163,29 @@ export function bindOutputSchema<T extends Runnable>(loadedSequence: T) {
     "schema" in loadedSequence.first &&
     "last" in loadedSequence &&
     loadedSequence.last !== null &&
-    typeof loadedSequence.last === "object" &&
-    "bound" in loadedSequence.last &&
-    loadedSequence.last.bound !== null &&
-    typeof loadedSequence.last.bound === "object" &&
-    "withStructuredOutput" in loadedSequence.last.bound &&
-    typeof loadedSequence.last.bound.withStructuredOutput === "function"
+    typeof loadedSequence.last === "object"
   ) {
-    // eslint-disable-next-line no-param-reassign
-    loadedSequence.last.bound = loadedSequence.last.bound.withStructuredOutput(
-      loadedSequence.first.schema
-    );
+    if (
+      "bound" in loadedSequence.last &&
+      loadedSequence.last.bound !== null &&
+      typeof loadedSequence.last.bound === "object" &&
+      "withStructuredOutput" in loadedSequence.last.bound &&
+      typeof loadedSequence.last.bound.withStructuredOutput === "function"
+    ) {
+      // eslint-disable-next-line no-param-reassign
+      loadedSequence.last.bound =
+        loadedSequence.last.bound.withStructuredOutput(
+          loadedSequence.first.schema
+        );
+    } else if (
+      "withStructuredOutput" in loadedSequence.last &&
+      typeof loadedSequence.last.withStructuredOutput === "function"
+    ) {
+      // eslint-disable-next-line no-param-reassign
+      loadedSequence.last = loadedSequence.last.withStructuredOutput(
+        loadedSequence.first.schema
+      );
+    }
   }
   return loadedSequence;
 }

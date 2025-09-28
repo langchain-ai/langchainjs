@@ -221,7 +221,7 @@ export interface ChatMistralAIInput
   numCompletions?: number;
 }
 
-function convertMessagesToMistralMessages(
+export function convertMessagesToMistralMessages(
   messages: Array<BaseMessage>
 ): Array<MistralAIMessage> {
   const getRole = (role: MessageType) => {
@@ -323,35 +323,80 @@ function convertMessagesToMistralMessages(
     return undefined;
   };
 
-  return messages.map((message) => {
+  // Build a set of toolCallIds that have corresponding tool responses present
+  // to ensure 1:1 assistant toolCalls <-> tool responses.
+  const toolResponseIds = new Set<string>();
+  for (const m of messages) {
+    if ("tool_call_id" in m && typeof m.tool_call_id === "string") {
+      toolResponseIds.add(
+        _convertToolCallIdToMistralCompatible(m.tool_call_id)
+      );
+    }
+  }
+
+  return messages.flatMap((message) => {
     const toolCalls = getTools(message);
     const content = getContent(message.content, message.getType());
     if ("tool_call_id" in message && typeof message.tool_call_id === "string") {
-      return {
-        role: getRole(message.getType()),
-        content,
-        name: message.name,
-        toolCallId: _convertToolCallIdToMistralCompatible(message.tool_call_id),
-      };
+      return [
+        {
+          role: getRole(message.getType()),
+          content,
+          name: message.name,
+          toolCallId: _convertToolCallIdToMistralCompatible(
+            message.tool_call_id
+          ),
+        } as MistralAIMessage,
+      ];
       // Mistral "assistant" role can only support either content or tool calls but not both
     } else if (isAIMessage(message)) {
       if (toolCalls === undefined) {
-        return {
-          role: getRole(message.getType()),
-          content,
-        };
+        return [
+          {
+            role: getRole(message.getType()),
+            content,
+          } as MistralAIMessage,
+        ];
       } else {
-        return {
-          role: getRole(message.getType()),
-          toolCalls,
-        };
+        // Filter out toolCalls that do not have a matching tool response later in the list
+        const filteredToolCalls = toolCalls.filter((tc) =>
+          toolResponseIds.has(
+            _convertToolCallIdToMistralCompatible(tc.id ?? "")
+          )
+        );
+
+        if (filteredToolCalls.length === 0) {
+          // If there are no matching tool responses, and there's no content, drop this message
+          const isEmptyContent =
+            (typeof content === "string" && content.trim() === "") ||
+            (Array.isArray(content) && content.length === 0);
+          if (isEmptyContent) {
+            return [];
+          }
+          // Otherwise, send content only
+          return [
+            {
+              role: getRole(message.getType()),
+              content,
+            } as MistralAIMessage,
+          ];
+        }
+
+        return [
+          {
+            role: getRole(message.getType()),
+            toolCalls: filteredToolCalls as MistralAIToolCall[],
+          } as MistralAIMessage,
+        ];
       }
     }
 
-    return {
-      role: getRole(message.getType()),
-      content,
-    };
+    return [
+      {
+        role: getRole(message.getType()),
+        content,
+      } as MistralAIMessage,
+    ];
   }) as MistralAIMessage[];
 }
 

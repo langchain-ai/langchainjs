@@ -622,7 +622,7 @@ export abstract class BaseChatOpenAI<
    * OpenAI organization or project. This must be configured directly with OpenAI.
    *
    * See:
-   * https://help.openai.com/en/articles/10503543-data-residency-for-the-openai-api
+   * https://platform.openai.com/docs/guides/your-data
    * https://platform.openai.com/docs/api-reference/responses/create#responses-create-store
    *
    * @default false
@@ -2904,7 +2904,9 @@ export interface ChatOpenAIFields extends BaseChatOpenAIFields {
  *   timeout: undefined,
  *   maxRetries: 2,
  *   // apiKey: "...",
- *   // baseUrl: "...",
+ *   // configuration: {
+ *   //   baseURL: "...",
+ *   // }
  *   // organization: "...",
  *   // other params...
  * });
