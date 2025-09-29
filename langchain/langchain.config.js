@@ -354,6 +354,11 @@ export const config = {
       modules: ["ChatGenerationChunk", "GenerationChunk"],
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
+    },
+    {
+      modules: ["Client"],
+      alias: ["langsmith"],
+      path: "langsmith",
     }
   ],
   shouldTestExports: true,
