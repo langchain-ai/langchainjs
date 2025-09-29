@@ -185,7 +185,7 @@ export class SqlDatabase
     } catch (e) {
       console.error(e);
       throw new Error(
-        "Failed to load typeorm. Please install it with eg. `pnpm install typeorm`."
+        "Failed to load typeorm. Please install it with eg. `yarn add typeorm`."
       );
     }
   }
