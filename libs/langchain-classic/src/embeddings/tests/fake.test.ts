@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect } from "@jest/globals";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 
 test("Synthetic basic", async () => {

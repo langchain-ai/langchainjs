@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect } from "@jest/globals";
 import { z } from "zod";
 
 import { StructuredTool } from "@langchain/core/tools";

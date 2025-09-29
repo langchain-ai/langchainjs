@@ -141,7 +141,7 @@ importers:
         version: link:../libs/providers/langchain-groq
       '@langchain/langgraph':
         specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 1.0.0-alpha.4(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-mistralai
@@ -386,31 +386,31 @@ importers:
         version: 0.25.8
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-beta.42
+        version: 1.0.0-beta.43
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.13.3
@@ -554,7 +554,7 @@ importers:
     dependencies:
       '@langchain/langgraph':
         specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 1.0.0-alpha.4(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/langgraph-checkpoint':
         specifier: ^0.1.1
         version: 0.1.1(@langchain/core@libs+langchain-core)
@@ -653,15 +653,9 @@ importers:
 
   libs/langchain-classic:
     dependencies:
-      '@langchain/openai':
-        specifier: workspace:*
-        version: link:../providers/langchain-openai
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
-      handlebars:
-        specifier: ^4.7.8
-        version: 4.7.8
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -684,165 +678,24 @@ importers:
         specifier: ^3.25.76 || ^4
         version: 4.1.11
     devDependencies:
-      '@aws-sdk/dsql-signer':
-        specifier: ^3.858.0
-        version: 3.858.0
-      '@azure/identity':
-        specifier: ^4.12.0
-        version: 4.12.0
-      '@browserbasehq/stagehand':
-        specifier: ^1.3.0
-        version: 1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(utf-8-validate@6.0.5)(zod@4.1.11)
-      '@clickhouse/client':
-        specifier: ^0.2.5
-        version: 0.2.10
-      '@cloudflare/workers-types':
-        specifier: ^4.20250801.0
-        version: 4.20250801.0
-      '@elastic/elasticsearch':
-        specifier: ^8.4.0
-        version: 8.19.0
-      '@eslint/js':
-        specifier: ^9.36.0
-        version: 9.36.0
-      '@faker-js/faker':
-        specifier: ^10.0.0
-        version: 10.0.0
-      '@getmetal/metal-sdk':
-        specifier: ^4.0.0
-        version: 4.0.6
-      '@getzep/zep-cloud':
-        specifier: ^1.0.12
-        version: 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
-      '@getzep/zep-js':
-        specifier: ^0.9.0
-        version: 0.9.0
-      '@gomomento/sdk':
-        specifier: 1.51.1
-        version: 1.51.1(encoding@0.1.13)
-      '@google/generative-ai':
-        specifier: ^0.7.0
-        version: 0.7.1
-      '@lancedb/lancedb':
-        specifier: ^0.19.1
-        version: 0.19.1(apache-arrow@19.0.1)
       '@langchain/anthropic':
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
-      '@langchain/aws':
-        specifier: ^0.1.15
-        version: 0.1.15(@langchain/core@libs+langchain-core)
-      '@langchain/azure-cosmosdb':
-        specifier: workspace:*
-        version: link:../providers/langchain-azure-cosmosdb
-      '@langchain/azure-dynamic-sessions':
-        specifier: workspace:*
-        version: link:../providers/langchain-azure-dynamic-sessions
-      '@langchain/baidu-qianfan':
-        specifier: workspace:*
-        version: link:../providers/langchain-baidu-qianfan
-      '@langchain/cloudflare':
-        specifier: workspace:*
-        version: link:../providers/langchain-cloudflare
       '@langchain/cohere':
         specifier: workspace:*
         version: link:../providers/langchain-cohere
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
-      '@langchain/deepseek':
-        specifier: workspace:*
-        version: link:../providers/langchain-deepseek
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
-      '@langchain/exa':
+      '@langchain/openai':
         specifier: workspace:*
-        version: link:../providers/langchain-exa
-      '@langchain/google-cloud-sql-pg':
-        specifier: workspace:*
-        version: link:../providers/langchain-google-cloud-sql-pg
-      '@langchain/google-common':
-        specifier: workspace:*
-        version: link:../providers/langchain-google-common
-      '@langchain/google-genai':
-        specifier: workspace:*
-        version: link:../providers/langchain-google-genai
-      '@langchain/google-vertexai':
-        specifier: workspace:*
-        version: link:../providers/langchain-google-vertexai
-      '@langchain/google-vertexai-web':
-        specifier: workspace:*
-        version: link:../providers/langchain-google-vertexai-web
-      '@langchain/groq':
-        specifier: workspace:*
-        version: link:../providers/langchain-groq
-      '@langchain/langgraph':
-        specifier: 1.0.0-alpha.5
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@4.1.11)
-      '@langchain/mistralai':
-        specifier: workspace:*
-        version: link:../providers/langchain-mistralai
-      '@langchain/mongodb':
-        specifier: workspace:*
-        version: link:../providers/langchain-mongodb
-      '@langchain/nomic':
-        specifier: workspace:*
-        version: link:../providers/langchain-nomic
-      '@langchain/ollama':
-        specifier: workspace:*
-        version: link:../providers/langchain-ollama
-      '@langchain/pinecone':
-        specifier: ^0.2.0
-        version: 0.2.0(@langchain/core@libs+langchain-core)(@pinecone-database/pinecone@5.1.2)
-      '@langchain/qdrant':
-        specifier: workspace:*
-        version: link:../providers/langchain-qdrant
-      '@langchain/redis':
-        specifier: workspace:*
-        version: link:../providers/langchain-redis
-      '@langchain/scripts':
-        specifier: '>=0.1.0 <0.2.0'
-        version: 0.1.3
-      '@langchain/tavily':
-        specifier: workspace:*
-        version: link:../providers/langchain-tavily
-      '@langchain/weaviate':
-        specifier: workspace:*
-        version: link:../providers/langchain-weaviate
-      '@langchain/xai':
-        specifier: workspace:*
-        version: link:../providers/langchain-xai
-      '@langchain/yandex':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
-      '@layerup/layerup-security':
-        specifier: ^1.5.12
-        version: 1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
-      '@opensearch-project/opensearch':
-        specifier: ^2.2.0
-        version: 2.13.0
-      '@pinecone-database/pinecone':
-        specifier: ^5.0.2
-        version: 5.1.2
-      '@planetscale/database':
-        specifier: ^1.8.0
-        version: 1.19.0
+        version: link:../providers/langchain-openai
       '@prisma/client':
         specifier: ^4.16.2
         version: 4.16.2(prisma@4.16.2)
-      '@qdrant/js-client-rest':
-        specifier: ^1.15.0
-        version: 1.15.0(typescript@5.8.3)
-      '@rockset/client':
-        specifier: ^0.9.1
-        version: 0.9.2(encoding@0.1.13)
-      '@supabase/supabase-js':
-        specifier: ^2.53.0
-        version: 2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      '@tensorflow/tfjs-backend-cpu':
-        specifier: ^4.4.0
-        version: 4.22.0(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13))
       '@tsconfig/recommended':
         specifier: ^1.0.2
         version: 1.0.10
@@ -852,51 +705,18 @@ importers:
       '@types/jsdom':
         specifier: ^21.1.1
         version: 21.1.7
-      '@types/pg':
-        specifier: ^8.15.5
-        version: 8.15.5
       '@types/uuid':
         specifier: ^9
         version: 9.0.8
       '@types/ws':
         specifier: ^8
         version: 8.18.1
-      '@upstash/redis':
-        specifier: ^1.35.3
-        version: 1.35.3
-      '@upstash/vector':
-        specifier: ^1.2.2
-        version: 1.2.2
-      '@vercel/kv':
-        specifier: ^3.0.0
-        version: 3.0.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1))
-      '@xata.io/client':
-        specifier: ^0.28.4
-        version: 0.28.4(typescript@5.8.3)
-      '@zilliz/milvus2-sdk-node':
-        specifier: ^2.3.5
-        version: 2.6.0
-      axios:
-        specifier: ^0.26.0
-        version: 0.26.1
       cheerio:
         specifier: 1.0.0-rc.12
         version: 1.0.0-rc.12
-      chromadb:
-        specifier: ^1.5.3
-        version: 1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))
-      cohere-ai:
-        specifier: ^7.14.0
-        version: 7.18.0(encoding@0.1.13)
-      convex:
-        specifier: ^1.3.1
-        version: 1.25.4(react@19.0.0)
-      date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
       dotenv:
         specifier: ^16.0.3
         version: 16.6.1
@@ -927,45 +747,18 @@ importers:
       langchain:
         specifier: workspace:*
         version: link:../langchain
-      lorem-ipsum:
-        specifier: ^2.0.8
-        version: 2.0.8
-      lunary:
-        specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0)
-      mariadb:
-        specifier: ^3.4.0
-        version: 3.4.5
-      mem0ai:
-        specifier: ^2.1.8
-        version: 2.1.36(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      mongodb:
-        specifier: ^6.17.0
-        version: 6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6)
       openai:
         specifier: ^5.1.0
         version: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
       peggy:
         specifier: ^3.0.2
         version: 3.0.2
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
-      pickleparser:
-        specifier: ^0.2.1
-        version: 0.2.1
       prettier:
         specifier: ^2.8.3
         version: 2.8.8
       prisma:
         specifier: ^4.16.2
         version: 4.16.2
-      readline:
-        specifier: ^1.3.0
-        version: 1.3.0
-      redis:
-        specifier: ^4.6.13
-        version: 4.7.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -981,9 +774,6 @@ importers:
       rollup:
         specifier: ^3.19.1
         version: 3.29.5
-      sqlite3:
-        specifier: ^5.1.4
-        version: 5.1.7
       typeorm:
         specifier: ^0.3.20
         version: 0.3.25(better-sqlite3@9.5.0)(ioredis@5.7.0)(mongodb@6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6))(mysql2@3.14.3)(pg@8.16.3)(redis@4.7.1)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.6.1)(typescript@5.8.3))
@@ -2919,7 +2709,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/langgraph':
         specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 1.0.0-alpha.4(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
@@ -4031,10 +3821,6 @@ packages:
 
   '@azure/identity@4.10.2':
     resolution: {integrity: sha512-Uth4vz0j+fkXCkbvutChUj03PDCokjbC6Wk9JT8hHEUtpy/EurNKAseb3+gO6Zi9VYBvwt61pgbzn1ovk942Qg==}
-    engines: {node: '>=20.0.0'}
-
-  '@azure/identity@4.12.0':
-    resolution: {integrity: sha512-6vuh2R3Cte6SD6azNalLCjIDoryGdcvDVEV7IDRPtm5lHX5ffkDlIalaoOp5YJU08e4ipjJENel20kSMDLAcug==}
     engines: {node: '>=20.0.0'}
 
   '@azure/keyvault-common@2.0.0':
@@ -5463,10 +5249,6 @@ packages:
     resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@faker-js/faker@10.0.0':
-    resolution: {integrity: sha512-UollFEUkVXutsaP+Vndjxar40Gs5JL2HeLcl8xO1QAjJgOdhc3OmBFWyEylS+RddWaaBiAzH+5/17PLQJwDiLw==}
-    engines: {node: ^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0, npm: '>=10'}
-
   '@faker-js/faker@8.4.1':
     resolution: {integrity: sha512-XQ3cU+Q8Uqmrbf2e0cIC/QN43sTBSC8KF12u29Mb47tWrt2hAgBXSgpZMj4Ao8Uk0iJcU99QsOCaIL8934obCg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
@@ -6243,8 +6025,8 @@ packages:
       react-dom:
         optional: true
 
-  '@langchain/langgraph@1.0.0-alpha.5':
-    resolution: {integrity: sha512-Sg0LZ/zb0osMT+2/poTRH6GbmzSYxPVzZPXikjryCFMCw52HGbq0sLEXFsaqfs+1HCcDs1Ob6IPw8IucE5pM9Q==}
+  '@langchain/langgraph@1.0.0-alpha.4':
+    resolution: {integrity: sha512-TI0SYmEiZziyyB9LmapY5OZhd92A/cO4Du1CmxIf5Ri7yhhzR+od3zvvdt1GvchOxD2YtXP4Er8nZOkK70WGQw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6272,13 +6054,6 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/pinecone@0.2.0':
-    resolution: {integrity: sha512-O3tWSCIbm1uDLh0J4R0ETmYeRFtQAI2qcSAMC/VW1+xBb+o/IJ5VMyJhGKc4RsmyWE0wG4kOuwfIcCP+XV0clw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-      '@pinecone-database/pinecone': ^5.0.2
-
   '@langchain/scripts@0.1.3':
     resolution: {integrity: sha512-n//AURe2vDwT1DT6XaSrdlBu5FLc+fHsDFHhBzYxLgWzIOHSzYNUZZQTPAEQJZjeFoJUS84eV8q1cfQuHsAQdw==}
     engines: {node: '>=18'}
@@ -6298,12 +6073,6 @@ packages:
 
   '@langchain/xai@0.1.0':
     resolution: {integrity: sha512-KODdPmESUxPKcrqLLvm8VReOZhG+BKWUxmXtIMUbYeB525/rKrtYX0ygVUf55E7VrXvndwLtFX/hQSqQwx2y1A==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/yandex@0.1.0':
-    resolution: {integrity: sha512-o2ji7b6v5ib247mpwQLSSAlIeTjqK7HOZFkEdvH6BoO7Dq9A8l8n8FUwpZSNdN1L5hw1M2lzz5N7AfW7GSO7lQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -7229,8 +6998,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.42':
-    resolution: {integrity: sha512-abw/wtgJA8OCgaTlL+xJxnN/Z01BwV1rfzIp5Hh9x+IIO6xOBfPsQ0nzi0+rWx3TyZ9FZXyC7bbC+5NpQ9EaXQ==}
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.43':
+    resolution: {integrity: sha512-kuVWnZsE4vEjMF/10SbSUyzucIW2zmdsqFghYMqy+fsjXnRHg0luTU6qWF8IqJf4Cbpm9NEZRnjIEPpAbdiSNQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7240,8 +7009,8 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.42':
-    resolution: {integrity: sha512-Y/UrZIRVr8CvXVEB88t6PeC46r1K9/QdPEo2ASE/b/KBEyXIx+QbM6kv9QfQVWU2Atly2+SVsQzxQsIvuk3lZQ==}
+  '@rolldown/binding-darwin-x64@1.0.0-beta.43':
+    resolution: {integrity: sha512-u9Ps4sh6lcmJ3vgLtyEg/x4jlhI64U0mM93Ew+tlfFdLDe7yKyA+Fe80cpr2n1mNCeZXrvTSbZluKpXQ0GxLjw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7261,8 +7030,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.42':
-    resolution: {integrity: sha512-LMYHM5Sf6ROq+VUwHMDVX2IAuEsWTv4SnlFEedBnMGpvRuQ14lCmD4m5Q8sjyAQCgyha9oghdGoK8AEg1sXZKg==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.43':
+    resolution: {integrity: sha512-mcjd57vEj+CEQbZAzUiaxNzNgwwgOpFtZBWcINm8DNscvkXl5b/s622Z1dqGNWSdrZmdjdC6LWMvu8iHM6v9sQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7272,8 +7041,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.42':
-    resolution: {integrity: sha512-/bNTYb9aKNhzdbPn3O4MK2aLv55AlrkUKPE4KNfBYjkoZUfDr4jWp7gsSlvTc5A/99V1RCm9axvt616ZzeXGyA==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.43':
+    resolution: {integrity: sha512-Pa8QMwlkrztTo/1mVjZmPIQ44tCSci10TBqxzVBvXVA5CFh5EpiEi99fPSll2dHG2uT4dCOMeC6fIhyDdb0zXA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7288,8 +7057,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.42':
-    resolution: {integrity: sha512-n/SLa4h342oyeGykZdch7Y3GNCNliRPL4k5wkeZ/5eQZs+c6/ZG1SHCJQoy7bZcmxiMyaXs9HoFmv1PEKrZgWg==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.43':
+    resolution: {integrity: sha512-BgynXKMjeaX4AfWLARhOKDetBOOghnSiVRjAHVvhiAaDXgdQN8e65mSmXRiVoVtD3cHXx/cfU8Gw0p0K+qYKVQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7299,8 +7068,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.42':
-    resolution: {integrity: sha512-4PSd46sFzqpLHSGdaSViAb1mk55sCUMpJg+X8ittXaVocQsV3QLG/uydSH8RyL0ngHX5fy3D70LcCzlB15AgHw==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.43':
+    resolution: {integrity: sha512-VIsoPlOB/tDSAw9CySckBYysoIBqLeps1/umNSYUD8pMtalJyzMTneAVI1HrUdf4ceFmQ5vARoLIXSsPwVFxNg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7315,8 +7084,8 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.42':
-    resolution: {integrity: sha512-hC1kShXW/z221eG+WzQMN06KepvPbMBknF0iGR3VMYJLOe9gwnSTfGxFT5hf8XrPv7CEZqTWRd0GQpkSHRbGsw==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.43':
+    resolution: {integrity: sha512-/B1j1pJs33y9ywtslOMxryUPHq8zIGu/OGEc2gyed0slimJ8fX2uR/SaJVhB4+NEgCFIeYDR4CX6jynAkeRuCA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7326,8 +7095,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.42':
-    resolution: {integrity: sha512-AICBYromawouGjj+GS33369E8Vwhy6UwhQEhQ5evfS8jPCsyVvoICJatbDGDGH01dwtVGLD5eDFzPicUOVpe4g==}
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.43':
+    resolution: {integrity: sha512-29oG1swCz7hNP+CQYrsM4EtylsKwuYzM8ljqbqC5TsQwmKat7P8ouDpImsqg/GZxFSXcPP9ezQm0Q0wQwGM3JA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [ia32]
     os: [win32]
@@ -7337,8 +7106,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.42':
-    resolution: {integrity: sha512-XpZ0M+tjoEiSc9c+uZR7FCnOI0uxDRNs1elGOMjeB0pUP1QmvVbZGYNsyLbLoP4u7e3VQN8rie1OQ8/mB6rcJg==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.43':
+    resolution: {integrity: sha512-eWBV1Ef3gfGNehxVGCyXs7wLayRIgCmyItuCZwYYXW5bsk4EvR4n2GP5m3ohjnx7wdiY3nLmwQfH2Knb5gbNZw==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -14262,6 +14031,7 @@ packages:
   puppeteer@22.15.0:
     resolution: {integrity: sha512-XjCY1SiSEi1T7iSYuxS82ft85kwDJUS7wj1Z0eGVXKdtr5g4xnVcbjwxhq5xBnpK/E7x1VZZoJDxpjAOasHT4Q==}
     engines: {node: '>=18'}
+    deprecated: < 24.10.2 is no longer supported
     hasBin: true
 
   pure-rand@6.1.0:
@@ -16411,12 +16181,6 @@ snapshots:
     optionalDependencies:
       zod: 3.25.76
 
-  '@anthropic-ai/sdk@0.65.0(zod@4.1.11)':
-    dependencies:
-      json-schema-to-ts: 3.1.1
-    optionalDependencies:
-      zod: 4.1.11
-
   '@anthropic-ai/vertex-sdk@0.11.5(zod@3.25.76)':
     dependencies:
       '@anthropic-ai/sdk': 0.65.0(zod@3.25.76)
@@ -17596,22 +17360,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/identity@4.12.0':
-    dependencies:
-      '@azure/abort-controller': 2.1.2
-      '@azure/core-auth': 1.10.0
-      '@azure/core-client': 1.10.0
-      '@azure/core-rest-pipeline': 1.22.0
-      '@azure/core-tracing': 1.3.0
-      '@azure/core-util': 1.13.0
-      '@azure/logger': 1.3.0
-      '@azure/msal-browser': 4.18.0
-      '@azure/msal-node': 3.6.4
-      open: 10.2.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
   '@azure/keyvault-common@2.0.0':
     dependencies:
       '@azure/abort-controller': 2.1.2
@@ -18612,22 +18360,6 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@browserbasehq/stagehand@1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(utf-8-validate@6.0.5)(zod@4.1.11)':
-    dependencies:
-      '@anthropic-ai/sdk': 0.27.3(encoding@0.1.13)
-      '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
-      '@playwright/test': 1.54.2
-      deepmerge: 4.3.1
-      dotenv: 16.6.1
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      zod: 4.1.11
-      zod-to-json-schema: 3.24.6(zod@4.1.11)
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@bufbuild/protobuf@2.6.2': {}
 
   '@bytecodealliance/componentize-js@0.18.4':
@@ -19156,8 +18888,6 @@ snapshots:
     dependencies:
       '@eslint/core': 0.15.2
       levn: 0.4.1
-
-  '@faker-js/faker@10.0.0': {}
 
   '@faker-js/faker@8.4.1': {}
 
@@ -20196,6 +19926,7 @@ snapshots:
       '@langchain/core': link:libs/langchain-core
     transitivePeerDependencies:
       - aws-crt
+    optional: true
 
   '@langchain/cohere@0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
@@ -20280,7 +20011,7 @@ snapshots:
       react: 19.0.0
       react-dom: 18.3.1(react@19.0.0)
 
-  '@langchain/langgraph@1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
+  '@langchain/langgraph@1.0.0-alpha.4(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph-checkpoint': 0.1.1(@langchain/core@libs+langchain-core)
@@ -20289,19 +20020,6 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       zod-to-json-schema: 3.24.6(zod@3.25.76)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
-  '@langchain/langgraph@1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@4.1.11)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/langgraph-checkpoint': 0.1.1(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 0.1.9(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)
-      uuid: 10.0.0
-      zod: 4.1.11
-    optionalDependencies:
-      zod-to-json-schema: 3.24.6(zod@4.1.11)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -20330,13 +20048,6 @@ snapshots:
       zod: 3.25.76
     transitivePeerDependencies:
       - ws
-
-  '@langchain/pinecone@0.2.0(@langchain/core@libs+langchain-core)(@pinecone-database/pinecone@5.1.2)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@pinecone-database/pinecone': 5.1.2
-      flat: 5.0.2
-      uuid: 10.0.0
 
   '@langchain/scripts@0.1.3':
     dependencies:
@@ -20376,24 +20087,10 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/yandex@0.1.0(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)':
     dependencies:
       axios: 1.11.0(debug@4.4.3)
       openai: 4.104.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - ws
-      - zod
-
-  '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)':
-    dependencies:
-      axios: 1.11.0(debug@4.4.3)
-      openai: 4.104.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
     transitivePeerDependencies:
       - debug
       - encoding
@@ -20507,11 +20204,6 @@ snapshots:
     dependencies:
       zod: 3.25.76
       zod-to-json-schema: 3.24.6(zod@3.25.76)
-
-  '@mistralai/mistralai@1.7.5(zod@4.1.11)':
-    dependencies:
-      zod: 4.1.11
-      zod-to-json-schema: 3.24.6(zod@4.1.11)
 
   '@mixedbread-ai/sdk@2.2.11(encoding@0.1.13)':
     dependencies:
@@ -21380,13 +21072,13 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-beta.42':
+  '@rolldown/binding-darwin-arm64@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-beta.42':
+  '@rolldown/binding-darwin-x64@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-freebsd-x64@1.0.0-beta.30':
@@ -21398,13 +21090,13 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.42':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.42':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-linux-arm64-ohos@1.0.0-beta.30':
@@ -21413,13 +21105,13 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.42':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-beta.42':
+  '@rolldown/binding-linux-x64-musl@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.0.0-beta.30':
@@ -21430,19 +21122,19 @@ snapshots:
   '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.42':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.42':
+  '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.43':
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-beta.30':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.42':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-beta.43':
     optional: true
 
   '@rolldown/pluginutils@1.0.0-beta.30': {}
@@ -24205,18 +23897,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  chromadb@1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.16)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)):
-    dependencies:
-      cliui: 8.0.1
-      isomorphic-fetch: 3.0.0(encoding@0.1.13)
-    optionalDependencies:
-      '@google/generative-ai': 0.7.1
-      cohere-ai: 7.18.0(encoding@0.1.13)
-      ollama: 0.5.16
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
-    transitivePeerDependencies:
-      - encoding
-
   chromadb@3.0.14:
     dependencies:
       semver: 7.7.2
@@ -26716,6 +26396,7 @@ snapshots:
       wordwrap: 1.0.0
     optionalDependencies:
       uglify-js: 3.19.3
+    optional: true
 
   has-bigints@1.1.0: {}
 
@@ -28549,14 +28230,6 @@ snapshots:
       openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11))(react@19.0.0):
-    dependencies:
-      unctx: 2.4.1
-    optionalDependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@4.1.11)
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11)
-      react: 19.0.0
-
   macos-release@3.4.0: {}
 
   magic-bytes.js@1.12.1: {}
@@ -28700,34 +28373,6 @@ snapshots:
       '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.7.5(zod@3.25.76)
-      '@qdrant/js-client-rest': 1.15.0(typescript@5.8.3)
-      '@supabase/supabase-js': 2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      '@types/jest': 29.5.14
-      '@types/pg': 8.15.5
-      '@types/sqlite3': 3.1.11
-      axios: 1.7.7
-      cloudflare: 4.5.0(encoding@0.1.13)
-      groq-sdk: 0.19.0(encoding@0.1.13)
-      neo4j-driver: 5.28.1
-      ollama: 0.5.16
-      openai: 4.104.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-      pg: 8.16.3
-      redis: 4.7.1
-      sqlite3: 5.1.7
-      uuid: 9.0.1
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - ws
-
-  mem0ai@2.1.36(@anthropic-ai/sdk@0.65.0(zod@4.1.11))(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@4.1.11))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.16)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)):
-    dependencies:
-      '@anthropic-ai/sdk': 0.65.0(zod@4.1.11)
-      '@cloudflare/workers-types': 4.20250801.0
-      '@google/genai': 1.12.0(@modelcontextprotocol/sdk@1.19.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
-      '@langchain/core': link:libs/langchain-core
-      '@mistralai/mistralai': 1.7.5(zod@4.1.11)
       '@qdrant/js-client-rest': 1.15.0(typescript@5.8.3)
       '@supabase/supabase-js': 2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@types/jest': 29.5.14
@@ -29421,21 +29066,6 @@ snapshots:
     optionalDependencies:
       ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       zod: 3.25.76
-    transitivePeerDependencies:
-      - encoding
-
-  openai@4.104.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@4.1.11):
-    dependencies:
-      '@types/node': 18.19.121
-      '@types/node-fetch': 2.6.13
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-    optionalDependencies:
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      zod: 4.1.11
     transitivePeerDependencies:
       - encoding
 
