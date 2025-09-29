@@ -433,6 +433,12 @@ export function inputGuardrailsMiddleware(
   return createMiddleware({
     name: "InputGuardrailsMiddleware",
     contextSchema,
+    stateSchema: z.object({
+      /**
+       * cached message IDs that have already been processed
+       */
+      _processedMessageIds: z.array(z.string()).default([]),
+    }),
     beforeModel: async (state, runtime) => {
       /**
        * Merge options with context, following bigTool.ts pattern
@@ -464,7 +470,13 @@ export function inputGuardrailsMiddleware(
       let hasChanges = false;
       const processedMessages = await Promise.all(
         state.messages.map(async (message) => {
-          if (!HumanMessage.isInstance(message)) {
+          if (
+            /**
+             * only process HumanMessages that have not already been processed
+             */
+            !HumanMessage.isInstance(message) ||
+            (message.id && state._processedMessageIds?.includes(message.id))
+          ) {
             return message;
           }
 
@@ -482,6 +494,12 @@ export function inputGuardrailsMiddleware(
        */
       if (hasChanges) {
         return {
+          _processedMessageIds: [
+            ...new Set([
+              ...(state._processedMessageIds ?? []),
+              ...processedMessages.map((message) => message.id as string),
+            ]),
+          ],
           messages: processedMessages,
         };
       }

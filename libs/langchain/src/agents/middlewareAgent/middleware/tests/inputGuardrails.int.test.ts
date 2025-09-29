@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
+import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";
+import { tool } from "@langchain/core/tools";
 
 import { createAgent } from "../../index.js";
 import { inputGuardrailsMiddleware } from "../inputGuardrails.js";
@@ -192,5 +194,74 @@ describe("inputGuardrailsMiddleware Integration", () => {
     expect(thirdHuman.content).not.toContain("john@example.com");
 
     expect(fetchMock.mock.calls.length).toBe(3);
+  });
+
+  it("should only process new messages", async () => {
+    const fetchResponse = vi
+      .fn()
+      .mockImplementation((response) => response.clone());
+    const fetchMock = vi.fn().mockImplementation((url, options) => {
+      return fetch(url, options).then(fetchResponse);
+    });
+
+    const model = new ChatOpenAI({
+      model: "gpt-4o",
+      temperature: 0,
+      configuration: {
+        fetch: fetchMock,
+      },
+    });
+
+    const fetchUser = tool(
+      vi.fn().mockImplementation(({ id, email }) => ({
+        id,
+        name: "John Doe",
+        email,
+        ssn: "123-45-6789",
+        phone: "123-456-7890",
+        address: "123 Main St, Anytown, USA",
+        socialSecurityNumber: "123-45-6789",
+        city: "Anytown",
+        state: "CA",
+        zip: "12345",
+        loanEligible: true,
+      })),
+      {
+        name: "fetchUser",
+        description: "Fetch a user",
+        schema: z.object({
+          id: z.string().describe("The ID of the user to fetch"),
+          email: z.string().describe("The email of the user to fetch"),
+        }),
+      }
+    );
+
+    const agent = createAgent({
+      model,
+      tools: [fetchUser],
+      middleware: [inputGuardrailsMiddleware()],
+      responseFormat: z.object({
+        name: z.string().describe("The name of the user"),
+        email: z.string().describe("The email of the user"),
+        isEligible: z
+          .boolean()
+          .describe("Whether the user is eligible for a loan"),
+      }),
+    });
+
+    const result = await agent.invoke({
+      messages: [
+        new HumanMessage(
+          "Fetch user with id '123-45-6789' and email john@example.com and determine if the user is eligible for a loan"
+        ),
+      ],
+    });
+
+    expect(result.structuredResponse).toEqual({
+      name: "John Doe",
+      email: "[REDACTED_EMAIL]",
+      isEligible: true,
+    });
+    expect(fetchMock.mock.calls.length).toBe(2);
   });
 });
