@@ -487,31 +487,19 @@ export function inputGuardrailsMiddleware(
         systemPrompt,
       };
 
-      const { messages } = state;
-      const processedMessages = [];
-      let hasChanges = false;
-
       /**
        * Process messages, focusing on HumanMessages
        */
-      for (const message of messages) {
-        if (HumanMessage.isInstance(message)) {
-          const processedMessage = await processHumanMessage(message, config);
-
-          if (processedMessage !== message) {
-            hasChanges = true;
-          }
-
-          processedMessages.push(processedMessage);
-        } else {
-          processedMessages.push(message);
-        }
-      }
+      const processedMessages = await Promise.all(
+        state.messages
+          .filter(HumanMessage.isInstance)
+          .map(async (message) => processHumanMessage(message, config))
+      );
 
       /**
        * Return updated state only if changes were made
        */
-      if (hasChanges) {
+      if (processedMessages.length > 0) {
         return {
           messages: processedMessages,
         };

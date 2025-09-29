@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 
 import { createAgent } from "../../index.js";
 import { inputGuardrailsMiddleware } from "../inputGuardrails.js";
@@ -138,5 +139,58 @@ describe("inputGuardrailsMiddleware Integration", () => {
 
     expect(thirdHuman.content).toContain("[REDACTED_EMAIL]");
     expect(thirdHuman.content).not.toContain("john@example.com");
+  });
+
+  it("should allow to use a custom model for PII detection and only process new messages", async () => {
+    const fetchResponse = vi
+      .fn()
+      .mockImplementation((response) => response.clone());
+    const fetchMock = vi.fn().mockImplementation((url, options) => {
+      return fetch(url, options).then(fetchResponse);
+    });
+
+    const model = new ChatOpenAI({
+      model: "gpt-4o",
+      temperature: 0,
+      configuration: {
+        fetch: fetchMock,
+      },
+    });
+
+    const agent = createAgent({
+      model: "openai:gpt-4o",
+      tools: [],
+      middleware: [
+        inputGuardrailsMiddleware({
+          model,
+        }),
+      ],
+    });
+
+    const result = await agent.invoke({
+      messages: [
+        new HumanMessage("First message with SSN 123-45-6789"),
+        new HumanMessage("Second clean message"),
+        new HumanMessage("Third message with email john@example.com"),
+      ],
+    });
+
+    // Should have original messages plus AI response
+    expect(result.messages.length).toBeGreaterThan(3);
+
+    // Check that PII was redacted in the appropriate messages
+    const firstHuman = result.messages[0];
+    const secondHuman = result.messages[1];
+    const thirdHuman = result.messages[2];
+
+    expect(firstHuman.content).toContain("[REDACTED_SSN]");
+    expect(firstHuman.content).not.toContain("123-45-6789");
+
+    expect(secondHuman.content).toBe("Second clean message");
+
+    expect(thirdHuman.content).toContain("[REDACTED_EMAIL]");
+    expect(thirdHuman.content).not.toContain("john@example.com");
+
+    expect(fetchMock.mock.calls.length).toBe(3);
   });
 });
