@@ -490,16 +490,26 @@ export function inputGuardrailsMiddleware(
       /**
        * Process messages, focusing on HumanMessages
        */
+      let hasChanges = false;
       const processedMessages = await Promise.all(
-        state.messages
-          .filter(HumanMessage.isInstance)
-          .map(async (message) => processHumanMessage(message, config))
+        state.messages.map(async (message) => {
+          if (!HumanMessage.isInstance(message)) {
+            return message;
+          }
+
+          const processed = await processHumanMessage(message, config);
+          if (processed !== message) {
+            hasChanges = true;
+            return processed;
+          }
+          return message;
+        })
       );
 
       /**
        * Return updated state only if changes were made
        */
-      if (processedMessages.length > 0) {
+      if (hasChanges) {
         return {
           messages: processedMessages,
         };
