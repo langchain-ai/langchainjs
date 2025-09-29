@@ -251,7 +251,6 @@ export type TodoMiddlewareState = z.infer<typeof stateSchema>;
 
 /**
  * Write todos tool - manages todo list with Command return
- * Uses getCurrentTaskInput() instead of Python's InjectedState
  */
 const writeTodos = tool(
   ({ todos }, config) => {
@@ -289,12 +288,11 @@ const writeTodos = tool(
  *
  * @example
  * ```typescript
- * import { todoMiddleware } from './middleware/todo.js';
- * import { createAgent } from '../index.js';
+ * import { planningMiddleware, createAgent } from 'langchain';
  *
  * const agent = createAgent({
- *   model: chatModel,
- *   middleware: [todoMiddleware()],
+ *   model: "openai:gpt-4o",
+ *   middleware: [planningMiddleware()],
  * });
  *
  * // Agent now has access to write_todos tool and todo state tracking
@@ -310,14 +308,16 @@ const writeTodos = tool(
  * @see {@link TodoMiddlewareState} for the state schema
  * @see {@link writeTodos} for the tool implementation
  */
-export function todoMiddleware() {
+export function planningMiddleware() {
   return createMiddleware({
-    name: "todoMiddleware",
+    name: "planningMiddleware",
     stateSchema,
     tools: [writeTodos],
     modifyModelRequest: (request) => ({
       ...request,
-      systemPrompt: (request.systemPrompt ?? "") + systemPrompt,
+      systemPrompt:
+        (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
+        systemPrompt,
     }),
   });
 }
