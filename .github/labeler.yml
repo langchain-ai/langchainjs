@@ -1,0 +1,142 @@
+# Configuration for GitHub Actions Labeler
+# https://github.com/actions/labeler
+
+internal:
+  - changed-files:
+      - any-glob-to-any-file:
+          - internal/**
+          - internal/**/*
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .github/actions/**
+          - dependency_range_tests/**
+          - dependency_range_tests/**/*
+          - environment_tests/**
+          - environment_tests/**/*
+          - libs/langchain-scripts/**
+          - libs/langchain-scripts/**/*
+          - libs/langchain-standard-tests/**
+          - libs/langchain-standard-tests/**/*
+
+examples:
+  - changed-files:
+      - any-glob-to-any-file:
+          - examples/**
+          - examples/**/*
+
+langchain:
+  - changed-files:
+      - any-glob-to-any-file:
+          - langchain/**
+          - langchain/**/*
+
+core:
+  - changed-flies:
+      - any-glob-to-any-file:
+          - langchain-core/**
+          - langchain-core/**/*
+
+textsplitters:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-textsplitters/**
+          - libs/langchain-textsplitters/**/*
+
+provider/anthropic:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-anthropic/**
+          - libs/langchain-anthropic/**/*
+
+provider/aws:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-aws/**
+          - libs/langchain-aws/**/*
+
+provider/azure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-*azure*/**
+          - libs/langchain-*azure*/**/*
+
+provider/ollama:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-ollama/**
+          - libs/langchain-ollama/**/*
+
+provider/openai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-openai/**
+          - libs/langchain-openai/**/*
+
+provider/google:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-*google*/**
+          - libs/langchain-*google*/**/*
+
+provider/groq:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-groq/**
+          - libs/langchain-groq/**/*
+
+provider/mistralai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-mistralai/**
+          - libs/langchain-mistralai/**/*
+
+provider/mongodb:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-mongodb/**
+          - libs/langchain-mongodb/**/*
+
+provider/redis:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-redis/**
+          - libs/langchain-redis/**/*
+
+provider/xai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-xai/**
+          - libs/langchain-xai/**/*
+
+community:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/langchain-community/**
+          - libs/langchain-community/**/*
+          - libs/langchain-baidu-qianfan/**
+          - libs/langchain-baidu-qianfan/**/*
+          - libs/langchain-cerebras/**
+          - libs/langchain-cerebras/**/*
+          - libs/langchain-cloudflare/**
+          - libs/langchain-cloudflare/**/*
+          - libs/langchain-cohere/**
+          - libs/langchain-cohere/**/*
+          - libs/langchain-exa/**
+          - libs/langchain-exa/**/*
+          - libs/langchain-mixedbread-ai/**
+          - libs/langchain-mixedbread-ai/**/*
+          - libs/langchain-nomic/**
+          - libs/langchain-nomic/**/*
+          - libs/langchain-pinecone/**
+          - libs/langchain-pinecone/**/*
+          - libs/langchain-qdrant/**
+          - libs/langchain-qdrant/**/*
+          - libs/langchain-tavily/**
+          - libs/langchain-tavily/**/*
+          - libs/langchain-weaviate/**
+          - libs/langchain-weaviate/**/*
+          - libs/langchain-yandex/**
+          - libs/langchain-yandex/**/*
