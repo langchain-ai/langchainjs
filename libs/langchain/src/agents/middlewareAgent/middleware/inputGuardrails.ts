@@ -94,7 +94,7 @@ export const DEFAULT_PII_RULES: PIIRule[] = [
 /**
  * Configuration schema for the Input Guardrails middleware
  */
-const contextSchema: z.ZodDefault<z.ZodObject<Record<string, z.ZodTypeAny>>> = z
+const contextSchema = z
   .object({
     /**
      * Array of PII detection rules to apply
@@ -241,7 +241,7 @@ async function applyAIDetection(
 interface ProcessHumanMessageConfig {
   rules: PIIRule[];
   customDetectors: PIIDetectionFunction[];
-  model?: BaseLanguageModel;
+  model?: string | BaseLanguageModel;
   parallel: boolean;
   logDetections: boolean;
   systemPrompt: string;
