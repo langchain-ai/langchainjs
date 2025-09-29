@@ -164,7 +164,7 @@ export interface AnthropicInput {
    * To not set this field, pass `null`. If `undefined` is passed,
    * the default (-1) will be used.
    *
-   * For Opus 4.1, this defaults to `null`.
+   * For Opus 4.1 and Sonnet 4.5, this defaults to `null`.
    */
   topP?: number | null;
 
