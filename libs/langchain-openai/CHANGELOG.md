@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 0.6.14
+
+### Patch Changes
+
+- d38e9d6: fix(openai): fix streaming in openai
+
 ## 0.6.12
 
 ### Patch Changes

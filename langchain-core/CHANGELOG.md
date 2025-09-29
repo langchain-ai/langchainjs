@@ -1,5 +1,12 @@
 # @langchain/core
 
+## 0.3.78
+
+### Patch Changes
+
+- 1519a97: update chunk concat logic to match on missing ID fields
+- 079e11d: omit tool call chunks without tool call id
+
 ## 0.3.76
 
 ### Patch Changes
