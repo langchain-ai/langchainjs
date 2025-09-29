@@ -38,12 +38,14 @@ describe("middleware types", () => {
       foo: "bar",
     });
 
-    await agent.invoke({
-      messages: [new HumanMessage("Hello, world!")],
-      customRequiredStateProp: "123",
+    await agent.invoke(
       // @ts-expect-error invalid type
-      customRequiredStateProp2: 456,
-    });
+      {
+        messages: [new HumanMessage("Hello, world!")],
+        customRequiredStateProp: "123",
+        customRequiredStateProp2: 456,
+      }
+    );
 
     // Verify the result has the expected properties
     expectTypeOf(result).toHaveProperty("customStateProp");

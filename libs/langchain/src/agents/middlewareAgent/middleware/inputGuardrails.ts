@@ -98,44 +98,42 @@ export const DEFAULT_PII_RULES: PIIRule[] = [
 /**
  * Configuration schema for the Input Guardrails middleware
  */
-const contextSchema = z
-  .object({
-    /**
-     * Array of PII detection rules to apply
-     * @default DEFAULT_PII_RULES (with enabled rules only)
-     */
-    rules: z.array(z.custom<PIIRule>()).optional(),
+const contextSchema = z.object({
+  /**
+   * Array of PII detection rules to apply
+   * @default DEFAULT_PII_RULES (with enabled rules only)
+   */
+  rules: z.array(z.custom<PIIRule>()).optional(),
 
-    /**
-     * Custom PII detection functions to run in addition to rules
-     */
-    customDetectors: z.array(z.custom<PIIDetectionFunction>()).optional(),
+  /**
+   * Custom PII detection functions to run in addition to rules
+   */
+  customDetectors: z.array(z.custom<PIIDetectionFunction>()).optional(),
 
-    /**
-     * Chat model to use for AI-powered PII detection
-     * When provided, the model will analyze text for PII that regex patterns might miss
-     */
-    model: z.string().or(z.custom<LanguageModelLike>()).optional(),
+  /**
+   * Chat model to use for AI-powered PII detection
+   * When provided, the model will analyze text for PII that regex patterns might miss
+   */
+  model: z.string().or(z.custom<LanguageModelLike>()).optional(),
 
-    /**
-     * Whether to run PII checks in parallel for better performance
-     * @default true
-     */
-    parallel: z.boolean().default(true),
+  /**
+   * Whether to run PII checks in parallel for better performance
+   * @default true
+   */
+  parallel: z.boolean().default(true),
 
-    /**
-     * Whether to log detected PII types (not the actual PII content)
-     * @default false
-     */
-    logDetections: z.boolean().default(false),
+  /**
+   * Whether to log detected PII types (not the actual PII content)
+   * @default false
+   */
+  logDetections: z.boolean().default(false),
 
-    /**
-     * Custom prompt for AI-powered PII detection
-     * @default A built-in prompt that instructs the model to identify and redact PII
-     */
-    systemPrompt: z.string().optional(),
-  })
-  .default({});
+  /**
+   * Custom prompt for AI-powered PII detection
+   * @default A built-in prompt that instructs the model to identify and redact PII
+   */
+  systemPrompt: z.string().optional(),
+});
 
 export type InputGuardrailsMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
