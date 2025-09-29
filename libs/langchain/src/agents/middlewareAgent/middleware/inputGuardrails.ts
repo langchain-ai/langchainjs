@@ -49,7 +49,7 @@ export const DEFAULT_PII_RULES: PIIRule[] = [
   {
     name: "email",
     description: "Email addresses",
-    pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+    pattern: /\b[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}\b/g,
     replacement: "[REDACTED_EMAIL]",
     enabled: true,
   },
