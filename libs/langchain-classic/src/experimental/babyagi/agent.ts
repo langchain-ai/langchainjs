@@ -262,6 +262,7 @@ export class BabyAGI extends BaseChain implements BabyAGIInputs {
     while (numIters < this.maxIterations && this.taskList.length > 0) {
       this.printTaskList();
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const task = this.taskList.shift()!;
       this.printNextTask(task);
 

@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { test } from "@jest/globals";
 import { ChatOpenAI } from "@langchain/openai";
 import { Client, Example, Run } from "langsmith";
 
@@ -95,7 +95,7 @@ const checkFeedbackPassed = (evalResults: EvalResults) => {
     expect(result.run_id).toBeDefined();
     expect(result.feedback).toBeDefined();
     expect(result.feedback.length).toBeGreaterThan(0);
-
+    // eslint-disable-next-line no-loop-func
     result.feedback.forEach((feedback) => {
       expect(feedback.score).toBeDefined();
       expect(feedback.score).toBeTruthy();
@@ -180,7 +180,7 @@ describe.skip.each(datasetTypes)("runner_utils %s dataset", (datasetType) => {
       const examples = datasetType === "chat" ? chatDataset : kvDataset;
       await Promise.all(
         examples.map(async (example) => {
-          await client.createExample(example.inputs, example.outputs, {
+          void client.createExample(example.inputs, example.outputs, {
             datasetId: dataset.id,
           });
         })

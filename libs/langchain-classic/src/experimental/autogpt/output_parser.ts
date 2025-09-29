@@ -57,11 +57,11 @@ export class AutoGPTOutputParser extends BaseOutputParser<AutoGPTAction> {
     };
     try {
       parsed = JSON.parse(text);
-    } catch {
+    } catch (error) {
       const preprocessedText = preprocessJsonInput(text);
       try {
         parsed = JSON.parse(preprocessedText);
-      } catch {
+      } catch (error) {
         return {
           name: "ERROR",
           args: { error: `Could not parse invalid json: ${text}` },
@@ -73,7 +73,7 @@ export class AutoGPTOutputParser extends BaseOutputParser<AutoGPTAction> {
         name: parsed.command.name,
         args: parsed.command.args,
       };
-    } catch {
+    } catch (error) {
       return {
         name: "ERROR",
         args: { error: `Incomplete command args: ${parsed}` },

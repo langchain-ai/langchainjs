@@ -73,6 +73,7 @@ export class CustomFormatPromptTemplate<
         names.add(node.name);
       }
     }
+    // eslint-disable-next-line @typescript-eslint/ban-types
     return new this<RunInput extends Symbol ? never : RunInput>({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
