@@ -1,6 +1,10 @@
 import { z } from "zod";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseLanguageModel } from "@langchain/core/language_models/base";
+import {
+  HumanMessage,
+  SystemMessage,
+  BaseMessage,
+} from "@langchain/core/messages";
+import { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
@@ -111,7 +115,7 @@ const contextSchema = z
      * Chat model to use for AI-powered PII detection
      * When provided, the model will analyze text for PII that regex patterns might miss
      */
-    model: z.string().or(z.custom<BaseLanguageModel>()).optional(),
+    model: z.string().or(z.custom<LanguageModelLike>()).optional(),
 
     /**
      * Whether to run PII checks in parallel for better performance
@@ -222,14 +226,14 @@ async function applyCustomDetectors(
  */
 async function applyAIDetection(
   text: string,
-  model: BaseLanguageModel,
+  model: LanguageModelLike,
   prompt: string = DEFAULT_AI_DETECTION_PROMPT
 ): Promise<string> {
   try {
-    const response = await model.invoke([
+    const response = (await model.invoke([
       new SystemMessage(prompt),
       new HumanMessage(text),
-    ]);
+    ])) as BaseMessage;
 
     return response.content as string;
   } catch (error) {
@@ -241,7 +245,7 @@ async function applyAIDetection(
 interface ProcessHumanMessageConfig {
   rules: PIIRule[];
   customDetectors: PIIDetectionFunction[];
-  model?: string | BaseLanguageModel;
+  model?: string | LanguageModelLike;
   parallel: boolean;
   logDetections: boolean;
   systemPrompt: string;
