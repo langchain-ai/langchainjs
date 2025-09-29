@@ -238,19 +238,21 @@ async function applyAIDetection(
   }
 }
 
+interface ProcessHumanMessageConfig {
+  rules: PIIRule[];
+  customDetectors: PIIDetectionFunction[];
+  model?: BaseLanguageModel;
+  parallel: boolean;
+  logDetections: boolean;
+  systemPrompt: string;
+}
+
 /**
  * Process a single human message for PII detection and redaction
  */
 async function processHumanMessage(
   message: HumanMessage,
-  config: {
-    rules: PIIRule[];
-    customDetectors: PIIDetectionFunction[];
-    model?: BaseLanguageModel;
-    parallel: boolean;
-    logDetections: boolean;
-    systemPrompt: string;
-  }
+  config: ProcessHumanMessageConfig
 ): Promise<HumanMessage> {
   if (typeof message.content !== "string") {
     /**
@@ -478,7 +480,7 @@ export function inputGuardrailsMiddleware(
         options.systemPrompt ??
         DEFAULT_AI_DETECTION_PROMPT;
 
-      const config = {
+      const config: ProcessHumanMessageConfig = {
         rules,
         customDetectors,
         model,
