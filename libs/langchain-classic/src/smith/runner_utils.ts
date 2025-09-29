@@ -284,7 +284,7 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
       ) {
         try {
           return (await this.func(runTree, input.input)) as RunOutput;
-        } catch {
+        } catch (err) {
           return (await this.func(runTree, input)) as RunOutput;
         }
       }
@@ -476,7 +476,7 @@ const createWrappedModel = async (modelOrFactory: ChainOrFactory) => {
         res = await res;
       }
       return modelOrFactory as () => Runnable;
-    } catch {
+    } catch (err) {
       // Otherwise, it's a custom UDF, and we'll wrap
       // the function in a lambda
       const wrappedModel = new RunnableLambda({ func: modelOrFactory });

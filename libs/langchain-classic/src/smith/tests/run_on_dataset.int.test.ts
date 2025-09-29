@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable arrow-body-style */
 
 import OpenAI from "openai";
 import wiki from "wikipedia";

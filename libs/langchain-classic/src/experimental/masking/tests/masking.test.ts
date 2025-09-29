@@ -1,6 +1,7 @@
+/* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
-import { vi } from "vitest";
+import { jest } from "@jest/globals";
 import {
   MaskingParser,
   RegexMaskingTransformer,
@@ -326,8 +327,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     // Masking hooks
     it("handles synchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
-      const onMaskingStart = vi.fn(); // Synchronous mock
-      const onMaskingEnd = vi.fn(); // Synchronous mock
+      const onMaskingStart = jest.fn(); // Synchronous mock
+      const onMaskingEnd = jest.fn(); // Synchronous mock
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -343,8 +344,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     it("handles asynchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
-      const onMaskingStart = vi.fn(() => Promise.resolve()); // Correctly mocked as an async function
-      const onMaskingEnd = vi.fn(() => Promise.resolve()); // Correctly mocked as an async function
+      const onMaskingStart = jest.fn(() => Promise.resolve()); // Correctly mocked as an async function
+      const onMaskingEnd = jest.fn(() => Promise.resolve()); // Correctly mocked as an async function
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -361,10 +362,10 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("handles errors in synchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
       const error = new Error("Test Error");
-      const onMaskingStart = vi.fn(() => {
+      const onMaskingStart = jest.fn(() => {
         throw error;
       }); // Synchronous mock that throws an error
-      const onMaskingEnd = vi.fn(() => {
+      const onMaskingEnd = jest.fn(() => {
         throw error;
       }); // Synchronous mock that throws an error
 
@@ -384,8 +385,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("handles errors in asynchronous onMaskingStart and onMaskingEnd hooks during parse", async () => {
       const error = new Error("Test Error");
-      const onMaskingStart = vi.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
-      const onMaskingEnd = vi.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onMaskingStart = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onMaskingEnd = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -403,8 +404,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     // Rehydration hooks
     it("handles synchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
-      const onRehydratingStart = vi.fn(); // Synchronous mock
-      const onRehydratingEnd = vi.fn(); // Synchronous mock
+      const onRehydratingStart = jest.fn(); // Synchronous mock
+      const onRehydratingEnd = jest.fn(); // Synchronous mock
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -422,8 +423,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
     });
 
     it("handles asynchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
-      const onRehydratingStart = vi.fn(() => Promise.resolve()); // Asynchronous mock
-      const onRehydratingEnd = vi.fn(() => Promise.resolve()); // Asynchronous mock
+      const onRehydratingStart = jest.fn(() => Promise.resolve()); // Asynchronous mock
+      const onRehydratingEnd = jest.fn(() => Promise.resolve()); // Asynchronous mock
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],
@@ -442,10 +443,10 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("handles errors in synchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
       const error = new Error("Test Error");
-      const onRehydratingStart = vi.fn(() => {
+      const onRehydratingStart = jest.fn(() => {
         throw error;
       }); // Synchronous mock that throws an error
-      const onRehydratingEnd = vi.fn(() => {
+      const onRehydratingEnd = jest.fn(() => {
         throw error;
       }); // Synchronous mock that throws an error
 
@@ -469,8 +470,8 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("handles errors in asynchronous onRehydratingStart and onRehydratingEnd hooks during rehydrate", async () => {
       const error = new Error("Test Error");
-      const onRehydratingStart = vi.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
-      const onRehydratingEnd = vi.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onRehydratingStart = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
+      const onRehydratingEnd = jest.fn(() => Promise.reject(error)); // Asynchronous mock that rejects with an error
 
       maskingParser = new MaskingParser({
         transformers: [piiMaskingTransformer],

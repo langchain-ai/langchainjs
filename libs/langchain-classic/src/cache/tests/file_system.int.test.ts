@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect } from "@jest/globals";
 
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -7,6 +7,7 @@ import * as os from "node:os";
 import { OpenAI, ChatOpenAI } from "@langchain/openai";
 import { LocalFileCache } from "../file_system.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let tmpDir: string;
 
 describe("Test LocalFileCache", () => {

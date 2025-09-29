@@ -225,6 +225,17 @@
       },
       "input": "./src/agents/middlewareAgent/middleware/index.ts"
     },
+    "./document": {
+      "import": {
+        "types": "./dist/document.d.ts",
+        "default": "./dist/document.js"
+      },
+      "require": {
+        "types": "./dist/document.d.cts",
+        "default": "./dist/document.cjs"
+      },
+      "input": "./src/document.ts"
+    },
     "./package.json": "./package.json"
   }
 }

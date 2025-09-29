@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { test } from "@jest/globals";
 
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "../../../vectorstores/memory.js";
@@ -290,6 +290,7 @@ test.skip(
         );
         // console.log("Initial reply:", observation);
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
           let breakDialogue = false;
           for (const agent of agents) {

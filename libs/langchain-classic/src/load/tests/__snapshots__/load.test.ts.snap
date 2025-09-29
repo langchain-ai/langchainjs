@@ -580,3 +580,19 @@ kwargs:
           - OPENAI_API_KEY
 "
 `;
+
+exports[`serialize + deserialize with new and old ids 1`] = `
+"lc: 1
+type: constructor
+id:
+  - langchain_core
+  - prompts
+  - prompt
+  - PromptTemplate
+kwargs:
+  input_variables:
+    - name
+  template_format: f-string
+  template: Hello, {name}!
+"
+`;

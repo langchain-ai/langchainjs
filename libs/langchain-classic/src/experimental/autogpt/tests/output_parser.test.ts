@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect } from "@jest/globals";
 import { preprocessJsonInput } from "../output_parser.js";
 
 test("should parse outputs correctly", () => {

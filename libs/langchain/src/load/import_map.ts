@@ -9,6 +9,7 @@ export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
 export * as storage__file_system from "../storage/file_system.js";
 export * as middleware from "../agents/middlewareAgent/middleware/index.js";
+export * as document from "../document.js";
 import {
   PromptTemplate,
   AIMessagePromptTemplate,
