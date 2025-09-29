@@ -117,12 +117,6 @@ const contextSchema = z.object({
   model: z.string().or(z.custom<LanguageModelLike>()).optional(),
 
   /**
-   * Whether to run PII checks in parallel for better performance
-   * @default true
-   */
-  parallel: z.boolean().default(true),
-
-  /**
    * Whether to log detected PII types (not the actual PII content)
    * @default false
    */
@@ -178,34 +172,9 @@ async function applyPIIRules(text: string, rules: PIIRule[]): Promise<string> {
  */
 async function applyCustomDetectors(
   text: string,
-  detectors: PIIDetectionFunction[],
-  parallel: boolean = true
+  detectors: PIIDetectionFunction[]
 ): Promise<string> {
   if (detectors.length === 0) {
-    return text;
-  }
-
-  if (parallel) {
-    /**
-     * For parallel execution, we apply each detector to the original text
-     * This ensures all detectors see the original content
-     * Note: This approach may miss interactions between different detectors
-     * For more sophisticated parallel processing, consider sequential application
-     */
-    const results = await Promise.all(
-      detectors.map((detector) => detector(text))
-    );
-
-    /**
-     * Apply the first result that differs from the original text
-     * In practice, you might want more sophisticated merging logic
-     */
-    for (const result of results) {
-      if (result !== text) {
-        return result;
-      }
-    }
-
     return text;
   }
 
@@ -244,7 +213,6 @@ interface ProcessHumanMessageConfig {
   rules: PIIRule[];
   customDetectors: PIIDetectionFunction[];
   model?: string | LanguageModelLike;
-  parallel: boolean;
   logDetections: boolean;
   systemPrompt: string;
 }
@@ -292,8 +260,7 @@ async function processHumanMessage(
   if (config.customDetectors && config.customDetectors.length > 0) {
     processedContent = await applyCustomDetectors(
       processedContent,
-      config.customDetectors,
-      config.parallel
+      config.customDetectors
     );
   }
 
@@ -339,39 +306,46 @@ async function processHumanMessage(
 }
 
 /**
- * Creates an Input Guardrails middleware that scrubs sensitive information (PII) from human messages.
+ * Creates a middleware that detects and redacts personally identifiable information (PII)
+ * from human messages before they reach the model.
  *
- * This middleware runs in the `beforeModel` phase to prevent PII from being accidentally exposed
- * to other systems via tool calls. It supports multiple detection methods:
+ * This middleware executes during the `beforeModel` phase and processes human messages
+ * through a configurable pipeline of detection methods. Each method operates sequentially
+ * on the message content:
  *
- * - **Regex-based rules**: Prebuilt patterns for common PII types (SSN, phone, email, etc.)
- * - **Custom functions**: User-provided detection and redaction logic
- * - **AI-powered detection**: Uses a chat model to identify PII that patterns might miss
- * - **Parallel execution**: Runs checks concurrently for better performance
+ * 1. Regex-based pattern matching using configurable rules
+ * 2. Custom detection functions (if provided)
+ * 3. Language model-based detection (if a model is provided)
  *
- * ## Features
+ * ## Detection Methods
  *
- * - **Prebuilt Rules**: Detects SSNs, phone numbers, emails, credit cards, IPs, and more
- * - **Custom Detection**: Support for user-defined PII detection functions
- * - **AI Enhancement**: Optional chat model integration for advanced PII detection
- * - **Parallel Processing**: Concurrent execution of multiple detection methods
- * - **Configurable Logging**: Optional logging of detected PII types (not content)
- * - **Selective Rules**: Enable/disable individual detection rules
+ * Regex patterns match common PII formats (SSN, phone numbers, email addresses,
+ * credit card numbers, IP addresses, driver's licenses, passports, bank accounts).
+ * See {@link DEFAULT_PII_RULES} for the full list of built-in patterns.
  *
- * ## Important Notes
+ * Custom detection functions receive the text content and return modified text with
+ * sensitive information redacted. Functions are applied sequentially after regex rules.
  *
- * - **Checkpoint Limitation**: PII will still remain in LangGraph checkpoints
- * - **Client-side Consideration**: For complete PII protection, consider implementing
- *   client-side filtering to prevent PII from being sent over the wire
- * - **Performance**: AI-powered detection adds latency but catches more sophisticated PII
+ * Model-based detection uses a chat model to identify PII that may not match
+ * predefined patterns. This adds latency but can detect contextual PII such as names
+ * and addresses.
+ *
+ * ## Limitations
+ *
+ * PII redaction occurs only in the middleware layer. Original PII will remain in:
+ * - LangGraph state checkpoints
+ * - Network traffic between client and server
+ * - Logs or monitoring systems outside the middleware
+ *
+ * For comprehensive PII protection, implement client-side filtering before transmission
+ * and ensure proper checkpoint storage configuration.
  *
  * @param options - Configuration options for the middleware
- * @param options.rules - Array of PII detection rules (defaults to enabled built-in rules)
- * @param options.customDetectors - Custom PII detection functions
- * @param options.model - Chat model for AI-powered PII detection
- * @param options.parallel - Whether to run checks in parallel (default: true)
- * @param options.logDetections - Whether to log detected PII types (default: false)
- * @param options.systemPrompt - Custom prompt for AI detection
+ * @param options.rules - Array of PII detection rules. Defaults to enabled rules from {@link DEFAULT_PII_RULES}
+ * @param options.customDetectors - Custom PII detection functions applied after regex rules
+ * @param options.model - Chat model instance or model identifier for AI-based PII detection
+ * @param options.logDetections - If true, logs detected PII types to console (not the content itself). Default: false
+ * @param options.systemPrompt - System prompt for model-based detection. Defaults to a prompt that identifies common PII types
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *
@@ -429,7 +403,6 @@ async function processHumanMessage(
  * const middleware = inputGuardrailsMiddleware({
  *   model: piiDetectionModel,
  *   systemPrompt: "Identify and redact any personal information...",
- *   parallel: true,
  *   logDetections: true
  * });
  * ```
@@ -446,7 +419,6 @@ async function processHumanMessage(
  *
  * const middleware = inputGuardrailsMiddleware({
  *   rules,
- *   parallel: false // Sequential processing for deterministic results
  * });
  * ```
  *
@@ -469,10 +441,6 @@ export function inputGuardrailsMiddleware(
       const customDetectors =
         runtime.context.customDetectors ?? options.customDetectors ?? [];
       const model = runtime.context.model ?? options.model;
-      const parallel =
-        runtime.context.parallel === true
-          ? options.parallel ?? runtime.context.parallel
-          : runtime.context.parallel ?? options.parallel ?? true;
       const logDetections =
         runtime.context.logDetections === false
           ? options.logDetections ?? runtime.context.logDetections
@@ -486,7 +454,6 @@ export function inputGuardrailsMiddleware(
         rules,
         customDetectors,
         model,
-        parallel,
         logDetections,
         systemPrompt,
       };

@@ -237,7 +237,6 @@ describe("inputGuardrailsMiddleware", () => {
       const middleware = inputGuardrailsMiddleware({
         rules: [],
         customDetectors: [detector1, detector2],
-        parallel: false, // Sequential processing
       });
 
       const humanMessage = new HumanMessage(
