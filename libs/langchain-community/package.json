@@ -85,7 +85,7 @@
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
-    "@langchain/standard-tests": "0.0.1",
+    "@langchain/standard-tests": "0.0.0",
     "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
