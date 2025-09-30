@@ -1503,4 +1503,20 @@ describe("Sonnet 4.5", () => {
     );
     expect(response.content.length).toBeGreaterThan(0);
   });
+
+  it("works with streaming and thinking", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-4-5-20250929",
+      thinking: {
+        type: "enabled",
+        budget_tokens: 1024,
+      },
+    });
+
+    const response = await model.invoke(
+      "Please respond to this message simply with: Hello"
+    );
+
+    expect(response.content.length).toBeGreaterThan(0);
+  });
 });

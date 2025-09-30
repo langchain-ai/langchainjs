@@ -849,7 +849,7 @@ export class ChatAnthropicMessages<
         throw new Error("topK is not supported when thinking is enabled");
       }
       if (
-        this.model.includes("opus-4-1")
+        this.model.includes("opus-4-1") || this.model.includes("sonnet-4-5")
           ? this.topP !== undefined
           : this.topP !== -1
       ) {
