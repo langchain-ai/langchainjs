@@ -7,7 +7,7 @@ import { createAgent } from "../index.js";
 describe("reactAgent", () => {
   it("should not require runnable config if context schema is not provided", async () => {
     const agent = createAgent({
-      tools: [],
+      model: "openai:gpt-4",
     });
     await agent.invoke({
       messages: [new HumanMessage("Hello, world!")],
@@ -16,7 +16,7 @@ describe("reactAgent", () => {
 
   it("should allow a context schema that makes invoke calls require to pass in a context", async () => {
     const agent = createAgent({
-      tools: [],
+      model: "openai:gpt-4",
       contextSchema: z.object({
         customRequiredContextProp: z.string(),
         customOptionalContextProp: z.string().default("default value"),
@@ -44,6 +44,52 @@ describe("reactAgent", () => {
         // @ts-expect-error defined as string
         customOptionalContextProp: 456,
       },
+    });
+  });
+
+  it("verify input types", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+
+    // invoke
+    await agent.invoke({
+      messages: [{ role: "user", content: "Hello, world!" }],
+    });
+    await agent.invoke({
+      messages: ["Hello, world!"],
+    });
+    await agent.invoke({
+      messages: [new HumanMessage("Hello, world!")],
+    });
+    await agent.invoke({
+      messages: { role: "user", content: "Hello, world!" },
+    });
+    await agent.invoke({
+      messages: "Hello, world!",
+    });
+    await agent.invoke({
+      messages: new HumanMessage("Hello, world!"),
+    });
+
+    // stream
+    await agent.stream({
+      messages: [{ role: "user", content: "Hello, world!" }],
+    });
+    await agent.stream({
+      messages: ["Hello, world!"],
+    });
+    await agent.stream({
+      messages: [new HumanMessage("Hello, world!")],
+    });
+    await agent.stream({
+      messages: { role: "user", content: "Hello, world!" },
+    });
+    await agent.stream({
+      messages: "Hello, world!",
+    });
+    await agent.stream({
+      messages: new HumanMessage("Hello, world!"),
     });
   });
 });

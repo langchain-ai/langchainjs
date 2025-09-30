@@ -16,11 +16,16 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type {
+  BaseMessageLike,
+  BaseMessage,
+  MessageFieldWithRole,
+} from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
+import type { Messages } from "@langchain/langgraph/";
 
 import { JUMP_TO_TARGETS } from "./constants.js";
 import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
@@ -39,7 +44,7 @@ import type { ClientTool, ServerTool } from "../types.js";
 export type N = typeof START | "model_request" | "tools";
 
 export interface BuiltInState {
-  messages: BaseMessage[];
+  messages: (BaseMessage | MessageFieldWithRole)[];
   __interrupt__?: Interrupt[];
   /**
    * Optional property to control routing after afterModel middleware execution.
@@ -51,6 +56,13 @@ export interface BuiltInState {
    */
   jumpTo?: JumpToTarget;
 }
+
+/**
+ * Base input type for `.invoke` and `.stream` methods.
+ */
+export type UserInput = {
+  messages: Messages;
+};
 
 /**
  * Information about a tool call that has been executed.
@@ -108,7 +120,7 @@ export interface ModelRequest {
   /**
    * The messages to send to the model.
    */
-  messages: BaseMessage[];
+  messages: BaseMessageLike[];
   /**
    * The system message for this step.
    */
@@ -185,7 +197,7 @@ export type MiddlewareResult<TState> = TState | void;
  * Type for the agent's built-in state properties.
  */
 export type AgentBuiltInState = {
-  messages: BaseMessage[];
+  messages: BaseMessageLike[];
 };
 
 /**
@@ -434,11 +446,11 @@ export interface LLMCall {
   /**
    * The messages that were sent to the LLM.
    */
-  messages: BaseMessage[];
+  messages: BaseMessageLike[];
   /**
    * The response from the LLM.
    */
-  response?: BaseMessage;
+  response?: BaseMessageLike;
 }
 
 export type CreateAgentParams<
@@ -480,7 +492,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  model?: string | LanguageModelLike;
+  model: string | LanguageModelLike;
 
   /**
    * A list of tools or a ToolNode.
@@ -753,7 +765,7 @@ export type InternalAgentState<
     unknown
   >
 > = {
-  messages: BaseMessage[];
+  messages: BaseMessageLike[];
   __preparedModelOptions?: ModelRequest;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
