@@ -32,7 +32,7 @@ const contextSchema = z.object({
     .optional(),
 });
 
-export type InputGuardrailsMiddlewareConfig = InferInteropZodInput<
+export type PIIRedactionMiddlewareConfig = InferInteropZodInput<
   typeof contextSchema
 >;
 
@@ -280,7 +280,7 @@ function restoreMessage(
  *
  * @example Basic usage with custom rules
  * ```typescript
- * import { inputGuardrailsMiddleware } from "langchain";
+ * import { piiRedactionMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  * import { tool } from "@langchain/core/tools";
  * import { z } from "zod";
@@ -303,7 +303,7 @@ function restoreMessage(
  * const agent = createAgent({
  *   model: new ChatOpenAI({ model: "gpt-4" }),
  *   tools: [lookupUser],
- *   middleware: [inputGuardrailsMiddleware({ rules: PII_RULES })]
+ *   middleware: [piiRedactionMiddleware({ rules: PII_RULES })]
  * });
  *
  * const result = await agent.invoke({
@@ -319,7 +319,7 @@ function restoreMessage(
  * const agent = createAgent({
  *   model: new ChatOpenAI({ model: "gpt-4" }),
  *   tools: [someTool],
- *   middleware: [inputGuardrailsMiddleware()]
+ *   middleware: [piiRedactionMiddleware()]
  * });
  *
  * // Configure rules at runtime via middleware context
@@ -327,7 +327,7 @@ function restoreMessage(
  *   { messages: [new HumanMessage("...")] },
  *   {
  *     configurable: {
- *       InputGuardrailsMiddleware: {
+ *       PIIRedactionMiddleware: {
  *         rules: {
  *           ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,
  *           email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
@@ -346,19 +346,19 @@ function restoreMessage(
  *   credit_card: /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g,
  * };
  *
- * const middleware = inputGuardrailsMiddleware({ rules: customRules });
+ * const middleware = piiRedactionMiddleware({ rules: customRules });
  * // Generates markers like: [REDACTED_EMPLOYEE_ID_xyz789]
  * ```
  *
  * @public
  */
-export function inputGuardrailsMiddleware(
-  options: InputGuardrailsMiddlewareConfig = {}
+export function piiRedactionMiddleware(
+  options: PIIRedactionMiddlewareConfig = {}
 ): ReturnType<typeof createMiddleware> {
   const redactionMap: RedactionMap = {};
 
   return createMiddleware({
-    name: "InputGuardrailsMiddleware",
+    name: "PIIRedactionMiddleware",
     contextSchema,
     modifyModelRequest: async (request, state, runtime) => {
       /**

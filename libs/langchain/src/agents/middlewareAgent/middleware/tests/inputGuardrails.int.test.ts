@@ -6,7 +6,7 @@ import { tool } from "@langchain/core/tools";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 import { createAgent } from "../../index.js";
-import { inputGuardrailsMiddleware } from "../inputGuardrails.js";
+import { piiRedactionMiddleware } from "../piiRedaction.js";
 
 const USER_DATA = {
   id: "userId-123",
@@ -65,7 +65,7 @@ function mockModel(type: "openai" | "anthropic") {
   return { model, fetchMock, fetchResponse };
 }
 
-describe("inputGuardrailsMiddleware Integration", () => {
+describe("piiRedactionMiddleware Integration", () => {
   it.each(["openai", "anthropic"])(
     `[%s] should redact PII data from model request bodies`,
     async (type) => {
@@ -102,7 +102,7 @@ describe("inputGuardrailsMiddleware Integration", () => {
       const agent = createAgent({
         model,
         tools: [fetchUser, emailUser],
-        middleware: [inputGuardrailsMiddleware({ rules: PII_RULES })],
+        middleware: [piiRedactionMiddleware({ rules: PII_RULES })],
         responseFormat: z.object({
           name: z.string().describe("The name of the user"),
           email: z.string().describe("The email of the user"),

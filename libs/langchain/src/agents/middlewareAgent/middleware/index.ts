@@ -23,7 +23,7 @@ export {
   type LLMToolSelectorConfig,
 } from "./llmToolSelector.js";
 export {
-  inputGuardrailsMiddleware,
-  type InputGuardrailsMiddlewareConfig,
-} from "./inputGuardrails.js";
+  piiRedactionMiddleware,
+  type PIIRedactionMiddlewareConfig,
+} from "./piiRedaction.js";
 export { type AgentMiddleware } from "../types.js";
