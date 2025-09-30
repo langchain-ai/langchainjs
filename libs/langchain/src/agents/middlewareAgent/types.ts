@@ -16,10 +16,7 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type {
-  BaseMessage,
-  MessageFieldWithRole,
-} from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
@@ -43,7 +40,7 @@ import type { ClientTool, ServerTool } from "../types.js";
 export type N = typeof START | "model_request" | "tools";
 
 export interface BuiltInState {
-  messages: (BaseMessage | MessageFieldWithRole)[];
+  messages: BaseMessage[];
   __interrupt__?: Interrupt[];
   /**
    * Optional property to control routing after afterModel middleware execution.
