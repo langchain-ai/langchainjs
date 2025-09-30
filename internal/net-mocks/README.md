@@ -114,7 +114,7 @@ Additionally when a response comes back with `Content-Type: text/event-stream` (
 
 ### Using dev tools
 
-HAR is a lesser known web standard that has its own place in modern web browser devtools, and its the format that we're using to retain network activity for later runs. This means that we can inspect all network transactions that occured in a test directly in the browser.
+HAR is a lesser known web standard that has its own place in modern web browser devtools, and it's the format that we're using to retain network activity for later runs. This means that we can inspect all network transactions that occurred in a test directly in the browser.
 
 <video src="https://github.com/user-attachments/assets/36de46b7-d9d6-408a-9d06-4185dd990020" controls style="max-width: 100%;">
   Your browser does not support the video tag.
