@@ -16,12 +16,12 @@ const client = new MultiServerMCPClient({
   },
 
   // Receive log/notification messages from the server
-  onMessage: (log, source) => {
-    console.log(`[${source.server}] ${log.data}`);
+  onMessage: (log, context) => {
+    console.log(`[${context.server}] ${log.data}`);
   },
 
   // Receive progress updates (e.g. from long‑running tool calls)
-  onProgress: (progress, source) => {
+  onProgress: (progress, context) => {
     const pct =
       progress.percentage ??
       (progress.progress != null && progress.total
@@ -29,7 +29,9 @@ const client = new MultiServerMCPClient({
         : undefined);
     if (pct != null) {
       const origin =
-        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
+        context.type === "tool"
+          ? `${context.server}/${context.name}`
+          : "unknown";
       console.log(`[progress:${origin}] ${pct}%`);
     }
   },

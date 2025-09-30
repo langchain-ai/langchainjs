@@ -27,12 +27,25 @@ import type {
   MessageStructure,
 } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
+import type {
+  Command,
+  CommandInstance,
+  CommandParams,
+} from "@langchain/langgraph";
 
 import type { UnionToTuple } from "./util.js";
 import { toolHooksSchema, type ToolHooks } from "./hooks.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-export type { ContentBlock, ToolMessage, MessageStructure, RunnableConfig };
+export type {
+  Command,
+  ContentBlock,
+  ToolMessage,
+  MessageStructure,
+  RunnableConfig,
+  CommandInstance,
+  CommandParams,
+};
 
 function isZodObject(
   schema: unknown
@@ -449,8 +462,8 @@ const toolSourceSchema = z.object({
 const unknownSourceSchema = z.object({
   type: z.literal("unknown"),
 });
-const eventSourceSchema = z.union([toolSourceSchema, unknownSourceSchema]);
-export type EventSource = z.output<typeof eventSourceSchema>;
+const eventContextSchema = z.union([toolSourceSchema, unknownSourceSchema]);
+export type EventContext = z.output<typeof eventContextSchema>;
 
 const serverMessageSourceSchema = z.object({
   server: z.string(),
@@ -515,7 +528,7 @@ export const notifications = z.object({
    */
   onProgress: z
     .function()
-    .args(ProgressSchema, eventSourceSchema)
+    .args(ProgressSchema, eventContextSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
 

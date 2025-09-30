@@ -32,6 +32,16 @@ import { getDebugLog } from "./logging.js";
 const debugLog = getDebugLog("tools");
 
 /**
+ * MCP instance is either a Client or a MCPClient.
+ *
+ * `MCPClient`: is the base instance from the `@modelcontextprotocol/sdk` package.
+ * `Client`: is an extension of the `MCPClient` that adds the `fork` method to easier create a new client with different headers.
+ *
+ * This distinction is necessary to keep the interface of the `getTools` method simple.
+ */
+type MCPInstance = Client | MCPClient;
+
+/**
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
@@ -87,7 +97,7 @@ async function* _embeddedResourceToStandardFileBlocks(
   resource:
     | EmbeddedResource["resource"]
     | ReadResourceResult["contents"][number],
-  client: Client | MCPClient
+  client: MCPInstance
 ): AsyncGenerator<
   | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
   | (ContentBlock.Data.StandardFileBlock &
@@ -128,28 +138,28 @@ async function* _embeddedResourceToStandardFileBlocks(
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: true,
-  client: Client | MCPClient,
+  client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock.Multimodal.Standard[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: false | undefined,
-  client: Client | MCPClient,
+  client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
 async function _toolOutputToContentBlocks(
   content: CallToolResultContent,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
@@ -217,7 +227,7 @@ async function _toolOutputToContentBlocks(
 async function _embeddedResourceToArtifact(
   resource: EmbeddedResource,
   useStandardContentBlocks: boolean | undefined,
-  client: Client | MCPClient,
+  client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<(EmbeddedResource | ContentBlock.Multimodal.Standard)[]> {
@@ -615,7 +625,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
  */
 export async function loadMcpTools(
   serverName: string,
-  client: Client | MCPClient,
+  client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const {
