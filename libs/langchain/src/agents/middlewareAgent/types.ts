@@ -17,7 +17,6 @@ import type {
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
-  BaseMessageLike,
   BaseMessage,
   MessageFieldWithRole,
 } from "@langchain/core/messages";
@@ -120,7 +119,7 @@ export interface ModelRequest {
   /**
    * The messages to send to the model.
    */
-  messages: BaseMessageLike[];
+  messages: BaseMessage[];
   /**
    * The system message for this step.
    */
@@ -197,7 +196,7 @@ export type MiddlewareResult<TState> = TState | void;
  * Type for the agent's built-in state properties.
  */
 export type AgentBuiltInState = {
-  messages: BaseMessageLike[];
+  messages: BaseMessage[];
 };
 
 /**
@@ -437,20 +436,6 @@ export interface ExecutedToolCall {
    * The result of the tool call (if available).
    */
   result?: unknown;
-}
-
-/**
- * Information about an LLM invocation.
- */
-export interface LLMCall {
-  /**
-   * The messages that were sent to the LLM.
-   */
-  messages: BaseMessageLike[];
-  /**
-   * The response from the LLM.
-   */
-  response?: BaseMessageLike;
 }
 
 export type CreateAgentParams<
@@ -765,7 +750,7 @@ export type InternalAgentState<
     unknown
   >
 > = {
-  messages: BaseMessageLike[];
+  messages: BaseMessage[];
   __preparedModelOptions?: ModelRequest;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>

@@ -71,20 +71,6 @@ export interface ExecutedToolCall {
 }
 
 /**
- * Information about an LLM invocation.
- */
-export interface LLMCall {
-  /**
-   * The messages that were sent to the LLM.
-   */
-  messages: BaseMessage[];
-  /**
-   * The response from the LLM.
-   */
-  response?: BaseMessage;
-}
-
-/**
  * Type helper to extract the inferred type from a single Zod schema or array of schemas
  */
 export type ExtractZodType<T> = T extends InteropZodType<infer U>
