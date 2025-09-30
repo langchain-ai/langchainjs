@@ -8,11 +8,31 @@ import {
   UnknownKeysParam,
   Primitive,
 } from "zod/v3";
+import {
+  LoggingMessageNotificationSchema,
+  ProgressSchema,
+  CancelledNotificationSchema,
+  InitializedNotificationSchema,
+  PromptListChangedNotificationSchema,
+  ResourceListChangedNotificationSchema,
+  ResourceUpdatedNotificationSchema,
+  RootsListChangedNotificationSchema,
+  ToolListChangedNotificationSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import type {
+  ContentBlock,
+  ToolMessage,
+  MessageStructure,
+} from "@langchain/core/messages";
+import type { RunnableConfig } from "@langchain/core/runnables";
+
 import type { UnionToTuple } from "./util.js";
+import { toolHooksSchema, type ToolHooks } from "./hooks.js";
 
 export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+export type { ContentBlock, ToolMessage, MessageStructure, RunnableConfig };
 
 function isZodObject(
   schema: unknown
@@ -417,6 +437,142 @@ export const connectionSchema = z
   .union([stdioConnectionSchema, streamableHttpConnectionSchema])
   .describe("Configuration for a single MCP server");
 
+const toolSourceSchema = z.object({
+  type: z.literal("tool"),
+  name: z.string(),
+  args: z.unknown(),
+  server: z.string(),
+});
+/**
+ * we don't know yet what other types of sources may send progress messages
+ */
+const unknownSourceSchema = z.object({
+  type: z.literal("unknown"),
+});
+const eventSourceSchema = z.union([toolSourceSchema, unknownSourceSchema]);
+export type EventSource = z.output<typeof eventSourceSchema>;
+
+const serverMessageSourceSchema = z.object({
+  server: z.string(),
+  options: connectionSchema,
+});
+export type ServerMessageSource = z.output<typeof serverMessageSourceSchema>;
+
+export const notifications = z.object({
+  /**
+   * Called when a log message is received.
+   *
+   * @param logMessage - The log message
+   * @param logMessage.message - The log message
+   * @param logMessage.level - The log level
+   * @param logMessage.timestamp - The log timestamp
+   * @param source - The source of the log message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.option - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
+   * @returns The log message
+   *
+   * @example
+   * ```ts
+   * const interceptor = {
+   *   onLog: (logMessage) => {
+   *     console.log(logMessage);
+   *   },
+   * };
+   * ```
+   */
+  onMessage: z
+    .function()
+    .args(
+      LoggingMessageNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+
+  /**
+   * Called when a progress message is received.
+   *
+   * @param progress - The progress message
+   * @param progress.message - The progress message
+   * @param progress.percentage - The progress percentage
+   * @param progress.timestamp - The progress timestamp
+   * @param source - The source of the progress message
+   * @param source.type - The type of the source, e.g. "tool"
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.name - The name of the source, e.g. "my-name"
+   * @param source.args - The arguments of the source, e.g. { a: 1, b: 2 }
+   * @returns The progress message
+   *
+   * @example
+   * ```ts
+   * const interceptor = {
+   *   onProgress: (progress, source) => {
+   *     if (source.type === "tool") {
+   *     console.log(progress);
+   *   },
+   * };
+   * ```
+   */
+  onProgress: z
+    .function()
+    .args(ProgressSchema, eventSourceSchema)
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+
+  onCancelled: z
+    .function()
+    .args(CancelledNotificationSchema.shape.params, serverMessageSourceSchema)
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+
+  onInitialized: z
+    .function()
+    .args(InitializedNotificationSchema.shape.params, serverMessageSourceSchema)
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+  onPromptsListChanged: z
+    .function()
+    .args(
+      PromptListChangedNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+  onResourcesListChanged: z
+    .function()
+    .args(
+      ResourceListChangedNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+  onResourcesUpdated: z
+    .function()
+    .args(
+      ResourceUpdatedNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+  onRootsListChanged: z
+    .function()
+    .args(
+      RootsListChangedNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+  onToolsListChanged: z
+    .function()
+    .args(
+      ToolListChangedNotificationSchema.shape.params,
+      serverMessageSourceSchema
+    )
+    .returns(z.union([z.void(), z.promise(z.void())]))
+    .optional(),
+});
+export type Notifications = z.output<typeof notifications>;
+
 /**
  * {@link MultiServerMCPClient} configuration
  */
@@ -482,6 +638,8 @@ export const clientConfigSchema = z
       .default(false),
   })
   .and(baseConfigSchema)
+  .and(toolHooksSchema)
+  .and(notifications)
   .describe("Configuration for the MCP client");
 
 /**
@@ -587,6 +745,21 @@ export type LoadMcpToolsOptions = {
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout?: number;
+
+  /**
+   * `onProgress` callbacks used for tool calls.
+   */
+  onProgress?: Notifications["onProgress"];
+
+  /**
+   * `beforeToolCall` callbacks used for tool calls.
+   */
+  beforeToolCall?: ToolHooks["beforeToolCall"];
+
+  /**
+   * `afterToolCall` callbacks used for tool calls.
+   */
+  afterToolCall?: ToolHooks["afterToolCall"];
 };
 
 /**
@@ -638,4 +811,9 @@ export function _resolveAndApplyOverrideHandlingOverrides(
     ...expandedBase,
     ...expandedOverride,
   };
+}
+
+export interface CustomHTTPTransportOptions {
+  authProvider?: OAuthClientProvider;
+  headers?: Record<string, string>;
 }
