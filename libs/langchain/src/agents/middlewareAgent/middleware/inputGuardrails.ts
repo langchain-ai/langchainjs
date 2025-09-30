@@ -1,132 +1,35 @@
 import { z } from "zod";
 import {
-  HumanMessage,
-  SystemMessage,
   BaseMessage,
+  AIMessage,
+  HumanMessage,
+  ToolMessage,
+  RemoveMessage,
+  SystemMessage,
 } from "@langchain/core/messages";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
-import { initChatModel } from "../../../chat_models/universal.js";
 
 /**
- * Configuration for a PII detection rule
+ * Type for the redaction map that stores original values by ID
  */
-export interface PIIRule {
-  /** Name of the rule for identification */
-  name: string;
-  /** Description of what this rule detects */
-  description: string;
-  /** Regular expression pattern to match PII */
-  pattern: RegExp;
-  /** Replacement text for detected PII */
-  replacement: string;
-  /** Whether this rule is enabled by default */
-  enabled?: boolean;
-}
-
-/**
- * Custom function for PII detection and replacement
- */
-export type PIIDetectionFunction = (text: string) => Promise<string> | string;
-
-/**
- * Prebuilt PII detection rules for common sensitive information
- */
-export const DEFAULT_PII_RULES: PIIRule[] = [
-  {
-    name: "ssn",
-    description: "US Social Security Numbers",
-    pattern: /\b\d{3}-?\d{2}-?\d{4}\b/g,
-    replacement: "[REDACTED_SSN]",
-    enabled: true,
-  },
-  {
-    name: "phone",
-    description: "Phone numbers",
-    pattern:
-      /(?:\+?1[-.\s]?)?(?:\([0-9]{3}\)|[0-9]{3})[-.\s][0-9]{3}[-.\s][0-9]{4}|(?:\+?1[-.\s]?)?\([0-9]{3}\)\s?[0-9]{3}[-.\s]?[0-9]{4}/g,
-    replacement: "[REDACTED_PHONE]",
-    enabled: true,
-  },
-  {
-    name: "email",
-    description: "Email addresses",
-    pattern: /\b[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,253}\.[A-Za-z]{2,}\b/g,
-    replacement: "[REDACTED_EMAIL]",
-    enabled: true,
-  },
-  {
-    name: "credit_card",
-    description: "Credit card numbers",
-    pattern:
-      /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|3[0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
-    replacement: "[REDACTED_CREDIT_CARD]",
-    enabled: true,
-  },
-  {
-    name: "ip_address",
-    description: "IP addresses",
-    pattern: /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g,
-    replacement: "[REDACTED_IP]",
-    enabled: true,
-  },
-  {
-    name: "drivers_license",
-    description: "US driver's license numbers (common patterns)",
-    pattern: /\b[A-Z]{1,2}[0-9]{6,8}\b/g,
-    replacement: "[REDACTED_DRIVERS_LICENSE]",
-    enabled: true,
-  },
-  {
-    name: "passport",
-    description: "US passport numbers",
-    pattern: /\b[0-9]{9}\b/g,
-    replacement: "[REDACTED_PASSPORT]",
-    enabled: false, // Disabled by default as it might catch other 9-digit numbers
-  },
-  {
-    name: "bank_account",
-    description: "Bank account numbers",
-    pattern: /\b[0-9]{8,17}\b/g,
-    replacement: "[REDACTED_BANK_ACCOUNT]",
-    enabled: false, // Disabled by default as it might catch other long numbers
-  },
-];
+type RedactionMap = Record<string, string>;
 
 /**
  * Configuration schema for the Input Guardrails middleware
  */
 const contextSchema = z.object({
   /**
-   * Array of PII detection rules to apply
+   * A record of PII detection rules to apply
    * @default DEFAULT_PII_RULES (with enabled rules only)
    */
-  rules: z.array(z.custom<PIIRule>()).optional(),
-
-  /**
-   * Custom PII detection functions to run in addition to rules
-   */
-  customDetectors: z.array(z.custom<PIIDetectionFunction>()).optional(),
-
-  /**
-   * Chat model to use for AI-powered PII detection
-   * When provided, the model will analyze text for PII that regex patterns might miss
-   */
-  model: z.string().or(z.custom<LanguageModelLike>()).optional(),
-
-  /**
-   * Whether to log detected PII types (not the actual PII content)
-   * @default false
-   */
-  logDetections: z.boolean().default(false),
-
-  /**
-   * Custom prompt for AI-powered PII detection
-   * @default A built-in prompt that instructs the model to identify and redact PII
-   */
-  systemPrompt: z.string().optional(),
+  rules: z
+    .record(
+      z.string(),
+      z.instanceof(RegExp).describe("Regular expression pattern to match PII")
+    )
+    .optional(),
 });
 
 export type InputGuardrailsMiddlewareConfig = InferInteropZodInput<
@@ -134,87 +37,38 @@ export type InputGuardrailsMiddlewareConfig = InferInteropZodInput<
 >;
 
 /**
- * Default prompt for AI-powered PII detection
+ * Generate a unique ID for a redaction
  */
-const DEFAULT_AI_DETECTION_PROMPT = `You are a PII detection system. Your task is to identify and redact personally identifiable information (PII) from the given text.
-
-Please identify and replace the following types of PII with appropriate redaction markers:
-- Names of people: [REDACTED_NAME]
-- Addresses: [REDACTED_ADDRESS]
-- Social Security Numbers: [REDACTED_SSN]
-- Phone numbers: [REDACTED_PHONE]
-- Email addresses: [REDACTED_EMAIL]
-- Credit card numbers: [REDACTED_CREDIT_CARD]
-- Bank account numbers: [REDACTED_BANK_ACCOUNT]
-- Driver's license numbers: [REDACTED_DRIVERS_LICENSE]
-- Passport numbers: [REDACTED_PASSPORT]
-- Any other sensitive personal information: [REDACTED_PII]
-
-Return only the redacted text with no additional explanation or formatting.`;
-
-/**
- * Apply PII detection rules to text
- */
-async function applyPIIRules(text: string, rules: PIIRule[]): Promise<string> {
-  let processedText = text;
-
-  for (const rule of rules) {
-    if (rule.enabled !== false) {
-      processedText = processedText.replace(rule.pattern, rule.replacement);
-    }
-  }
-
-  return processedText;
+function generateRedactionId(): string {
+  return Math.random().toString(36).substring(2, 11);
 }
 
 /**
- * Apply custom PII detection functions to text
+ * Apply PII detection rules to text with ID tracking
  */
-async function applyCustomDetectors(
+function applyPIIRules(
   text: string,
-  detectors: PIIDetectionFunction[]
-): Promise<string> {
-  if (detectors.length === 0) {
-    return text;
-  }
-
-  /**
-   * Apply detectors sequentially
-   */
+  rules: Record<string, RegExp>,
+  redactionMap: RedactionMap
+): string {
   let processedText = text;
-  for (const detector of detectors) {
-    processedText = await detector(processedText);
+
+  for (const [name, pattern] of Object.entries(rules)) {
+    const replacement = name.toUpperCase().replace(/[^a-zA-Z0-9_-]/g, "");
+    processedText = processedText.replace(pattern, (match) => {
+      const id = generateRedactionId();
+      redactionMap[id] = match;
+      // Create a trackable replacement like [REDACTED_SSN_abc123]
+      return `[REDACTED_${replacement}_${id}]`;
+    });
   }
+
   return processedText;
-}
-
-/**
- * Apply AI-powered PII detection using a chat model
- */
-async function applyAIDetection(
-  text: string,
-  model: LanguageModelLike,
-  prompt: string = DEFAULT_AI_DETECTION_PROMPT
-): Promise<string> {
-  try {
-    const response = (await model.invoke([
-      new SystemMessage(prompt),
-      new HumanMessage(text),
-    ])) as BaseMessage;
-
-    return response.content as string;
-  } catch (error) {
-    console.warn("AI PII detection failed, returning original text:", error);
-    return text;
-  }
 }
 
 interface ProcessHumanMessageConfig {
-  rules: PIIRule[];
-  customDetectors: PIIDetectionFunction[];
-  model?: string | LanguageModelLike;
-  logDetections: boolean;
-  systemPrompt: string;
+  rules: Record<string, RegExp>;
+  redactionMap: RedactionMap;
 }
 
 /**
@@ -224,296 +78,410 @@ async function processMessage(
   message: BaseMessage,
   config: ProcessHumanMessageConfig
 ): Promise<BaseMessage> {
-  if (typeof message.content !== "string") {
-    /**
-     * Skip non-string content (e.g., multimodal content)
-     */
+  /**
+   * handle basic message types
+   */
+  if (
+    HumanMessage.isInstance(message) ||
+    ToolMessage.isInstance(message) ||
+    SystemMessage.isInstance(message)
+  ) {
+    const content = message.content as string;
+    const processedContent = await applyPIIRules(
+      content,
+      config.rules,
+      config.redactionMap
+    );
+
+    if (processedContent !== content) {
+      const MessageConstructor = Object.getPrototypeOf(message).constructor;
+      return new MessageConstructor({
+        ...message,
+        content: processedContent,
+      });
+    }
+
     return message;
   }
 
-  let processedContent = message.content;
-  const detectedTypes: string[] = [];
-
   /**
-   * Apply regex-based PII rules
+   * Handle AI messages
    */
-  const enabledRules = config.rules.filter((rule) => rule.enabled !== false);
-  if (enabledRules.length > 0) {
-    const originalContent = processedContent;
-    processedContent = await applyPIIRules(processedContent, enabledRules);
+  if (AIMessage.isInstance(message)) {
+    const content =
+      typeof message.content === "string"
+        ? message.content
+        : JSON.stringify(message.content);
+    const toolCalls = JSON.stringify(message.tool_calls);
+    const processedContent = await applyPIIRules(
+      content,
+      config.rules,
+      config.redactionMap
+    );
+    const processedToolCalls = await applyPIIRules(
+      toolCalls,
+      config.rules,
+      config.redactionMap
+    );
 
-    /**
-     * Track which types of PII were detected
-     */
-    if (config.logDetections && processedContent !== originalContent) {
-      enabledRules.forEach((rule) => {
-        if (rule.pattern.test(originalContent)) {
-          detectedTypes.push(rule.name);
-        }
+    if (processedContent !== content || processedToolCalls !== toolCalls) {
+      return new AIMessage({
+        ...message,
+        content:
+          typeof message.content === "string"
+            ? processedContent
+            : JSON.parse(processedContent),
+        tool_calls: JSON.parse(processedToolCalls),
       });
     }
+
+    return message;
+  }
+
+  throw new Error(`Unsupported message type: ${message.type}`);
+}
+
+/**
+ * Restore original values from redacted text using the redaction map
+ */
+function restoreRedactedValues(
+  text: string,
+  redactionMap: RedactionMap
+): string {
+  let restoredText = text;
+
+  // Pattern to match redacted values like [REDACTED_SSN_abc123]
+  const redactionPattern = /\[REDACTED_[A-Z_]+_(\w+)\]/g;
+
+  restoredText = restoredText.replace(redactionPattern, (match, id) => {
+    if (redactionMap[id]) {
+      return redactionMap[id];
+    }
+    return match; // Keep original if no mapping found
+  });
+
+  return restoredText;
+}
+
+/**
+ * Restore redacted values in a message (creates a new message object)
+ */
+function restoreMessage(
+  message: BaseMessage,
+  redactionMap: RedactionMap
+): { message: BaseMessage; changed: boolean } {
+  /**
+   * handle basic message types
+   */
+  if (
+    HumanMessage.isInstance(message) ||
+    ToolMessage.isInstance(message) ||
+    SystemMessage.isInstance(message)
+  ) {
+    const content = message.content as string;
+    const restoredContent = restoreRedactedValues(content, redactionMap);
+    if (restoredContent !== content) {
+      const MessageConstructor = Object.getPrototypeOf(message).constructor;
+      const newMessage = new MessageConstructor({
+        ...message,
+        content: restoredContent,
+      });
+      return { message: newMessage, changed: true };
+    }
+    return { message, changed: false };
   }
 
   /**
-   * Apply custom detection functions
+   * handle AI messages
    */
-  if (config.customDetectors && config.customDetectors.length > 0) {
-    processedContent = await applyCustomDetectors(
-      processedContent,
-      config.customDetectors
-    );
+  if (AIMessage.isInstance(message)) {
+    const content =
+      typeof message.content === "string"
+        ? message.content
+        : JSON.stringify(message.content);
+    const toolCalls = JSON.stringify(message.tool_calls);
+    const processedContent = restoreRedactedValues(content, redactionMap);
+    const processedToolCalls = restoreRedactedValues(toolCalls, redactionMap);
+    if (processedContent !== content || processedToolCalls !== toolCalls) {
+      return {
+        message: new AIMessage({
+          ...message,
+          content:
+            typeof message.content === "string"
+              ? processedContent
+              : JSON.parse(processedContent),
+          tool_calls: JSON.parse(processedToolCalls),
+        }),
+        changed: true,
+      };
+    }
+
+    return { message, changed: false };
   }
 
-  /**
-   * Apply AI-powered detection
-   */
-  if (config.model) {
-    const aiModel =
-      typeof config.model === "string"
-        ? await initChatModel(config.model)
-        : config.model;
-    processedContent = await applyAIDetection(
-      processedContent,
-      aiModel,
-      config.systemPrompt
-    );
-  }
-
-  /**
-   * Log detected PII types if enabled
-   */
-  if (config.logDetections && detectedTypes.length > 0) {
-    console.log(
-      `Input Guardrails: Detected and redacted PII types: ${detectedTypes.join(
-        ", "
-      )}`
-    );
-  }
-
-  /**
-   * Return new message with processed content if changes were made
-   */
-  if (processedContent !== message.content) {
-    message.content = processedContent;
-  }
-
-  return message;
+  throw new Error(`Unsupported message type: ${message.type}`);
 }
 
 /**
  * Creates a middleware that detects and redacts personally identifiable information (PII)
- * from messages before they are sent to model providers.
+ * from messages before they are sent to model providers, and restores original values
+ * in model responses for tool execution.
  *
- * ## Purpose
+ * ## Mechanism
  *
- * This middleware protects sensitive user data from being inadvertently shared with
- * third-party AI model providers (OpenAI, Anthropic, etc.). It acts as a security layer
- * that automatically redacts PII before messages reach the model's API, ensuring that
- * sensitive information stays within your application and doesn't get transmitted to
- * external services.
+ * The middleware intercepts agent execution at two points:
  *
- * ## How It Works
+ * ### Request Phase (`modifyModelRequest`)
+ * - Applies regex-based pattern matching to all message content (HumanMessage, ToolMessage, SystemMessage, AIMessage)
+ * - Processes both message text and AIMessage tool call arguments
+ * - Each matched pattern generates:
+ *   - Unique identifier: `generateRedactionId()` → `"abc123"`
+ *   - Redaction marker: `[REDACTED_{RULE_NAME}_{ID}]` → `"[REDACTED_SSN_abc123]"`
+ *   - Redaction map entry: `{ "abc123": "123-45-6789" }`
+ * - Returns modified request with redacted message content
  *
- * The middleware executes during the `beforeModel` phase and processes all messages
- * through a configurable pipeline of detection methods. Each method operates sequentially
- * on the message content:
+ * ### Response Phase (`afterModel`)
+ * - Scans AIMessage responses for redaction markers matching pattern: `/\[REDACTED_[A-Z_]+_(\w+)\]/g`
+ * - Replaces markers with original values from redaction map
+ * - Handles both standard responses and structured output (via tool calls or JSON content)
+ * - For structured output, restores values in both the tool call arguments and the `structuredResponse` state field
+ * - Returns new message instances via RemoveMessage/AIMessage to update state
  *
- * 1. Regex-based pattern matching using configurable rules
- * 2. Custom detection functions (if provided)
- * 3. Language model-based detection (if a model is provided)
+ * ## Data Flow
  *
- * Regex patterns match common PII formats (SSN, phone numbers, email addresses,
- * credit card numbers, IP addresses, driver's licenses, passports, bank accounts).
- * See {@link DEFAULT_PII_RULES} for the full list of built-in patterns.
+ * ```
+ * User Input: "My SSN is 123-45-6789"
+ *     ↓ [beforeModel]
+ * Model Request: "My SSN is [REDACTED_SSN_abc123]"
+ *     ↓ [model invocation]
+ * Model Response: tool_call({ "ssn": "[REDACTED_SSN_abc123]" })
+ *     ↓ [afterModel]
+ * Tool Execution: tool({ "ssn": "123-45-6789" })
+ * ```
  *
- * Custom detection functions receive the text content and return modified text with
- * sensitive information redacted. Functions are applied sequentially after regex rules.
+ * ## Limitations
  *
- * Model-based detection uses a chat model to identify PII that may not match
- * predefined patterns. This adds latency but can detect contextual PII such as names
- * and addresses.
+ * This middleware provides model provider isolation only. PII may still be present in:
+ * - LangGraph state checkpoints (memory, databases)
+ * - Network traffic between client and application server
+ * - Application logs and trace data
+ * - Tool execution arguments and responses
+ * - Final agent output
  *
- * ## Important Considerations
+ * For comprehensive PII protection, implement additional controls at the application,
+ * network, and storage layers.
  *
- * This middleware redacts PII before transmission to model providers. However, please note:
- * - PII may still exist in LangGraph state checkpoints stored locally or in databases
- * - Network traffic between your client and server may still contain PII
- * - Application logs and monitoring systems may capture PII before redaction
+ * @param options - Configuration options
+ * @param options.rules - Record of detection rules mapping rule names to regex patterns.
+ *   Rule names are normalized to uppercase and used in redaction markers.
+ *   Patterns must use the global flag (`/pattern/g`) to match all occurrences.
  *
- * For end-to-end PII protection, combine this middleware with client-side filtering,
- * secure checkpoint storage, and proper logging configuration.
+ * @returns Middleware instance for use with `createAgent`
  *
- * @param options - Configuration options for the middleware
- * @param options.rules - Array of PII detection rules. Defaults to enabled rules from {@link DEFAULT_PII_RULES}
- * @param options.customDetectors - Custom PII detection functions applied after regex rules
- * @param options.model - Chat model instance or model identifier for AI-based PII detection
- * @param options.logDetections - If true, logs detected PII types to console (not the content itself). Default: false
- * @param options.systemPrompt - System prompt for model-based detection. Defaults to a prompt that identifies common PII types
- *
- * @returns A middleware instance that can be passed to `createAgent`
- *
- * @example Basic usage with default rules
+ * @example Basic usage with custom rules
  * ```typescript
- * import { inputGuardrailsMiddleware, HumanMessage } from "langchain";
+ * import { inputGuardrailsMiddleware } from "langchain";
  * import { createAgent } from "langchain";
+ * import { tool } from "@langchain/core/tools";
+ * import { z } from "zod";
+ *
+ * const PII_RULES = {
+ *   ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,
+ *   email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+ *   phone: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g,
+ * };
+ *
+ * const lookupUser = tool(async ({ ssn }) => {
+ *   // Receives original value: "123-45-6789"
+ *   return { name: "John Doe", account: "active" };
+ * }, {
+ *   name: "lookup_user",
+ *   description: "Look up user by SSN",
+ *   schema: z.object({ ssn: z.string() })
+ * });
  *
  * const agent = createAgent({
- *   model: "openai:gpt-4",
+ *   model: new ChatOpenAI({ model: "gpt-4" }),
+ *   tools: [lookupUser],
+ *   middleware: [inputGuardrailsMiddleware({ rules: PII_RULES })]
+ * });
+ *
+ * const result = await agent.invoke({
+ *   messages: [new HumanMessage("Look up SSN 123-45-6789")]
+ * });
+ * // Model request: "Look up SSN [REDACTED_SSN_abc123]"
+ * // Model response: tool_call({ "ssn": "[REDACTED_SSN_abc123]" })
+ * // Tool receives: { "ssn": "123-45-6789" }
+ * ```
+ *
+ * @example Runtime rule configuration via context
+ * ```typescript
+ * const agent = createAgent({
+ *   model: new ChatOpenAI({ model: "gpt-4" }),
+ *   tools: [someTool],
  *   middleware: [inputGuardrailsMiddleware()]
  * });
  *
- * // PII in user messages will be automatically redacted before sending to OpenAI
- * const result = await agent.invoke({
- *   messages: [new HumanMessage("My SSN is 123-45-6789 and email is john@example.com")]
- * });
- * // OpenAI receives: "My SSN is [REDACTED_SSN] and email is [REDACTED_EMAIL]"
- * // The model never sees the actual sensitive information
+ * // Configure rules at runtime via middleware context
+ * const result = await agent.invoke(
+ *   { messages: [new HumanMessage("...")] },
+ *   {
+ *     configurable: {
+ *       InputGuardrailsMiddleware: {
+ *         rules: {
+ *           ssn: /\b\d{3}-?\d{2}-?\d{4}\b/g,
+ *           email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+ *         }
+ *       }
+ *     }
+ *   }
+ * );
  * ```
  *
- * @example Custom rules and detection
+ * @example Custom rule patterns
  * ```typescript
- * import { inputGuardrailsMiddleware, DEFAULT_PII_RULES } from "langchain";
- *
- * const customRule = {
- *   name: "employee_id",
- *   description: "Employee ID numbers",
- *   pattern: /EMP-\d{6}/g,
- *   replacement: "[REDACTED_EMPLOYEE_ID]",
- *   enabled: true
+ * const customRules = {
+ *   employee_id: /EMP-\d{6}/g,
+ *   api_key: /sk-[a-zA-Z0-9]{32}/g,
+ *   credit_card: /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g,
  * };
  *
- * const customDetector = async (text: string) => {
- *   // Custom logic to detect and redact sensitive info
- *   return text.replace(/Project Codename: \w+/g, "Project Codename: [REDACTED]");
- * };
- *
- * const middleware = inputGuardrailsMiddleware({
- *   rules: [...DEFAULT_PII_RULES, customRule],
- *   customDetectors: [customDetector],
- *   logDetections: true
- * });
+ * const middleware = inputGuardrailsMiddleware({ rules: customRules });
+ * // Generates markers like: [REDACTED_EMPLOYEE_ID_xyz789]
  * ```
  *
- * @example AI-powered detection
- * ```typescript
- * import { ChatOpenAI } from "@langchain/openai";
- * import { inputGuardrailsMiddleware } from "langchain";
- *
- * const piiDetectionModel = new ChatOpenAI({
- *   model: "gpt-3.5-turbo", // Use a cost-effective model for PII detection
- *   temperature: 0
- * });
- *
- * const middleware = inputGuardrailsMiddleware({
- *   model: piiDetectionModel,
- *   systemPrompt: "Identify and redact any personal information...",
- *   logDetections: true
- * });
- * ```
- *
- * @example Selective rule configuration
- * ```typescript
- * import { inputGuardrailsMiddleware, DEFAULT_PII_RULES } from "langchain";
- *
- * // Enable only specific rules
- * const rules = DEFAULT_PII_RULES.map(rule => ({
- *   ...rule,
- *   enabled: ["ssn", "email", "phone"].includes(rule.name)
- * }));
- *
- * const middleware = inputGuardrailsMiddleware({
- *   rules,
- * });
- * ```
- *
- * @see {@link DEFAULT_PII_RULES} for available built-in rules
- * @see {@link PIIRule} for rule configuration
- * @see {@link PIIDetectionFunction} for custom detector signature
  * @public
  */
 export function inputGuardrailsMiddleware(
   options: InputGuardrailsMiddlewareConfig = {}
 ): ReturnType<typeof createMiddleware> {
-  const processedMessageIds = new Set<string>();
+  const redactionMap: RedactionMap = {};
 
   return createMiddleware({
     name: "InputGuardrailsMiddleware",
     contextSchema,
-    stateSchema: z.object({
-      /**
-       * cached message IDs that have already been processed
-       */
-      _processedMessageIds: z.array(z.string()).default([]),
-    }),
     modifyModelRequest: async (request, state, runtime) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */
-      const rules = runtime.context.rules ?? options.rules ?? DEFAULT_PII_RULES;
-      const customDetectors =
-        runtime.context.customDetectors ?? options.customDetectors ?? [];
-      const model = runtime.context.model ?? options.model;
-      const logDetections =
-        runtime.context.logDetections === false
-          ? options.logDetections ?? runtime.context.logDetections
-          : runtime.context.logDetections ?? options.logDetections ?? false;
-      const systemPrompt =
-        runtime.context.systemPrompt ??
-        options.systemPrompt ??
-        DEFAULT_AI_DETECTION_PROMPT;
-
-      const config: ProcessHumanMessageConfig = {
-        rules,
-        customDetectors,
-        model,
-        logDetections,
-        systemPrompt,
-      };
+      const rules = runtime.context.rules ?? options.rules ?? {};
 
       /**
-       * Process messages, focusing on HumanMessages
+       * If no rules are provided, skip processing
        */
-      let hasChanges = false;
-      const processedMessages = await Promise.all(
-        state.messages.map(async (message) => {
-          if (
-            /**
-             * only process if not already been processed
-             */
-            (message.id && state._processedMessageIds?.includes(message.id)) ||
-            /**
-             * or message has no content
-             */
-            !("content" in message) ||
-            !message.content
-          ) {
-            return message;
-          }
+      if (Object.keys(rules).length === 0) {
+        return;
+      }
 
-          const processed = await processMessage(message, config);
-          processedMessageIds.add(processed.id as string);
-          if (processed !== message) {
-            hasChanges = true;
-            return processed;
-          }
-          return message;
-        })
+      const processedMessages = await Promise.all(
+        state.messages.map((message: BaseMessage) =>
+          processMessage(message, {
+            rules,
+            redactionMap,
+          })
+        )
       );
 
+      return {
+        ...request,
+        messages: processedMessages,
+      };
+    },
+    afterModel: async (state) => {
       /**
-       * Return updated state only if changes were made
+       * If no redactions were made, skip processing
        */
-      if (hasChanges) {
-        return {
-          ...request,
-          messages: processedMessages,
-        };
+      if (Object.keys(redactionMap).length === 0) {
+        return;
+      }
+
+      const lastMessage = state.messages.at(-1);
+      if (!AIMessage.isInstance(lastMessage)) {
+        return;
       }
 
       /**
-       * No changes needed
+       * In cases where we do structured output via tool calls, we also have to look at the second last message
+       * as we add a custom last message to the messages array.
        */
-      return request;
+      const secondLastMessage = state.messages.at(-2);
+
+      const { message: restoredLastMessage, changed } = restoreMessage(
+        lastMessage,
+        redactionMap
+      );
+
+      if (!changed) {
+        return;
+      }
+
+      /**
+       * Identify if the last message is a structured response and restore the values if so
+       */
+      let structuredResponse: Record<string, unknown> | undefined;
+      if (
+        AIMessage.isInstance(lastMessage) &&
+        lastMessage?.tool_calls?.length === 0 &&
+        typeof lastMessage.content === "string" &&
+        lastMessage.content.startsWith("{") &&
+        lastMessage.content.endsWith("}")
+      ) {
+        try {
+          structuredResponse = JSON.parse(
+            restoreRedactedValues(lastMessage.content, redactionMap)
+          );
+        } catch {
+          // ignore
+        }
+      }
+
+      /**
+       * Check if the second last message is a structured response tool call
+       */
+      const isStructuredResponseToolCall =
+        AIMessage.isInstance(secondLastMessage) &&
+        secondLastMessage?.tool_calls?.length !== 0 &&
+        secondLastMessage?.tool_calls?.some((call) =>
+          call.name.startsWith("extract-")
+        );
+      if (isStructuredResponseToolCall) {
+        const {
+          message: restoredSecondLastMessage,
+          changed: changedSecondLastMessage,
+        } = restoreMessage(secondLastMessage, redactionMap);
+        const structuredResponseRedacted = secondLastMessage.tool_calls?.find(
+          (call) => call.name.startsWith("extract-")
+        )?.args;
+        const structuredResponse = structuredResponseRedacted
+          ? JSON.parse(
+              restoreRedactedValues(
+                JSON.stringify(structuredResponseRedacted),
+                redactionMap
+              )
+            )
+          : undefined;
+        if (changed || changedSecondLastMessage) {
+          return {
+            ...state,
+            ...(structuredResponse ? { structuredResponse } : {}),
+            messages: [
+              new RemoveMessage({ id: secondLastMessage.id as string }),
+              new RemoveMessage({ id: lastMessage.id as string }),
+              restoredSecondLastMessage,
+              restoredLastMessage,
+            ],
+          };
+        }
+      }
+
+      return {
+        ...state,
+        ...(structuredResponse ? { structuredResponse } : {}),
+        messages: [
+          new RemoveMessage({ id: lastMessage.id as string }),
+          restoredLastMessage,
+        ],
+      };
     },
   });
 }

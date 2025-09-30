@@ -601,8 +601,8 @@ export class AgentNode<
       const result = await middleware.modifyModelRequest!(
         currentOptions,
         {
-          messages: state.messages,
           ...getMiddlewareState(),
+          messages: state.messages,
         },
         /**
          * ensure runtime is frozen to prevent modifications

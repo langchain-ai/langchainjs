@@ -24,9 +24,6 @@ export {
 } from "./llmToolSelector.js";
 export {
   inputGuardrailsMiddleware,
-  DEFAULT_PII_RULES,
   type InputGuardrailsMiddlewareConfig,
-  type PIIRule,
-  type PIIDetectionFunction,
 } from "./inputGuardrails.js";
 export { type AgentMiddleware } from "../types.js";
