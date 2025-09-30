@@ -7,9 +7,16 @@ import { createAgent } from "../index.js";
 
 describe("reactAgent", () => {
   it("should require model as only required property", async () => {
-    expectTypeOf(createAgent)
-      .parameter(0)
-      .toMatchObjectType<{ model: string | LanguageModelLike }>();
+    // Verify that passing only model is valid
+    createAgent({ model: "openai:gpt-4" });
+
+    // @ts-expect-error model is required
+    createAgent({});
+
+    // Verify model property type
+    expectTypeOf<Parameters<typeof createAgent>[0]>()
+      .toHaveProperty("model")
+      .toEqualTypeOf<string | LanguageModelLike>();
   });
 
   it("should not require runnable config if context schema is not provided", async () => {
