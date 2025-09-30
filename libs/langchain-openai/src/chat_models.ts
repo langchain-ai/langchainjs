@@ -2097,7 +2097,7 @@ export class ChatOpenAIResponses<
                   name: toolCall.name,
                   arguments: JSON.stringify(toolCall.args),
                   call_id: toolCall.id!,
-                  ...(this.zdrEnabled
+                  ...(!this.zdrEnabled
                     ? { id: functionCallIds?.[toolCall.id!] }
                     : {}),
                 };
@@ -2111,7 +2111,7 @@ export class ChatOpenAIResponses<
                   name: toolCall.function.name,
                   call_id: toolCall.id,
                   arguments: toolCall.function.arguments,
-                  ...(this.zdrEnabled
+                  ...(!this.zdrEnabled
                     ? { id: functionCallIds?.[toolCall.id] }
                     : {}),
                 })
