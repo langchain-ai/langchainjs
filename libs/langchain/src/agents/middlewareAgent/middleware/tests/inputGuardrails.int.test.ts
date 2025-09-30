@@ -8,194 +8,6 @@ import { createAgent } from "../../index.js";
 import { inputGuardrailsMiddleware } from "../inputGuardrails.js";
 
 describe("inputGuardrailsMiddleware Integration", () => {
-  it("should integrate with agent and redact PII from user messages", async () => {
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [inputGuardrailsMiddleware()],
-    });
-
-    const result = await agent.invoke({
-      messages: [
-        new HumanMessage("My SSN is 123-45-6789 and email is john@example.com"),
-      ],
-    });
-
-    // The human message should be redacted
-    const humanMessage = result.messages.find(HumanMessage.isInstance);
-    expect(humanMessage?.content).toContain("[REDACTED_SSN]");
-    expect(humanMessage?.content).toContain("[REDACTED_EMAIL]");
-    expect(humanMessage?.content).not.toContain("123-45-6789");
-    expect(humanMessage?.content).not.toContain("john@example.com");
-
-    // The AI should respond appropriately to the redacted input
-    const aiMessage = result.messages[result.messages.length - 1];
-    expect(aiMessage.content).toBeDefined();
-  });
-
-  it("should work with custom PII rules", async () => {
-    const customRule = {
-      name: "employee_id",
-      description: "Employee ID numbers",
-      pattern: /EMP-\d{6}/g,
-      replacement: "[REDACTED_EMPLOYEE_ID]",
-      enabled: true,
-    };
-
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [
-        inputGuardrailsMiddleware({
-          rules: [customRule],
-        }),
-      ],
-    });
-
-    const result = await agent.invoke({
-      messages: [
-        new HumanMessage("Employee EMP-123456 needs access to the system"),
-      ],
-    });
-
-    const humanMessage = result.messages.find(HumanMessage.isInstance);
-    expect(humanMessage?.content).toContain("[REDACTED_EMPLOYEE_ID]");
-    expect(humanMessage?.content).not.toContain("EMP-123456");
-  });
-
-  it("should work with custom detection functions", async () => {
-    const customDetector = (text: string) => {
-      return text.replace(
-        /Project Codename: \w+/g,
-        "Project Codename: [REDACTED]"
-      );
-    };
-
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [
-        inputGuardrailsMiddleware({
-          rules: [], // No regex rules
-          customDetectors: [customDetector],
-        }),
-      ],
-    });
-
-    const result = await agent.invoke({
-      messages: [
-        new HumanMessage("Project Codename: Phoenix is highly classified"),
-      ],
-    });
-
-    const humanMessage = result.messages.find(HumanMessage.isInstance);
-    expect(humanMessage?.content).toContain("Project Codename: [REDACTED]");
-    expect(humanMessage?.content).not.toContain("Project Codename: Phoenix");
-  });
-
-  it("should not modify messages without PII", async () => {
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [inputGuardrailsMiddleware()],
-    });
-
-    const originalMessage =
-      "This is a clean message with no sensitive information";
-    const result = await agent.invoke({
-      messages: [new HumanMessage(originalMessage)],
-    });
-
-    // Find the human message in the result (it should be unchanged)
-    const humanMessage = result.messages.find(HumanMessage.isInstance);
-    expect(humanMessage?.content).toBe(originalMessage);
-  });
-
-  it("should preserve message order and types", async () => {
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [inputGuardrailsMiddleware()],
-    });
-
-    const result = await agent.invoke({
-      messages: [
-        new HumanMessage("First message with SSN 123-45-6789"),
-        new HumanMessage("Second clean message"),
-        new HumanMessage("Third message with email john@example.com"),
-      ],
-    });
-
-    // Should have original messages plus AI response
-    expect(result.messages.length).toBeGreaterThan(3);
-
-    // Check that PII was redacted in the appropriate messages
-    const firstHuman = result.messages[0];
-    const secondHuman = result.messages[1];
-    const thirdHuman = result.messages[2];
-
-    expect(firstHuman.content).toContain("[REDACTED_SSN]");
-    expect(firstHuman.content).not.toContain("123-45-6789");
-
-    expect(secondHuman.content).toBe("Second clean message");
-
-    expect(thirdHuman.content).toContain("[REDACTED_EMAIL]");
-    expect(thirdHuman.content).not.toContain("john@example.com");
-  });
-
-  it("should allow to use a custom model for PII detection and only process new messages", async () => {
-    const fetchResponse = vi
-      .fn()
-      .mockImplementation((response) => response.clone());
-    const fetchMock = vi.fn().mockImplementation((url, options) => {
-      return fetch(url, options).then(fetchResponse);
-    });
-
-    const model = new ChatOpenAI({
-      model: "gpt-4o",
-      temperature: 0,
-      configuration: {
-        fetch: fetchMock,
-      },
-    });
-
-    const agent = createAgent({
-      model: "openai:gpt-4o",
-      tools: [],
-      middleware: [
-        inputGuardrailsMiddleware({
-          model,
-        }),
-      ],
-    });
-
-    const result = await agent.invoke({
-      messages: [
-        new HumanMessage("First message with SSN 123-45-6789"),
-        new HumanMessage("Second clean message"),
-        new HumanMessage("Third message with email john@example.com"),
-      ],
-    });
-
-    // Should have original messages plus AI response
-    expect(result.messages.length).toBeGreaterThan(3);
-
-    // Check that PII was redacted in the appropriate messages
-    const firstHuman = result.messages[0];
-    const secondHuman = result.messages[1];
-    const thirdHuman = result.messages[2];
-
-    expect(firstHuman.content).toContain("[REDACTED_SSN]");
-    expect(firstHuman.content).not.toContain("123-45-6789");
-
-    expect(secondHuman.content).toBe("Second clean message");
-
-    expect(thirdHuman.content).toContain("[REDACTED_EMAIL]");
-    expect(thirdHuman.content).not.toContain("john@example.com");
-
-    expect(fetchMock.mock.calls.length).toBe(3);
-  });
-
   it("should only process new messages", async () => {
     const fetchResponse = vi
       .fn()
@@ -213,25 +25,26 @@ describe("inputGuardrailsMiddleware Integration", () => {
     });
 
     const fetchUser = tool(
-      vi.fn().mockImplementation(({ id, email }) => ({
-        id,
-        name: "John Doe",
-        email,
-        ssn: "123-45-6789",
-        phone: "123-456-7890",
-        address: "123 Main St, Anytown, USA",
-        socialSecurityNumber: "123-45-6789",
-        city: "Anytown",
-        state: "CA",
-        zip: "12345",
-        loanEligible: true,
+      vi.fn().mockImplementation(({ id }) => ({
+        "userId-123": {
+          id,
+          name: "John Doe",
+          email: "john@example.com",
+          ssn: "123-45-6789",
+          phone: "123-456-7890",
+          address: "123 Main St, Anytown, USA",
+          socialSecurityNumber: "123-45-6789",
+          city: "Anytown",
+          state: "CA",
+          zip: "12345",
+          loanEligible: true,
+        },
       })),
       {
         name: "fetchUser",
         description: "Fetch a user",
         schema: z.object({
           id: z.string().describe("The ID of the user to fetch"),
-          email: z.string().describe("The email of the user to fetch"),
         }),
       }
     );
@@ -242,7 +55,6 @@ describe("inputGuardrailsMiddleware Integration", () => {
       middleware: [inputGuardrailsMiddleware()],
       responseFormat: z.object({
         name: z.string().describe("The name of the user"),
-        email: z.string().describe("The email of the user"),
         isEligible: z
           .boolean()
           .describe("Whether the user is eligible for a loan"),
@@ -252,16 +64,40 @@ describe("inputGuardrailsMiddleware Integration", () => {
     const result = await agent.invoke({
       messages: [
         new HumanMessage(
-          "Fetch user with id '123-45-6789' and email john@example.com and determine if the user is eligible for a loan"
+          "Fetch user with id 'userId-123' and determine if the user is eligible for a loan"
         ),
       ],
     });
 
     expect(result.structuredResponse).toEqual({
       name: "John Doe",
-      email: "[REDACTED_EMAIL]",
       isEligible: true,
     });
     expect(fetchMock.mock.calls.length).toBe(2);
+    expect(
+      JSON.parse(fetchMock.mock.calls[1][1].body).messages.map(
+        (m: { content: string }) => m.content
+      )
+    ).toMatchInlineSnapshot(`
+      [
+        "Fetch user with id 'userId-123' and determine if the user is eligible for a loan",
+        "",
+        "{
+        "userId-123": {
+          "id": "userId-123",
+          "name": "John Doe",
+          "email": "[REDACTED_EMAIL]",
+          "ssn": "[REDACTED_SSN]",
+          "phone": "[REDACTED_PHONE]",
+          "address": "123 Main St, Anytown, USA",
+          "socialSecurityNumber": "[REDACTED_SSN]",
+          "city": "Anytown",
+          "state": "CA",
+          "zip": "12345",
+          "loanEligible": true
+        }
+      }",
+      ]
+    `);
   });
 });

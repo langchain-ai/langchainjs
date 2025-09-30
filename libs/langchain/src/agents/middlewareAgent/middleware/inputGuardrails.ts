@@ -220,10 +220,10 @@ interface ProcessHumanMessageConfig {
 /**
  * Process a single human message for PII detection and redaction
  */
-async function processHumanMessage(
-  message: HumanMessage,
+async function processMessage(
+  message: BaseMessage,
   config: ProcessHumanMessageConfig
-): Promise<HumanMessage> {
+): Promise<BaseMessage> {
   if (typeof message.content !== "string") {
     /**
      * Skip non-string content (e.g., multimodal content)
@@ -294,12 +294,7 @@ async function processHumanMessage(
    * Return new message with processed content if changes were made
    */
   if (processedContent !== message.content) {
-    return new HumanMessage({
-      content: processedContent,
-      id: message.id,
-      name: message.name,
-      additional_kwargs: message.additional_kwargs,
-    });
+    message.content = processedContent;
   }
 
   return message;
@@ -307,17 +302,25 @@ async function processHumanMessage(
 
 /**
  * Creates a middleware that detects and redacts personally identifiable information (PII)
- * from human messages before they reach the model.
+ * from messages before they are sent to model providers.
  *
- * This middleware executes during the `beforeModel` phase and processes human messages
+ * ## Purpose
+ *
+ * This middleware protects sensitive user data from being inadvertently shared with
+ * third-party AI model providers (OpenAI, Anthropic, etc.). It acts as a security layer
+ * that automatically redacts PII before messages reach the model's API, ensuring that
+ * sensitive information stays within your application and doesn't get transmitted to
+ * external services.
+ *
+ * ## How It Works
+ *
+ * The middleware executes during the `beforeModel` phase and processes all messages
  * through a configurable pipeline of detection methods. Each method operates sequentially
  * on the message content:
  *
  * 1. Regex-based pattern matching using configurable rules
  * 2. Custom detection functions (if provided)
  * 3. Language model-based detection (if a model is provided)
- *
- * ## Detection Methods
  *
  * Regex patterns match common PII formats (SSN, phone numbers, email addresses,
  * credit card numbers, IP addresses, driver's licenses, passports, bank accounts).
@@ -330,15 +333,15 @@ async function processHumanMessage(
  * predefined patterns. This adds latency but can detect contextual PII such as names
  * and addresses.
  *
- * ## Limitations
+ * ## Important Considerations
  *
- * PII redaction occurs only in the middleware layer. Original PII will remain in:
- * - LangGraph state checkpoints
- * - Network traffic between client and server
- * - Logs or monitoring systems outside the middleware
+ * This middleware redacts PII before transmission to model providers. However, please note:
+ * - PII may still exist in LangGraph state checkpoints stored locally or in databases
+ * - Network traffic between your client and server may still contain PII
+ * - Application logs and monitoring systems may capture PII before redaction
  *
- * For comprehensive PII protection, implement client-side filtering before transmission
- * and ensure proper checkpoint storage configuration.
+ * For end-to-end PII protection, combine this middleware with client-side filtering,
+ * secure checkpoint storage, and proper logging configuration.
  *
  * @param options - Configuration options for the middleware
  * @param options.rules - Array of PII detection rules. Defaults to enabled rules from {@link DEFAULT_PII_RULES}
@@ -359,11 +362,12 @@ async function processHumanMessage(
  *   middleware: [inputGuardrailsMiddleware()]
  * });
  *
- * // PII in user messages will be automatically redacted
+ * // PII in user messages will be automatically redacted before sending to OpenAI
  * const result = await agent.invoke({
  *   messages: [new HumanMessage("My SSN is 123-45-6789 and email is john@example.com")]
  * });
- * // Agent sees: "My SSN is [REDACTED_SSN] and email is [REDACTED_EMAIL]"
+ * // OpenAI receives: "My SSN is [REDACTED_SSN] and email is [REDACTED_EMAIL]"
+ * // The model never sees the actual sensitive information
  * ```
  *
  * @example Custom rules and detection
@@ -430,6 +434,8 @@ async function processHumanMessage(
 export function inputGuardrailsMiddleware(
   options: InputGuardrailsMiddlewareConfig = {}
 ): ReturnType<typeof createMiddleware> {
+  const processedMessageIds = new Set<string>();
+
   return createMiddleware({
     name: "InputGuardrailsMiddleware",
     contextSchema,
@@ -439,7 +445,7 @@ export function inputGuardrailsMiddleware(
        */
       _processedMessageIds: z.array(z.string()).default([]),
     }),
-    beforeModel: async (state, runtime) => {
+    modifyModelRequest: async (request, state, runtime) => {
       /**
        * Merge options with context, following bigTool.ts pattern
        */
@@ -472,15 +478,20 @@ export function inputGuardrailsMiddleware(
         state.messages.map(async (message) => {
           if (
             /**
-             * only process HumanMessages that have not already been processed
+             * only process if not already been processed
              */
-            !HumanMessage.isInstance(message) ||
-            (message.id && state._processedMessageIds?.includes(message.id))
+            (message.id && state._processedMessageIds?.includes(message.id)) ||
+            /**
+             * or message has no content
+             */
+            !("content" in message) ||
+            !message.content
           ) {
             return message;
           }
 
-          const processed = await processHumanMessage(message, config);
+          const processed = await processMessage(message, config);
+          processedMessageIds.add(processed.id as string);
           if (processed !== message) {
             hasChanges = true;
             return processed;
@@ -494,12 +505,7 @@ export function inputGuardrailsMiddleware(
        */
       if (hasChanges) {
         return {
-          _processedMessageIds: [
-            ...new Set([
-              ...(state._processedMessageIds ?? []),
-              ...processedMessages.map((message) => message.id as string),
-            ]),
-          ],
+          ...request,
           messages: processedMessages,
         };
       }
@@ -507,7 +513,7 @@ export function inputGuardrailsMiddleware(
       /**
        * No changes needed
        */
-      return;
+      return request;
     },
   });
 }
