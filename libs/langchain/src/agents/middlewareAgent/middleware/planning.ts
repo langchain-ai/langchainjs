@@ -223,7 +223,7 @@ Using the todo list here is overkill and wastes time and tokens. These three too
 Being proactive with task management demonstrates attentiveness and ensures you complete all requirements successfully
 Remember: If you only need to make a few tool calls to complete a task, and it is clear what you need to do, it is better to just do the task directly and NOT call this tool at all.`;
 
-const systemPrompt = `## \`write_todos\`
+export const PLANNING_MIDDLEWARE_SYSTEM_PROMPT = `## \`write_todos\`
 
 You have access to the \`write_todos\` tool to help you manage and plan complex objectives. 
 Use this tool for complex objectives to ensure that you are tracking each necessary step and giving the user visibility into your progress.
@@ -249,32 +249,18 @@ const stateSchema = z.object({
 });
 export type TodoMiddlewareState = z.infer<typeof stateSchema>;
 
-/**
- * Write todos tool - manages todo list with Command return
- * Uses getCurrentTaskInput() instead of Python's InjectedState
- */
-const writeTodos = tool(
-  ({ todos }, config) => {
-    return new Command({
-      update: {
-        todos,
-        messages: [
-          new ToolMessage({
-            content: `Updated todo list to ${JSON.stringify(todos)}`,
-            tool_call_id: config.toolCall?.id as string,
-          }),
-        ],
-      },
-    });
-  },
-  {
-    name: "write_todos",
-    description: WRITE_TODOS_DESCRIPTION,
-    schema: z.object({
-      todos: z.array(TodoSchema).describe("List of todo items to update"),
-    }),
-  }
-);
+export interface PlanningMiddlewareOptions {
+  /**
+   * Custom system prompt to guide the agent on using the todo tool.
+   * If not provided, uses the default {@link PLANNING_MIDDLEWARE_SYSTEM_PROMPT}.
+   */
+  systemPrompt?: string;
+  /**
+   * Custom description for the {@link writeTodos} tool.
+   * If not provided, uses the default {@link WRITE_TODOS_DESCRIPTION}.
+   */
+  toolDescription?: string;
+}
 
 /**
  * Creates a middleware that provides todo list management capabilities to agents.
@@ -289,12 +275,11 @@ const writeTodos = tool(
  *
  * @example
  * ```typescript
- * import { todoMiddleware } from './middleware/todo.js';
- * import { createAgent } from '../index.js';
+ * import { planningMiddleware, createAgent } from 'langchain';
  *
  * const agent = createAgent({
- *   model: chatModel,
- *   middleware: [todoMiddleware()],
+ *   model: "openai:gpt-4o",
+ *   middleware: [planningMiddleware()],
  * });
  *
  * // Agent now has access to write_todos tool and todo state tracking
@@ -310,14 +295,42 @@ const writeTodos = tool(
  * @see {@link TodoMiddlewareState} for the state schema
  * @see {@link writeTodos} for the tool implementation
  */
-export function todoMiddleware() {
+export function planningMiddleware(options?: PlanningMiddlewareOptions) {
+  /**
+   * Write todos tool - manages todo list with Command return
+   */
+  const writeTodos = tool(
+    ({ todos }, config) => {
+      return new Command({
+        update: {
+          todos,
+          messages: [
+            new ToolMessage({
+              content: `Updated todo list to ${JSON.stringify(todos)}`,
+              tool_call_id: config.toolCall?.id as string,
+            }),
+          ],
+        },
+      });
+    },
+    {
+      name: "write_todos",
+      description: options?.toolDescription ?? WRITE_TODOS_DESCRIPTION,
+      schema: z.object({
+        todos: z.array(TodoSchema).describe("List of todo items to update"),
+      }),
+    }
+  );
+
   return createMiddleware({
-    name: "todoMiddleware",
+    name: "planningMiddleware",
     stateSchema,
     tools: [writeTodos],
     modifyModelRequest: (request) => ({
       ...request,
-      systemPrompt: (request.systemPrompt ?? "") + systemPrompt,
+      systemPrompt:
+        (request.systemPrompt ? `${request.systemPrompt}\n\n` : "") +
+        (options?.systemPrompt ?? PLANNING_MIDDLEWARE_SYSTEM_PROMPT),
     }),
   });
 }
