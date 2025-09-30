@@ -227,7 +227,7 @@ export class ReactAgent<
     /**
      * add single tool node for all tools
      */
-    if (toolClasses.length > 0) {
+    if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
       });
@@ -354,7 +354,7 @@ export class ReactAgent<
     /**
      * add edges for tools node
      */
-    if (toolClasses.length > 0) {
+    if (toolClasses.filter(isClientTool).length > 0) {
       // Tools should return to first beforeModel node or agent
       let toolReturnTarget: string;
       if (beforeModelNodes.length > 0) {
