@@ -10449,7 +10449,7 @@ __metadata:
     "@types/lodash": ^4
     "@typescript-eslint/eslint-plugin": ^6.12.0
     "@typescript-eslint/parser": ^6.12.0
-    axios: ^1.6.7
+    axios: ^1.12.0
     commander: ^11.1.0
     dotenv: ^16.3.1
     dpdm: ^3.14.0
@@ -18670,7 +18670,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.1.3, axios@npm:^1.3.2, axios@npm:^1.4.0, axios@npm:^1.6.2, axios@npm:^1.6.5, axios@npm:^1.6.7, axios@npm:^1.6.8, axios@npm:^1.8.2":
+"axios@npm:^1.1.3, axios@npm:^1.3.2, axios@npm:^1.4.0, axios@npm:^1.6.2, axios@npm:^1.6.5, axios@npm:^1.6.8, axios@npm:^1.8.2":
   version: 1.8.4
   resolution: "axios@npm:1.8.4"
   dependencies:
