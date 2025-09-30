@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 0.3.30
+
+### Patch Changes
+
+- 6c7eb84: fix sonnet-4.5 thinking
+
 ## 0.3.29
 
 ### Patch Changes
