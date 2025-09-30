@@ -1,10 +1,6 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
-import {
-  HumanMessage,
-  BaseMessage,
-  MessageFieldWithRole,
-} from "@langchain/core/messages";
+import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 
 import { createAgent, createMiddleware } from "../index.js";
 
@@ -58,9 +54,7 @@ describe("middleware types", () => {
     // Verify the types of individual properties
     expectTypeOf(result.customStateProp).toBeString();
     expectTypeOf(result.customStateProp2).toBeString();
-    expectTypeOf(result.messages).toEqualTypeOf<
-      (BaseMessage | MessageFieldWithRole)[]
-    >();
+    expectTypeOf(result.messages).toEqualTypeOf<BaseMessage[]>();
     expectTypeOf(result.structuredResponse).toEqualTypeOf<{
       customResponseFormat: string;
     }>();
