@@ -39,6 +39,7 @@ import type {
   InvokeConfiguration,
   StreamConfiguration,
   JumpTo,
+  UserInput,
 } from "./types.js";
 
 import {
@@ -63,7 +64,7 @@ type MergedAgentState<
 type InvokeStateParameter<
   TMiddleware extends readonly AgentMiddleware<any, any, any>[]
 > =
-  | (BuiltInState & InferMiddlewareInputStates<TMiddleware>)
+  | (UserInput & InferMiddlewareInputStates<TMiddleware>)
   | Command<any, any, any>
   | null;
 

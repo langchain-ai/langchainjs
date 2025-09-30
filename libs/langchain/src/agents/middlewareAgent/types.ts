@@ -21,6 +21,7 @@ import type {
   BaseCheckpointSaver,
   BaseStore,
 } from "@langchain/langgraph-checkpoint";
+import type { Messages } from "@langchain/langgraph/";
 
 import { JUMP_TO_TARGETS } from "./constants.js";
 import type { AnyAnnotationRoot, ToAnnotationRoot } from "../annotation.js";
@@ -51,6 +52,13 @@ export interface BuiltInState {
    */
   jumpTo?: JumpToTarget;
 }
+
+/**
+ * Base input type for `.invoke` and `.stream` methods.
+ */
+export type UserInput = {
+  messages: Messages;
+};
 
 /**
  * Information about a tool call that has been executed.
@@ -427,20 +435,6 @@ export interface ExecutedToolCall {
   result?: unknown;
 }
 
-/**
- * Information about an LLM invocation.
- */
-export interface LLMCall {
-  /**
-   * The messages that were sent to the LLM.
-   */
-  messages: BaseMessage[];
-  /**
-   * The response from the LLM.
-   */
-  response?: BaseMessage;
-}
-
 export type CreateAgentParams<
   StructuredResponseType extends Record<string, any> = Record<string, any>,
   ContextSchema extends
@@ -480,7 +474,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  model?: string | LanguageModelLike;
+  model: string | LanguageModelLike;
 
   /**
    * A list of tools or a ToolNode.
