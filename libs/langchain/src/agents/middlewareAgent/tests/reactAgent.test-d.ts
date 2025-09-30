@@ -1,10 +1,17 @@
 import { z } from "zod/v3";
 import { HumanMessage } from "@langchain/core/messages";
-import { describe, it } from "vitest";
+import { LanguageModelLike } from "@langchain/core/language_models/base";
+import { describe, it, expectTypeOf } from "vitest";
 
 import { createAgent } from "../index.js";
 
 describe("reactAgent", () => {
+  it("should require model as only required property", async () => {
+    expectTypeOf(createAgent)
+      .parameter(0)
+      .toMatchObjectType<{ model: string | LanguageModelLike }>();
+  });
+
   it("should not require runnable config if context schema is not provided", async () => {
     const agent = createAgent({
       model: "openai:gpt-4",
