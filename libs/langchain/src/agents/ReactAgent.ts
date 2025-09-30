@@ -146,7 +146,7 @@ export class ReactAgent<
     /**
      * add single tool node for all tools
      */
-    if (toolClasses.length > 0) {
+    if (toolClasses.filter(isClientTool).length > 0) {
       const toolNode = new ToolNode(toolClasses.filter(isClientTool), {
         signal: this.options.signal,
       });
@@ -206,7 +206,7 @@ export class ReactAgent<
     /**
      * add edges for tools node
      */
-    if (toolClasses.length > 0) {
+    if (toolClasses.filter(isClientTool).length > 0) {
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           "tools",
