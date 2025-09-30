@@ -21,11 +21,13 @@ import { AgentNode } from "./nodes/AgentNode.js";
 import { ToolNode } from "../nodes/ToolNode.js";
 import { BeforeModelNode } from "./nodes/BeforeModalNode.js";
 import { AfterModelNode } from "./nodes/AfterModalNode.js";
+import { StructuredResponseNode } from "./nodes/StructuredResponseNode.js";
 import {
   initializeMiddlewareStates,
   parseJumpToTarget,
+  getResponseFormat,
 } from "./nodes/utils.js";
-
+import type { ResponseFormat } from "./nodes/utils.js";
 import type { ClientTool, ServerTool, WithStateGraphNodes } from "../types.js";
 
 import type {
@@ -146,7 +148,7 @@ export class ReactAgent<
     );
 
     const allNodeWorkflows = workflow as WithStateGraphNodes<
-      "tools" | "model_request" | string,
+      "tools" | "model_request" | "structured_response" | string,
       typeof workflow
     >;
 
@@ -221,6 +223,19 @@ export class ReactAgent<
     }
 
     /**
+     * Compute response format once to ensure consistent tool names
+     * Note: If model is a string, it will be initialized here.
+     * If model is already a LanguageModelLike instance, we use it directly.
+     */
+    let structuredResponseFormat: ResponseFormat | undefined;
+    if (this.options.responseFormat && this.options.model) {
+      structuredResponseFormat = getResponseFormat(
+        this.options.responseFormat,
+        this.options.model
+      );
+    }
+
+    /**
      * Add Nodes
      */
     allNodeWorkflows.addNode(
@@ -236,6 +251,7 @@ export class ReactAgent<
         shouldReturnDirect,
         signal: this.options.signal,
         modifyModelRequestHookMiddleware,
+        structuredResponseFormat,
       }),
       AgentNode.nodeOptions
     );
@@ -248,6 +264,19 @@ export class ReactAgent<
         signal: this.options.signal,
       });
       allNodeWorkflows.addNode("tools", toolNode);
+    }
+
+    /**
+     * add structured response node if responseFormat is provided
+     */
+    if (this.options.responseFormat && structuredResponseFormat) {
+      const structuredResponseNode = new StructuredResponseNode({
+        model: this.options.model,
+        responseFormat: this.options.responseFormat,
+        name: this.options.name,
+        structuredResponseFormat,
+      });
+      allNodeWorkflows.addNode("structured_response", structuredResponseNode);
     }
 
     /**
@@ -380,14 +409,24 @@ export class ReactAgent<
       }
 
       if (shouldReturnDirect.size > 0) {
+        const toolRouterDestinations = this.options.responseFormat
+          ? [toolReturnTarget, "structured_response"]
+          : [toolReturnTarget, END];
         allNodeWorkflows.addConditionalEdges(
           "tools",
           this.#createToolsRouter(shouldReturnDirect),
-          [toolReturnTarget, END]
+          toolRouterDestinations as any
         );
       } else {
         allNodeWorkflows.addEdge("tools", toolReturnTarget);
       }
+    }
+
+    /**
+     * add edge from structured_response to END
+     */
+    if (this.options.responseFormat) {
+      allNodeWorkflows.addEdge("structured_response", END);
     }
 
     /**
@@ -421,8 +460,13 @@ export class ReactAgent<
   #getModelPaths(
     toolClasses: (ClientTool | ServerTool)[],
     includeModelRequest: boolean = false
-  ): ("tools" | "model_request" | typeof END)[] {
-    const paths: ("tools" | "model_request" | typeof END)[] = [];
+  ): ("tools" | "model_request" | "structured_response" | typeof END)[] {
+    const paths: (
+      | "tools"
+      | "model_request"
+      | "structured_response"
+      | typeof END
+    )[] = [];
     if (toolClasses.length > 0) {
       paths.push("tools");
     }
@@ -431,7 +475,12 @@ export class ReactAgent<
       paths.push("model_request");
     }
 
-    paths.push(END);
+    // If responseFormat is configured, route to structured_response instead of END
+    if (this.options.responseFormat) {
+      paths.push("structured_response");
+    } else {
+      paths.push(END);
+    }
 
     return paths;
   }
@@ -453,9 +502,9 @@ export class ReactAgent<
         lastMessage.name &&
         shouldReturnDirect.has(lastMessage.name)
       ) {
-        // If we have a response format, route to agent to generate structured response
+        // If we have a response format, route to structured_response node
         // Otherwise, return directly
-        return this.options.responseFormat ? "model_request" : END;
+        return this.options.responseFormat ? "structured_response" : END;
       }
 
       // For non-returnDirect tools, always route back to agent
@@ -479,7 +528,8 @@ export class ReactAgent<
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
-        return END;
+        // No tool calls, route to structured_response if configured, otherwise END
+        return this.options.responseFormat ? "structured_response" : END;
       }
 
       // Check if all tool calls are for structured response extraction
@@ -488,9 +538,9 @@ export class ReactAgent<
       );
 
       if (hasOnlyStructuredResponseCalls) {
-        // If all tool calls are for structured response extraction, go to END
-        // The AgentNode will handle these internally and return the structured response
-        return END;
+        // If all tool calls are for structured response extraction, route to structured_response
+        // The StructuredResponseNode will handle these and extract the structured response
+        return this.options.responseFormat ? "structured_response" : END;
       }
 
       /**
@@ -508,7 +558,8 @@ export class ReactAgent<
       );
 
       if (regularToolCalls.length === 0) {
-        return END;
+        // No regular tool calls, route to structured_response if configured
+        return this.options.responseFormat ? "structured_response" : END;
       }
 
       return regularToolCalls.map(
@@ -536,15 +587,15 @@ export class ReactAgent<
     const hasStructuredResponse = Boolean(this.options.responseFormat);
 
     return (state: Omit<BuiltInState, "jumpTo"> & { jumpTo?: JumpTo }) => {
-      // First, check if we just processed a structured response
-      // If so, ignore any existing jumpTo and go to END
+      // First, check if we just processed a message with no tool calls
+      // If so, ignore any existing jumpTo and route to structured_response or END
       const messages = state.messages;
       const lastMessage = messages.at(-1);
       if (
         AIMessage.isInstance(lastMessage) &&
         (!lastMessage.tool_calls || lastMessage.tool_calls.length === 0)
       ) {
-        return END;
+        return hasStructuredResponse ? "structured_response" : END;
       }
 
       // Check if jumpTo is set in the state and allowed
@@ -563,11 +614,13 @@ export class ReactAgent<
         return new Send("model_request", { ...state, jumpTo: undefined });
       }
 
-      // check if there are pending tool calls
+      // check if there are pending REGULAR tool calls (excluding structured response tool calls)
       const toolMessages = messages.filter(ToolMessage.isInstance);
       const lastAiMessage = messages.filter(AIMessage.isInstance).at(-1);
       const pendingToolCalls = lastAiMessage?.tool_calls?.filter(
-        (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
+        (call) =>
+          !call.name.startsWith("extract-") &&
+          !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
         return pendingToolCalls.map(
@@ -595,7 +648,7 @@ export class ReactAgent<
         !lastMessage.tool_calls ||
         lastMessage.tool_calls.length === 0
       ) {
-        return END;
+        return hasStructuredResponse ? "structured_response" : END;
       }
 
       // Check if all tool calls are for structured response extraction
@@ -609,7 +662,7 @@ export class ReactAgent<
       );
 
       if (hasOnlyStructuredResponseCalls || !hasRegularToolCalls) {
-        return END;
+        return hasStructuredResponse ? "structured_response" : END;
       }
 
       /**
@@ -634,10 +687,13 @@ export class ReactAgent<
       if (state.jumpTo) {
         const dest = parseJumpToTarget(state.jumpTo);
         if (dest === END && allowedSet.has(END)) {
-          return END;
+          // Route to structured_response if configured, otherwise END
+          return this.options.responseFormat ? "structured_response" : END;
         }
         if (dest === "tools" && allowedSet.has("tools")) {
-          if (toolClasses.length === 0) return END;
+          if (toolClasses.length === 0) {
+            return this.options.responseFormat ? "structured_response" : END;
+          }
           return new Send("tools", { ...state, jumpTo: undefined });
         }
         if (dest === "model_request" && allowedSet.has("model_request")) {
@@ -662,11 +718,12 @@ export class ReactAgent<
       }
       const destination = parseJumpToTarget(state.jumpTo);
       if (destination === END) {
-        return END;
+        // Route to structured_response if configured, otherwise END
+        return this.options.responseFormat ? "structured_response" : END;
       }
       if (destination === "tools") {
         if (toolClasses.length === 0) {
-          return END;
+          return this.options.responseFormat ? "structured_response" : END;
         }
         return new Send("tools", { ...state, jumpTo: undefined });
       }

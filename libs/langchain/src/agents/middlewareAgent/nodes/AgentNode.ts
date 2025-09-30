@@ -11,10 +11,8 @@ import {
   getSchemaDescription,
   interopParse,
 } from "@langchain/core/utils/types";
-import type { ToolCall } from "@langchain/core/messages/tool";
 
 import { initChatModel } from "../../../chat_models/universal.js";
-import { MultipleStructuredOutputsError } from "../../errors.js";
 import { RunnableCallable } from "../../RunnableCallable.js";
 import { PreHookAnnotation, AnyAnnotationRoot } from "../../annotation.js";
 import {
@@ -33,21 +31,8 @@ import {
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
-import {
-  ToolStrategy,
-  ProviderStrategy,
-  transformResponseFormat,
-  ToolStrategyError,
-  hasSupportForJsonSchemaOutput,
-} from "../../responses.js";
-import { parseToolCalls } from "./utils.js";
-
-type ResponseHandlerResult<StructuredResponseFormat> =
-  | {
-      structuredResponse: StructuredResponseFormat;
-      messages: BaseMessage[];
-    }
-  | Promise<Command>;
+import { hasSupportForJsonSchemaOutput } from "../../responses.js";
+import { parseToolCalls, type ResponseFormat } from "./utils.js";
 
 export interface AgentNodeOptions<
   StructuredResponseFormat extends Record<string, unknown> = Record<
@@ -71,19 +56,12 @@ export interface AgentNodeOptions<
     AgentMiddleware<any, any, any>,
     () => any
   ][];
+  /**
+   * Pre-computed structured response format.
+   * This ensures consistent tool names across AgentNode and StructuredResponseNode.
+   */
+  structuredResponseFormat?: ResponseFormat;
 }
-
-interface NativeResponseFormat {
-  type: "native";
-  strategy: ProviderStrategy;
-}
-
-interface ToolResponseFormat {
-  type: "tool";
-  tools: Record<string, ToolStrategy>;
-}
-
-type ResponseFormat = NativeResponseFormat | ToolResponseFormat;
 
 export class AgentNode<
   StructuredResponseFormat extends Record<string, unknown> = Record<
@@ -93,7 +71,7 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
+  { messages: BaseMessage[] }
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
 
@@ -107,64 +85,6 @@ export class AgentNode<
     });
 
     this.#options = options;
-  }
-
-  /**
-   * Returns response format primtivies based on given model and response format provided by the user.
-   *
-   * If the the user selects a tool output:
-   * - return a record of tools to extract structured output from the model's response
-   *
-   * if the the user selects a native schema output or if the model supports JSON schema output:
-   * - return a provider strategy to extract structured output from the model's response
-   *
-   * @param model - The model to get the response format for.
-   * @returns The response format.
-   */
-  #getResponseFormat(
-    model: string | LanguageModelLike
-  ): ResponseFormat | undefined {
-    if (!this.#options.responseFormat) {
-      return undefined;
-    }
-
-    const strategies = transformResponseFormat(
-      this.#options.responseFormat,
-      undefined,
-      model
-    );
-
-    /**
-     * we either define a list of provider strategies or a list of tool strategies
-     */
-    const isProviderStrategy = strategies.every(
-      (format) => format instanceof ProviderStrategy
-    );
-
-    /**
-     * Populate a list of structured tool info.
-     */
-    if (!isProviderStrategy) {
-      return {
-        type: "tool",
-        tools: (
-          strategies.filter(
-            (format) => format instanceof ToolStrategy
-          ) as ToolStrategy[]
-        ).reduce((acc, format) => {
-          acc[format.name] = format;
-          return acc;
-        }, {} as Record<string, ToolStrategy>),
-      };
-    }
-
-    return {
-      type: "native",
-      /**
-       * there can only be one provider strategy
-       */
-      strategy: strategies[0] as ProviderStrategy,
-    };
   }
 
   async #run(
@@ -190,16 +110,6 @@ export class AgentNode<
     }
 
     const response = await this.#invokeModel(state, config);
-
-    /**
-     * if we were able to generate a structured response, return it
-     */
-    if ("structuredResponse" in response) {
-      return {
-        messages: [...state.messages, ...(response.messages || [])],
-        structuredResponse: response.structuredResponse,
-      };
-    }
 
     /**
      * if we need to direct the agent to the model, return the update
@@ -247,11 +157,8 @@ export class AgentNode<
   async #invokeModel(
     state: InternalAgentState<StructuredResponseFormat> &
       PreHookAnnotation["State"],
-    config: RunnableConfig,
-    options: {
-      lastMessage?: string;
-    } = {}
-  ): Promise<AIMessage | ResponseHandlerResult<StructuredResponseFormat>> {
+    config: RunnableConfig
+  ): Promise<AIMessage | Command> {
     const model = await this.#deriveModel();
 
     /**
@@ -274,12 +181,7 @@ export class AgentNode<
      */
     validateLLMHasNoBoundTools(finalModel);
 
-    const structuredResponseFormat = this.#getResponseFormat(finalModel);
-    const modelWithTools = await this.#bindTools(
-      finalModel,
-      preparedOptions,
-      structuredResponseFormat
-    );
+    const modelWithTools = await this.#bindTools(finalModel, preparedOptions);
     let modelInput = this.#getModelInputState(state);
 
     /**
@@ -296,217 +198,7 @@ export class AgentNode<
       invokeConfig
     )) as AIMessage;
 
-    /**
-     * if the user requests a native schema output, try to parse the response
-     * and return the structured response if it is valid
-     */
-    if (structuredResponseFormat?.type === "native") {
-      const structuredResponse =
-        structuredResponseFormat.strategy.parse(response);
-      if (structuredResponse) {
-        return { structuredResponse, messages: [response] };
-      }
-
-      return response;
-    }
-
-    if (!structuredResponseFormat || !response.tool_calls) {
-      return response;
-    }
-
-    const toolCalls = response.tool_calls.filter(
-      (call) => call.name in structuredResponseFormat.tools
-    );
-
-    /**
-     * if there were not structured tool calls, we can return the response
-     */
-    if (toolCalls.length === 0) {
-      return response;
-    }
-
-    /**
-     * if there were multiple structured tool calls, we should throw an error as this
-     * scenario is not defined/supported.
-     */
-    if (toolCalls.length > 1) {
-      return this.#handleMultipleStructuredOutputs(
-        response,
-        toolCalls,
-        structuredResponseFormat
-      );
-    }
-
-    const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
-    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
-    return this.#handleSingleStructuredOutput(
-      response,
-      toolCalls[0],
-      structuredResponseFormat,
-      toolMessageContent ?? options.lastMessage
-    );
-  }
-
-  /**
-   * If the model returns multiple structured outputs, we need to handle it.
-   * @param response - The response from the model
-   * @param toolCalls - The tool calls that were made
-   * @returns The response from the model
-   */
-  #handleMultipleStructuredOutputs(
-    response: AIMessage,
-    toolCalls: ToolCall[],
-    responseFormat: ToolResponseFormat
-  ): Promise<Command> {
-    const multipleStructuredOutputsError = new MultipleStructuredOutputsError(
-      toolCalls.map((call) => call.name)
-    );
-
-    return this.#handleToolStrategyError(
-      multipleStructuredOutputsError,
-      response,
-      toolCalls[0],
-      responseFormat
-    );
-  }
-
-  /**
-   * If the model returns a single structured output, we need to handle it.
-   * @param toolCall - The tool call that was made
-   * @returns The structured response and a message to the LLM if needed
-   */
-  #handleSingleStructuredOutput(
-    response: AIMessage,
-    toolCall: ToolCall,
-    responseFormat: ToolResponseFormat,
-    lastMessage?: string
-  ): ResponseHandlerResult<StructuredResponseFormat> {
-    const tool = responseFormat.tools[toolCall.name];
-
-    try {
-      const structuredResponse = tool.parse(
-        toolCall.args
-      ) as StructuredResponseFormat;
-
-      return {
-        structuredResponse,
-        messages: [
-          response,
-          new AIMessage(
-            lastMessage ??
-              `Returning structured response: ${JSON.stringify(
-                structuredResponse
-              )}`
-          ),
-        ],
-      };
-    } catch (error) {
-      return this.#handleToolStrategyError(
-        error as ToolStrategyError,
-        response,
-        toolCall,
-        responseFormat
-      );
-    }
-  }
-
-  async #handleToolStrategyError(
-    error: ToolStrategyError,
-    response: AIMessage,
-    toolCall: ToolCall,
-    responseFormat: ToolResponseFormat
-  ): Promise<Command> {
-    /**
-     * Using the `errorHandler` option of the first `ToolStrategy` entry is sufficient here.
-     * There is technically only one `ToolStrategy` entry in `structuredToolInfo` if the user
-     * uses `toolStrategy` to define the response format. If the user applies a list of json
-     * schema objects, these will be transformed into multiple `ToolStrategy` entries but all
-     * with the same `handleError` option.
-     */
-    const errorHandler = Object.values(responseFormat.tools).at(0)?.options
-      ?.handleError;
-
-    const toolCallId = toolCall.id;
-    if (!toolCallId) {
-      throw new Error(
-        "Tool call ID is required to handle tool output errors. Please provide a tool call ID."
-      );
-    }
-
-    /**
-     * retry if:
-     */
-    if (
-      /**
-       * if the user has provided `true` as the `errorHandler` option, return a new AIMessage
-       * with the error message and retry the tool call.
-       */
-      (typeof errorHandler === "boolean" && errorHandler) ||
-      /**
-       * if `errorHandler` is an array and contains MultipleStructuredOutputsError
-       */
-      (Array.isArray(errorHandler) &&
-        errorHandler.some((h) => h instanceof MultipleStructuredOutputsError))
-    ) {
-      return new Command({
-        update: {
-          messages: [
-            response,
-            new ToolMessage({
-              content: error.message,
-              tool_call_id: toolCallId,
-            }),
-          ],
-        },
-        goto: "model",
-      });
-    }
-
-    /**
-     * if `errorHandler` is a string, retry the tool call with given string
-     */
-    if (typeof errorHandler === "string") {
-      return new Command({
-        update: {
-          messages: [
-            response,
-            new ToolMessage({
-              content: errorHandler,
-              tool_call_id: toolCallId,
-            }),
-          ],
-        },
-        goto: "model",
-      });
-    }
-
-    /**
-     * if `errorHandler` is a function, retry the tool call with the function
-     */
-    if (typeof errorHandler === "function") {
-      const content = await errorHandler(error);
-      if (typeof content !== "string") {
-        throw new Error("Error handler must return a string.");
-      }
-
-      return new Command({
-        update: {
-          messages: [
-            response,
-            new ToolMessage({
-              content,
-              tool_call_id: toolCallId,
-            }),
-          ],
-        },
-        goto: "model",
-      });
-    }
-
-    /**
-     * throw otherwise, e.g. if `errorHandler` is not defined or set to `false`
-     */
-    throw error;
+    return response;
   }
 
   #areMoreStepsNeeded(
@@ -642,9 +334,9 @@ export class AgentNode<
 
   async #bindTools(
     model: LanguageModelLike,
-    preparedOptions: ModelRequest | undefined,
-    structuredResponseFormat: ResponseFormat | undefined
+    preparedOptions: ModelRequest | undefined
   ): Promise<Runnable> {
+    const structuredResponseFormat = this.#options.structuredResponseFormat;
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(
       structuredResponseFormat && "tools" in structuredResponseFormat

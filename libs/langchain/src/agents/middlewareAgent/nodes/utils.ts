@@ -1,3 +1,4 @@
+/* eslint-disable no-instanceof/no-instanceof */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@langchain/core/utils/types";
 import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
+import { type LanguageModelLike } from "@langchain/core/language_models/base";
 
 import type {
   AgentMiddleware,
@@ -18,6 +20,11 @@ import type {
   ToolResult,
   JumpTo,
 } from "../types.js";
+import {
+  ToolStrategy,
+  ProviderStrategy,
+  transformResponseFormat,
+} from "../../responses.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -182,4 +189,72 @@ export function parseJumpToTarget(target?: string): JumpTo | undefined {
   throw new Error(
     `Invalid jump target: ${target}, must be "model", "tools" or "end".`
   );
+}
+
+export interface NativeResponseFormat {
+  type: "native";
+  strategy: ProviderStrategy;
+}
+
+export interface ToolResponseFormat {
+  type: "tool";
+  tools: Record<string, ToolStrategy>;
+}
+
+export type ResponseFormat = NativeResponseFormat | ToolResponseFormat;
+
+/**
+ * Returns response format primitives based on given model and response format provided by the user.
+ *
+ * If the user selects a tool output:
+ * - return a record of tools to extract structured output from the model's response
+ *
+ * If the user selects a native schema output or if the model supports JSON schema output:
+ * - return a provider strategy to extract structured output from the model's response
+ *
+ * @param responseFormat - The response format configuration
+ * @param model - The model to get the response format for
+ * @returns The response format primitives or undefined if no response format is configured
+ */
+export function getResponseFormat(
+  responseFormat: any,
+  model: string | LanguageModelLike
+): ResponseFormat | undefined {
+  if (!responseFormat) {
+    return undefined;
+  }
+
+  const strategies = transformResponseFormat(responseFormat, undefined, model);
+
+  /**
+   * we either define a list of provider strategies or a list of tool strategies
+   */
+  const isProviderStrategy = strategies.every(
+    (format) => format instanceof ProviderStrategy
+  );
+
+  /**
+   * Populate a list of structured tool info.
+   */
+  if (!isProviderStrategy) {
+    return {
+      type: "tool",
+      tools: (
+        strategies.filter(
+          (format) => format instanceof ToolStrategy
+        ) as ToolStrategy[]
+      ).reduce((acc, format) => {
+        acc[format.name] = format;
+        return acc;
+      }, {} as Record<string, ToolStrategy>),
+    };
+  }
+
+  return {
+    type: "native",
+    /**
+     * there can only be one provider strategy
+     */
+    strategy: strategies[0] as ProviderStrategy,
+  };
 }

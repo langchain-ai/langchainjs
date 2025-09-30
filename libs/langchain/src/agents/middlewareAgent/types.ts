@@ -16,7 +16,7 @@ import type {
 } from "@langchain/langgraph";
 
 import type { LanguageModelLike } from "@langchain/core/language_models/base";
-import type { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage, BaseMessageLike } from "@langchain/core/messages";
 import type {
   BaseCheckpointSaver,
   BaseStore,
@@ -39,7 +39,7 @@ import type { ClientTool, ServerTool } from "../types.js";
 export type N = typeof START | "model_request" | "tools";
 
 export interface BuiltInState {
-  messages: BaseMessage[];
+  messages: BaseMessageLike[];
   __interrupt__?: Interrupt[];
   /**
    * Optional property to control routing after afterModel middleware execution.
@@ -754,7 +754,6 @@ export type InternalAgentState<
   >
 > = {
   messages: BaseMessage[];
-  __preparedModelOptions?: ModelRequest;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
