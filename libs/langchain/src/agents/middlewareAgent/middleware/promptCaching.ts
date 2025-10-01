@@ -15,17 +15,17 @@ const contextSchema = z.object({
    * Whether to enable prompt caching.
    * @default true
    */
-  enableCaching: z.boolean().default(DEFAULT_ENABLE_CACHING),
+  enableCaching: z.boolean().optional(),
   /**
    * The time-to-live for the cached prompt.
    * @default "5m"
    */
-  ttl: z.enum(["5m", "1h"]).default(DEFAULT_TTL),
+  ttl: z.enum(["5m", "1h"]).optional(),
   /**
    * The minimum number of messages required before caching is applied.
    * @default 3
    */
-  minMessagesToCache: z.number().default(DEFAULT_MIN_MESSAGES_TO_CACHE),
+  minMessagesToCache: z.number().optional(),
   /**
    * The behavior to take when an unsupported model is used.
    * - "ignore" will ignore the unsupported model and continue without caching.
@@ -33,9 +33,7 @@ const contextSchema = z.object({
    * - "raise" will raise an error and stop the agent.
    * @default "warn"
    */
-  unsupportedModelBehavior: z
-    .enum(["ignore", "warn", "raise"])
-    .default(DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR),
+  unsupportedModelBehavior: z.enum(["ignore", "warn", "raise"]).optional(),
 });
 export type PromptCachingMiddlewareConfig = Partial<
   InferInteropZodInput<typeof contextSchema>
@@ -174,32 +172,21 @@ export function anthropicPromptCachingMiddleware(
     contextSchema,
     modifyModelRequest: (request, state, runtime) => {
       /**
-       * If the runtime values match the schema default values, use the middleware option
-       * values otherwise use the runtime values. This allows to apply general configurations
-       * for all invocations, and override them for specific invocations.
+       * Prefer runtime context values over middleware options values over defaults
        */
       const enableCaching =
-        runtime.context.enableCaching === DEFAULT_ENABLE_CACHING
-          ? middlewareOptions?.enableCaching ?? runtime.context.enableCaching
-          : runtime.context.enableCaching ?? middlewareOptions?.enableCaching;
-      const ttl =
-        runtime.context.ttl === DEFAULT_TTL
-          ? middlewareOptions?.ttl ?? runtime.context.ttl
-          : runtime.context.ttl ?? middlewareOptions?.ttl;
+        runtime.context.enableCaching ??
+        middlewareOptions?.enableCaching ??
+        DEFAULT_ENABLE_CACHING;
+      const ttl = runtime.context.ttl ?? middlewareOptions?.ttl ?? DEFAULT_TTL;
       const minMessagesToCache =
-        runtime.context.minMessagesToCache === DEFAULT_MIN_MESSAGES_TO_CACHE
-          ? middlewareOptions?.minMessagesToCache ??
-            runtime.context.minMessagesToCache
-          : runtime.context.minMessagesToCache ??
-            middlewareOptions?.minMessagesToCache ??
-            DEFAULT_MIN_MESSAGES_TO_CACHE;
+        runtime.context.minMessagesToCache ??
+        middlewareOptions?.minMessagesToCache ??
+        DEFAULT_MIN_MESSAGES_TO_CACHE;
       const unsupportedModelBehavior =
-        runtime.context.unsupportedModelBehavior ===
-        DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR
-          ? middlewareOptions?.unsupportedModelBehavior ??
-            runtime.context.unsupportedModelBehavior
-          : runtime.context.unsupportedModelBehavior ??
-            middlewareOptions?.unsupportedModelBehavior;
+        runtime.context.unsupportedModelBehavior ??
+        middlewareOptions?.unsupportedModelBehavior ??
+        DEFAULT_UNSUPPORTED_MODEL_BEHAVIOR;
 
       // Skip if caching is disabled
       if (!enableCaching || !request.model) {
