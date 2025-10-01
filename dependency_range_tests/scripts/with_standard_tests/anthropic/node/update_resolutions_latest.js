@@ -8,7 +8,9 @@ const currentPackageJson = JSON.parse(
 
 if (currentPackageJson.devDependencies["@langchain/core"]) {
   delete currentPackageJson.devDependencies["@langchain/core"];
-  currentPackageJson.peerDependencies["@langchain/core"] = "*";
+  if (!currentPackageJson.peerDependencies["@langchain/core"]) {
+    currentPackageJson.peerDependencies["@langchain/core"] = "*";
+  }
 }
 
 fs.writeFileSync(
