@@ -1467,7 +1467,9 @@ export class ChatOpenAIResponses<
         : (() => {
             const formatted = formatToOpenAIToolChoice(options?.tool_choice);
             if (typeof formatted === "object" && "type" in formatted) {
-              if (formatted.type === "function") {
+              if (formatted.type === "function" && typeof formatted.function === "object" ) {
+                return formatted
+              } else if (formatted.type === "function") {
                 return { type: "function", name: formatted.function.name };
               } else if (formatted.type === "allowed_tools") {
                 return {
