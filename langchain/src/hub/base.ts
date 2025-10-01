@@ -114,6 +114,8 @@ export function generateModelImportMap(
       importMapKey = "chat_models__chat_bedrock_converse";
     } else if (modelLcName === "ChatMistralAI") {
       importMapKey = "chat_models__mistralai";
+    } else if (modelLcName === "ChatMistral") {
+      importMapKey = "chat_models__mistralai";
     } else if (modelLcName === "ChatFireworks") {
       importMapKey = "chat_models__fireworks";
     } else if (modelLcName === "ChatGroq") {
