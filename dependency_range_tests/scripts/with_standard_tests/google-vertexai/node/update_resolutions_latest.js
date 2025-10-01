@@ -8,7 +8,10 @@ const currentPackageJson = JSON.parse(
 
 if (currentPackageJson.devDependencies["@langchain/core"]) {
   delete currentPackageJson.devDependencies["@langchain/core"];
-  currentPackageJson.peerDependencies["@langchain/core"] = "*";
+  const peerDependencyVersion =
+    currentPackageJson.peerDependencies["@langchain/core"] ?? "*";
+  currentPackageJson.peerDependencies["@langchain/core"] =
+    peerDependencyVersion;
 }
 
 if (currentPackageJson.dependencies["@langchain/google-gauth"]) {
