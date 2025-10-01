@@ -319,7 +319,6 @@ export function convertToV1FromResponses(
               name: "code_interpreter",
               args: { code: toolOutput.code },
             };
-            continue;
           }
           if (_isArray(toolOutput.outputs)) {
             const returnCode = iife(() => {
@@ -333,7 +332,6 @@ export function convertToV1FromResponses(
             for (const output of toolOutput.outputs) {
               if (_isContentBlock(output, "logs")) {
                 yield {
-                  id: toolOutput.id,
                   type: "server_tool_call_result",
                   toolCallId: toolOutput.id ?? "",
                   status: "success",
@@ -352,6 +350,7 @@ export function convertToV1FromResponses(
               }
             }
           }
+          continue;
         } else if (_isContentBlock(toolOutput, "mcp_call")) {
           yield {
             id: toolOutput.id,

@@ -139,6 +139,7 @@ describe("anthropicTranslator", () => {
       },
       {
         type: "server_tool_call_result",
+        name: "web_search",
         toolCallId: "srvtoolu_abc123",
         status: "success",
         output: {
@@ -153,6 +154,7 @@ describe("anthropicTranslator", () => {
       },
       {
         type: "server_tool_call_result",
+        name: "code_execution",
         toolCallId: "srvtoolu_def456",
         status: "success",
         output: {

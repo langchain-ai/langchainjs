@@ -439,6 +439,7 @@ export function convertToV1FromAnthropicMessage(
         }, []);
         yield {
           type: "server_tool_call_result",
+          name: "web_search",
           toolCallId: tool_use_id,
           status: "success",
           output: {
@@ -455,6 +456,7 @@ export function convertToV1FromAnthropicMessage(
       ) {
         yield {
           type: "server_tool_call_result",
+          name: "code_execution",
           toolCallId: block.tool_use_id,
           status: "success",
           output: block.content,
@@ -479,6 +481,7 @@ export function convertToV1FromAnthropicMessage(
       ) {
         yield {
           type: "server_tool_call_result",
+          name: "mcp_tool_use",
           toolCallId: block.tool_use_id,
           status: "success",
           output: block.content,

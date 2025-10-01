@@ -1,6 +1,7 @@
 import type { OpenAI as OpenAIClient } from "openai";
 import {
-  isToolMessage,
+  BaseMessage,
+  ToolMessage,
   type AIMessage,
   type ContentBlock,
 } from "@langchain/core/messages";
@@ -71,7 +72,7 @@ function _convertToChatCompletionsData(
 }
 
 export function _convertToCompletionsMessageFromV1(
-  message: AIMessage,
+  message: BaseMessage,
   model?: string
 ): OpenAIClient.Chat.Completions.ChatCompletionMessageParam {
   let role = messageToOpenAIRole(message);
@@ -93,7 +94,7 @@ export function _convertToCompletionsMessageFromV1(
       role: "assistant",
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
-  } else if (role === "tool" && isToolMessage(message)) {
+  } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
       tool_call_id: message.tool_call_id,

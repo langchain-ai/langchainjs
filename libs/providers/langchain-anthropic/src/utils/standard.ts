@@ -1,5 +1,9 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { BaseMessage, ContentBlock } from "@langchain/core/messages";
+import type {
+  BaseMessage,
+  ContentBlock,
+  ResponseMetadata,
+} from "@langchain/core/messages";
 import { iife } from "./index.js";
 
 function _isStandardAnnotation(
@@ -21,7 +25,7 @@ function _formatStandardCitations(
       if (_isStandardAnnotation(annotation)) {
         if (annotation.source === "char") {
           yield {
-            type: "char_location",
+            type: "char_location" as const,
             start_char_index: annotation.startIndex ?? 0,
             end_char_index: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -30,7 +34,7 @@ function _formatStandardCitations(
           };
         } else if (annotation.source === "page") {
           yield {
-            type: "page_location",
+            type: "page_location" as const,
             start_page_number: annotation.startIndex ?? 0,
             end_page_number: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -39,7 +43,7 @@ function _formatStandardCitations(
           };
         } else if (annotation.source === "block") {
           yield {
-            type: "content_block_location",
+            type: "content_block_location" as const,
             start_block_index: annotation.startIndex ?? 0,
             end_block_index: annotation.endIndex ?? 0,
             document_title: annotation.title ?? null,
@@ -48,7 +52,7 @@ function _formatStandardCitations(
           };
         } else if (annotation.source === "url") {
           yield {
-            type: "web_search_result_location",
+            type: "web_search_result_location" as const,
             url: annotation.url ?? "",
             title: annotation.title ?? null,
             encrypted_index: String(annotation.startIndex ?? 0),
@@ -56,7 +60,7 @@ function _formatStandardCitations(
           };
         } else if (annotation.source === "search") {
           yield {
-            type: "search_result_location",
+            type: "search_result_location" as const,
             title: annotation.title ?? null,
             start_block_index: annotation.startIndex ?? 0,
             end_block_index: annotation.endIndex ?? 0,
@@ -75,7 +79,8 @@ export function _formatStandardContent(
   message: BaseMessage
 ): Anthropic.Beta.BetaContentBlockParam[] {
   const result: Anthropic.Beta.BetaContentBlockParam[] = [];
-  const modelProvider = message.response_metadata?.model_provider;
+  const responseMetadata = message.response_metadata as ResponseMetadata;
+  const modelProvider = responseMetadata?.model_provider;
   for (const block of message.contentBlocks) {
     if (block.type === "text") {
       if (block.annotations) {
@@ -123,52 +128,55 @@ export function _formatStandardContent(
         signature: String(block.signature),
       });
     } else if (
-      block.type === "web_search_call" &&
+      block.type === "server_tool_call" &&
+      modelProvider == "anthropic"
+    ) {
+      if (block.name === "web_search") {
+        result.push({
+          type: "server_tool_use",
+          name: block.name,
+          id: block.id ?? "",
+          input: block.args,
+        });
+      } else if (block.name === "code_execution") {
+        result.push({
+          type: "server_tool_use",
+          name: block.name,
+          id: block.id ?? "",
+          input: block.args,
+        });
+      }
+    } else if (
+      block.type === "server_tool_call_result" &&
       modelProvider === "anthropic"
     ) {
-      result.push({
-        id: block.id ?? "",
-        type: "server_tool_use",
-        name: "web_search",
-        input: block.input ?? { query: block.query },
-      });
-    } else if (
-      block.type === "web_search_result" &&
-      modelProvider === "anthropic"
-    ) {
-      result.push({
-        id: block.id,
-        type: "web_search_tool_result",
-        content: block.content,
-      });
-    } else if (
-      block.type === "code_interpreter_call" &&
-      modelProvider === "anthropic"
-    ) {
-      result.push({
-        type: "server_tool_use",
-        name: "code_execution",
-        id: block.id,
-        input: { code: block.code },
-      });
-    } else if (
-      block.type === "code_interpreter_result" &&
-      modelProvider === "anthropic" &&
-      Array.isArray(block.fileIds)
-    ) {
-      result.push({
-        type: "code_execution_tool_result",
-        content: {
-          type: "code_execution_result",
-          stderr: block.stderr as string,
-          stdout: block.stdout as string,
-          return_code: block.returnCode as number,
-          fileIds: block.fileIds.map((fileId: string) => ({
-            type: "code_execution_output",
-            file_id: fileId,
-          })),
-        },
-      });
+      if (block.name === "web_search" && Array.isArray(block.output.urls)) {
+        const content = block.output.urls.map((url) => ({
+          type: "web_search_result" as const,
+          title: "",
+          encrypted_content: "",
+          url,
+        }));
+        result.push({
+          type: "web_search_tool_result",
+          tool_use_id: block.toolCallId ?? "",
+          content,
+        });
+      } else if (block.name === "code_execution") {
+        result.push({
+          type: "code_execution_tool_result",
+          tool_use_id: block.toolCallId ?? "",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          content: block.output as any,
+        });
+      } else if (block.name === "mcp_tool_result") {
+        result.push({
+          type: "mcp_tool_result",
+          tool_use_id: block.toolCallId ?? "",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          content: block.output as any,
+        });
+      }
     }
   }
   return result;
