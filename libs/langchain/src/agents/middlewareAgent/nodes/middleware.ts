@@ -4,13 +4,17 @@ import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
-import { RunnableCallable } from "../../RunnableCallable.js";
+import {
+  RunnableCallable,
+  RunnableCallableArgs,
+} from "../../RunnableCallable.js";
 import type {
   Runtime,
   ControlAction,
   AgentMiddleware,
   MiddlewareResult,
   JumpToTarget,
+  PrivateState,
 } from "../types.js";
 import {
   derivePrivateState,
@@ -22,14 +26,28 @@ type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
   | Command<any, TStateSchema, string>;
 
+export interface MiddlewareNodeOptions {
+  getPrivateState: () => PrivateState;
+}
+
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
+  #options: MiddlewareNodeOptions;
+
   abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;
+
+  constructor(
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
+    options: MiddlewareNodeOptions
+  ) {
+    super(fields);
+    this.#options = options;
+  }
 
   abstract runHook(
     state: TStateSchema,
@@ -89,9 +107,11 @@ export abstract class MiddlewareNode<
         }
         return { type: "terminate", result };
       },
+      ...this.#options.getPrivateState(),
     };
 
     const result = await this.runHook(state, runtime);
+    delete result?._privateState;
 
     /**
      * If result is undefined, return current state

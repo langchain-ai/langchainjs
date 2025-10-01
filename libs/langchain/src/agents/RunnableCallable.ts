@@ -51,6 +51,13 @@ export class RunnableCallable<I = unknown, O = unknown> extends Runnable<I, O> {
     return this.#state;
   }
 
+  setState(state: Awaited<O>) {
+    this.#state = {
+      ...this.#state,
+      ...state,
+    };
+  }
+
   async invoke(
     input: I,
     options?: Partial<RunnableConfig> | undefined

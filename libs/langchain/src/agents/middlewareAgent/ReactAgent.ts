@@ -40,6 +40,7 @@ import type {
   StreamConfiguration,
   JumpTo,
   UserInput,
+  PrivateState,
 } from "./types.js";
 
 import {
@@ -102,6 +103,8 @@ export class ReactAgent<
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
+
+  #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
   constructor(
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
@@ -170,6 +173,19 @@ export class ReactAgent<
       () => any
     ][] = [];
 
+    this.#agentNode = new AgentNode({
+      model: this.options.model,
+      systemPrompt: this.options.systemPrompt,
+      includeAgentName: this.options.includeAgentName,
+      name: this.options.name,
+      responseFormat: this.options.responseFormat,
+      middleware: this.options.middleware,
+      toolClasses,
+      shouldReturnDirect,
+      signal: this.options.signal,
+      modifyModelRequestHookMiddleware,
+    });
+
     const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
     for (let i = 0; i < middleware.length; i++) {
@@ -182,7 +198,9 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m);
+        beforeModelNode = new BeforeModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -196,7 +214,9 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m);
+        afterModelNode = new AfterModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -226,18 +246,7 @@ export class ReactAgent<
      */
     allNodeWorkflows.addNode(
       "model_request",
-      new AgentNode({
-        model: this.options.model,
-        systemPrompt: this.options.systemPrompt,
-        includeAgentName: this.options.includeAgentName,
-        name: this.options.name,
-        responseFormat: this.options.responseFormat,
-        middleware: this.options.middleware,
-        toolClasses,
-        shouldReturnDirect,
-        signal: this.options.signal,
-        modifyModelRequestHookMiddleware,
-      }),
+      this.#agentNode,
       AgentNode.nodeOptions
     );
 
@@ -762,6 +771,24 @@ export class ReactAgent<
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
     const initializedState = await this.#initializeMiddlewareStates(state);
+
+    /**
+     * init state if thread_id is provided
+     */
+    if (config?.configurable?.thread_id) {
+      const prevState = (await this.#graph.getState(config as any)) as {
+        values: {
+          _privateState: PrivateState;
+        };
+      };
+      if (prevState.values._privateState) {
+        this.#agentNode.setState({
+          structuredResponse: undefined,
+          _privateState: prevState.values._privateState,
+        });
+      }
+    }
+
     return this.#graph.invoke(
       initializedState,
       config as unknown as InferContextInput<ContextSchema> &

@@ -184,7 +184,8 @@ export type Runtime<TState = unknown, TContext = unknown> = Partial<
    * @param result - The result to terminate the agent with.
    */
   terminate(result: Partial<TState> | Error): ControlAction<TState>;
-} & WithMaybeContext<TContext>;
+} & WithMaybeContext<TContext> &
+  PrivateState;
 
 /**
  * Control action type returned by control methods.
@@ -754,6 +755,17 @@ export type InferAgentConfig<
         InferMiddlewareContextInputs<TMiddleware>;
     }>;
 
+export interface RunLevelPrivateState {
+  runModelCallCount: number;
+}
+export interface ThreadLevelPrivateState {
+  threadLevelCallCount: number;
+}
+
+export interface PrivateState
+  extends ThreadLevelPrivateState,
+    RunLevelPrivateState {}
+
 export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
@@ -761,7 +773,7 @@ export type InternalAgentState<
   >
 > = {
   messages: BaseMessage[];
-  __preparedModelOptions?: ModelRequest;
+  _privateState?: PrivateState;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
