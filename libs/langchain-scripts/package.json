@@ -44,7 +44,7 @@
   "dependencies": {
     "@octokit/rest": "^21.0.2",
     "@rollup/wasm-node": "^4.19.0",
-    "axios": "^1.6.7",
+    "axios": "^1.12.0",
     "commander": "^11.1.0",
     "glob": "^10.3.10",
     "lodash": "^4.17.21",
