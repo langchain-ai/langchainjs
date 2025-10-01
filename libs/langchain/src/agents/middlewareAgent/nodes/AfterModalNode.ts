@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import { MiddlewareNode } from "./middleware.js";
+import { MiddlewareNode, MiddlewareNodeOptions } from "./middleware.js";
 import type {
   AgentBuiltInState,
   AgentMiddleware,
@@ -19,12 +19,18 @@ export class AfterModelNode<
 
   name: string;
 
-  constructor(public middleware: AgentMiddleware<any, any, any>) {
-    super({
-      name: `AfterModelNode_${middleware.name}`,
-      func: async (state: TStateSchema, config?: LangGraphRunnableConfig) =>
-        this.invokeMiddleware(state, config),
-    });
+  constructor(
+    public middleware: AgentMiddleware<any, any, any>,
+    options: MiddlewareNodeOptions
+  ) {
+    super(
+      {
+        name: `AfterModelNode_${middleware.name}`,
+        func: async (state: TStateSchema, config?: LangGraphRunnableConfig) =>
+          this.invokeMiddleware(state, config),
+      },
+      options
+    );
     this.name = `AfterModelNode_${middleware.name}`;
   }
 

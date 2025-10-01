@@ -174,7 +174,8 @@ export type WithMaybeContext<TContext> = undefined extends TContext
 export type Runtime<TContext = unknown> = Partial<
   Omit<LangGraphRuntime<TContext>, "context" | "configurable">
 > &
-  WithMaybeContext<TContext>;
+  WithMaybeContext<TContext> &
+  PrivateState;
 
 /**
  * Result type for middleware functions.
@@ -733,6 +734,17 @@ export type InferAgentConfig<
         InferMiddlewareContextInputs<TMiddleware>;
     }>;
 
+export interface RunLevelPrivateState {
+  runModelCallCount: number;
+}
+export interface ThreadLevelPrivateState {
+  threadLevelCallCount: number;
+}
+
+export interface PrivateState
+  extends ThreadLevelPrivateState,
+    RunLevelPrivateState {}
+
 export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
@@ -740,7 +752,7 @@ export type InternalAgentState<
   >
 > = {
   messages: BaseMessage[];
-  __preparedModelOptions?: ModelRequest;
+  _privateState?: PrivateState;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });
