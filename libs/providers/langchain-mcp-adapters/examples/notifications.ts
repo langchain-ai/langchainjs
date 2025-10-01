@@ -23,10 +23,9 @@ const client = new MultiServerMCPClient({
   // Receive progress updates (e.g. from long‑running tool calls)
   onProgress: (progress, context) => {
     const pct =
-      progress.percentage ??
-      (progress.progress != null && progress.total
+      progress.progress != null && progress.total
         ? Math.round((progress.progress / progress.total) * 100)
-        : undefined);
+        : undefined;
     if (pct != null) {
       const origin =
         context.type === "tool"

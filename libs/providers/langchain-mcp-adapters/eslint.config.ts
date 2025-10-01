@@ -35,12 +35,20 @@ const config: ConfigArray = [
   },
   {
     // Override parser options for test files
-    files: ["__tests__/**/*.ts", "**/*.test.ts"],
+    files: ["__tests__/**/*.ts", "**/*.test.ts", "**/*.test-d.ts"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.tests.json",
         tsconfigRootDir: __dirname,
       },
+    },
+    rules: {
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          devDependencies: true,
+        },
+      ],
     },
   },
 ];

@@ -142,13 +142,11 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onInitialized) {
-      mcpClient.setNotificationHandler(
-        InitializedNotificationSchema,
-        (notification) =>
-          this.#hooks.onInitialized?.(notification.params, {
-            server: serverName,
-            options,
-          })
+      mcpClient.setNotificationHandler(InitializedNotificationSchema, () =>
+        this.#hooks.onInitialized?.({
+          server: serverName,
+          options,
+        })
       );
     }
 
@@ -166,8 +164,8 @@ export class ConnectionManager {
     if (this.#hooks.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
         PromptListChangedNotificationSchema,
-        (notification) =>
-          this.#hooks.onPromptsListChanged?.(notification.params, {
+        () =>
+          this.#hooks.onPromptsListChanged?.({
             server: serverName,
             options,
           })
@@ -177,8 +175,8 @@ export class ConnectionManager {
     if (this.#hooks.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
         ResourceListChangedNotificationSchema,
-        (notification) =>
-          this.#hooks.onResourcesListChanged?.(notification.params, {
+        () =>
+          this.#hooks.onResourcesListChanged?.({
             server: serverName,
             options,
           })
@@ -197,24 +195,20 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler(
-        RootsListChangedNotificationSchema,
-        (notification) =>
-          this.#hooks.onRootsListChanged?.(notification.params, {
-            server: serverName,
-            options,
-          })
+      mcpClient.setNotificationHandler(RootsListChangedNotificationSchema, () =>
+        this.#hooks.onRootsListChanged?.({
+          server: serverName,
+          options,
+        })
       );
     }
 
     if (this.#hooks.onToolsListChanged) {
-      mcpClient.setNotificationHandler(
-        ToolListChangedNotificationSchema,
-        (notification) =>
-          this.#hooks.onToolsListChanged?.(notification.params, {
-            server: serverName,
-            options,
-          })
+      mcpClient.setNotificationHandler(ToolListChangedNotificationSchema, () =>
+        this.#hooks.onToolsListChanged?.({
+          server: serverName,
+          options,
+        })
       );
     }
 

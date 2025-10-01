@@ -1,11 +1,9 @@
 import { z } from "zod/v3";
 import type { Command } from "@langchain/langgraph";
-import { EmbeddedResourceSchema } from "@modelcontextprotocol/sdk/types.js";
+import type { EmbeddedResource } from "@modelcontextprotocol/sdk/types.js";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import type { ToolMessage, MessageStructure } from "@langchain/core/messages";
-
-export type { RunnableConfig, ToolMessage, MessageStructure };
+import type { ToolMessage } from "@langchain/core/messages";
 
 /**
  * state messages
@@ -26,7 +24,7 @@ const toolResultBeforeSchema = z.tuple([
   z.custom<string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]>(),
   z.array(
     z.union([
-      EmbeddedResourceSchema,
+      z.custom<EmbeddedResource>(),
       z.custom<ContentBlock.Multimodal.Standard>(),
     ])
   ),

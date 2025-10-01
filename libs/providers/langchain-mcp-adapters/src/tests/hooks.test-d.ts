@@ -72,21 +72,21 @@ test("check tool hooks types", () => {
       }>();
     },
 
-    onInitialized: (_, server) => {
+    onInitialized: (server) => {
       expectTypeOf(server).toEqualTypeOf<{
         server: string;
         options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
       }>();
     },
 
-    onPromptsListChanged: (_, server) => {
+    onPromptsListChanged: (server) => {
       expectTypeOf(server).toEqualTypeOf<{
         server: string;
         options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
       }>();
     },
 
-    onResourcesListChanged: (_, server) => {
+    onResourcesListChanged: (server) => {
       expectTypeOf(server).toEqualTypeOf<{
         server: string;
         options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
@@ -101,14 +101,14 @@ test("check tool hooks types", () => {
       }>();
     },
 
-    onRootsListChanged: (_, server) => {
+    onRootsListChanged: (server) => {
       expectTypeOf(server).toEqualTypeOf<{
         server: string;
         options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
       }>();
     },
 
-    onToolsListChanged: (_, server) => {
+    onToolsListChanged: (server) => {
       expectTypeOf(server).toEqualTypeOf<{
         server: string;
         options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;

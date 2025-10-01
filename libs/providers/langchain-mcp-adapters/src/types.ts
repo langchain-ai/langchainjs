@@ -1,18 +1,10 @@
 import { z } from "zod/v3";
-import {
-  LoggingMessageNotificationSchema,
-  ProgressSchema,
-  CancelledNotificationSchema,
-  InitializedNotificationSchema,
-  PromptListChangedNotificationSchema,
-  ResourceListChangedNotificationSchema,
-  ResourceUpdatedNotificationSchema,
-  RootsListChangedNotificationSchema,
-  ToolListChangedNotificationSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { Command } from "@langchain/langgraph";
 
 import { toolHooksSchema, type ToolHooks } from "./hooks.js";
+
+export type { Command };
 
 const callToolResultContentTypes = [
   "audio",
@@ -21,7 +13,29 @@ const callToolResultContentTypes = [
   "resource_link",
   "text",
 ] as const;
-type CallToolResultContentType = (typeof callToolResultContentTypes)[number];
+export type CallToolResultContentType =
+  (typeof callToolResultContentTypes)[number];
+
+/**
+ * The severity of a log message.
+ * @see {@link https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/types.ts#L1067}
+ */
+export const LoggingLevelSchema = z.enum([
+  "debug",
+  "info",
+  "notice",
+  "warning",
+  "error",
+  "critical",
+  "alert",
+  "emergency",
+]);
+
+/**
+ * A uniquely identifying ID for a request in JSON-RPC.
+ * @see {@link https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/types.ts#L71C1-L74C72}
+ */
+export const RequestIdSchema = z.union([z.string(), z.number().int()]);
 
 const outputTypesUnion = z.union([
   z
@@ -399,22 +413,35 @@ export const notifications = z.object({
    *
    * @example
    * ```ts
-   * const interceptor = {
+   * const client = new MultiServerMCPClient({
+   *   // ...
    *   onLog: (logMessage) => {
    *     console.log(logMessage);
    *   },
-   * };
+   * });
    * ```
    */
   onMessage: z
     .function()
     .args(
-      LoggingMessageNotificationSchema.pick({ params: true }),
+      z.object({
+        /**
+         * The severity of this log message.
+         */
+        level: LoggingLevelSchema,
+        /**
+         * An optional name of the logger issuing this message.
+         */
+        logger: z.optional(z.string()),
+        /**
+         * The data to be logged, such as a string message or an object. Any JSON serializable type is allowed here.
+         */
+        data: z.unknown(),
+      }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
-
   /**
    * Called when a progress message is received.
    *
@@ -431,75 +458,202 @@ export const notifications = z.object({
    *
    * @example
    * ```ts
-   * const interceptor = {
+   * const client = new MultiServerMCPClient({
+   *   // ...
    *   onProgress: (progress, source) => {
    *     if (source.type === "tool") {
    *     console.log(progress);
    *   },
-   * };
+   * });
    * ```
    */
   onProgress: z
     .function()
-    .args(ProgressSchema, eventContextSchema)
+    .args(
+      z.object({
+        /**
+         * The progress thus far. This should increase every time progress is made, even if the total is unknown.
+         */
+        progress: z.number(),
+        /**
+         * Total number of items to process (or total progress required), if known.
+         */
+        total: z.optional(z.number()),
+        /**
+         * An optional message describing the current progress.
+         */
+        message: z.optional(z.string()),
+      }),
+      eventContextSchema
+    )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
-
   onCancelled: z
     .function()
     .args(
-      CancelledNotificationSchema.pick({ params: true }),
+      z.object({
+        /**
+         * The ID of the request to cancel.
+         *
+         * This MUST correspond to the ID of a request previously issued in the same direction.
+         */
+        requestId: RequestIdSchema,
+
+        /**
+         * An optional string describing the reason for the cancellation. This MAY be logged or presented to the user.
+         */
+        reason: z.string().optional(),
+      }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
-
+  /**
+   * Called when the server is initialized.
+   *
+   * @param source - The source of the initialized message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The initialized message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onInitialized: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onInitialized: z
     .function()
-    .args(
-      InitializedNotificationSchema.pick({ params: true }),
-      serverMessageSourceSchema
-    )
+    .args(serverMessageSourceSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
+  /**
+   * Called when the prompts list is changed.
+   *
+   * @param source - The source of the prompts list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The prompts list changed message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onPromptsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onPromptsListChanged: z
     .function()
-    .args(
-      PromptListChangedNotificationSchema.pick({ params: true }),
-      serverMessageSourceSchema
-    )
+    .args(serverMessageSourceSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
+  /**
+   * Called when the resources list is changed.
+   *
+   * @param source - The source of the resources list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The resources list changed message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onResourcesListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onResourcesListChanged: z
     .function()
-    .args(
-      ResourceListChangedNotificationSchema.pick({ params: true }),
-      serverMessageSourceSchema
-    )
+    .args(serverMessageSourceSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
+  /**
+   * Called when the resources are updated.
+   *
+   * @param updatedResource - The updated resource
+   * @param updatedResource.uri - The URI of the resource that has been updated. This might be a sub-resource of the one that the client actually subscribed to.
+   * @param source - The source of the resources updated message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The resources updated message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onResourcesUpdated: (updatedResource, source) => {
+   *     console.log(`Resource ${updatedResource.uri} updated`);
+   *   },
+   * });
+   * ```
+   */
   onResourcesUpdated: z
     .function()
     .args(
-      ResourceUpdatedNotificationSchema.pick({ params: true }),
+      z.object({
+        /**
+         * The URI of the resource that has been updated. This might be a sub-resource of the one that the client actually subscribed to.
+         */
+        uri: z.string(),
+      }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
+  /**
+   * Called when the roots list is changed.
+   *
+   * @param source - The source of the roots list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The roots list changed message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onRootsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onRootsListChanged: z
     .function()
-    .args(
-      RootsListChangedNotificationSchema.pick({ params: true }),
-      serverMessageSourceSchema
-    )
+    .args(serverMessageSourceSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
+  /**
+   * Called when the tools list is changed.
+   *
+   * @param source - The source of the tools list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   * @returns The tools list changed message
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   // ...
+   *   onToolsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onToolsListChanged: z
     .function()
-    .args(
-      ToolListChangedNotificationSchema.pick({ params: true }),
-      serverMessageSourceSchema
-    )
+    .args(serverMessageSourceSchema)
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
 });

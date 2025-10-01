@@ -1,5 +1,9 @@
 import { z, ZodError as ZodErrorV4 } from "zod/v4";
 import { ZodError as ZodErrorV3 } from "zod/v3";
+import {
+  type CallToolResult,
+  type ContentBlock as MCPContentBlock,
+} from "@modelcontextprotocol/sdk/types.js";
 import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
 import type {
   EmbeddedResource,
@@ -19,8 +23,6 @@ import type { Notifications } from "./types.js";
 
 import {
   _resolveDetailedOutputHandling,
-  type CallToolResult,
-  type CallToolResultContent,
   type CallToolResultContentType,
   type LoadMcpToolsOptions,
   type OutputHandling,
@@ -136,28 +138,28 @@ async function* _embeddedResourceToStandardFileBlocks(
 }
 
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: true,
   client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock.Multimodal.Standard[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: false | undefined,
   client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<ContentBlock[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: boolean | undefined,
   client: MCPInstance,
   toolName: string,
   serverName: string
 ): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
 async function _toolOutputToContentBlocks(
-  content: CallToolResultContent,
+  content: MCPContentBlock,
   useStandardContentBlocks: boolean | undefined,
   client: MCPInstance,
   toolName: string,
@@ -342,7 +344,7 @@ async function _convertCallToolResult({
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
-        .map((content: CallToolResultContent) => content.text)
+        .map((content: MCPContentBlock) => content.text)
         .join("\n")}`
     );
   }
@@ -352,11 +354,11 @@ async function _convertCallToolResult({
       await Promise.all(
         result.content
           .filter(
-            (content: CallToolResultContent) =>
+            (content: MCPContentBlock) =>
               _getOutputTypeForContentType(content.type, outputHandling) ===
               "content"
           )
-          .map((content: CallToolResultContent) =>
+          .map((content: MCPContentBlock) =>
             _toolOutputToContentBlocks(
               content,
               useStandardContentBlocks,
@@ -373,7 +375,7 @@ async function _convertCallToolResult({
     await Promise.all(
       (
         result.content.filter(
-          (content: CallToolResultContent) =>
+          (content: MCPContentBlock) =>
             _getOutputTypeForContentType(content.type, outputHandling) ===
             "artifact"
         ) as EmbeddedResource[]
