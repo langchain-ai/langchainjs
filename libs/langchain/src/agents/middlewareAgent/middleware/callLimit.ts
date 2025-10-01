@@ -94,7 +94,7 @@ class ModelCallLimitMiddlewareError extends Error {
  * );
  * ```
  */
-export function modelCllLimitMiddleware(
+export function modelCallLimitMiddleware(
   middlewareOptions?: ModelCallLimitMiddlewareConfig
 ) {
   return createMiddleware({

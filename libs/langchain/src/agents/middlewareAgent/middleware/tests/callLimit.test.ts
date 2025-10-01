@@ -4,7 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { FakeToolCallingChatModel } from "../../../tests/utils.js";
-import { modelCllLimitMiddleware } from "../callLimit.js";
+import { modelCallLimitMiddleware } from "../callLimit.js";
 import { createAgent } from "../../index.js";
 
 const toolCallMessage1 = new AIMessage({
@@ -54,7 +54,7 @@ describe("ModelCallLimitMiddleware", () => {
             responseMessage2,
           ],
         });
-        const middleware = modelCllLimitMiddleware({
+        const middleware = modelCallLimitMiddleware({
           runLimit: 2,
           exitBehavior,
         });
@@ -102,7 +102,7 @@ describe("ModelCallLimitMiddleware", () => {
           thread_id: "test-123",
         },
       };
-      const middleware = modelCllLimitMiddleware({
+      const middleware = modelCallLimitMiddleware({
         threadLimit: 2,
         exitBehavior,
       });
