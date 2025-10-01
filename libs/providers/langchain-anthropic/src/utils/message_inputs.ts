@@ -4,15 +4,14 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   type BaseMessage,
-  AIMessage,
   HumanMessage,
   ToolMessage,
-  SystemMessage,
   MessageContentComplex,
   isDataContentBlock,
   convertToProviderContentBlock,
   parseBase64DataUrl,
   ContentBlock,
+  isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -297,23 +296,20 @@ export function _convertMessagesToAnthropicPayload(
 ): AnthropicMessageCreateParams {
   const mergedMessages = _ensureMessageContents(messages);
   let system;
-  if (
-    mergedMessages.length > 0 &&
-    SystemMessage.isInstance(mergedMessages[0])
-  ) {
+  if (mergedMessages.length > 0 && mergedMessages[0]._getType() === "system") {
     system = messages[0].content;
   }
   const conversationMessages =
     system !== undefined ? mergedMessages.slice(1) : mergedMessages;
   const formattedMessages = conversationMessages.map((message) => {
     let role;
-    if (HumanMessage.isInstance(message)) {
+    if (message._getType() === "human") {
       role = "user" as const;
-    } else if (AIMessage.isInstance(message)) {
+    } else if (message._getType() === "ai") {
       role = "assistant" as const;
-    } else if (ToolMessage.isInstance(message)) {
+    } else if (message._getType() === "tool") {
       role = "user" as const;
-    } else if (SystemMessage.isInstance(message)) {
+    } else if (message._getType() === "system") {
       throw new Error(
         "System messages are only permitted as the first passed message."
       );
@@ -321,7 +317,7 @@ export function _convertMessagesToAnthropicPayload(
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
     if (
-      AIMessage.isInstance(message) &&
+      isAIMessage(message) &&
       message.response_metadata?.output_version === "v1"
     ) {
       return {
@@ -329,7 +325,7 @@ export function _convertMessagesToAnthropicPayload(
         content: _formatStandardContent(message),
       };
     }
-    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
+    if (isAIMessage(message) && !!message.tool_calls?.length) {
       if (typeof message.content === "string") {
         if (message.content === "") {
           return {

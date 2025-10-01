@@ -8,11 +8,10 @@ const currentPackageJson = JSON.parse(
   fs.readFileSync(communityPackageJsonPath)
 );
 
-const isPrerelease = ["rc", "alpha"].includes(
-  currentPackageJson.peerDependencies["@langchain/core"]
-);
-
-if (currentPackageJson.peerDependencies?.["@langchain/core"] && !isPrerelease) {
+if (
+  currentPackageJson.peerDependencies?.["@langchain/core"] &&
+  !currentPackageJson.peerDependencies["@langchain/core"].includes("rc")
+) {
   const minVersion = semver.minVersion(
     currentPackageJson.peerDependencies["@langchain/core"]
   ).version;
