@@ -132,32 +132,34 @@ describe("anthropicTranslator", () => {
         ],
       },
       {
-        type: "web_search_call",
+        type: "server_tool_call",
+        name: "web_search",
         id: "srvtoolu_abc123",
-        query: "web search query",
+        args: { query: "web search query" },
       },
       {
-        type: "web_search_result",
-        id: "srvtoolu_abc123",
-        urls: ["<page url 1>", "<page url 2>"],
+        type: "server_tool_call_result",
+        toolCallId: "srvtoolu_abc123",
+        status: "success",
+        output: {
+          urls: ["<page url 1>", "<page url 2>"],
+        },
       },
       {
-        type: "code_interpreter_call",
+        type: "server_tool_call",
+        name: "code_execution",
         id: "srvtoolu_def456",
-        code: "import numpy as np...",
+        args: { code: "import numpy as np..." },
       },
       {
-        type: "code_interpreter_result",
-        id: "srvtoolu_def456",
-        output: [
-          {
-            type: "code_interpreter_output",
-            fileIds: [],
-            returnCode: 0,
-            stdout: "Mean: 5.5\nStandard deviation...",
-            stderr: "",
-          },
-        ],
+        type: "server_tool_call_result",
+        toolCallId: "srvtoolu_def456",
+        status: "success",
+        output: {
+          type: "code_execution_result",
+          stdout: "Mean: 5.5\nStandard deviation...",
+          stderr: "",
+        },
       },
       // {
       //   type: "something_else",
@@ -464,20 +466,20 @@ describe("anthropicTranslator", () => {
         url: "https://example.com",
       },
       // {
-      //   type: "document",
-      //   source: {
+      //   type: "file",
+      //   mimeType: "application/octet-stream",
+      //   data: JSON.stringify({
       //     type: "content",
       //     content: [
       //       { type: "text", text: "The grass is green" },
       //       { type: "text", text: "The sky is blue" },
       //     ],
-      //   },
-      //   citations: { enabled: true },
+      //   }),
       // },
       // {
-      //   type: "text-plain",
-      //   text: "<plain text data>",
+      //   type: "file",
       //   mimeType: "text/plain",
+      //   data: "<plain text data>",
       // },
       {
         type: "image",

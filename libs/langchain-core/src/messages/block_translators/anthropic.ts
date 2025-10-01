@@ -198,8 +198,6 @@ export function convertToV1FromAnthropicContentBlock(
         mimeType: String(block.source.media_type ?? "text/plain"),
         data: block.source.data,
       };
-    } else {
-      return block as ContentBlock.Standard;
     }
   } else if (
     _isContentBlock(block, "image") &&
@@ -229,8 +227,6 @@ export function convertToV1FromAnthropicContentBlock(
         type: "image",
         fileId: block.source.file_id,
       };
-    } else {
-      return block as ContentBlock.Standard;
     }
   }
   return undefined;
@@ -256,35 +252,12 @@ export function convertToV1FromAnthropicInput(
       if (stdBlock) {
         yield stdBlock;
       } else {
-        yield { type: "non_standard", value: block };
+        yield block as ContentBlock.Standard;
       }
     }
   }
   return Array.from(iterateContent());
 }
-
-type AnthropicCodeExecutionToolResult = {
-  type: "code_execution_tool_result";
-  tool_use_id: string;
-  content:
-    | {
-        // BetaCodeExecutionToolResultError
-        type: "code_execution_tool_result_error";
-        error_code: string;
-      }
-    | {
-        // BetaCodeExecutionResultBlock
-        type: "code_execution_result";
-        stderr: string;
-        stdout: string;
-        return_code: number;
-        content: {
-          // BetaCodeExecutionOutputBlock
-          type: "code_execution_output";
-          file_id: string;
-        }[];
-      };
-};
 
 /**
  * Converts an Anthropic AI message to an array of v1 standard content blocks.
@@ -422,6 +395,7 @@ export function convertToV1FromAnthropicMessage(
             return "";
           });
           yield {
+            id,
             type: "server_tool_call",
             name: "web_search",
             args: { query },
@@ -446,7 +420,6 @@ export function convertToV1FromAnthropicMessage(
             type: "server_tool_call",
             name: "code_execution",
             args: { code },
-            code,
           };
           continue;
         }
@@ -477,23 +450,21 @@ export function convertToV1FromAnthropicMessage(
       // CodeExecutionToolResultBlock
       else if (
         _isContentBlock(block, "code_execution_tool_result") &&
-        _isString(block.tool_use_id)
+        _isString(block.tool_use_id) &&
+        _isObject(block.content)
       ) {
-        // We just make a type assertion here instead of deep checking every property
-        // since `code_execution_tool_result` is an anthropic only block
-        const { content, tool_use_id } =
-          block as AnthropicCodeExecutionToolResult;
         yield {
           type: "server_tool_call_result",
-          toolCallId: tool_use_id,
+          toolCallId: block.tool_use_id,
           status: "success",
-          output: content,
+          output: block.content,
         };
         continue;
       }
       // MCPToolUseBlock
       else if (_isContentBlock(block, "mcp_tool_use")) {
         yield {
+          id: block.id,
           type: "server_tool_call",
           name: "mcp_tool_use",
           args: block.input,
@@ -525,12 +496,12 @@ export function convertToV1FromAnthropicMessage(
       }
       // SearchResultBlockParam
       else if (_isContentBlock(block, "search_result")) {
-        yield { type: "non_standard", value: block };
+        yield { id: block.id, type: "non_standard", value: block };
         continue;
       }
       // ToolResultBlockParam
       else if (_isContentBlock(block, "tool_result")) {
-        yield { type: "non_standard", value: block };
+        yield { id: block.id, type: "non_standard", value: block };
         continue;
       } else {
         // For all other blocks, we try to convert them to a standard block

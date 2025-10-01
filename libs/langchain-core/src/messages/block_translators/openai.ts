@@ -294,6 +294,7 @@ export function convertToV1FromResponses(
       for (const toolOutput of message.additional_kwargs.tool_outputs) {
         if (_isContentBlock(toolOutput, "web_search_call")) {
           yield {
+            id: toolOutput.id,
             type: "server_tool_call",
             name: "web_search",
             args: { query: toolOutput.query },
@@ -301,17 +302,19 @@ export function convertToV1FromResponses(
           continue;
         } else if (_isContentBlock(toolOutput, "file_search_call")) {
           yield {
+            id: toolOutput.id,
             type: "server_tool_call",
             name: "file_search",
             args: { query: toolOutput.query },
           };
           continue;
         } else if (_isContentBlock(toolOutput, "computer_call")) {
-          // no-op
+          yield { type: "non_standard", value: toolOutput };
           continue;
         } else if (_isContentBlock(toolOutput, "code_interpreter_call")) {
           if (_isString(toolOutput.code)) {
             yield {
+              id: toolOutput.id,
               type: "server_tool_call",
               name: "code_interpreter",
               args: { code: toolOutput.code },
@@ -330,6 +333,7 @@ export function convertToV1FromResponses(
             for (const output of toolOutput.outputs) {
               if (_isContentBlock(output, "logs")) {
                 yield {
+                  id: toolOutput.id,
                   type: "server_tool_call_result",
                   toolCallId: toolOutput.id ?? "",
                   status: "success",
@@ -350,6 +354,7 @@ export function convertToV1FromResponses(
           }
         } else if (_isContentBlock(toolOutput, "mcp_call")) {
           yield {
+            id: toolOutput.id,
             type: "server_tool_call",
             name: "mcp_call",
             args: toolOutput.input,
@@ -357,6 +362,7 @@ export function convertToV1FromResponses(
           continue;
         } else if (_isContentBlock(toolOutput, "mcp_list_tools")) {
           yield {
+            id: toolOutput.id,
             type: "server_tool_call",
             name: "mcp_list_tools",
             args: toolOutput.input,
