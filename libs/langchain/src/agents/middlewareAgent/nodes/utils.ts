@@ -169,6 +169,14 @@ export function parseJumpToTarget(target?: string): JumpTo | undefined {
   if (!target) {
     return undefined;
   }
+
+  /**
+   * if target is already a valid jump target, return it
+   */
+  if (["model_request", "tools", END].includes(target)) {
+    return target as JumpTo;
+  }
+
   if (target === "model") {
     return "model_request";
   }
