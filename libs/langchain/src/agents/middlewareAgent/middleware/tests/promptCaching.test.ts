@@ -77,6 +77,46 @@ describe("anthropicPromptCachingMiddleware", () => {
     });
   });
 
+  it("should not add cache_control on multiple messages", async () => {
+    const model = createMockModel();
+
+    const middleware = anthropicPromptCachingMiddleware({
+      ttl: "5m",
+      minMessagesToCache: 3,
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware] as const,
+    });
+
+    // Test with enough messages to trigger caching
+    const messages = [
+      new SystemMessage("You are a helpful assistant"),
+      new HumanMessage("Hello"),
+      new AIMessage("Hi there!"),
+      new HumanMessage("How are you?"),
+      new AIMessage("I'm doing well, thanks!"),
+      new HumanMessage("What's the weather like?"),
+    ];
+
+    await agent.invoke({ messages });
+    await agent.invoke({
+      messages: [...messages, new HumanMessage("How are you?")],
+    });
+
+    expect(model.invoke).toHaveBeenCalled();
+    const [secondLastMessage, lastMessage] = (
+      model.invoke as unknown as MockInstance
+    ).mock.calls[1][0].slice(-2);
+    expect(secondLastMessage.content[0]).not.toHaveProperty("cache_control");
+    expect(lastMessage.content[0]).toHaveProperty("cache_control");
+    expect(lastMessage.content[0].cache_control).toEqual({
+      type: "ephemeral",
+      ttl: "5m",
+    });
+  });
+
   it("should not add cache_control when message count is below threshold", async () => {
     const model = createMockModel();
     const middleware = anthropicPromptCachingMiddleware({

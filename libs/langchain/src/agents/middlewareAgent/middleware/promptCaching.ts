@@ -172,7 +172,7 @@ export function anthropicPromptCachingMiddleware(
   return createMiddleware({
     name: "PromptCachingMiddleware",
     contextSchema,
-    modifyModelRequest: (options, state, runtime) => {
+    modifyModelRequest: (request, state, runtime) => {
       /**
        * If the runtime values match the schema default values, use the middleware option
        * values otherwise use the runtime values. This allows to apply general configurations
@@ -202,22 +202,22 @@ export function anthropicPromptCachingMiddleware(
             middlewareOptions?.unsupportedModelBehavior;
 
       // Skip if caching is disabled
-      if (!enableCaching || !options.model) {
+      if (!enableCaching || !request.model) {
         return undefined;
       }
 
       const isAnthropicModel =
-        options.model.getName() === "ChatAnthropic" ||
-        (options.model.getName() === "ConfigurableModel" &&
-          (options.model as ConfigurableModel)._defaultConfig?.modelProvider ===
+        request.model.getName() === "ChatAnthropic" ||
+        (request.model.getName() === "ConfigurableModel" &&
+          (request.model as ConfigurableModel)._defaultConfig?.modelProvider ===
             "anthropic");
       if (!isAnthropicModel) {
         // Get model name for better error context
-        const modelName = options.model.getName();
+        const modelName = request.model.getName();
         const modelInfo =
-          options.model.getName() === "ConfigurableModel"
+          request.model.getName() === "ConfigurableModel"
             ? `${modelName} (${
-                (options.model as ConfigurableModel)._defaultConfig
+                (request.model as ConfigurableModel)._defaultConfig
                   ?.modelProvider
               })`
             : modelName;
@@ -237,49 +237,62 @@ export function anthropicPromptCachingMiddleware(
       }
 
       const messagesCount =
-        state.messages.length + (options.systemPrompt ? 1 : 0);
+        state.messages.length + (request.systemPrompt ? 1 : 0);
 
       if (messagesCount < minMessagesToCache) {
-        return options;
+        return request;
       }
 
       /**
        * Add cache_control to the last message
        */
-      const lastMessage = options.messages.at(-1);
+      const lastMessage = request.messages.at(-1);
       if (!lastMessage) {
-        return options;
+        return request;
       }
 
+      const NewMessageConstructor =
+        Object.getPrototypeOf(lastMessage).constructor;
       if (Array.isArray(lastMessage.content)) {
-        lastMessage.content = [
-          ...lastMessage.content.slice(0, -1),
-          {
-            ...lastMessage.content.at(-1),
-            cache_control: {
-              type: "ephemeral",
-              ttl,
-            },
-          } as ContentBlock,
-        ];
+        const newMessage = new NewMessageConstructor({
+          ...lastMessage,
+          content: [
+            ...lastMessage.content.slice(0, -1),
+            {
+              ...lastMessage.content.at(-1),
+              cache_control: {
+                type: "ephemeral",
+                ttl,
+              },
+            } as ContentBlock,
+          ],
+        });
+        return {
+          ...request,
+          messages: [...request.messages.slice(0, -1), newMessage],
+        };
       } else if (typeof lastMessage.content === "string") {
-        lastMessage.content = [
-          {
-            type: "text",
-            text: lastMessage.content,
-            cache_control: {
-              type: "ephemeral",
-              ttl,
+        const newMessage = new NewMessageConstructor({
+          content: [
+            {
+              type: "text",
+              text: lastMessage.content,
+              cache_control: {
+                type: "ephemeral",
+                ttl,
+              },
             },
-          },
-        ];
-      } else {
-        throw new PromptCachingMiddlewareError(
-          "Last message content is not a string or array"
-        );
+          ],
+        });
+        return {
+          ...request,
+          messages: [...request.messages.slice(0, -1), newMessage],
+        };
       }
 
-      return options;
+      throw new PromptCachingMiddlewareError(
+        "Last message content is not a string or array"
+      );
     },
   });
 }
