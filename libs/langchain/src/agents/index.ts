@@ -33,6 +33,7 @@ import type {
 export * from "./types.js";
 export * from "./errors.js";
 export * from "./interrupt.js";
+export * from "./annotation.js";
 export { ToolNode } from "./nodes/ToolNode.js";
 export {
   toolStrategy,
