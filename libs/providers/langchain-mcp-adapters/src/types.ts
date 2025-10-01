@@ -1,13 +1,4 @@
-/* __LC_ALLOW_ENTRYPOINT_SIDE_EFFECTS__ */
-import {
-  z,
-  ZodTypeAny,
-  ZodObject,
-  ZodLiteral,
-  ZodRawShape,
-  UnknownKeysParam,
-  Primitive,
-} from "zod/v3";
+import { z } from "zod/v3";
 import {
   LoggingMessageNotificationSchema,
   ProgressSchema,
@@ -20,95 +11,17 @@ import {
   ToolListChangedNotificationSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
-import type {
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-} from "@langchain/core/messages";
-import type { RunnableConfig } from "@langchain/core/runnables";
-import type {
-  Command,
-  CommandInstance,
-  CommandParams,
-} from "@langchain/langgraph";
 
-import type { UnionToTuple } from "./util.js";
 import { toolHooksSchema, type ToolHooks } from "./hooks.js";
 
-export type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-export type {
-  Command,
-  ContentBlock,
-  ToolMessage,
-  MessageStructure,
-  RunnableConfig,
-  CommandInstance,
-  CommandParams,
-};
-
-function isZodObject(
-  schema: unknown
-): schema is ZodObject<ZodRawShape, UnknownKeysParam, ZodTypeAny> {
-  return (
-    typeof schema === "object" &&
-    schema !== null &&
-    "_def" in schema &&
-    (schema as { _def: { typeName: string } })._def.typeName === "ZodObject"
-  );
-}
-
-function isZodLiteral(schema: unknown): schema is ZodLiteral<Primitive> {
-  return (
-    typeof schema === "object" &&
-    schema !== null &&
-    "_def" in schema &&
-    (schema as { _def: { typeName: string } })._def.typeName === "ZodLiteral"
-  );
-}
-
-/**
- * Zod schema for an individual content item within a CallToolResult.
- */
-const callToolResultContentSchema =
-  CallToolResultSchema.shape.content._def.innerType.element;
-export type CallToolResultContent = z.output<
-  typeof callToolResultContentSchema
->;
-
-const callToolResultContentTypes = callToolResultContentSchema.options.map(
-  (option) => {
-    if (
-      isZodObject(option) &&
-      "type" in option.shape &&
-      isZodLiteral(option.shape.type)
-    ) {
-      return option.shape.type.value;
-    }
-    throw new Error(
-      "Internal error: Invalid option found in CallToolResultContentSchema's union. Expected ZodObject with ZodLiteral 'type'."
-    );
-  }
-) as UnionToTuple<
-  (typeof callToolResultContentSchema.options)[number]["shape"]["type"]["value"]
->;
-
-const callToolResultContentTypeZodLiterals = callToolResultContentTypes.map(
-  (t) => z.literal(t)
-) as UnionToTuple<
-  (typeof callToolResultContentSchema.options)[number]["shape"]["type"]
->;
-
-/**
- * Zod schema for the 'type' field of a CallToolResultContent item.
- * This will be a union of literals like "text", "image", "audio", and "resource".
- */
-export const callToolResultContentTypeSchema = z.union(
-  callToolResultContentTypeZodLiterals
-);
-export type CallToolResultContentType = z.output<
-  typeof callToolResultContentTypeSchema
->;
+const callToolResultContentTypes = [
+  "audio",
+  "image",
+  "resource",
+  "resource_link",
+  "text",
+] as const;
+type CallToolResultContentType = (typeof callToolResultContentTypes)[number];
 
 const outputTypesUnion = z.union([
   z
@@ -496,7 +409,7 @@ export const notifications = z.object({
   onMessage: z
     .function()
     .args(
-      LoggingMessageNotificationSchema.shape.params,
+      LoggingMessageNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
@@ -534,19 +447,25 @@ export const notifications = z.object({
 
   onCancelled: z
     .function()
-    .args(CancelledNotificationSchema.shape.params, serverMessageSourceSchema)
+    .args(
+      CancelledNotificationSchema.pick({ params: true }),
+      serverMessageSourceSchema
+    )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
 
   onInitialized: z
     .function()
-    .args(InitializedNotificationSchema.shape.params, serverMessageSourceSchema)
+    .args(
+      InitializedNotificationSchema.pick({ params: true }),
+      serverMessageSourceSchema
+    )
     .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
   onPromptsListChanged: z
     .function()
     .args(
-      PromptListChangedNotificationSchema.shape.params,
+      PromptListChangedNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
@@ -554,7 +473,7 @@ export const notifications = z.object({
   onResourcesListChanged: z
     .function()
     .args(
-      ResourceListChangedNotificationSchema.shape.params,
+      ResourceListChangedNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
@@ -562,7 +481,7 @@ export const notifications = z.object({
   onResourcesUpdated: z
     .function()
     .args(
-      ResourceUpdatedNotificationSchema.shape.params,
+      ResourceUpdatedNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
@@ -570,7 +489,7 @@ export const notifications = z.object({
   onRootsListChanged: z
     .function()
     .args(
-      RootsListChangedNotificationSchema.shape.params,
+      RootsListChangedNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
@@ -578,7 +497,7 @@ export const notifications = z.object({
   onToolsListChanged: z
     .function()
     .args(
-      ToolListChangedNotificationSchema.shape.params,
+      ToolListChangedNotificationSchema.pick({ params: true }),
       serverMessageSourceSchema
     )
     .returns(z.union([z.void(), z.promise(z.void())]))
