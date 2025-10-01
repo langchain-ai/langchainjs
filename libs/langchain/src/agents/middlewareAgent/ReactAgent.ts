@@ -48,6 +48,7 @@ import {
   type ToAnnotationRoot,
   type ResponseFormatUndefined,
 } from "../annotation.js";
+import { RunnableConfig } from "@langchain/core/runnables";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -720,6 +721,35 @@ export class ReactAgent<
   }
 
   /**
+   * Populate the private state of the agent node from the previous state.
+   */
+  async #populatePrivateState(config?: RunnableConfig) {
+    /**
+     * not needed if thread_id is not provided
+     */
+    if (!config?.configurable?.thread_id) {
+      return;
+    }
+    const prevState = (await this.#graph.getState(config as any)) as {
+      values: {
+        _privateState: PrivateState;
+      };
+    };
+
+    /**
+     * not need if state is empty
+     */
+    if (!prevState.values._privateState) {
+      return;
+    }
+
+    this.#agentNode.setState({
+      structuredResponse: undefined,
+      _privateState: prevState.values._privateState,
+    });
+  }
+
+  /**
    * Executes the agent with the given state and returns the final state after all processing.
    *
    * This method runs the agent's entire workflow synchronously, including:
@@ -771,23 +801,7 @@ export class ReactAgent<
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
     const initializedState = await this.#initializeMiddlewareStates(state);
-
-    /**
-     * init state if thread_id is provided
-     */
-    if (config?.configurable?.thread_id) {
-      const prevState = (await this.#graph.getState(config as any)) as {
-        values: {
-          _privateState: PrivateState;
-        };
-      };
-      if (prevState.values._privateState) {
-        this.#agentNode.setState({
-          structuredResponse: undefined,
-          _privateState: prevState.values._privateState,
-        });
-      }
-    }
+    await this.#populatePrivateState(config);
 
     return this.#graph.invoke(
       initializedState,
@@ -853,6 +867,7 @@ export class ReactAgent<
     >
   ): Promise<IterableReadableStream<any>> {
     const initializedState = await this.#initializeMiddlewareStates(state);
+    await this.#populatePrivateState(config);
     return this.#graph.streamEvents(initializedState, {
       ...config,
       version: "v2",
