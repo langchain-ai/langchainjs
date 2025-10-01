@@ -167,6 +167,10 @@ describe("middleware state management", () => {
       afterModel: async (_, runtime) => {
         expect(runtime.threadLevelCallCount).toBe(1);
         expect(runtime.runModelCallCount).toBe(1);
+
+        /**
+         * try to override the private state
+         */
         return {
           _privateState: {
             threadLevelCallCount: 123,
