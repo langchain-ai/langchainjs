@@ -388,4 +388,44 @@ describe("AIMessageChunk", () => {
     );
     expect(firstCall?.id).toBeUndefined();
   });
+
+  it("should properly merge server tool call chunks", () => {
+    const chunk1 = new AIMessageChunk({
+      content: [
+        {
+          type: "server_tool_call_chunk",
+          index: 0,
+          name: "foo",
+        },
+      ],
+    });
+    const chunk2 = new AIMessageChunk({
+      content: [
+        {
+          type: "server_tool_call_chunk",
+          index: 0,
+          args: '{"a',
+        },
+      ],
+    });
+    const chunk3 = new AIMessageChunk({
+      content: [
+        {
+          type: "server_tool_call_chunk",
+          index: 0,
+          args: '": 1}',
+        },
+      ],
+    });
+
+    const merged = chunk1.concat(chunk2).concat(chunk3);
+    expect(merged.content).toEqual([
+      {
+        type: "server_tool_call_chunk",
+        index: 0,
+        name: "foo",
+        args: '{"a": 1}',
+      },
+    ]);
+  });
 });

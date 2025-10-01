@@ -117,6 +117,7 @@ describe("openaiTranslator", () => {
           reasoning: { summary: [{ text: "Thinking..." }, { text: " Done." }] },
           tool_outputs: [
             {
+              id: "call_456",
               type: "code_interpreter_call",
               code: "print('hello')",
               status: "completed",
@@ -155,12 +156,22 @@ describe("openaiTranslator", () => {
           name: "summarize",
           args: { length: "short" },
         },
-        { type: "code_interpreter_call", code: "print('hello')" },
         {
-          type: "code_interpreter_result",
-          output: [
-            { type: "code_interpreter_output", returnCode: 0, stdout: "hello" },
-          ],
+          type: "server_tool_call",
+          name: "code_interpreter",
+          id: "call_456",
+          args: { code: "print('hello')" },
+        },
+        {
+          type: "server_tool_call_result",
+          toolCallId: "call_456",
+          status: "success",
+          output: {
+            type: "code_interpreter_output",
+            returnCode: 0,
+            stderr: undefined,
+            stdout: "hello",
+          },
         },
       ];
 

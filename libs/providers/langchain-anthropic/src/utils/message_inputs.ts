@@ -4,16 +4,14 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   type BaseMessage,
-  type SystemMessage,
   HumanMessage,
-  type AIMessage,
-  type ToolMessage,
-  isAIMessage,
+  ToolMessage,
   MessageContentComplex,
   isDataContentBlock,
   convertToProviderContentBlock,
   parseBase64DataUrl,
   ContentBlock,
+  isAIMessage,
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import {
@@ -82,9 +80,7 @@ function _formatImage(imageUrl: string) {
   );
 }
 
-function _ensureMessageContents(
-  messages: BaseMessage[]
-): (SystemMessage | HumanMessage | AIMessage)[] {
+function _ensureMessageContents(messages: BaseMessage[]): BaseMessage[] {
   // Merge runs of human/tool messages into single human messages with content blocks.
   const updatedMsgs = [];
   for (const message of messages) {
@@ -318,7 +314,7 @@ export function _convertMessagesToAnthropicPayload(
         "System messages are only permitted as the first passed message."
       );
     } else {
-      throw new Error(`Message type "${message._getType()}" is not supported.`);
+      throw new Error(`Message type "${message.type}" is not supported.`);
     }
     if (
       isAIMessage(message) &&
