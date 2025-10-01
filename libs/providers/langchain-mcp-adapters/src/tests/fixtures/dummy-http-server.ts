@@ -28,6 +28,7 @@ export function createDummyHttpServer(
   const sessionHeaders: Record<string, Record<string, string>> = {};
 
   // Add tools that can inspect request details
+  // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
   server.tool(
     "test_tool",
     "A test tool that echoes input and request metadata",
