@@ -35,7 +35,11 @@ pnpm install --no-frozen-lockfile
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_vertexai_dir"
 
+# Read the @langchain/core version from peerDependencies
+core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
+
 # Clean and reinstall to avoid dependency conflicts
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core @langchain/google-gauth
+# Install @langchain/core at the specified version
+pnpm add @langchain/core@$core_version @langchain/google-gauth
 pnpm test

@@ -35,9 +35,13 @@ pnpm install --no-frozen-lockfile
 # not try to build the package/its workspace dependencies.
 cd "$monorepo_community_dir"
 
+# Read the @langchain/core version from peerDependencies
+core_version=$(node -p "require('./package.json').peerDependencies?.['@langchain/core']")
+
 # Clean and reinstall to avoid dependency conflicts
 pnpm install --no-frozen-lockfile
-pnpm add @langchain/core
+# Install @langchain/core at the specified version
+pnpm add @langchain/core@$core_version
 
 # Approve builds for transient dependencies 
 pnpm approve-builds
