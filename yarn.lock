@@ -12,6 +12,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@alchemystai/sdk@npm:latest":
+  version: 0.5.0
+  resolution: "@alchemystai/sdk@npm:0.5.0"
+  checksum: 48330f113babf2c513ce3423329f4014f9619e9d8093d3d9205b7ac4dfbc571f584dd6c721f202db0d8e6a5a3a421ac037ee1d34ba6754b99e28daf421ad0cc8
+  languageName: node
+  linkType: hard
+
 "@algolia/autocomplete-core@npm:1.9.3":
   version: 1.9.3
   resolution: "@algolia/autocomplete-core@npm:1.9.3"
@@ -9026,6 +9033,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@langchain/community@workspace:libs/langchain-community"
   dependencies:
+    "@alchemystai/sdk": latest
     "@arcjet/redact": ^v1.0.0-alpha.23
     "@aws-crypto/sha256-js": ^5.0.0
     "@aws-sdk/client-bedrock-agent-runtime": ^3.749.0
