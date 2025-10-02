@@ -1,4 +1,3 @@
-/* eslint-disable no-promise-executor-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
 import { vi } from "vitest";
