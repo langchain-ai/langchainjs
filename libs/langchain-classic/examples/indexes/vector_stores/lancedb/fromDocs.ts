@@ -1,6 +1,6 @@
 import { LanceDB } from "@langchain/community/vectorstores/lancedb";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";

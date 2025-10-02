@@ -1,6 +1,6 @@
 import { ConneryService } from "@langchain/community/tools/connery";
 import { ChatOpenAI } from "@langchain/openai";
-import { createAgent } from "langchain";
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
 
 // Specify your Connery Runner credentials.
 process.env.CONNERY_RUNNER_URL = "";
@@ -28,13 +28,11 @@ console.log(manualRunResult);
 
 // Run the action using the OpenAI Functions agent.
 const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
-const agent = await createAgent({
-  llm,
-  tools: [sendEmailAction],
+const agent = await initializeAgentExecutorWithOptions([sendEmailAction], llm, {
+  agentType: "openai-functions",
+  verbose: true,
 });
 const agentRunResult = await agent.invoke({
-  messages: [
-    `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,
-  ],
+  input: `Send an email to the ${recepientEmail} and say that I will be late for the meeting.`,
 });
 console.log(agentRunResult);

@@ -1,12 +1,15 @@
-import { TavilySearch } from "@langchain/tavily";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 
 import { pull } from "langchain/hub";
-import { createAgent } from "langchain";
+import {
+  AgentExecutor,
+  createOpenAIFunctionsAgent,
+} from "@langchain/classic/agents";
 
 // Define the tools the agent will have access to.
-const tools = [new TavilySearch({ maxResults: 1 })];
+const tools = [new TavilySearchResults({ maxResults: 1 })];
 
 // Get the prompt to use - you can modify this!
 // If you want to see the prompt in full, you can at:
@@ -20,14 +23,19 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createAgent({
+const agent = await createOpenAIFunctionsAgent({
   llm,
   tools,
   prompt,
 });
 
-const result = await agent.invoke({
-  messages: ["what is the weather in wailea?"],
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input: "what is the weather in wailea?",
 });
 
 console.log(result);

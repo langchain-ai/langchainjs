@@ -1,5 +1,5 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
-import { BaseChain, ChainInputs } from "langchain/chains";
+import { BaseChain, ChainInputs } from "@langchain/classic/chains";
 import { BasePromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { ChainValues } from "@langchain/core/utils/types";

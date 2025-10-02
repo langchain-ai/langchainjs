@@ -1,7 +1,7 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { FirestoreChatMessageHistory } from "@langchain/community/stores/message/firestore";
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 import admin from "firebase-admin";
 
 const memory = new BufferMemory({

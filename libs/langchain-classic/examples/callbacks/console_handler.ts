@@ -1,4 +1,4 @@
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 import { OpenAI } from "@langchain/openai";
 import { ConsoleCallbackHandler } from "@langchain/core/tracers/console";
 import { PromptTemplate } from "@langchain/core/prompts";

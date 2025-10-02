@@ -1,5 +1,5 @@
 import fs from "fs";
-import { LocalFileStore } from "langchain/storage/file_system";
+import { LocalFileStore } from "@langchain/classic/storage/file_system";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 
 // Instantiate the store using the `fromPath` method.

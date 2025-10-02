@@ -2,7 +2,7 @@ import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { CohereEmbeddings } from "@langchain/cohere";
 import { MongoClient } from "mongodb";
 
-import { sleep } from "langchain/util/time";
+import { sleep } from "@langchain/classic/util/time";
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
 const namespace = "langchain.test";

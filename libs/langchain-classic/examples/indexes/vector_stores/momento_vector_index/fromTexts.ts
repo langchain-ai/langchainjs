@@ -6,7 +6,7 @@ import {
   CredentialProvider,
 } from "@gomomento/sdk";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { sleep } from "langchain/util/time";
+import { sleep } from "@langchain/classic/util/time";
 
 const vectorStore = await MomentoVectorIndex.fromTexts(
   ["hello world", "goodbye world", "salutations world", "farewell world"],

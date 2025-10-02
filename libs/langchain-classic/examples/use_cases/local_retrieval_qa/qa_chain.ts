@@ -1,4 +1,4 @@
-import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
+import { RetrievalQAChain, loadQAStuffChain } from "@langchain/classic/chains";
 import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";

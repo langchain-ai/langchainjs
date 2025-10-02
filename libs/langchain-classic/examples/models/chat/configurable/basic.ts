@@ -1,4 +1,4 @@
-import { initChatModel } from "langchain/chat_models/universal";
+import { initChatModel } from "@langchain/classic/chat_models/universal";
 
 // Returns a @langchain/openai ChatOpenAI instance.
 const gpt4o = await initChatModel("gpt-4o", {

@@ -1,6 +1,6 @@
 import { Client, ClientOptions } from "@elastic/elasticsearch";
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { VectorDBQAChain } from "langchain/chains";
+import { VectorDBQAChain } from "@langchain/classic/chains";
 
 import {
   ElasticClientArgs,

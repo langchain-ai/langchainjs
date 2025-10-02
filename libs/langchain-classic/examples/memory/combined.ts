@@ -3,8 +3,8 @@ import {
   BufferMemory,
   CombinedMemory,
   ConversationSummaryMemory,
-} from "langchain/memory";
-import { ConversationChain } from "langchain/chains";
+} from "@langchain/classic/memory";
+import { ConversationChain } from "@langchain/classic/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 // buffer memory

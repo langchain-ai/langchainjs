@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";
-import { LLMChain } from "langchain/chains";
-import { OutputFixingParser } from "langchain/output_parsers";
+import { LLMChain } from "@langchain/classic/chains";
+import { OutputFixingParser } from "@langchain/classic/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 

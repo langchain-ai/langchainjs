@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { SqlDatabase } from "langchain/sql_db";
+import { SqlDatabase } from "@langchain/classic/sql_db";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
@@ -35,7 +35,7 @@ QUESTION: {question}
 ------------
 SQL QUERY:`);
 /**
- * You can also load a default prompt by importing from "langchain/sql_db"
+ * You can also load a default prompt by importing from "@langchain/classic/sql_db"
  *
  * import {
  *   DEFAULT_SQL_DATABASE_PROMPT
@@ -44,7 +44,7 @@ SQL QUERY:`);
  *   SQL_MSSQL_PROMPT
  *   SQL_MYSQL_PROMPT
  *   SQL_SAP_HANA_PROMPT
- * } from "langchain/sql_db";
+ * } from "@langchain/classic/sql_db";
  *
  */
 

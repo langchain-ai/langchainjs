@@ -1,5 +1,5 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { ConversationalRetrievalQAChain } from "langchain/chains";
+import { ConversationalRetrievalQAChain } from "@langchain/classic/chains";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";

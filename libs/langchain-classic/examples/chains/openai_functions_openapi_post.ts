@@ -1,4 +1,4 @@
-import { createOpenAPIChain } from "langchain/chains";
+import { createOpenAPIChain } from "@langchain/classic/chains";
 
 const chain = await createOpenAPIChain("https://api.speak.com/openapi.yaml");
 const result = await chain.run(`How would you say no thanks in Russian?`);

@@ -26,14 +26,14 @@ const splitDocs = await splitter.splitDocuments(docs);
 console.log(splitDocs.length);
 console.log(splitDocs[0].pageContent.length);
 
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   splitDocs,
   embeddings
 );
 
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt =
@@ -66,7 +66,7 @@ console.log(
 
 const retriever = vectorstore.asRetriever();
 
-import { createRetrieverTool } from "langchain/tools/retriever";
+import { createRetrieverTool } from "@langchain/classic/tools/retriever";
 
 const retrieverTool = await createRetrieverTool(retriever, {
   name: "langsmith_search",
@@ -81,7 +81,10 @@ const searchTool = new TavilySearchResults();
 const tools = [retrieverTool, searchTool];
 
 import { pull } from "langchain/hub";
-import { createAgent } from "langchain";
+import {
+  createOpenAIFunctionsAgent,
+  AgentExecutor,
+} from "@langchain/classic/agents";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 // Get the prompt to use - you can modify this!
@@ -96,30 +99,36 @@ const agentModel = new ChatOpenAI({
   temperature: 0,
 });
 
-const agent = await createAgent({
+const agent = await createOpenAIFunctionsAgent({
   llm: agentModel,
   tools,
   prompt: agentPrompt,
 });
 
-const agentResult = await agent.invoke({
-  messages: "how can LangSmith help with testing?",
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+  verbose: true,
+});
+
+const agentResult = await agentExecutor.invoke({
+  input: "how can LangSmith help with testing?",
 });
 
 console.log(agentResult);
 
-const agentResult2 = await agent.invoke({
-  messages: "what is the weather in SF?",
+const agentResult2 = await agentExecutor.invoke({
+  input: "what is the weather in SF?",
 });
 
 console.log(agentResult2);
 
-const agentResult3 = await agent.invoke({
-  messages: [
+const agentResult3 = await agentExecutor.invoke({
+  chat_history: [
     new HumanMessage("Can LangSmith help test my LLM applications?"),
     new AIMessage("Yes!"),
-    "Tell me how",
   ],
+  input: "Tell me how",
 });
 
 console.log(agentResult3);

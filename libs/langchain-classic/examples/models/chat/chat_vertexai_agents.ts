@@ -1,6 +1,10 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 
-import { createAgent, HumanMessage, tool } from "langchain";
+import { tool } from "@langchain/core/tools";
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from "@langchain/classic/agents";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatVertexAI } from "@langchain/google-vertexai";
@@ -28,17 +32,22 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,
 });
 
-const messages = [new HumanMessage("What's the weather like in Paris?")];
-const result = await agent.invoke({ messages });
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools: [currentWeatherTool],
+});
 
-console.log(result.messages.at(-1)?.content);
+const input = "What's the weather like in Paris?";
+const { output } = await agentExecutor.invoke({ input });
 
-/**
- * It's 28 degrees Celsius in Paris.
- */
+console.log(output);
+
+/* 
+It's 28 degrees Celsius in Paris.
+*/

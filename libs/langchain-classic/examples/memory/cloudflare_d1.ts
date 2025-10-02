@@ -1,5 +1,5 @@
 import type { D1Database } from "@cloudflare/workers-types";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { CloudflareD1MessageHistory } from "@langchain/cloudflare";
 import {
   ChatPromptTemplate,

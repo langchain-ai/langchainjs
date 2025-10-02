@@ -1,4 +1,4 @@
-import { SqlDatabase } from "langchain/sql_db";
+import { SqlDatabase } from "@langchain/classic/sql_db";
 import { DataSource } from "typeorm";
 
 const datasource = new DataSource({

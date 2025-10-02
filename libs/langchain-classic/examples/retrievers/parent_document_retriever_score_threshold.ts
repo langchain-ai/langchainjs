@@ -1,10 +1,10 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { InMemoryStore } from "@langchain/core/stores";
-import { ParentDocumentRetriever } from "langchain/retrievers/parent_document";
+import { ParentDocumentRetriever } from "@langchain/classic/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { ScoreThresholdRetriever } from "@langchain/classic/retrievers/score_threshold";
 
 const vectorstore = new MemoryVectorStore(new OpenAIEmbeddings());
 const byteStore = new InMemoryStore<Uint8Array>();

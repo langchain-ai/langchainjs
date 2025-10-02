@@ -3,8 +3,8 @@ import * as fs from "fs";
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
-import { LLMChainExtractor } from "langchain/retrievers/document_compressors/chain_extract";
+import { ContextualCompressionRetriever } from "@langchain/classic/retrievers/contextual_compression";
+import { LLMChainExtractor } from "@langchain/classic/retrievers/document_compressors/chain_extract";
 
 const model = new OpenAI({
   model: "gpt-3.5-turbo-instruct",

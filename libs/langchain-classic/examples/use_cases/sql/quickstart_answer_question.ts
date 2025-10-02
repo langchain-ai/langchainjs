@@ -1,8 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { createSqlQueryChain } from "langchain/chains/sql_db";
-import { SqlDatabase } from "langchain/sql_db";
+import { createSqlQueryChain } from "@langchain/classic/chains/sql_db";
+import { SqlDatabase } from "@langchain/classic/sql_db";
 import { DataSource } from "typeorm";
-import { QuerySqlTool } from "langchain/tools/sql";
+import { QuerySqlTool } from "@langchain/classic/tools/sql";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import {

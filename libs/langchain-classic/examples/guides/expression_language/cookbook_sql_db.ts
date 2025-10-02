@@ -1,5 +1,5 @@
 import { DataSource } from "typeorm";
-import { SqlDatabase } from "langchain/sql_db";
+import { SqlDatabase } from "@langchain/classic/sql_db";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   RunnablePassthrough,

@@ -1,5 +1,8 @@
 import { OpenAI } from "@langchain/openai";
-import { loadSummarizationChain, AnalyzeDocumentChain } from "langchain/chains";
+import {
+  loadSummarizationChain,
+  AnalyzeDocumentChain,
+} from "@langchain/classic/chains";
 import * as fs from "fs";
 
 // In this example, we use the `AnalyzeDocumentChain` to summarize a large text document.

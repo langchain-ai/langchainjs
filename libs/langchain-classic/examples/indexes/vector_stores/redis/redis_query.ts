@@ -2,8 +2,8 @@ import { createClient } from "redis";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RedisVectorStore } from "@langchain/redis";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
-import { createRetrievalChain } from "langchain/chains/retrieval";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
+import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
 
 const client = createClient({
   url: process.env.REDIS_URL ?? "redis://localhost:6379",

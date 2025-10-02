@@ -1,7 +1,8 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { createAgent } from "langchain";
+import { AgentExecutor } from "@langchain/classic/agents";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { SearxngSearch } from "@langchain/community/tools/searxng_search";
 
@@ -38,16 +39,16 @@ const customOutputParser = (
   },
 });
 // Replace this placeholder agent with your actual implementation.
-const agent = createAgent({
-  llm: model,
+const agent = RunnableSequence.from([prefix, model, customOutputParser]);
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
   tools,
-  prompt: prefix,
 });
 console.log("Loaded agent.");
 const input = `What is Langchain? Describe in 50 words`;
 console.log(`Executing with input "${input}"...`);
-const result = await agent.invoke({ messages: [input] });
-console.log(result.messages.at(-1)?.content);
+const result = await executor.invoke({ input });
+console.log(result);
 /**
  * Langchain is a framework for developing applications powered by language models, such as chatbots, Generative Question-Answering, summarization, and more. It provides a standard interface, integrations with other tools, and end-to-end chains for common applications. Langchain enables data-aware and powerful applications.
  */

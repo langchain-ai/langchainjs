@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 /* eslint-disable import/no-duplicates */
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const memory = new BufferMemory();
@@ -30,7 +30,7 @@ console.log(await messageMemory.loadMemoryVariables({}));
 
 import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 
 const llm = new OpenAI({ temperature: 0 });
 

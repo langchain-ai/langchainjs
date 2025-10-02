@@ -1,6 +1,9 @@
+/* eslint-disable import/first */
+/* eslint-disable arrow-body-style */
+/* eslint-disable import/no-duplicates */
+
 import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
-import { type Runnable } from "@langchain/core/runnables";
 
 const tools = [
   new TavilySearchResults({
@@ -28,20 +31,27 @@ const prompt = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-import { createAgent } from "langchain";
+import {
+  AgentExecutor,
+  createOpenAIToolsAgent,
+} from "@langchain/classic/agents";
 
-const agent = await createAgent({
+const agent = await createOpenAIToolsAgent({
   llm: chat,
   tools,
   prompt,
 });
 
+const agentExecutor = new AgentExecutor({ agent, tools });
+
 import { HumanMessage } from "@langchain/core/messages";
 
-console.log(await agent.invoke({ messages: [new HumanMessage("I'm Nemo!")] }));
+console.log(
+  await agentExecutor.invoke({ messages: [new HumanMessage("I'm Nemo!")] })
+);
 
 console.log(
-  await agent.invoke({
+  await agentExecutor.invoke({
     messages: [
       new HumanMessage(
         "What is the current conservation status of the Great Barrier Reef?"
@@ -53,7 +63,7 @@ console.log(
 import { AIMessage } from "@langchain/core/messages";
 
 console.log(
-  await agent.invoke({
+  await agentExecutor.invoke({
     messages: [
       new HumanMessage("I'm Nemo!"),
       new AIMessage("Hello Nemo! How can I assist you today?"),
@@ -73,19 +83,21 @@ const prompt2 = ChatPromptTemplate.fromMessages([
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
 
-const agent2 = await createAgent({
+const agent2 = await createOpenAIToolsAgent({
   llm: chat,
   tools,
   prompt: prompt2,
 });
+
+const agentExecutor2 = new AgentExecutor({ agent: agent2, tools });
 
 import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 
 const demoEphemeralChatMessageHistory = new ChatMessageHistory();
 
-const conversationalAgent = new RunnableWithMessageHistory({
-  runnable: agent2 as unknown as Runnable,
+const conversationalAgentExecutor = new RunnableWithMessageHistory({
+  runnable: agentExecutor2,
   getMessageHistory: (_sessionId) => demoEphemeralChatMessageHistory,
   inputMessagesKey: "input",
   outputMessagesKey: "output",
@@ -93,14 +105,14 @@ const conversationalAgent = new RunnableWithMessageHistory({
 });
 
 console.log(
-  await conversationalAgent.invoke(
+  await conversationalAgentExecutor.invoke(
     { input: "I'm Nemo!" },
     { configurable: { sessionId: "unused" } }
   )
 );
 
 console.log(
-  await conversationalAgent.invoke(
+  await conversationalAgentExecutor.invoke(
     { input: "What is my name?" },
     { configurable: { sessionId: "unused" } }
   )

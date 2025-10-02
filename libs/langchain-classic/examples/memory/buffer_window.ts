@@ -1,6 +1,6 @@
 import { OpenAI } from "@langchain/openai";
-import { BufferWindowMemory } from "langchain/memory";
-import { LLMChain } from "langchain/chains";
+import { BufferWindowMemory } from "@langchain/classic/memory";
+import { LLMChain } from "@langchain/classic/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {

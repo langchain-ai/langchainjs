@@ -1,6 +1,6 @@
 import { MemgraphGraph } from "@langchain/community/graphs/memgraph_graph";
 import { OpenAI } from "@langchain/openai";
-import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
+import { GraphCypherQAChain } from "@langchain/classic/chains/graph_qa/cypher";
 
 /**
  * This example uses Memgraph database, an in-memory graph database.

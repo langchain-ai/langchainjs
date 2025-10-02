@@ -2,7 +2,7 @@ import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
-import { loadQAMapReduceChain } from "langchain/chains";
+import { loadQAMapReduceChain } from "@langchain/classic/chains";
 
 // Initialize the LLM to use to answer the question.
 const model = new OpenAI({});

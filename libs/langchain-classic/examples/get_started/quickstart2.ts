@@ -27,14 +27,14 @@ const splitDocs = await splitter.splitDocuments(docs);
 console.log(splitDocs.length);
 console.log(splitDocs[0].pageContent.length);
 
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   splitDocs,
   embeddings
 );
 
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const prompt =
@@ -65,7 +65,7 @@ console.log(
   })
 );
 
-import { createRetrievalChain } from "langchain/chains/retrieval";
+import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
 
 const retriever = vectorstore.asRetriever();
 
@@ -80,7 +80,7 @@ console.log(
   })
 );
 
-import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
+import { createHistoryAwareRetriever } from "@langchain/classic/chains/history_aware_retriever";
 import { MessagesPlaceholder } from "@langchain/core/prompts";
 
 const historyAwarePrompt = ChatPromptTemplate.fromMessages([

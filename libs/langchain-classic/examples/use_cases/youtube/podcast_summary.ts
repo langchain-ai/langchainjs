@@ -1,4 +1,4 @@
-import { loadSummarizationChain } from "langchain/chains";
+import { loadSummarizationChain } from "@langchain/classic/chains";
 import { SearchApiLoader } from "@langchain/community/document_loaders/web/searchapi";
 import { TokenTextSplitter } from "@langchain/textsplitters";
 import { PromptTemplate } from "@langchain/core/prompts";

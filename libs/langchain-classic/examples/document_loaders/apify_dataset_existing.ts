@@ -3,8 +3,8 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { createRetrievalChain } from "langchain/chains/retrieval";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 
 const APIFY_API_TOKEN = "YOUR-APIFY-API-TOKEN"; // or set as process.env.APIFY_API_TOKEN
 const OPENAI_API_KEY = "YOUR-OPENAI-API-KEY"; // or set as process.env.OPENAI_API_KEY

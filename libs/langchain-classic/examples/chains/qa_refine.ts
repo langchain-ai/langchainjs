@@ -1,8 +1,8 @@
-import { loadQARefineChain } from "langchain/chains";
+import { loadQARefineChain } from "@langchain/classic/chains";
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 // Create the models and chain
 const embeddings = new OpenAIEmbeddings();

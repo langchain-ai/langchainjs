@@ -7,7 +7,7 @@ import {
 } from "@langchain/core/runnables";
 import { Document } from "@langchain/core/documents";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const model = new ChatAnthropic();
 const vectorstore = await MemoryVectorStore.fromDocuments(

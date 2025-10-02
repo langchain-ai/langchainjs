@@ -1,4 +1,4 @@
-import { MatryoshkaRetriever } from "langchain/retrievers/matryoshka_retriever";
+import { MatryoshkaRetriever } from "@langchain/classic/retrievers/matryoshka_retriever";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

@@ -1,5 +1,5 @@
-import { loadEvaluator } from "langchain/evaluation";
-import { PRINCIPLES } from "langchain/chains";
+import { loadEvaluator } from "@langchain/classic/evaluation";
+import { PRINCIPLES } from "@langchain/classic/chains";
 import { ChatOpenAI } from "@langchain/openai";
 
 console.log(`${Object.keys(PRINCIPLES).length} available principles`);

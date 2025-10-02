@@ -1,6 +1,6 @@
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { CohereEmbeddings } from "@langchain/cohere";
-import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
+import { MultiQueryRetriever } from "@langchain/classic/retrievers/multi_query";
 import { ChatAnthropic } from "@langchain/anthropic";
 
 const vectorstore = await MemoryVectorStore.fromTexts(

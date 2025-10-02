@@ -1,7 +1,7 @@
 import { OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { VectorStoreRetrieverMemory } from "langchain/memory";
-import { LLMChain } from "langchain/chains";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { VectorStoreRetrieverMemory } from "@langchain/classic/memory";
+import { LLMChain } from "@langchain/classic/chains";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());

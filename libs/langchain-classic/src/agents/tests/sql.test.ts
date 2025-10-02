@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test, expect, beforeEach, afterEach } from "@jest/globals";
+import { test, expect, beforeEach, afterEach } from "vitest";
 import { DataSource } from "typeorm";
 import {
   InfoSqlTool,

@@ -6,7 +6,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { RunnableWithMessageHistory } from "@langchain/core/runnables";
 import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
 // For demos, you can also use an in-memory store:
-// import { ChatMessageHistory } from "langchain/stores/message/in_memory";
+// import { ChatMessageHistory } from "@langchain/classic/stores/message/in_memory";
 
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You're an assistant who's good at {ability}"],

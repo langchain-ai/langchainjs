@@ -1,10 +1,13 @@
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createAgent } from "langchain";
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from "@langchain/classic/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearch } from "@langchain/tavily";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { Calculator } from "@langchain/community/tools/calculator";
 
-const tools = [new TavilySearch(), new Calculator()];
+const tools = [new TavilySearchResults(), new Calculator()];
 
 // Prompt template must have "input" and "agent_scratchpad input variables
 const prompt = ChatPromptTemplate.fromMessages([
@@ -19,14 +22,19 @@ const llm = new ChatAnthropic({
   temperature: 0,
 });
 
-const agent = await createAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools,
   prompt,
 });
 
-const result = await agent.invoke({
-  messages:
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input:
     "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });
 

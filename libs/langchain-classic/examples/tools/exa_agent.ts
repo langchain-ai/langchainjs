@@ -4,8 +4,11 @@ import {
 } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import Exa from "exa-js";
-import { createAgent } from "langchain";
-import { createRetrieverTool } from "langchain/tools/retriever";
+import {
+  AgentExecutor,
+  createOpenAIFunctionsAgent,
+} from "@langchain/classic/agents";
+import { createRetrieverTool } from "@langchain/classic/tools/retriever";
 import { ExaRetriever } from "@langchain/exa";
 
 // @ts-expect-error Some TS Config's will cause this to give a TypeScript error, even though it works.
@@ -34,14 +37,16 @@ const prompt = ChatPromptTemplate.fromMessages([
   ["human", "{input}"],
   new MessagesPlaceholder("agent_scratchpad"),
 ]);
-const agent = await createAgent({
-  llm,
+const agentExecutor = new AgentExecutor({
+  agent: await createOpenAIFunctionsAgent({
+    llm,
+    tools,
+    prompt,
+  }),
   tools,
-  prompt,
 });
-
 console.log(
-  await agent.invoke({
-    messages: ["Summarize for me a fascinating article about cats."],
+  await agentExecutor.invoke({
+    input: "Summarize for me a fascinating article about cats.",
   })
 );

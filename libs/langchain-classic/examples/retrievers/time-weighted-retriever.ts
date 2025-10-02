@@ -1,5 +1,5 @@
-import { TimeWeightedVectorStoreRetriever } from "langchain/retrievers/time_weighted";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { TimeWeightedVectorStoreRetriever } from "@langchain/classic/retrievers/time_weighted";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 const vectorStore = new MemoryVectorStore(new OpenAIEmbeddings());

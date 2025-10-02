@@ -1,4 +1,4 @@
-import { createOpenAPIChain } from "langchain/chains";
+import { createOpenAPIChain } from "@langchain/classic/chains";
 
 const chain = await createOpenAPIChain(
   "https://gist.githubusercontent.com/roaldnefs/053e505b2b7a807290908fe9aa3e1f00/raw/0a212622ebfef501163f91e23803552411ed00e4/openapi.yaml"

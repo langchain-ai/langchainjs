@@ -1,4 +1,4 @@
-import { loadEvaluator } from "langchain/evaluation";
+import { loadEvaluator } from "@langchain/classic/evaluation";
 import { ChatOpenAI } from "@langchain/openai";
 
 const evaluator = await loadEvaluator("labeled_criteria", {

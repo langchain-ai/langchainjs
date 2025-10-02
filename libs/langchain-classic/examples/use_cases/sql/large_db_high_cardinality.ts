@@ -5,9 +5,9 @@ import {
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { createSqlQueryChain } from "langchain/chains/sql_db";
-import { SqlDatabase } from "langchain/sql_db";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { createSqlQueryChain } from "@langchain/classic/chains/sql_db";
+import { SqlDatabase } from "@langchain/classic/sql_db";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { DataSource } from "typeorm";
 
 const datasource = new DataSource({

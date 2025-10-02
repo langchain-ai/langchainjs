@@ -1,6 +1,6 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 import { XataChatMessageHistory } from "@langchain/community/stores/message/xata";
 import { BaseClient } from "@xata.io/client";
 

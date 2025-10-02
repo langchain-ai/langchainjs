@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
-import { initChatModel } from "langchain/chat_models/universal";
+import { initChatModel } from "@langchain/classic/chat_models/universal";
 
 const GetWeather = z
   .object({

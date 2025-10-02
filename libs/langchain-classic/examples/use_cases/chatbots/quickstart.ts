@@ -100,7 +100,7 @@ const textSplitter = new RecursiveCharacterTextSplitter({
 const allSplits = await textSplitter.splitDocuments(rawDocs);
 
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const vectorstore = await MemoryVectorStore.fromDocuments(
   allSplits,
@@ -113,7 +113,7 @@ const docs = await retriever.invoke("how can langsmith help with testing?");
 
 console.log(docs);
 
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 
 const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
   [

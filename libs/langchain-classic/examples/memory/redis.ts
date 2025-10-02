@@ -1,7 +1,7 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { RedisChatMessageHistory } from "@langchain/redis";
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 
 const memory = new BufferMemory({
   chatHistory: new RedisChatMessageHistory({

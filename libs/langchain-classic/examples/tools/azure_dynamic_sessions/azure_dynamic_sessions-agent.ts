@@ -1,6 +1,9 @@
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { pull } from "langchain/hub";
-import { createAgent } from "langchain";
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from "@langchain/classic/agents";
 import { SessionsPythonREPLTool } from "@langchain/azure-dynamic-sessions";
 import { AzureChatOpenAI } from "@langchain/openai";
 
@@ -22,16 +25,20 @@ const llm = new AzureChatOpenAI({
 // https://smith.langchain.com/hub/jacob/tool-calling-agent
 const prompt = await pull<ChatPromptTemplate>("jacob/tool-calling-agent");
 
-const agent = await createAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools,
   prompt,
 });
 
-const result = await agent.invoke({
-  messages: [
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+});
+
+const result = await agentExecutor.invoke({
+  input:
     "Create a Python program that prints the Python version and return the result.",
-  ],
 });
 
 console.log(result);

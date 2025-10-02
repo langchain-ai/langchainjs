@@ -1,4 +1,4 @@
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 import { ChatMinimax } from "@langchain/community/chat_models/minimax";
 import {
   ChatPromptTemplate,

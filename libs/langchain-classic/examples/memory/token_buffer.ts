@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { ConversationTokenBufferMemory } from "langchain/memory";
+import { ConversationTokenBufferMemory } from "@langchain/classic/memory";
 
 const model = new OpenAI({});
 const memory = new ConversationTokenBufferMemory({

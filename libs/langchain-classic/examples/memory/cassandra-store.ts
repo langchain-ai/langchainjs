@@ -1,7 +1,7 @@
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { CassandraChatMessageHistory } from "@langchain/community/stores/message/cassandra";
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 
 // The example below uses Astra DB, but you can use any Cassandra connection
 const configConnection = {

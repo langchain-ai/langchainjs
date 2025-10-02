@@ -2,8 +2,8 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { SearchApiLoader } from "@langchain/community/document_loaders/web/searchapi";
 import { TokenTextSplitter } from "@langchain/textsplitters";
 import { FaissStore } from "@langchain/community/vectorstores/faiss";
-import { createRetrievalChain } from "langchain/chains/retrieval";
-import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
+import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 const loader = new SearchApiLoader({

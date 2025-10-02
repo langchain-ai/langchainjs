@@ -1,4 +1,4 @@
-import { WebBrowser } from "langchain/tools/webbrowser";
+import { WebBrowser } from "@langchain/classic/tools/webbrowser";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 export async function run() {

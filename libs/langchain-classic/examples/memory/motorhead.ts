@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 import { MotorheadMemory } from "@langchain/community/memory/motorhead_memory";
 
 // Managed Example (visit https://getmetal.io to get your keys)

@@ -2,7 +2,7 @@ import {
   ConstitutionalPrinciple,
   ConstitutionalChain,
   LLMChain,
-} from "langchain/chains";
+} from "@langchain/classic/chains";
 import { OpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 

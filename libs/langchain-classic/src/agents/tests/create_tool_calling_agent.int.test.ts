@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { DynamicStructuredTool } from "@langchain/core/tools";

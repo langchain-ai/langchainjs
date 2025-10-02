@@ -165,7 +165,7 @@ async function buildProject(
     outDir: "./dist",
     format,
     watch,
-    tsconfig: resolve(path, "tsconfig.json"),
+    tsconfig: resolve(path, opts.tsconfigPath ?? "tsconfig.json"),
     ignoreWatch: [
       `${path}/.turbo`,
       `${path}/dist`,

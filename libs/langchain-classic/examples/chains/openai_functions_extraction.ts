@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import { ChatOpenAI } from "@langchain/openai";
-import { createExtractionChainFromZod } from "langchain/chains";
+import { createExtractionChainFromZod } from "@langchain/classic/chains";
 
 const zodSchema = z.object({
   "person-name": z.string().optional(),

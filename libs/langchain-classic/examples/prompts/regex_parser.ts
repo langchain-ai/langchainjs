@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { RegexParser } from "langchain/output_parsers";
+import { RegexParser } from "@langchain/classic/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 export const run = async () => {

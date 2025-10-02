@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { loadSummarizationChain } from "langchain/chains";
+import { loadSummarizationChain } from "@langchain/classic/chains";
 import { Document } from "@langchain/core/documents";
 
 export const run = async () => {

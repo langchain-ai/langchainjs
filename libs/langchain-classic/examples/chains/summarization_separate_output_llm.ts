@@ -1,4 +1,4 @@
-import { loadSummarizationChain } from "langchain/chains";
+import { loadSummarizationChain } from "@langchain/classic/chains";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import * as fs from "fs";
 import { ChatOpenAI } from "@langchain/openai";

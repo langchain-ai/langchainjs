@@ -1,4 +1,4 @@
-import { loadEvaluator } from "langchain/evaluation";
+import { loadEvaluator } from "@langchain/classic/evaluation";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 

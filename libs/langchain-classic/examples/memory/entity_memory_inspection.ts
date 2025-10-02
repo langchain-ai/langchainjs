@@ -2,8 +2,8 @@ import { OpenAI } from "@langchain/openai";
 import {
   EntityMemory,
   ENTITY_MEMORY_CONVERSATION_TEMPLATE,
-} from "langchain/memory";
-import { LLMChain } from "langchain/chains";
+} from "@langchain/classic/memory";
+import { LLMChain } from "@langchain/classic/chains";
 
 const memory = new EntityMemory({
   llm: new OpenAI({ temperature: 0 }),

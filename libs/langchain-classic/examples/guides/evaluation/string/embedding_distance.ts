@@ -1,4 +1,4 @@
-import { loadEvaluator } from "langchain/evaluation";
+import { loadEvaluator } from "@langchain/classic/evaluation";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { ChatOpenAI } from "@langchain/openai";
 

@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { loadQAMapReduceChain } from "langchain/chains";
+import { loadQAMapReduceChain } from "@langchain/classic/chains";
 import { Document } from "@langchain/core/documents";
 
 // Optionally limit the number of concurrent requests to the language model.

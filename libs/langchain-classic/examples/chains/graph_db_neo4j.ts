@@ -1,6 +1,6 @@
 import { Neo4jGraph } from "@langchain/community/graphs/neo4j_graph";
 import { OpenAI } from "@langchain/openai";
-import { GraphCypherQAChain } from "langchain/chains/graph_qa/cypher";
+import { GraphCypherQAChain } from "@langchain/classic/chains/graph_qa/cypher";
 
 /**
  * This example uses Neo4j database, which is native graph database.

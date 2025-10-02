@@ -1,7 +1,11 @@
-import { z } from "zod/v3";
+import { z } from "zod";
 
 import { ChatAnthropic } from "@langchain/anthropic";
-import { createAgent, tool, HumanMessage } from "langchain";
+import { tool } from "@langchain/core/tools";
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from "@langchain/classic/agents";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
@@ -26,17 +30,22 @@ const currentWeatherTool = tool(async () => "28 °C", {
   }),
 });
 
-const agent = await createAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools: [currentWeatherTool],
   prompt,
 });
 
-const messages = [new HumanMessage("What's the weather like in SF?")];
-const result = await agent.invoke({ messages });
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools: [currentWeatherTool],
+});
 
-console.log(result.messages.at(-1)?.content);
+const input = "What's the weather like in SF?";
+const { output } = await agentExecutor.invoke({ input });
 
-/**
- * The current weather in San Francisco, CA is 28°C.
- */
+console.log(output);
+
+/* 
+  The current weather in San Francisco, CA is 28°C.
+*/

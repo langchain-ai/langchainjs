@@ -1,6 +1,6 @@
 import { OpenAI } from "@langchain/openai";
-import { BufferMemory } from "langchain/memory";
-import { LLMChain } from "langchain/chains";
+import { BufferMemory } from "@langchain/classic/memory";
+import { LLMChain } from "@langchain/classic/chains";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const memory = new BufferMemory({ memoryKey: "chat_history" });

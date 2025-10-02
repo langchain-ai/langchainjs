@@ -1,11 +1,14 @@
-import { createAgent } from "langchain";
+import {
+  AgentExecutor,
+  createToolCallingAgent,
+} from "@langchain/classic/agents";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { TavilySearch } from "@langchain/tavily";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { Calculator } from "@langchain/community/tools/calculator";
 
 const tools = [
-  new TavilySearch({ verbose: true }),
+  new TavilySearchResults({ verbose: true }),
   new Calculator({ verbose: true }),
 ];
 
@@ -18,19 +21,25 @@ const prompt = ChatPromptTemplate.fromMessages([
 ]);
 
 const llm = new ChatAnthropic({
-  model: "claude-3-5-sonnet-20241022",
+  model: "claude-3-sonnet-20240229",
   temperature: 0,
   verbose: false,
 });
 
-const agent = await createAgent({
+const agent = await createToolCallingAgent({
   llm,
   tools,
   prompt,
 });
 
-const result = await agent.invoke({
-  messages:
+const agentExecutor = new AgentExecutor({
+  agent,
+  tools,
+  verbose: false,
+});
+
+const result = await agentExecutor.invoke({
+  input:
     "Who directed the 2023 film Oppenheimer and what is their age? What is their age in days (assume 365 days per year)?",
 });
 

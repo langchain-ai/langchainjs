@@ -3,8 +3,8 @@ import * as fs from "fs";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { ContextualCompressionRetriever } from "langchain/retrievers/contextual_compression";
-import { EmbeddingsFilter } from "langchain/retrievers/document_compressors/embeddings_filter";
+import { ContextualCompressionRetriever } from "@langchain/classic/retrievers/contextual_compression";
+import { EmbeddingsFilter } from "@langchain/classic/retrievers/document_compressors/embeddings_filter";
 
 const baseCompressor = new EmbeddingsFilter({
   embeddings: new OpenAIEmbeddings(),

@@ -1,5 +1,5 @@
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
-import { loadEvaluator } from "langchain/evaluation";
+import { loadEvaluator } from "@langchain/classic/evaluation";
 
 const embedding = new OpenAIEmbeddings();
 

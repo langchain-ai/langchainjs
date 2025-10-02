@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { createAgent } from "langchain";
+import { AgentExecutor } from "@langchain/classic/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { AgentFinish, AgentAction } from "@langchain/core/agents";
 import { BaseMessageChunk } from "@langchain/core/messages";
 import { SearchApi } from "@langchain/community/tools/searchapi";
@@ -31,12 +32,12 @@ const customOutputParser = (
   },
 });
 // Replace this placeholder agent with your actual implementation.
-const agent = createAgent({
-  llm: model,
+const agent = RunnableSequence.from([prefix, model, customOutputParser]);
+const executor = AgentExecutor.fromAgentAndTools({
+  agent,
   tools,
-  prompt: prefix,
 });
-const res = await agent.invoke({
-  messages: ["What's happening in Ukraine today?"],
+const res = await executor.invoke({
+  input: "What's happening in Ukraine today?",
 });
-console.log(res.messages.at(-1)?.content);
+console.log(res);

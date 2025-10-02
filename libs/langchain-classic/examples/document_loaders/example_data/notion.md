@@ -12,7 +12,7 @@ Please fill out [this form](https://forms.gle/57d8AmXBYp8PP8tZA) and we'll set u
 `pnpm add langchain`
 
 ```typescript
-import { OpenAI } from "langchain/llms/openai";
+import { OpenAI } from "@langchain/classic/llms/openai";
 ```
 
 ## 🤔 What is this?

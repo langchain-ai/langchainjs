@@ -1,5 +1,5 @@
 import { OpenAI } from "@langchain/openai";
-import { loadQAStuffChain } from "langchain/chains";
+import { loadQAStuffChain } from "@langchain/classic/chains";
 import { Document } from "@langchain/core/documents";
 
 // This first example uses the `StuffDocumentsChain`.

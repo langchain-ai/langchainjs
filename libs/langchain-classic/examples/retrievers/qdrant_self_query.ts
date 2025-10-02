@@ -1,9 +1,9 @@
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
-import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { QdrantTranslator } from "@langchain/community/structured_query/qdrant";
 import { Document } from "@langchain/core/documents";
-import type { AttributeInfo } from "langchain/chains/query_constructor";
+import type { AttributeInfo } from "@langchain/classic/chains/query_constructor";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
 /**

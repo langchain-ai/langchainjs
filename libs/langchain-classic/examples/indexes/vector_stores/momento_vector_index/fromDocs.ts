@@ -6,8 +6,8 @@ import {
   CredentialProvider,
 } from "@gomomento/sdk";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { TextLoader } from "langchain/document_loaders/fs/text";
-import { sleep } from "langchain/util/time";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
+import { sleep } from "@langchain/classic/util/time";
 
 // Create docs with a loader
 const loader = new TextLoader("src/document_loaders/example_data/example.txt");

@@ -1,10 +1,10 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import * as fs from "fs";
-import { LLMChain } from "langchain/chains";
-import { formatDocumentsAsString } from "langchain/util/document";
+import { LLMChain } from "@langchain/classic/chains";
+import { formatDocumentsAsString } from "@langchain/classic/util/document";
 import { RunnableBranch, RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";

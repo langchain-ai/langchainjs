@@ -1,8 +1,8 @@
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { CohereEmbeddings } from "@langchain/cohere";
-import { MultiQueryRetriever } from "langchain/retrievers/multi_query";
-import { LLMChain } from "langchain/chains";
-import { pull } from "langchain/hub";
+import { MultiQueryRetriever } from "@langchain/classic/retrievers/multi_query";
+import { LLMChain } from "@langchain/classic/chains";
+import { pull } from "@langchain/classic/hub";
 import { BaseOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { ChatAnthropic } from "@langchain/anthropic";

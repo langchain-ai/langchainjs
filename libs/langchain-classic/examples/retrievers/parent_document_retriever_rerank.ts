@@ -5,7 +5,7 @@ import { InMemoryStore } from "@langchain/core/stores";
 import {
   ParentDocumentRetriever,
   type SubDocs,
-} from "langchain/retrievers/parent_document";
+} from "@langchain/classic/retrievers/parent_document";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // init Cohere Rerank. Remember to add COHERE_API_KEY to your .env

@@ -1,4 +1,4 @@
-import { createAgent, HumanMessage } from "langchain";
+import { AgentExecutor, createReactAgent } from "@langchain/classic/agents";
 import { pull } from "langchain/hub";
 import type { PromptTemplate } from "@langchain/core/prompts";
 
@@ -25,14 +25,19 @@ export const run = async () => {
     temperature: 0,
   });
 
-  const agent = await createAgent({
+  const agent = await createReactAgent({
     llm,
     tools,
     prompt,
   });
 
-  const result = await agent.invoke({
-    messages: [new HumanMessage("what is LangChain?")],
+  const agentExecutor = new AgentExecutor({
+    agent,
+    tools,
+  });
+
+  const result = await agentExecutor.invoke({
+    input: "what is LangChain?",
   });
 
   console.log(result);

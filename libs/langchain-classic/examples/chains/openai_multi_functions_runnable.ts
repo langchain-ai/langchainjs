@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { createOpenAIFnRunnable } from "langchain/chains/openai_functions";
+import { createOpenAIFnRunnable } from "@langchain/classic/chains/openai_functions";
 import { JsonOutputFunctionsParser } from "@langchain/core/output_parsers/openai_functions";
 
 const personDetailsFunction = {

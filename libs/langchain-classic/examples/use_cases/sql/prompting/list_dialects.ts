@@ -1,4 +1,4 @@
-import { SQL_PROMPTS_MAP } from "langchain/chains/sql_db";
+import { SQL_PROMPTS_MAP } from "@langchain/classic/chains/sql_db";
 
 console.log({ SQL_PROMPTS_MAP: Object.keys(SQL_PROMPTS_MAP) });
 /**

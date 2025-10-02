@@ -1,8 +1,8 @@
 import { Redis } from "ioredis";
-import { BufferMemory } from "langchain/memory";
+import { BufferMemory } from "@langchain/classic/memory";
 import { RedisChatMessageHistory } from "@langchain/community/stores/message/ioredis";
 import { ChatOpenAI } from "@langchain/openai";
-import { ConversationChain } from "langchain/chains";
+import { ConversationChain } from "@langchain/classic/chains";
 
 const client = new Redis("redis://localhost:6379");
 
