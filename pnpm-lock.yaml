@@ -561,6 +561,9 @@ importers:
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
       zod:
         specifier: ^3.25.76 || ^4
         version: 3.25.76
@@ -643,9 +646,6 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.6.1)(jiti@2.5.1)(jsdom@26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(terser@5.44.0)(tsx@4.20.3)(yaml@2.8.1)
-      yaml:
-        specifier: ^2.8.1
-        version: 2.8.1
     optionalDependencies:
       langsmith:
         specifier: ^0.3.64
@@ -653,9 +653,15 @@ importers:
 
   libs/langchain-classic:
     dependencies:
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
+      handlebars:
+        specifier: ^4.7.8
+        version: 4.7.8
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -696,6 +702,9 @@ importers:
       '@elastic/elasticsearch':
         specifier: ^8.4.0
         version: 8.19.0
+      '@eslint/js':
+        specifier: ^9.36.0
+        version: 9.36.0
       '@faker-js/faker':
         specifier: ^10.0.0
         version: 10.0.0
@@ -727,14 +736,14 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-azure-cosmosdb
       '@langchain/azure-dynamic-sessions':
-        specifier: ^0.2.0
-        version: 0.2.0(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-azure-dynamic-sessions
       '@langchain/baidu-qianfan':
         specifier: workspace:*
         version: link:../providers/langchain-baidu-qianfan
       '@langchain/cloudflare':
-        specifier: ^0.1.2
-        version: 0.1.2(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-cloudflare
       '@langchain/cohere':
         specifier: workspace:*
         version: link:../providers/langchain-cohere
@@ -751,20 +760,20 @@ importers:
         specifier: workspace:*
         version: link:../../internal/eslint
       '@langchain/exa':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../providers/langchain-exa
       '@langchain/google-cloud-sql-pg':
-        specifier: ^0.0.2
-        version: 0.0.2(better-sqlite3@9.5.0)(encoding@0.1.13)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-cloud-sql-pg
       '@langchain/google-common':
         specifier: workspace:*
         version: link:../providers/langchain-google-common
       '@langchain/google-genai':
-        specifier: ^0.2.18
-        version: 0.2.18(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-genai
       '@langchain/google-vertexai':
-        specifier: ^0.2.18
-        version: 0.2.18(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-vertexai
       '@langchain/google-vertexai-web':
         specifier: workspace:*
         version: link:../providers/langchain-google-vertexai-web
@@ -775,20 +784,17 @@ importers:
         specifier: 1.0.0-alpha.5
         version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@4.1.11)
       '@langchain/mistralai':
-        specifier: ^0.2.3
-        version: 0.2.3(@langchain/core@libs+langchain-core)(zod@4.1.11)
+        specifier: workspace:*
+        version: link:../providers/langchain-mistralai
       '@langchain/mongodb':
         specifier: workspace:*
         version: link:../providers/langchain-mongodb
       '@langchain/nomic':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
-      '@langchain/ollama':
-        specifier: ^0.2.4
-        version: 0.2.4(@langchain/core@libs+langchain-core)
-      '@langchain/openai':
         specifier: workspace:*
-        version: link:../providers/langchain-openai
+        version: link:../providers/langchain-nomic
+      '@langchain/ollama':
+        specifier: workspace:*
+        version: link:../providers/langchain-ollama
       '@langchain/pinecone':
         specifier: ^0.2.0
         version: 0.2.0(@langchain/core@libs+langchain-core)(@pinecone-database/pinecone@5.1.2)
@@ -802,11 +808,11 @@ importers:
         specifier: '>=0.1.0 <0.2.0'
         version: 0.1.3
       '@langchain/tavily':
-        specifier: ^0.1.5
-        version: 0.1.5(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-tavily
       '@langchain/weaviate':
-        specifier: ^0.2.3
-        version: 0.2.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+        specifier: workspace:*
+        version: link:../providers/langchain-weaviate
       '@langchain/xai':
         specifier: workspace:*
         version: link:../providers/langchain-xai
@@ -2379,7 +2385,7 @@ importers:
         version: 9.15.1(encoding@0.1.13)
       knex:
         specifier: ^3.1.0
-        version: 3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
+        version: 3.1.0(pg@8.16.3)
       uuid:
         specifier: ^11.0.5
         version: 11.1.0
@@ -6163,18 +6169,6 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/azure-dynamic-sessions@0.2.0':
-    resolution: {integrity: sha512-IZjAdyA4/lSp2F70++y6RCiqDp7TnYcOOegFtxFeIHnb+Rv63n64xB7x72Nu1O29pMF24NbCkTOpcVqwd/J2mA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/cloudflare@0.1.2':
-    resolution: {integrity: sha512-NLTPcH73zA860fseAfUxGHaRBiaVwd1SgeDAUzHGclZMfAZJ8RwD4JTELj3BF6lXOGHhPDfLaGM2f8CytBlNQA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
   '@langchain/cohere@0.3.4':
     resolution: {integrity: sha512-TdOaxKtavYxf5iVO20OQHGwDUSvCTp2o6Jc0N26FyBZKP4J5LECOksmL28y6hNI/4duXPTl2IEXsNqlOTc2ssQ==}
     engines: {node: '>=18'}
@@ -6186,16 +6180,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
-
-  '@langchain/exa@0.1.0':
-    resolution: {integrity: sha512-9HN4vuqiKxo4SYu7SbxdrKAu2ISiDUy0PRexKX/pNbxwAzKhBhCDkALjIceSAIJ9F6rgJxkykPYJd1AzHPvXFA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-cloud-sql-pg@0.0.2':
-    resolution: {integrity: sha512-hpj7fUZ90MU9HhIugfLPIE8ey12RSes8EnnpV7geer5KVozYYEc1a9GaxxU4B4E9UGBupupsIHoDGZZLpVZYqw==}
-    engines: {node: '>=18'}
 
   '@langchain/google-common@0.2.16':
     resolution: {integrity: sha512-RZmXGXDJcW0qdOe6yvp42/GILbe2vOvgZ+rUV1onZAJUYm4JjyByoj4+Zxyxza3b4EjWaqo6QegDiyF55sxpgg==}
@@ -6299,12 +6283,6 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/nomic@0.1.0':
-    resolution: {integrity: sha512-VIwDpoLX+xB4tMBXHeMTMmbaNT/7iMvSCeKmtxUqg8upFL3uhH1l4UdS5GZZrCjyXKnTP7amxdBA2HfRyDmdnA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
   '@langchain/ollama@0.2.4':
     resolution: {integrity: sha512-XThDrZurNPcUO6sasN13rkes1aGgu5gWAtDkkyIGT3ZeMOvrYgPKGft+bbhvsigTIH9C01TfPzrSp8LAmvHIjA==}
     engines: {node: '>=18'}
@@ -6329,12 +6307,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@langchain/tavily@0.1.5':
-    resolution: {integrity: sha512-6C8hb3d6YjlGJPdPFfaNlrUS0h6blQx4cRzCKeDdCvixcghzV8llAmuzvJSmAyALprFfvKtj+1NJb4ttj1iZ/A==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
     engines: {node: '>=18'}
@@ -6343,12 +6315,6 @@ packages:
 
   '@langchain/weaviate@0.2.1':
     resolution: {integrity: sha512-rlfAKF+GB0A5MUrol34oDrBkl4q6AefARk9KDW+LfzhV/74pZZLZyIPYPxvE4XwI3gvpwp024DNsDxK/4UW0/g==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/weaviate@0.2.3':
-    resolution: {integrity: sha512-WqNGn1eSrI+ZigJd7kZjCj3fvHBYicKr054qts2nNJ+IyO5dWmY3oFTaVHFq1OLFVZJJxrFeDnxSEOC3JnfP0w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -20264,19 +20230,6 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@langchain/azure-dynamic-sessions@0.2.0(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@azure/identity': 4.13.0
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - supports-color
-
-  '@langchain/cloudflare@0.1.2(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-
   '@langchain/cohere@0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -20295,32 +20248,6 @@ snapshots:
       - ws
     optional: true
 
-  '@langchain/exa@0.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      exa-js: 1.8.26(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-    transitivePeerDependencies:
-      - encoding
-      - ws
-
-  '@langchain/google-cloud-sql-pg@0.0.2(better-sqlite3@9.5.0)(encoding@0.1.13)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)':
-    dependencies:
-      '@google-cloud/cloud-sql-connector': 1.8.2
-      '@langchain/core': link:libs/langchain-core
-      google-auth-library: 9.15.1(encoding@0.1.13)
-      knex: 3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
-      uuid: 11.1.0
-    transitivePeerDependencies:
-      - better-sqlite3
-      - encoding
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
-
   '@langchain/google-common@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -20330,6 +20257,7 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
+    optional: true
 
   '@langchain/google-gauth@0.2.16':
     dependencies:
@@ -20345,12 +20273,14 @@ snapshots:
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@langchain/google-genai@0.2.18(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
+    optional: true
 
   '@langchain/google-vertexai-web@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -20364,6 +20294,7 @@ snapshots:
       '@langchain/google-gauth': 0.2.18(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@langchain/google-webauth@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -20431,24 +20362,12 @@ snapshots:
       - zod
     optional: true
 
-  '@langchain/mistralai@0.2.3(@langchain/core@libs+langchain-core)(zod@4.1.11)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@mistralai/mistralai': 1.7.5(zod@4.1.11)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - zod
-
-  '@langchain/nomic@0.1.0(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@nomic-ai/atlas': 0.8.0
-
   '@langchain/ollama@0.2.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.5.18
       uuid: 10.0.0
+    optional: true
 
   '@langchain/openai@0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
@@ -20482,11 +20401,6 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@langchain/tavily@0.1.5(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      zod: 3.25.76
-
   '@langchain/textsplitters@0.1.0(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -20494,14 +20408,6 @@ snapshots:
     optional: true
 
   '@langchain/weaviate@0.2.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-      weaviate-client: 3.8.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
-  '@langchain/weaviate@0.2.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
@@ -26857,7 +26763,6 @@ snapshots:
       wordwrap: 1.0.0
     optionalDependencies:
       uglify-js: 3.19.3
-    optional: true
 
   has-bigints@1.1.0: {}
 
@@ -28314,7 +28219,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  knex@3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7):
+  knex@3.1.0(pg@8.16.3):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -28331,10 +28236,7 @@ snapshots:
       tarn: 3.0.2
       tildify: 2.0.0
     optionalDependencies:
-      better-sqlite3: 9.5.0
-      mysql2: 3.14.3
       pg: 8.16.3
-      sqlite3: 5.1.7
     transitivePeerDependencies:
       - supports-color
 
