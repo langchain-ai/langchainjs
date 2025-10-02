@@ -1,5 +1,5 @@
-import { BaseChatMemory, BaseChatMemoryInput } from "langchain/memory";
 import AlchemystAI from "@alchemystai/sdk";
+import { BaseChatMemory, BaseChatMemoryInput } from "@langchain/core/memory";
 
 export interface AlchemystMemoryInput extends BaseChatMemoryInput {
   apiKey: string;

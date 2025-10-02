@@ -35,7 +35,7 @@ export class AlchemystRetriever extends BaseRetriever {
    * The logical component namespace for this retriever.
    * Used internally by LangChain.
    */
-  override lc_namespace: string[] = ["alchemyst", "retrievers"];
+  override lc_namespace: string[] = ["alchemystai", "retrievers"];
 
   /**
    * The Alchemyst AI SDK client instance.

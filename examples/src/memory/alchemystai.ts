@@ -1,8 +1,9 @@
-import { AlchemystMemory } from "@langchain/community/memory/alchemyst";
+import { AlchemystMemory } from "@langchain/community/memory/alchemystai";
+import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
+import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
 import { randomUUID } from "crypto";
 import 'dotenv/config';
-import { ConversationChain } from "langchain/chains";
 
 async function main() {
   console.log("Boot: starting test with env:", {
@@ -19,18 +20,48 @@ async function main() {
 
   const model = new ChatOpenAI({
     model: "gpt-5-nano",
-    // temperature: 0,
   });
 
-  const chain = new ConversationChain({ llm: model, memory });
+  // Create a prompt template with message history
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are a helpful AI assistant. Have a conversation with the human, using the chat history for context."],
+    new MessagesPlaceholder("history"),
+    ["human", "{input}"],
+  ]);
+
+  // Create the chain using LCEL (LangChain Expression Language)
+  const chain = RunnableSequence.from([
+    RunnablePassthrough.assign({
+      history: async () => {
+        const memoryVars = await memory.loadMemoryVariables({});
+        return memoryVars.history || [];
+      },
+    }),
+    prompt,
+    model,
+  ]);
 
   console.log("Invoke #1 ->");
   const first = await chain.invoke({ input: "Hi, my name is Anuran. Anuran is from Bangalore." });
-  console.log("First reply:", first.response ?? first);
+
+  // Save to memory
+  await memory.saveContext(
+    { input: "Hi, my name is Anuran. Anuran is from Bangalore." },
+    { output: first.content }
+  );
+
+  console.log("First reply:", first.content);
 
   console.log("Invoke #2 ->");
   const second = await chain.invoke({ input: "Who is Anuran? Where is Anuran from?" });
-  console.log("Second reply:", second.response ?? second);
+
+  // Save to memory
+  await memory.saveContext(
+    { input: "Who is Anuran? Where is Anuran from?" },
+    { output: second.content }
+  );
+
+  console.log("Second reply:", second.content);
 }
 
 main().catch((err) => {
