@@ -290,7 +290,6 @@ test.skip(
         );
         // console.log("Initial reply:", observation);
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           let breakDialogue = false;
           for (const agent of agents) {

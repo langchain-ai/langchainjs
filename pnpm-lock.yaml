@@ -616,6 +616,9 @@ importers:
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
       zod:
         specifier: ^3.25.76 || ^4
         version: 3.25.76
@@ -705,9 +708,15 @@ importers:
 
   libs/langchain-classic:
     dependencies:
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../providers/langchain-openai
       '@langchain/textsplitters':
         specifier: workspace:*
         version: link:../langchain-textsplitters
+      handlebars:
+        specifier: ^4.7.8
+        version: 4.7.8
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -748,6 +757,9 @@ importers:
       '@elastic/elasticsearch':
         specifier: ^8.4.0
         version: 8.19.0
+      '@eslint/js':
+        specifier: ^9.36.0
+        version: 9.36.0
       '@faker-js/faker':
         specifier: ^10.0.0
         version: 10.0.0
@@ -779,20 +791,20 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-azure-cosmosdb
       '@langchain/azure-dynamic-sessions':
-        specifier: ^0.2.0
-        version: 0.2.0(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-azure-dynamic-sessions
       '@langchain/baidu-qianfan':
         specifier: workspace:*
         version: link:../providers/langchain-baidu-qianfan
       '@langchain/cloudflare':
-        specifier: ^0.1.2
-        version: 0.1.2(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-cloudflare
       '@langchain/cohere':
         specifier: workspace:*
         version: link:../providers/langchain-cohere
       '@langchain/community':
-        specifier: ^0.3.57
-        version: 0.3.57(5d24a7f595840860b56378b192de5259)
+        specifier: workspace:*
+        version: link:../langchain-community
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
@@ -803,20 +815,20 @@ importers:
         specifier: workspace:*
         version: link:../../internal/eslint
       '@langchain/exa':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
+        specifier: workspace:*
+        version: link:../providers/langchain-exa
       '@langchain/google-cloud-sql-pg':
-        specifier: ^0.0.2
-        version: 0.0.2(better-sqlite3@9.5.0)(encoding@0.1.13)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-cloud-sql-pg
       '@langchain/google-common':
         specifier: workspace:*
         version: link:../providers/langchain-google-common
       '@langchain/google-genai':
-        specifier: ^0.2.18
-        version: 0.2.18(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-genai
       '@langchain/google-vertexai':
-        specifier: ^0.2.18
-        version: 0.2.18(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-google-vertexai
       '@langchain/google-vertexai-web':
         specifier: workspace:*
         version: link:../providers/langchain-google-vertexai-web
@@ -827,20 +839,17 @@ importers:
         specifier: 1.0.0-alpha.5
         version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/mistralai':
-        specifier: ^0.2.3
-        version: 0.2.3(@langchain/core@libs+langchain-core)(zod@3.25.76)
+        specifier: workspace:*
+        version: link:../providers/langchain-mistralai
       '@langchain/mongodb':
         specifier: workspace:*
         version: link:../providers/langchain-mongodb
       '@langchain/nomic':
-        specifier: ^0.1.0
-        version: 0.1.0(@langchain/core@libs+langchain-core)
-      '@langchain/ollama':
-        specifier: ^0.2.4
-        version: 0.2.4(@langchain/core@libs+langchain-core)
-      '@langchain/openai':
         specifier: workspace:*
-        version: link:../providers/langchain-openai
+        version: link:../providers/langchain-nomic
+      '@langchain/ollama':
+        specifier: workspace:*
+        version: link:../providers/langchain-ollama
       '@langchain/pinecone':
         specifier: ^0.2.0
         version: 0.2.0(@langchain/core@libs+langchain-core)(@pinecone-database/pinecone@5.1.2)
@@ -854,11 +863,11 @@ importers:
         specifier: '>=0.1.0 <0.2.0'
         version: 0.1.3
       '@langchain/tavily':
-        specifier: ^0.1.5
-        version: 0.1.5(@langchain/core@libs+langchain-core)
+        specifier: workspace:*
+        version: link:../providers/langchain-tavily
       '@langchain/weaviate':
-        specifier: ^0.2.3
-        version: 0.2.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
+        specifier: workspace:*
+        version: link:../providers/langchain-weaviate
       '@langchain/xai':
         specifier: workspace:*
         version: link:../providers/langchain-xai
@@ -956,8 +965,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.7
       eslint:
-        specifier: ^9.34.0
-        version: 9.35.0(jiti@2.5.1)
+        specifier: ^9.36.0
+        version: 9.36.0(jiti@2.5.1)
       exa-js:
         specifier: ^1.0.12
         version: 1.8.26(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -967,9 +976,6 @@ importers:
       graphql:
         specifier: ^16.6.0
         version: 16.11.0
-      handlebars:
-        specifier: ^4.7.8
-        version: 4.7.8
       hdb:
         specifier: ^0.19.8
         version: 0.19.8
@@ -2437,7 +2443,7 @@ importers:
         version: 9.15.1(encoding@0.1.13)
       knex:
         specifier: ^3.1.0
-        version: 3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
+        version: 3.1.0(pg@8.16.3)
       uuid:
         specifier: ^11.0.5
         version: 11.1.0
@@ -6225,419 +6231,17 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/azure-dynamic-sessions@0.2.0':
-    resolution: {integrity: sha512-IZjAdyA4/lSp2F70++y6RCiqDp7TnYcOOegFtxFeIHnb+Rv63n64xB7x72Nu1O29pMF24NbCkTOpcVqwd/J2mA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/cloudflare@0.1.2':
-    resolution: {integrity: sha512-NLTPcH73zA860fseAfUxGHaRBiaVwd1SgeDAUzHGclZMfAZJ8RwD4JTELj3BF6lXOGHhPDfLaGM2f8CytBlNQA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
   '@langchain/cohere@0.3.4':
     resolution: {integrity: sha512-TdOaxKtavYxf5iVO20OQHGwDUSvCTp2o6Jc0N26FyBZKP4J5LECOksmL28y6hNI/4duXPTl2IEXsNqlOTc2ssQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/community@0.3.57':
-    resolution: {integrity: sha512-xUe5UIlh1yZjt/cMtdSVlCoC5xm/RMN/rp+KZGLbquvjQeONmQ2rvpCqWjAOgQ6SPLqKiXvoXaKSm20r+LHISw==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@arcjet/redact': ^v1.0.0-alpha.23
-      '@aws-crypto/sha256-js': ^5.0.0
-      '@aws-sdk/client-bedrock-agent-runtime': ^3.749.0
-      '@aws-sdk/client-bedrock-runtime': ^3.749.0
-      '@aws-sdk/client-dynamodb': ^3.749.0
-      '@aws-sdk/client-kendra': ^3.749.0
-      '@aws-sdk/client-lambda': ^3.749.0
-      '@aws-sdk/client-s3': ^3.749.0
-      '@aws-sdk/client-sagemaker-runtime': ^3.749.0
-      '@aws-sdk/client-sfn': ^3.749.0
-      '@aws-sdk/credential-provider-node': ^3.388.0
-      '@aws-sdk/dsql-signer': '*'
-      '@azure/search-documents': ^12.0.0
-      '@azure/storage-blob': ^12.15.0
-      '@browserbasehq/sdk': '*'
-      '@browserbasehq/stagehand': ^1.0.0
-      '@clickhouse/client': ^0.2.5
-      '@cloudflare/ai': '*'
-      '@datastax/astra-db-ts': ^1.0.0
-      '@elastic/elasticsearch': ^8.4.0
-      '@getmetal/metal-sdk': '*'
-      '@getzep/zep-cloud': ^1.0.6
-      '@getzep/zep-js': ^0.9.0
-      '@gomomento/sdk': ^1.51.1
-      '@gomomento/sdk-core': ^1.51.1
-      '@google-ai/generativelanguage': '*'
-      '@google-cloud/storage': ^6.10.1 || ^7.7.0
-      '@gradientai/nodejs-sdk': ^1.2.0
-      '@huggingface/inference': ^4.0.5
-      '@huggingface/transformers': ^3.5.2
-      '@ibm-cloud/watsonx-ai': '*'
-      '@lancedb/lancedb': ^0.19.1
-      '@langchain/core': workspace:*
-      '@layerup/layerup-security': ^1.5.12
-      '@libsql/client': ^0.14.0
-      '@mendable/firecrawl-js': ^1.4.3
-      '@mlc-ai/web-llm': '*'
-      '@mozilla/readability': '*'
-      '@neondatabase/serverless': '*'
-      '@notionhq/client': ^2.2.10
-      '@opensearch-project/opensearch': '*'
-      '@pinecone-database/pinecone': '*'
-      '@planetscale/database': ^1.8.0
-      '@premai/prem-sdk': ^0.3.25
-      '@qdrant/js-client-rest': ^1.15.0
-      '@raycast/api': ^1.55.2
-      '@rockset/client': ^0.9.1
-      '@smithy/eventstream-codec': ^2.0.5
-      '@smithy/protocol-http': ^3.0.6
-      '@smithy/signature-v4': ^2.0.10
-      '@smithy/util-utf8': ^2.0.0
-      '@spider-cloud/spider-client': ^0.0.21
-      '@supabase/supabase-js': ^2.45.0
-      '@tensorflow-models/universal-sentence-encoder': '*'
-      '@tensorflow/tfjs-converter': '*'
-      '@tensorflow/tfjs-core': '*'
-      '@upstash/ratelimit': ^1.1.3 || ^2.0.3
-      '@upstash/redis': ^1.20.6
-      '@upstash/vector': ^1.1.1
-      '@vercel/kv': '*'
-      '@vercel/postgres': '*'
-      '@writerai/writer-sdk': ^0.40.2
-      '@xata.io/client': ^0.28.0
-      '@zilliz/milvus2-sdk-node': '>=2.3.5'
-      apify-client: ^2.7.1
-      assemblyai: ^4.6.0
-      azion: ^1.11.1
-      better-sqlite3: '>=9.4.0 <12.0.0'
-      cassandra-driver: ^4.7.2
-      cborg: ^4.1.1
-      cheerio: ^1.0.0-rc.12
-      chromadb: '*'
-      closevector-common: 0.1.3
-      closevector-node: 0.1.6
-      closevector-web: 0.1.6
-      cohere-ai: '*'
-      convex: ^1.3.1
-      crypto-js: ^4.2.0
-      d3-dsv: ^2.0.0
-      discord.js: ^14.14.1
-      duck-duck-scrape: ^2.2.5
-      epub2: ^3.0.1
-      fast-xml-parser: '*'
-      firebase-admin: ^11.9.0 || ^12.0.0 || ^13.0.0
-      google-auth-library: '*'
-      googleapis: '*'
-      hnswlib-node: ^3.0.0
-      html-to-text: ^9.0.5
-      ibm-cloud-sdk-core: '*'
-      ignore: ^5.2.0
-      interface-datastore: ^8.2.11
-      ioredis: ^5.3.2
-      it-all: ^3.0.4
-      jsdom: '*'
-      jsonwebtoken: ^9.0.2
-      llmonitor: ^0.5.9
-      lodash: ^4.17.21
-      lunary: ^0.7.10
-      mammoth: ^1.6.0
-      mariadb: ^3.4.0
-      mem0ai: ^2.1.8
-      mongodb: ^6.17.0
-      mysql2: ^3.9.8
-      neo4j-driver: '*'
-      notion-to-md: ^3.1.0
-      officeparser: ^4.0.4
-      openai: '*'
-      pdf-parse: 1.1.1
-      pg: ^8.11.0
-      pg-copy-streams: ^6.0.5
-      pickleparser: ^0.2.1
-      playwright: ^1.32.1
-      portkey-ai: ^0.1.11
-      puppeteer: '*'
-      pyodide: '>=0.24.1 <0.27.0'
-      redis: '*'
-      replicate: '*'
-      sonix-speech-recognition: ^2.1.1
-      srt-parser-2: ^1.2.3
-      typeorm: ^0.3.20
-      typesense: ^1.5.3
-      usearch: ^1.1.1
-      voy-search: 0.6.2
-      weaviate-client: ^3.5.2
-      web-auth-library: ^1.0.3
-      word-extractor: '*'
-      ws: ^8.14.2
-      youtubei.js: '*'
-    peerDependenciesMeta:
-      '@arcjet/redact':
-        optional: true
-      '@aws-crypto/sha256-js':
-        optional: true
-      '@aws-sdk/client-bedrock-agent-runtime':
-        optional: true
-      '@aws-sdk/client-bedrock-runtime':
-        optional: true
-      '@aws-sdk/client-dynamodb':
-        optional: true
-      '@aws-sdk/client-kendra':
-        optional: true
-      '@aws-sdk/client-lambda':
-        optional: true
-      '@aws-sdk/client-s3':
-        optional: true
-      '@aws-sdk/client-sagemaker-runtime':
-        optional: true
-      '@aws-sdk/client-sfn':
-        optional: true
-      '@aws-sdk/credential-provider-node':
-        optional: true
-      '@aws-sdk/dsql-signer':
-        optional: true
-      '@azure/search-documents':
-        optional: true
-      '@azure/storage-blob':
-        optional: true
-      '@browserbasehq/sdk':
-        optional: true
-      '@clickhouse/client':
-        optional: true
-      '@cloudflare/ai':
-        optional: true
-      '@datastax/astra-db-ts':
-        optional: true
-      '@elastic/elasticsearch':
-        optional: true
-      '@getmetal/metal-sdk':
-        optional: true
-      '@getzep/zep-cloud':
-        optional: true
-      '@getzep/zep-js':
-        optional: true
-      '@gomomento/sdk':
-        optional: true
-      '@gomomento/sdk-core':
-        optional: true
-      '@google-ai/generativelanguage':
-        optional: true
-      '@google-cloud/storage':
-        optional: true
-      '@gradientai/nodejs-sdk':
-        optional: true
-      '@huggingface/inference':
-        optional: true
-      '@huggingface/transformers':
-        optional: true
-      '@lancedb/lancedb':
-        optional: true
-      '@layerup/layerup-security':
-        optional: true
-      '@libsql/client':
-        optional: true
-      '@mendable/firecrawl-js':
-        optional: true
-      '@mlc-ai/web-llm':
-        optional: true
-      '@mozilla/readability':
-        optional: true
-      '@neondatabase/serverless':
-        optional: true
-      '@notionhq/client':
-        optional: true
-      '@opensearch-project/opensearch':
-        optional: true
-      '@pinecone-database/pinecone':
-        optional: true
-      '@planetscale/database':
-        optional: true
-      '@premai/prem-sdk':
-        optional: true
-      '@qdrant/js-client-rest':
-        optional: true
-      '@raycast/api':
-        optional: true
-      '@rockset/client':
-        optional: true
-      '@smithy/eventstream-codec':
-        optional: true
-      '@smithy/protocol-http':
-        optional: true
-      '@smithy/signature-v4':
-        optional: true
-      '@smithy/util-utf8':
-        optional: true
-      '@spider-cloud/spider-client':
-        optional: true
-      '@supabase/supabase-js':
-        optional: true
-      '@tensorflow-models/universal-sentence-encoder':
-        optional: true
-      '@tensorflow/tfjs-converter':
-        optional: true
-      '@tensorflow/tfjs-core':
-        optional: true
-      '@upstash/ratelimit':
-        optional: true
-      '@upstash/redis':
-        optional: true
-      '@upstash/vector':
-        optional: true
-      '@vercel/kv':
-        optional: true
-      '@vercel/postgres':
-        optional: true
-      '@writerai/writer-sdk':
-        optional: true
-      '@xata.io/client':
-        optional: true
-      '@zilliz/milvus2-sdk-node':
-        optional: true
-      apify-client:
-        optional: true
-      assemblyai:
-        optional: true
-      azion:
-        optional: true
-      better-sqlite3:
-        optional: true
-      cassandra-driver:
-        optional: true
-      cborg:
-        optional: true
-      cheerio:
-        optional: true
-      chromadb:
-        optional: true
-      closevector-common:
-        optional: true
-      closevector-node:
-        optional: true
-      closevector-web:
-        optional: true
-      cohere-ai:
-        optional: true
-      convex:
-        optional: true
-      crypto-js:
-        optional: true
-      d3-dsv:
-        optional: true
-      discord.js:
-        optional: true
-      duck-duck-scrape:
-        optional: true
-      epub2:
-        optional: true
-      fast-xml-parser:
-        optional: true
-      firebase-admin:
-        optional: true
-      google-auth-library:
-        optional: true
-      googleapis:
-        optional: true
-      hnswlib-node:
-        optional: true
-      html-to-text:
-        optional: true
-      ignore:
-        optional: true
-      interface-datastore:
-        optional: true
-      ioredis:
-        optional: true
-      it-all:
-        optional: true
-      jsdom:
-        optional: true
-      jsonwebtoken:
-        optional: true
-      llmonitor:
-        optional: true
-      lodash:
-        optional: true
-      lunary:
-        optional: true
-      mammoth:
-        optional: true
-      mariadb:
-        optional: true
-      mem0ai:
-        optional: true
-      mongodb:
-        optional: true
-      mysql2:
-        optional: true
-      neo4j-driver:
-        optional: true
-      notion-to-md:
-        optional: true
-      officeparser:
-        optional: true
-      pdf-parse:
-        optional: true
-      pg:
-        optional: true
-      pg-copy-streams:
-        optional: true
-      pickleparser:
-        optional: true
-      playwright:
-        optional: true
-      portkey-ai:
-        optional: true
-      puppeteer:
-        optional: true
-      pyodide:
-        optional: true
-      redis:
-        optional: true
-      replicate:
-        optional: true
-      sonix-speech-recognition:
-        optional: true
-      srt-parser-2:
-        optional: true
-      typeorm:
-        optional: true
-      typesense:
-        optional: true
-      usearch:
-        optional: true
-      voy-search:
-        optional: true
-      weaviate-client:
-        optional: true
-      web-auth-library:
-        optional: true
-      word-extractor:
-        optional: true
-      ws:
-        optional: true
-      youtubei.js:
-        optional: true
-
   '@langchain/deepseek@0.1.0':
     resolution: {integrity: sha512-5VzaG/oi2oSfBt+JUdXWjavZcmOzjk14+N5sCFnbrY6xeAjHrtBq7VeBcBJcHqkrjafxADK1aVGV0hpbhiFyJg==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
-
-  '@langchain/exa@0.1.0':
-    resolution: {integrity: sha512-9HN4vuqiKxo4SYu7SbxdrKAu2ISiDUy0PRexKX/pNbxwAzKhBhCDkALjIceSAIJ9F6rgJxkykPYJd1AzHPvXFA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/google-cloud-sql-pg@0.0.2':
-    resolution: {integrity: sha512-hpj7fUZ90MU9HhIugfLPIE8ey12RSes8EnnpV7geer5KVozYYEc1a9GaxxU4B4E9UGBupupsIHoDGZZLpVZYqw==}
-    engines: {node: '>=18'}
 
   '@langchain/google-common@0.2.16':
     resolution: {integrity: sha512-RZmXGXDJcW0qdOe6yvp42/GILbe2vOvgZ+rUV1onZAJUYm4JjyByoj4+Zxyxza3b4EjWaqo6QegDiyF55sxpgg==}
@@ -6730,14 +6334,14 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/nomic@0.1.0':
-    resolution: {integrity: sha512-VIwDpoLX+xB4tMBXHeMTMmbaNT/7iMvSCeKmtxUqg8upFL3uhH1l4UdS5GZZrCjyXKnTP7amxdBA2HfRyDmdnA==}
+  '@langchain/ollama@0.2.4':
+    resolution: {integrity: sha512-XThDrZurNPcUO6sasN13rkes1aGgu5gWAtDkkyIGT3ZeMOvrYgPKGft+bbhvsigTIH9C01TfPzrSp8LAmvHIjA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
 
-  '@langchain/ollama@0.2.4':
-    resolution: {integrity: sha512-XThDrZurNPcUO6sasN13rkes1aGgu5gWAtDkkyIGT3ZeMOvrYgPKGft+bbhvsigTIH9C01TfPzrSp8LAmvHIjA==}
+  '@langchain/openai@0.6.14':
+    resolution: {integrity: sha512-SM/xJOFDxT9NN/07fvhNB5dgAsIOQaLhmANxrRlSQ7Qs1zImMrzOvq+/5JP/ifpC/YxcgEnt4dblKVqvNU/C5A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -6760,12 +6364,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@langchain/tavily@0.1.5':
-    resolution: {integrity: sha512-6C8hb3d6YjlGJPdPFfaNlrUS0h6blQx4cRzCKeDdCvixcghzV8llAmuzvJSmAyALprFfvKtj+1NJb4ttj1iZ/A==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
     engines: {node: '>=18'}
@@ -6774,12 +6372,6 @@ packages:
 
   '@langchain/weaviate@0.2.1':
     resolution: {integrity: sha512-rlfAKF+GB0A5MUrol34oDrBkl4q6AefARk9KDW+LfzhV/74pZZLZyIPYPxvE4XwI3gvpwp024DNsDxK/4UW0/g==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:*
-
-  '@langchain/weaviate@0.2.3':
-    resolution: {integrity: sha512-WqNGn1eSrI+ZigJd7kZjCj3fvHBYicKr054qts2nNJ+IyO5dWmY3oFTaVHFq1OLFVZJJxrFeDnxSEOC3JnfP0w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:*
@@ -13377,23 +12969,6 @@ packages:
 
   langsmith@0.3.64:
     resolution: {integrity: sha512-67yccwrREK5pgVX7PktkUImbNT4bQpSPH7SETSPYZ+X42OpGGAABU4s+pNV/55/ke+INrmpXXlKxfMpZOCrzQA==}
-    peerDependencies:
-      '@opentelemetry/api': '*'
-      '@opentelemetry/exporter-trace-otlp-proto': '*'
-      '@opentelemetry/sdk-trace-base': '*'
-      openai: '*'
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      '@opentelemetry/exporter-trace-otlp-proto':
-        optional: true
-      '@opentelemetry/sdk-trace-base':
-        optional: true
-      openai:
-        optional: true
-
-  langsmith@0.3.71:
-    resolution: {integrity: sha512-xl00JZso7J3OaurUQ+seT2qRJ34OGZXYAvCYj3vNC3TB+JOcdcYZ1uLvENqOloKB8VCiADh1eZ0FG3Cj/cy2FQ==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -21269,19 +20844,6 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@langchain/azure-dynamic-sessions@0.2.0(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@azure/identity': 4.12.0
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - supports-color
-
-  '@langchain/cloudflare@0.1.2(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-
   '@langchain/cohere@0.3.4(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -21292,167 +20854,6 @@ snapshots:
       - encoding
     optional: true
 
-  '@langchain/community@0.3.57(5d24a7f595840860b56378b192de5259)':
-    dependencies:
-      '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.54.2)(bufferutil@4.0.9)(deepmerge@4.3.1)(dotenv@16.6.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(utf-8-validate@6.0.5)(zod@3.25.76)
-      '@ibm-cloud/watsonx-ai': 1.6.10
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/weaviate': 0.2.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)
-      binary-extensions: 2.3.0
-      expr-eval: 2.0.2
-      flat: 5.0.2
-      ibm-cloud-sdk-core: 5.4.2
-      js-yaml: 4.1.0
-      langchain: 0.3.30(d287327487915eb65909f38e6ed03b35)
-      langsmith: 0.3.71(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-      uuid: 10.0.0
-      zod: 3.25.76
-    optionalDependencies:
-      '@arcjet/redact': 1.0.0-beta.9
-      '@aws-crypto/sha256-js': 5.2.0
-      '@aws-sdk/client-bedrock-agent-runtime': 3.858.0
-      '@aws-sdk/client-bedrock-runtime': 3.858.0
-      '@aws-sdk/client-dynamodb': 3.858.0
-      '@aws-sdk/client-kendra': 3.858.0
-      '@aws-sdk/client-lambda': 3.858.0
-      '@aws-sdk/client-s3': 3.858.0
-      '@aws-sdk/client-sagemaker-runtime': 3.858.0
-      '@aws-sdk/client-sfn': 3.858.0
-      '@aws-sdk/credential-provider-node': 3.858.0
-      '@aws-sdk/dsql-signer': 3.858.0
-      '@azure/search-documents': 12.1.0
-      '@azure/storage-blob': 12.28.0
-      '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
-      '@clickhouse/client': 0.2.10
-      '@cloudflare/ai': 1.0.12
-      '@datastax/astra-db-ts': 1.5.0
-      '@elastic/elasticsearch': 8.19.0
-      '@getmetal/metal-sdk': 4.0.6
-      '@getzep/zep-cloud': 1.0.12(@langchain/core@libs+langchain-core)(encoding@0.1.13)(langchain@libs+langchain)
-      '@getzep/zep-js': 0.9.0
-      '@gomomento/sdk': 1.51.1(encoding@0.1.13)
-      '@gomomento/sdk-core': 1.111.0
-      '@google-ai/generativelanguage': 2.9.1(encoding@0.1.13)
-      '@google-cloud/storage': 7.16.0(encoding@0.1.13)
-      '@gradientai/nodejs-sdk': 1.12.1
-      '@huggingface/inference': 4.6.1
-      '@huggingface/transformers': 3.7.0
-      '@lancedb/lancedb': 0.19.1(apache-arrow@19.0.1)
-      '@layerup/layerup-security': 1.6.0(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-      '@libsql/client': 0.14.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      '@mendable/firecrawl-js': 1.29.3
-      '@mlc-ai/web-llm': 0.2.79
-      '@mozilla/readability': 0.4.4
-      '@neondatabase/serverless': 0.9.5
-      '@notionhq/client': 2.3.0(encoding@0.1.13)
-      '@opensearch-project/opensearch': 2.13.0
-      '@pinecone-database/pinecone': 5.1.2
-      '@planetscale/database': 1.19.0
-      '@premai/prem-sdk': 0.3.100
-      '@qdrant/js-client-rest': 1.15.0(typescript@5.8.3)
-      '@raycast/api': 1.102.3(@types/node@24.3.1)
-      '@rockset/client': 0.9.2(encoding@0.1.13)
-      '@smithy/eventstream-codec': 2.2.0
-      '@smithy/protocol-http': 3.3.0
-      '@smithy/signature-v4': 2.3.0
-      '@smithy/util-utf8': 2.3.0
-      '@spider-cloud/spider-client': 0.0.21
-      '@supabase/supabase-js': 2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      '@tensorflow-models/universal-sentence-encoder': 1.3.3(@tensorflow/tfjs-converter@3.21.0(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13)))(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13))
-      '@tensorflow/tfjs-converter': 3.21.0(@tensorflow/tfjs-core@3.21.0(encoding@0.1.13))
-      '@tensorflow/tfjs-core': 3.21.0(encoding@0.1.13)
-      '@upstash/ratelimit': 2.0.6(@upstash/redis@1.35.3)
-      '@upstash/redis': 1.35.3
-      '@upstash/vector': 1.2.2
-      '@vercel/kv': 3.0.0
-      '@vercel/postgres': 0.10.0(utf-8-validate@6.0.5)
-      '@writerai/writer-sdk': 0.40.2
-      '@xata.io/client': 0.28.4(typescript@5.8.3)
-      '@zilliz/milvus2-sdk-node': 2.6.0
-      apify-client: 2.12.6
-      assemblyai: 4.14.2(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      azion: 1.20.2(@babel/core@7.28.0)(@fastly/js-compute@3.34.0)(@swc/core@1.13.3(@swc/helpers@0.5.17))
-      better-sqlite3: 9.5.0
-      cassandra-driver: 4.8.0
-      cborg: 4.2.12
-      cheerio: 1.0.0-rc.12
-      chromadb: 1.10.5(@google/generative-ai@0.7.1)(cohere-ai@7.18.0(encoding@0.1.13))(encoding@0.1.13)(ollama@0.5.18)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
-      closevector-common: 0.1.3
-      closevector-node: 0.1.6
-      closevector-web: 0.1.6
-      cohere-ai: 7.18.0(encoding@0.1.13)
-      convex: 1.25.4(react@19.0.0)
-      crypto-js: 4.2.0
-      d3-dsv: 2.0.0
-      discord.js: 14.21.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      duck-duck-scrape: 2.2.7
-      epub2: 3.0.2(ts-toolbelt@9.6.0)
-      fast-xml-parser: 5.2.5
-      firebase-admin: 12.7.0(encoding@0.1.13)
-      google-auth-library: 10.2.0
-      googleapis: 126.0.1(encoding@0.1.13)
-      hnswlib-node: 3.0.0
-      html-to-text: 9.0.5
-      ignore: 5.3.2
-      interface-datastore: 8.3.2
-      ioredis: 5.7.0
-      it-all: 3.0.9
-      jsdom: 26.1.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      jsonwebtoken: 9.0.2
-      llmonitor: 0.5.11(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
-      lodash: 4.17.21
-      lunary: 0.8.8(@anthropic-ai/sdk@0.56.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0)
-      mammoth: 1.9.1
-      mariadb: 3.4.5
-      mem0ai: 2.1.36(@anthropic-ai/sdk@0.56.0)(@cloudflare/workers-types@4.20250801.0)(@google/genai@1.12.0(@modelcontextprotocol/sdk@1.17.1)(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.7.5(zod@3.25.76))(@qdrant/js-client-rest@1.15.0(typescript@5.8.3))(@supabase/supabase-js@2.53.0(bufferutil@4.0.9)(utf-8-validate@6.0.5))(@types/jest@29.5.14)(@types/pg@8.15.5)(@types/sqlite3@3.1.11)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@0.19.0(encoding@0.1.13))(neo4j-driver@5.28.1)(ollama@0.5.18)(pg@8.16.3)(redis@4.7.1)(sqlite3@5.1.7)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      mongodb: 6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6)
-      mysql2: 3.14.3
-      neo4j-driver: 5.28.1
-      notion-to-md: 3.1.9(encoding@0.1.13)
-      officeparser: 4.2.0
-      pdf-parse: 1.1.1
-      pg: 8.16.3
-      pg-copy-streams: 6.0.6
-      pickleparser: 0.2.1
-      playwright: 1.54.2
-      portkey-ai: 0.1.16
-      puppeteer: 22.15.0(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@6.0.5)
-      pyodide: 0.26.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      redis: 4.7.1
-      replicate: 1.0.1
-      sonix-speech-recognition: 2.1.1
-      srt-parser-2: 1.2.3
-      typeorm: 0.3.25(better-sqlite3@9.5.0)(ioredis@5.7.0)(mongodb@6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6))(mysql2@3.14.3)(pg@8.16.3)(redis@4.7.1)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.3.1)(typescript@5.8.3))
-      typesense: 1.8.2(@babel/runtime@7.28.2)
-      voy-search: 0.6.2
-      weaviate-client: 3.8.0(encoding@0.1.13)
-      web-auth-library: 1.0.3
-      word-extractor: 1.0.4
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      youtubei.js: 12.2.0
-    transitivePeerDependencies:
-      - '@langchain/anthropic'
-      - '@langchain/aws'
-      - '@langchain/cerebras'
-      - '@langchain/cohere'
-      - '@langchain/deepseek'
-      - '@langchain/google-genai'
-      - '@langchain/google-vertexai'
-      - '@langchain/google-vertexai-web'
-      - '@langchain/groq'
-      - '@langchain/mistralai'
-      - '@langchain/ollama'
-      - '@langchain/xai'
-      - '@opentelemetry/api'
-      - '@opentelemetry/exporter-trace-otlp-proto'
-      - '@opentelemetry/sdk-trace-base'
-      - axios
-      - encoding
-      - handlebars
-      - peggy
-
   '@langchain/deepseek@0.1.0(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
       '@langchain/core': link:libs/langchain-core
@@ -21460,32 +20861,6 @@ snapshots:
     transitivePeerDependencies:
       - ws
     optional: true
-
-  '@langchain/exa@0.1.0(@langchain/core@libs+langchain-core)(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      exa-js: 1.8.26(encoding@0.1.13)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-    transitivePeerDependencies:
-      - encoding
-      - ws
-
-  '@langchain/google-cloud-sql-pg@0.0.2(better-sqlite3@9.5.0)(encoding@0.1.13)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)':
-    dependencies:
-      '@google-cloud/cloud-sql-connector': 1.8.2
-      '@langchain/core': link:libs/langchain-core
-      google-auth-library: 9.15.1(encoding@0.1.13)
-      knex: 3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7)
-      uuid: 11.1.0
-    transitivePeerDependencies:
-      - better-sqlite3
-      - encoding
-      - mysql
-      - mysql2
-      - pg
-      - pg-native
-      - sqlite3
-      - supports-color
-      - tedious
 
   '@langchain/google-common@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -21496,6 +20871,7 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
+    optional: true
 
   '@langchain/google-gauth@0.2.16':
     dependencies:
@@ -21511,12 +20887,14 @@ snapshots:
       google-auth-library: 10.2.0
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@langchain/google-genai@0.2.18(@langchain/core@libs+langchain-core)':
     dependencies:
       '@google/generative-ai': 0.24.1
       '@langchain/core': link:libs/langchain-core
       uuid: 11.1.0
+    optional: true
 
   '@langchain/google-vertexai-web@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -21530,6 +20908,7 @@ snapshots:
       '@langchain/google-gauth': 0.2.18(@langchain/core@libs+langchain-core)
     transitivePeerDependencies:
       - supports-color
+    optional: true
 
   '@langchain/google-webauth@0.2.16(@langchain/core@libs+langchain-core)':
     dependencies:
@@ -21582,17 +20961,24 @@ snapshots:
       uuid: 10.0.0
     transitivePeerDependencies:
       - zod
-
-  '@langchain/nomic@0.1.0(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@nomic-ai/atlas': 0.8.0
+    optional: true
 
   '@langchain/ollama@0.2.4(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       ollama: 0.5.18
       uuid: 10.0.0
+    optional: true
+
+  '@langchain/openai@0.6.14(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.20
+      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - ws
+    optional: true
 
   '@langchain/openai@0.6.14(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))':
     dependencies:
@@ -21636,25 +21022,12 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  '@langchain/tavily@0.1.5(@langchain/core@libs+langchain-core)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      zod: 3.25.76
-
   '@langchain/textsplitters@0.1.0(@langchain/core@libs+langchain-core)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
 
   '@langchain/weaviate@0.2.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      uuid: 10.0.0
-      weaviate-client: 3.8.0(encoding@0.1.13)
-    transitivePeerDependencies:
-      - encoding
-
-  '@langchain/weaviate@0.2.3(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       uuid: 10.0.0
@@ -28640,7 +28013,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.11.0(debug@4.4.1))
+      retry-axios: 2.6.0(axios@1.11.0)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -29943,7 +29316,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  knex@3.1.0(better-sqlite3@9.5.0)(mysql2@3.14.3)(pg@8.16.3)(sqlite3@5.1.7):
+  knex@3.1.0(pg@8.16.3):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -29960,10 +29333,7 @@ snapshots:
       tarn: 3.0.2
       tildify: 2.0.0
     optionalDependencies:
-      better-sqlite3: 9.5.0
-      mysql2: 3.14.3
       pg: 8.16.3
-      sqlite3: 5.1.7
     transitivePeerDependencies:
       - supports-color
 
@@ -30011,44 +29381,6 @@ snapshots:
       - openai
       - ws
 
-  langchain@0.3.30(d287327487915eb65909f38e6ed03b35):
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/openai': 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@langchain/textsplitters': 0.1.0(@langchain/core@libs+langchain-core)
-      js-tiktoken: 1.0.20
-      js-yaml: 4.1.0
-      jsonpointer: 5.0.1
-      langsmith: 0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))
-      openapi-types: 12.1.3
-      p-retry: 4.6.2
-      uuid: 10.0.0
-      yaml: 2.8.1
-      zod: 3.25.76
-    optionalDependencies:
-      '@langchain/anthropic': link:libs/providers/langchain-anthropic
-      '@langchain/aws': 0.1.15(@langchain/core@libs+langchain-core)
-      '@langchain/cohere': link:libs/providers/langchain-cohere
-      '@langchain/deepseek': link:libs/providers/langchain-deepseek
-      '@langchain/google-genai': 0.2.18(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai': 0.2.18(@langchain/core@libs+langchain-core)
-      '@langchain/google-vertexai-web': link:libs/providers/langchain-google-vertexai-web
-      '@langchain/groq': link:libs/providers/langchain-groq
-      '@langchain/mistralai': 0.2.3(@langchain/core@libs+langchain-core)(zod@3.25.76)
-      '@langchain/ollama': 0.2.4(@langchain/core@libs+langchain-core)
-      '@langchain/xai': link:libs/providers/langchain-xai
-      axios: 0.26.1
-      cheerio: 1.0.0-rc.12
-      handlebars: 4.7.8
-      peggy: 3.0.2
-      typeorm: 0.3.25(better-sqlite3@9.5.0)(ioredis@5.7.0)(mongodb@6.18.0(@aws-sdk/credential-providers@3.858.0)(socks@2.8.6))(mysql2@3.14.3)(pg@8.16.3)(redis@4.7.1)(reflect-metadata@0.2.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.13.3(@swc/helpers@0.5.17))(@types/node@24.3.1)(typescript@5.8.3))
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - '@opentelemetry/exporter-trace-otlp-proto'
-      - '@opentelemetry/sdk-trace-base'
-      - openai
-      - ws
-
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
@@ -30063,19 +29395,6 @@ snapshots:
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
 
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
-    dependencies:
-      '@types/uuid': 10.0.0
-      chalk: 4.1.2
-      console-table-printer: 2.14.6
-      p-queue: 6.6.2
-      p-retry: 4.6.2
-      semver: 7.7.2
-      uuid: 10.0.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-
-  langsmith@0.3.71(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -30184,14 +29503,6 @@ snapshots:
     optionalDependencies:
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
       react: 19.0.0
-
-  llmonitor@0.5.11(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76))(react@19.0.0):
-    dependencies:
-      unctx: 2.4.1
-    optionalDependencies:
-      openai: 5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
-      react: 19.0.0
-    optional: true
 
   load-json-file@4.0.0:
     dependencies:
@@ -32565,7 +31876,7 @@ snapshots:
       onetime: 7.0.0
       signal-exit: 4.1.0
 
-  retry-axios@2.6.0(axios@1.11.0(debug@4.4.1)):
+  retry-axios@2.6.0(axios@1.11.0):
     dependencies:
       axios: 1.11.0(debug@4.4.1)
 
@@ -33500,7 +32811,7 @@ snapshots:
       - encoding
       - supports-color
 
-  terser-webpack-plugin@5.3.14(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8)(webpack@5.101.0(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8)):
+  terser-webpack-plugin@5.3.14(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8)(webpack@5.101.0(@swc/core@1.13.3(@swc/helpers@0.5.17))):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.29
       jest-worker: 27.5.1
@@ -34696,7 +34007,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.2
-      terser-webpack-plugin: 5.3.14(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8)(webpack@5.101.0(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8))
+      terser-webpack-plugin: 5.3.14(@swc/core@1.13.3(@swc/helpers@0.5.17))(esbuild@0.25.8)(webpack@5.101.0(@swc/core@1.13.3(@swc/helpers@0.5.17)))
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     transitivePeerDependencies:

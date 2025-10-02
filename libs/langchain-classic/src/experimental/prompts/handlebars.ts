@@ -10,7 +10,6 @@ export const parseHandlebars = (template: string): ParsedFStringNode[] => {
   const parsed: ParsedFStringNode[] = [];
   const nodes: { type: string }[] = [...Handlebars.parse(template).body];
   while (nodes.length) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const node = nodes.pop()!;
     if (node.type === "ContentStatement") {
       // @ts-expect-error - handlebars' hbs.AST.ContentStatement isn't exported
