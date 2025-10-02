@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
+    "rootDir": "./examples",
     "lib": ["ES2021", "ES2022.Object", "DOM"],
     "target": "ES2021",
     "module": "nodenext",
@@ -8,7 +9,6 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
     "declaration": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
