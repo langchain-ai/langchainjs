@@ -27,6 +27,7 @@ import {
   AnthropicWebSearchToolResultBlockParam,
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
+  AnthropicContainerUploadBlockParam,
 } from "../types.js";
 import {
   _isAnthropicImageBlockParam,
@@ -271,6 +272,15 @@ function* _formatContentBlocks(
         ...(cacheControl ? { cache_control: cacheControl } : {}),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
+    } else if (contentPart.type === "container_upload") {
+      yield {
+        ...contentPart,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      } as AnthropicContainerUploadBlockParam;
+    } else {
+      console.warn(
+        `Skipping unsupported content block of type "${contentPart.type}".`
+      );
     }
   }
 }
