@@ -1,0 +1,34 @@
+---
+hide_table_of_contents: true
+---
+
+import CodeBlock from "@theme/CodeBlock";
+
+# Alchemyst AI Memory
+
+[**Alchemyst AI**](https://getalchemystai.com) is the context cloud for LLMs and AI Agents, purpose-built to serve as the connective tissue of your entire AI stack. It provides a unified memory layer that bridges data ingestion, context management, orchestration, inference, and deployment. By acting as a central hub for context and knowledge, Alchemyst enables your AI systems to access, share, and persist information across tools, sessions, and workflows.
+
+With seamless integrations at every layer, Alchemyst empowers you to:
+
+- Aggregate and enrich data from diverse sources, making it accessible to LLMs and agents in real time.
+- Maintain persistent, context-aware memory that enhances reasoning, retrieval, and generation.
+- Orchestrate complex workflows by connecting specialized frameworks, libraries, and platforms.
+- Deploy AI solutions that are modular, scalable, and easy to maintain.
+
+## Setup
+
+Goto [**Alchemyst Platform**](https://platform.getalchemystai.com/settings) to get API keys. Sign in with Google to sign up with a new account.
+
+## Usage
+
+import Example from "@examples/memory/alchemystai.ts";
+
+import IntegrationInstallTooltip from "@mdx_components/integration_install_tooltip.mdx";
+
+<IntegrationInstallTooltip></IntegrationInstallTooltip>
+
+```bash npm2yarn
+npm install @langchain/openai @langchain/core @langchain/community
+```
+
+<CodeBlock language="typescript">{Example}</CodeBlock>
