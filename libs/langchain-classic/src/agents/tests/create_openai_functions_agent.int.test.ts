@@ -1,6 +1,6 @@
 /** eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";
 import type { ChatPromptTemplate } from "@langchain/core/prompts";
 import { TavilySearchResults } from "../../util/testing/tools/tavily_search.js";
