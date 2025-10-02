@@ -73,8 +73,6 @@ export * as stores__message__in_memory from "../stores/message/in_memory.js";
 export * as storage__encoder_backed from "../storage/encoder_backed.js";
 export * as storage__in_memory from "../storage/in_memory.js";
 export * as storage__file_system from "../storage/file_system.js";
-export * as hub from "../hub/index.js";
-export * as hub__node from "../hub/node.js";
 export * as util__document from "../util/document.js";
 export * as util__math from "../util/math.js";
 export * as util__time from "../util/time.js";
@@ -94,3 +92,8 @@ export * as runnables__remote from "../runnables/remote.js";
 export * as indexes from "../indexes/index.js";
 export * as schema__query_constructor from "../schema/query_constructor.js";
 export * as schema__prompt_template from "../schema/prompt_template.js";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+const schema__output_parser = {
+  StringOutputParser,
+};
+export { schema__output_parser };
