@@ -63,7 +63,7 @@ async function main() {
   console.log("Second reply:", second.content);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// main().catch((err) => {
+//   console.error(err);
+//   process.exit(1);
+// });
