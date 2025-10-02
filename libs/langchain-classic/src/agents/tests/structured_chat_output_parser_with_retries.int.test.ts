@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { StructuredChatOutputParserWithRetries } from "../structured_chat/outputParser.js";

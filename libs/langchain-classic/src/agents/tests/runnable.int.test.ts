@@ -1,5 +1,5 @@
 /* eslint-disable no-process-env */
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
