@@ -172,7 +172,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * which tools were interrupted, and how to handle them separately.
  *
  * ```ts
- * import { type ToolApprovalRequest, type HumanInTheLoopMiddlewareHumanResponse } from "langchain/middleware";
+ * import { type ToolApprovalRequest, type HumanInTheLoopMiddlewareHumanResponse } from "langchain";
  * import { type Interrupt } from "langchain";
  *
  * const result = await agent.invoke(request);
@@ -226,7 +226,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @example
  * Basic usage with selective tool approval
  * ```typescript
- * import { humanInTheLoopMiddleware } from "langchain/middleware";
+ * import { humanInTheLoopMiddleware } from "langchain";
  * import { createAgent } from "langchain";
  *
  * const hitlMiddleware = humanInTheLoopMiddleware({
@@ -252,7 +252,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @example
  * Handling approval requests
  * ```typescript
- * import { type HumanInTheLoopRequest, type Interrupt } from "langchain/middleware";
+ * import { type HumanInTheLoopRequest, type Interrupt } from "langchain";
  * import { Command } from "@langchain/langgraph";
  *
  * // Initial agent invocation

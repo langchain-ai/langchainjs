@@ -1,5 +1,5 @@
 import { createAgent, HumanMessage, tool } from "langchain";
-import { humanInTheLoopMiddleware } from "langchain/middleware";
+import { humanInTheLoopMiddleware } from "langchain";
 import { Command, MemorySaver } from "@langchain/langgraph";
 import { z } from "zod";
 

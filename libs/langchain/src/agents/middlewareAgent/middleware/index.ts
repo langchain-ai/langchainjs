@@ -21,4 +21,9 @@ export {
 export {
   llmToolSelectorMiddleware,
   type LLMToolSelectorConfig,
-} from "./bigTool.js";
+} from "./llmToolSelector.js";
+export {
+  piiRedactionMiddleware,
+  type PIIRedactionMiddlewareConfig,
+} from "./piiRedaction.js";
+export { type AgentMiddleware } from "../types.js";
