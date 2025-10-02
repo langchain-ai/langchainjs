@@ -1,4 +1,4 @@
-import { resolve, dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -273,6 +273,7 @@ export const config = {
     // memory
     "memory/chat_memory": "memory/chat_memory",
     "memory/mem0": "memory/mem0",
+    "memory/alchemystai": "memory/alchemystai",
     "memory/motorhead_memory": "memory/motorhead_memory",
     "memory/zep": "memory/zep",
     "memory/zep_cloud": "memory/zep_cloud",
@@ -455,6 +456,7 @@ export const config = {
     "chat_models/iflytek_xinghuo/web",
     "chat_models/webllm",
     "chat_models/zhipuai",
+    "retrievers/alchemystai",
     "retrievers/amazon_kendra",
     "retrievers/amazon_knowledge_base",
     "retrievers/arxiv",
