@@ -35,7 +35,6 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@alchemystai/sdk": "^0.5.0",
     "@langchain/openai": ">=0.2.0 <0.7.0",
     "@langchain/weaviate": "^0.2.0",
     "binary-extensions": "^2.2.0",
@@ -48,6 +47,7 @@
     "zod": "^3.25.32"
   },
   "devDependencies": {
+    "@alchemystai/sdk": "^0.5.0",
     "@arcjet/redact": "^v1.0.0-alpha.23",
     "@aws-crypto/sha256-js": "^5.0.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.749.0",

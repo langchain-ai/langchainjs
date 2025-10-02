@@ -143,6 +143,7 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/stores/message/upstash_redis",
   "langchain_community/stores/message/xata",
   "langchain_community/stores/message/zep_cloud",
+  "langchain_community/memory/alchemystai",
   "langchain_community/memory/mem0",
   "langchain_community/memory/motorhead_memory",
   "langchain_community/memory/zep",
