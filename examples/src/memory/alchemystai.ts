@@ -3,7 +3,6 @@ import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts
 import { RunnablePassthrough, RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
 import { randomUUID } from "crypto";
-import 'dotenv/config';
 
 async function main() {
   console.log("Boot: starting test with env:", {
