@@ -1,7 +1,7 @@
+import { AlchemystRetriever } from "@langchain/community/retrievers/alchemystai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import dotenv from "dotenv";
-import { AlchemystRetriever } from "./index";
 // filepath: /Users/anuran/Alchemyst/integrations/playground/example.ts
 
 dotenv.config();
