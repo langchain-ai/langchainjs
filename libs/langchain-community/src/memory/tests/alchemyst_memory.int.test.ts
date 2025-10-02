@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { v4 as uuid } from "uuid";
-import { AlchemystMemory } from "../alchemyst.js";
+import { AlchemystMemory } from "../alchemystai.js";
 
 const apiKey = process.env.ALCHEMYST_API_KEY; // Set this in your env
 if (!apiKey) {
