@@ -4,6 +4,13 @@
 
 export const optionalEntrypoints: Record<string, string[]> = {
   langchain: [
+    "chat_models/universal",
+    "cache/file_system",
+    "storage/file_system",
+    "hub",
+    "hub/node",
+  ],
+  "@langchain/classic": [
     "agents/load",
     "agents/toolkits/sql",
     "tools/sql",
@@ -33,6 +40,7 @@ export const optionalEntrypoints: Record<string, string[]> = {
 
 export const deprecatedOmitFromImportMap: Record<string, string[]> = {
   langchain: ["hub", "hub/node"],
+  "@langchain/classic": ["hub", "hub/node"],
 };
 
 export const extraImportMapEntries: Record<
@@ -136,14 +144,16 @@ export const extraImportMapEntries: Record<
       path: "@langchain/core/runnables",
     },
     {
-      modules: ["StringOutputParser"],
-      alias: ["schema", "output_parser"],
-      path: "@langchain/core/output_parsers",
-    },
-    {
       modules: ["ChatGenerationChunk", "GenerationChunk"],
       alias: ["schema", "output"],
       path: "@langchain/core/outputs",
+    },
+  ],
+  "@langchain/classic": [
+    {
+      modules: ["StringOutputParser"],
+      alias: ["schema", "output_parser"],
+      path: "@langchain/core/output_parsers",
     },
   ],
 };

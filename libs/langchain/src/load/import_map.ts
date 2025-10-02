@@ -52,7 +52,6 @@ import {
   RunnableWithFallbacks,
   RunnableWithMessageHistory,
 } from "@langchain/core/runnables";
-import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatGenerationChunk, GenerationChunk } from "@langchain/core/outputs";
 const prompts__prompt = {
   PromptTemplate,
@@ -129,10 +128,6 @@ const schema__runnable = {
   RunnableWithMessageHistory,
 };
 export { schema__runnable };
-const schema__output_parser = {
-  StringOutputParser,
-};
-export { schema__output_parser };
 const schema__output = {
   ChatGenerationChunk,
   GenerationChunk,

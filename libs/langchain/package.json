@@ -58,7 +58,8 @@
     "rollup": "^3.19.1",
     "typeorm": "^0.3.20",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "yaml": "^2.8.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0-alpha.6 <2.0.0"
@@ -67,7 +68,6 @@
     "@langchain/langgraph": "next",
     "@langchain/langgraph-checkpoint": "^0.1.1",
     "uuid": "^10.0.0",
-    "yaml": "^2.8.1",
     "zod": "^3.25.76 || ^4"
   },
   "optionalDependencies": {
