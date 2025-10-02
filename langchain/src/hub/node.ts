@@ -77,6 +77,8 @@ export async function pull<T extends Runnable>(
           .ChatGoogleGenerativeAI;
       } else if (modelName === "ChatBedrockConverse") {
         modelClass = (await import("@langchain/aws")).ChatBedrockConverse;
+      } else if (modelName === "ChatMistralAI") {
+        modelClass = (await import("@langchain/mistralai")).ChatMistralAI;
       } else if (modelName === "ChatMistral") {
         modelClass = (await import("@langchain/mistralai")).ChatMistralAI;
       } else if (modelName === "ChatGroq") {
