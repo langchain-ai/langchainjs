@@ -46,9 +46,9 @@ const getDocs = async () => {
   }
 
   docs.forEach((doc, idx) => {
-    // eslint-disable-next-line no-param-reassign
+     
     doc.metadata.publish_year = getYear(dates[idx]);
-    // eslint-disable-next-line no-param-reassign
+     
     doc.metadata.publish_date = dates[idx];
   });
 

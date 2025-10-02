@@ -86,12 +86,12 @@ const attributeInfo: AttributeInfo[] = [
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const client = (weaviate as any).client({
   scheme: process.env.WEAVIATE_SCHEME || "https",
   host: process.env.WEAVIATE_HOST || "localhost",
   apiKey: process.env.WEAVIATE_API_KEY
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ?  
       new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
     : undefined,
 });

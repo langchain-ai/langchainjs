@@ -21,7 +21,7 @@ const vectorStore = await ClickHouseStore.fromTexts(
 );
 
 // Sleep 1 second to ensure that the search occurs after the successful insertion of data.
-// eslint-disable-next-line no-promise-executor-return
+ 
 await new Promise((resolve) => setTimeout(resolve, 1000));
 
 // Perform similarity search without filtering

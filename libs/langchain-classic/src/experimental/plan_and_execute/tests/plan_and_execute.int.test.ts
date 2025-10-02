@@ -1,4 +1,3 @@
-/* eslint-disable no-process-env */
 import { ChatOpenAI } from "@langchain/openai";
 import { SerpAPI } from "../../../util/testing/tools/serpapi.js";
 import { Calculator } from "../../../util/testing/tools/calculator.js";

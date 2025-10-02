@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import weaviate, { ApiKey } from "weaviate-client";
 import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";

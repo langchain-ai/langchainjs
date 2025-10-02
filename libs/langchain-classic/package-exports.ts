@@ -849,18 +849,22 @@ const old = {
 
 console.log(
   JSON.stringify(
-  Object.entries(old).reduce((acc, [key, value]) => {
-    acc[key] = {
-      import: {
-        types: value.types.default.replace(/^\.\//, "./dist/"),
-        default: value.import.replace(/^\.\//, "./dist/"),
-      },
-      require: {
-        types: value.types.require.replace(/^\.\//, "./dist/"),
-        default: value.require.replace(/^\.\//, "./dist/"),
-      },
-      input: value.import.replace(/^\.\//, "./src/").replace(/\.js$/, ".ts"),
-    };
-    return acc;
-  }, {} as Record<string, any>), null, 2)
+    Object.entries(old).reduce((acc, [key, value]) => {
+      acc[key] = {
+        import: {
+          types: value.types.default.replace(/^\.\//, "./dist/"),
+          default: value.import.replace(/^\.\//, "./dist/"),
+        },
+        require: {
+          types: value.types.require.replace(/^\.\//, "./dist/"),
+          default: value.require.replace(/^\.\//, "./dist/"),
+        },
+        input: value.import.replace(/^\.\//, "./src/").replace(/\.js$/, ".ts"),
+      };
+      return acc;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }, {} as Record<string, any>),
+    null,
+    2
+  )
 );

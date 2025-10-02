@@ -22,7 +22,7 @@ const IDs = await UpstashVector.addDocuments([
 ]);
 
 // Waiting vectors to be indexed in the vector store.
-// eslint-disable-next-line no-promise-executor-return
+ 
 await new Promise((resolve) => setTimeout(resolve, 1000));
 
 await UpstashVector.delete({ ids: [IDs[0], IDs[2], IDs[3]] });

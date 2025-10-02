@@ -48,7 +48,7 @@ export async function run() {
 
   const ids = await store.addDocuments(docs);
 
-  // eslint-disable-next-line no-promise-executor-return
+   
   await new Promise((r) => setTimeout(r, 2000));
 
   const model = new OpenAI();

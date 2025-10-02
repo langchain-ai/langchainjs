@@ -37,7 +37,7 @@ const documents = [
 await UpstashVector.addDocuments(documents);
 
 // Waiting vectors to be indexed in the vector store.
-// eslint-disable-next-line no-promise-executor-return
+ 
 await new Promise((resolve) => setTimeout(resolve, 1000));
 
 const queryResult = await UpstashVector.similaritySearchWithScore(

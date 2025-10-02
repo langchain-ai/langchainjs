@@ -23,13 +23,13 @@ const vectorStore = await ZepCloudVectorStore.fromDocuments(
 );
 
 // Wait for the documents to be embedded
-// eslint-disable-next-line no-constant-condition
+ 
 while (true) {
   const c = await vectorStore.client.document.getCollection(collectionName);
   console.log(
     `Embedding status: ${c.documentEmbeddedCount}/${c.documentCount} documents embedded`
   );
-  // eslint-disable-next-line no-promise-executor-return
+   
   await new Promise((resolve) => setTimeout(resolve, 1000));
   if (c.documentEmbeddedCount === c.documentCount) {
     break;

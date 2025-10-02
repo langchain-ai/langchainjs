@@ -548,7 +548,7 @@ export abstract class Agent extends BaseSingleActionAgent {
   static fromLLMAndTools(
     _llm: BaseLanguageModelInterface,
     _tools: StructuredToolInterface[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     _args?: AgentArgs
   ): Agent {
     throw new Error("Not implemented");

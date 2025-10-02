@@ -1,4 +1,4 @@
-/* eslint-disable import/first */
+ 
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
