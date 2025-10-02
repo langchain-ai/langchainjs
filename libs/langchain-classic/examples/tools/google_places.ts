@@ -1,6 +1,6 @@
 import { GooglePlacesAPI } from "@langchain/community/tools/google_places";
 import { OpenAI } from "@langchain/openai";
-import { createAgent } from "langchain";
+import { initializeAgentExecutorWithOptions } from "@langchain/classic/agents";
 
 export async function run() {
   const model = new OpenAI({
@@ -9,15 +9,14 @@ export async function run() {
 
   const tools = [new GooglePlacesAPI()];
 
-  const executor = await createAgent({
-    llm: model,
-    tools,
-    name: "zero-shot-react-description",
+  const executor = await initializeAgentExecutorWithOptions(tools, model, {
+    agentType: "zero-shot-react-description",
+    verbose: true,
   });
 
   const res = await executor.invoke({
-    messages: ["Where is the University of Toronto - Scarborough? "],
+    input: "Where is the University of Toronto - Scarborough? ",
   });
 
-  console.log(res.messages.at(-1)?.content);
+  console.log(res.output);
 }

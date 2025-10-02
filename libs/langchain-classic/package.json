@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/langchain/",
   "scripts": {
-    "build": "pnpm --filter @langchain/build compile @langchain/classic",
+    "build": "pnpm --filter @langchain/build compile @langchain/classic --tsconfigPath tsconfig.build.json && pnpm build:examples",
+    "build:examples": "tsc --project tsconfig.examples.json",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "pnpm lint:eslint && pnpm lint:dpdm",
@@ -33,19 +34,79 @@
     "format:check": "prettier --config .prettierrc --check \"src\""
   },
   "devDependencies": {
+    "@aws-sdk/dsql-signer": "^3.858.0",
+    "@azure/identity": "^4.12.0",
+    "@browserbasehq/stagehand": "^1.3.0",
+    "@clickhouse/client": "^0.2.5",
+    "@cloudflare/workers-types": "^4.20250801.0",
+    "@elastic/elasticsearch": "^8.4.0",
+    "@faker-js/faker": "^10.0.0",
+    "@getmetal/metal-sdk": "^4.0.0",
+    "@getzep/zep-cloud": "^1.0.12",
+    "@getzep/zep-js": "^0.9.0",
+    "@gomomento/sdk": "1.51.1",
+    "@google/generative-ai": "^0.7.0",
+    "@lancedb/lancedb": "^0.19.1",
     "@langchain/anthropic": "workspace:*",
+    "@langchain/aws": "^0.1.15",
+    "@langchain/azure-cosmosdb": "workspace:*",
+    "@langchain/azure-dynamic-sessions": "^0.2.0",
+    "@langchain/baidu-qianfan": "workspace:*",
+    "@langchain/cloudflare": "^0.1.2",
     "@langchain/cohere": "workspace:*",
+    "@langchain/community": "^0.3.57",
     "@langchain/core": "workspace:*",
+    "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
+    "@langchain/exa": "^0.1.0",
+    "@langchain/google-cloud-sql-pg": "^0.0.2",
+    "@langchain/google-common": "workspace:*",
+    "@langchain/google-genai": "^0.2.18",
+    "@langchain/google-vertexai": "^0.2.18",
+    "@langchain/google-vertexai-web": "workspace:*",
+    "@langchain/groq": "workspace:*",
+    "@langchain/langgraph": "1.0.0-alpha.5",
+    "@langchain/mistralai": "^0.2.3",
+    "@langchain/mongodb": "workspace:*",
+    "@langchain/nomic": "^0.1.0",
+    "@langchain/ollama": "^0.2.4",
     "@langchain/openai": "workspace:*",
+    "@langchain/pinecone": "^0.2.0",
+    "@langchain/qdrant": "workspace:*",
+    "@langchain/redis": "workspace:*",
+    "@langchain/scripts": ">=0.1.0 <0.2.0",
+    "@langchain/tavily": "^0.1.5",
+    "@langchain/textsplitters": "workspace:*",
+    "@langchain/weaviate": "^0.2.3",
+    "@langchain/xai": "workspace:*",
+    "@langchain/yandex": "^0.1.0",
+    "@layerup/layerup-security": "^1.5.12",
+    "@opensearch-project/opensearch": "^2.2.0",
+    "@pinecone-database/pinecone": "^5.0.2",
+    "@planetscale/database": "^1.8.0",
     "@prisma/client": "^4.16.2",
+    "@qdrant/js-client-rest": "^1.15.0",
+    "@rockset/client": "^0.9.1",
+    "@supabase/supabase-js": "^2.53.0",
+    "@tensorflow/tfjs-backend-cpu": "^4.4.0",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^21.1.1",
+    "@types/pg": "^8.15.5",
     "@types/uuid": "^9",
     "@types/ws": "^8",
+    "@upstash/redis": "^1.35.3",
+    "@upstash/vector": "^1.2.2",
+    "@vercel/kv": "^3.0.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "@xata.io/client": "^0.28.4",
+    "@zilliz/milvus2-sdk-node": "^2.3.5",
+    "axios": "^0.26.0",
     "cheerio": "1.0.0-rc.12",
+    "chromadb": "^1.5.3",
+    "cohere-ai": "^7.14.0",
+    "convex": "^1.3.1",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.0.3",
     "dpdm": "^3.14.0",
     "duck-duck-scrape": "^2.2.5",
@@ -57,15 +118,25 @@
     "ioredis": "^5.3.2",
     "langchain": "workspace:*",
     "langsmith": "^0.3.64",
+    "lorem-ipsum": "^2.0.8",
+    "lunary": "^0.8.8",
+    "mariadb": "^3.4.0",
+    "mem0ai": "^2.1.8",
+    "mongodb": "^6.17.0",
     "openai": "^5.1.0",
     "peggy": "^3.0.2",
+    "pg": "^8.16.3",
+    "pickleparser": "^0.2.1",
     "prettier": "^2.8.3",
     "prisma": "^4.16.2",
+    "readline": "^1.3.0",
+    "redis": "^4.6.13",
     "reflect-metadata": "^0.2.2",
     "release-it": "^19.0.4",
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^5.0.1",
     "rollup": "^3.19.1",
+    "sqlite3": "^5.1.4",
     "typeorm": "^0.3.20",
     "typescript": "~5.8.3",
     "typesense": "^1.5.3",
@@ -124,16 +195,27 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "./load": {
+    ".": {
       "import": {
-        "types": "./dist/load.d.ts",
-        "default": "./dist/load.js"
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/load.d.cts",
-        "default": "./dist/load.cjs"
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
       },
-      "input": "./src/load.ts"
+      "input": "./src/index.ts"
+    },
+    "./load": {
+      "import": {
+        "types": "./dist/load/index.d.ts",
+        "default": "./dist/load/index.js"
+      },
+      "require": {
+        "types": "./dist/load/index.d.cts",
+        "default": "./dist/load/index.cjs"
+      },
+      "input": "./src/load/index.ts"
     },
     "./load/serializable": {
       "import": {
@@ -155,7 +237,7 @@
         "types": "./dist/agents/index.d.cts",
         "default": "./dist/agents/index.cjs"
       },
-      "input": "./src/agents.ts"
+      "input": "./src/agents/index.ts"
     },
     "./agents/load": {
       "import": {
@@ -181,14 +263,14 @@
     },
     "./agents/toolkits/sql": {
       "import": {
-        "types": "./dist/agents/toolkits/sql.d.ts",
-        "default": "./dist/agents/toolkits/sql.js"
+        "types": "./dist/agents/toolkits/sql/index.d.ts",
+        "default": "./dist/agents/toolkits/sql/index.js"
       },
       "require": {
-        "types": "./dist/agents/toolkits/sql.d.cts",
-        "default": "./dist/agents/toolkits/sql.cjs"
+        "types": "./dist/agents/toolkits/sql/index.d.cts",
+        "default": "./dist/agents/toolkits/sql/index.cjs"
       },
-      "input": "./src/agents/toolkits/sql.ts"
+      "input": "./src/agents/toolkits/sql/index.ts"
     },
     "./agents/format_scratchpad": {
       "import": {

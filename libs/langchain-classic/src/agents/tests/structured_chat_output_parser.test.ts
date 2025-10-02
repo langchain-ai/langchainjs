@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { AgentAction, AgentFinish } from "@langchain/core/agents";
 import { StructuredChatOutputParser } from "../structured_chat/outputParser.js";
 
