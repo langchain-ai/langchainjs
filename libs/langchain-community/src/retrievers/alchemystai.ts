@@ -11,7 +11,7 @@ export interface AlchemystRetrieverConfig extends BaseRetrieverInput {
 }
 
 /**
- * A retriever implementation for LangChain that integrates with the Alchemyst AI SDK.
+ * A retriever implementation for LangChain that integrates with the Alchemyst AI SDK. Refer https://docs.getalchemystai.com for more detailed docs.
  *
  * This class allows you to use Alchemyst's context search as a retriever in LangChain pipelines.
  * It supports configurable similarity thresholds, scope, and metadata filtering.
