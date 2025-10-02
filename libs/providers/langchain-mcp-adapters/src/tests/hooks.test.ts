@@ -264,16 +264,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         },
       },
       onMessage: (log) => {
-        const msg =
-          (
-            log as unknown as {
-              params?: { message?: string };
-              message?: string;
-            }
-          ).params?.message ??
-          (log as unknown as { message?: string }).message ??
-          "";
-        logs.push(String(msg));
+        logs.push((log.data as string) ?? "");
       },
       onProgress: (p) => {
         const anyP = p as unknown as {

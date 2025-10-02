@@ -41,8 +41,8 @@ export function createDummyHttpServer(
           method: "notifications/message",
           params: {
             level: "info",
-            message: `test_tool invoked with ${input}`,
-            timestamp: new Date().toISOString(),
+            logger: "test_tool",
+            data: `test_tool invoked with ${input}`,
           },
         },
         { relatedRequestId: extra.requestId }

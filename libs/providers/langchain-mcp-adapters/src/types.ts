@@ -1,10 +1,23 @@
 import { z } from "zod/v3";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type { Command } from "@langchain/langgraph";
+import type {
+  ContentBlock,
+  ToolMessage,
+  MessageStructure,
+} from "@langchain/core/messages";
+import type { RunnableConfig } from "@langchain/core/runnables";
+import type { Command, CommandParams } from "@langchain/langgraph";
 
 import { toolHooksSchema, type ToolHooks } from "./hooks.js";
 
-export type { Command };
+export type {
+  Command,
+  ContentBlock,
+  ToolMessage,
+  MessageStructure,
+  RunnableConfig,
+  CommandParams,
+};
 
 const callToolResultContentTypes = [
   "audio",
