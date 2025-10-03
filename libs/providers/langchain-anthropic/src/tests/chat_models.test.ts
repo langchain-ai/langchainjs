@@ -191,3 +191,117 @@ test("Can properly format anthropic messages when given two tool results", async
     system: undefined,
   });
 });
+
+test("Can properly format messages with bash_code_execution_tool_result blocks", async () => {
+  const messageHistory = [
+    new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "bash_call",
+          name: "bash_code_execution",
+          input: { command: "echo 'hello'" },
+        },
+        {
+          type: "bash_code_execution_tool_result",
+          tool_use_id: "bash_call",
+          content: {
+            type: "bash_code_execution_result",
+            stdout: "hello\n",
+            stderr: "",
+            return_code: 0,
+            content: [],
+          },
+        },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "server_tool_use",
+            id: "bash_call",
+            name: "bash_code_execution",
+            input: { command: "echo 'hello'" },
+          },
+          {
+            type: "bash_code_execution_tool_result",
+            tool_use_id: "bash_call",
+            content: {
+              type: "bash_code_execution_result",
+              stdout: "hello\n",
+              stderr: "",
+              return_code: 0,
+              content: [],
+            },
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
+
+test("Can properly format messages with text_editor_code_execution_tool_result blocks", async () => {
+  const messageHistory = [
+    new AIMessage({
+      content: [
+        {
+          type: "server_tool_use",
+          id: "editor_call",
+          name: "text_editor_code_execution",
+          input: { command: "view", path: "/tmp/test.txt" },
+        },
+        {
+          type: "text_editor_code_execution_tool_result",
+          tool_use_id: "editor_call",
+          content: {
+            type: "text_editor_code_execution_view_result",
+            file_type: "text",
+            content: "file contents here",
+            num_lines: 1,
+            start_line: 1,
+            total_lines: 1,
+          },
+        },
+      ],
+    }),
+  ];
+
+  const formattedMessages = _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages).toEqual({
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "server_tool_use",
+            id: "editor_call",
+            name: "text_editor_code_execution",
+            input: { command: "view", path: "/tmp/test.txt" },
+          },
+          {
+            type: "text_editor_code_execution_tool_result",
+            tool_use_id: "editor_call",
+            content: {
+              type: "text_editor_code_execution_view_result",
+              file_type: "text",
+              content: "file contents here",
+              num_lines: 1,
+              start_line: 1,
+              total_lines: 1,
+            },
+          },
+        ],
+      },
+    ],
+    system: undefined,
+  });
+});
