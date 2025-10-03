@@ -62,6 +62,11 @@ export interface ChatAnthropicCallOptions
    * when making a request.
    */
   headers?: Record<string, string>;
+  /**
+   * Container ID for file persistence across turns with code execution.
+   * Used with the code_execution_20250825 tool.
+   */
+  container?: string;
 }
 
 function _toolsInParams(
@@ -856,6 +861,7 @@ export class ChatAnthropicMessages<
         tool_choice,
         thinking: this.thinking,
         ...this.invocationKwargs,
+        container: options?.container,
       };
     }
     return {
@@ -870,6 +876,7 @@ export class ChatAnthropicMessages<
       tool_choice,
       thinking: this.thinking,
       ...this.invocationKwargs,
+      container: options?.container,
     };
   }
 
