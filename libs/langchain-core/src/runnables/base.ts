@@ -1479,8 +1479,6 @@ export class RunnableBinding<
  *
  * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
  * ```
- *
- * @deprecated This will be removed in the next breaking release.
  */
 export class RunnableEach<
   RunInputItem,
