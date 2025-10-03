@@ -16,12 +16,6 @@ import {
   CassandraTable,
 } from "../utils/cassandra.js";
 
-/**
- * @deprecated
- * Import from "../utils/cassandra.js" instead.
- */
-export type { Column, Filter, Index, WhereClause } from "../utils/cassandra.js";
-
 export type SupportedVectorTypes = "cosine" | "dot_product" | "euclidean";
 
 export interface CassandraLibArgs

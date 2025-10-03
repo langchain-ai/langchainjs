@@ -8,11 +8,6 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  */
 export interface FireworksEmbeddingsParams extends EmbeddingsParams {
   /**
-   * @deprecated Use `model` instead.
-   */
-  modelName: string;
-
-  /**
    * Model name to use.
    */
   model: string;
@@ -49,11 +44,6 @@ export class FireworksEmbeddings
   extends Embeddings
   implements FireworksEmbeddingsParams
 {
-  /**
-   * @deprecated Use `model` instead.
-   */
-  modelName = "nomic-ai/nomic-embed-text-v1.5";
-
   model = "nomic-ai/nomic-embed-text-v1.5";
 
   batchSize = 8;
@@ -88,7 +78,6 @@ export class FireworksEmbeddings
     }
 
     this.model = fieldsWithDefaults?.model ?? this.model;
-    this.modelName = this.model;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
     this.apiUrl = `${this.basePath}/embeddings`;

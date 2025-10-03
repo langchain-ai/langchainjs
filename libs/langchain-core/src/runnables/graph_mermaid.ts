@@ -172,21 +172,6 @@ export function drawMermaid(
 }
 
 /**
- * @deprecated Use `drawMermaidImage` instead.
- */
-export async function drawMermaidPng(
-  mermaidSyntax: string,
-  config?: {
-    backgroundColor?: string;
-  }
-) {
-  return drawMermaidImage(mermaidSyntax, {
-    ...config,
-    imageType: "png",
-  });
-}
-
-/**
  * Renders Mermaid graph using the Mermaid.INK API.
  *
  * @example

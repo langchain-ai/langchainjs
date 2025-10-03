@@ -34,10 +34,6 @@ export interface FirestoreDBChatMessageHistory {
    * @TODO make required variable in 0.2
    */
   docs?: string[];
-  /**
-   * @deprecated Will be removed in 0.2 use `collections` field instead.
-   */
-  collectionName?: string;
   sessionId: string;
   userId: string;
   appIdx?: number;
@@ -86,7 +82,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
   private document: DocumentReference<DocumentData> | null;
 
   constructor({
-    collectionName,
     collections,
     docs,
     sessionId,
@@ -95,16 +90,6 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
     config,
   }: FirestoreDBChatMessageHistory) {
     super();
-    if (collectionName && collections) {
-      throw new Error(
-        "Can not pass in collectionName and collections. Please use collections only."
-      );
-    }
-    if (!collectionName && !collections) {
-      throw new Error(
-        "Must pass in a list of collections. Fields `collectionName` and `collections` are both undefined."
-      );
-    }
     if (collections || docs) {
       // This checks that the 'collections' and 'docs' arrays have the same length,
       // which means each collection has a corresponding document name. The only exception allowed is
@@ -122,7 +107,7 @@ export class FirestoreChatMessageHistory extends BaseListChatMessageHistory {
       }
     }
 
-    this.collections = collections || ([collectionName] as string[]);
+    this.collections = collections || [];
     this.docs = docs || ([sessionId] as string[]);
     this.sessionId = sessionId;
     this.userId = userId;
