@@ -64,6 +64,23 @@ function isDefaultCachePoint(block: unknown): boolean {
   );
 }
 
+function isEphemeralCachePoint(block: unknown): boolean {
+  return Boolean(
+    (typeof block === "object" &&
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "ephemeral") &&
+      (!("ttl" in block.cachePoint) || 
+      ("ttl" in block.cachePoint &&
+      typeof block.cachePoint.ttl === "string" && 
+      (block.cachePoint.ttl === "5m" || block.cachePoint.ttl === "1h")))
+  );
+}
+
 const standardContentBlockConverter: StandardContentBlockConverter<{
   text: ContentBlock.TextMember;
   image: ContentBlock.ImageMember;
@@ -331,6 +348,16 @@ function convertLangChainContentBlockToConverseContentBlock<
     };
   }
 
+  if (isEphemeralCachePoint(block)) {
+    const cachePoint = (block as any).cachePoint;
+    return {
+      cachePoint: {
+        type: "ephemeral",
+        ...(cachePoint.ttl ? { ttl: cachePoint.ttl } : {}),
+      },
+    };
+  }
+
   if (onUnknown === "throw") {
     throw new Error(`Unsupported content block type: ${block.type}`);
   } else {
@@ -354,6 +381,14 @@ function convertSystemMessageToConverseMessage(
         contentBlocks.push({
           cachePoint: {
             type: "default",
+          },
+        });
+      } else if (isEphemeralCachePoint(block)) {
+        const cachePoint = (block as any).cachePoint;
+        contentBlocks.push({
+          cachePoint: {
+            type: "ephemeral",
+            ...(cachePoint.ttl ? { ttl: cachePoint.ttl } : {}),
           },
         });
       } else break;
@@ -404,6 +439,14 @@ function convertAIMessageToConverseMessage(msg: AIMessage): BedrockMessage {
         contentBlocks.push({
           cachePoint: {
             type: "default",
+          },
+        });
+      } else if (isEphemeralCachePoint(block)) {
+        const cachePoint = (block as any).cachePoint;
+        contentBlocks.push({
+          cachePoint: {
+            type: "ephemeral",
+            ...(cachePoint.ttl ? { ttl: cachePoint.ttl } : {}),
           },
         });
       } else {
