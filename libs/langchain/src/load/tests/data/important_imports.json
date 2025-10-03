@@ -7,7 +7,6 @@
   "langchain/prompts/image/ImagePromptTemplate": "langchain_core/prompts/image/ImagePromptTemplate",
   "langchain/prompts/chat/BaseMessagePromptTemplate": "langchain_core/prompts/chat/BaseMessagePromptTemplate",
   "langchain/prompts/chat/AIMessagePromptTemplate": "langchain_core/prompts/chat/AIMessagePromptTemplate",
-  "langchain/output_parsers/list/CommaSeparatedListOutputParser": "langchain_core/output_parsers/list/CommaSeparatedListOutputParser",
   "langchain/prompts/chat/ChatMessagePromptTemplate": "langchain_core/prompts/chat/ChatMessagePromptTemplate",
   "langchain/prompts/few_shot_with_templates/FewShotPromptWithTemplates": "langchain_core/prompts/few_shot_with_templates/FewShotPromptWithTemplates",
   "langchain/prompts/pipeline/PipelinePromptTemplate": "langchain_core/prompts/pipeline/PipelinePromptTemplate",

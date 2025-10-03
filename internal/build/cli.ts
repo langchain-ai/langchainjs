@@ -18,6 +18,11 @@ const cliConfig = {
       default: false,
       description: "Watch for changes and recompile automatically",
     },
+    tsconfigPath: {
+      type: "string" as const,
+      default: "tsconfig.json",
+      description: "Path to tsconfig.json file (default: tsconfig.json)",
+    },
     help: {
       type: "boolean" as const,
       short: "h",
@@ -160,6 +165,7 @@ async function main() {
   }
 
   const packageQuery = positionals;
+  const tsconfigPath = values.tsconfigPath;
   const watch = values.watch;
   const noEmit = values.noEmit;
   const skipUnused = values.skipUnused;
@@ -168,11 +174,12 @@ async function main() {
   const exclude = Array.isArray(values.exclude)
     ? values.exclude
     : values.exclude
-    ? [values.exclude]
-    : [];
+      ? [values.exclude]
+      : [];
 
   const opts: CompilePackageOptions = {
     packageQuery,
+    tsconfigPath,
     watch,
     exclude,
     noEmit,

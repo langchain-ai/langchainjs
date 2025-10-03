@@ -1,0 +1,117 @@
+import { ConversationChain, LLMChain } from "@langchain/classic/chains";
+import { ChatOpenAI } from "@langchain/openai";
+import { BufferMemory } from "@langchain/classic/memory";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from "@langchain/core/prompts";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+export const run = async () => {
+  const chat = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
+
+  // Sending one message to the chat model, receiving one message back
+
+  let response = await chat.invoke([
+    new HumanMessage(
+      "Translate this sentence from English to French. I love programming."
+    ),
+  ]);
+
+  console.log(response);
+
+  // Sending an input made up of two messages to the chat model
+
+  response = await chat.invoke([
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage("Translate: I love programming."),
+  ]);
+
+  console.log(response);
+
+  // Sending two separate prompts in parallel, receiving two responses back
+
+  const responseA = await chat.invoke([
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage(
+      "Translate this sentence from English to French. I love programming."
+    ),
+    new SystemMessage(
+      "You are a helpful assistant that translates English to French."
+    ),
+    new HumanMessage(
+      "Translate this sentence from English to French. I love artificial intelligence."
+    ),
+  ]);
+
+  console.log(responseA);
+
+  // Using ChatPromptTemplate to encapsulate the reusable parts of the prompt
+
+  const translatePrompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      "You are a helpful assistant that translates {input_language} to {output_language}."
+    ),
+    HumanMessagePromptTemplate.fromTemplate("{text}"),
+  ]);
+
+  const responseB = await chat.invoke(
+    await translatePrompt.formatPromptValue({
+      input_language: "English",
+      output_language: "French",
+      text: "I love programming.",
+    })
+  );
+
+  console.log(responseB);
+
+  // This pattern of asking for the completion of a formatted prompt is quite
+  // common, so we introduce the next piece of the puzzle: LLMChain
+
+  const translateChain = new LLMChain({
+    prompt: translatePrompt,
+    llm: chat,
+  });
+
+  const responseC = await translateChain.invoke({
+    input_language: "English",
+    output_language: "French",
+    text: "I love programming.",
+  });
+
+  console.log(responseC);
+
+  // Next up, stateful chains that remember the conversation history
+
+  const chatPrompt = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+    ),
+    new MessagesPlaceholder("history"),
+    HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ]);
+
+  const chain = new ConversationChain({
+    memory: new BufferMemory({ returnMessages: true }),
+    prompt: chatPrompt,
+    llm: chat,
+  });
+
+  const responseE = await chain.invoke({
+    input: "hi from London, how are you doing today",
+  });
+
+  console.log(responseE);
+
+  const responseF = await chain.invoke({
+    input: "Do you know where I am?",
+  });
+
+  console.log(responseF);
+};
