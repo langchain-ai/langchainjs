@@ -169,7 +169,7 @@ pnpm install
 Then, you will need to switch directories into `langchain-core` and build core by running:
 
 ```bash
-cd ../../langchain-core
+cd libs/langchain-core
 pnpm install
 pnpm build
 ```
