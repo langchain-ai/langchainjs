@@ -54,6 +54,54 @@ export function removeAdditionalProperties(
   return obj as GenerativeAIJsonSchema;
 }
 
+export function processEnumFieldsForGemini(
+  schema: Record<string, unknown>
+): GenerativeAIJsonSchema {
+  const processed = removeAdditionalProperties(schema);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function removeTypeFromEnums(obj: any): any {
+    if (typeof obj !== "object" || obj === null) return obj;
+
+    const result = { ...obj };
+
+    // Check if this object has both enum and type fields
+    if ("enum" in result && "type" in result && result.type === "string") {
+      delete result.type;
+    }
+
+    // Recursively process nested objects
+    if (result.properties && typeof result.properties === "object") {
+      result.properties = Object.fromEntries(
+        Object.entries(result.properties).map(([key, value]) => [
+          key,
+          removeTypeFromEnums(value),
+        ])
+      );
+    }
+
+    // Process items in arrays
+    if (result.items) {
+      result.items = removeTypeFromEnums(result.items);
+    }
+
+    // Process items in arrays (oneOf, anyOf, allOf)
+    if (result.oneOf && Array.isArray(result.oneOf)) {
+      result.oneOf = result.oneOf.map(removeTypeFromEnums);
+    }
+    if (result.anyOf && Array.isArray(result.anyOf)) {
+      result.anyOf = result.anyOf.map(removeTypeFromEnums);
+    }
+    if (result.allOf && Array.isArray(result.allOf)) {
+      result.allOf = result.allOf.map(removeTypeFromEnums);
+    }
+
+    return result;
+  }
+
+  return removeTypeFromEnums(processed);
+}
+
 export function schemaToGenerativeAIParameters<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>
@@ -62,7 +110,8 @@ export function schemaToGenerativeAIParameters<
 ): GenerativeAIFunctionDeclarationSchema {
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  const jsonSchema = removeAdditionalProperties(
+  // Also need to handle enums specially for Gemini
+  const jsonSchema = processEnumFieldsForGemini(
     isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
   );
   const { $schema, ...rest } = jsonSchema;
@@ -76,9 +125,8 @@ export function jsonSchemaToGeminiParameters(
 ): GenerativeAIFunctionDeclarationSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
-  const jsonSchema = removeAdditionalProperties(
-    schema as GenerativeAIJsonSchemaDirty
-  );
+  // Also need to handle enums specially for Gemini
+  const jsonSchema = processEnumFieldsForGemini(schema);
   const { $schema, ...rest } = jsonSchema;
 
   return rest as GenerativeAIFunctionDeclarationSchema;
