@@ -747,9 +747,6 @@ importers:
       '@langchain/cohere':
         specifier: workspace:*
         version: link:../providers/langchain-cohere
-      '@langchain/community':
-        specifier: workspace:*
-        version: link:../langchain-community
       '@langchain/core':
         specifier: workspace:*
         version: link:../langchain-core
@@ -1015,6 +1012,9 @@ importers:
 
   libs/langchain-community:
     dependencies:
+      '@langchain/classic':
+        specifier: workspace:*
+        version: link:../langchain-classic
       '@langchain/openai':
         specifier: '>=0.2.0 <0.7.0'
         version: 0.6.3(@langchain/core@libs+langchain-core)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))
@@ -1036,9 +1036,6 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
-      langchain:
-        specifier: '>=0.2.3 <0.3.0 || >=0.3.4 <0.4.0'
-        version: 0.3.30(26e64a1780a3c60cf79d86ff89457db6)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -20331,6 +20328,7 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.20
+    optional: true
 
   '@langchain/weaviate@0.2.1(@langchain/core@libs+langchain-core)(encoding@0.1.13)':
     dependencies:
@@ -28203,6 +28201,7 @@ snapshots:
       - '@opentelemetry/sdk-trace-base'
       - openai
       - ws
+    optional: true
 
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
@@ -28216,6 +28215,7 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 5.11.0(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)
+    optional: true
 
   langsmith@0.3.64(@opentelemetry/api@1.9.0)(openai@5.12.2(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@6.0.5))(zod@3.25.76)):
     dependencies:
