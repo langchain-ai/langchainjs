@@ -21,6 +21,7 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/ollama": "workspace:*",
     "@langchain/google-gauth": "workspace:*",

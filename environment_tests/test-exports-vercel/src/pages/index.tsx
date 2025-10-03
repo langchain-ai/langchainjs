@@ -6,7 +6,7 @@ import styles from "@/styles/Home.module.css";
 import { useCallback } from "react";
 import { ChatOpenAI } from "@langchain/openai";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,

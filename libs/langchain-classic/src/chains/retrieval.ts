@@ -56,8 +56,8 @@ function isBaseRetriever(x: unknown): x is BaseRetrieverInterface {
  *
  * import { ChatOpenAI } from "@langchain/openai";
  * import { pull } from "langchain/hub";
- * import { createRetrievalChain } from "langchain/chains/retrieval";
- * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+ * import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
+ * import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
  *
  * const retrievalQAChatPrompt = await pull("langchain-ai/retrieval-qa-chat");
  * const llm = new ChatOpenAI({ model: "gpt-4o-mini" });

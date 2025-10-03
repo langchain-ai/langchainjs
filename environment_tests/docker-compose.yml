@@ -12,7 +12,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -38,7 +38,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -64,7 +64,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -90,7 +90,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -116,7 +116,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -142,7 +142,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -168,7 +168,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
@@ -191,7 +191,7 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-agents:/langchain-agents
+      - ../libs/langchain-classic:/langchain-classic
       - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
