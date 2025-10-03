@@ -33,12 +33,7 @@ export type SerializedLLM = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
-export interface BaseLLMParams extends BaseLanguageModelParams {
-  /**
-   * @deprecated Use `maxConcurrency` instead
-   */
-  concurrency?: number;
-}
+export interface BaseLLMParams extends BaseLanguageModelParams {}
 
 export interface BaseLLMCallOptions extends BaseLanguageModelCallOptions {}
 
@@ -56,10 +51,6 @@ export abstract class BaseLLM<
 
   // Only ever instantiated in main LangChain
   lc_namespace = ["langchain", "llms", this._llmType()];
-
-  constructor({ concurrency, ...rest }: BaseLLMParams) {
-    super(concurrency ? { maxConcurrency: concurrency, ...rest } : rest);
-  }
 
   /**
    * This method takes an input and options, and returns a string. It
@@ -535,57 +526,6 @@ export abstract class BaseLLM<
   }
 
   /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   * Convenience wrapper for {@link generate} that takes in a single string prompt and returns a single string output.
-   */
-  async call(
-    prompt: string,
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<string> {
-    const { generations } = await this.generate([prompt], options, callbacks);
-    return generations[0][0].text;
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * This method is similar to `call`, but it's used for making predictions
-   * based on the input text.
-   * @param text Input text for the prediction.
-   * @param options Options for the LLM call.
-   * @param callbacks Callbacks for the LLM call.
-   * @returns A prediction based on the input text.
-   */
-  async predict(
-    text: string,
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<string> {
-    return this.call(text, options, callbacks);
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * This method takes a list of messages, options, and callbacks, and
-   * returns a predicted message.
-   * @param messages A list of messages for the prediction.
-   * @param options Options for the LLM call.
-   * @param callbacks Callbacks for the LLM call.
-   * @returns A predicted message based on the list of messages.
-   */
-  async predictMessages(
-    messages: BaseMessage[],
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<BaseMessage> {
-    const text = getBufferString(messages);
-    const prediction = await this.call(text, options, callbacks);
-    return new AIMessage(prediction);
-  }
-
-  /**
    * Get the identifying parameters of the LLM.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -597,18 +537,6 @@ export abstract class BaseLLM<
    * Return the string type key uniquely identifying this class of LLM.
    */
   abstract _llmType(): string;
-
-  /**
-   * @deprecated
-   * Return a json-like object representing this LLM.
-   */
-  serialize(): SerializedLLM {
-    return {
-      ...this._identifyingParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
 
   _modelType(): string {
     return "base_llm" as const;

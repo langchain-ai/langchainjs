@@ -1,5 +1,4 @@
 import {
-  BaseCallbackConfig,
   CallbackManager,
   CallbackManagerForRetrieverRun,
   Callbacks,
@@ -49,22 +48,7 @@ export interface BaseRetrieverInput {
 export interface BaseRetrieverInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Metadata extends Record<string, any> = Record<string, any>
-> extends RunnableInterface<string, DocumentInterface<Metadata>[]> {
-  /**
-   * Retrieves documents relevant to a given query, allowing optional
-   * configurations for customization.
-   *
-   * @param query - A string representing the query to search for relevant documents.
-   * @param config - (optional) Configuration options for the retrieval process,
-   *                 which may include callbacks and additional context settings.
-   * @returns A promise that resolves to an array of `DocumentInterface` instances,
-   *          each containing metadata specified by the `Metadata` type parameter.
-   */
-  getRelevantDocuments(
-    query: string,
-    config?: Callbacks | BaseCallbackConfig
-  ): Promise<DocumentInterface<Metadata>[]>;
-}
+> extends RunnableInterface<string, DocumentInterface<Metadata>[]> {}
 
 /**
  * Abstract base class for a document retrieval system, designed to
@@ -159,26 +143,7 @@ export abstract class BaseRetriever<
     input: string,
     options?: RunnableConfig
   ): Promise<DocumentInterface<Metadata>[]> {
-    return this.getRelevantDocuments(input, ensureConfig(options));
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.3.0.
-   *
-   * Main method used to retrieve relevant documents. It takes a query
-   * string and an optional configuration object, and returns a promise that
-   * resolves to an array of `Document` objects. This method handles the
-   * retrieval process, including starting and ending callbacks, and error
-   * handling.
-   * @param query The query string to retrieve relevant documents for.
-   * @param config Optional configuration object for the retrieval process.
-   * @returns A promise that resolves to an array of `Document` objects.
-   */
-  async getRelevantDocuments(
-    query: string,
-    config?: Callbacks | BaseCallbackConfig
-  ): Promise<DocumentInterface<Metadata>[]> {
-    const parsedConfig = ensureConfig(parseCallbackConfigArg(config));
+    const parsedConfig = ensureConfig(parseCallbackConfigArg(options));
     const callbackManager_ = await CallbackManager.configure(
       parsedConfig.callbacks,
       this.callbacks,
@@ -190,7 +155,7 @@ export abstract class BaseRetriever<
     );
     const runManager = await callbackManager_?.handleRetrieverStart(
       this.toJSON(),
-      query,
+      input,
       parsedConfig.runId,
       undefined,
       undefined,
@@ -198,7 +163,7 @@ export abstract class BaseRetriever<
       parsedConfig.runName
     );
     try {
-      const results = await this._getRelevantDocuments(query, runManager);
+      const results = await this._getRelevantDocuments(input, runManager);
       await runManager?.handleRetrieverEnd(results);
       return results;
     } catch (error) {

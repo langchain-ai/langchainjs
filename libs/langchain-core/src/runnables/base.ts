@@ -148,31 +148,6 @@ export abstract class Runnable<
   ): Promise<RunOutput>;
 
   /**
-   * Bind arguments to a Runnable, returning a new Runnable.
-   * @param kwargs
-   * @returns A new RunnableBinding that, when invoked, will apply the bound args.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(
-    kwargs: Partial<CallOptions>
-  ): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableBinding({ bound: this, kwargs, config: {} });
-  }
-
-  /**
-   * Return a new Runnable that maps a list of inputs to a list of outputs,
-   * by calling invoke() with each input.
-   *
-   * @deprecated This will be removed in the next breaking release.
-   */
-  map(): Runnable<RunInput[], RunOutput[], CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableEach({ bound: this });
-  }
-
-  /**
    * Add retry logic to an existing runnable.
    * @param fields.stopAfterAttempt The number of attempts to retry.
    * @param fields.onFailedAttempt A function that is called when a retry fails.
@@ -185,7 +160,6 @@ export abstract class Runnable<
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this,
-      kwargs: {},
       config: {},
       maxAttemptNumber: fields?.stopAfterAttempt,
       ...fields,
@@ -204,7 +178,6 @@ export abstract class Runnable<
     return new RunnableBinding({
       bound: this,
       config,
-      kwargs: {},
     });
   }
 
@@ -1219,10 +1192,6 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
-  /**
-   * @deprecated use {@link config} instead
-   */
-  kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
@@ -1252,8 +1221,8 @@ export type RunnableBindingArgs<
  * const runnable = RunnableLambda.from(enhanceProfile);
  *
  * // Bind configuration to the runnable to set the user's role dynamically
- * const adminRunnable = runnable.bind({ configurable: { role: "Admin" } });
- * const userRunnable = runnable.bind({ configurable: { role: "User" } });
+ * const adminRunnable = runnable.withConfig({ configurable: { role: "Admin" } });
+ * const userRunnable = runnable.withConfig({ configurable: { role: "User" } });
  *
  * const result1 = await adminRunnable.invoke({
  *   name: "Alice",
@@ -1287,8 +1256,6 @@ export class RunnableBinding<
 
   config: RunnableConfig;
 
-  kwargs?: Partial<CallOptions>;
-
   configFactories?: Array<
     (config: RunnableConfig) => RunnableConfig | Promise<RunnableConfig>
   >;
@@ -1296,7 +1263,6 @@ export class RunnableBinding<
   constructor(fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>) {
     super(fields);
     this.bound = fields.bound;
-    this.kwargs = fields.kwargs;
     this.config = fields.config;
     this.configFactories = fields.configFactories;
   }
@@ -1321,27 +1287,6 @@ export class RunnableBinding<
     );
   }
 
-  /**
-   * Binds the runnable with the specified arguments.
-   * @param kwargs The arguments to bind the runnable with.
-   * @returns A new instance of the `RunnableBinding` class that is bound with the specified arguments.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(
-    kwargs: Partial<CallOptions>
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return new (this.constructor as {
-      new (
-        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
-      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
-    })({
-      bound: this.bound,
-      kwargs: { ...this.kwargs, ...kwargs },
-      config: this.config,
-    });
-  }
-
   withConfig(
     config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
@@ -1351,7 +1296,6 @@ export class RunnableBinding<
       ): RunnableBinding<RunInput, RunOutput, CallOptions>;
     })({
       bound: this.bound,
-      kwargs: this.kwargs,
       config: { ...this.config, ...config },
     });
   }
@@ -1363,7 +1307,6 @@ export class RunnableBinding<
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this.bound,
-      kwargs: this.kwargs,
       config: this.config,
       maxAttemptNumber: fields?.stopAfterAttempt,
       ...fields,
@@ -1374,10 +1317,7 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions>
   ): Promise<RunOutput> {
-    return this.bound.invoke(
-      input,
-      await this._mergeConfig(ensureConfig(options), this.kwargs)
-    );
+    return this.bound.invoke(input, await ensureConfig(options));
   }
 
   async batch(
@@ -1406,10 +1346,10 @@ export class RunnableBinding<
     const mergedOptions = Array.isArray(options)
       ? await Promise.all(
           options.map(async (individualOption) =>
-            this._mergeConfig(ensureConfig(individualOption), this.kwargs)
+            ensureConfig(individualOption)
           )
         )
-      : await this._mergeConfig(ensureConfig(options), this.kwargs);
+      : await ensureConfig(options);
     return this.bound.batch(inputs, mergedOptions, batchOptions);
   }
 
@@ -1417,30 +1357,21 @@ export class RunnableBinding<
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ) {
-    yield* this.bound._streamIterator(
-      input,
-      await this._mergeConfig(ensureConfig(options), this.kwargs)
-    );
+    yield* this.bound._streamIterator(input, await ensureConfig(options));
   }
 
   async stream(
     input: RunInput,
     options?: Partial<CallOptions> | undefined
   ): Promise<IterableReadableStream<RunOutput>> {
-    return this.bound.stream(
-      input,
-      await this._mergeConfig(ensureConfig(options), this.kwargs)
-    );
+    return this.bound.stream(input, await ensureConfig(options));
   }
 
   async *transform(
     generator: AsyncGenerator<RunInput>,
     options?: Partial<CallOptions>
   ): AsyncGenerator<RunOutput> {
-    yield* this.bound.transform(
-      generator,
-      await this._mergeConfig(ensureConfig(options), this.kwargs)
-    );
+    yield* this.bound.transform(generator, await ensureConfig(options));
   }
 
   streamEvents(
@@ -1471,10 +1402,7 @@ export class RunnableBinding<
       yield* outerThis.bound.streamEvents(
         input,
         {
-          ...(await outerThis._mergeConfig(
-            ensureConfig(options),
-            outerThis.kwargs
-          )),
+          ...ensureConfig(options),
           version: options.version,
         },
         streamOptions
@@ -1513,7 +1441,6 @@ export class RunnableBinding<
   }): Runnable<RunInput, RunOutput, CallOptions> {
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this.bound,
-      kwargs: this.kwargs,
       config: this.config,
       configFactories: [
         (config) => ({
@@ -1575,19 +1502,6 @@ export class RunnableEach<
   }) {
     super(fields);
     this.bound = fields.bound;
-  }
-
-  /**
-   * Binds the runnable with the specified arguments.
-   * @param kwargs The arguments to bind the runnable with.
-   * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(kwargs: Partial<CallOptions>) {
-    return new RunnableEach({
-      bound: this.bound.bind(kwargs),
-    });
   }
 
   /**
