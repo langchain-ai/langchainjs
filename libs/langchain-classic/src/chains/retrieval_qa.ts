@@ -32,7 +32,7 @@ export interface RetrievalQAChainInput extends Omit<ChainInputs, "memory"> {
  * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
  * import { ChatPromptTemplate } from "@langchain/core/prompts";
  * import { createRetrievalChain } from "langchain/chains/retrieval";
- * import { MemoryVectorStore } from "langchain/vectorstores/memory";
+ * import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
  *
  * const documents = [...your documents here];
  * const embeddings = ...your embeddings model;

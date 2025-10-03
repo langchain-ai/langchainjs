@@ -167,7 +167,7 @@ export type CreateStructuredOutputRunnableConfig<
  * import { createStructuredOutputRunnable } from "langchain/chains/openai_functions";
  * import { ChatOpenAI } from "@langchain/openai";
  * import { ChatPromptTemplate } from "@langchain/core/prompts";
- * import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+ * import { JsonOutputFunctionsParser } from "@langchain/classic/output_parsers";
  *
  * const jsonSchema = {
  *   title: "Person",

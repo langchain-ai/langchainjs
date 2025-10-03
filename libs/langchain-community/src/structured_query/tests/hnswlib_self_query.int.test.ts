@@ -5,7 +5,7 @@ import { AttributeInfo } from "langchain/chains/query_constructor";
 import {
   FunctionalTranslator,
   SelfQueryRetriever,
-} from "langchain/retrievers/self_query";
+} from "@langchain/classic/retrievers/self_query";
 import { HNSWLib } from "../../vectorstores/hnswlib.js";
 
 test("HNSWLib Store Self Query Retriever Test", async () => {
