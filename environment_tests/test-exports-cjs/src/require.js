@@ -2,9 +2,9 @@ const assert = require("assert");
 const { OpenAI } = require("@langchain/openai");
 const { ChatOllama } = require("@langchain/ollama");
 const { ChatGoogle } = require("@langchain/google-gauth");
-const { LLMChain } = require("langchain/chains");
+const { LLMChain } = require("@langchain/classic/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { MemoryVectorStore } = require("langchain/vectorstores/memory");
+const { MemoryVectorStore } = require("@langchain/classic/vectorstores/memory");
 const {
   HuggingFaceTransformersEmbeddings,
 } = require("@langchain/community/embeddings/huggingface_transformers");

@@ -1,7 +1,7 @@
 import type { BaseLanguageModelInterface } from "@langchain/core/language_models/base";
 import { Toolkit, ToolInterface } from "@langchain/core/tools";
 import { renderTemplate } from "@langchain/core/prompts";
-import { LLMChain } from "langchain/chains";
+import { LLMChain } from "@langchain/classic/chains";
 import {
   AgentExecutor,
   ZeroShotAgent,

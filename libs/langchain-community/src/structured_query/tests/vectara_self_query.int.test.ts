@@ -3,7 +3,7 @@ import { Document } from "@langchain/core/documents";
 import { OpenAI } from "@langchain/openai";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { AttributeInfo } from "langchain/chains/query_constructor";
-import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import { VectaraStore } from "../../vectorstores/vectara.js";
 import { VectaraTranslator } from "../vectara.js";
 

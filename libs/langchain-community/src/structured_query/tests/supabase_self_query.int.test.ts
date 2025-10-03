@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { AttributeInfo } from "langchain/chains/query_constructor";
-import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import {
   SupabaseFilter,
   SupabaseVectorStore,
