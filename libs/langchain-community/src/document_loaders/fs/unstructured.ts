@@ -7,7 +7,7 @@ import {
   DirectoryLoader,
   UnknownHandling,
   LoadersMapping,
-} from "langchain/document_loaders/fs/directory";
+} from "@langchain/classic/document_loaders/fs/directory";
 import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 
 export const UNSTRUCTURED_API_FILETYPES = [

@@ -47,9 +47,9 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
  *   MessagesPlaceholder,
  * } from "@langchain/core/prompts";
  * import { BaseMessage } from "@langchain/core/messages";
- * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
- * import { createHistoryAwareRetriever } from "langchain/chains/history_aware_retriever";
- * import { createRetrievalChain } from "langchain/chains/retrieval";
+ * import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
+ * import { createHistoryAwareRetriever } from "@langchain/classic/chains/history_aware_retriever";
+ * import { createRetrievalChain } from "@langchain/classic/chains/retrieval";
  *
  * const retriever = ...your retriever;
  * const llm = new ChatAnthropic();

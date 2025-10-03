@@ -19,7 +19,7 @@ type BrowserbaseLoaderOptions = ClientOptions & LoadOptions;
  *
  * @example
  * ```typescript
- * import { BrowserbaseLoader } from "langchain/document_loaders/web/browserbase";
+ * import { BrowserbaseLoader } from "@langchain/classic/document_loaders/web/browserbase";
  *
  * const loader = new BrowserbaseLoader(["https://example.com"], {
  *   apiKey: process.env.BROWSERBASE_API_KEY,
