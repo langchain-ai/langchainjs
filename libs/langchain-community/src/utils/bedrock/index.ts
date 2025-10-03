@@ -142,17 +142,8 @@ export interface BaseBedrockInput {
   /** A custom fetch function for low-level access to AWS API. Defaults to fetch(). */
   fetchFn?: typeof fetch;
 
-  /** @deprecated Use endpointHost instead Override the default endpoint url. */
-  endpointUrl?: string;
-
   /** Override the default endpoint hostname. */
   endpointHost?: string;
-
-  /**
-   * Optional additional stop sequences to pass to the model. Currently only supported for Anthropic and AI21.
-   * @deprecated Use .withConfig({ "stop": [...] }) instead
-   * */
-  stopSequences?: string[];
 
   /** Additional kwargs to pass to the model. */
   modelKwargs?: Record<string, unknown>;

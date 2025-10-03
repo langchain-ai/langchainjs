@@ -167,12 +167,6 @@ export interface AnthropicInput {
   /** A maximum number of tokens to generate before stopping. */
   maxTokens?: number;
 
-  /**
-   * A maximum number of tokens to generate before stopping.
-   * @deprecated Use "maxTokens" instead.
-   */
-  maxTokensToSample?: number;
-
   /** A list of strings upon which to stop generating.
    * You probably want `["\n\nHuman:"]`, as that's the cue for
    * the next turn in the dialog agent.
@@ -735,8 +729,7 @@ export class ChatAnthropicMessages<
         ? undefined
         : fields?.temperature ?? this.temperature;
     this.topK = fields?.topK ?? this.topK;
-    this.maxTokens =
-      fields?.maxTokensToSample ?? fields?.maxTokens ?? this.maxTokens;
+    this.maxTokens = fields?.maxTokens ?? this.maxTokens;
     this.stopSequences = fields?.stopSequences ?? this.stopSequences;
 
     this.streaming = fields?.streaming ?? false;

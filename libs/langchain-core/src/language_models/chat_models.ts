@@ -5,7 +5,6 @@ import {
   type BaseMessage,
   BaseMessageChunk,
   type BaseMessageLike,
-  HumanMessage,
   coerceMessageLikeToMessage,
   AIMessageChunk,
   isAIMessageChunk,
@@ -137,26 +136,6 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
    */
   tool_choice?: ToolChoice;
 };
-
-/**
- * Creates a transform stream for encoding chat message chunks.
- * @deprecated Use {@link BytesOutputParser} instead
- * @returns A TransformStream instance that encodes chat message chunks.
- */
-export function createChatMessageChunkEncoderStream() {
-  const textEncoder = new TextEncoder();
-  return new TransformStream<BaseMessageChunk>({
-    transform(chunk: BaseMessageChunk, controller) {
-      controller.enqueue(
-        textEncoder.encode(
-          typeof chunk.content === "string"
-            ? chunk.content
-            : JSON.stringify(chunk.content)
-        )
-      );
-    },
-  });
-}
 
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
@@ -834,18 +813,6 @@ export abstract class BaseChatModel<
   abstract _llmType(): string;
 
   /**
-   * @deprecated
-   * Return a json-like object representing this LLM.
-   */
-  serialize(): SerializedLLM {
-    return {
-      ...this.invocationParams(),
-      _type: this._llmType(),
-      _model: this._modelType(),
-    };
-  }
-
-  /**
    * Generates a prompt based on the input prompt values.
    * @param promptValues An array of BasePromptValue instances.
    * @param options The call options or an array of stop sequences.
@@ -868,86 +835,6 @@ export abstract class BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * Makes a single call to the chat model.
-   * @param messages An array of BaseMessage instances.
-   * @param options The call options or an array of stop sequences.
-   * @param callbacks The callbacks for the language model.
-   * @returns A Promise that resolves to a BaseMessage.
-   */
-  async call(
-    messages: BaseMessageLike[],
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<BaseMessage> {
-    const result = await this.generate(
-      [messages.map(coerceMessageLikeToMessage)],
-      options,
-      callbacks
-    );
-    const generations = result.generations as ChatGeneration[][];
-    return generations[0][0].message;
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * Makes a single call to the chat model with a prompt value.
-   * @param promptValue The value of the prompt.
-   * @param options The call options or an array of stop sequences.
-   * @param callbacks The callbacks for the language model.
-   * @returns A Promise that resolves to a BaseMessage.
-   */
-  async callPrompt(
-    promptValue: BasePromptValueInterface,
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<BaseMessage> {
-    const promptMessages: BaseMessage[] = promptValue.toChatMessages();
-    return this.call(promptMessages, options, callbacks);
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * Predicts the next message based on the input messages.
-   * @param messages An array of BaseMessage instances.
-   * @param options The call options or an array of stop sequences.
-   * @param callbacks The callbacks for the language model.
-   * @returns A Promise that resolves to a BaseMessage.
-   */
-  async predictMessages(
-    messages: BaseMessage[],
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<BaseMessage> {
-    return this.call(messages, options, callbacks);
-  }
-
-  /**
-   * @deprecated Use .invoke() instead. Will be removed in 0.2.0.
-   *
-   * Predicts the next message based on a text input.
-   * @param text The text input.
-   * @param options The call options or an array of stop sequences.
-   * @param callbacks The callbacks for the language model.
-   * @returns A Promise that resolves to a string.
-   */
-  async predict(
-    text: string,
-    options?: string[] | CallOptions,
-    callbacks?: Callbacks
-  ): Promise<string> {
-    const message = new HumanMessage(text);
-    const result = await this.call([message], options, callbacks);
-    if (typeof result.content !== "string") {
-      throw new Error("Cannot use predict when output is not a string.");
-    }
-    return result.content;
-  }
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
