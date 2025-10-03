@@ -192,12 +192,12 @@ test("Can properly format anthropic messages when given two tool results", async
   });
 });
 
-test("Can properly format messages with container_upload blocks", async () => {
+test("Drop content blocks that we don't know how to handle", async () => {
   const messageHistory = [
     new HumanMessage({
       content: [
-        { type: "text", text: "Analyze this CSV data" },
-        { type: "container_upload", file_id: "file_abc123" },
+        { type: "text", text: "Hello" },
+        { type: "some-unexpected-block-type", some_unexpected_field: "abc123" },
       ],
     }),
   ];
@@ -208,10 +208,7 @@ test("Can properly format messages with container_upload blocks", async () => {
     messages: [
       {
         role: "user",
-        content: [
-          { type: "text", text: "Analyze this CSV data" },
-          { type: "container_upload", file_id: "file_abc123" },
-        ],
+        content: [{ type: "text", text: "Hello" }],
       },
     ],
     system: undefined,

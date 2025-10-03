@@ -277,11 +277,13 @@ function* _formatContentBlocks(
         ...contentPart,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       } as AnthropicContainerUploadBlockParam;
-    } else {
-      console.warn(
-        `Skipping unsupported content block of type "${contentPart.type}".`
-      );
     }
+
+    // Note that we are intentionally dropping any blocks that we don't
+    // recognize. This is to allow for cross-compatibility between different
+    // providers that may have different block types. Ie if we take a message
+    // output from OpenAI and send it to Anthropic, we want to drop any blocks
+    // that Anthropic doesn't understand.
   }
 }
 
