@@ -31,8 +31,6 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "example": "pnpm --filter examples start",
     "precommit": "turbo precommit",
-    "docs": "pnpm --filter core_docs start",
-    "docs:api_refs": "pnpm --filter api_refs start",
     "release": "node release_workspace.js --workspace"
   },
   "devDependencies": {
