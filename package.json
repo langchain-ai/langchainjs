@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@10.14.0",
   "scripts": {
-    "build": "turbo build --filter=\"!test-exports-*\" --filter=\"!@langchain/build\" --filter=\"!api_refs\"",
+    "build": "turbo build --filter=\"!test-exports-*\" --filter=\"!@langchain/build\"",
     "clean": "turbo clean",
     "dev": "pnpm --filter @langchain/build watch",
     "format": "turbo format --concurrency=50",
@@ -19,7 +19,7 @@
     "lint": "turbo lint --concurrency=50",
     "lint:fix": "turbo lint:fix --concurrency=50",
     "test": "pnpm test:unit && pnpm test:exports:docker",
-    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!api_refs --filter=!create-langchain-integration",
+    "test:unit": "turbo test --filter=\"!test-exports-*\" --filter=!examples --filter=!create-langchain-integration",
     "test:unit:ci": "turbo test:ci",
     "test:int": "pnpm run test:int:deps && turbo test:integration ; pnpm run test:int:deps:down",
     "test:int:deps": "docker compose -f test-int-deps-docker-compose.yml up -d",
@@ -31,8 +31,6 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "example": "pnpm --filter examples start",
     "precommit": "turbo precommit",
-    "docs": "pnpm --filter core_docs start",
-    "docs:api_refs": "pnpm --filter api_refs start",
     "release": "node release_workspace.js --workspace"
   },
   "devDependencies": {

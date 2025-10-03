@@ -36,22 +36,7 @@ export {
 /**
  * LangChain Agents
  */
-export {
-  createAgent,
-  createMiddleware,
-  toolStrategy,
-  providerStrategy,
-  ToolNode,
-  type ReactAgent,
-  type AgentState,
-  type AgentRuntime,
-  type AgentMiddleware,
-  type HumanInterrupt,
-  type HumanInterruptConfig,
-  type ActionRequest,
-  type HumanResponse,
-  type Interrupt,
-} from "./agents/index.js";
+export * from "./agents/index.js";
 
 /**
  * `createAgent` pre-built middleware
@@ -74,4 +59,4 @@ export {
 /**
  * LangChain Documents
  */
-export { Document } from "@langchain/core/documents";
+export { type DocumentInput, Document } from "@langchain/core/documents";

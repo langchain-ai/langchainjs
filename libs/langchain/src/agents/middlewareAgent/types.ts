@@ -33,11 +33,24 @@ import type {
   JsonSchemaFormat,
 } from "../responses.js";
 import type { ResponseFormatUndefined } from "../annotation.js";
-import type { Interrupt } from "../interrupt.js";
 import type { ToolNode } from "../nodes/ToolNode.js";
 import type { ClientTool, ServerTool } from "../types.js";
 
 export type N = typeof START | "model_request" | "tools";
+
+/**
+ * Represents information about an interrupt.
+ */
+export interface Interrupt<TValue = unknown> {
+  /**
+   * The ID of the interrupt.
+   */
+  id: string;
+  /**
+   * The requests for human input.
+   */
+  value: TValue;
+}
 
 export interface BuiltInState {
   messages: BaseMessage[];

@@ -7,6 +7,11 @@ export interface CompilePackageOptions {
    */
   packageQuery?: string[];
   /**
+   * Specifies a custom tsconfig to be used for the build
+   * @default undefined
+   */
+  tsconfigPath?: string;
+  /**
    * Whether to watch for changes and automatically recompile
    * @default false
    */

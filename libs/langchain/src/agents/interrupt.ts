@@ -1,4 +1,5 @@
 export { interrupt } from "@langchain/langgraph";
+import type { ActionRequest } from "./middlewareAgent/middleware/hitl.js";
 
 /**
  * Represents information about an interrupt.
@@ -35,22 +36,6 @@ export interface HumanInterruptConfig {
    * Whether the human can accept/approve the current state
    */
   allow_accept: boolean;
-}
-
-/**
- * Represents a request for human action within the graph execution.
- * Contains the action type and any associated arguments needed for the action.
- */
-export interface ActionRequest {
-  /**
-   * The type or name of action being requested (e.g., "Approve XYZ action")
-   */
-  action: string;
-  /**
-   * Key-value pairs of arguments needed for the action
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args: Record<string, any>;
 }
 
 /**

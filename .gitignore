@@ -11,12 +11,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log
 .pnpm-debug.log*
-docs/_dist/
 
 package-lock.json
 yarn.lock
-
-langchain/docs/
 
 .idea/
 
@@ -38,16 +35,8 @@ tmp/
 **/convex/.gitignore
 **/convex/tsconfig.json
 
-langchain/api_refs_docs_build/dist/**/*
-
-.docusaurus/
-docs/build/
-docs/api_refs/typedoc.json
-
 .tool-versions
 credentials.json
-**/typedoc.json
-.vercel
 
 bun.lock
 coverage/

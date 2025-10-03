@@ -32,20 +32,6 @@ type ToolConfigSchema = z.input<typeof ToolConfigSchema>;
 type ToolCall = NonNullable<AIMessage["tool_calls"]>[number];
 
 /**
- * Represents information about an interrupt.
- */
-export interface Interrupt<TValue = unknown> {
-  /**
-   * The ID of the interrupt.
-   */
-  id: string;
-  /**
-   * The requests for human input.
-   */
-  value: TValue;
-}
-
-/**
  * Configuration that defines which reviewer response types are permitted during a human interrupt.
  * These flags control what the human reviewer may do (e.g., accept/edit/respond),
  * not the tool action the agent has requested.
