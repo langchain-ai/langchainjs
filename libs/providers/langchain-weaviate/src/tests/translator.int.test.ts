@@ -3,7 +3,7 @@ import weaviate, { Filters, WeaviateClient } from "weaviate-client";
 
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
-import { AttributeInfo } from "langchain/chains/query_constructor";
+import { AttributeInfo } from "@langchain/classic/chains/query_constructor";
 import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 
 import { WeaviateStore } from "../vectorstores.js";

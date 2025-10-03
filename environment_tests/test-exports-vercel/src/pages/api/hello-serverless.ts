@@ -12,7 +12,7 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 import { NextApiRequest, NextApiResponse } from "next";
 
