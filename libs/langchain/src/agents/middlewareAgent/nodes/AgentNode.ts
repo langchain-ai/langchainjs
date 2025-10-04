@@ -610,8 +610,6 @@ export class AgentNode<
         })
       );
 
-      console.log("result", result?.tools?.[0]?.description);
-
       if (result) {
         const modifiedTools = result.tools ?? [];
 
@@ -638,14 +636,6 @@ export class AgentNode<
          * Verify that user has not added or modified a tool with the same name.
          * We can't allow this as the ToolNode is already initiated with given tools.
          */
-        console.log(
-          "Before",
-          this.#options.toolClasses.map((t) => t.name)
-        );
-        console.log(
-          "Modified",
-          modifiedTools.map((t) => t.name)
-        );
         const invalidTools = modifiedTools.filter(
           (tool) =>
             isClientTool(tool) &&
@@ -665,7 +655,6 @@ export class AgentNode<
       }
     }
 
-    console.log("currentOptions", currentOptions.tools[0].name);
     return currentOptions;
   }
 
