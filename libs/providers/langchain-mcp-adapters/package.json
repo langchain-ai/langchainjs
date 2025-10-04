@@ -39,11 +39,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.2",
     "debug": "^4.4.3",
-    "zod": "^4.1.11"
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0-0 <2.0.0",
-    "@langchain/langgraph": "v1.0.0-0 <2.0.0"
+    "@langchain/core": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0",
+    "@langchain/langgraph": ">=1.0.0-alpha.5 <1.0.0 || >=1.0.0 <2.0.0"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
