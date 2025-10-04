@@ -94,7 +94,13 @@ export abstract class MiddlewareNode<
       ...this.#options.getPrivateState(),
     };
 
-    const result = await this.runHook(state, runtime);
+    const result = await this.runHook(
+      state,
+      Object.freeze({
+        ...runtime,
+        context: filteredContext,
+      })
+    );
     delete result?._privateState;
 
     /**
