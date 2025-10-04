@@ -51,6 +51,17 @@ export class RunnableCallable<I = unknown, O = unknown> extends Runnable<I, O> {
     return this.#state;
   }
 
+  /**
+   * This allows us to set the state of the runnable, e.g. for model and middleware nodes.
+   * @internal
+   */
+  setState(state: Awaited<O>) {
+    this.#state = {
+      ...this.#state,
+      ...state,
+    };
+  }
+
   async invoke(
     input: I,
     options?: Partial<RunnableConfig> | undefined

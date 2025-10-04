@@ -1,9 +1,17 @@
 import { z } from "zod/v3";
 import { describe, it, expect } from "vitest";
 import { HumanMessage } from "@langchain/core/messages";
-import { createMiddleware, createAgent } from "../index.js";
+import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
+import { createMiddleware, createAgent } from "../index.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
+
+const checkpointer = new MemorySaver();
+const config = {
+  configurable: {
+    thread_id: "test-123",
+  },
+};
 
 describe("middleware state management", () => {
   it("should allow to define private state props with _ that doesn't leak out", async () => {
@@ -131,5 +139,98 @@ describe("middleware state management", () => {
       middlewareCBeforeModelState: "CBefore",
       middlewareCAfterModelState: "middlewareCAfterModelState",
     });
+  });
+
+  it("should track thread level call count and run model call count as part of a private state", async () => {
+    expect.assertions(9);
+    const model = new FakeToolCallingModel({});
+    const middleware = createMiddleware({
+      name: "middleware",
+      beforeModel: async (_, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(0);
+        expect(runtime.runModelCallCount).toBe(0);
+
+        /**
+         * try to override the private state
+         */
+        return {
+          _privateState: {
+            threadLevelCallCount: 123,
+            runModelCallCount: 123,
+          },
+        };
+      },
+      modifyModelRequest: async (_, __, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(0);
+        expect(runtime.runModelCallCount).toBe(0);
+      },
+      afterModel: async (_, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(1);
+        expect(runtime.runModelCallCount).toBe(1);
+
+        /**
+         * try to override the private state
+         */
+        return {
+          _privateState: {
+            threadLevelCallCount: 123,
+            runModelCallCount: 123,
+          },
+        };
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware] as const,
+      checkpointer,
+    });
+
+    const result = await agent.invoke(
+      {
+        messages: [new HumanMessage("What is the weather in Tokyo?")],
+      },
+      config
+    );
+
+    // @ts-expect-error should not be defined in the state
+    expect(result.threadLevelCallCount).toBe(undefined);
+    // @ts-expect-error should not be defined in the state
+    expect(result.runModelCallCount).toBe(undefined);
+    // @ts-expect-error should not be defined in the state
+    expect(result._privateState).toBe(undefined);
+  });
+
+  it("should allow to continue counting thread level call count and run model call count across multiple invocations", async () => {
+    expect.assertions(6);
+    const model = new FakeToolCallingModel({});
+    const middleware = createMiddleware({
+      name: "middleware",
+      beforeModel: async (_, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(1);
+        expect(runtime.runModelCallCount).toBe(0);
+      },
+      modifyModelRequest: async (_, __, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(1);
+        expect(runtime.runModelCallCount).toBe(0);
+      },
+      afterModel: async (_, runtime) => {
+        expect(runtime.threadLevelCallCount).toBe(2);
+        expect(runtime.runModelCallCount).toBe(1);
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware] as const,
+      checkpointer,
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("What is the weather in Tokyo?")],
+      },
+      config
+    );
   });
 });

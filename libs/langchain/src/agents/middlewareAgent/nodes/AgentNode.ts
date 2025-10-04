@@ -30,6 +30,7 @@ import {
   InternalAgentState,
   Runtime,
   AgentMiddleware,
+  PrivateState,
 } from "../types.js";
 import type { ClientTool, ServerTool } from "../../types.js";
 import { withAgentName } from "../../withAgentName.js";
@@ -93,9 +94,16 @@ export class AgentNode<
   ContextSchema extends AnyAnnotationRoot | InteropZodObject = AnyAnnotationRoot
 > extends RunnableCallable<
   InternalAgentState<StructuredResponseFormat> & PreHookAnnotation["State"],
-  { messages: BaseMessage[] } | { structuredResponse: StructuredResponseFormat }
+  | (
+      | { messages: BaseMessage[] }
+      | { structuredResponse: StructuredResponseFormat }
+    ) & { _privateState: PrivateState }
 > {
   #options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>;
+
+  #runState: Pick<PrivateState, "runModelCallCount"> = {
+    runModelCallCount: 0,
+  };
 
   constructor(
     options: AgentNodeOptions<StructuredResponseFormat, ContextSchema>
@@ -189,7 +197,13 @@ export class AgentNode<
       return { messages: [] };
     }
 
+    const privateState = this.getState()._privateState;
     const response = await this.#invokeModel(state, config);
+    this.#runState.runModelCallCount++;
+    const _privateState = {
+      ...privateState,
+      threadLevelCallCount: privateState.threadLevelCallCount + 1,
+    };
 
     /**
      * if we were able to generate a structured response, return it
@@ -198,6 +212,7 @@ export class AgentNode<
       return {
         messages: [...state.messages, ...(response.messages || [])],
         structuredResponse: response.structuredResponse,
+        _privateState,
       };
     }
 
@@ -220,10 +235,11 @@ export class AgentNode<
             id: response.id,
           }),
         ],
+        _privateState,
       };
     }
 
-    return { messages: [response] };
+    return { messages: [response], _privateState };
   }
 
   /**
@@ -588,7 +604,9 @@ export class AgentNode<
       /**
        * Create runtime
        */
+      const privateState = this.getState()._privateState;
       const runtime: Runtime<unknown, unknown> = {
+        ...privateState,
         toolCalls: parseToolCalls(state.messages),
         tools: this.#options.toolClasses,
         context,
@@ -730,12 +748,46 @@ export class AgentNode<
   }
 
   static get nodeOptions(): {
-    input: z.ZodObject<{ messages: z.ZodArray<z.ZodType<BaseMessage>> }>;
+    input: z.ZodObject<{
+      messages: z.ZodArray<z.ZodType<BaseMessage>>;
+      _privateState: z.ZodObject<{
+        threadLevelCallCount: z.ZodNumber;
+      }>;
+    }>;
   } {
     return {
       input: z.object({
         messages: z.array(z.custom<BaseMessage>()),
+        _privateState: z.object({
+          threadLevelCallCount: z.number(),
+        }),
       }),
+    };
+  }
+
+  getState(): {
+    messages: BaseMessage[];
+    _privateState: PrivateState;
+  } {
+    const origState =
+      super.getState() ??
+      ({
+        _privateState: {
+          threadLevelCallCount: 0,
+          runModelCallCount: 0,
+        },
+      } as {
+        messages?: BaseMessage[];
+        _privateState?: PrivateState;
+      });
+
+    return {
+      messages: [],
+      ...origState,
+      _privateState: {
+        ...(origState._privateState ?? {}),
+        ...this.#runState,
+      },
     };
   }
 }
