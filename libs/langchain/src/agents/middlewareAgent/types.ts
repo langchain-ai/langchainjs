@@ -151,7 +151,7 @@ export interface ModelRequest {
   /**
    * The tools to make available for this step.
    */
-  tools: string[];
+  tools: (ServerTool | ClientTool)[];
 }
 
 /**
@@ -171,31 +171,10 @@ export type WithMaybeContext<TContext> = undefined extends TContext
 /**
  * Runtime information available to middleware (readonly).
  */
-export type Runtime<TState = unknown, TContext = unknown> = Partial<
+export type Runtime<TContext = unknown> = Partial<
   Omit<LangGraphRuntime<TContext>, "context" | "configurable">
-> & {
-  readonly toolCalls: ToolCall[];
-  /**
-   * All tool instances that are provided to the agent.
-   */
-  readonly tools: (ClientTool | ServerTool)[];
-  /**
-   * Terminates the agent with an update to the state or throws an error.
-   * @param result - The result to terminate the agent with.
-   */
-  terminate(result: Partial<TState> | Error): ControlAction<TState>;
-} & WithMaybeContext<TContext>;
-
-/**
- * Control action type returned by control methods.
- */
-export type ControlAction<TStateSchema> = {
-  type: "terminate";
-  target?: string;
-  stateUpdate?: Partial<TStateSchema>;
-  result?: any;
-  error?: Error;
-};
+> &
+  WithMaybeContext<TContext>;
 
 /**
  * Result type for middleware functions.

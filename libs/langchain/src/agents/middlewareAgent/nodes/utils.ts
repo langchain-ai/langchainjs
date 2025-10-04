@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
-import {
-  type BaseMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+import { type BaseMessage } from "@langchain/core/messages";
 import {
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
@@ -12,12 +8,7 @@ import {
 import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
 
-import type {
-  AgentMiddleware,
-  ToolCall,
-  ToolResult,
-  JumpTo,
-} from "../types.js";
+import type { AgentMiddleware, JumpTo } from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -117,48 +108,6 @@ export function derivePrivateState(
 
   // Return a new schema with only private properties (all optional)
   return z.object(privateShape);
-}
-
-/**
- * Parse out all tool calls from the messages and populate the results
- * @param messages - The messages to parse
- * @returns The tool calls
- */
-export function parseToolCalls(messages: BaseMessage[]): ToolCall[] {
-  const calls =
-    messages
-      .filter(
-        (message) =>
-          AIMessage.isInstance(message) && (message as AIMessage).tool_calls
-      )
-      .map((message) => (message as AIMessage).tool_calls as ToolCall[])
-      .flat() || [];
-
-  const results = parseToolResults(messages);
-  return calls.map((call) => {
-    const callResult = results.find((result) => result.id === call.id);
-    if (callResult) {
-      return {
-        ...call,
-        result: callResult.result,
-      };
-    }
-    return call;
-  });
-}
-
-/**
- * Parse out all tool results from the messages
- * @param messages - The messages to parse
- * @returns The tool results
- */
-function parseToolResults(messages: BaseMessage[]): ToolResult[] {
-  return messages
-    .filter((message) => ToolMessage.isInstance(message))
-    .map((message) => ({
-      id: (message as ToolMessage).tool_call_id,
-      result: (message as ToolMessage).content,
-    }));
 }
 
 /**

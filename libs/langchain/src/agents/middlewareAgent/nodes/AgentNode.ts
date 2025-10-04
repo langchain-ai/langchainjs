@@ -22,6 +22,7 @@ import {
   getPromptRunnable,
   validateLLMHasNoBoundTools,
   hasToolCalls,
+  isClientTool,
 } from "../../utils.js";
 import { mergeAbortSignals } from "../../nodes/utils.js";
 import {
@@ -40,7 +41,6 @@ import {
   ToolStrategyError,
   hasSupportForJsonSchemaOutput,
 } from "../../responses.js";
-import { parseToolCalls } from "./utils.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
   | {
@@ -570,7 +570,7 @@ export class AgentNode<
       model,
       systemPrompt,
       messages: state.messages,
-      tools: this.#options.toolClasses.map((tool) => tool.name as string),
+      tools: this.#options.toolClasses,
     };
 
     /**
@@ -588,14 +588,11 @@ export class AgentNode<
       /**
        * Create runtime
        */
-      const runtime: Runtime<unknown, unknown> = {
-        toolCalls: parseToolCalls(state.messages),
-        tools: this.#options.toolClasses,
+      const runtime: Runtime<unknown> = {
         context,
         writer: config.writer,
         interrupt: config.interrupt,
         signal: config.signal,
-        terminate: (result) => ({ type: "terminate", result }),
       };
 
       const result = await middleware.modifyModelRequest!(
@@ -613,30 +610,62 @@ export class AgentNode<
         })
       );
 
-      /**
-       * raise meaningful error if unknown tools were selected
-       */
-      const unknownTools =
-        result?.tools?.filter(
-          (tool) => !this.#options.toolClasses.some((t) => t.name === tool)
-        ) ?? [];
-      if (unknownTools.length > 0) {
-        throw new Error(
-          `Unknown tools selected in middleware "${
-            middleware.name
-          }": ${unknownTools.join(
-            ", "
-          )}, available tools: ${this.#options.toolClasses
-            .map((t) => t.name)
-            .join(", ")}!`
-        );
-      }
+      console.log("result", result?.tools?.[0]?.description);
 
       if (result) {
+        const modifiedTools = result.tools ?? [];
+
+        /**
+         * Verify that the user didn't add any new tools.
+         * We can't allow this as the ToolNode is already initiated with given tools.
+         */
+        const newTools = modifiedTools.filter(
+          (tool) =>
+            isClientTool(tool) &&
+            !this.#options.toolClasses.some((t) => t.name === tool.name)
+        );
+        if (newTools.length > 0) {
+          throw new Error(
+            `You have added a new tool in "modifyModelRequest" hook of middleware "${
+              middleware.name
+            }": ${newTools
+              .map((tool) => tool.name)
+              .join(", ")}. This is not supported.`
+          );
+        }
+
+        /**
+         * Verify that user has not added or modified a tool with the same name.
+         * We can't allow this as the ToolNode is already initiated with given tools.
+         */
+        console.log(
+          "Before",
+          this.#options.toolClasses.map((t) => t.name)
+        );
+        console.log(
+          "Modified",
+          modifiedTools.map((t) => t.name)
+        );
+        const invalidTools = modifiedTools.filter(
+          (tool) =>
+            isClientTool(tool) &&
+            this.#options.toolClasses.every((t) => t !== tool)
+        );
+        if (invalidTools.length > 0) {
+          throw new Error(
+            `You have modified a tool in "modifyModelRequest" hook of middleware "${
+              middleware.name
+            }": ${invalidTools
+              .map((tool) => tool.name)
+              .join(", ")}. This is not supported.`
+          );
+        }
+
         currentOptions = { ...currentOptions, ...result };
       }
     }
 
+    console.log("currentOptions", currentOptions.tools[0].name);
     return currentOptions;
   }
 
@@ -653,14 +682,8 @@ export class AgentNode<
     );
 
     // Use tools from preparedOptions if provided, otherwise use default tools
-    const preparedTools = preparedOptions?.tools ?? [];
     const allTools = [
-      ...(preparedTools.length > 0
-        ? this.#options.toolClasses.filter(
-            (tool) =>
-              typeof tool.name === "string" && preparedTools.includes(tool.name)
-          )
-        : this.#options.toolClasses),
+      ...(preparedOptions?.tools ?? []),
       ...structuredTools.map((toolStrategy) => toolStrategy.tool),
     ];
 
