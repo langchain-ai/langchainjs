@@ -1,1 +1,1 @@
-export * from "langchain/memory/chat_memory";
+export * from "@langchain/classic/memory/chat_memory";

@@ -1,9 +1,11 @@
 async function test() {
   const { default: assert } = await import("assert");
   const { OpenAI } = await import("@langchain/openai");
-  const { LLMChain } = await import("langchain/chains");
+  const { LLMChain } = await import("@langchain/classic/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
-  const { MemoryVectorStore } = await import("langchain/vectorstores/memory");
+  const { MemoryVectorStore } = await import(
+    "@langchain/classic/vectorstores/memory"
+  );
   const { OpenAIEmbeddings } = await import("@langchain/openai");
   const { Document } = await import("@langchain/core/documents");
 
@@ -13,7 +15,9 @@ async function test() {
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 
-  const vs = new MemoryVectorStore(new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" }));
+  const vs = new MemoryVectorStore(
+    new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" })
+  );
 
   await vs.addVectors(
     [
