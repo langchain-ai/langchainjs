@@ -2905,8 +2905,8 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3(supports-color@8.1.1)
       zod:
-        specifier: ^4.1.11
-        version: 4.1.11
+        specifier: ^3.25.76 || ^4
+        version: 3.25.76
     devDependencies:
       '@eslint/js':
         specifier: ^9.36.0
@@ -2919,7 +2919,7 @@ importers:
         version: link:../../../internal/eslint
       '@langchain/langgraph':
         specifier: next
-        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@4.1.11))(zod@4.1.11)
+        version: 1.0.0-alpha.5(@langchain/core@libs+langchain-core)(react-dom@18.3.1(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../langchain-openai
