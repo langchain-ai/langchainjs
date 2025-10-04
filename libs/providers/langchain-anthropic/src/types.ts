@@ -48,6 +48,8 @@ export type AnthropicWebSearchResultBlockParam =
 // TODO(hntrl): beta blocks should be separated
 export type AnthropicSearchResultBlockParam =
   Anthropic.Beta.BetaSearchResultBlockParam;
+export type AnthropicContainerUploadBlockParam =
+  Anthropic.Beta.BetaContainerUploadBlockParam;
 
 // Union of all possible content block types including server tool use
 export type ChatAnthropicContentBlock =
@@ -61,7 +63,8 @@ export type ChatAnthropicContentBlock =
   | AnthropicServerToolUseBlockParam
   | AnthropicWebSearchToolResultBlockParam
   | AnthropicWebSearchResultBlockParam
-  | AnthropicSearchResultBlockParam;
+  | AnthropicSearchResultBlockParam
+  | AnthropicContainerUploadBlockParam;
 
 export function isAnthropicImageBlockParam(
   block: unknown
