@@ -22,8 +22,18 @@ const toolCallMessage2 = new AIMessage({
   tool_calls: [
     {
       id: "call_1",
-      name: "tool_1",
+      name: "tool_2",
       args: { arg1: "arg2" },
+    },
+  ],
+});
+const toolCallMessage3 = new AIMessage({
+  content: "baz",
+  tool_calls: [
+    {
+      id: "call_1",
+      name: "tool_3",
+      args: { arg1: "arg3" },
     },
   ],
 });
@@ -32,6 +42,9 @@ const responseMessage1 = new AIMessage({
 });
 const responseMessage2 = new AIMessage({
   content: "fuzbaz",
+});
+const responseMessage3 = new AIMessage({
+  content: "fuzbazbaz",
 });
 
 const tools = [
@@ -52,6 +65,8 @@ describe("ModelCallLimitMiddleware", () => {
             responseMessage1,
             toolCallMessage2,
             responseMessage2,
+            toolCallMessage3,
+            responseMessage3,
           ],
         });
         const middleware = modelCallLimitMiddleware({
@@ -78,7 +93,7 @@ describe("ModelCallLimitMiddleware", () => {
           await expect(
             agent.invoke({ messages: ["Hello, world!"] })
           ).rejects.toThrow(
-            "Run level call limit reached with 3 model calls (allowed: 2)"
+            "Model call limits exceeded: run level call limit reached with 3 model calls (allowed: 2)"
           );
         } else {
           /**
@@ -86,7 +101,7 @@ describe("ModelCallLimitMiddleware", () => {
            */
           const result = await agent.invoke({ messages: ["Hello, world!"] });
           expect(result.messages.at(-1)?.content).toBe(
-            "Run level call limit reached with 3 model calls (allowed: 2)"
+            "Model call limits exceeded: run level call limit reached with 3 model calls (allowed: 2)"
           );
         }
       });
@@ -146,7 +161,7 @@ describe("ModelCallLimitMiddleware", () => {
           await expect(
             agent.invoke({ messages: ["Hello, world!"] }, config)
           ).rejects.toThrow(
-            "Thread level call limit reached with 3 model calls (allowed: 2)"
+            "Model call limits exceeded: thread level call limit reached with 3 model calls (allowed: 2)"
           );
         } else {
           const result = await agent.invoke(
@@ -154,7 +169,7 @@ describe("ModelCallLimitMiddleware", () => {
             config
           );
           expect(result.messages.at(-1)?.content).toBe(
-            "Thread level call limit reached with 3 model calls (allowed: 2)"
+            "Model call limits exceeded: thread level call limit reached with 3 model calls (allowed: 2)"
           );
         }
       });

@@ -40,12 +40,12 @@ class ModelCallLimitMiddlewareError extends Error {
     runCount?: number;
   }) {
     const exceededHint: string[] = [];
-    if (threadLimit && threadCount && threadLimit < threadCount) {
+    if (typeof threadLimit === "number" && typeof threadCount === "number") {
       exceededHint.push(
         `thread level call limit reached with ${threadCount} model calls (allowed: ${threadLimit})`
       );
     }
-    if (runLimit && runCount && runLimit < runCount) {
+    if (typeof runLimit === "number" && typeof runCount === "number") {
       exceededHint.push(
         `run level call limit reached with ${runCount} model calls (allowed: ${runLimit})`
       );
@@ -137,7 +137,7 @@ export function modelCallLimitMiddleware(
 
       if (
         typeof threadLimit === "number" &&
-        threadLimit <= runtime.threadLevelCallCount
+        threadLimit < runtime.threadLevelCallCount
       ) {
         const error = new ModelCallLimitMiddlewareError({
           threadLimit,
@@ -154,7 +154,7 @@ export function modelCallLimitMiddleware(
       }
       if (
         typeof runLimit === "number" &&
-        runLimit <= runtime.runModelCallCount
+        runLimit < runtime.runModelCallCount
       ) {
         const error = new ModelCallLimitMiddlewareError({
           runLimit,
