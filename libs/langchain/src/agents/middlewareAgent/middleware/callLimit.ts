@@ -28,8 +28,33 @@ export type ModelCallLimitMiddlewareConfig = Partial<
 >;
 
 class ModelCallLimitMiddlewareError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor({
+    threadLimit,
+    runLimit,
+    threadCount,
+    runCount,
+  }: {
+    threadLimit?: number;
+    runLimit?: number;
+    threadCount?: number;
+    runCount?: number;
+  }) {
+    const exceededHint: string[] = [];
+    if (threadLimit && threadCount && threadLimit < threadCount) {
+      exceededHint.push(
+        `thread level call limit reached with ${threadCount} model calls (allowed: ${threadLimit})`
+      );
+    }
+    if (runLimit && runCount && runLimit < runCount) {
+      exceededHint.push(
+        `run level call limit reached with ${runCount} model calls (allowed: ${runLimit})`
+      );
+    }
+    super(
+      `Model call limits exceeded${
+        exceededHint.length > 0 ? `: ${exceededHint.join(", ")}` : ""
+      }`
+    );
     this.name = "ModelCallLimitMiddlewareError";
   }
 }
@@ -110,27 +135,39 @@ export function modelCallLimitMiddleware(
         runtime.context.threadLimit ?? middlewareOptions?.threadLimit;
       const runLimit = runtime.context.runLimit ?? middlewareOptions?.runLimit;
 
-      if (threadLimit && threadLimit < runtime.threadLevelCallCount) {
-        const errorMessage = `Thread level call limit reached with ${runtime.threadLevelCallCount} model calls (allowed: ${threadLimit})`;
+      if (
+        typeof threadLimit === "number" &&
+        threadLimit <= runtime.threadLevelCallCount
+      ) {
+        const error = new ModelCallLimitMiddlewareError({
+          threadLimit,
+          threadCount: runtime.threadLevelCallCount,
+        });
         if (exitBehavior === "end") {
           return {
             jumpTo: "end",
-            messages: [new AIMessage(errorMessage)],
+            messages: [new AIMessage(error.message)],
           };
         }
 
-        throw new ModelCallLimitMiddlewareError(errorMessage);
+        throw error;
       }
-      if (runLimit && runLimit < runtime.runModelCallCount) {
-        const errorMessage = `Run level call limit reached with ${runtime.runModelCallCount} model calls (allowed: ${runLimit})`;
+      if (
+        typeof runLimit === "number" &&
+        runLimit <= runtime.runModelCallCount
+      ) {
+        const error = new ModelCallLimitMiddlewareError({
+          runLimit,
+          runCount: runtime.runModelCallCount,
+        });
         if (exitBehavior === "end") {
           return {
             jumpTo: "end",
-            messages: [new AIMessage(errorMessage)],
+            messages: [new AIMessage(error.message)],
           };
         }
 
-        throw new ModelCallLimitMiddlewareError(errorMessage);
+        throw error;
       }
 
       return state;
