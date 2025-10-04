@@ -107,8 +107,6 @@ export function createMiddleware<
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
-        AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault<any>
@@ -132,8 +130,6 @@ export function createMiddleware<
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
-        AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault<any>
@@ -171,8 +167,6 @@ export function createMiddleware<
       : {}) &
       AgentBuiltInState,
     runtime: Runtime<
-      (TSchema extends InteropZodObject ? InferInteropZodInput<TSchema> : {}) &
-        AgentBuiltInState,
       TContextSchema extends InteropZodObject
         ? InferInteropZodOutput<TContextSchema>
         : TContextSchema extends InteropZodDefault<any>
@@ -213,10 +207,6 @@ export function createMiddleware<
           options,
           state,
           runtime as Runtime<
-            (TSchema extends InteropZodObject
-              ? InferInteropZodInput<TSchema>
-              : {}) &
-              AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault<any>
@@ -235,10 +225,6 @@ export function createMiddleware<
         config.beforeModel!(
           state,
           runtime as Runtime<
-            (TSchema extends InteropZodObject
-              ? InferInteropZodInput<TSchema>
-              : {}) &
-              AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault<any>
@@ -257,10 +243,6 @@ export function createMiddleware<
         config.afterModel!(
           state,
           runtime as Runtime<
-            (TSchema extends InteropZodObject
-              ? InferInteropZodInput<TSchema>
-              : {}) &
-              AgentBuiltInState,
             TContextSchema extends InteropZodObject
               ? InferInteropZodOutput<TContextSchema>
               : TContextSchema extends InteropZodDefault<any>

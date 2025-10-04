@@ -3,7 +3,7 @@ import type { Runtime, AgentBuiltInState } from "../types.js";
 
 export type DynamicSystemPromptMiddlewareConfig<TContextSchema> = (
   state: AgentBuiltInState,
-  runtime: Runtime<AgentBuiltInState, TContextSchema>
+  runtime: Runtime<TContextSchema>
 ) => string | Promise<string>;
 
 /**
@@ -52,7 +52,7 @@ export function dynamicSystemPromptMiddleware<TContextSchema = unknown>(
     modifyModelRequest: async (options, state, runtime) => {
       const systemPrompt = await fn(
         state as AgentBuiltInState,
-        runtime as Runtime<AgentBuiltInState, TContextSchema>
+        runtime as Runtime<TContextSchema>
       );
 
       if (typeof systemPrompt !== "string") {

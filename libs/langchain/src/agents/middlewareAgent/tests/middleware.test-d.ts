@@ -1,8 +1,10 @@
 import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, BaseMessage } from "@langchain/core/messages";
+import { tool } from "@langchain/core/tools";
 
 import { createAgent, createMiddleware } from "../index.js";
+import type { ServerTool, ClientTool } from "../../types.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -182,7 +184,9 @@ describe("middleware types", () => {
           }>();
         },
         modifyModelRequest: async (request, _state, runtime) => {
-          expectTypeOf(request.tools).toEqualTypeOf<string[]>();
+          expectTypeOf(request.tools).toEqualTypeOf<
+            (ServerTool | ClientTool)[]
+          >();
           expectTypeOf(runtime.context).toEqualTypeOf<{
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
@@ -191,7 +195,7 @@ describe("middleware types", () => {
 
           return {
             ...request,
-            tools: ["toolA"],
+            tools: [tool(() => "result", { name: "toolA" })],
           };
         },
       });

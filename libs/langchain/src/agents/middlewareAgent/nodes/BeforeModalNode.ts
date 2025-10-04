@@ -27,10 +27,10 @@ export class BeforeModelNode<
     });
   }
 
-  runHook(state: TStateSchema, runtime: Runtime<TStateSchema, TContextSchema>) {
+  runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {
     return this.middleware.beforeModel!(
       state as Record<string, any> & AgentBuiltInState,
-      runtime as Runtime<TStateSchema, unknown>
+      runtime as Runtime<unknown>
     ) as Promise<MiddlewareResult<TStateSchema>>;
   }
 }

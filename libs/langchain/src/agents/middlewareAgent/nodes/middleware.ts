@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
@@ -7,16 +6,11 @@ import { interopParse } from "@langchain/core/utils/types";
 import { RunnableCallable } from "../../RunnableCallable.js";
 import type {
   Runtime,
-  ControlAction,
   AgentMiddleware,
   MiddlewareResult,
   JumpToTarget,
 } from "../types.js";
-import {
-  derivePrivateState,
-  parseToolCalls,
-  parseJumpToTarget,
-} from "./utils.js";
+import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
@@ -33,7 +27,7 @@ export abstract class MiddlewareNode<
 
   abstract runHook(
     state: TStateSchema,
-    config?: Runtime<TStateSchema, TContextSchema>
+    config?: Runtime<TContextSchema>
   ): Promise<MiddlewareResult<TStateSchema>>;
 
   async invokeMiddleware(
@@ -74,21 +68,11 @@ export abstract class MiddlewareNode<
     /**
      * ToDo: implement later
      */
-    const runtime: Runtime<TStateSchema, TContextSchema> = {
-      toolCalls: parseToolCalls(state.messages),
+    const runtime: Runtime<TContextSchema> = {
       context: filteredContext,
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
-      tools: this.middleware.tools ?? [],
-      terminate: (
-        result?: Partial<TStateSchema> | Error
-      ): ControlAction<TStateSchema> => {
-        if (result instanceof Error) {
-          throw result;
-        }
-        return { type: "terminate", result };
-      },
     };
 
     const result = await this.runHook(state, runtime);
