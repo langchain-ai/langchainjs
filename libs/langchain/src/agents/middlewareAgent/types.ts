@@ -152,6 +152,11 @@ export interface ModelRequest {
    * The tools to make available for this step.
    */
   tools: string[];
+
+  /**
+   * Extra call options to pass to the model.
+   */
+  callOptions?: Record<string, unknown>;
 }
 
 /**
