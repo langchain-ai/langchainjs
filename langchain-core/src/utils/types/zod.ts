@@ -447,6 +447,26 @@ export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
   return false;
 }
 
+export function isZodOptionalV4(obj: unknown): obj is z4.$ZodOptional {
+  if (!isZodSchemaV4(obj)) return false;
+  // Zod v4 optional schemas have _zod.def.type === "optional"
+  if (
+    typeof obj === "object" &&
+    obj !== null &&
+    "_zod" in obj &&
+    typeof obj._zod === "object" &&
+    obj._zod !== null &&
+    "def" in obj._zod &&
+    typeof obj._zod.def === "object" &&
+    obj._zod.def !== null &&
+    "type" in obj._zod.def &&
+    obj._zod.def.type === "optional"
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Determines if the provided value is an InteropZodObject (Zod v3 or v4 object schema).
  *
@@ -772,6 +792,13 @@ export function interopZodTransformInputSchema(
           ...outputSchema._zod.def,
           element: elementSchema as z4.$ZodType,
         });
+      }
+      // Handle nested optional schemas
+      else if (isZodOptionalV4(outputSchema)) {
+        outputSchema._zod.def.innerType = interopZodTransformInputSchema(
+          outputSchema._zod.def.innerType,
+          recursive
+        ) as z4.$ZodType;
       }
     }
     const meta = globalRegistry.get(schema);
