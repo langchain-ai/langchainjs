@@ -10,9 +10,12 @@ import {
   Send,
   Command,
   CompiledStateGraph,
+  type GetStateOptions,
 } from "@langchain/langgraph";
+import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
 import { ToolMessage, AIMessage } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
+import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createAgentAnnotationConditional } from "./annotation.js";
 import { isClientTool } from "../utils.js";
@@ -48,7 +51,6 @@ import {
   type ToAnnotationRoot,
   type ResponseFormatUndefined,
 } from "../annotation.js";
-import { RunnableConfig } from "@langchain/core/runnables";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -811,14 +813,15 @@ export class ReactAgent<
   }
 
   /**
-   * Executes the agent with streaming, returning an async iterable of events as they occur.
+   * Executes the agent with streaming, returning an async iterable of state updates as they occur.
    *
    * This method runs the agent's workflow similar to `invoke`, but instead of waiting for
-   * completion, it streams events in real-time. This allows you to:
+   * completion, it streams high-level state updates in real-time. This allows you to:
    * - Display intermediate results to users as they're generated
    * - Monitor the agent's progress through each step
-   * - Handle tool calls and results as they happen
-   * - Update UI with streaming responses from the LLM
+   * - React to state changes as nodes complete
+   *
+   * For more granular event-level streaming (like individual LLM tokens), use `streamEvents` instead.
    *
    * @param state - The initial state for the agent execution. Can be:
    *   - An object containing `messages` array and any middleware-specific state properties
@@ -832,8 +835,63 @@ export class ReactAgent<
    * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
    * @param config.recursionLimit - The recursion limit for the agent execution.
    *
-   * @returns A Promise that resolves to an IterableReadableStream of events.
-   *          Events include:
+   * @returns A Promise that resolves to an IterableReadableStream of state updates.
+   *          Each update contains the current state after a node completes.
+   *
+   * @example
+   * ```typescript
+   * const agent = new ReactAgent({
+   *   llm: myModel,
+   *   tools: [calculator, webSearch]
+   * });
+   *
+   * const stream = await agent.stream({
+   *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * });
+   *
+   * for await (const chunk of stream) {
+   *   console.log(chunk); // State update from each node
+   * }
+   * ```
+   */
+  async stream(
+    state: InvokeStateParameter<TMiddleware>,
+    config?: StreamConfiguration<
+      InferContextInput<ContextSchema> &
+        InferMiddlewareContextInputs<TMiddleware>
+    >
+  ): Promise<IterableReadableStream<any>> {
+    const initializedState = await this.#initializeMiddlewareStates(state);
+    return this.#graph.stream(initializedState, config as Record<string, any>);
+  }
+
+  /**
+   * Executes the agent with low-level event streaming, returning detailed events as they occur.
+   *
+   * This method provides fine-grained control over streaming, emitting events for every
+   * operation during execution. This is useful when you need to:
+   * - Stream individual LLM tokens as they're generated
+   * - Monitor detailed execution flow with timing information
+   * - Handle specific event types (model start/end, tool calls, etc.)
+   * - Debug or trace agent behavior at a granular level
+   *
+   * For simpler state-based streaming, use `stream` instead.
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Optional runtime configuration including:
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/memory#memory-storage | Memory storage}.
+   * @param config.signal - An optional {@link https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal | `AbortSignal`} for the agent execution.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   * @param config.streamMode - The streaming mode for the agent execution, see more in {@link https://docs.langchain.com/oss/javascript/langgraph/streaming#supported-stream-modes | Supported stream modes}.
+   *
+   * @param streamOptions - Additional streaming options (passed to LangGraph's streamEvents).
+   *
+   * @returns An IterableReadableStream of detailed events including:
    *          - `on_chat_model_start`: When the LLM begins processing
    *          - `on_chat_model_stream`: Streaming tokens from the LLM
    *          - `on_chat_model_end`: When the LLM completes
@@ -850,28 +908,37 @@ export class ReactAgent<
    *   tools: [calculator, webSearch]
    * });
    *
-   * const stream = await agent.stream({
+   * const stream = await agent.streamEvents({
    *   messages: [{ role: "human", content: "What's 2+2 and the weather in NYC?" }]
+   * }, {
+   *   version: "v2"
    * });
    *
    * for await (const event of stream) {
-   *   //
+   *   if (event.event === "on_chat_model_stream") {
+   *     process.stdout.write(event.data.chunk.content); // Stream tokens
+   *   }
    * }
    * ```
    */
-  async stream(
+  async streamEvents(
     state: InvokeStateParameter<TMiddleware>,
     config?: StreamConfiguration<
       InferContextInput<ContextSchema> &
         InferMiddlewareContextInputs<TMiddleware>
-    >
+    > & { version?: "v1" | "v2" },
+    streamOptions?: any
   ): Promise<IterableReadableStream<any>> {
     const initializedState = await this.#initializeMiddlewareStates(state);
     await this.#populatePrivateState(config);
-    return this.#graph.streamEvents(initializedState, {
-      ...config,
-      version: "v2",
-    } as any) as IterableReadableStream<any>;
+    return this.#graph.streamEvents(
+      initializedState,
+      {
+        ...(config as any),
+        version: config?.version ?? "v2",
+      },
+      streamOptions
+    ) as IterableReadableStream<any>;
   }
 
   /**
@@ -917,5 +984,43 @@ export class ReactAgent<
   }) {
     const representation = await this.#graph.getGraphAsync();
     return representation.drawMermaid(params);
+  }
+
+  /**
+   * The following are internal methods to enable support for LangGraph Platform.
+   * They are not part of the createAgent public API.
+   *
+   * Note: we intentionally return as `never` to avoid type errors due to type inference.
+   */
+
+  /**
+   * @internal
+   */
+  getGraphAsync(config?: RunnableConfig) {
+    return this.#graph.getGraphAsync(config) as never;
+  }
+  /**
+   * @internal
+   */
+  getState(config: RunnableConfig, options?: GetStateOptions) {
+    return this.#graph.getState(config, options) as never;
+  }
+  /**
+   * @internal
+   */
+  getStateHistory(config: RunnableConfig, options?: CheckpointListOptions) {
+    return this.#graph.getStateHistory(config, options) as never;
+  }
+  /**
+   * @internal
+   */
+  getSubgraphs(namespace?: string, recurse?: boolean) {
+    return this.#graph.getSubgraphs(namespace, recurse) as never;
+  }
+  /**
+   * @internal
+   */
+  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+    return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
 }
