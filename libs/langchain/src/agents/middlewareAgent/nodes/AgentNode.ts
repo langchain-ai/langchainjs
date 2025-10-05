@@ -72,6 +72,10 @@ export interface AgentNodeOptions<
     AgentMiddleware<any, any, any>,
     () => any
   ][];
+  retryModelRequestHookMiddleware?: [
+    AgentMiddleware<any, any, any>,
+    () => any
+  ][];
 }
 
 interface NativeResponseFormat {
@@ -273,94 +277,174 @@ export class AgentNode<
     /**
      * Execute modifyModelRequest hooks from beforeModelNodes
      */
-    const preparedOptions = await this.#executePrepareModelRequestHooks(
+    let preparedOptions = await this.#executePrepareModelRequestHooks(
       model,
       state,
       config
     );
 
     /**
-     * If user provides a model in the preparedOptions, use it,
-     * otherwise use the model from the options
+     * Retry loop for model invocation with error handling
+     * Hard limit of 100 attempts to prevent infinite loops from buggy middleware
      */
-    const finalModel = preparedOptions?.model ?? model;
+    const maxAttempts = 100;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        /**
+         * If user provides a model in the preparedOptions, use it,
+         * otherwise use the model from the options
+         */
+        const finalModel = preparedOptions?.model ?? model;
 
-    /**
-     * Check if the LLM already has bound tools and throw if it does.
-     */
-    validateLLMHasNoBoundTools(finalModel);
+        /**
+         * Check if the LLM already has bound tools and throw if it does.
+         */
+        validateLLMHasNoBoundTools(finalModel);
 
-    const structuredResponseFormat = this.#getResponseFormat(finalModel);
-    const modelWithTools = await this.#bindTools(
-      finalModel,
-      preparedOptions,
-      structuredResponseFormat
-    );
-    let modelInput = this.#getModelInputState(state);
+        const structuredResponseFormat = this.#getResponseFormat(finalModel);
+        const modelWithTools = await this.#bindTools(
+          finalModel,
+          preparedOptions,
+          structuredResponseFormat
+        );
+        let modelInput = this.#getModelInputState(state);
 
-    /**
-     * Use messages from preparedOptions if provided
-     */
-    if (preparedOptions?.messages) {
-      modelInput = { ...modelInput, messages: preparedOptions.messages };
-    }
+        /**
+         * Use messages from preparedOptions if provided
+         */
+        if (preparedOptions?.messages) {
+          modelInput = { ...modelInput, messages: preparedOptions.messages };
+        }
 
-    const signal = mergeAbortSignals(this.#options.signal, config.signal);
-    const invokeConfig = { ...config, signal };
-    const response = (await modelWithTools.invoke(
-      modelInput,
-      invokeConfig
-    )) as AIMessage;
+        const signal = mergeAbortSignals(this.#options.signal, config.signal);
+        const invokeConfig = { ...config, signal };
+        const response = (await modelWithTools.invoke(
+          modelInput,
+          invokeConfig
+        )) as AIMessage;
 
-    /**
-     * if the user requests a native schema output, try to parse the response
-     * and return the structured response if it is valid
-     */
-    if (structuredResponseFormat?.type === "native") {
-      const structuredResponse =
-        structuredResponseFormat.strategy.parse(response);
-      if (structuredResponse) {
-        return { structuredResponse, messages: [response] };
+        /**
+         * if the user requests a native schema output, try to parse the response
+         * and return the structured response if it is valid
+         */
+        if (structuredResponseFormat?.type === "native") {
+          const structuredResponse =
+            structuredResponseFormat.strategy.parse(response);
+          if (structuredResponse) {
+            return { structuredResponse, messages: [response] };
+          }
+
+          return response;
+        }
+
+        if (!structuredResponseFormat || !response.tool_calls) {
+          return response;
+        }
+
+        const toolCalls = response.tool_calls.filter(
+          (call) => call.name in structuredResponseFormat.tools
+        );
+
+        /**
+         * if there were not structured tool calls, we can return the response
+         */
+        if (toolCalls.length === 0) {
+          return response;
+        }
+
+        /**
+         * if there were multiple structured tool calls, we should throw an error as this
+         * scenario is not defined/supported.
+         */
+        if (toolCalls.length > 1) {
+          return this.#handleMultipleStructuredOutputs(
+            response,
+            toolCalls,
+            structuredResponseFormat
+          );
+        }
+
+        const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
+        const toolMessageContent = toolStrategy?.options?.toolMessageContent;
+        return this.#handleSingleStructuredOutput(
+          response,
+          toolCalls[0],
+          structuredResponseFormat,
+          toolMessageContent ?? options.lastMessage
+        );
+      } catch (error) {
+        // Try retry_model_request on each middleware
+        const retryMiddleware =
+          this.#options.retryModelRequestHookMiddleware ?? [];
+        let shouldRetry = false;
+
+        for (const [middleware, getMiddlewareState] of retryMiddleware) {
+          if (middleware.retryModelRequest) {
+            /**
+             * Cast config to LangGraphRunnableConfig to access LangGraph-specific properties
+             */
+            const lgConfig = config as LangGraphRunnableConfig;
+
+            /**
+             * Merge context with default context of middleware
+             */
+            const context = middleware.contextSchema
+              ? interopParse(middleware.contextSchema, lgConfig?.context || {})
+              : lgConfig?.context;
+
+            /**
+             * Create runtime
+             */
+            const privateState = this.getState()._privateState;
+            const runtime: Runtime<unknown> = {
+              ...privateState,
+              context,
+              writer: lgConfig.writer,
+              interrupt: lgConfig.interrupt,
+              signal: lgConfig.signal,
+            };
+
+            const retryRequest = await middleware.retryModelRequest(
+              error as Error,
+              {
+                model: preparedOptions?.model ?? model,
+                systemPrompt: preparedOptions?.systemPrompt,
+                messages: preparedOptions?.messages ?? state.messages,
+                tools: this.#options.toolClasses,
+              },
+              {
+                ...getMiddlewareState(),
+                messages: state.messages,
+              },
+              /**
+               * ensure runtime is frozen to prevent modifications
+               */
+              Object.freeze({
+                ...runtime,
+                context,
+              }),
+              attempt
+            );
+
+            if (retryRequest) {
+              // Update preparedOptions with the modified request
+              preparedOptions = retryRequest;
+              shouldRetry = true;
+              // Break on first middleware that wants to retry
+              break;
+            }
+          }
+        }
+
+        // If no middleware wants to retry, re-raise the error
+        if (!shouldRetry) {
+          throw error;
+        }
       }
-
-      return response;
     }
 
-    if (!structuredResponseFormat || !response.tool_calls) {
-      return response;
-    }
-
-    const toolCalls = response.tool_calls.filter(
-      (call) => call.name in structuredResponseFormat.tools
-    );
-
-    /**
-     * if there were not structured tool calls, we can return the response
-     */
-    if (toolCalls.length === 0) {
-      return response;
-    }
-
-    /**
-     * if there were multiple structured tool calls, we should throw an error as this
-     * scenario is not defined/supported.
-     */
-    if (toolCalls.length > 1) {
-      return this.#handleMultipleStructuredOutputs(
-        response,
-        toolCalls,
-        structuredResponseFormat
-      );
-    }
-
-    const toolStrategy = structuredResponseFormat.tools[toolCalls[0].name];
-    const toolMessageContent = toolStrategy?.options?.toolMessageContent;
-    return this.#handleSingleStructuredOutput(
-      response,
-      toolCalls[0],
-      structuredResponseFormat,
-      toolMessageContent ?? options.lastMessage
-    );
+    // If we exit the loop, max attempts exceeded
+    throw new Error(`Maximum retry attempts (${maxAttempts}) exceeded`);
   }
 
   /**
