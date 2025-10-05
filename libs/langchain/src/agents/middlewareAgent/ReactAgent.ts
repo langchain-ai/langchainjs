@@ -40,6 +40,7 @@ import type {
   StreamConfiguration,
   JumpTo,
   UserInput,
+  PrivateState,
 } from "./types.js";
 
 import {
@@ -47,6 +48,7 @@ import {
   type ToAnnotationRoot,
   type ResponseFormatUndefined,
 } from "../annotation.js";
+import { RunnableConfig } from "@langchain/core/runnables";
 
 // Helper type to get the state definition with middleware states
 type MergedAgentState<
@@ -102,6 +104,8 @@ export class ReactAgent<
   #graph: AgentGraph<StructuredResponseFormat, ContextSchema, TMiddleware>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
+
+  #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
   constructor(
     public options: CreateAgentParams<StructuredResponseFormat, ContextSchema>
@@ -170,6 +174,19 @@ export class ReactAgent<
       () => any
     ][] = [];
 
+    this.#agentNode = new AgentNode({
+      model: this.options.model,
+      systemPrompt: this.options.systemPrompt,
+      includeAgentName: this.options.includeAgentName,
+      name: this.options.name,
+      responseFormat: this.options.responseFormat,
+      middleware: this.options.middleware,
+      toolClasses,
+      shouldReturnDirect,
+      signal: this.options.signal,
+      modifyModelRequestHookMiddleware,
+    });
+
     const middlewareNames = new Set<string>();
     const middleware = this.options.middleware ?? [];
     for (let i = 0; i < middleware.length; i++) {
@@ -182,7 +199,9 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m);
+        beforeModelNode = new BeforeModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -196,7 +215,9 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m);
+        afterModelNode = new AfterModelNode(m, {
+          getPrivateState: () => this.#agentNode.getState()._privateState,
+        });
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -226,18 +247,7 @@ export class ReactAgent<
      */
     allNodeWorkflows.addNode(
       "model_request",
-      new AgentNode({
-        model: this.options.model,
-        systemPrompt: this.options.systemPrompt,
-        includeAgentName: this.options.includeAgentName,
-        name: this.options.name,
-        responseFormat: this.options.responseFormat,
-        middleware: this.options.middleware,
-        toolClasses,
-        shouldReturnDirect,
-        signal: this.options.signal,
-        modifyModelRequestHookMiddleware,
-      }),
+      this.#agentNode,
       AgentNode.nodeOptions
     );
 
@@ -711,6 +721,35 @@ export class ReactAgent<
   }
 
   /**
+   * Populate the private state of the agent node from the previous state.
+   */
+  async #populatePrivateState(config?: RunnableConfig) {
+    /**
+     * not needed if thread_id is not provided
+     */
+    if (!config?.configurable?.thread_id) {
+      return;
+    }
+    const prevState = (await this.#graph.getState(config as any)) as {
+      values: {
+        _privateState: PrivateState;
+      };
+    };
+
+    /**
+     * not need if state is empty
+     */
+    if (!prevState.values._privateState) {
+      return;
+    }
+
+    this.#agentNode.setState({
+      structuredResponse: undefined,
+      _privateState: prevState.values._privateState,
+    });
+  }
+
+  /**
    * Executes the agent with the given state and returns the final state after all processing.
    *
    * This method runs the agent's entire workflow synchronously, including:
@@ -762,6 +801,8 @@ export class ReactAgent<
   ) {
     type FullState = MergedAgentState<StructuredResponseFormat, TMiddleware>;
     const initializedState = await this.#initializeMiddlewareStates(state);
+    await this.#populatePrivateState(config);
+
     return this.#graph.invoke(
       initializedState,
       config as unknown as InferContextInput<ContextSchema> &
@@ -826,6 +867,7 @@ export class ReactAgent<
     >
   ): Promise<IterableReadableStream<any>> {
     const initializedState = await this.#initializeMiddlewareStates(state);
+    await this.#populatePrivateState(config);
     return this.#graph.streamEvents(initializedState, {
       ...config,
       version: "v2",

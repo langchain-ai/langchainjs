@@ -26,4 +26,8 @@ export {
   piiRedactionMiddleware,
   type PIIRedactionMiddlewareConfig,
 } from "./piiRedaction.js";
+export {
+  modelCallLimitMiddleware,
+  type ModelCallLimitMiddlewareConfig,
+} from "./callLimit.js";
 export { type AgentMiddleware } from "../types.js";
