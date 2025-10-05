@@ -30,8 +30,5 @@ export {
   modelCallLimitMiddleware,
   type ModelCallLimitMiddlewareConfig,
 } from "./callLimit.js";
-export {
-  modelFallbackMiddleware,
-  type ModelFallbackMiddlewareConfig,
-} from "./modelFallback.js";
+export { modelFallbackMiddleware } from "./modelFallback.js";
 export { type AgentMiddleware } from "../types.js";

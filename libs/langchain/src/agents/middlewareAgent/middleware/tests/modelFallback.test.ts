@@ -31,11 +31,7 @@ describe("modelFallbackMiddleware", () => {
     const agent = createAgent({
       model,
       tools: [],
-      middleware: [
-        modelFallbackMiddleware({
-          firstModel: retryModel,
-        }),
-      ] as const,
+      middleware: [modelFallbackMiddleware(retryModel)] as const,
     });
     await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
     expect(model.invoke).toHaveBeenCalledTimes(1);
@@ -57,14 +53,12 @@ describe("modelFallbackMiddleware", () => {
       model,
       tools: [],
       middleware: [
-        modelFallbackMiddleware({
-          firstModel: anotherFailingModel,
-          additionalModels: [
-            anotherFailingModel,
-            anotherFailingModel,
-            retryModel,
-          ],
-        }),
+        modelFallbackMiddleware(
+          anotherFailingModel,
+          anotherFailingModel,
+          anotherFailingModel,
+          retryModel
+        ),
       ] as const,
     });
 
@@ -72,5 +66,32 @@ describe("modelFallbackMiddleware", () => {
     expect(model.invoke).toHaveBeenCalledTimes(1);
     expect(anotherFailingModel.invoke).toHaveBeenCalledTimes(3);
     expect(retryModel.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw if list is exhausted", async () => {
+    const model = createMockModel();
+    model.invoke = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Model error"))
+      .mockResolvedValueOnce(new AIMessage("Response from model"));
+    const anotherFailingModel = createMockModel();
+    anotherFailingModel.invoke = vi
+      .fn()
+      .mockRejectedValue(new Error("Model error"));
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [
+        modelFallbackMiddleware(
+          anotherFailingModel,
+          anotherFailingModel,
+          anotherFailingModel
+        ),
+      ] as const,
+    });
+
+    await expect(
+      agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+    ).rejects.toThrow("Model error");
   });
 });
