@@ -795,10 +795,14 @@ export function interopZodTransformInputSchema(
       }
       // Handle nested optional schemas
       else if (isZodOptionalV4(outputSchema)) {
-        outputSchema._zod.def.innerType = interopZodTransformInputSchema(
+        const innerType = interopZodTransformInputSchema(
           outputSchema._zod.def.innerType,
           recursive
         ) as z4.$ZodType;
+        outputSchema = clone<z4.$ZodOptional>(outputSchema, {
+          ...outputSchema._zod.def,
+          innerType,
+        });
       }
     }
     const meta = globalRegistry.get(schema);
