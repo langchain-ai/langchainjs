@@ -69,11 +69,11 @@ const selectToolsMiddleware = createMiddleware({
   name: "SelectToolsMiddleware",
   modifyModelRequest: async (request, state) => {
     const last = state.messages.at(-1);
-    const active = last?.content
+    const tools = last?.content
       ? // only give me the most relevant tool
         await selectTopKBySimilarity(last.content as string, 1)
       : fullCatalog.slice(0, 5);
-    return { ...request, tools: active.map((t) => t.name) };
+    return { ...request, tools };
   },
 });
 
