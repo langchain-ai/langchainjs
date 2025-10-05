@@ -226,6 +226,13 @@ export function llmToolSelectorMiddleware(
       }
 
       /**
+       * If no tools were selected after all retries, fall back to all tools
+       */
+      if (selectedToolNames.length === 0) {
+        return request;
+      }
+
+      /**
        * Filter tools based on selection
        */
       const selectedTools = toolInfo.filter(({ name }) =>
