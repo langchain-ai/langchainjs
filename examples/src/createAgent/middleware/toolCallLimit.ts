@@ -9,6 +9,8 @@ import { z } from "zod";
 import { createAgent, tool, toolCallLimitMiddleware } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
+import { MemorySaver } from "@langchain/langgraph";
+const config = { configurable: { thread_id: "demo-thread" } };
 
 /**
  * Define a simple search tool
@@ -33,6 +35,7 @@ const searchTool = tool(
 const agent = createAgent({
   model: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [searchTool],
+  checkpointer: new MemorySaver(),
   middleware: [
     /**
      * Limit to 3 tool calls per conversation
@@ -63,3 +66,34 @@ const result = await agent.invoke(
 
 console.log("\nAgent response:");
 console.log(result.messages[result.messages.length - 1].content);
+
+/**
+ * Create an agent with a tool call limit
+ */
+const agent2 = createAgent({
+  model: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  tools: [searchTool],
+  checkpointer: new MemorySaver(),
+  middleware: [
+    /**
+     * Limit to 3 tool calls per conversation
+     */
+    toolCallLimitMiddleware({
+      threadLimit: 3,
+      /**
+       * Gracefully end when limit is reached
+       */
+      exitBehavior: "end",
+    }),
+  ],
+});
+
+const result2 = await agent.invoke(
+  {
+    messages: [new HumanMessage("Search for 'AI' and 'ML'")],
+  },
+  { configurable: { thread_id: "demo-thread" } }
+);
+
+console.log("\nAgent response:");
+console.log(result2.messages[result2.messages.length - 1].content);

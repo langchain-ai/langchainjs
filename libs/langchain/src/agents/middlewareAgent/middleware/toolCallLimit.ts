@@ -68,14 +68,14 @@ function getRunMessages(messages: BaseMessage[]): BaseMessage[] {
 }
 
 /**
- * Build a message indicating which tool call limits were exceeded.
+ * Build a message indicating which tool call limits were reached.
  *
  * @param threadCount - Current thread tool call count.
  * @param runCount - Current run tool call count.
  * @param threadLimit - Thread tool call limit (if set).
  * @param runLimit - Run tool call limit (if set).
  * @param toolName - Tool name being limited (if specific tool), or undefined for all tools.
- * @returns A formatted message describing which limits were exceeded.
+ * @returns A formatted message describing which limits were reached.
  */
 function buildToolLimitExceededMessage(
   threadCount: number,
@@ -88,13 +88,15 @@ function buildToolLimitExceededMessage(
   const exceededLimits: string[] = [];
 
   if (threadLimit !== undefined && threadCount >= threadLimit) {
-    exceededLimits.push(`thread limit (${threadCount}/${threadLimit})`);
+    exceededLimits.push(`thread limit reached (${threadCount}/${threadLimit})`);
   }
   if (runLimit !== undefined && runCount >= runLimit) {
-    exceededLimits.push(`run limit (${runCount}/${runLimit})`);
+    exceededLimits.push(`run limit reached (${runCount}/${runLimit})`);
   }
 
-  return `${toolDesc} limits exceeded: ${exceededLimits.join(", ")}`;
+  return `${toolDesc} limit${
+    exceededLimits.length > 1 ? "s" : ""
+  }: ${exceededLimits.join(", ")}. Stopping to prevent further tool calls.`;
 }
 
 /**

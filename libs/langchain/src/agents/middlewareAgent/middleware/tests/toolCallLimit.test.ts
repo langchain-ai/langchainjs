@@ -142,7 +142,7 @@ describe("toolCallLimitMiddleware", () => {
 
       const lastMessage = result.messages[result.messages.length - 1];
       expect(lastMessage).toBeInstanceOf(AIMessage);
-      expect(lastMessage.content).toContain("thread limit (3/3)");
+      expect(lastMessage.content).toContain("thread limit reached (3/3)");
     });
 
     it("should persist thread count across multiple runs", async () => {
@@ -212,7 +212,7 @@ describe("toolCallLimitMiddleware", () => {
       );
 
       const lastMessage = finalResult.messages[finalResult.messages.length - 1];
-      expect(lastMessage.content).toContain("thread limit (4/4)");
+      expect(lastMessage.content).toContain("thread limit reached (4/4)");
     });
   });
 
@@ -277,7 +277,7 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const lastMessage = result.messages[result.messages.length - 1];
-      expect(lastMessage.content).toContain("run limit (2/2)");
+      expect(lastMessage.content).toContain("run limit reached (2/2)");
     });
 
     it("should reset run count after new HumanMessage", async () => {
@@ -326,7 +326,7 @@ describe("toolCallLimitMiddleware", () => {
         threadConfig
       );
       expect(result1.messages[result1.messages.length - 1].content).toContain(
-        "run limit (2/2)"
+        "run limit reached (2/2)"
       );
 
       // Second run with new model - run count resets, should also hit limit
@@ -342,7 +342,7 @@ describe("toolCallLimitMiddleware", () => {
         threadConfig
       );
       expect(result2.messages[result2.messages.length - 1].content).toContain(
-        "run limit (2/2)"
+        "run limit reached (2/2)"
       );
     });
   });
@@ -420,7 +420,7 @@ describe("toolCallLimitMiddleware", () => {
 
       const lastMessage = result.messages[result.messages.length - 1];
       expect(lastMessage.content).toContain("'search' tool call");
-      expect(lastMessage.content).toContain("thread limit (2/2)");
+      expect(lastMessage.content).toContain("thread limit reached (2/2)");
     });
   });
 
@@ -463,7 +463,7 @@ describe("toolCallLimitMiddleware", () => {
 
       const lastMessage = result.messages[result.messages.length - 1];
       expect(lastMessage.content).toContain("'search' tool call");
-      expect(lastMessage.content).toContain("thread limit (2/2)");
+      expect(lastMessage.content).toContain("thread limit reached (2/2)");
     });
   });
 
@@ -536,8 +536,8 @@ describe("toolCallLimitMiddleware", () => {
           expect(error.runCount).toBe(2);
           expect(error.runLimit).toBe(1);
           expect(error.toolName).toBeUndefined();
-          expect(error.message).toContain("thread limit (2/2)");
-          expect(error.message).toContain("run limit (2/1)");
+          expect(error.message).toContain("thread limit reached (2/2)");
+          expect(error.message).toContain("run limit reached (2/1)");
         }
       }
     });
@@ -615,7 +615,7 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const lastMessage = result.messages[result.messages.length - 1];
-      expect(lastMessage.content).toContain("run limit (2/2)");
+      expect(lastMessage.content).toContain("run limit reached (2/2)");
     });
 
     it("should report correct limit type when thread limit is hit first", async () => {
@@ -654,7 +654,7 @@ describe("toolCallLimitMiddleware", () => {
       );
 
       const lastMessage = result.messages[result.messages.length - 1];
-      expect(lastMessage.content).toContain("thread limit (2/2)");
+      expect(lastMessage.content).toContain("thread limit reached (2/2)");
     });
   });
 
@@ -725,7 +725,7 @@ describe("toolCallLimitMiddleware", () => {
       expect(result).toBeDefined();
 
       const messages = (result as { messages: BaseMessage[] }).messages;
-      expect(messages[0].content).toContain("thread limit (3/3)");
+      expect(messages[0].content).toContain("thread limit reached (3/3)");
     });
   });
 });
