@@ -26,4 +26,9 @@ export {
   piiRedactionMiddleware,
   type PIIRedactionMiddlewareConfig,
 } from "./piiRedaction.js";
+export {
+  toolCallLimitMiddleware,
+  ToolCallLimitExceededError,
+  type ToolCallLimitConfig,
+} from "./toolCallLimit.js";
 export { type AgentMiddleware } from "../types.js";
