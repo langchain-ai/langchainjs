@@ -5,10 +5,8 @@ import {
   isZodSchemaV3,
   isZodSchemaV4,
   InteropZodType,
-  interopZodObjectStrict,
-  isZodObjectV4,
-  ZodObjectV4,
-  interopZodTransformInputSchema,
+  ZodTypeV4,
+  interopZodSanitizeSchema,
 } from "./types/zod.js";
 
 export type JSONSchema = JsonSchema7Type;
@@ -22,16 +20,8 @@ export { deepCompareStrict, Validator } from "@cfworker/json-schema";
  */
 export function toJsonSchema(schema: InteropZodType | JSONSchema): JSONSchema {
   if (isZodSchemaV4(schema)) {
-    const inputSchema = interopZodTransformInputSchema(schema, true);
-    if (isZodObjectV4(inputSchema)) {
-      const strictSchema = interopZodObjectStrict(
-        inputSchema,
-        true
-      ) as ZodObjectV4;
-      return toJSONSchema(strictSchema);
-    } else {
-      return toJSONSchema(schema);
-    }
+    const inputSchema = interopZodSanitizeSchema(schema, true);
+    return toJSONSchema(inputSchema as ZodTypeV4);
   }
   if (isZodSchemaV3(schema)) {
     return zodToJsonSchema(schema);

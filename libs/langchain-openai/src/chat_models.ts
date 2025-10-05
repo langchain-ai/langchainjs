@@ -71,6 +71,7 @@ import {
   getSchemaDescription,
   InteropZodType,
   isInteropZodSchema,
+  interopZodSanitizeSchema,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -1242,7 +1243,9 @@ export abstract class BaseChatOpenAI<
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
         description: getSchemaDescription(schema),
-        schema,
+        schema: isInteropZodSchema(schema)
+          ? interopZodSanitizeSchema(schema, true)
+          : schema,
         strict: config?.strict,
       };
       const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
