@@ -110,7 +110,7 @@ export function llmToolSelectorMiddleware(
       /**
        * Extract tool information
        */
-      const toolInfo = runtime.tools.map((tool) => ({
+      const toolInfo = request.tools.map((tool) => ({
         name: tool.name as string,
         description: tool.description,
         tool,
@@ -226,11 +226,18 @@ export function llmToolSelectorMiddleware(
       }
 
       /**
+       * If no tools were selected after all retries, fall back to all tools
+       */
+      if (selectedToolNames.length === 0) {
+        return request;
+      }
+
+      /**
        * Filter tools based on selection
        */
-      const selectedTools = toolInfo
-        .filter(({ name }) => selectedToolNames.includes(name))
-        .map(({ name }) => name);
+      const selectedTools = toolInfo.filter(({ name }) =>
+        selectedToolNames.includes(name)
+      );
 
       return {
         ...request,

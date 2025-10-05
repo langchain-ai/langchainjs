@@ -28,10 +28,10 @@ export class AfterModelNode<
     this.name = `AfterModelNode_${middleware.name}`;
   }
 
-  runHook(state: TStateSchema, runtime: Runtime<TStateSchema, TContextSchema>) {
+  runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {
     return this.middleware.afterModel!(
       state as Record<string, any> & AgentBuiltInState,
-      runtime as Runtime<TStateSchema, unknown>
+      runtime as Runtime<unknown>
     ) as Promise<MiddlewareResult<TStateSchema>>;
   }
 }

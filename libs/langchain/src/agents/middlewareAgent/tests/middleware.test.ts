@@ -196,8 +196,8 @@ describe("middleware", () => {
       });
       const middleware = createMiddleware({
         name: "middleware",
-        beforeModel: (_, runtime) => {
-          return runtime.terminate(new Error("middleware terminated"));
+        beforeModel: () => {
+          throw new Error("middleware terminated");
         },
       });
       const toolFn = vi.fn();
@@ -230,10 +230,8 @@ describe("middleware", () => {
       const middleware = createMiddleware({
         name: "middleware",
         beforeModel,
-        afterModel: (_, runtime) => {
-          return runtime.terminate(
-            new Error("middleware terminated in afterModel")
-          );
+        afterModel: () => {
+          throw new Error("middleware terminated in afterModel");
         },
       });
       const toolFn = vi.fn();
@@ -360,7 +358,7 @@ describe("middleware", () => {
         modifyModelRequest: async (request) => {
           return {
             ...request,
-            tools: ["toolD"],
+            tools: request.tools.filter((tool) => tool.name === "toolD"),
             toolChoice: "required",
           };
         },
@@ -381,21 +379,19 @@ describe("middleware", () => {
       );
     });
 
-    it("should throw if unknown tools were selected", async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const model = createMockModel() as any;
+    it("should throw if user adds a new tool", async () => {
+      const model = createMockModel();
       const middleware = createMiddleware({
-        name: "testMiddleware",
-        tools: [
-          tool(async () => "Tool response", {
-            name: "toolD",
-          }),
-        ],
+        name: "middleware",
         modifyModelRequest: async (request) => {
           return {
             ...request,
-            tools: ["foobar"],
-            toolChoice: "required",
+            tools: [
+              ...request.tools,
+              tool(async () => "Tool response", {
+                name: "toolE",
+              }),
+            ],
           };
         },
       });
@@ -405,11 +401,35 @@ describe("middleware", () => {
         middleware: [middleware] as const,
       });
       await expect(
-        agent.invoke({
-          messages: [new HumanMessage("Hello, world!")],
-        })
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
       ).rejects.toThrow(
-        'Unknown tools selected in middleware "testMiddleware": foobar, available tools: toolA, toolB, toolC, toolD!'
+        'You have added a new tool in "modifyModelRequest" hook of middleware "middleware": toolE. This is not supported.'
+      );
+    });
+
+    it("should throw if user modifies a tool", async () => {
+      const model = createMockModel();
+      const middleware = createMiddleware({
+        name: "middleware",
+        modifyModelRequest: async (request) => {
+          return {
+            ...request,
+            tools: request.tools.map((tool) => ({
+              ...tool,
+              description: "Modified tool",
+            })),
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools,
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+      ).rejects.toThrow(
+        'You have modified a tool in "modifyModelRequest" hook of middleware "middleware": toolA, toolB, toolC. This is not supported.'
       );
     });
   });

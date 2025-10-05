@@ -67,7 +67,7 @@ export type DescriptionFactory<
 > = (
   toolCall: ToolCall,
   state: State,
-  runtime: Runtime<State>
+  runtime: Runtime<unknown>
 ) => string | Promise<string>;
 
 /**
