@@ -1,6 +1,5 @@
 export {
   summarizationMiddleware,
-  countTokensApproximately,
   type SummarizationMiddlewareConfig,
 } from "./summarization.js";
 export {
@@ -27,6 +26,14 @@ export {
   type PIIRedactionMiddlewareConfig,
 } from "./piiRedaction.js";
 export {
+  contextEditingMiddleware,
+  ClearToolUsesEdit,
+  type ContextEditingMiddlewareConfig,
+  type ContextEdit,
+  type ClearToolUsesEditConfig,
+  type TokenCounter,
+} from "./contextEditing.js";
+export {
   toolCallLimitMiddleware,
   ToolCallLimitExceededError,
   type ToolCallLimitConfig,
@@ -37,3 +44,4 @@ export {
 } from "./callLimit.js";
 export { modelFallbackMiddleware } from "./modelFallback.js";
 export { type AgentMiddleware } from "../types.js";
+export { countTokensApproximately } from "./utils.js";
