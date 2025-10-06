@@ -34,6 +34,11 @@ export {
   type TokenCounter,
 } from "./contextEditing.js";
 export {
+  toolCallLimitMiddleware,
+  ToolCallLimitExceededError,
+  type ToolCallLimitConfig,
+} from "./toolCallLimit.js";
+export {
   modelCallLimitMiddleware,
   type ModelCallLimitMiddlewareConfig,
 } from "./callLimit.js";
