@@ -33,5 +33,10 @@ export {
   type ClearToolUsesEditConfig,
   type TokenCounter,
 } from "./contextEditing.js";
+export {
+  modelCallLimitMiddleware,
+  type ModelCallLimitMiddlewareConfig,
+} from "./callLimit.js";
+export { modelFallbackMiddleware } from "./modelFallback.js";
 export { type AgentMiddleware } from "../types.js";
 export { countTokensApproximately } from "./utils.js";
