@@ -433,4 +433,82 @@ describe("middleware", () => {
       );
     });
   });
+
+  describe("retryModelRequest", () => {
+    it("should retry the model request with the new model", async () => {
+      const model = createMockModel();
+      model.invoke = vi.fn().mockRejectedValue(new Error("Model error"));
+      const retryModel = createMockModel("ChatAnthropic", "anthropic");
+      const middleware = createMiddleware({
+        name: "middleware",
+        retryModelRequest: async (_, request) => {
+          return {
+            ...request,
+            model: retryModel,
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+      expect(model.invoke).toHaveBeenCalledTimes(1);
+      expect(retryModel.invoke).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not retry the model request if the middleware returns undefined", async () => {
+      const model = createMockModel();
+      model.invoke = vi.fn().mockRejectedValue(new Error("Model error"));
+      const retryModel = createMockModel("ChatAnthropic", "anthropic");
+      const middleware = createMiddleware({
+        name: "middleware",
+        retryModelRequest: async () => {
+          return;
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware] as const,
+      });
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
+      ).rejects.toThrow("Model error");
+      expect(model.invoke).toHaveBeenCalledTimes(1);
+      expect(retryModel.invoke).toHaveBeenCalledTimes(0);
+    });
+
+    it("should break after the first middleware that returns a request", async () => {
+      const model = createMockModel();
+      model.invoke = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("Model error"))
+        .mockResolvedValueOnce(new AIMessage("Response from model"));
+      const retryModel = createMockModel("ChatAnthropic", "anthropic");
+      const middleware1 = createMiddleware({
+        name: "middleware1",
+        retryModelRequest: async (_, request) => request,
+      });
+      const middleware2 = createMiddleware({
+        name: "middleware2",
+        retryModelRequest: async (_, request) => {
+          return {
+            ...request,
+            model: retryModel,
+          };
+        },
+      });
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2] as const,
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello, world!")] });
+      expect(model.invoke).toHaveBeenCalledTimes(2);
+      expect(retryModel.invoke).toHaveBeenCalledTimes(0);
+    });
+  });
 });

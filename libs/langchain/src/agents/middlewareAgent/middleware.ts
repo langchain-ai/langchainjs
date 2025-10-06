@@ -117,6 +117,34 @@ export function createMiddleware<
     >
   ) => Promise<ModelRequest | void> | ModelRequest | void;
   /**
+   * The function to handle model invocation errors and optionally retry.
+   *
+   * @param error - The exception that occurred during model invocation
+   * @param request - The original model request that failed
+   * @param state - The current agent state
+   * @param runtime - The runtime context
+   * @param attempt - The current attempt number (1-indexed)
+   * @returns Modified request to retry with, or undefined/null to propagate the error (re-raise)
+   */
+  retryModelRequest?: (
+    error: Error,
+    request: ModelRequest,
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<
+      TContextSchema extends InteropZodObject
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodDefault<any>
+        ? InferInteropZodOutput<TContextSchema>
+        : TContextSchema extends InteropZodOptional<any>
+        ? Partial<InferInteropZodOutput<TContextSchema>>
+        : never
+    >,
+    attempt: number
+  ) => Promise<ModelRequest | void> | ModelRequest | void;
+  /**
    * The function to run before the model call. This function is called before the model is invoked and before the `modifyModelRequest` hook.
    * It allows to modify the state of the agent.
    *
@@ -215,6 +243,33 @@ export function createMiddleware<
               ? Partial<InferInteropZodOutput<TContextSchema>>
               : never
           >
+        )
+      );
+  }
+
+  if (config.retryModelRequest) {
+    middleware.retryModelRequest = async (
+      error,
+      request,
+      state,
+      runtime,
+      attempt
+    ) =>
+      Promise.resolve(
+        config.retryModelRequest!(
+          error,
+          request,
+          state,
+          runtime as Runtime<
+            TContextSchema extends InteropZodObject
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodDefault<any>
+              ? InferInteropZodOutput<TContextSchema>
+              : TContextSchema extends InteropZodOptional<any>
+              ? Partial<InferInteropZodOutput<TContextSchema>>
+              : never
+          >,
+          attempt
         )
       );
   }

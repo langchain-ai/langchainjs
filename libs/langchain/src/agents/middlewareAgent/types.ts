@@ -378,6 +378,26 @@ export interface AgentMiddleware<
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
+  /**
+   * Logic to handle model invocation errors and optionally retry.
+   *
+   * @param error - The exception that occurred during model invocation.
+   * @param request - The original model request that failed.
+   * @param state - The current agent state.
+   * @param runtime - The runtime context.
+   * @param attempt - The current attempt number (1-indexed).
+   * @returns Modified request to retry with, or undefined/null to propagate the error (re-raise).
+   */
+  retryModelRequest?(
+    error: Error,
+    request: ModelRequest,
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<TFullContext>,
+    attempt: number
+  ): Promise<ModelRequest | void> | ModelRequest | void;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>

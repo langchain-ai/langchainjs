@@ -175,6 +175,13 @@ export class ReactAgent<
        */
       () => any
     ][] = [];
+    const retryModelRequestHookMiddleware: [
+      AgentMiddleware,
+      /**
+       * ToDo: better type to get the state of middleware
+       */
+      () => any
+    ][] = [];
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
@@ -187,6 +194,7 @@ export class ReactAgent<
       shouldReturnDirect,
       signal: this.options.signal,
       modifyModelRequestHookMiddleware,
+      retryModelRequestHookMiddleware,
     });
 
     const middlewareNames = new Set<string>();
@@ -235,6 +243,16 @@ export class ReactAgent<
 
       if (m.modifyModelRequest) {
         modifyModelRequestHookMiddleware.push([
+          m,
+          () => ({
+            ...beforeModelNode?.getState(),
+            ...afterModelNode?.getState(),
+          }),
+        ]);
+      }
+
+      if (m.retryModelRequest) {
+        retryModelRequestHookMiddleware.push([
           m,
           () => ({
             ...beforeModelNode?.getState(),
