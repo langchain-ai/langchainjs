@@ -48,7 +48,6 @@ export async function run() {
 
   const ids = await store.addDocuments(docs);
 
-   
   await new Promise((r) => setTimeout(r, 2000));
 
   const model = new OpenAI();

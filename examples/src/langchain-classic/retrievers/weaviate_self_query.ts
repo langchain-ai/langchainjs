@@ -86,13 +86,12 @@ const attributeInfo: AttributeInfo[] = [
 const embeddings = new OpenAIEmbeddings();
 const llm = new OpenAI();
 const documentContents = "Brief summary of a movie";
- 
+
 const client = (weaviate as any).client({
   scheme: process.env.WEAVIATE_SCHEME || "https",
   host: process.env.WEAVIATE_HOST || "localhost",
   apiKey: process.env.WEAVIATE_API_KEY
-    ?  
-      new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
+    ? new (weaviate as any).ApiKey(process.env.WEAVIATE_API_KEY)
     : undefined,
 });
 

@@ -47,7 +47,6 @@ export async function run() {
   ];
   const ids = await store.addDocuments(docs);
 
-   
   await new Promise((r) => setTimeout(r, 2000));
 
   // author is applied as pre-filter to the similarity search

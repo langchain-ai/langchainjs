@@ -1,4 +1,3 @@
- 
 import weaviate, { ApiKey } from "weaviate-client";
 import { WeaviateStore } from "@langchain/weaviate";
 import { OpenAIEmbeddings } from "@langchain/openai";

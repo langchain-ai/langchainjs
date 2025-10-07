@@ -46,9 +46,8 @@ const getDocs = async () => {
   }
 
   docs.forEach((doc, idx) => {
-     
     doc.metadata.publish_year = getYear(dates[idx]);
-     
+
     doc.metadata.publish_date = dates[idx];
   });
 

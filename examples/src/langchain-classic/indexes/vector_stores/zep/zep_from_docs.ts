@@ -24,13 +24,13 @@ export const run = async () => {
   );
 
   // Wait for the documents to be embedded
-   
+
   while (true) {
     const c = await vectorStore.client.document.getCollection(collectionName);
     console.log(
       `Embedding status: ${c.document_embedded_count}/${c.document_count} documents embedded`
     );
-     
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
     if (c.status === "ready") {
       break;
