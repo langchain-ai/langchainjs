@@ -1,4 +1,3 @@
- 
 import { ChatOpenAI } from "@langchain/openai";
 
 const chatModel = new ChatOpenAI({
