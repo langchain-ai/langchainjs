@@ -63,7 +63,7 @@ export type RuntimeEnvironment = {
 
 let runtimeEnvironment: RuntimeEnvironment | undefined;
 
-export function getRuntimeEnvironmentSync(): RuntimeEnvironment {
+export function getRuntimeEnvironment(): RuntimeEnvironment {
   if (runtimeEnvironment === undefined) {
     const env = getEnv();
 
