@@ -7,7 +7,7 @@ import { BaseDocumentLoader } from "@langchain/core/document_loaders/base";
 import {
   DirectoryLoader,
   UnknownHandling,
-} from "langchain/document_loaders/fs/directory";
+} from "@langchain/classic/document_loaders/fs/directory";
 
 export type FrontMatter = {
   title?: string;

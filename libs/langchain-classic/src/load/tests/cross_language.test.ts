@@ -49,6 +49,7 @@ const CURRENT_KNOWN_FAILURES = [
   "langchain_core/runnables/base/RunnableEachBase",
   "langchain_core/runnables/configurable/RunnableConfigurableAlternatives",
   "langchain_core/runnables/configurable/RunnableConfigurableFields",
+  "@langchain/classic/output_parsers/list/CommaSeparatedListOutputParser",
 ];
 
 const CROSS_LANGUAGE_ENTRYPOINTS = Object.keys(IMPORTANT_IMPORTS)

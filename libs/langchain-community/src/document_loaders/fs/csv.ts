@@ -1,4 +1,4 @@
-import { TextLoader } from "langchain/document_loaders/fs/text";
+import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 /**
  * Loads a CSV file into a list of documents.

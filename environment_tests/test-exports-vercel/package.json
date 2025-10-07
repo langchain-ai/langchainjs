@@ -11,6 +11,7 @@
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/core": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@types/node": "18.15.11",

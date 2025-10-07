@@ -4,7 +4,7 @@ import * as uuid from "uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { SaveableVectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { SynchronousInMemoryDocstore } from "langchain/stores/doc/in_memory";
+import { SynchronousInMemoryDocstore } from "@langchain/classic/stores/doc/in_memory";
 
 /**
  * Interface for the arguments required to initialize a FaissStore

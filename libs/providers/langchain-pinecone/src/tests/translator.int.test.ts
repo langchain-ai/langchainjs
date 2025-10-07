@@ -2,8 +2,8 @@ import { test, expect } from "vitest";
 
 import { Document } from "@langchain/core/documents";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
-import { AttributeInfo } from "langchain/chains/query_constructor";
-import { SelfQueryRetriever } from "langchain/retrievers/self_query";
+import { AttributeInfo } from "@langchain/classic/chains/query_constructor";
+import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import { PineconeStore } from "../vectorstores.js";
 import { PineconeTranslator } from "../translator.js";
 

@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 
-// import { MemoryVectorStore } from "langchain/vectorstores/memory";
+// import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { BedrockEmbeddings } from "../embeddings.js";
 
 const getClient = () => {

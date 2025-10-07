@@ -22,6 +22,7 @@
     "@langchain/anthropic": "workspace:*",
     "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:*",
+    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/node": "^24.3.0",
