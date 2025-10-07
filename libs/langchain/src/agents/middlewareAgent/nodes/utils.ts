@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
-import {
-  type BaseMessage,
-  ToolMessage,
-  AIMessage,
-} from "@langchain/core/messages";
+import { type BaseMessage } from "@langchain/core/messages";
 import {
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
@@ -12,12 +8,7 @@ import {
 import { type ZodIssue } from "zod/v3";
 import { END } from "@langchain/langgraph";
 
-import type {
-  AgentMiddleware,
-  ToolCall,
-  ToolResult,
-  JumpTo,
-} from "../types.js";
+import type { AgentMiddleware, JumpTo } from "../types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -120,48 +111,6 @@ export function derivePrivateState(
 }
 
 /**
- * Parse out all tool calls from the messages and populate the results
- * @param messages - The messages to parse
- * @returns The tool calls
- */
-export function parseToolCalls(messages: BaseMessage[]): ToolCall[] {
-  const calls =
-    messages
-      .filter(
-        (message) =>
-          AIMessage.isInstance(message) && (message as AIMessage).tool_calls
-      )
-      .map((message) => (message as AIMessage).tool_calls as ToolCall[])
-      .flat() || [];
-
-  const results = parseToolResults(messages);
-  return calls.map((call) => {
-    const callResult = results.find((result) => result.id === call.id);
-    if (callResult) {
-      return {
-        ...call,
-        result: callResult.result,
-      };
-    }
-    return call;
-  });
-}
-
-/**
- * Parse out all tool results from the messages
- * @param messages - The messages to parse
- * @returns The tool results
- */
-function parseToolResults(messages: BaseMessage[]): ToolResult[] {
-  return messages
-    .filter((message) => ToolMessage.isInstance(message))
-    .map((message) => ({
-      id: (message as ToolMessage).tool_call_id,
-      result: (message as ToolMessage).content,
-    }));
-}
-
-/**
  * Parse `jumpTo` target from user facing labels to a LangGraph node names
  */
 export function parseJumpToTarget(target: string): JumpTo;
@@ -169,6 +118,14 @@ export function parseJumpToTarget(target?: string): JumpTo | undefined {
   if (!target) {
     return undefined;
   }
+
+  /**
+   * if target is already a valid jump target, return it
+   */
+  if (["model_request", "tools", END].includes(target)) {
+    return target as JumpTo;
+  }
+
   if (target === "model") {
     return "model_request";
   }

@@ -151,7 +151,7 @@ export interface ModelRequest {
   /**
    * The tools to make available for this step.
    */
-  tools: string[];
+  tools: (ServerTool | ClientTool)[];
 }
 
 /**
@@ -171,31 +171,11 @@ export type WithMaybeContext<TContext> = undefined extends TContext
 /**
  * Runtime information available to middleware (readonly).
  */
-export type Runtime<TState = unknown, TContext = unknown> = Partial<
+export type Runtime<TContext = unknown> = Partial<
   Omit<LangGraphRuntime<TContext>, "context" | "configurable">
-> & {
-  readonly toolCalls: ToolCall[];
-  /**
-   * All tool instances that are provided to the agent.
-   */
-  readonly tools: (ClientTool | ServerTool)[];
-  /**
-   * Terminates the agent with an update to the state or throws an error.
-   * @param result - The result to terminate the agent with.
-   */
-  terminate(result: Partial<TState> | Error): ControlAction<TState>;
-} & WithMaybeContext<TContext>;
-
-/**
- * Control action type returned by control methods.
- */
-export type ControlAction<TStateSchema> = {
-  type: "terminate";
-  target?: string;
-  stateUpdate?: Partial<TStateSchema>;
-  result?: any;
-  error?: Error;
-};
+> &
+  WithMaybeContext<TContext> &
+  PrivateState;
 
 /**
  * Result type for middleware functions.
@@ -398,6 +378,26 @@ export interface AgentMiddleware<
       AgentBuiltInState,
     runtime: Runtime<TFullContext>
   ): Promise<Partial<ModelRequest> | void> | Partial<ModelRequest> | void;
+  /**
+   * Logic to handle model invocation errors and optionally retry.
+   *
+   * @param error - The exception that occurred during model invocation.
+   * @param request - The original model request that failed.
+   * @param state - The current agent state.
+   * @param runtime - The runtime context.
+   * @param attempt - The current attempt number (1-indexed).
+   * @returns Modified request to retry with, or undefined/null to propagate the error (re-raise).
+   */
+  retryModelRequest?(
+    error: Error,
+    request: ModelRequest,
+    state: (TSchema extends InteropZodObject
+      ? InferInteropZodInput<TSchema>
+      : {}) &
+      AgentBuiltInState,
+    runtime: Runtime<TFullContext>,
+    attempt: number
+  ): Promise<ModelRequest | void> | ModelRequest | void;
   beforeModel?(
     state: (TSchema extends InteropZodObject
       ? InferInteropZodInput<TSchema>
@@ -754,6 +754,31 @@ export type InferAgentConfig<
         InferMiddlewareContextInputs<TMiddleware>;
     }>;
 
+export interface RunLevelPrivateState {
+  /**
+   * The number of times the model has been called at the run level.
+   * This includes multiple agent invocations.
+   */
+  runModelCallCount: number;
+}
+export interface ThreadLevelPrivateState {
+  /**
+   * The number of times the model has been called at the thread level.
+   * This includes multiple agent invocations within different environments
+   * using the same thread.
+   */
+  threadLevelCallCount: number;
+}
+
+/**
+ * As private state we consider all information we want to track within
+ * the lifecycle of the agent, without exposing it to the user. These informations
+ * are propagated to the user as _readonly_ runtime properties.
+ */
+export interface PrivateState
+  extends ThreadLevelPrivateState,
+    RunLevelPrivateState {}
+
 export type InternalAgentState<
   StructuredResponseType extends Record<string, unknown> | undefined = Record<
     string,
@@ -761,7 +786,7 @@ export type InternalAgentState<
   >
 > = {
   messages: BaseMessage[];
-  __preparedModelOptions?: ModelRequest;
+  _privateState?: PrivateState;
 } & (StructuredResponseType extends ResponseFormatUndefined
   ? Record<string, never>
   : { structuredResponse: StructuredResponseType });

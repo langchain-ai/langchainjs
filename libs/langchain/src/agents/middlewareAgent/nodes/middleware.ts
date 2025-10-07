@@ -1,39 +1,51 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
 import { z } from "zod/v3";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
 
-import { RunnableCallable } from "../../RunnableCallable.js";
+import {
+  RunnableCallable,
+  RunnableCallableArgs,
+} from "../../RunnableCallable.js";
 import type {
   Runtime,
-  ControlAction,
   AgentMiddleware,
   MiddlewareResult,
   JumpToTarget,
+  PrivateState,
 } from "../types.js";
-import {
-  derivePrivateState,
-  parseToolCalls,
-  parseJumpToTarget,
-} from "./utils.js";
+import { derivePrivateState, parseJumpToTarget } from "./utils.js";
 
 type NodeOutput<TStateSchema extends Record<string, any>> =
   | TStateSchema
   | Command<any, TStateSchema, string>;
 
+export interface MiddlewareNodeOptions {
+  getPrivateState: () => PrivateState;
+}
+
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
+  #options: MiddlewareNodeOptions;
+
   abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;
 
+  constructor(
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
+    options: MiddlewareNodeOptions
+  ) {
+    super(fields);
+    this.#options = options;
+  }
+
   abstract runHook(
     state: TStateSchema,
-    config?: Runtime<TStateSchema, TContextSchema>
+    config?: Runtime<TContextSchema>
   ): Promise<MiddlewareResult<TStateSchema>>;
 
   async invokeMiddleware(
@@ -74,24 +86,22 @@ export abstract class MiddlewareNode<
     /**
      * ToDo: implement later
      */
-    const runtime: Runtime<TStateSchema, TContextSchema> = {
-      toolCalls: parseToolCalls(state.messages),
+    const runtime: Runtime<TContextSchema> = {
       context: filteredContext,
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,
-      tools: this.middleware.tools ?? [],
-      terminate: (
-        result?: Partial<TStateSchema> | Error
-      ): ControlAction<TStateSchema> => {
-        if (result instanceof Error) {
-          throw result;
-        }
-        return { type: "terminate", result };
-      },
+      ...this.#options.getPrivateState(),
     };
 
-    const result = await this.runHook(state, runtime);
+    const result = await this.runHook(
+      state,
+      Object.freeze({
+        ...runtime,
+        context: filteredContext,
+      })
+    );
+    delete result?._privateState;
 
     /**
      * If result is undefined, return current state
