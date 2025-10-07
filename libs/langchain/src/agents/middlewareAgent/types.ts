@@ -152,6 +152,11 @@ export interface ModelRequest {
    * The tools to make available for this step.
    */
   tools: (ServerTool | ClientTool)[];
+
+  /**
+   * Extra call options to pass to the model.
+   */
+  callOptions?: Record<string, unknown>;
 }
 
 /**
@@ -852,3 +857,26 @@ export type StreamConfiguration<ContextSchema extends Record<string, any>> =
         >
       > &
         WithMaybeContext<ContextSchema>;
+
+export interface FileProvider {
+  readFile(id: string): Promise<string>;
+  listFiles(): Promise<string[]>;
+  addFile(path: string, content: string): Promise<string>;
+}
+
+export interface ContainerProvider {
+  tools: (ClientTool | ServerTool)[] | undefined;
+  uploadFile(containerId: string, ...files: ContainerFile[]): Promise<void>;
+  startContainer(): Promise<string>;
+  isExpired(containerId: string): Promise<boolean>;
+  modifyModelRequest(
+    containerId: string,
+    request: ModelRequest
+  ): Promise<ModelRequest | void> | ModelRequest | void;
+}
+
+export interface ContainerFile {
+  id: string;
+  path: string;
+  origin: "user" | "tool" | "agent";
+}
