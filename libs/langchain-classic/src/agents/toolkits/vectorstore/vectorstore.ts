@@ -95,7 +95,6 @@ export class VectorStoreRouterToolkit extends BaseToolkit {
   }
 }
 
-/** @deprecated Create a specific agent with a custom tool instead. */
 export function createVectorStoreAgent(
   llm: BaseLanguageModelInterface,
   toolkit: VectorStoreToolkit,
@@ -124,7 +123,6 @@ export function createVectorStoreAgent(
   });
 }
 
-/** @deprecated Create a specific agent with a custom tool instead. */
 export function createVectorStoreRouterAgent(
   llm: BaseLanguageModelInterface,
   toolkit: VectorStoreRouterToolkit,

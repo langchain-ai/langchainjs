@@ -16,10 +16,6 @@ function formatSet(input: Set<string>) {
 
 /**
  * Interface for the input parameters of the SequentialChain class.
- *
- * @deprecated
- * Switch to expression language: https://js.langchain.com/docs/expression_language/
- * Will be removed in 0.2.0
  */
 export interface SequentialChainInput extends ChainInputs {
   /** Array of chains to run as a sequence. The chains are run in order they appear in the array. */
@@ -77,10 +73,6 @@ export interface SequentialChainInput extends ChainInputs {
  * });
  * console.log(chainExecutionResult);
  * ```
- * 
- * @deprecated
- * Switch to {@link https://js.langchain.com/docs/expression_language/ | expression language}.
- * Will be removed in 0.2.0
  */
 export class SequentialChain extends BaseChain implements SequentialChainInput {
   static lc_name() {
@@ -244,7 +236,6 @@ export class SequentialChain extends BaseChain implements SequentialChainInput {
 }
 
 /**
- * @deprecated Switch to expression language: https://js.langchain.com/docs/expression_language/
  * Interface for the input parameters of the SimpleSequentialChain class.
  */
 export interface SimpleSequentialChainInput extends ChainInputs {
@@ -255,7 +246,6 @@ export interface SimpleSequentialChainInput extends ChainInputs {
 }
 
 /**
- * @deprecated Switch to expression language: https://js.langchain.com/docs/expression_language/
  * Simple chain where a single string output of one chain is fed directly into the next.
  * @augments BaseChain
  * @augments SimpleSequentialChainInput
