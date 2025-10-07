@@ -12,7 +12,7 @@ import { ReActSingleInputOutputParser } from "./output_parser.js";
 import { AgentRunnableSequence } from "../agent.js";
 
 /**
- * Params used by the createXmlAgent function.
+ * Params used by the createReactAgent function.
  */
 export type CreateReactAgentParams = {
   /** LLM to use for the agent. */
