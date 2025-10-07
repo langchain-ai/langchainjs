@@ -1,3 +1,4 @@
+import type { BasePromptValueInterface } from "../prompt_values.js";
 import {
   type LLMResult,
   RUN_KEY,
