@@ -50,8 +50,6 @@ export type ChatConversationalAgentInput = Optional<AgentInput, "outputParser">;
 /**
  * Agent for the MRKL chain.
  * @augments Agent
- *
- * @deprecated Use the {@link https://api.js.langchain.com/functions/langchain.agents.createStructuredChatAgent.html | createStructuredChatAgent method instead}.
  */
 export class ChatConversationalAgent extends Agent {
   static lc_name() {

@@ -9,10 +9,6 @@ import { ChainInputs, BaseChain } from "./base.js";
  * Interface that extends the `ChainInputs` interface and defines the
  * fields required for a transform chain. It includes the `transform`
  * function, `inputVariables`, and `outputVariables` properties.
- *
- * @deprecated
- * Switch to expression language: https://js.langchain.com/docs/expression_language/
- * Will be removed in 0.2.0
  */
 export interface TransformChainFields<
   I extends ChainValues,
@@ -28,10 +24,6 @@ export interface TransformChainFields<
  * class and implements the `TransformChainFields` interface. It provides
  * a way to transform input values to output values using a specified
  * transform function.
- *
- * @deprecated
- * Switch to {@link https://js.langchain.com/docs/expression_language/ | expression language}.
- * Will be removed in 0.2.0
  */
 export class TransformChain<
   I extends ChainValues,

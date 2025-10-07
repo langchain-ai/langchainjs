@@ -13,7 +13,6 @@ import { TEMPLATE_TOOL_RESPONSE } from "../chat_convo/prompt.js";
  * agents that use OpenAI's API. Helpful for passing in previous agent
  * step context into new iterations.
  *
- * @deprecated Use formatToOpenAIFunctionMessages instead.
  * @param steps A list of AgentSteps to format.
  * @returns A list of BaseMessages.
  */

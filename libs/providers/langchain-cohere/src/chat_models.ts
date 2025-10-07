@@ -94,9 +94,6 @@ export interface ChatCohereCallOptions
   tools?: ChatCohereToolType[];
 }
 
-/** @deprecated Import as ChatCohereCallOptions instead. */
-export interface CohereChatCallOptions extends ChatCohereCallOptions {}
-
 function convertToDocuments(
   observations: MessageContent
 ): Array<Record<string, any>> {

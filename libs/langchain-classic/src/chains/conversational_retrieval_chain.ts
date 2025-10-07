@@ -33,9 +33,6 @@ export interface ConversationalRetrievalQAChainInput extends ChainInputs {
 }
 
 /**
- * @deprecated This class will be removed in 1.0.0. See below for an example implementation using
- * `createRetrievalChain`.
- *
  * Class for conducting conversational question-answering tasks with a
  * retrieval component. Extends the BaseChain class and implements the
  * ConversationalRetrievalQAChainInput interface.

@@ -148,31 +148,6 @@ export abstract class Runnable<
   ): Promise<RunOutput>;
 
   /**
-   * Bind arguments to a Runnable, returning a new Runnable.
-   * @param kwargs
-   * @returns A new RunnableBinding that, when invoked, will apply the bound args.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(
-    kwargs: Partial<CallOptions>
-  ): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableBinding({ bound: this, kwargs, config: {} });
-  }
-
-  /**
-   * Return a new Runnable that maps a list of inputs to a list of outputs,
-   * by calling invoke() with each input.
-   *
-   * @deprecated This will be removed in the next breaking release.
-   */
-  map(): Runnable<RunInput[], RunOutput[], CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    return new RunnableEach({ bound: this });
-  }
-
-  /**
    * Add retry logic to an existing runnable.
    * @param fields.stopAfterAttempt The number of attempts to retry.
    * @param fields.onFailedAttempt A function that is called when a retry fails.
@@ -1219,9 +1194,7 @@ export type RunnableBindingArgs<
   CallOptions extends RunnableConfig = RunnableConfig
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
-  /**
-   * @deprecated use {@link config} instead
-   */
+  /** @deprecated Use {@link config} instead. */
   kwargs?: Partial<CallOptions>;
   config: RunnableConfig;
   configFactories?: Array<
@@ -1252,8 +1225,8 @@ export type RunnableBindingArgs<
  * const runnable = RunnableLambda.from(enhanceProfile);
  *
  * // Bind configuration to the runnable to set the user's role dynamically
- * const adminRunnable = runnable.bind({ configurable: { role: "Admin" } });
- * const userRunnable = runnable.bind({ configurable: { role: "User" } });
+ * const adminRunnable = runnable.withConfig({ configurable: { role: "Admin" } });
+ * const userRunnable = runnable.withConfig({ configurable: { role: "User" } });
  *
  * const result1 = await adminRunnable.invoke({
  *   name: "Alice",
@@ -1321,27 +1294,6 @@ export class RunnableBinding<
     );
   }
 
-  /**
-   * Binds the runnable with the specified arguments.
-   * @param kwargs The arguments to bind the runnable with.
-   * @returns A new instance of the `RunnableBinding` class that is bound with the specified arguments.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(
-    kwargs: Partial<CallOptions>
-  ): RunnableBinding<RunInput, RunOutput, CallOptions> {
-    return new (this.constructor as {
-      new (
-        fields: RunnableBindingArgs<RunInput, RunOutput, CallOptions>
-      ): RunnableBinding<RunInput, RunOutput, CallOptions>;
-    })({
-      bound: this.bound,
-      kwargs: { ...this.kwargs, ...kwargs },
-      config: this.config,
-    });
-  }
-
   withConfig(
     config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
@@ -1376,7 +1328,7 @@ export class RunnableBinding<
   ): Promise<RunOutput> {
     return this.bound.invoke(
       input,
-      await this._mergeConfig(ensureConfig(options), this.kwargs)
+      await this._mergeConfig(options, this.kwargs)
     );
   }
 
@@ -1552,8 +1504,6 @@ export class RunnableBinding<
  *
  * // ["Hello, ALICE!", "Hello, BOB!", "Hello, CAROL!"]
  * ```
- *
- * @deprecated This will be removed in the next breaking release.
  */
 export class RunnableEach<
   RunInputItem,
@@ -1575,19 +1525,6 @@ export class RunnableEach<
   }) {
     super(fields);
     this.bound = fields.bound;
-  }
-
-  /**
-   * Binds the runnable with the specified arguments.
-   * @param kwargs The arguments to bind the runnable with.
-   * @returns A new instance of the `RunnableEach` class that is bound with the specified arguments.
-   *
-   * @deprecated Use {@link withConfig} instead. This will be removed in the next breaking release.
-   */
-  bind(kwargs: Partial<CallOptions>) {
-    return new RunnableEach({
-      bound: this.bound.bind(kwargs),
-    });
   }
 
   /**

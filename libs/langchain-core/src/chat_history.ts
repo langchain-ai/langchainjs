@@ -57,11 +57,6 @@ export abstract class BaseListChatMessageHistory extends Serializable {
     return this.addMessage(new HumanMessage(message));
   }
 
-  /** @deprecated Use addAIMessage instead */
-  public addAIChatMessage(message: string): Promise<void> {
-    return this.addMessage(new AIMessage(message));
-  }
-
   /**
    * This is a convenience method for adding an AI message string to the store.
    * Please note that this is a convenience method. Code should favor the bulk

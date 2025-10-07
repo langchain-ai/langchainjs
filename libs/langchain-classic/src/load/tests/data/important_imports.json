@@ -1,6 +1,6 @@
 {
   "langchain/prompts/chat/BaseMessagePromptTemplate": "langchain_core/prompts/chat/BaseMessagePromptTemplate",
-  "@langchain/classic/output_parsers/list/CommaSeparatedListOutputParser": "langchain_core/output_parsers/list/CommaSeparatedListOutputParser",
+  "langchain/output_parsers/list/CommaSeparatedListOutputParser": "langchain_core/output_parsers/list/CommaSeparatedListOutputParser",
   "langchain/prompts/few_shot_with_templates/FewShotPromptWithTemplates": "langchain_core/prompts/few_shot_with_templates/FewShotPromptWithTemplates",
   "langchain/prompts/base/StringPromptTemplate": "langchain_core/prompts/string/StringPromptTemplate",
   "langchain/prompts/chat/BaseStringMessagePromptTemplate": "langchain_core/prompts/chat/BaseStringMessagePromptTemplate",

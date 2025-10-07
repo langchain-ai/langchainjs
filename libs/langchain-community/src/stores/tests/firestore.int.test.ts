@@ -11,7 +11,7 @@ const sessionId = Date.now().toString();
 
 test.skip("Test firestore message history store", async () => {
   const messageHistory = new FirestoreChatMessageHistory({
-    collectionName: "langchain",
+    collections: ["langchain"],
     sessionId,
     userId: "a@example.com",
     config: { projectId: "your-project-id" },
