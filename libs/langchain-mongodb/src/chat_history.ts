@@ -10,7 +10,6 @@ import {
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
 } from "@langchain/core/messages";
-import { VERSION } from "./version.js";
 
 export interface MongoDBChatMessageHistoryInput {
   collection: Collection<MongoDBDocument>;
@@ -42,8 +41,7 @@ export class MongoDBChatMessageHistory extends BaseListChatMessageHistory {
     this.collection = collection;
     this.sessionId = sessionId;
     this.collection.db.client.appendMetadata({
-      name: 'langchainjs_chat_history',
-      version: VERSION
+      name: 'langchainjs_chat_history'
     });
   }
 

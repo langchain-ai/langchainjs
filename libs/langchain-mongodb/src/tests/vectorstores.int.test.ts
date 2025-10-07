@@ -12,7 +12,6 @@ import { Document as BSONDocument } from "bson";
 import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
-import { VERSION } from "../version.js";
 
 /**
  * The following json can be used to create an index in atlas for Cohere embeddings.
@@ -122,7 +121,7 @@ test("MongoDBStore sets client metadata", () => {
       collection,
     }
   );
-  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector", version: VERSION });
+  expect(spy).toHaveBeenCalledWith({ name: "langchainjs_vector" });
   jest.clearAllMocks();
 });
 

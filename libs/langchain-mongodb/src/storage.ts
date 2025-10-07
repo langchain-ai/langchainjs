@@ -1,6 +1,5 @@
 import { BaseStore } from "@langchain/core/stores";
 import { Collection, Document as MongoDocument } from "mongodb";
-import { VERSION } from "./version.js";
 
 /**
  * Type definition for the input parameters required to initialize an
@@ -67,8 +66,7 @@ export class MongoDBStore extends BaseStore<string, Uint8Array> {
       fields.yieldKeysScanBatchSize ?? this.yieldKeysScanBatchSize;
     this.namespace = fields.namespace;
     this.collection.db.client.appendMetadata({
-      name: 'langchainjs_storage',
-      version: VERSION
+      name: 'langchainjs_storage'
     });
   }
 

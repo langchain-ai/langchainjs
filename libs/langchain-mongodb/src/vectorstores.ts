@@ -11,7 +11,6 @@ import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { VERSION } from "./version.js";
 
 /**
  * Type that defines the arguments required to initialize the
@@ -81,8 +80,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.primaryKey = args.primaryKey ?? "_id";
     this.caller = new AsyncCaller(args);
     this.collection.db.client.appendMetadata({
-      name: 'langchainjs_vector',
-      version: VERSION
+      name: 'langchainjs_vector'
     });
   }
 
